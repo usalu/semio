@@ -173,11 +173,12 @@ pub mod io_registry {
 //#region 🔖️IoDeclaration
 /// 🚪️ New tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P pilot):
 /// `io() -> IoDeclaration` for `standard utf-8 / subset any` — design.md §2/§3. **Carrier law**:
-/// `s.stdio.txt@utf-8/*` IS `CARRIER_TEXT` (`semio_framework::io_schema::CARRIER_TEXT`), so its
-/// own native `Text` `IoPayload` already equals what `io_identify`/`io_route` treat as "the raw
-/// file" — zero foreign `IoEntry` rows are needed on this side (mirrors `💾️binary`'s `io()`; see
-/// that file's doc comment for the full reasoning, incl. why the old self-referential identity
-/// leaves + `derived_composition`'s binary-dependency read stay in place this pass).
+/// `s.stdio.txt@utf-8/*`'s own native `Text` `IoPayload` is byte-identical to the raw file text the
+/// framework-owned carrier `CARRIER_TEXT` (`semio_framework::io_schema::CARRIER_TEXT`) names, but the
+/// carrier is a neutral framework dialect, not this artifact — other plugins reference the framework
+/// constant directly, so no foreign `IoEntry` rows are needed on this side (mirrors `💾️binary`'s
+/// `io()`; see that file's doc comment for the full reasoning, incl. why the old self-referential
+/// identity leaves + `derived_composition`'s binary-dependency read stay in place this pass).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};

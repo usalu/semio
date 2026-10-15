@@ -19,3 +19,9 @@ path = "../../🦀️.rs"
 semio-s-artifact-wfc-2d = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-test-mutation-inventory = { path = "../../../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = "1"
+
+[profile.prototype]
+inherits = "dev"

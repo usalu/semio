@@ -3,7 +3,7 @@ import type {Stats} from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import schema from "./🧬️schema/🔣️.json";
 import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {acquireCargoProfileMaintenanceLeaseV1,acquireCargoStoreLeaseV1,cargoBuildLeaseIdentityV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import {acquireCargoStoreMaintenanceLeaseV1,acquireCargoProfileMaintenanceLeaseV1,acquireCargoStoreLeaseV1,cargoBuildLeaseIdentityV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 
 export type CacheUnitKind = "cargo-build" | "cargo-incremental" | "cargo-incremental-session" | "cargo-target-file" | "directory";
 /** 📦️ One independently deletable slice of a cache area: a compilation unit, an incremental crate dir, a stale finalized incremental session, an uplifted file, or a whole scratch directory. */
@@ -37,10 +37,10 @@ export interface PrunePlan {
 export{planCachePressurePruneV1,type CachePressurePolicyV1,type CachePressurePlanV1}from"./📉️pressure/🟦️.ts";
 
 /** 🛡️ Rescans and prunes a shared compiler store only after all admitted profiles release it. */
-export async function withCargoCacheMaintenanceV1<T>(options:Readonly<{buildDirectory:string;relatedDirectories?:readonly string[];leaseDirectory:string;control:ResourceLeaseControl}>,run:()=>Promise<T>):Promise<T>{
-  checkResourceLeaseControl(options.control);const signal=options.control.signal,prune=await acquireResourceLease({directory:options.leaseDirectory,resource:"cache-prune",mode:"exclusive",signal,control:options.control});
+export async function withCargoCacheMaintenanceV1<T>(options:Readonly<{buildDirectory:string;relatedDirectories?:readonly string[];leaseDirectory:string;control:ResourceLeaseControl;wait:boolean}>,run:()=>Promise<T>):Promise<T>{
+  checkResourceLeaseControl(options.control);if(typeof options.wait!=="boolean")throw Error("Explicit Cargo maintenance wait policy required");const signal=options.control.signal,prune=await acquireResourceLease({directory:options.leaseDirectory,resource:"cache-prune",mode:"exclusive",signal,control:options.control,...(!options.wait?{timeoutMs:0}:{})});
   const stores:Awaited<ReturnType<typeof acquireCargoStoreLeaseV1>>[]=[];
-  try{for(const buildDirectory of [...new Set([options.buildDirectory,...(options.relatedDirectories??[])].map(path=>cargoBuildLeaseIdentityV1(path,[]).buildDirectory))].sort())stores.push(await acquireCargoStoreLeaseV1({directory:options.leaseDirectory,buildDirectory,mode:"exclusive",signal,control:options.control}));checkResourceLeaseControl(options.control);const result=await run();checkResourceLeaseControl(options.control);return result;}
+  try{for(const buildDirectory of [...new Set([options.buildDirectory,...(options.relatedDirectories??[])].map(path=>cargoBuildLeaseIdentityV1(path,[]).buildDirectory))].sort())stores.push(await(options.wait?acquireCargoStoreLeaseV1({directory:options.leaseDirectory,buildDirectory,mode:"exclusive",signal,control:options.control}):acquireCargoStoreMaintenanceLeaseV1({directory:options.leaseDirectory,buildDirectory,signal,control:options.control})));checkResourceLeaseControl(options.control);const result=await run();checkResourceLeaseControl(options.control);return result;}
   finally{for(const store of stores.reverse())store.release();prune.release();}
 }
 

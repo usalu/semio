@@ -12,13 +12,22 @@ import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { childElementId } from "../🆔️ElementId/🟦️.tsx";
 import { ActionGroup, ActionGroupItem } from "../⚡️ActionGroup/🟦️.tsx";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
-import { loadingBorderStateClass, waitingBorderStateClass } from "../../🎯️targets/⚛️react/🟦️";
+import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown } from "../🐚️ShellScope/🟦️.tsx";
 import { SurfaceScope, isSurfaceActiveBackgroundPointer, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
 import { measureWindowChromeScrollClearancePx, windowChromeScrollClearanceVar, windowContentDeadLineVar } from "../🚧️WindowContentDeadLine/🟦️.tsx";
-import { interactiveActiveFillClass, type UiStatus, type EngagementSpec, type SearchSpec, UI_WINDOW_SEARCH, useUiMobile, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, useChromePanelSafeArea, chromePanelSafeAreaStyle, ExternalLinkIcon, GhostRegionShell, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass, focusActiveSearchInput, windowChromeClearedTopOffset } from "../../🎯️targets/⚛️react/🟦️";
-import { Minimize2Icon, Maximize2Icon, CloseIcon } from "../🔣️Icons/🟦️.tsx";
+import { interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
+import { type UiStatus, uiSpacingPx } from "@semio-tech/ui-styling";
+import { ExternalLinkIcon, Minimize2Icon, Maximize2Icon, CloseIcon } from "../🔣️Icons/🟦️.tsx";
+import { PaneHost, Pane } from "../📌️WindowPane/🟦️.tsx";
+import { type EngagementSpec, Engagement } from "../🎮️Engagement/🟦️.tsx";
+import { type SearchSpec, UI_WINDOW_SEARCH, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, Search, focusActiveSearchInput } from "../🔍️WindowSearch/🟦️.tsx";
+import { windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, windowChromeClearedTopOffset } from "../../🔨️modules/📐️window-measures/🟦️.ts";
+import { useChromePanelSafeArea, chromePanelSafeAreaStyle } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+import { panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { useUiMobile } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
+import { GhostRegionShell } from "../👻️PanelGhost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌊️Window

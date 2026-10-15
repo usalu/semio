@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "algorithm": "sha256",
+        "maximumBytes": 8388608,
+        "maximumFiles": 65536,
+        "maximumPathUnits": 256
+      }
+    },
+    "File": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "digest",
+        "bytes"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\u0000]+$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4194304
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "root",
+        "cwd",
+        "text",
+        "expected"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "posix",
+            "windows"
+          ]
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 8388608
+        },
+        "expected": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/File"
+          }
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "algorithm",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "algorithm": {
+          "const": "sha256"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/File"
+          }
+        }
+      }
+    }
+  },
+  "$ref": "#/definitions/Receipt"
+}

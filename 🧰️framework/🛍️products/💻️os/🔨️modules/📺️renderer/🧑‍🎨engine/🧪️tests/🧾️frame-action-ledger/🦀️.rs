@@ -16,7 +16,7 @@ use super::*;
 use serde_json::Value;
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/🧾️frame-action-ledger/🔣️.json");
-const RENDERER_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+const RENDERER_SOURCE: &str = crate::RENDERER_SOURCE;
 const FRAME_JOB_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
 
 #[test]

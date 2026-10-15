@@ -12,7 +12,8 @@
 //! downstream crates never have to hardcode the number themselves.
 
 use semio_framework_pack_error::PackRefusal;
-use crate::{crc32c, read_varint_u64, write_varint_u64, ByteRange, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackLimits, PackSink, PackSource};
+use crate::{crc32c, read_varint_u64, write_varint_u64, ByteRange, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackLimits};
+use semio_framework_pack_source::{PackSink, PackSource};
 use semio_framework_value::ValueRefusalKind;
 use semio_framework_value::list::{PagedListError,PagedListAllocationError,PagedListRefusalKind};
 use std::mem::size_of;

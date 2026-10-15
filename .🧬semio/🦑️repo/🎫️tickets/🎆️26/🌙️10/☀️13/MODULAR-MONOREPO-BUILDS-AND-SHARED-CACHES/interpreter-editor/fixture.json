@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "project": "@semio-tech/framework-plugin-interpreter",
+  "targets": [
+    "test-completed-source",
+    "test-completed-native",
+    "test-poll-input-source",
+    "test-poll-input-native"
+  ],
+  "forbiddenEnvironment": [
+    "CARGO_TARGET_DIR",
+    "CARGO_BUILD_BUILD_DIR",
+    "CARGO_BUILD_JOBS",
+    "CARGO_INCREMENTAL",
+    "CARGO_PROFILE_DEV_DEBUG"
+  ],
+  "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target",
+  "workspaceRoot": "."
+}

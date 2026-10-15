@@ -1,6 +1,74 @@
 {
   "schemaVersion": 1,
-  "packageRouting":[{"platform":"posix","root":"/work/repo","package":"/work/repo/space dir/a/b","script":"bun --cwd \"../../..\" repo run fixture:test","target":"fixture:test","accepted":true},{"platform":"win32","root":"C:/work/repo","package":"C:/work/repo/space dir/a/b","script":"bun --cwd \"../../..\" repo run fixture:test","target":"fixture:test","accepted":true},{"platform":"posix","root":"/work/repo","package":"/work/repo/a/b","script":"bun --cwd \"..\" repo run fixture:test","target":"fixture:test","accepted":false},{"platform":"posix","root":"/work/repo","package":"/work/repo/a/b","script":"bun --cwd \"../..\" repo run fixture:other","target":"fixture:test","accepted":false}],
+  "cargoMetadata": {
+    "owner": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+    "function": "stdioCargoMetadata",
+    "invocation": "invocation",
+    "custody": [
+      "withRepositoryToolingStoreV1",
+      "withRepositoryRustToolchainV1"
+    ],
+    "capture": "captureOwnedCommandResultV1",
+    "program": "generation.cargo",
+    "control": "control",
+    "maximumBytes": 16777216,
+    "maximumLines": 65536
+  },
+  "cargoControl": {
+    "maximumBytes": 64,
+    "maximumLines": 4,
+    "outputs": [
+      {
+        "bytes": 63,
+        "accepted": true
+      },
+      {
+        "bytes": 65,
+        "accepted": false
+      }
+    ],
+    "refusals": [
+      "cancelled",
+      "expired",
+      "publisher"
+    ],
+    "progressDelayMilliseconds": 10,
+    "queueChildMilliseconds": 5000
+  },
+  "packageRouting": [
+    {
+      "platform": "posix",
+      "root": "/work/repo",
+      "package": "/work/repo/space dir/a/b",
+      "script": "bun --cwd \"../../..\" repo run fixture:test",
+      "target": "fixture:test",
+      "accepted": true
+    },
+    {
+      "platform": "win32",
+      "root": "C:/work/repo",
+      "package": "C:/work/repo/space dir/a/b",
+      "script": "bun --cwd \"../../..\" repo run fixture:test",
+      "target": "fixture:test",
+      "accepted": true
+    },
+    {
+      "platform": "posix",
+      "root": "/work/repo",
+      "package": "/work/repo/a/b",
+      "script": "bun --cwd \"..\" repo run fixture:test",
+      "target": "fixture:test",
+      "accepted": false
+    },
+    {
+      "platform": "posix",
+      "root": "/work/repo",
+      "package": "/work/repo/a/b",
+      "script": "bun --cwd \"../..\" repo run fixture:other",
+      "target": "fixture:test",
+      "accepted": false
+    }
+  ],
   "owners": [
     {
       "id": "artifact-inventory",

@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import receiptFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 it("correlates receipt refusals independently of identical action payloads", () => {
   const refused = new Set<number>();
@@ -46,7 +47,7 @@ type Row = { id: string; why: string; owner: "runtime" | "candidate"; steps: Ste
 type Fixture = { rows: Row[] };
 
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
-const rendererSource = readFileSync(rendererPath, "utf8");
+const rendererSource = readModuleTreeSource(rendererPath);
 const frameJobSource = readFileSync(frameJobPath, "utf8");
 
 /** 🧾️ The frame runtime, re-derived: one ledger, one deferred owner, and whatever the shell was handed. */

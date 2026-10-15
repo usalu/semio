@@ -35,6 +35,10 @@ fn semantic_chart_validation_borrows_authored_fields(){
 }
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🧬️chart-mutations/🔣️.json")).unwrap() }
+pub(crate) fn assets() -> &'static ChartSchemaAssets {
+    static ASSETS: std::sync::OnceLock<ChartSchemaAssets> = std::sync::OnceLock::new();
+    ASSETS.get_or_init(|| ChartSchemaAssets::read(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap())
+}
 fn snapshot() -> ChartSnapshot { ChartSnapshot::from_value(DslValue::from(fixture()["snapshot"].clone())).unwrap() }
 
 #[test]
@@ -107,9 +111,9 @@ fn native_registry_dispatch_is_deterministic_and_controlled() {
     let budgets = WireArtifactInferenceBudget { work_units: 100, allocation_bytes: 1_000_000, recursion_depth: 64 };
     let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, policy: &[], budgets: &budgets, retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 7, maximum_copy_bytes: 3, maximum_capacity_bytes: 129, maximum_release_bytes: 4096, maximum_depth: 2 }, cancellation_id: "chart-test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Bypass, canonical_payload: &payload, dependencies: &[] };
     let mut registry = ArtifactInferenceServiceRegistry::new();
-    registry.register(chart_inference_service()).unwrap();
-    register_chart_artifact().unwrap();
-    register_chart_artifact().unwrap();
+    registry.register(chart_inference_service(&assets())).unwrap();
+    register_chart_artifact(&assets()).unwrap();
+    register_chart_artifact(&assets()).unwrap();
     let published=semio_framework_plugin::app::artifact_inference_service(CHART_ARTIFACT_KIND,"framework.print.chart.inference").unwrap().unwrap();
     assert_eq!(published.infer(&request).unwrap().canonical_payload,registry.infer(CHART_ARTIFACT_KIND,"framework.print.chart.inference",&request).unwrap().canonical_payload);
     let first = registry.infer(CHART_ARTIFACT_KIND, "framework.print.chart.inference", &request).unwrap();
@@ -371,4 +375,31 @@ fn chart_diff_text_and_binary_preserve_owned_edits() {
     assert!(ChartDiff::parse_diff("{\"edits\":[{\"path\":[],\"unknown\":1}]}").is_err());
     assert!(ChartDiff::decode_diff(&[255]).is_err());
     eprintln!("[DEBUG] chart diff physical owners preserve typed edits; independent serde_json oracle");
+}
+
+#[test]
+fn runtime_schema_assets_equal_the_documents_once_compiled_into_the_crate() {
+    let assets = assets();
+    let facet = |leaves: &semio_framework_schema_registry::FacetLeaves, rust: &str, typescript: &str, json_schema: &str| {
+        assert_eq!((leaves.rust, leaves.typescript, leaves.json_schema, leaves.graphql, leaves.proto), (rust, typescript, json_schema, "", ""));
+        serde_json::from_str::<serde_json::Value>(json_schema).expect("every schema leaf is JSON");
+    };
+    facet(&assets.artifact, include_str!("../../🦀️.rs"), "", include_str!("../../🧬️schema/🔣️.json"));
+    facet(&assets.snapshot, include_str!("../../🧬️schema/📸️snapshot/🦀️.rs"), include_str!("../../🧬️schema/📸️snapshot/🟦️.ts"), include_str!("../../🧬️schema/📸️snapshot/🔣️.json"));
+    facet(&assets.diff, include_str!("../../🧬️schema/🔀️diff/🦀️.rs"), include_str!("../../🧬️schema/🔀️diff/🟦️.ts"), include_str!("../../🧬️schema/🔀️diff/🔣️.json"));
+    facet(&assets.mutations, include_str!("../../🧬️schema/🧬️mutations/🦀️.rs"), include_str!("../../🧬️schema/🧬️mutations/🟦️.ts"), include_str!("../../🧬️schema/🧬️mutations/🔣️.json"));
+    facet(&assets.inferences, include_str!("../../🧬️schema/💡️inferences/🦀️.rs"), include_str!("../../🧬️schema/💡️inferences/🟦️.ts"), include_str!("../../🧬️schema/💡️inferences/🔣️.json"));
+    assert_eq!(assets.inference_output_schema, include_str!("../../🚪️io/📝️text/💡️inferences/🔣️.json"));
+    serde_json::from_str::<serde_json::Value>(assets.inference_output_schema).expect("the inference output schema is JSON");
+    let descriptor = chart_artifact_schema_descriptor(assets);
+    assert_eq!((descriptor.id, descriptor.facet_leaves()), ("framework.print.chart", [assets.artifact, assets.snapshot, assets.diff, assets.mutations]));
+}
+
+#[test]
+fn missing_schema_assets_name_the_unreadable_document() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("🕳️nowhere");
+    let error = ChartSchemaAssets::read(&root).unwrap_err();
+    assert_eq!(error.path, root.join("🦀️.rs"));
+    assert_eq!(error.cause.kind(), std::io::ErrorKind::NotFound);
+    assert!(error.to_string().contains("🦀️.rs"));
 }

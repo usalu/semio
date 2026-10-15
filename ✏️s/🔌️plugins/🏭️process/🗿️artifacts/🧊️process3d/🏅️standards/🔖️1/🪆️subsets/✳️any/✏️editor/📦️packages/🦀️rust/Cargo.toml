@@ -20,6 +20,7 @@ name = "process3d_editor_unit"
 path = "../../🧪️tests/🔬️unit/🦀️.rs"
 
 [dependencies]
+semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 base64_codec = { workspace = true }
 machine = { workspace = true }
 semio-framework = { workspace = true }

@@ -10,6 +10,7 @@
 //! taxonomy node (commands, windows, panels, the wasm bridge) — a helper with exactly one consumer
 //! lives in that consumer's own component file instead.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use crate::editor::sequence::commands::connection::{connect_steps, disconnect_steps};
 use crate::editor::sequence::commands::example::set_active_example;
 use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
@@ -2730,9 +2731,9 @@ struct SequenceImportJob {
     snapshot: Option<std::sync::Arc<SequenceSnapshot>>,
     children: Option<semio_framework_plugin::app::ChildContentView>,
     emit: Option<Emit<SequenceMutation, NoConfigMutation>>,
-    checkpoint_publication: semio_framework_job::RetainedJobPublication,
+    checkpoint_publication: semio_framework_job_publication::RetainedJobPublication,
     checkpoint_delivered: bool,
-    fault_publication: semio_framework_job::RetainedJobPublication,
+    fault_publication: semio_framework_job_publication::RetainedJobPublication,
     fault_detail: Option<Vec<u8>>,
     decoded: bool,
     completed: bool,
@@ -2787,9 +2788,9 @@ impl SequenceImportJob {
             snapshot: Some(request.snapshot),
             children: Some(request.children),
             emit: None,
-            checkpoint_publication: semio_framework_job::RetainedJobPublication::new(),
+            checkpoint_publication: semio_framework_job_publication::RetainedJobPublication::new(),
             checkpoint_delivered: false,
-            fault_publication: semio_framework_job::RetainedJobPublication::new(),
+            fault_publication: semio_framework_job_publication::RetainedJobPublication::new(),
             fault_detail: None,
             decoded: false,
             completed: false,
@@ -2805,7 +2806,7 @@ impl SequenceImportJob {
             self.fault_detail = Some(bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec());
         }
         let bytes = self.fault_detail.as_deref().unwrap_or_default();
-        self.fault_publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, bytes, cx)
+        self.fault_publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, bytes, cx)
     }
 
     fn decode(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<SequenceDecodeTurn, String> {
@@ -3061,7 +3062,7 @@ impl semio_framework_job::InteractiveJob for SequenceImportJob {
             }
         }
         if !self.checkpoint_delivered {
-            let outcome = self.checkpoint_publication.advance_from_source(semio_framework_job::JobPublicationKind::Checkpoint { applied_progress: 1 }, &[1], cx)?;
+            let outcome = self.checkpoint_publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Checkpoint { applied_progress: 1 }, &[1], cx)?;
             if outcome.is_some() {
                 self.checkpoint_delivered = true;
             }
@@ -3242,8 +3243,8 @@ impl ArtifactEditor for SequencePlayApp {
     const DIALECT: Dialect = crate::SEQUENCE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.child.projection"), error.to_string()))
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.child.projection"), error.to_string()))
     }
 
     /// 🔔️ The localized notices of the editor's own refusal codes (design §20.12).

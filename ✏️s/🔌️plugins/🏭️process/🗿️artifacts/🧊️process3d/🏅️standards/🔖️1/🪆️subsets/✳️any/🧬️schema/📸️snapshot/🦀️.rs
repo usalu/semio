@@ -823,8 +823,8 @@ fn step_tool_solids(steps: &[ProcessStep]) -> impl Iterator<Item = Option<&Worki
 /// (`ArtifactEditor::child_restore_projection` / `ArtifactViewer::child_restore_projection`). The
 /// trait default grants no restore authority, so without it every live envelope load faults
 /// `editor did not declare a loaded-parent child projection`. Mirrors `energy_child_restore_projection`.
-pub fn process3d_child_restore_projection(snapshot: &Process3dSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("process3d child projection failed: {error}")))
+pub fn process3d_child_restore_projection(snapshot: &Process3dSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("process3d child projection failed: {error}")))
 }
 //#endregion 🌱️GenesisChildren
 //#endregion 🔖️WorkingScene

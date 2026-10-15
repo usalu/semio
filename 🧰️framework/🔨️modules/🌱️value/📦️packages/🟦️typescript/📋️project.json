@@ -15,6 +15,17 @@
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
       }
     },
+    "test-dictionary": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": ["{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧾️dictionary/**/*", "sharedGlobals"],
+      "options": {
+        "command": "bun 📜️script.ts test-dictionary",
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
+      }
+    },
     "test-scalars-api": {
       "executor": "repo:script",
       "cache": false,

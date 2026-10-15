@@ -174,11 +174,10 @@
       "properties": {"version": {"const": 1}, "wait": {"type": "boolean"}}
     },
     "ImageMaintenanceResult": {
-      "description": "Every maintenance result declares whether its receiver remains usable or has released its original image custody.",
+      "description": "Closed nonblocking admission or the exact original maintenance callback value.",
       "oneOf": [
-        {"type": "object", "additionalProperties": false, "required": ["acquired", "receiver"], "properties": {"acquired": {"const": false}, "receiver": {"const": "released"}}},
-        {"type": "object", "additionalProperties": false, "required": ["acquired", "receiver", "value"], "properties": {"acquired": {"const": true}, "receiver": {"const": "released"}, "value": {}}},
-        {"type": "object", "additionalProperties": false, "required": ["acquired", "receiver", "value"], "properties": {"acquired": {"const": true}, "receiver": {"const": "retained"}, "value": {}}}
+        {"type": "object", "additionalProperties": false, "required": ["acquired"], "properties": {"acquired": {"const": false}}},
+        {"type": "object", "additionalProperties": false, "required": ["acquired", "value"], "properties": {"acquired": {"const": true}, "value": {}}}
       ]
     },
     "ImageRequest": {

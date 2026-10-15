@@ -1011,7 +1011,7 @@ impl ArtifactEditor for Fem3dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <Fem3dSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let snapshot = <Fem3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
             }
             "geometry:in" => {

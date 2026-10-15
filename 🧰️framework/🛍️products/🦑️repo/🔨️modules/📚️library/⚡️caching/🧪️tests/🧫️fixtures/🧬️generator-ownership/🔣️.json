@@ -127,6 +127,11 @@
         "scope": "browser"
       },
       {
+        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📞️directory-client/🟦️.ts",
+        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+        "scope": "browser"
+      },
+      {
         "source": "🧰️framework/🛍️products/💻️os/🟦️.ts",
         "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts",
         "scope": "browser"

@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-job-registry"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "job-registry"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }

@@ -4,7 +4,7 @@
 //! @see ../../../../🧫️fixtures/🧬️schema-conformance/🔣️.json — the shared vectors, judged by python-jsonschema and the TypeScript twin
 
 use super::*;
-use crate::schema::tests::{assert_same, entries, fixture, json, typed};
+use crate::testkit::{assert_same, entries, fixture, json, typed};
 use serde_json::{json, Value};
 
 const CODES: [IssueCode; 25] = [

@@ -11,7 +11,7 @@ import { runScriptMain } from "../../../../../../../🧰️framework/📦️pack
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-plugin-flow-math"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-s-plugin-flow-math"], this.repoRoot, this.invocation, rest);
   }
 }
 

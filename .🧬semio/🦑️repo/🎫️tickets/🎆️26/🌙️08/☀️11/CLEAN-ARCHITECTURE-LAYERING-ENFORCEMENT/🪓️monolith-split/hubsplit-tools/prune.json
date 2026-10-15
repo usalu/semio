@@ -1,0 +1,64 @@
+{
+ "presence": {
+  "drop": [
+   "now_ms",
+   "encode"
+  ],
+  "test": []
+ },
+ "state": {
+  "drop": [],
+  "test": [
+   "DirectoryEventPageHttpControl",
+   "SocketBindingValidityV1",
+   "Mutex"
+  ]
+ },
+ "open_plan": {
+  "drop": [
+   "now_ms"
+  ],
+  "test": []
+ },
+ "access_grants": {
+  "drop": [
+   "bearer",
+   "document_scope_key_v1",
+   "db_artifact_id"
+  ],
+  "test": [
+   "FencedDirectoryCommandErrorV1",
+   "invalidate_directory_event_authority",
+   "pause_directory_command_membership_fence",
+   "pause_directory_command_authority",
+   "SocketGrantRecordV1",
+   "pause_admin_effect_started",
+   "SESSION_PROTOCOL_V1",
+   "acquire_directory_command_fence"
+  ]
+ },
+ "check_in": {
+  "drop": [
+   "bearer"
+  ],
+  "test": []
+ },
+ "directory_events": {
+  "drop": [
+   "socket_live_authority"
+  ],
+  "test": []
+ },
+ "ROOT": {
+  "drop": [
+   "BTreeMap"
+  ],
+  "test": []
+ },
+ "directory_commands": {
+  "drop": [
+   "pause_admin_effect_started"
+  ],
+  "test": []
+ }
+}

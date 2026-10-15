@@ -15,6 +15,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 test("Chromium preserves the exact captured sibling when a new scene is inserted before it", async () => {
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"), "utf8"));
@@ -314,7 +315,7 @@ describe("🧲️ engine surfaces are retained by their window instance, not by 
     const shell = readFileSync(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
     expect(shell).toContain("fn mirror_engine_surface_states(");
     expect(shell).toContain("live_window_ids.contains(&surface.window_id.as_str())");
-    const registration = readFileSync(join(engineRoot, "🧱️elements", "⚙️EngineCanvas", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
+    const registration = readModuleTreeSource(join(engineRoot, "🧱️elements", "⚙️EngineCanvas", "🎯️targets", "🧊️wgpu", "🦀️.rs"));
     expect(registration).toContain("pub struct EngineSurfaceRegistration {");
     expect(registration.slice(registration.indexOf("pub struct EngineSurfaceRegistration {"), registration.indexOf("pub struct EngineSurfaceRegistration {") + 400)).toContain("pub window_id: String,");
   });

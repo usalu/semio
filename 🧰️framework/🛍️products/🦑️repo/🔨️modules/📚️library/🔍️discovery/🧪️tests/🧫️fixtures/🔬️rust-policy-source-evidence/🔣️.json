@@ -19,5 +19,24 @@
       "fn kept_in_production() -> u8 { 1 }",
       "fn only_in_tests() -> u8 { 2 }"
     ]
+  },
+  "splitTree": {
+    "productionPath": "🌎️hub/🏗️bootstrap/🦀️.rs",
+    "files": {
+      "🌎️hub/🏗️bootstrap/🦀️.rs": "pub fn head() -> u8 { 1 }\n#[path = \"🧱️child/🦀️.rs\"]\nmod child;\n",
+      "🌎️hub/🏗️bootstrap/🧱️child/🦀️.rs": "pub fn tail() -> u8 { 2 }\n#[cfg(test)]\n#[path = \"../🧪️tests/🔬️child-law/🦀️.rs\"]\nmod tests;\n",
+      "🌎️hub/🏗️bootstrap/🧪️tests/🔬️child-law/🦀️.rs": "use super::tail;\n#[test]\nfn child_law() { assert_eq!(tail(), 2); }\n"
+    },
+    "childOnly": "pub fn tail() -> u8 { 2 }",
+    "testPath": "🌎️hub/🏗️bootstrap/🧪️tests/🔬️child-law/🦀️.rs",
+    "law": "fn child_law()",
+    "unregistered": {
+      "productionPath": "owner/🦀️.rs",
+      "files": {
+        "owner/🦀️.rs": "pub fn head() -> u8 { 1 }\n#[path = \"🧱️mounted/🦀️.rs\"]\nmod mounted;\n",
+        "owner/🧱️mounted/🦀️.rs": "pub fn audited_on_its_own() -> u8 { 2 }\n"
+      },
+      "mountedOnly": "pub fn audited_on_its_own()"
+    }
   }
 }

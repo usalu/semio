@@ -3,16 +3,19 @@ import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-os-shell-rs` task router: `bun ./📜️script.ts <check|test|typegen|schema-check|preview-generated>`. */
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import { runCargo, runRepositoryCargoTests, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import {runRepositoryCargoCommandV1,runRepositoryCargoTests} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import {launchRepositoryCargoV1,readRepositoryCargoLaunchV1,readRepositoryCargoGeneratedCapturePolicyV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
+import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import {OwnedCommandFailure,writeOwnedCommandOutputV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 class CheckScript extends BundleScript {
-  run(): void {
-    runCargo(["check", "--manifest-path", "Cargo.toml"], this.root);
+  async run(): Promise<void> {
+    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check","--manifest-path","Cargo.toml"],this.root,process.env,buildBudgetMs());
   }
 }
 
@@ -51,49 +54,33 @@ function generatedBindingsPath(root: string): string {
 const OWNED_JSON_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/os/shell/component.json";
 const OWNED_JSON_SCHEMA_DIALECT = "http://json-schema.org/draft-07/schema#";
 
-function runTypegenExportTest(root: string, outPath: string): void {
-  const env = { ...process.env, SEMIO_TYPEGEN_OUT: outPath };
-  const status = runCmdStatus("cargo", ["test", "--features", "typegen", TYPEGEN_TEST_FILTER], { cwd: root, env, budgetMs: buildBudgetMs() });
-  if (status !== 0) {
-    console.error("framework-os-shell typegen: `cargo test --features typegen` failed — see output above.");
-    process.exit(status);
-  }
+async function runTypegenExportTest(root:string,outPath:string,workspace:string,invocation:ScriptInvocation):Promise<void>{
+  await runRepositoryCargoCommandV1(invocation,workspace,["test","--features","typegen",TYPEGEN_TEST_FILTER],root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs());
 }
 
 /** 🧬️ Renders `<owner>/🤖️generated/🟦️.ts` from `<owner>/🧬️schema` — the schema module's Rust
  * registry, gated against its own `🔣️.json` before a single byte is written. */
 class TypegenScript extends BundleScript {
-  run(): void {
+  async run(): Promise<void> {
     assertSchemaModulePresent(this.root);
     const outPath = generatedBindingsPath(this.root);
     mkdirSync(dirname(outPath), { recursive: true });
-    runTypegenExportTest(this.root, outPath);
+    await runTypegenExportTest(this.root,outPath,this.repoRoot,this.invocation);
     for (const name of readdirSync(dirname(outPath))) if (name !== basename(outPath)) rmSync(join(dirname(outPath), name), { recursive: true, force: true });
     console.log(`framework-os-shell typescript mirror refreshed from 🧬️schema -> ${outPath}`);
   }
 }
 
-/** 🧾️ Runs the exact exporter against isolated output/target directories and emits only canonical JSON. */
+/** 🧾️ Runs the exact exporter in issued Rust capture backing and emits only canonical JSON. */
 class PreviewGeneratedScript extends BundleScript {
-  run(): void {
-    const targetPath = generatedBindingsPath(this.root);
-    const temp = mkdtempSync(join(tmpdir(), "semio-shell-typegen-"));
-    let content: Buffer;
-    try {
-      const outPath = join(temp, basename(targetPath));
-      const result = Bun.spawnSync(["cargo", "test", "--locked", "--features", "typegen", TYPEGEN_TEST_FILTER], { cwd: this.root, env: { ...process.env, CARGO_TARGET_DIR: join(temp, "target"), SEMIO_TYPEGEN_OUT: outPath }, stderr: "pipe", stdout: "pipe" });
-      if (result.exitCode !== 0) throw new Error(`framework-os-shell preview export failed: ${result.stderr.toString()}`);
-      content = readFileSync(outPath);
-    } finally {
-      rmSync(temp, { recursive: true, force: true });
-    }
-    const rootPath = relative(this.repoRoot, dirname(targetPath)).replaceAll("\\", "/").normalize("NFC");
-    const nodes = [
-      { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
-      { bytesBase64: content.toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/${basename(targetPath).normalize("NFC")}` },
-    ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
-    const staleRemovals = (existsSync(dirname(targetPath)) ? readdirSync(dirname(targetPath)) : []).filter((name) => name !== basename(targetPath)).map((name) => `${rootPath}/${name.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
-    process.stdout.write(`${JSON.stringify({ contractId: "shell-typegen", nodes, schemaVersion: 1, staleRemovals })}\n`);
+  async run():Promise<void>{
+    const targetPath=generatedBindingsPath(this.root),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),request=readRepositoryCargoLaunchV1(["--store=shared","--configuration="+mode,"--","test","--locked","--features","typegen",TYPEGEN_TEST_FILTER],{...process.env,SEMIO_BUILD_MODE:mode});
+    await launchRepositoryCargoV1(this.invocation,this.repoRoot,request,this.root,process.env,{maximumMilliseconds:buildBudgetMs(),output:"capture",limits:{maximumBytes:16777216,maximumLines:65536},generated:readRepositoryCargoGeneratedCapturePolicyV1({version:1,maximumBytes:1048576}),consume:async(result,context)=>{
+      if(result.status!==0||result.signal!==null){if(result.stderr)await writeOwnedCommandOutputV1(process.stderr,result.stderr,context.control);throw new OwnedCommandFailure("shell:preview-generated",{version:1,status:result.status,signal:result.signal});}
+      if(!context.generated)throw Error("Actual shell generated output absent");
+      const rootPath=relative(this.repoRoot,dirname(targetPath)).replaceAll("\\","/").normalize("NFC"),nodes=[{bytesBase64:"",mode:0o755,nodeKind:"directory",path:rootPath},{bytesBase64:Buffer.from(context.generated).toString("base64"),mode:0o644,nodeKind:"file",path:rootPath+"/"+basename(targetPath).normalize("NFC")}].sort((a,b)=>Buffer.from(a.path).compare(Buffer.from(b.path))),staleRemovals=(existsSync(dirname(targetPath))?readdirSync(dirname(targetPath)):[]).filter(name=>name!==basename(targetPath)).map(name=>rootPath+"/"+name.normalize("NFC")).sort((a,b)=>Buffer.from(a).compare(Buffer.from(b)));
+      await writeOwnedCommandOutputV1(process.stdout,JSON.stringify({contractId:"shell-typegen",nodes,schemaVersion:1,staleRemovals})+"\n",context.control);
+    }});
   }
 }
 //#endregion 🔖️Typegen
@@ -147,7 +134,7 @@ function reportSetDifference(label: string, expected: string[], actual: string[]
  * here across all three projections (authority, Rust registry, rendered mirror, TypeScript face)
  * and then again inside Rust itself, where the registry is the live value rather than source text. */
 class SchemaCheckScript extends BundleScript {
-  run(): void {
+  async run(): Promise<void> {
     assertSchemaModulePresent(this.root);
     const document = readOwnedJsonSchema(this.root);
     const problems: string[] = [];
@@ -160,13 +147,9 @@ class SchemaCheckScript extends BundleScript {
     problems.push(...reportSetDifference("the parsers in 🧬️schema/🟦️.ts", declared, typescriptParserExportIds(this.root, declared).sort()));
     if (problems.length > 0) {
       for (const problem of problems) console.error(`framework-os-shell schema-check: ${problem}`);
-      process.exit(1);
+      throw Error("framework-os-shell schema ownership disagreement");
     }
-    const status = runCmdStatus("cargo", ["test", "--features", "typegen", SCHEMA_GATE_TEST_FILTER], { cwd: this.root, budgetMs: buildBudgetMs() });
-    if (status !== 0) {
-      console.error("framework-os-shell schema-check: the Rust `$defs`/registry gate failed — see output above.");
-      process.exit(status);
-    }
+    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["test","--features","typegen",SCHEMA_GATE_TEST_FILTER],this.root,process.env,buildBudgetMs());
     console.log(`framework-os-shell schema-check: ${declared.length} 🔣️.json \`$defs\` exports agree with the Rust registry, the rendered mirror and 🧬️schema/🟦️.ts.`);
   }
 }

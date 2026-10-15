@@ -231,7 +231,7 @@ pub(crate) struct ComponentSurfaceCloseToken(u64);
 #[derive(Clone)]
 struct ComponentSurfaceCloseRequest {
     token: ComponentSurfaceCloseToken,
-    owner: crate::interpreter::ScenePointerTarget,
+    owner: crate::element_contracts::ScenePointerTarget,
     engine_token: Option<crate::engine_canvas::EngineSurfaceToken>,
 }
 
@@ -274,9 +274,9 @@ fn with_component_surface_close_bridge<R>(f: impl FnOnce(&mut ComponentSurfaceCl
 }
 
 pub(crate) fn request_component_surface_close(
-    owner: crate::interpreter::ScenePointerTarget,
+    owner: crate::element_contracts::ScenePointerTarget,
     engine_token: Option<crate::engine_canvas::EngineSurfaceToken>,
-) -> Result<ComponentSurfaceCloseToken, (crate::interpreter::ScenePointerTarget, Option<crate::engine_canvas::EngineSurfaceToken>)> {
+) -> Result<ComponentSurfaceCloseToken, (crate::element_contracts::ScenePointerTarget, Option<crate::engine_canvas::EngineSurfaceToken>)> {
     with_component_surface_close_bridge(|bridge| {
         if bridge.request.is_some() {
             return Err((owner, engine_token));

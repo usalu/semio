@@ -28,6 +28,12 @@ reserved-producer-testing = []
 original-actor-context-testing = []
 
 [dependencies]
+semio-framework-job-publication = { path = "../../../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-job-fault-publication = { path = "../../../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
+semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+
+semio-framework-composition-admission = { path = "../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-plugin-ownership = { path = "../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-value-retirement-owner = { path = "../../../../../../🔨️modules/🌱️value/♻️retirement/📦️owner/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
@@ -111,6 +117,8 @@ wit-bindgen = { version = "0.57.1", default-features = false, features = ["macro
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 [dev-dependencies]
+semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
+
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

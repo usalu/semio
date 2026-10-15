@@ -76,13 +76,13 @@ file and never hides a valid command):
   scoped storybooks, the hub variants, the inspector tool beside its targets); two owners claiming the same
   port are a problem of `semio commands --check`, which compares the default ready ports of long-running
   commands with every playground port (react, wgpu, user slots). `--check` also reports a playground
-  renderer whose build target is missing from the graph and every plugin error Nx recorded in the published
+  renderer whose build target is missing from the graph and every plugin error recorded in the published
   graph (a partial graph is not healthy).
 - Playgrounds gain `renderer`, `example` (its slug or bare id), `user-slot`, `app-role`, `language`,
   `terminology`, `appearance` and, from their catalog row, `hub`, `data` and `local-only`.
 
 Authored scripts use `tool:workspace/run-script`: `script` is the workspace-relative `📜️script.ts`,
-`project` selects its Nx owner (default `workspace`), and `directory` selects the working directory
+`project` selects its build owner (default `workspace`), and `directory` selects the working directory
 (default the workspace root). Extra arguments follow `--`, and explicit environment values use
 `--env KEY=value`. This entry invokes the authored script through the build runner; named recurring workflows
 belong in their owner's target or typed declaration.
@@ -301,10 +301,10 @@ and checks the XXH3 vectors of the graph-reuse decision against Bun's own hash:
 
 `🌀️control-plane` defines language-neutral lifecycle scenarios and protocol vectors. The owned
 Rust codec and the existing Ajv library validate the same vectors. The quick suite runs actual
-Bun PTYs, Nx server/build/test targets, output replay, cancellation, restart, process-tree
+Bun PTYs, build-runner server/build/test targets, output replay, cancellation, restart, process-tree
 termination, singleton enforcement and reattachment: `bun repo run @semio-tech/repo-dashboard-rs:test -- quick`.
 
-`🧊️execution` pins the native launch vectors of `./🧪️tests/🧫️fixtures/🧊️execution`, the Nx scheduling of
+`🧊️execution` pins the native launch vectors of `./🧪️tests/🧫️fixtures/🧊️execution`, the build-runner scheduling of
 `run` and `install`, the immutable installation that keeps a running executable's bytes while
 a new build is published, and the source digest that decides whether an installation is stale (the fixture names the
 files that must and must not change it): `bun ./📜️script.ts test execution` in `📦️packages/🦀️rust`.

@@ -1,0 +1,23 @@
+//! 🚽️ `delete-component` mutation leaf: mounts the payload, its behavior facets and its tests under one module.
+
+//#region 🔖️Leaves
+#[path = "🦠️mutation/🦀️.rs"]
+mod component;
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+pub use component::*;
+#[cfg(test)]
+#[path = "🧪️tests/✅️removes-with-its-overrides/🦀️.rs"]
+mod tests_removes_with_its_overrides;
+#[cfg(test)]
+#[path = "🧪️tests/➕️removes-a-plain-component/🦀️.rs"]
+mod tests_removes_a_plain_component;
+#[cfg(test)]
+#[path = "🧪️tests/✨️removes-its-data/🦀️.rs"]
+mod tests_removes_its_data;
+#[cfg(test)]
+#[path = "🧪️tests/🚫️missing/🦀️.rs"]
+mod tests_missing;
+//#endregion 🔖️Leaves

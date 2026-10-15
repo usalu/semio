@@ -463,9 +463,26 @@ fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
     assert!(!exact(&duplicate));
 }
 
+/// 📚️ The editor module's production source as the unsplit editor file held it: every mounted child first, then the editor file itself, so the `UnitTests` region marker still closes the production prefix.
+pub(crate) fn editor_source() -> String {
+    [
+        include_str!("../../🧩️entities/🦀️.rs"),
+        include_str!("../../🧭️view/🦀️.rs"),
+        include_str!("../../🗂️catalog/🦀️.rs"),
+        include_str!("../../🕹️interaction/🦀️.rs"),
+        include_str!("../../🖌️session/🦀️.rs"),
+        include_str!("../../🧵️retained/🦀️.rs"),
+        include_str!("../../👆️gestures/🦀️.rs"),
+        include_str!("../../🧰️kit/🦀️.rs"),
+        include_str!("../../🦀️.rs"),
+    ]
+    .concat()
+}
+
 #[test]
 fn retained_import_media_has_no_live_synchronous_fallback() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     let production = source.split_once("//#region 🧪️UnitTests").map(|(production, _)| production).expect("production prefix");
     let fallback = production.split_once("fn import_media(_port:").and_then(|(_, suffix)| suffix.split_once("fn render(").map(|(fallback, _)| fallback)).expect("closed synchronous import callback");
     assert!(fallback.contains("Err(MediaError::NotImplemented)"));
@@ -489,7 +506,8 @@ fn complex_retained_route_is_cursorized(source: &str) -> bool {
 
 #[test]
 fn apply_board_events_hostile_static_law_rejects_the_old_one_grant_reducer() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     assert!(complex_retained_route_is_cursorized(source));
     let direct = source
         .replace("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::new(request.authoring_seed.clone()))", "\"applyBoardEvents\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))");
@@ -510,7 +528,8 @@ fn focus_selection_route_is_cursorized(source: &str) -> bool {
 
 #[test]
 fn focus_selection_hostile_static_law_rejects_whole_selection_reducers() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     assert!(focus_selection_route_is_cursorized(source));
     let direct = source
         .replace(r#""focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default())"#, r#""focusSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#);
@@ -547,7 +566,8 @@ fn window_owner_routes_are_exact(source: &str) -> bool {
 
 #[test]
 fn window_owner_hostile_static_law_rejects_missing_owner_boundaries_and_app_config_leaks() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     assert!(window_owner_routes_are_exact(source));
     for marker in [
         "struct Puzzle5dWindowCommandWork",
@@ -580,7 +600,8 @@ fn add_part_kind_route_is_cursorized(source: &str) -> bool {
 
 #[test]
 fn add_part_kind_hostile_static_law_rejects_old_brush_reducer_and_missing_cursors() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     assert!(add_part_kind_route_is_cursorized(source));
     let direct = source.replace(
         r#""addBrushPart" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#,
@@ -605,7 +626,8 @@ fn kind_weight_route_is_cursorized(source: &str) -> bool {
 
 #[test]
 fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     assert!(kind_weight_route_is_cursorized(source));
     let direct = source.replace(
         r#""setPartKindWeight" | "setGripKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#,
@@ -627,7 +649,8 @@ fn engagement_submit_route_is_cursorized(source: &str) -> bool {
 
 #[test]
 fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfers() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     assert!(engagement_submit_route_is_cursorized(source));
     for marker in [
         "transient_from_snapshot(window_transient_snapshot)",
@@ -659,7 +682,8 @@ fn selection_transforms_run_the_transform_tool(source: &str) -> bool {
 /// tool: a one-grant reducer, a missing stage or a bypassed tool fails closed.
 #[test]
 fn selection_transform_hostile_static_law_rejects_one_grant_reducers_and_bypassed_tools() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     assert!(selection_transforms_run_the_transform_tool(source));
     let direct = source.replace(
         r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone()))"#,
@@ -1517,7 +1541,8 @@ fn declared_lanes(tool_id: &str) -> &'static [ArtifactToolPublicationLane] {
 /// nothing and no fault surfaces.
 #[test]
 fn window_and_config_lane_verbs_are_registered_migrated_retained_tools() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     let production = source.split_once("//#region 🧪️UnitTests").map(|(production, _)| production).expect("production prefix");
     for tool_id in MIGRATED_WINDOW_LANE_VERBS.iter().chain(MIGRATED_CONFIG_LANE_VERBS) {
         assert!(PUZZLE5D_RETAINED_TOOL_IDS.contains(tool_id), "{tool_id} must be a retained tool id");
@@ -1932,7 +1957,8 @@ const MIGRATED_ARTIFACT_LANE_VERBS: &[(&str, &[ArtifactToolPublicationLane])] = 
 /// proofs, in the publication contracts with EXACTLY the lanes above, and classified `Migrated`.
 #[test]
 fn artifact_lane_verbs_are_registered_migrated_retained_tools() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     let production = source.split_once("//#region 🧪️UnitTests").map(|(production, _)| production).expect("production prefix");
     let proofs = production.split_once("semio_framework_plugin::bounded_first_step_tool_proofs!").and_then(|(_, rest)| rest.split_once("fn register_tool_job_factories")).map(|(proofs, _)| proofs).expect("proof block");
     for (tool_id, lanes) in MIGRATED_ARTIFACT_LANE_VERBS {
@@ -1953,7 +1979,8 @@ fn artifact_lane_verbs_are_registered_migrated_retained_tools() {
 /// and brush placement, so no context-menu or keybinding row can address a dead twin.
 #[test]
 fn duplicate_verb_ids_are_removed_rather_than_aliased() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     let production = source.split_once("//#region 🧪️UnitTests").map(|(production, _)| production).expect("production prefix");
     for removed in ["zoomToSelection", "\"selectSameKind\""] {
         assert!(!production.contains(removed), "{removed} must not survive anywhere in the production source");
@@ -2001,7 +2028,8 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
         assert!(extent.is_some(), "setActiveExample {example_id} must declare an extent — `None` is the opaque capacity fault this slice replaced with a notice");
         assert!(extent.is_some_and(|extent| extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), "setActiveExample {example_id} must stay inside the fixed work ceiling");
     }
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     assert!(source.contains("labels.example_too_large.as_str()"), "the oversized switch completes with a localized notice");
     close_app(&mut app);
 }

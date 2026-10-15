@@ -1,8 +1,9 @@
 import { afterAll, expect, test } from "bun:test";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { interactivityProductionSource, policyMutateRustSourceEvidence, policyReadRustPolicySource, policyReadRustSourceEvidence } from "../../../../../../../../📜️script.ts";
+import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadModuleTreeSource } from "../../📖️source-access/🟦️.ts";
 import vector from "../🧫️fixtures/🔬️rust-policy-source-evidence/🔣️.json";
 
 const root = mkdtempSync(join(tmpdir(), "semio-rust-policy-evidence-"));
@@ -24,6 +25,43 @@ test("declared canonical Rust test evidence retains source identity", () => {
   expect(policySource).toContain(vector.law);
   expect(interactivityProductionSource(policySource)).not.toContain(vector.law);
 });
+
+test("a split source reads as one text and exposes the canonical tests its children declare", () => {
+  const split = vector.splitTree;
+  for (const [path, source] of Object.entries(split.files)) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), source);
+  }
+  const evidence = policyReadRustSourceEvidence(root, split.productionPath);
+  expect(evidence.production.path).toBe(split.productionPath);
+  expect(evidence.production.source).toContain("pub fn head()");
+  expect(evidence.production.source).toContain(split.childOnly);
+  expect(evidence.production.source.indexOf("pub fn head()")).toBeLessThan(evidence.production.source.indexOf(split.childOnly));
+  expect(evidence.tests.map(({ path }) => path)).toEqual([split.testPath]);
+  expect(evidence.tests[0]?.source).toContain(split.law);
+  expect(evidence.production.source).not.toContain(split.law);
+  expect(policyReadRustPolicySource(root, split.productionPath)).toContain(split.law);
+  for (const [path, source] of Object.entries(split.unregistered.files)) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), source);
+  }
+  const unregistered = policyReadRustSourceEvidence(root, split.unregistered.productionPath);
+  expect(unregistered.production.source).toContain("pub fn head()");
+  expect(unregistered.production.source).not.toContain(split.unregistered.mountedOnly);
+  const mutated = policyMutateRustSourceEvidence(evidence, split.childOnly, "pub fn removed() {}");
+  expect(mutated.production.source).not.toContain(split.childOnly);
+  expect(mutated.tests[0]?.source).toContain(split.law);
+});
+
+test("every declared split source root names a real file that reads as one text", () => {
+  const repoRoot = join(import.meta.dir, "../../../../../../../..");
+  for (const path of POLICY_SPLIT_SOURCE_ROOTS) {
+    expect(existsSync(join(repoRoot, path)), path).toBe(true);
+    const files = policyModuleTreeFiles(repoRoot, path);
+    expect(files[0], path).toBe(path);
+    expect(policyReadModuleTreeSource(repoRoot, path).length, path).toBeGreaterThanOrEqual(readFileSync(join(repoRoot, path), "utf8").length);
+  }
+}, 60_000);
 
 test("cfg(test) attributes hide exactly their test-only items, same-line or negated", () => {
   const production = interactivityProductionSource(vector.cfgTestItems.source);

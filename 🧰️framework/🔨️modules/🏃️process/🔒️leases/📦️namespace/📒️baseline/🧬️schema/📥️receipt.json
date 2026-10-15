@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://process.leases/OriginalResourceBaselineReceiptV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "namespaceDevice",
+    "namespaceInode",
+    "imageDevice",
+    "imageInode",
+    "catalogDevice",
+    "catalogInode",
+    "catalogBytes",
+    "sha256",
+    "bindings",
+    "unresolved",
+    "inventoryRows",
+    "keyUtf8Bytes",
+    "pathUtf8Bytes",
+    "uninitialized",
+    "publicationJournalBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "namespaceDevice": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "namespaceInode": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "imageDevice": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "imageInode": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "catalogDevice": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "catalogInode": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "catalogBytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 8388608
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "bindings": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8192
+    },
+    "unresolved": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8192
+    },
+    "inventoryRows": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "keyUtf8Bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4194304
+    },
+    "pathUtf8Bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2097152
+    },
+    "uninitialized": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8192
+    },
+    "publicationJournalBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 24576
+    }
+  }
+}

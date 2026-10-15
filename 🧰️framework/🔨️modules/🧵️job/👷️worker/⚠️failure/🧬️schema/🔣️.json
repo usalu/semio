@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "clock",
+    "deadline",
+    "fuel",
+    "source",
+    "work",
+    "close",
+    "primary",
+    "receiptRefusal",
+    "beforeReceipt",
+    "afterReceipt",
+    "terminal",
+    "initialStock",
+    "initialFuel",
+    "normalReturn",
+    "admission"
+  ],
+  "properties": {
+    "operation": {
+      "const": 81295
+    },
+    "generation": {
+      "const": 5
+    },
+    "clock": {
+      "const": 1000
+    },
+    "deadline": {
+      "const": 1500
+    },
+    "fuel": {
+      "const": 1
+    },
+    "source": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 65536,
+        "maximumDepth": 64
+      }
+    },
+    "work": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 17,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 64
+      }
+    },
+    "close": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 17,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 65536,
+        "maximumDepth": 64
+      }
+    },
+    "primary": {
+      "const": "Original worker semantic cause 源🌊"
+    },
+    "receiptRefusal": {
+      "const": "Distinct worker receipt refusal Ω"
+    },
+    "beforeReceipt": {
+      "const": "noFailureLoan"
+    },
+    "afterReceipt": {
+      "const": "bothOriginalPointers"
+    },
+    "terminal": {
+      "const": "exactBornReleaseAndDrop0"
+    },
+    "initialStock": {
+      "const": {
+        "maximumItems": 512,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 1048576,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 64
+      }
+    },
+    "initialFuel": {
+      "const": 100000
+    },
+    "normalReturn": {
+      "const": "same-original-caller"
+    },
+    "admission": {
+      "const": "exact-native-quote-within-initial-stock"
+    }
+  }
+}

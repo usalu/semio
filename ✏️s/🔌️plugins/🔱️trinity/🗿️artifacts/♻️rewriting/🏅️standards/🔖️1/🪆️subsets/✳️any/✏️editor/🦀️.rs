@@ -704,7 +704,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
 
     const DIALECT: Dialect = TRINITY_REWRITING_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::rewriting_child_restore_projection`).
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         crate::rewriting_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
@@ -820,7 +820,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "graph:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <JackSnapshot as ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let snapshot = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let _ = doc;
                 Ok(Emit::mutations(vec![schema::mutations::edit_working_graph(snapshot)]))
             }

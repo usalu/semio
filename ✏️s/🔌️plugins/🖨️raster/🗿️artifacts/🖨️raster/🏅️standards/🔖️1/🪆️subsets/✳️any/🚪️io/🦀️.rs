@@ -13,7 +13,7 @@ use semio_s_artifact_raster_raster_model::image_content_child_handle;
 use semio_s_artifact_raster_raster_model::RasterOwnedMap;
 /// 📥️ The stdio format kinds this artifact can genuinely BUILD a document from — the single source
 /// of truth `artifact_kind()` re-exports, so the workflow wire negotiator
-/// (`🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs`'s `negotiate_wire_format`) can never pick a hop that
+/// (`🧰️framework/🛍️products/💻️os/🖥️host/🔀️workflow/🦀️.rs`'s `negotiate_wire_format`) can never pick a hop that
 /// has no real decoder. `stdio.pdf` is absent on purpose: `PdfSnapshot`'s only per-page state is
 /// `{width, height, text}` (no image XObject model at all), so there is nothing to read pixels out
 /// of — the leaf itself says so with a typed `Err`.
@@ -910,7 +910,7 @@ pub fn raster_asset(assets: &RasterOwnedMap<RasterAssetChild>, asset_id: &str) -
 /// re-listed here (🗒️note's convention, `🗒️note/🗿️artifacts/🗒️note/🦀️.rs:101-102`). Before this the
 /// two surfaces disagreed three ways — `🚪️io` listed all 9 formats, this spec listed 2, and
 /// `io_registry::entries()` registered 9 — which matters because
-/// `negotiate_wire_format` (`🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs:3484`) picks a workflow wire
+/// `negotiate_wire_format` (`🧰️framework/🛍️products/💻️os/🖥️host/🔀️workflow/🦀️.rs`) picks a workflow wire
 /// straight out of THESE lists: anything listed here that has no real codec becomes an edge that
 /// always fails at run time. The io functions now list only the hops that genuinely encode/decode;
 /// the composer registry deliberately still carries all 9 so a refused hop answers with its own

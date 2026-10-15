@@ -10,7 +10,7 @@ const BINARY_NAME = "semio-s-artifact-trinity-jack-shell";
 
 class TestScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
-    await runRepositoryCargoTests([BINARY_NAME], this.repoRoot, this.invocation.control);
+    await runRepositoryCargoTests([BINARY_NAME], this.repoRoot, this.invocation);
   }
 }
 

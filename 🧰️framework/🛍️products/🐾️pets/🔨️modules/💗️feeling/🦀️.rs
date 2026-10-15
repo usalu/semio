@@ -22,9 +22,9 @@
 //! @see ../../🧬️schema/🦀️.rs — `Feeling`, `Mood`, `Cue`, `SpeciesState`, `Trick`, `Trait`, `Effect`, `Reaction`, `Species`, `Menagerie`, `Cooling`
 
 use crate::behavior::affinity_of;
-use crate::randomness::weighted_index;
-use crate::schema::{Activity, Cooling, Cue, Feeling, Menagerie, Mood, Party, Placement, Rapport, Reaction, Slug, Species, SpeciesState, Temperament, Ticks, Trait, Trick, ACTIVITIES, MOODS, TICKS_PER_SECOND};
-use crate::trigonometry::clamp;
+use semio_framework_pets_contract::schema::{Activity, Cooling, Cue, Feeling, Menagerie, Mood, Party, Placement, Rapport, Reaction, Slug, Species, SpeciesState, Temperament, Ticks, Trait, Trick, ACTIVITIES, MOODS, TICKS_PER_SECOND};
+use semio_framework_pets_kinematics::randomness::weighted_index;
+use semio_framework_pets_kinematics::trigonometry::clamp;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Moods

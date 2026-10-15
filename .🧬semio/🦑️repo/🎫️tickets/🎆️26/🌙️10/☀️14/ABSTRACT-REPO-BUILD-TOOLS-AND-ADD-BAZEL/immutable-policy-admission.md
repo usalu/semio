@@ -1,0 +1,9 @@
+# Immutable Policy Admission
+
+Measured CPU profiles identify repeated policy schema admission within the Original remaining-control stack. This is a narrow optimization of immutable data validation, with no Source-tree, lease, physical-currentness or deadline reuse.
+
+readScriptPolicy now remembers only an object that passed the normal closed schema and is non-Proxy, fully frozen, plain or null-prototype, with exactly three own string data properties containing primitives and nonwritable/nonconfigurable descriptors. Mutable objects, frozen accessors and proxies still validate on every call. Failed admission never enters the private WeakSet. Every invocation/control/capability exact-shape check, signal check, remaining-clock check and progress/continuation pre/post-await check remains.
+
+The language-neutral five-case corpus specifies validation counts for frozen plain, frozen null-prototype, mutable, frozen accessor and Proxy values. The regression extracts and executes the actual production admission function and its private WeakSet declaration, injecting the real compiled schema contract with a call counter. Independent Ajv checks acceptance. Actual RED: one failure/four assertions/1.52seconds, observing two schema validations instead of one for immutable data. Initial GREEN: one test/24assertions/740ms.
+
+Two invalid frozen policies then verified repeat refusal and repeat validation. The final actual owned Original60 control gate passed seven tests,101assertions, zero failures in892ms, covering actual envelope immutability, canonical policy reference, late completion, no-deadline cancellation and both derived-signal stop laws. No wall-time improvement for SDK setup is claimed before a fresh runtime measurement. Low reviewed the implementation and faithful actual-method extraction; its recommended failed-admission negative was added and run.

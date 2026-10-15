@@ -5,13 +5,30 @@ resolver = "2"
 members = [
     "📦️packages/🦀️rust",
     "🔨️modules/⏪️time-travel/📦️packages/🦀️rust",
-    "🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
     "🔨️modules/⏯️tool-run/👥️entities/📦️packages/🦀️rust",
     "🔨️modules/⏯️tool-run/📊️progress/🪟️presentation/📦️packages/🦀️rust",
+    "🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
     "🔨️modules/⏱️trace/📦️packages/🦀️rust",
     "🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust",
     "🔨️modules/⏳️async/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/⚙️engine/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/📝️text/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/📝️text/🔤️font/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/📝️text/🔤️font/🧪️testing/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🏷️properties/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🔁️mappings/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📦️packages/🦀️rust",
     "🔨️modules/◻️2d/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/🔀️booleans/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/🔍️trace/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/🛤️path/📏️flatten/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/🛤️path/🖊️stroke/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/🧱️regions/📦️packages/🦀️rust",
+    "🔨️modules/◻️2d/🧹️retire/📦️packages/🦀️rust",
     "🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
     "🔨️modules/✍️editor/📦️packages/🦀️rust",
     "🔨️modules/✍️editor/🧩️component/📦️packages/🦀️rust",
@@ -36,13 +53,20 @@ members = [
     "🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/🧬️schema/📡️record-token/📦️packages/🦀️rust",
+    "🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/📦️packages/🦀️rust",
+    "🔨️modules/🎭️actor/🎟️retained-turn/📦️packages/🦀️rust",
+    "🔨️modules/🎭️actor/💼️job/📨️publication/📦️packages/🦀️rust",
+    "🔨️modules/🎭️actor/📖️vocabulary/📦️packages/🦀️rust",
     "🔨️modules/🎭️actor/📦️packages/🦀️rust",
     "🔨️modules/🎭️actor/🧩️component/📦️packages/🦀️rust",
+    "🔨️modules/🎭️actor/🧵️pack/📦️packages/🦀️rust",
     "🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust",
     "🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust",
     "🔨️modules/📐️geometry/⚙️engine/📦️packages/🦀️rust",
@@ -53,6 +77,8 @@ members = [
     "🔨️modules/📐️geometry/🦴️skeleton/📦️packages/🦀️rust",
     "🔨️modules/📚️compiler/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/⚠️error/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🔐️crypto/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/📦️packages/🦀️rust",
     "🔨️modules/🔀️dispatch/📦️packages/🦀️rust",
     "🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust",
@@ -90,7 +116,10 @@ members = [
     "🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/🆔️identity/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/📏️budget/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/🔤️text/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🪟️surface/🪪️identity/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust",
@@ -149,7 +178,10 @@ members = [
     "🔨️modules/🧊️3d/📐️brep/📸️representation/🏄️surface/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/📸️representation/📏️tolerance/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📦️packages/🦀️rust",
     "🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust",
     "🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust",
@@ -157,6 +189,8 @@ members = [
     "🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust",
     "🔨️modules/🧬️schema/📦️packages/🦀️rust",
     "🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust",
+    "🔨️modules/🧬️schema/🗿️artifact-reference/🔗️borrow/📦️packages/🦀️rust",
+    "🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust",
     "🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
     "🔨️modules/🧮️expression/📦️packages/🦀️rust",
     "🔨️modules/🧮️math/🎯️sampling/🌫️diffusion/📦️packages/🦀️rust",
@@ -168,7 +202,16 @@ members = [
     "🔨️modules/🧮️math/🎯️sampling/🚧️constraints/📦️packages/🦀️rust",
     "🔨️modules/🧮️math/🎯️sampling/🧪️testing/📦️packages/🦀️rust",
     "🔨️modules/🧮️math/🎯️sampling/🧺️workspace/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/👶️scope/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/📡️progress/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/🧪️conformance/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",
@@ -229,8 +272,17 @@ exclude-patterns = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽�
     [workspace.dependencies.semio-framework-3d-brep-engine]
     path = "🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust"
 
-    [workspace.dependencies.semio-framework-3d-brep-operations]
+    [workspace.dependencies.semio-framework-3d-brep-construction]
     path = "🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-3d-brep-boolean]
+    path = "🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-3d-brep-sweep]
+    path = "🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-3d-brep-offset]
+    path = "🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-3d-brep-queries]
     path = "🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust"
@@ -258,6 +310,33 @@ exclude-patterns = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽�
 
     [workspace.dependencies.semio-framework-hash]
     path = "🔨️modules/🔏️hash/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-registry]
+    path = "🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-scope]
+    path = "🔨️modules/🧵️job/👶️scope/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-progress]
+    path = "🔨️modules/🧵️job/📡️progress/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-conformance]
+    path = "🔨️modules/🧵️job/🧪️conformance/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-fault-publication]
+    path = "🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-publication]
+    path = "🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-preview]
+    path = "🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-worker-authority]
+    path = "🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-worker]
+    path = "🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-job]
     path = "🔨️modules/🧵️job/📦️packages/🦀️rust"
@@ -303,6 +382,9 @@ exclude-patterns = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽�
 
     [workspace.dependencies.semio-framework-value-derive]
     path = "🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-value-dictionary]
+    path = "🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust"
 
     [workspace.dependencies.serde]
     version = "1.0.228"

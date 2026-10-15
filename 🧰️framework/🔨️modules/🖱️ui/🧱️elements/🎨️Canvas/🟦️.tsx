@@ -25,17 +25,22 @@ import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { interactiveHoverClass, interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { glassClass, surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
-import { chromeStatusBorderClass } from "../../🎯️targets/⚛️react/🟦️";
+import { chromeStatusBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { modeDockTabClassName } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 import { useLabel, resolveTranslationLabel, useUiTranslation } from "../🏷️Label/🟦️.tsx";
 import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../🐚️ShellScope/🟦️.tsx";
-import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
-import { createEvenWindowLayout, focusActiveSearchInput, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace, setSurfaceActiveRoot, WindowChrome, dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabClass, windowBodyFrameClass, windowCapFrameClass, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type WindowLayoutWindowNode, type WindowStackCorner, type UiStatus, type PanelGhostValue } from "../../🎯️targets/⚛️react/🟦️";
+import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope, setSurfaceActiveRoot } from "../🌈️Surface/🟦️.tsx";
+import { WindowChrome, windowCapFrameClass } from "../🗂️WindowChrome/🟦️.tsx";
+import { type UiStatus } from "@semio-tech/ui-styling";
+import { createEvenWindowLayout, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type WindowLayoutWindowNode, type WindowStackCorner } from "../../🔨️modules/🗺️window-layout/🟦️.ts";
+import { focusActiveSearchInput, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace } from "../🔍️WindowSearch/🟦️.tsx";
+import { dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabClass, windowBodyFrameClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { CloseIcon, Maximize2Icon, Minimize2Icon, Icon, type ControlIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { ChromeControlHint } from "../💡️ChromeControlHint/🟦️.tsx";
 import { useControlKeybinding } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { ButtonGroup, ButtonGroupItem } from "../🔳️ButtonGroup/🟦️.tsx";
+import { panelGhostSessionBridge } from "../👻️PanelGhost/🟦️.tsx";
 // #endregion 🔌️Adapters
 // #region ⚙️Canvas
 
@@ -88,13 +93,8 @@ export interface WindowTemplateDragSession {
   readonly label: string;
 }
 
-type PanelGhostSessionBridge = Pick<PanelGhostValue, "begin" | "end">;
 
-export let panelGhostSessionBridge: PanelGhostSessionBridge | null = null;
 
-export function setPanelGhostSessionBridge(bridge: PanelGhostSessionBridge | null): void {
-  panelGhostSessionBridge = bridge;
-}
 
 const activeWindowTemplateDragSession = ephemeralBox<WindowTemplateDragSession | null>("framework.modules.ui.elements.Canvas.component.tsx.activeWindowTemplateDragSession", null);
 

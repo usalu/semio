@@ -1,3 +1,4 @@
+import {conformsOwnerContractV1} from "../../📤️arguments/🟨️.mjs";
 import {repositoryBuildGraphDataDirectoryV1,repositoryBuildGraphWriterDirectoryV1,withRepositoryBuildGraphFactStoreV1} from "../../📥️inputs/💾️storage/🟨️.mjs";
 import {loadCatalogBuildProvidersV1,catalogBuildContributionForManifestV1} from "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
 import { mkdirSync, writeFileSync, statSync as rawStatSync } from "node:fs";
@@ -523,7 +524,7 @@ function buildImportResourceV1(containing,specifier){
 /** 🧭️ Tracks literal relative command imports through the existing TypeScript tooling boundary. */
 async function relativeScriptInputs(entries, workspaceRoot, cache = createScriptInputCache(), requiredSources=false) {
   const roots = [...new Set(entries.map(entry => resolve(entry)))].sort(), key = JSON.stringify([resolve(workspaceRoot), roots,requiredSources]);
-  let steps=0;const checkpoint=()=>yieldInferenceV1(cache.context,"build:command-source-imports",++steps);
+  let steps=0;const checkpoint=(force=false)=>yieldInferenceV1(cache.context,"build:command-source-imports",++steps,force);
   return memoizedObservedAsyncComputationV1(cache.closures,key,async()=>{
   const compiler = createRequire(import.meta.url)("typescript"), host = observedTypeScriptHost(compiler.sys), files = new Set(),compiled=new Set();
   const visit = async(path,source=true) => {
@@ -623,7 +624,7 @@ async function genericTargetCommandInputs(target, workspaceRoot, fallback, scrip
   const sources = await targetScriptSources(target, workspaceRoot, scripts, projectRoot),closure=sources.closure;
   if (!closure) return [...fallback, "{workspaceRoot}/package.json", "{workspaceRoot}/bun.lock"];
   const key=JSON.stringify([closure,sources.fallback?fallback:null]);
-  let index=0;const checkpoint=()=>yieldInferenceV1(scripts.context,"build:command-source-packages",++index);
+  let index=0;const checkpoint=(force=false)=>yieldInferenceV1(scripts.context,"build:command-source-packages",++index,force);
   return memoizedObservedAsyncComputationV1(scripts.commandDependencies,key,async()=>{
   const packages = new Set(), graph = existsSync(join(workspaceRoot, "bun.lock")) ? readBunLockGraph(workspaceRoot) : undefined;
   for (const input of closure) {
@@ -894,7 +895,7 @@ function targetExecutionKindV1(target, identity) {
   const value = target.metadata?.semio?.execution;
   if (value === undefined) return undefined;
   const schema = Object.values(targetExecutionSchema.definitions).find(schema => schema.properties.kind.const === value?.kind);
-  if (!schema || value === null || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== schema.required.length || schema.required.some(key => !Object.hasOwn(value, key)) || Object.entries(schema.properties).some(([key, rule]) => Object.hasOwn(rule, "const") ? value[key] !== rule.const : !rule.enum.includes(value[key]))) throw Error(`Repository target execution contract refused${identity ? `: ${identity}` : ""}`);
+  if (!schema || !conformsOwnerContractV1(schema,value)) throw Error(`Repository target execution contract refused${identity ? `: ${identity}` : ""}`);
   return value.kind;
 }
 
@@ -1597,7 +1598,7 @@ function projectAssemblyAuthorityV1(workspaceRoot,nativeRoot,projectsByRoot,comp
 }
 
 /** ⏳️ Delegates bounded inference work to the caller's original progress and continuation control. */
-async function yieldInferenceV1(context,phase,index){if(context.invocation){checkScriptInvocation(context.invocation);if(index%16===0)await advanceScriptInvocation(context.invocation,phase,"running");}}
+async function yieldInferenceV1(context,phase,index,force=false){if(context.invocation){checkScriptInvocation(context.invocation);if(force||index%16===0)await advanceScriptInvocation(context.invocation,phase,"running");}}
 
 /** 🪪️ Expands actual native owners through the same read-only phase and original caller controls. */
 export async function discoverNativeBuildOwnersV1(configFiles,workspaceRoot,context){

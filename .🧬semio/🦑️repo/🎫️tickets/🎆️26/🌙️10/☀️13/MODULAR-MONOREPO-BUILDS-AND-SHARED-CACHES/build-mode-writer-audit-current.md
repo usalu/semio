@@ -1,0 +1,21 @@
+# Build Mode and Writer Audit — Current
+
+Read-only Source audit, 2026-10-15. Only this report was written. No tests, compiler probes, processes, mounts, leases or Git mutations were run. No external-write escape was observed.
+
+## Observed Contracts
+
+- The canonical mode owner `🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts:4–35` accepts exactly `prototype|release`, maps native Cargo and wasm profiles separately, maps CMake/.NET to Debug/Release, and disables source maps for release. The public TypeScript paths reexport this owner.
+- `.cargo/config.toml:68–81` defines prototype as dev, opt 0, debug 1, no LTO, 256 codegen units and incremental; release is opt 3, thin LTO, one codegen unit, stripped debuginfo and no incremental. `Cargo.toml:576–625` retains release trim-paths, a release-derived host-tool profile, wasm-release opt s/16 units, and wasm-prototype opt 1/256 units/incremental/assertions/symbols. These are deliberately distinct policies, not evidence of a mode alias. Four wasm-prototype package overrides remain opt 2 at lines 629–642.
+- Authored config rustflags are still threads=0 plus exact wasm stack/memory/backend and Linux linker settings (`.cargo/config.toml:10,26,44,53`); no authored output/dump flag was found in that file. This does not admit ancestor, Cargo-home, per-directory or mutable configuration.
+
+## Remaining Writer Frontiers
+
+1. **Effective Cargo configuration is still observed without flag admission.** Core `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts:38` config-get hashes the result and refuses host adapters. Lines 39–40 then run metadata and unit-graph, compiler identity and cfg probes. Lines 44–46 project effective build/target/env rustflags but do not reject writer selectors. Current literals confirm the prior admission plan remains actionable. Whether a particular config flag writes during Cargo probes is untested.
+2. **Generic Cargo execution rereads configuration.** Repository `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts:137–144` gives lock/resolve a direct execution path, and compile plans before executing Cargo under capacity/build leases. A store/build-directory lease bounds owned paths; it does not itself prevent a configured compiler flag selecting another output. Final selected direct-rustc allowlisting should not be described as absent or bypassed: the unresolved receiver is earlier planning/generic Cargo and configuration custody.
+3. **Dedicated watcher paths still diverge from finite canonical namespace.** Bootstrap `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts:251–255` constructs `.nx/workspace-data/watchers/<identity>` and OS-temp sockets; lines 515–519 pass them to daemon startup and `nx watch`. Enforcement `…/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts:57` still requires exact canonical namespace environment. This is a current Source mismatch, not a newly observed unbounded write. Existing detached-reader report's root daemon custody work remains separate from the watcher namespace correction.
+
+## Highest-Value Next Action Outside Protected Nx Pair Source
+
+Start the schema-owned neutral compiler-flag/configuration admission leaf and repository generic receiver. Add language-neutral hostile configuration fixtures and an independent TOML/Cargo observation oracle first; admit the actual authored safe forms precisely and refuse output/dump/incremental/linker-response channels before fetch/planning. Include lock/resolve, rustdoc, config env and profile channels explicitly. Keep Core capture changes coordinated with its owner and preserve the existing direct-rustc allowlist. Configuration must remain authentic through terminal Cargo consumption; a digest followed by a second hash is not immutable custody. This closes a cross-mode receiver without editing the protected Nx implementation pair.
+
+The watcher correction is concrete but belongs with bootstrap/daemon lifetime ownership, since moving paths alone does not prove finite image custody until detached terminal shutdown. No total-disk bound is established for arbitrary build scripts or external programs by these observations.

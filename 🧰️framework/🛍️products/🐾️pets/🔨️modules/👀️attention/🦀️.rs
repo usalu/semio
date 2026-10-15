@@ -6,14 +6,14 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../👀️attention/🟦️.ts — the TypeScript twin
 
-use crate::animation::{spring_step, BLINK_TICKS, GAZE_DAMPING, GAZE_STIFFNESS};
-use crate::behavior::{dwell_of, needs_after};
 use crate::draft::{actor_key, blink_at, clip_at, facing_to, index_of, shift, Draft, ORIGIN};
-use crate::randomness::{random_words, unit_of};
-use crate::rig::{look_offset, BonePose, Pose};
-use crate::schema::{Activity, Actor, Facing, Gaze, Point, Species, Stage, Ticks};
-use crate::terrain::larger;
-use crate::trigonometry::smoothstep;
+use semio_framework_pets_character::behavior::{dwell_of, needs_after};
+use semio_framework_pets_contract::schema::{Activity, Actor, Facing, Gaze, Point, Species, Stage, Ticks};
+use semio_framework_pets_kinematics::animation::{spring_step, BLINK_TICKS, GAZE_DAMPING, GAZE_STIFFNESS};
+use semio_framework_pets_kinematics::randomness::{random_words, unit_of};
+use semio_framework_pets_kinematics::rig::{look_offset, BonePose, Pose};
+use semio_framework_pets_kinematics::terrain::larger;
+use semio_framework_pets_kinematics::trigonometry::smoothstep;
 use std::borrow::Borrow;
 
 //#region 🔖️Constants

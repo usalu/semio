@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, sep } from "node:path";
+import { listModuleTree } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 export type OrderedAppendBroadcastFixture = {
   readonly schema: "semio.hub.directory.ordered-append-broadcast/v1";
@@ -11,6 +12,18 @@ export type OrderedAppendBroadcastFixture = {
     readonly expectedBroadcastSequences: readonly number[];
   }[];
 };
+
+/** 📇️ Reads the hub directory module as one text: the parent first, then its own child modules in declaration order. The sqlite, postgres and neo4j backends are separate subjects of their own laws and stay out. */
+export function readHubDirectorySource(repoRoot: string): string {
+  const backends = ["🪶️sqlite", "🐘️postgres", "🌐️neo4j"];
+  return listModuleTree(join(repoRoot, "🌎️hub/📇️directory/🦀️.rs"))
+    .filter((path) => !backends.some((backend) => path.includes(`${sep}${backend}${sep}`)))
+    .map((path) => {
+      const text = readFileSync(path, "utf8");
+      return text.endsWith("\n") ? text : `${text}\n`;
+    })
+    .join("");
+}
 
 /** 📣️ Validates the neutral append/broadcast law and the exact single-writer production seam. */
 export function orderedDirectoryPublicationOracle(repoRoot: string): number {
@@ -27,7 +40,7 @@ export function orderedDirectoryPublicationOracle(repoRoot: string): number {
     if (JSON.stringify(expected) !== JSON.stringify(row.expectedBroadcastSequences)) throw new Error(`ordered directory publication oracle differs for ${row.id}`);
     if (row.persistedSequences.length > fixture.maximumEventsPerDecision) throw new Error(`ordered directory publication fixture exceeds its decision bound for ${row.id}`);
   }
-  const source = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🦀️.rs"), "utf8");
+  const source = readHubDirectorySource(repoRoot);
   const body = (text: string, name: string): string => {
     const signature = text.indexOf(`fn ${name}(`);
     if (signature < 0) return "";

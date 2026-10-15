@@ -70,13 +70,13 @@ pub(crate) enum ActiveArtifactEnvelopeDecodeState {
 }
 
 /// 🎟️ Keeps original worker receipts and child terminal evidence through one admitted lifecycle turn.
-pub(crate) fn original_worker_lifecycle(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_job::WorkerJobCloseStep,bool),semio_framework_job::OriginalTurnFailure>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+pub(crate) fn original_worker_lifecycle(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_job_worker_authority::WorkerJobCloseStep,bool),semio_framework_job::OriginalTurnFailure>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
     semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
         let(step,terminal)=cx.with_retained_loan(grant,owner)?;
         let step=match step{
-            semio_framework_job::WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>PluginLifecycleStep::Progress(progress),
-            semio_framework_job::WorkerJobCloseStep::Complete{progress}if progress.fits(grant)&&terminal=>PluginLifecycleStep::Progress(progress),
-            semio_framework_job::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason},
+            semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>PluginLifecycleStep::Progress(progress),
+            semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{progress}if progress.fits(grant)&&terminal=>PluginLifecycleStep::Progress(progress),
+            semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason},
             _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original worker retirement violated its grant or terminal witness").with_retained_progress(step.progress()).into())
         };Ok((step,false))
     })
@@ -96,7 +96,7 @@ pub(crate) struct ActiveArtifactEnvelopeDecode<P: Send + 'static, Mutation: Send
     pub(crate) operation: semio_framework_job::OperationId,
     pub(crate) generation: semio_framework_job::Generation,
     pub(crate) cancel: semio_framework_job::CancelToken,
-    session: ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
+    session: ManuallyDrop<Option<semio_framework_job_worker::MountedWorkerJobSession<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
     session_rejected: ManuallyDrop<Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
     pub(crate) outcome_pending: bool,
     terminal_state: Option<ActiveArtifactEnvelopeDecodeState>,
@@ -199,7 +199,7 @@ where
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         if let Some(rejected)=self.session_rejected.as_mut(){
             if rejected.admission_pending()&&!cx.is_cancelled()&&!self.cancel.is_cancelled_now(){
-                let config=semio_framework_job::BatchDriveConfig{retained:grant,site:"artifact_envelope_decode",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
+                let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"artifact_envelope_decode",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
                 let before=cx.retained_progress();
                 if let Some(session)=rejected.admit_pending(config,cx)?{*self.session=Some(session);drop(self.session_rejected.take());}
                 return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
@@ -241,7 +241,7 @@ where
                 drop(self.session.take());self.terminal_state=None;if self.state!=ActiveArtifactEnvelopeDecodeState::Ready{self.state=target;}
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
-            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"envelope original worker quote awaits its handback"}),Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(error.into())};
+            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"envelope original worker quote awaits its handback"}),Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(error.into())};
             return original_worker_lifecycle(cx,demand,grant,"envelope original terminal worker remains contended",|cx|{let step=session.close_step(cx)?;Ok((step,session.terminal_is_empty()))});
         }
         if grant.maximum_copy_bytes<size_of::<ActiveArtifactEnvelopeDecodeState>(){return Ok(PluginLifecycleStep::Progress(Default::default()));}
@@ -255,7 +255,7 @@ where
         if self.state==ActiveArtifactEnvelopeDecodeState::Ready&&self.session.is_none(){return Ok(PluginLifecycleStep::AwaitingInput{reason:"decoded envelope awaits exact consumer publication"});}
         let session=self.session.as_mut().ok_or_else(||plugin_sdk_fault("envelope live decode lost its original worker session"))?;
         match session.pump_one_for_interactive_turn(cx){
-            Ok(semio_framework_job::WorkerJobPoll::Outcome|semio_framework_job::WorkerJobPoll::Terminal)=>{
+            Ok(semio_framework_job_worker::WorkerJobPoll::Outcome|semio_framework_job_worker::WorkerJobPoll::Terminal)=>{
                 let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return Ok(PluginLifecycleStep::Blocked{reason:"envelope worker original receipt awaits its sole recipient"});};
                 if !progress.fits(issued)||!progress.fits(grant){return Err(plugin_sdk_fault("envelope worker original receipt exceeded its received turn").with_retained_progress(progress).into());}
                 self.terminal_state=match session.checked_out_outcome(){
@@ -268,7 +268,7 @@ where
                 self.outcome_pending=true;
                 Ok(PluginLifecycleStep::Progress(progress))
             }
-            Ok(semio_framework_job::WorkerJobPoll::Submitted|semio_framework_job::WorkerJobPoll::Idle)=>Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
+            Ok(semio_framework_job_worker::WorkerJobPoll::Submitted|semio_framework_job_worker::WorkerJobPoll::Idle)=>Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
             Ok(_)=>Ok(PluginLifecycleStep::AwaitingInput{reason:"envelope worker awaits its original mounted wake"}),
             Err(failure)=>Err(failure.into())
         }
@@ -640,7 +640,7 @@ where
     cancel: ManuallyDrop<Option<semio_framework_job::CancelToken>>,
     cancel_signal: ManuallyDrop<Option<std::sync::Arc<std::sync::atomic::AtomicBool>>>,
     cancel_retirement: ManuallyDrop<Option<semio_framework_async::CancelTokenRetirement>>,
-    session: ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>,
+    session: ManuallyDrop<Option<semio_framework_job_worker::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>,
     session_rejected: ManuallyDrop<Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<ArtifactStoreInitializationJob<P, Mutation>>>>,
     pub(crate) outcome_pending: bool,
     outcome_terminal: Option<(u8, ArtifactStoreRefusalCode)>,
@@ -832,10 +832,10 @@ where
     /// 📏️ Quotes the exact next [`Self::drive_initializer`] turn.
     pub(crate) fn initializer_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
-        let session_demand = |session: &semio_framework_job::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>| match session.retirement_demands(body) {
+        let session_demand = |session: &semio_framework_job_worker::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>| match session.retirement_demands(body) {
             Ok(demand) => Ok(demand),
-            Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => Ok(item),
-            Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => Err(error),
+            Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => Ok(item),
+            Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => Err(error),
         };
         if let Some(rejected) = self.session_rejected.as_ref() {
             if rejected.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(rejected), ..item }); }
@@ -1232,7 +1232,7 @@ where
         let business_cancelled=self.cancelled();
         if let Some(rejected)=self.session_rejected.as_mut(){
             if rejected.admission_pending()&&!cx.is_cancelled()&&!business_cancelled{
-                let config=semio_framework_job::BatchDriveConfig{retained:grant,site:"artifact_store_replacement",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
+                let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"artifact_store_replacement",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
                 let before=cx.retained_progress();
                 if let Some(session)=rejected.admit_pending(config,cx)?{*self.session=Some(session);drop(self.session_rejected.take());}
                 return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
@@ -1291,12 +1291,12 @@ where
                 drop(self.session.take());self.terminal_target=None;self.state=target;
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
-            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"store initializer original quote awaits worker handback"}),Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(error.into())};
+            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"store initializer original quote awaits worker handback"}),Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(error.into())};
             return original_worker_lifecycle(cx,demand,grant,"store initializer original terminal worker remains contended",|cx|{let step=session.close_step(cx)?;Ok((step,session.terminal_is_empty()))});
         }
         let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
         match session.pump_one_for_interactive_turn(cx) {
-            Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+            Ok(semio_framework_job_worker::WorkerJobPoll::Outcome | semio_framework_job_worker::WorkerJobPoll::Terminal) => {
                 let Some((issued, progress)) = session.take_checked_out_retained_step_receipt() else { return Ok(PluginLifecycleStep::Blocked { reason: "store initializer original receipt awaits its sole recipient" }) };
                 if !progress.fits(issued) || !progress.fits(grant) {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-receipt"), "store initializer original receipt exceeded its received turn").with_retained_progress(progress).into());
@@ -1311,7 +1311,7 @@ where
                 self.outcome_pending = true;
                 Ok(PluginLifecycleStep::Progress(progress))
             }
-            Ok(semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Idle) => Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
+            Ok(semio_framework_job_worker::WorkerJobPoll::Submitted | semio_framework_job_worker::WorkerJobPoll::Idle) => Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
             Ok(_) => Ok(PluginLifecycleStep::AwaitingInput { reason: "store initializer awaits its mounted wake" }),
             Err(failure) => Err(failure.into()),
         }

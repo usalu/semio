@@ -1,9 +1,9 @@
 use super::{shell_sync_owner_matches, ShellSyncOwner};
 
 const BINDING_FIXTURE: &str = include_str!("../../../../../../🔌️plugin/📡️backbone/🔗️binding/🧪️tests/🧫️fixtures/🔣️.json");
-const SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
+const SHELL_SOURCE: &str = crate::shell::SHELL_SOURCE;
 const BRIDGE_SOURCE: &str = include_str!("../../../🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");
-const KERNEL_SOURCE: &str = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+const KERNEL_SOURCE: &str = crate::RENDERER_SOURCE;
 
 fn owner(generation: u64, uri: &str) -> ShellSyncOwner {
     ShellSyncOwner { plugin_id: "s.plugin.puzzle".into(), instance_id: 7, binding_generation: generation, actor_uri: uri.into(), document_key: "space-a/map".into() }

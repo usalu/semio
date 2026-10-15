@@ -126,7 +126,7 @@ pub(crate) struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub(crate) window_config_authority: Option<super::window_config::WindowConfigAuthority>,
     pub(crate) window_transient_authority: Option<super::window_transient::WindowTransientAuthority>,
     pub(crate) publication_lanes: &'static [ArtifactToolPublicationLane],
-    pub(crate) session: Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
+    pub(crate) session: Option<semio_framework_job_worker::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
     pub(crate) session_rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<semio_framework::ErasedToolJob>>,
     pub(crate) reserved_producer: Option<ArtifactReservedToolJob>,
     pub(crate) completion: Option<ArtifactToolCompletion<A>>,
@@ -203,12 +203,12 @@ include!("../🪟️mounted/♻️frontier/🦀️.rs");
 
 
 /// 🪢️ Returns the worker's original cancellation ancestor alias against the lease root the operation still owns, since that root can never become unique while the operation retains it.
-fn return_session_cancel_alias(session: &semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>, lease: &Option<ToolCancellationLease>, grant: RetainedCloneGrant) -> Option<Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>> {
+fn return_session_cancel_alias(session: &semio_framework_job_worker::MountedWorkerJobSession<semio_framework::ErasedToolJob>, lease: &Option<ToolCancellationLease>, grant: RetainedCloneGrant) -> Option<Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>> {
     let lease = lease.as_ref()?;
     matches!(session.has_original_cancel_alias_witness(&lease.token), Ok(true)).then(|| match session.return_original_cancel_alias_step(&lease.token, grant) {
         Ok(Some(step)) => Ok(PluginLifecycleStep::Progress(step.progress())),
-        Ok(None) | Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original cancellation alias awaits its issuing root" }),
-        Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => Err(error.into()),
+        Ok(None) | Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original cancellation alias awaits its issuing root" }),
+        Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => Err(error.into()),
     })
 }
 
@@ -258,7 +258,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         if let Some(rejected)=self.session_rejected.as_mut(){
             if rejected.admission_pending()&&!cx.is_cancelled(){
-                let config=semio_framework_job::BatchDriveConfig{retained:grant,site:"plugin_framework_reserved_route",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
+                let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_framework_reserved_route",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
                 let before=cx.retained_progress();
                 if let Some(session)=rejected.admit_pending(config,cx)?{self.session=Some(session);drop(self.session_rejected.take());}
                 let after=cx.retained_progress();
@@ -307,13 +307,13 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             if let Some(step)=return_session_cancel_alias(session,&self.cancellation_lease,grant){return step.map_err(semio_framework_job::OriginalTurnFailure::from);}
             let demand=match session.retirement_demands(grant.maximum_copy_bytes){
                 Ok(demand)=>demand,
-                Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation original worker close quote awaits its handback"}),
-                Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(error.into())
+                Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation original worker close quote awaits its handback"}),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(error.into())
             };
             return semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=session.close_step(cx)?;Ok((match step{
-                semio_framework_job::WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>PluginLifecycleStep::Progress(progress),
-                semio_framework_job::WorkerJobCloseStep::Complete{progress}if progress.fits(grant)&&session.terminal_is_empty()=>PluginLifecycleStep::Progress(progress),
-                semio_framework_job::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted session close awaits its worker handback"},
+                semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>PluginLifecycleStep::Progress(progress),
+                semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{progress}if progress.fits(grant)&&session.terminal_is_empty()=>PluginLifecycleStep::Progress(progress),
+                semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted session close awaits its worker handback"},
 
                 _=>return Err(plugin_sdk_fault("typed operation worker violated its original grant or terminal witness").with_retained_progress(step.progress()).into())
             },false))}).map_err(semio_framework_job::OriginalTurnFailure::from);
@@ -340,14 +340,14 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
         }
         match session.pump_one_for_interactive_turn(cx){
-            Ok(semio_framework_job::WorkerJobPoll::Outcome|semio_framework_job::WorkerJobPoll::Terminal)=>{
+            Ok(semio_framework_job_worker::WorkerJobPoll::Outcome|semio_framework_job_worker::WorkerJobPoll::Terminal)=>{
                 let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return Ok(PluginLifecycleStep::Blocked{reason:"typed operation original worker receipt awaits its sole recipient"});};
                 self.worker_semantic_pending=true;
                 if !progress.fits(issued)||!progress.fits(grant)||issued.maximum_items>grant.maximum_items||issued.maximum_copy_bytes>grant.maximum_copy_bytes||issued.maximum_capacity_bytes>grant.maximum_capacity_bytes||issued.maximum_release_bytes>grant.maximum_release_bytes||issued.maximum_depth>grant.maximum_depth{return Err(plugin_sdk_fault("typed operation original worker receipt exceeded its received turn").with_retained_progress(progress).into());}
                 if matches!(session.checked_out_outcome(),Ok(None))&&session.resume().is_ok(){self.worker_semantic_pending=false;}
                 Ok(PluginLifecycleStep::Progress(progress))
             }
-            Ok(semio_framework_job::WorkerJobPoll::Submitted|semio_framework_job::WorkerJobPoll::Rejected)=>Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
+            Ok(semio_framework_job_worker::WorkerJobPoll::Submitted|semio_framework_job_worker::WorkerJobPoll::Rejected)=>Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
             Ok(_)=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted worker awaits its next outcome"}),
             Err(failure)=>Err(failure)
 
@@ -487,8 +487,8 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             if session.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(session), ..item }); }
             return match session.retirement_demands(body) {
                 Ok(demand) => Ok(demand),
-                Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => Ok(item),
-                Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => Err(error),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => Ok(item),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => Err(error),
             };
         }
         Ok(item)
@@ -526,15 +526,15 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             if let Some(step) = return_session_cancel_alias(session, &self.cancellation_lease, grant) { return step.map_err(semio_framework_job::OriginalTurnFailure::from); }
             let demand = match session.retirement_demands(grant.maximum_copy_bytes) {
                 Ok(demand) => demand,
-                Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => return Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original worker close quote awaits its handback" }),
-                Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => return Err(error.into()),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => return Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original worker close quote awaits its handback" }),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => return Err(error.into()),
             };
             return semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
                 let step = session.close_step(cx)?;
                 Ok((match step {
-                    semio_framework_job::WorkerJobCloseStep::Pending { progress } if progress.fits(grant) => PluginLifecycleStep::Progress(progress),
-                    semio_framework_job::WorkerJobCloseStep::Complete { progress } if progress.fits(grant) => PluginLifecycleStep::Progress(progress),
-                    semio_framework_job::WorkerJobCloseStep::Blocked => PluginLifecycleStep::AwaitingInput { reason: "typed operation mounted session close awaits its worker handback" },
+                    semio_framework_job_worker_authority::WorkerJobCloseStep::Pending { progress } if progress.fits(grant) => PluginLifecycleStep::Progress(progress),
+                    semio_framework_job_worker_authority::WorkerJobCloseStep::Complete { progress } if progress.fits(grant) => PluginLifecycleStep::Progress(progress),
+                    semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked => PluginLifecycleStep::AwaitingInput { reason: "typed operation mounted session close awaits its worker handback" },
 
                     _ => return Err(plugin_sdk_fault("typed operation worker violated its original grant or terminal witness").with_retained_progress(step.progress()).into()),
                 }, false))
@@ -1474,7 +1474,7 @@ fn released_slot_census<A: ArtifactApp>(app: &VcsArtifactApp<A>, continuations: 
 /// 🧹 Drains the fixture app's close ladder, which every `VcsArtifactApp` owes its retained store before
 /// `Drop`. The cooperative rotation is walked FIRST and only here: these laws measure what the host
 /// continuation alone releases, but the worker-session retirements a storm parks are PROCESS-global
-/// (`semio_framework_job::worker_job_retirements_are_parked`, maintenance stage 23), so leaving them
+/// (`semio_framework_job_worker::worker_job_retirements_are_parked`, maintenance stage 23), so leaving them
 /// behind pollutes every later test in the same binary — `a_settled_reactor_turn_retains_nothing_the_guest_cannot_afford`
 /// measures exactly that heap.
 #[cfg(test)]
@@ -1487,7 +1487,7 @@ fn fixture_close_receipt<A:ArtifactApp>(app:&mut VcsArtifactApp<A>,mounted_polic
 #[cfg(test)]
 async fn close_fixture_app_to_terminal_emptiness<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, mounted_policy: crate::MountedOwnerPolicyV1) {
     for _ in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
-        if !semio_framework_job::worker_job_retirements_are_parked() {
+        if !semio_framework_job_worker::worker_job_retirements_are_parked() {
             break;
         }
         let _ = PluginApp::maintenance_step(app, mounted_policy.maintenance).unwrap();

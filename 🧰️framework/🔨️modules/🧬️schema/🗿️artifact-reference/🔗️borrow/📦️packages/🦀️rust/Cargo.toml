@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-artifact-reference-borrow"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+build = false
+
+[package.metadata.semio]
+role = "framework"
+id = "artifact-reference-borrow"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 32768
+maxSourceFiles = 4
+maxActiveLines = 400
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "artifact-reference-borrow-neutral"
+path = "../../🧪️tests/🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+serde_json.workspace = true

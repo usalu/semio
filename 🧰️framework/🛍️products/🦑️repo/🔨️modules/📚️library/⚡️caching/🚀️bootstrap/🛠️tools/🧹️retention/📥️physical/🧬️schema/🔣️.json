@@ -1,1 +1,228 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","definitions":{"Request":{"type":"object","additionalProperties":false,"required":["version","minimumAvailableBytes"],"properties":{"version":{"const":1},"minimumAvailableBytes":{"type":"integer","minimum":1,"maximum":2147483648}}},"Observation":{"type":"object","additionalProperties":false,"required":["current","authenticated","readerProtocol","witness","exclusive"],"properties":{"current":{"type":"boolean"},"authenticated":{"type":"boolean"},"readerProtocol":{"type":"boolean"},"witness":{"type":"boolean"},"exclusive":{"type":"boolean"}}},"Protocol":{"const":{"maximumCandidates":64,"maximumWitnesses":1024,"maximumMetadataBytes":8388608,"owner":"nx-tooling:","activation":"nx-tooling-activation","registry":"nx-tooling-provision","minimumInstallerAvailableBytes":1610612736}}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "minimumAvailableBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "minimumAvailableBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483648
+        }
+      }
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current",
+        "authenticated",
+        "readerProtocol",
+        "witness",
+        "exclusive"
+      ],
+      "properties": {
+        "current": {
+          "type": "boolean"
+        },
+        "authenticated": {
+          "type": "boolean"
+        },
+        "readerProtocol": {
+          "type": "boolean"
+        },
+        "witness": {
+          "type": "boolean"
+        },
+        "exclusive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "maximumCandidates": 64,
+        "maximumWitnesses": 1024,
+        "maximumMetadataBytes": 8388608,
+        "owner": "nx-tooling:",
+        "activation": "nx-tooling-activation",
+        "registry": "nx-tooling-provision",
+        "minimumInstallerAvailableBytes": 1610612736,
+        "maximumPublications": 64,
+        "readerSources": [
+          "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️stdout.json",
+          "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json",
+          "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🐧️image/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🪟️image/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️bounded/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️metadata/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️metadata/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/🎟️custody.json",
+          "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/🎟️retention.json",
+          "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/📜️ticket.json",
+          "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️issuance/🧬️schema/📥️request.json",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/📥️json.json",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🧹️cleanup.json",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧬️schema/🔣️.json",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+          "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
+          "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+          "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧬️schema/📥️witness.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/📋️policy.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/📥️physical/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧬️schema.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧮️formula/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/📂️tree/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🗃️archive/📋️policy.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🗃️archive/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🗃️archive/🧬️schema.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/📋️plan/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/📋️plan/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/📥️publication/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🔎️verification/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️caller.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json"
+        ],
+        "readerEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts"
+      }
+    },
+    "AdmissionIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "publicationRequested",
+        "availableBytes",
+        "admitted"
+      ],
+      "properties": {
+        "publicationRequested": {
+          "type": "boolean"
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "admitted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PublicationScenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "callbackFailure",
+        "taskFailure",
+        "expectedFailure",
+        "events",
+        "detached"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "callbackFailure": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "taskFailure": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expectedFailure": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "detached": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

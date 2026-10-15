@@ -84,7 +84,12 @@
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/📤️selection/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧪️tests/🟦️.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧰️graph-core/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🌊️flow-canvas-host/🟦️.tsx",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🎨️flow-overlay-render/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧾️flow-interaction-lane/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🎯️flow-pick-spotlight/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx"
   ],
@@ -94,9 +99,112 @@
   ],
   "typedRegions": [
     {
-      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🌊️flow-canvas-host/🟦️.tsx",
       "functions": [
-        "FlowGraphCanvasHost",
+        "FlowGraphCanvasHost"
+      ],
+      "forbiddenCalls": [
+        "parseSelectionDomainsFromSession"
+      ],
+      "forbiddenSelectionArguments": [
+        "nodeIds",
+        "scene.selection"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧱️flow-surface-state/🟦️.ts",
+      "functions": [
+        "useFlowSurfaceState"
+      ],
+      "forbiddenCalls": [
+        "parseSelectionDomainsFromSession"
+      ],
+      "forbiddenSelectionArguments": [
+        "nodeIds",
+        "scene.selection"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🎬️flow-gestures/🟦️.ts",
+      "functions": [
+        "useFlowDispatchAndGestures"
+      ],
+      "forbiddenCalls": [
+        "parseSelectionDomainsFromSession"
+      ],
+      "forbiddenSelectionArguments": [
+        "nodeIds",
+        "scene.selection"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🎨️flow-overlay-render/🟦️.ts",
+      "functions": [
+        "useFlowOverlayAndRender"
+      ],
+      "forbiddenCalls": [
+        "parseSelectionDomainsFromSession"
+      ],
+      "forbiddenSelectionArguments": [
+        "nodeIds",
+        "scene.selection"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📏️flow-canvas-surface/🟦️.ts",
+      "functions": [
+        "useFlowCanvasSurface"
+      ],
+      "forbiddenCalls": [
+        "parseSelectionDomainsFromSession"
+      ],
+      "forbiddenSelectionArguments": [
+        "nodeIds",
+        "scene.selection"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧾️flow-interaction-lane/🟦️.ts",
+      "functions": [
+        "useFlowInteractionPublication"
+      ],
+      "forbiddenCalls": [
+        "parseSelectionDomainsFromSession"
+      ],
+      "forbiddenSelectionArguments": [
+        "nodeIds",
+        "scene.selection"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🔌️flow-session-attach/🟦️.ts",
+      "functions": [
+        "useFlowSessionAttach"
+      ],
+      "forbiddenCalls": [
+        "parseSelectionDomainsFromSession"
+      ],
+      "forbiddenSelectionArguments": [
+        "nodeIds",
+        "scene.selection"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🎯️flow-pick-spotlight/🟦️.ts",
+      "functions": [
+        "useFlowPickAndSpotlight"
+      ],
+      "forbiddenCalls": [
+        "parseSelectionDomainsFromSession"
+      ],
+      "forbiddenSelectionArguments": [
+        "nodeIds",
+        "scene.selection"
+      ]
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🔄️flow-session-sync/🟦️.ts",
+      "functions": [
         "syncFlowSessionStructureFromScene"
       ],
       "forbiddenCalls": [

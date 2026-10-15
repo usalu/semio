@@ -22,7 +22,7 @@ class TestScript extends BundleScript {
     console.log(`geometry-inference-oracle cases=${geometryInferenceOracle(import.meta.dir)}`);
     console.log(`channel-identity-oracle cases=${channelIdentityOracle(import.meta.dir)}`);
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-plugin-flow-brep"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-s-plugin-flow-brep"], this.repoRoot, this.invocation, rest);
   }
 }
 

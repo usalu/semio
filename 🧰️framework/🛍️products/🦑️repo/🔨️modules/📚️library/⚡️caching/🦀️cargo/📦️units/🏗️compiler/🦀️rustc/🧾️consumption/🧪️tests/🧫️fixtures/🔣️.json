@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "algorithm": "sha256",
+  "before": "pub fn value()->u32{1}\n",
+  "during": "pub fn value()->u32{2}\n",
+  "observedValue": 2
+}

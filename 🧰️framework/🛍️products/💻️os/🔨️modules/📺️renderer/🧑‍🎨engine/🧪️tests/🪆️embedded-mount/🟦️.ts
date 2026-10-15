@@ -5,7 +5,7 @@ import { shouldStartIntroduction } from "../../../../../../../🔨️modules/�
 import bootLifecycle from "../🧫️fixtures/⏳️boot-lifecycle/🔣️.json";
 // @vitest-environment jsdom
 
-import reactHostSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
+import reactHostSource from "../../🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx?raw";
 import reactShellSource from "../../🧱️elements/🐚️Shell/🟦️.tsx?raw";
 import ts from "typescript";
 import introductionFixture from "../🧫️fixtures/🎓️host-introduction/🔣️.json";
@@ -317,7 +317,7 @@ describe("embedded WGPU introduction policy", () => {
 
   
   it("matches the neutral first-frame policy against the authored React predicate", () => {
-    const tree = ts.createSourceFile("ShellHost.tsx", reactHostSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const tree = ts.createSourceFile("focus-and-input.tsx", reactHostSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     let call: ts.CallExpression | undefined;
     const visit = (node: ts.Node) => { if (ts.isCallExpression(node) && node.expression.getText(tree) === "shouldStartIntroduction") call = node; ts.forEachChild(node, visit); };
     visit(tree);

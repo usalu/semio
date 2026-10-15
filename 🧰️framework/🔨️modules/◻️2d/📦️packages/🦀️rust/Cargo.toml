@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../.."
+name = "semio-framework-2d"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "◻️ Public composition of the framework 2D geometry, compute, text and retirement modules."
+
+[package.metadata.semio]
+role = "framework"
+id = "2d"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_2d"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-2d-engine = { path = "../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-2d-compute = { path = "../../🧮️compute/📦️packages/🦀️rust" }
+semio-framework-2d-retire = { path = "../../🧹️retire/📦️packages/🦀️rust" }
+semio-framework-2d-path-flatten = { path = "../../🛤️path/📏️flatten/📦️packages/🦀️rust" }
+semio-framework-2d-path-stroke = { path = "../../🛤️path/🖊️stroke/📦️packages/🦀️rust" }
+semio-framework-2d-booleans = { path = "../../🔀️booleans/📦️packages/🦀️rust" }
+semio-framework-2d-trace = { path = "../../🔍️trace/📦️packages/🦀️rust" }
+semio-framework-2d-regions = { path = "../../🧱️regions/📦️packages/🦀️rust" }
+semio-framework-2d-text = { path = "../../📝️text/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

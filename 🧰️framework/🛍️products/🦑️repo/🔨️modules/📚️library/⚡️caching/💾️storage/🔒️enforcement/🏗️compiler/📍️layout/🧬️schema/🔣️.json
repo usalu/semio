@@ -1,0 +1,110 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "buildNamespace",
+    "modes",
+    "maximumPublishedPathCodeUnits",
+    "cases",
+    "rejected",
+    "targetNamespace"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "buildNamespace": {
+      "const": "b"
+    },
+    "modes": {
+      "const": {
+        "prototype": "p",
+        "release": "r"
+      }
+    },
+    "maximumPublishedPathCodeUnits": {
+      "const": 256
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "root",
+          "mode",
+          "build",
+          "target"
+        ],
+        "properties": {
+          "platform": {
+            "enum": [
+              "posix",
+              "win32"
+            ]
+          },
+          "root": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mode": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "build": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "rejected": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "string"
+      }
+    },
+    "targetNamespace": {
+      "const": "t"
+    }
+  },
+  "$defs": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "buildNamespace",
+        "modes",
+        "targetNamespace"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "buildNamespace": {
+          "const": "b"
+        },
+        "modes": {
+          "const": {
+            "prototype": "p",
+            "release": "r"
+          }
+        },
+        "targetNamespace": {
+          "const": "t"
+        }
+      }
+    }
+  }
+}

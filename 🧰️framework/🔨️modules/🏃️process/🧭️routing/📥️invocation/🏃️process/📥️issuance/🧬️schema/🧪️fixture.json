@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://process.routing/OriginalProcessIssuanceFixtureV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "observations",
+    "requests"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "originalAccepted",
+        "forgedInvocationRefused",
+        "forgedControlRefused",
+        "sameSignal",
+        "boundedDeadline",
+        "requestedDeadline",
+        "escapedControlRefused",
+        "escapedInvocationRefused",
+        "interruptionObserved",
+        "retiredAfterInterruption",
+        "physicalImageAccepted",
+        "fabricatedImageRefused",
+        "escapedImageRefused",
+        "expiredResourceControlRefused",
+        "forgedControlCannotOpenImage",
+        "secondProcessBirthRefused",
+        "additionalCancellationOnlyNarrows",
+        "derivedDeadlineDoesNotRenew",
+        "parentWaitsForAcceptedChild",
+        "delayedNewAdmissionRefused",
+        "acceptedChildRemainsLiveDuringDrain",
+        "acceptedChildSettlesBeforeOriginalRetires",
+        "acceptedFailureRejectsOriginal",
+        "detachedFailureRejectsOriginal",
+        "interruptionDrainRetainsHandlersUntilChildStop",
+        "interruptionDrainSettlesWithOriginalFailure",
+        "nestedParentWaitsForAcceptedChild",
+        "nestedLateAdmissionRefused",
+        "nestedChildSettlesBeforeParentRetires",
+        "imageAdmissionRetainedThroughCallbackAndClose",
+        "lateImageAdmissionRefused",
+        "acceptedImageObservationsDrained",
+        "realImageDescriptorClosedBeforeParentSettles",
+        "imageTokenRetiredAfterDrain",
+        "detachedPublicFailureNeverUnhandled",
+        "detachedPathFailureNeverUnhandled",
+        "detachedPathFailureRejectsOriginal",
+        "detachedPathImageRetainedUntilCallbackStops"
+      ],
+      "properties": {
+        "originalAccepted": {
+          "type": "boolean"
+        },
+        "forgedInvocationRefused": {
+          "type": "boolean"
+        },
+        "forgedControlRefused": {
+          "type": "boolean"
+        },
+        "sameSignal": {
+          "type": "boolean"
+        },
+        "boundedDeadline": {
+          "type": "boolean"
+        },
+        "requestedDeadline": {
+          "type": "boolean"
+        },
+        "escapedControlRefused": {
+          "type": "boolean"
+        },
+        "escapedInvocationRefused": {
+          "type": "boolean"
+        },
+        "interruptionObserved": {
+          "type": "boolean"
+        },
+        "retiredAfterInterruption": {
+          "type": "boolean"
+        },
+        "physicalImageAccepted": {
+          "type": "boolean"
+        },
+        "fabricatedImageRefused": {
+          "type": "boolean"
+        },
+        "escapedImageRefused": {
+          "type": "boolean"
+        },
+        "expiredResourceControlRefused": {
+          "type": "boolean"
+        },
+        "forgedControlCannotOpenImage": {
+          "type": "boolean"
+        },
+        "secondProcessBirthRefused": {
+          "type": "boolean"
+        },
+        "additionalCancellationOnlyNarrows": {
+          "type": "boolean"
+        },
+        "derivedDeadlineDoesNotRenew": {
+          "type": "boolean"
+        },
+        "parentWaitsForAcceptedChild": {
+          "type": "boolean"
+        },
+        "delayedNewAdmissionRefused": {
+          "type": "boolean"
+        },
+        "acceptedChildRemainsLiveDuringDrain": {
+          "type": "boolean"
+        },
+        "acceptedChildSettlesBeforeOriginalRetires": {
+          "type": "boolean"
+        },
+        "acceptedFailureRejectsOriginal": {
+          "type": "boolean"
+        },
+        "detachedFailureRejectsOriginal": {
+          "type": "boolean"
+        },
+        "interruptionDrainRetainsHandlersUntilChildStop": {
+          "type": "boolean"
+        },
+        "interruptionDrainSettlesWithOriginalFailure": {
+          "type": "boolean"
+        },
+        "nestedParentWaitsForAcceptedChild": {
+          "type": "boolean"
+        },
+        "nestedLateAdmissionRefused": {
+          "type": "boolean"
+        },
+        "nestedChildSettlesBeforeParentRetires": {
+          "type": "boolean"
+        },
+        "imageAdmissionRetainedThroughCallbackAndClose": {
+          "type": "boolean"
+        },
+        "lateImageAdmissionRefused": {
+          "type": "boolean"
+        },
+        "acceptedImageObservationsDrained": {
+          "type": "boolean"
+        },
+        "realImageDescriptorClosedBeforeParentSettles": {
+          "type": "boolean"
+        },
+        "imageTokenRetiredAfterDrain": {
+          "type": "boolean"
+        },
+        "detachedPublicFailureNeverUnhandled": {
+          "type": "boolean"
+        },
+        "detachedPathFailureNeverUnhandled": {
+          "type": "boolean"
+        },
+        "detachedPathFailureRejectsOriginal": {
+          "type": "boolean"
+        },
+        "detachedPathImageRetainedUntilCallbackStops": {
+          "type": "boolean"
+        }
+      }
+    },
+    "requests": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "accepted"
+        ],
+        "properties": {
+          "value": {},
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

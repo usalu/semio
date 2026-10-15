@@ -11,12 +11,12 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { type UiLabel, uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
-import { PropertyValueColumnContext } from "../🌳️Tree/🟦️.tsx";
+import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useIdLabel, useLabel, Label } from "../🏷️Label/🟦️.tsx";
-import { useInteractionCommands } from "../../🎯️targets/⚛️react/🟦️";
+import { useInteractionCommands } from "../👻️PanelGhost/🟦️.tsx";
 import { ChevronDownIcon } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
 

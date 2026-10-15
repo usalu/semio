@@ -4,8 +4,8 @@
 
 use super::*;
 use crate::challenge::points;
-use crate::schema::{Task, TaskKind, TaskResult, CHALLENGES};
 use crate::sheet::tests::{quiz, text};
+use quiz_schema::{Task, TaskKind, TaskResult, CHALLENGES};
 
 fn badge(id: &str, rule: BadgeRule) -> Badge {
     Badge { id: id.to_string(), emoji: "⭐".to_string(), label: text(id), description: text(id), rule }
@@ -112,7 +112,7 @@ fn perfect_tasks_with_a_least_challenge_collect_only_runs_that_meet_it() {
 
 #[test]
 fn shared_badge_vectors_of_the_python_reference_hold() {
-    use crate::schema::tests::{entries, fixture, typed};
+    use quiz_schema::testkit::{entries, fixture, typed};
     let vectors = fixture("badge-rules");
     let quizzes: Vec<Quiz> = entries(&vectors["quizzes"]).iter().map(typed).collect();
     let badges: Vec<Badge> = entries(&vectors["badges"]).iter().map(typed).collect();

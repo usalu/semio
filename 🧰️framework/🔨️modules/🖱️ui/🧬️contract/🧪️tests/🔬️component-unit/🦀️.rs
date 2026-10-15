@@ -19,7 +19,7 @@ fn typed_wire_neutral_component_defaults_match_serde() {
 
 #[test]
 fn draft_target_typed_wire_matches_the_neutral_serde_oracle() {
-    use protocol::value::{FromValue, ToValue};
+    use semio_framework_value::{FromValue, ToValue};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
     let row = &fixture["components"][5];
     let component: Component = serde_json::from_value(row["wire"].clone()).expect("draft-target component");
@@ -273,7 +273,7 @@ const PROGRESS_FIXTURE: &str = include_str!("../🧫️fixtures/📶️progress.
 /// oracle) and by the first-party `ToValue`/`FromValue` codec, which must agree on every case.
 #[test]
 fn progress_wire_shape_matches_the_serde_oracle_and_the_value_codec() {
-    use protocol::value::{FromValue, ToValue};
+    use semio_framework_value::{FromValue, ToValue};
     let fixture: serde_json::Value = serde_json::from_str(PROGRESS_FIXTURE).expect("📶️ the progress fixture parses");
     let cases = fixture["cases"].as_array().expect("progress cases");
     for case in cases {
@@ -431,7 +431,7 @@ fn number_controls_fixture_pins_the_detent_pointer_key_and_precision_laws() {
 
 #[test]
 fn a_select_states_its_appearance_only_when_it_is_segmented() {
-    use protocol::value::{FromValue, ToValue};
+    use semio_framework_value::{FromValue, ToValue};
     let menu = SelectProps { value: ui_text("a"), items: crate::UiFixedList::default(), placeholder: None, appearance: SelectAppearance::Menu };
     let segmented = SelectProps { appearance: SelectAppearance::Segmented, ..menu.clone() };
     assert!(serde_json::to_value(Component::Select(menu.clone())).expect("menu wire").get("appearance").is_none());

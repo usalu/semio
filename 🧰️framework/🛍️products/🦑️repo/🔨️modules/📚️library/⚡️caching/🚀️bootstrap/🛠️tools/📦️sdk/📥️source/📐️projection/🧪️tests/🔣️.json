@@ -1,0 +1,60 @@
+{
+  "recipe": {
+    "name": "@semio-tech/nx-bootstrap-tools",
+    "private": true,
+    "packageManager": "bun@1.3.14",
+    "dependencies": {
+      "nx": "23.2.0"
+    },
+    "semio": {
+      "toolPatches": {
+        "nx@23.2.0": "patches/current.patch"
+      }
+    }
+  },
+  "lock": {
+    "lockfileVersion": 1,
+    "configVersion": 1,
+    "workspaces": {
+      "": {
+        "name": "@semio-tech/nx-bootstrap-tools",
+        "dependencies": {
+          "nx": "23.2.0"
+        }
+      }
+    },
+    "patchedDependencies": {
+      "nx@23.2.0": "patches/current.patch"
+    },
+    "packages": {
+      "nx": [
+        "nx@23.2.0",
+        "",
+        {},
+        "sha512-pinned"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "patch",
+      "field": "patch",
+      "same": true
+    },
+    {
+      "name": "dependency",
+      "field": "dependency",
+      "same": false
+    },
+    {
+      "name": "integrity",
+      "field": "integrity",
+      "same": false
+    },
+    {
+      "name": "bun",
+      "field": "bun",
+      "same": false
+    }
+  ]
+}

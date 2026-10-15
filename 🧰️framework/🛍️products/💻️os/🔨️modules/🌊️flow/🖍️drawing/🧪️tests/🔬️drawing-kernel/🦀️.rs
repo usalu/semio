@@ -363,7 +363,7 @@ fn scene_bounds_grows_to_fit_text_and_shapes() {
 // #region Engine derive
 #[test]
 fn drawing_engine_id_matches_os_contract() {
-    assert_eq!(DrawingEngine::ENGINE_ID, "s.2d.drawing");
+    assert_eq!(DrawingEngine::ENGINE_ID, "framework.2d.drawing");
 }
 
 #[test]

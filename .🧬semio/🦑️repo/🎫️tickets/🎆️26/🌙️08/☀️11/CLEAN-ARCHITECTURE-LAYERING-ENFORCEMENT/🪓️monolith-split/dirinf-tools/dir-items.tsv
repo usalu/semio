@@ -1,0 +1,195 @@
+1	17	42	pub	mod	error	
+43	46	674	pub	mod	model	
+675	677	677		use		
+678	678	678	pub	use		
+679	679	679		use		
+680	680	680		use		
+681	681	681		use		
+682	682	682		use		
+683	683	683		use		
+684	684	684		use		
+685	685	685		use		
+686	686	686		use		
+687	687	687		use		
+689	690	690	pub	const	ARTIFACT_CHECKPOINT_LINEAGE_MAX	
+691	692	692	pub	const	DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS	
+693	694	694	pub	const	DIRECTORY_EVENT_READ_MAX	
+695	695	695	pub	const	ACTIVE_SYNC_SESSION_READ_MAX	
+696	697	697	pub	const	ADMIN_INTENT_REQUEST_MAX_BYTES	
+698	699	699	pub	const	ADMIN_PAGE_MAX	
+700	701	701	pub	const	ADMIN_PAGE_FETCH_MAX	
+702	703	703	pub	const	ADMIN_RESPONSE_MAX_BYTES	
+704	705	705	pub	const	SPACE_ADMINISTRATION_PAGE_MAX	
+706	707	707	pub	const	SPACE_ADMINISTRATION_PAGE_FETCH_MAX	
+708	709	709	pub	const	DIRECTORY_WIRE_INTEGER_MAX	
+710	711	711	pub	const	ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES	
+712	713	713	pub	const	ARTIFACT_CAS_SWEEP_PAGE_MAX	
+714	715	715	pub	const	ARTIFACT_CAS_SWEEP_OBJECT_MAX	
+716	717	717	pub	const	ARTIFACT_CAS_RESERVATION_MAX_TTL_MS	
+718	719	719	pub	const	ARTIFACT_CAS_DELETE_LEASE_TTL_MS	
+720	720	720		const	ARTIFACT_CAS_SWEEP_CONTINUATION_DOMAIN_V1	
+721	721	721		const	ARTIFACT_CAS_DELETE_LEASE_DOMAIN_V1	
+722	722	722		const	ARTIFACT_CAS_SWEEP_CONTINUATION_PAYLOAD_BYTES	
+723	723	723		const	ARTIFACT_CAS_SWEEP_CONTINUATION_BYTES	
+725	727	731	pub	struct	ArtifactCasSweepCandidatePage	#[derive(Clone,Debug,PartialEq,Eq)]
+733	735	735	pub	struct	ArtifactCasSweepContinuation	#[derive(Clone,Copy,PartialEq,Eq)]
+737	737	741		impl	fmt::DebugforArtifactCasSweepContinuation	
+743	745	749	pub	struct	ArtifactCasSweepRequest	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+751	751	755		impl	DefaultforArtifactCasSweepRequest	
+757	759	769	pub	struct	ArtifactCasSweepResult	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+771	773	776	pub	struct	ProjectionRebuildProgress	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+778	779	782	pub	trait	ProjectionRebuildControl	
+784	784	784	pub(crate)	struct	UncontrolledProjectionRebuild	
+786	786	792		impl	ProjectionRebuildControlforUncontrolledProjectionRebuild	
+794	794	794	pub(crate)	static	UNCONTROLLED_PROJECTION_REBUILD	
+796	796	805	pub(crate)	fn	checkpoint_projection_rebuild	
+807	807	812	pub(crate)	fn	bounded_event_read	
+814	815	815	pub	const	CAPABILITY_SELECTOR_BYTES	
+816	816	816	pub	const	CAPABILITY_SECRET_BYTES	
+817	817	817	pub	const	CAPABILITY_MAX_TTL_SECS	
+818	818	818	pub	const	DEVICE_INSTANCE_MAX_BYTES	
+819	819	819	pub	const	AUTH_ASSERTION_MAX_BYTES	
+820	820	820	pub	const	AUTH_TEXT_MAX_BYTES	
+822	825	825	pub(crate)	const	DIRECTORY_FORMAT_SCHEMA	
+827	829	829	pub(crate)	const	DIRECTORY_FORMAT_VERSION	
+831	833	836	pub(crate)	enum	DirectoryFormatAdmission	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+838	853	871	pub(crate)	fn	admit_directory_format	
+873	873	881	pub	fn	encode_capability_bytes	
+883	883	893		fn	decode_capability_bytes	
+895	895	897	pub(crate)	fn	decode_auth_digest_hex	
+899	900	908	pub	enum	CapabilityKind	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+910	910	930		impl	CapabilityKind	
+932	933	936		struct	CapabilityParts	#[derive(Clone,PartialEq,Eq)]
+938	938	958		fn	parse_capability_parts	
+960	960	968		fn	mint_capability_parts	
+970	970	975		fn	capability_digest	
+977	977	983	pub	fn	constant_time_digest_eq	
+985	985	1018		macro	capability_type	
+1020	1020	1020		capability_type		
+1021	1021	1021		capability_type		
+1022	1022	1022		capability_type		
+1023	1023	1023		capability_type		
+1024	1024	1024		capability_type		
+1026	1026	1030	pub	enum	HubCapability	
+1032	1032	1044		impl	HubCapability	
+1046	1047	1054	pub	fn	capability_window	
+1056	1056	1061	pub	fn	validate_bounded_auth_text	
+1063	1063	1073	pub	fn	identity_subject_digest	
+1075	1076	1076	pub	struct	IdentityAssertion	#[derive(Clone)]
+1078	1078	1090		impl	IdentityAssertion	
+1092	1093	1096	pub	enum	IdentityAssurance	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+1098	1099	1107	pub	struct	VerifiedIdentity	#[derive(Clone,Debug,PartialEq,Eq)]
+1109	1110	1113	pub	struct	IdentityVerificationProgress	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+1115	1115	1119	pub	trait	IdentityVerificationControl	
+1121	1121	1124	pub	struct	IdentityVerificationContext	
+1126	1126	1137		impl	IdentityVerificationContext<'_>	
+1139	1139	1139	pub	type	IdentityVerificationFuture	
+1141	1141	1143	pub	trait	IdentityAssertionVerifier	
+1145	1147	1152	pub	enum	LocalBootstrapClientClass	#[derive(Clone,Copy,Debug,Hash,PartialEq,Eq,serde::Serialize
+1154	1154	1163		impl	LocalBootstrapClientClass	
+1165	1166	1175	pub	struct	VerifiedLocalBootstrapRequest	#[derive(Clone,Debug,PartialEq,Eq)]
+1177	1178	1184	pub	enum	LocalBootstrapRejectCode	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+1186	1186	1196		impl	LocalBootstrapRejectCode	
+1198	1198	1198	pub	type	LocalBootstrapAcceptFuture	
+1199	1199	1199	pub	type	LocalBootstrapIssueFuture	
+1200	1200	1200	pub	type	LocalBootstrapTerminalFuture	
+1202	1202	1214	pub	trait	LocalBootstrapTransport	
+1216	1216	1218	pub	trait	NativeCredentialEnvelopeDelivery	
+1220	1220	1222	pub	trait	McpCredentialEnvelopeDelivery	
+1224	1224	1226	pub	trait	BrowserCredentialRelay	
+1228	1228	1228	pub	const	AUTH_AUDIT_PAGE_MAX	
+1230	1234	1234	pub	const	AGENT_DELEGATED_EVENT	
+1235	1235	1235	pub	const	AGENT_DELEGATION_REVOKED_EVENT	
+1236	1236	1236	pub	const	AGENT_SESSION_ISSUED_EVENT	
+1238	1240	1240	pub	const	AGENT_IDENTITY_PROVIDER	
+1242	1243	1243	pub	const	AGENT_DELEGATION_PAGE_MAX	
+1245	1245	1272	pub(crate)	fn	prepare_auth_session	
+1274	1274	1279	pub(crate)	fn	prepare_share_token	
+1281	1281	1299	pub(crate)	fn	prepare_invite	
+1301	1303	1323	pub	fn	prepare_agent_delegation	
+1325	1327	1327	pub	const	AGENT_LABEL_MAX_BYTES	
+1329	1334	1339	pub	enum	AgentSessionPreflight	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+1341	1345	1360	pub	fn	agent_session_preflight	
+1362	1362	1364	pub(crate)	fn	active_capability	
+1366	1367	1369	pub	struct	InviteRedemptionScopeHintV1	
+1371	1371	1375		impl	InviteRedemptionScopeHintV1	
+1377	1378	1384	pub(crate)	fn	verify_invite_redemption_scope_hint	
+1386	1387	1391	pub(crate)	enum	InviteRedemptionSpaceStateV1	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+1393	1393	1402		impl	InviteRedemptionSpaceStateV1	
+1404	1405	1412	pub(crate)	enum	InviteRedemptionPreflight	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+1414	1415	1436	pub(crate)	fn	invite_redemption_preflight	
+1438	1439	1460	pub(crate)	fn	verify_invite_redemption_event	
+1462	1462	1493	pub(crate)	fn	auth_audit	
+1495	1497	1506	pub(crate)	fn	validate_directory_command_claim	
+1508	1509	1518	pub(crate)	fn	validate_checkpoint_publication_claim	
+1520	1520	1531	pub(crate)	fn	validate_checkpoint_publication_completion	
+1533	1534	1539	pub(crate)	fn	directory_command_result_kind_str	
+1541	1542	1548	pub(crate)	fn	directory_command_result_kind_from_str	
+1550	1550	1581	pub(crate)	fn	validate_admin_operation_audit	
+1583	1583	1596	pub(crate)	fn	validate_admin_operation_effect_receipt	
+1598	1598	1609	pub(crate)	fn	admin_operation_effect_receipt_v1	
+1611	1611	1620	pub(crate)	fn	same_admin_operation_request	
+1621	1634	1639	pub(crate)	fn	role_to_wire	
+1641	1643	1648	pub(crate)	fn	role_from_wire	
+1650	1652	1658	pub(crate)	fn	kind_to_str	
+1660	1661	1666	pub(crate)	fn	visibility_to_str	
+1668	1669	1696	pub	fn	validate_document_descriptor	
+1698	1699	1711	pub	fn	published_artifact_checkpoint	
+1713	1713	1725		fn	checkpoint_identity_input	
+1727	1727	1729		fn	valid_hash	
+1731	1731	1759		fn	validate_checkpoint_shape	
+1761	1761	1775		fn	validate_retention_shape	
+1777	1778	1795	pub(crate)	fn	validate_verified_checkpoint_append	
+1797	1797	1799		fn	frontier_strictly_advances	
+1801	1802	1826	pub(crate)	fn	validate_published_checkpoint_lineage	
+1828	1829	1869	pub(crate)	fn	validate_document_genesis_append_v1	
+1871	1872	1898	pub(crate)	fn	document_genesis_completion_v1	
+1900	1916	1931	pub(crate)	fn	document_index_projection_v1	
+1933	1944	1950	pub(crate)	fn	validate_checkpoint_index_v1	
+1952	1954	1959	pub	struct	MemoryArtifactProjection	#[derive(Clone,Debug,Default,PartialEq,Eq)]
+1961	1961	2048		impl	MemoryArtifactProjection	
+2049	2052	2055		fn	now_ms	
+2057	2063	2066	pub	struct	HubClock	#[derive(Clone,Copy,Debug,Default)]
+2068	2068	2086		impl	HubClock	
+2088	2093	2099	pub	struct	NewDirectoryEvent	#[derive(Clone,Debug)]
+2100	2108	2110	pub	struct	CommandResult	#[derive(Clone,Debug,PartialEq)]
+2112	2115	2118	pub	struct	Decision	#[derive(Clone,Debug)]
+2120	2120	2122		fn	new_event	
+2124	2124	2126		fn	single	
+2128	2128	2130		fn	require_space	
+2132	2136	2141		fn	actor_user_id	
+2143	2163	2253	pub	fn	decide	
+2255	2255	2264		fn	decide_create_space	
+2266	2268	2270	pub	enum	ArtifactDirectoryCommand	#[derive(Clone,Debug,PartialEq,Eq)]
+2272	2272	2306		fn	decide_artifact_authority	
+2308	2308	2340		fn	decide_verified_checkpoint	
+2341	2345	2349		struct	DirectoryWriterTestFence	#[cfg(test)]
+2351	2352	2357		impl	DirectoryWriterTestFence	#[cfg(test)]
+2359	2361	2365	pub	enum	DirectoryProjectionRejectionV1	#[derive(Clone,Debug,PartialEq,Eq)]
+2367	2367	2376		impl	DirectoryProjectionRejectionV1	
+2378	2379	2387	pub(crate)	fn	directory_projection_space_v1	
+2389	2390	2402	pub(crate)	fn	directory_projection_rejection_v1	
+2404	2406	2409	pub	enum	DirectoryAppendOutcomeV1	#[derive(Clone,Debug)]
+2411	2413	2416	pub	enum	DirectoryCommandExecutionV1	#[derive(Clone,Debug,PartialEq)]
+2418	2419	2424	pub	fn	directory_command_result_kind	
+2426	2429	2435	pub	fn	replay_directory_command_receipt	
+2437	2442	2454	pub	struct	DirectoryService	
+2456	2457	2459	pub	struct	DirectoryDeliveryLeaseV1	
+2461	2461	2461		const	DIRECTORY_DELIVERY_SCOPE_MAX	
+2463	2464	2469		struct	ArtifactCasSweepPosition	#[derive(Clone,Copy)]
+2471	2471	3145		impl	DirectoryService	
+3147	3148	3152	pub	struct	HubVerifiedCheckpointPublisher	
+3154	3154	3159		impl	<S>HubVerifiedCheckpointPublisher<S>	
+3161	3161	3189		impl	<S:ArtifactChunkCasStorage>crate::artifact_authority::VerifiedCheckpointPublisherforHubVerifiedCheckpointPublisher<S>	
+3190	3194	3200		fn	capped_socket_session_binding	
+3202	3208	3524	pub	trait	HubDirectory	
+3525	3533	3533	pub	mod	sqlite	#[path="🪶️sqlite/🦀️.rs"]
+3535	3536	3536	pub	mod	postgres	#[path="🐘️postgres/🦀️.rs"]
+3538	3539	3539	pub	mod	neo4j	#[path="🌐️neo4j/🦀️.rs"]
+3540	3551	3555	pub	enum	HubDirectories	
+3557	3557	3561		impl	::core::convert::From<sqlite::SqliteDirectory>forHubDirectories	
+3563	3563	3567		impl	::core::convert::From<postgres::PostgresDirectory>forHubDirectories	
+3569	3569	3573		impl	::core::convert::From<neo4j::Neo4jDirectory>forHubDirectories	
+3575	3575	4340		impl	HubDirectoryforHubDirectories	
+4341	4350	4350	pub(crate)	mod	backend_corpus	#[cfg(test)] #[path="🧪️tests/🔮️backend-corpus/🦀️.rs"]
+4352	4354	4354		mod	tests	#[cfg(test)] #[path="🧪️tests/🔬️unit/🦀️.rs"]

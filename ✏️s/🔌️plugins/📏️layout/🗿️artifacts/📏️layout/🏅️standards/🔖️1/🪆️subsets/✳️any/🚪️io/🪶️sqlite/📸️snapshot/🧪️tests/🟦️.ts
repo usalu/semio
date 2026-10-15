@@ -60,8 +60,8 @@ import dictionaryFixture from "./🧫️fixtures/🧾️dictionary/🔣️.json"
 
 import {parseLayoutArtifact} from "../../../../🧬️schema/🟦️.ts";
 import type{IntrinsicValue}from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
-import dictionaryNativeSchema from "../../../../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️dictionary/🔣️.json";
-import{formDictionaryNativeJson,formDictionaryFromNativeJson}from"../../../../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧾️dictionary/🪪️native-json/🟦️.ts";
+import dictionaryNativeSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🔣️.json";
+import{questionDictionaryNativeJson,questionDictionaryFromNativeJson}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🪪️native-json/🟦️.ts";
 import{parseMediaPayload}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🎞️media/🟦️.ts";
 import unsignedFixture from"./🧫️fixtures/🧾️dictionary/🔢️unsigned/🔣️.json";
 
@@ -79,7 +79,7 @@ const dictionaryValue=(source:unknown):IntrinsicValue=>{
   default:throw Error("unrecognized neutral intrinsic kind");
  }
 };
-test("Layout owns optional FormDictionary and every intrinsic domain without a JSON source",async()=>{
+test("Layout owns optional QuestionDictionary and every intrinsic domain without a JSON source",async()=>{
  expect(dictionaryFixture["schema"]).toEqual("layout.form-dictionary/v1");expect(dictionaryFixture["valueKinds"]).toEqual(["null","boolean","unsigned","signed","float","text","bytes","array","object"]);expect(dictionaryFixture["tables"]).toEqual(["layout_form_dictionary","layout_dictionary_entry","layout_dictionary_value","layout_dictionary_boolean","layout_dictionary_unsigned","layout_dictionary_signed","layout_dictionary_float","layout_dictionary_text","layout_dictionary_bytes","layout_dictionary_array","layout_dictionary_member"]);expect(dictionaryFixture["refusals"]).toEqual(["duplicateQuestionId","orphanValue","sparseOrdinal","wrongScalarKind","sharedValueOwner"]);expect(dictionaryFixture["absence"]).toEqual("noDictionaryRow");expect(dictionaryFixture["empty"]).toEqual("dictionaryRowWithoutEntries");expect(dictionaryFixture["memberNull"]).toEqual("entryWithNullValue");expect(dictionaryFixture["allocation"]).toEqual("fullConcreteRequests");expect(dictionaryFixture["retirementRefund"]).toEqual(false);expect(dictionaryFixture["nativePreflight"]["schema"]).toEqual("layout.borrowed-native/v1");expect(dictionaryFixture["nativePreflight"]["encodings"]).toEqual(["binary","text"]);expect(dictionaryFixture["nativePreflight"]["scratchOwnership"]).toEqual("paidFrontiersOnly");
  const dictionary={entries:dictionaryFixture.dictionary.entries.map(entry=>({questionId:entry.questionId,value:dictionaryValue(entry.value)}))};
  expect(dictionary.entries.map(entry=>entry.value.kind)).toEqual(dictionaryFixture.valueKinds);
@@ -104,7 +104,7 @@ test("Layout owns optional FormDictionary and every intrinsic domain without a J
  const duplicate={...input,dataFields:{entries:[dictionary.entries[0],dictionary.entries[0]]}};expect(()=>parseLayoutArtifact(duplicate)).toThrow();
  const fields={entries:dictionaryFixture.floatWords.map((bits,index)=>({questionId:"word"+index,value:{kind:"float" as const,value:{bits:BigInt("0x"+bits)}}}))},allWords=parseLayoutArtifact({...owned(),dataFields:fields}),wordsDatabase=await layoutSnapshotToSqliteDatabase(allWords),wordsOracle=Database.deserialize(await exportSqliteDatabase(wordsDatabase),{safeIntegers:true});
  try{const rows=wordsOracle.query("SELECT value_ieee754_bits AS bits FROM layout_dictionary_float JOIN layout_scalar64 ON layout_scalar64.id=scalar_id ORDER BY layout_dictionary_float.id").all()as{bits:bigint}[];expect(rows.map(row=>BigInt.asUintN(64,row.bits))).toEqual(fields.entries.map(entry=>entry.value.value.bits));expect(await layoutSnapshotFromSqliteDatabase(await importSqliteDatabase(wordsOracle.serialize()))).toEqual(allWords);}finally{wordsOracle.close();}
- const json=formDictionaryNativeJson(dictionary);expect(new NativeAjv({strict:true}).addKeyword({keyword:"x-semio-ui",metaSchema:{type:"object"}}).validate(dictionaryNativeSchema,json)).toBe(true);expect(formDictionaryFromNativeJson(JSON.parse(JSON.stringify(json)))).toEqual(dictionary);
+ const json=questionDictionaryNativeJson(dictionary);expect(new NativeAjv({strict:true}).addKeyword({keyword:"x-semio-ui",metaSchema:{type:"object"}}).validate(dictionaryNativeSchema,json)).toBe(true);expect(questionDictionaryFromNativeJson(JSON.parse(JSON.stringify(json)))).toEqual(dictionary);
  const valid=await layoutSnapshotToSqliteDatabase(parsed);
  for(const refusal of dictionaryFixture.refusals){
   const malformed={tables:valid.tables.map(table=>({...table,rows:table.rows.map(row=>({...row,values:[...row.values]}))}))},table=(name:string)=>malformed.tables.find(table=>table.name===name)!;
@@ -124,7 +124,7 @@ test("Forms and Layout transport the complete dictionary as actual intrinsic med
  expect(parseMediaPayload(payload)).toEqual(payload);
  expect(value.members.find(member=>member.value.kind==="unsigned")!.value).toEqual({kind:"unsigned",value:18446744073709551615n});
  const octets=value.members.find(member=>member.value.kind==="bytes")!.value as Extract<IntrinsicValue,{kind:"bytes"}>;expect(Buffer.from(octets.value).toString("hex")).toBe("007fff");
- const json=formDictionaryNativeJson({entries:value.members.map(member=>({questionId:member.name,value:member.value}))});expect(formDictionaryFromNativeJson(JSON.parse(JSON.stringify(json)))).toEqual({entries:value.members.map(member=>({questionId:member.name,value:member.value}))});
+ const json=questionDictionaryNativeJson({entries:value.members.map(member=>({questionId:member.name,value:member.value}))});expect(questionDictionaryFromNativeJson(JSON.parse(JSON.stringify(json)))).toEqual({entries:value.members.map(member=>({questionId:member.name,value:member.value}))});
 });
 test("Layout dictionary unsigned magnitudes are independently readable and editable decimal SQL values",async()=>{
  expect(unsignedFixture["schema"]).toEqual("layout.dictionary-unsigned/v1");expect(unsignedFixture["storage"]).toEqual("canonicalDecimalText");expect(unsignedFixture["accepted"]).toEqual(["0","1","9223372036854775808","18446744073709551615"]);expect(unsignedFixture["refused"]).toEqual(["","00","01","-1","+1","1.0"," 1","1 ","18446744073709551616","184467440737095516150"]);

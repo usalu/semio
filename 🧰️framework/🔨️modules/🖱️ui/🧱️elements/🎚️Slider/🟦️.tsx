@@ -9,12 +9,12 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
-import { PropertyValueColumnContext } from "../🌳️Tree/🟦️.tsx";
+import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { formatNumber, Input } from "../✏️Input/🟦️.tsx";
 import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useLabel, useControlAccessibleLabel, Label } from "../🏷️Label/🟦️.tsx";
-import { useInteractionCommands } from "../../🎯️targets/⚛️react/🟦️";
+import { useInteractionCommands } from "../👻️PanelGhost/🟦️.tsx";
 import { dialAngle, dialPosition, sliderAxisPosition, sliderAxisValue, sliderKeyValue, sliderPointerValue, uiNumberCrossedBound, uiNumberDisplayText, uiNumberTypedValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
 import { formatUiNumber } from "../../🧬️contract/🔢️number-format/🟦️.ts";
 import type { SliderAppearance, UiNumberLimits, UiNumberScale } from "@semio-tech/framework";

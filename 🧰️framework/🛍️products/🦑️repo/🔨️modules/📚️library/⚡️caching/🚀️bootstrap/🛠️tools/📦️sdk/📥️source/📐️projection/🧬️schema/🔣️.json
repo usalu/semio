@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "private",
+        "packageManager",
+        "dependencies",
+        "semio"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "private": {
+          "const": true
+        },
+        "packageManager": {
+          "type": "string",
+          "pattern": "^bun@[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "dependencies": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+          }
+        },
+        "semio": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "toolPatches"
+          ],
+          "properties": {
+            "toolPatches": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumInputs": 2,
+        "maximumInputBytes": 16777216
+      }
+    }
+  }
+}

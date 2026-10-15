@@ -1,4 +1,4 @@
-use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
+use semio_hub::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
 use semio_framework_os_kernel::os_directory::io::text::access_policy::directory_access_permits;
 use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
 use semio_framework_os_kernel::os_directory::io::text::validate_directory_event_page_event;
@@ -220,7 +220,7 @@ fn readiness_publishes_each_hub_executed_inference_service_with_its_served_route
     let bound = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, true, false, true, "trusted-catalog-never-published-in-this-data-root");
     let encoded: serde_json::Value = serde_json::to_value(&bound).expect("readiness json");
     assert_eq!(encoded["features"]["inferenceServices"], serde_json::json!([{ "serviceId": "s.gis.gismap.inference", "route": "inference/gis-map" }]));
-    let router = include_str!("../../🏗️bootstrap/🦀️.rs");
+    let router = include_str!("../../🏗️bootstrap/🛣️routes/🦀️.rs");
     assert!(router.contains(&format!("\"/spaces/{{space_id}}/documents/{{document_id}}/{}/jobs\"", semio_hub::inference::schema::GIS_SERVICE_ROUTE)), "the published route family is the one the router serves");
     let unbound = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
     assert_eq!(serde_json::to_value(&unbound).expect("readiness json")["features"]["inferenceServices"], serde_json::json!([]));
@@ -1161,7 +1161,7 @@ async fn publish_genesis_checkpoint_for_test(
         deadline_ms: accepted_at_ms + ARTIFACT_CREATION_DEADLINE_MS,
     };
     let prepared = ArtifactCreationPreparedV1 { descriptor, checkpoint: checkpoint.clone(), pack: pack.to_vec(), spr: spr.to_vec() };
-    crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).expect("exact prepared publication genesis");
+    semio_hub::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).expect("exact prepared publication genesis");
     assert!(matches!(state.directory.claim_artifact_creation(&intent).await.expect("claim publication genesis"), ArtifactCreationClaimV1::Accepted(_)));
     state
         .directory
@@ -1302,7 +1302,7 @@ async fn check_in_fixture(label: &str) -> CheckInFixture {
     state.verified_catalog = Some(profile.catalog().clone());
     state.openable_catalog = Some(profile.catalog().clone());
     let document = db_artifact_id(&scope);
-    let pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
+    let pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
     let spr = directory::os_store::text_format::empty_document_spr(&document.0, &descriptor.artifact_schema).await;
     descriptor.bootstrap_snapshot_hash = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&pack));
     let session = state.directory.authenticate_session(&SessionCapability::parse(&author.token).expect("check-in author capability")).await.expect("check-in author session read").expect("check-in author session");
@@ -1682,7 +1682,7 @@ fn dechunk_http_body(raw: &[u8]) -> Vec<u8> {
 fn the_hostile_input_fixture_covers_every_registered_route() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚧️hostile-input-v1/🔣️.json")).unwrap();
     let covered: std::collections::BTreeSet<&str> = fixture["routes"].as_array().unwrap().iter().map(|row| row["route"].as_str().unwrap()).collect();
-    let source = include_str!("../../🏗️bootstrap/🦀️.rs");
+    let source = [include_str!("../../🏗️bootstrap/🛣️routes/🦀️.rs"), include_str!("../../🏗️bootstrap/🩺️readiness/🦀️.rs")].concat();
     let registered: std::collections::BTreeSet<String> = source
         .match_indices(".route(")
         .filter_map(|(at, _)| {
@@ -2114,7 +2114,7 @@ async fn gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_docum
 /// (`gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write`).
 #[test]
 fn a_committed_gis_map_approval_is_answered_with_its_receipt() {
-    let source = include_str!("../../🏗️bootstrap/🦀️.rs");
+    let source = include_str!("../../🏗️bootstrap/💡️inference/🦀️.rs");
     for (route, call) in [("async fn post_inference_gis_map_job_approval(", "approve_gis_map_job(context, &job_id, &body).await"), ("async fn post_inference_gis_map_approval_undo(", "undo_gis_map_approval(context, &body).await")] {
         let body = &source[source.find(route).expect("approval route")..];
         let body = &body[..body.find("\n}\n").expect("route end")];
@@ -2251,7 +2251,7 @@ async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) ->
     upsert_member_for_test(&state, &space_id, spectator_email, DirectorySpaceRole::Spectator).await;
     let document_id = artifact_document_id_for_test("gis-map-inference");
     let selection = profile.binding().selection();
-    let genesis_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
+    let genesis_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
     let genesis_spr = b"gis-map-genesis-spr";
     let descriptor = os_directory::DocumentDescriptor {
         space_id: space_id.clone(),
@@ -4380,7 +4380,7 @@ impl SupersedeAuthor {
         let (mut socket, _) = connect_async(document_socket_request(url, token)).await.expect("document socket");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("hello");
         while !matches!(next_command_frame(&mut socket, "until session").await, ServerFrame::Session { .. }) {}
-        let pack = <GisMapSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::encode_pack(&GisMapSnapshot::default());
+        let pack = <GisMapSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&GisMapSnapshot::default());
         let spr = directory::os_store::text_format::empty_document_spr(document, GIS_MAP_SCHEMA).await;
         let parsed = directory::os_store::text_format::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&pack, &spr).await.expect("genesis pair parses");
         let mut replica = SupersedeReplica::new(parsed.into_envelope(), directory::ActorId(actor.clone())).await.expect("replica");
@@ -4649,7 +4649,7 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Commands { origin, .. } if origin.0 == HUB_CATCH_UP_ORIGIN && origin.0 != legacy_receipt.actor_id), "a joiner behind the head is caught up before Session, never under its own actor");
         let echo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/document-echo-suppression-v1/🔣️.json")).expect("echo suppression fixture");
         assert_eq!(echo_fixture["hubCatchUpOrigin"].as_str(), Some(HUB_CATCH_UP_ORIGIN), "the hub's catch-up origin is the fixture's declared one");
-        assert_eq!(include_str!("../../🏗️bootstrap/🦀️.rs").matches("ActorId(HUB_CATCH_UP_ORIGIN.into())").count(), 2, "the hello tail and the FrontierAdvertise catch-up both carry the declared catch-up origin");
+        assert_eq!(include_str!("../../🏗️bootstrap/🔌️document-socket/🦀️.rs").matches("ActorId(HUB_CATCH_UP_ORIGIN.into())").count(), 2, "the hello tail and the FrontierAdvertise catch-up both carry the declared catch-up origin");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Session { .. }));
         legacy.send(WsMessage::Binary(vec![0, 0].into())).await.expect("legacy tag-zero frame");
         assert_eq!(next_close_code(&mut legacy, false).await, 4401, "v1 rejects the legacy actor/token carrier after upgrade");
@@ -9526,7 +9526,7 @@ mod long {
             assert_eq!(status.catalog_generation_id, request.expected_catalog_generation_id);
         }
         let facts = state.directory.read_artifact_creation(&author.user_id, &request.request_id).await.expect("durable creation facts");
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts).expect("one durable creation operation");
+        let operation = semio_hub::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts).expect("one durable creation operation");
         assert!(operation.intent.scope.document_id.strip_prefix("artifact-").is_some_and(artifact_creation_request_id_v1));
         let created_document_id = operation.intent.scope.document_id;
 

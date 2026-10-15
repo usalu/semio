@@ -1,5 +1,10 @@
 //! 🧪️ Original normal-work funding matches neutral arithmetic and actual allocator events.
-use super::*;
+use semio_framework_job::*;
+use semio_framework_job::retained_work::RetainedWorkBudget;
+use semio_framework_value::RetirementDemand;
+use std::mem::size_of;
+#[global_allocator]
+static ORIGINAL_TEST_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 fn grant(v:&serde_json::Value)->RetainedCloneGrant{let n=|key|v[key].as_u64().unwrap()as usize;RetainedCloneGrant{maximum_items:n("maximumItems"),maximum_copy_bytes:n("maximumCopyBytes"),maximum_capacity_bytes:n("maximumCapacityBytes"),maximum_release_bytes:n("maximumReleaseBytes"),maximum_depth:n("maximumDepth")}}
 fn demand(v:&serde_json::Value)->RetirementDemand{let n=|key|v[key].as_u64().unwrap()as usize;RetirementDemand{copy_bytes:n("copyBytes"),capacity_bytes:n("capacityBytes"),release_bytes:n("releaseBytes"),depth:n("depth")}}
@@ -13,7 +18,7 @@ fn original_retained_work_funding_preserves_axes_and_physical_receipts(){
 }
 #[test]
 fn original_step_context_forwards_independent_work_funding(){
- use crate::{StepBudget,StepContext,OperationId,Generation,CancelToken,JobPayloadAuthority};
+ use semio_framework_job::{StepBudget,StepContext,OperationId,Generation,CancelToken,JobPayloadAuthority};
  fn now()->Option<u64>{Some(0)}
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let owner_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};

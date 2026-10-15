@@ -1,0 +1,11 @@
+# Exact Cargo Dependency Preparation Arguments
+
+The repository Cargo-test wrapper passes only request.extraArgs into dependency/configuration admission even though the actual lower runner constructs a complete Cargo test command. A prior genuine PackSource run refused optional ["--","--nocapture"] before compilation. The new closed portable corpus and independent Ajv/Commander/TypeScript AST law require shared complete compiler selection, both modes and nextest/libtest, with assertion-only filters kept out of preparation. An actual same-Original PackSource regression route is authored before production changes. No new test result or implementation is claimed at this checkpoint.
+
+Actual prototype neutral21986 failed because cargoTestCompilerArgumentsV1 was absent. Actual same-Original native92418 reached the production forwarding guard and refused ["--","--nocapture"] with Declared Cargo compiler or program forwarding intent required before Cargo compilation. Both are genuine test-first failures, not infrastructure refusals.
+
+The lower test owner now exposes one validated compiler-selection projection and uses it for its actual Source/compiler admission. The repository wrapper uses that exact projection for dependency/configuration admission; Clippy uses its existing exact lint plan. Runtime output filters remain in the unchanged assertion request. No parser fallback, profile/storage override, Original change or new dependency was added. Successor tests are pending.
+
+Neutral successors BOTH61400/5225 GREEN1/109 across20 mode/nextest/argument combinations plus refusals and actual repository wrapper AST. Independent Ajv and Commander agree with the closed expected corpus. Expanded strict29884 GREEN0 includes the actual lower test runner and repository wrapper. Real same-Original PackSource runtime successors with ["--","--nocapture"] are in progress; no native success is claimed yet.
+
+Actual regression BOTH99682/74683 GREEN: real generic repository wrapper executed7/7 PackSource tests across2binaries with0skipped and ["--","--nocapture"], under the unchanged complete Original and actual shared compiler store. Prototype Nx46.4s; release36.3s. This closes the exact previously reproduced forwarding refusal. It does not qualify aggregate giant crates or the new combined SDK/ordinary artifact pair.

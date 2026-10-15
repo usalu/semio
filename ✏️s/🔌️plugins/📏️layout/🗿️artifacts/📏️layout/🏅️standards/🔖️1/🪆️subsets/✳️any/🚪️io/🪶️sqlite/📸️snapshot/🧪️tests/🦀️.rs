@@ -83,16 +83,16 @@ fn complete_fixture(word:f64,color:f32)->LayoutSnapshot{
     value.parent_pages=vec![ParentPage{id:String::new(),name:String::new(),width:word,height:word,layer_ids:vec![String::new(),String::new()],layers:layers.clone(),frames:frames.clone()}];
     value.spreads=vec![Spread{id:String::new(),name:String::new(),page_ids:vec![String::new(),"!".into()]}];
     value.pages=vec![Page{id:String::new(),name:String::new(),spread_id:String::new(),parent_page_id:Some(String::new()),width:word,height:word,margins:PageMargins{top:word,right:word,bottom:word,left:word},columns:PageColumns{count:u32::MAX,gutter:word},guides:vec![rect],layer_ids:vec![String::new()],layers,frames,overrides:vec![PageOverride{object_id:String::new(),bounds:Some(bounds),visible:Some(false),locked:None},PageOverride{object_id:String::new(),bounds:None,visible:None,locked:Some(true)}]}];
-    value.print_target=Some(String::new());value.data_fields=Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![
- semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:String::new(),value:semio_framework_value::DslValue::String("intrinsic data field\0".into())},
- semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"null".into(),value:semio_framework_value::DslValue::Null},
- semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"boolean".into(),value:semio_framework_value::DslValue::Bool(true)},
- semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"unsigned".into(),value:semio_framework_value::DslValue::uint(u64::MAX)},
- semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"signed".into(),value:semio_framework_value::DslValue::int(i64::MIN)},
- semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"float".into(),value:semio_framework_value::DslValue::float(word)},
- semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"bytes".into(),value:semio_framework_value::DslValue::Bytes(vec![0,127,128,255])},
- semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"array".into(),value:semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Null,semio_framework_value::DslValue::uint(u64::MAX)])},
- semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"object".into(),value:semio_framework_value::DslValue::Object(vec![("repeat".into(),semio_framework_value::DslValue::float(word)),(String::new(),semio_framework_value::DslValue::Bytes(vec![0,255])),("repeat".into(),semio_framework_value::DslValue::Null)])},
+    value.print_target=Some(String::new());value.data_fields=Some(semio_framework_value_dictionary::QuestionDictionary{entries:vec![
+ semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:String::new(),value:semio_framework_value::DslValue::String("intrinsic data field\0".into())},
+ semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"null".into(),value:semio_framework_value::DslValue::Null},
+ semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"boolean".into(),value:semio_framework_value::DslValue::Bool(true)},
+ semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"unsigned".into(),value:semio_framework_value::DslValue::uint(u64::MAX)},
+ semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"signed".into(),value:semio_framework_value::DslValue::int(i64::MIN)},
+ semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"float".into(),value:semio_framework_value::DslValue::float(word)},
+ semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"bytes".into(),value:semio_framework_value::DslValue::Bytes(vec![0,127,128,255])},
+ semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"array".into(),value:semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Null,semio_framework_value::DslValue::uint(u64::MAX)])},
+ semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"object".into(),value:semio_framework_value::DslValue::Object(vec![("repeat".into(),semio_framework_value::DslValue::float(word)),(String::new(),semio_framework_value::DslValue::Bytes(vec![0,255])),("repeat".into(),semio_framework_value::DslValue::Null)])},
  ]});value.background_drawing=Some(component_fixture());
     value.referenced_model=Some(store::ArtifactLink{target:semio_framework_artifact_reference::ArtifactRef{dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:"!/@".into(),subset:String::new()},artifact_id:String::new()},role:String::new(),pin:store::LinkPin::Snapshot{blob:store::BlobRef{hash:String::new(),size:maximum,media_type:String::new()}}});value
 }

@@ -39,6 +39,3 @@ pub fn parse_job_reconcile_result_v1<T>(schema: &str, version: u32, request_id: 
     }
 }
 
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️contract/🦀️.rs"]
-mod tests;

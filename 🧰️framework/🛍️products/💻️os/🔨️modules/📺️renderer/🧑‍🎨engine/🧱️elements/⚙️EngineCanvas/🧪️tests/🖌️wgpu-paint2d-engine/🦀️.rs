@@ -46,7 +46,7 @@ fn empty_scene(surface_id: &str, controller_id: &str, kind: SurfaceKind) -> UiCo
 /// `parse_document` refuses anything whose `schema` is not `"raster.document"`, and
 /// `LayerNodeJson::Pixel` declares `mask` as an `Option<MaskJson>` with no serde default. The attach
 /// path swallows the refusal (`let _ = host.sync_document_json(…)`,
-/// `⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs:2801`), so a fixture missing either key leaves the host with
+/// `⚙️EngineCanvas/🎯️targets/🧊️wgpu/🧩️engine-surface-attach/🦀️.rs`, `sync_raster_engine`), so a fixture missing either key leaves the host with
 /// NO layers — which reads downstream as "nothing is pickable anywhere in the viewport" rather than
 /// as a parse fault. The raster plugin's own snapshots carry both
 /// (`🖨️raster/…/📸️snapshot/⬅️before/🔣️.json`); this fixture carried neither

@@ -12,7 +12,8 @@ mount it through the renderer.
 | Path | What lives there |
 |---|---|
 | `📦️packages/🟦️typescript/` | The core: the declarative model, the slide-glob loader, resolution scopes, morph-run auto-animate id assignment and the deck templates. Zero runtime imports. |
-| `📦️packages/🟦️typescript/🎯️targets/⚛️react/` | The React + reveal.js renderer (`🟦️.tsx`), its stylesheet `🎨️.css`, and `🔨️modules/` — the markdown → HTML compiler and the pdf.js canvas port. |
+| `🎯️targets/⚛️react/` | The React + reveal.js renderer implementation: the public barrel `🟦️.tsx` (the single source of truth, consumed by plugins such as animate through `@semio-tech/presentation-react`) and `🔨️modules/` — the markdown → HTML compiler, the pdf.js canvas port and the renderer's internal modules (deck, reveal morph and auto-animate, figure scroll and zoom, morph views, interaction, arrangement section, json tree). |
+| `📦️packages/🟦️typescript/🎯️targets/⚛️react/` | The `@semio-tech/presentation-react` package: a thin entry `🟦️.tsx` that re-exports the target and loads the stylesheet `🎨️.css`, the manifest and the test script. |
 | `🧪️tests/` | One directory per language-agnostic test case: `🥒️.feature`, `🟦️.ts`, `🧫️fixtures/`. |
 | `🔮️oracles/🔣️.json` | The owner oracle registry: the third-party packages the tests compare against, and the justified no-oracle decisions. |
 

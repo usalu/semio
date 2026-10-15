@@ -198,7 +198,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
     type Members: SpaceMember + MemberFactory + Send + 'static = NoMembers;
     const DIALECT: Dialect;
     /// 🧬️ Supplies the editor's bounded projection of real parent child fields.
-    fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         Err(plugin_sdk_fault("editor did not declare a loaded-parent child projection"))
     }
     /// 🌱️ The editor's derivable-child genesis — see `ArtifactApp::genesis_child_pack`.
@@ -897,7 +897,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     const ROLE: AppRole = AppRole::Viewer;
     const DIALECT: Dialect;
     /// 🪟️ Supplies the viewer's bounded projection of real parent child fields.
-    fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         Err(plugin_sdk_fault("viewer did not declare a loaded-parent child projection"))
     }
     /// 🌱️ The viewer's derivable-child genesis — see `ArtifactApp::genesis_child_pack`.
@@ -1252,7 +1252,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn admit_owned_mutation_batch(values: &mut Option<Vec<Self::Mutation>>, grant: RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, RetainedCloneProgress)>, ValueError> { E::admit_owned_mutation_batch(values, grant) }
 
     const DIALECT: Dialect = E::DIALECT;
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         E::child_restore_projection(snapshot)
     }
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, ValueError> {
@@ -1680,7 +1680,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     }
 
     const DIALECT: Dialect = V::DIALECT;
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         V::child_restore_projection(snapshot)
     }
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, ValueError> {

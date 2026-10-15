@@ -53,7 +53,7 @@ impl PrivateChildPublicationInput {
         if grant.maximum_items == 0 { return Ok(paused()); }
         if self.closing { return Err(input_error("private child input cannot advance after cancellation")); }
         if self.ready { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        if declarations.len() > store::CHILD_RESTORE_MAXIMUM_REFERENCES { return Err(input_error("private child factory declarations exceed their fixed bound")); }
+        if declarations.len() > semio_framework_composition_admission::CHILD_RESTORE_MAXIMUM_REFERENCES { return Err(input_error("private child factory declarations exceed their fixed bound")); }
         let pointer = declarations.as_ptr() as usize;
         if self.declaration_count.is_some_and(|count| count != declarations.len()) || self.declaration_pointer.is_some_and(|original| original != pointer) { return Err(input_error("private child factory declarations changed their original roster")); }
         self.declaration_count = Some(declarations.len());

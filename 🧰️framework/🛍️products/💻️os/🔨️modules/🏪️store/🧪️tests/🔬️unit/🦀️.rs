@@ -10100,11 +10100,12 @@ async fn artifact_link_dsl_field_round_trips_every_link_pin_variant() {
     let pins = vec![LinkPin::Head, LinkPin::Checkpoint { id: "ck-abc123".into() }, LinkPin::Snapshot { blob: BlobRef { hash: "deadbeef".into(), size: 42, media_type: "image/png".into() } }];
     for pin in pins {
         let link = ArtifactLink { target: target.clone(), pin: pin.clone(), role: "cover-image".into() };
-        let spec = artifact_link_spec();
-        let record = artifact_link_to_record(&link);
+        let semio_framework_dsl_record::Shape::Record(producer)=<ArtifactLink as semio_framework_dsl_record::DslField>::shape()else{unreachable!()};
+        let spec=(producer.ordinary)();
+        let semio_framework_dsl_record::FieldValue::Record(record)=<ArtifactLink as semio_framework_dsl_record::DslField>::to_value(&link)else{unreachable!()};
         let bytes = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).expect("encode");
         let (decoded_record, _report) = crate::os_pack::decode_record_body(&bytes, &spec, &PackDecodeOptions::default()).expect("decode");
-        let decoded = artifact_link_from_record(&decoded_record).expect("from_record");
+        let decoded=<ArtifactLink as semio_framework_dsl_record::DslField>::from_value(&semio_framework_dsl_record::FieldValue::Record(decoded_record)).expect("from_record");
         assert_eq!(decoded, link, "round trip diverged for pin variant {pin:?}");
     }
 }

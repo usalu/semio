@@ -1,18 +1,7 @@
 //! 🎟️ Every fixture supplies its original issuer, source admission, clock and work before a once-paid caller is born.
 use super::{CancelToken,JobPayloadAuthority,OperationId,Generation,RetainedCloneGrant,RetainedCloneProgress,StepContext,StepBudget,OriginalTurnFailure,OriginalCallerSourceParent};
 use std::mem::ManuallyDrop;
-use super::{InteractiveJob,WorkerJobSession,MountedWorkerJobSession,BatchJobSession,WorkerJobCloseStep,WorkerJobDemandError,RetainedCloneStep,ValueError,ValueRefusalKind};
-pub trait OriginalFixtureSession{
- fn witnessed_alias(&self,witness:&CancelToken)->Result<bool,WorkerJobDemandError>;
- fn return_alias(&self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,WorkerJobDemandError>;
- fn close_original(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>;
-}
-macro_rules! original_session{($owner:ident)=>{impl<J:InteractiveJob+'static> OriginalFixtureSession for $owner<J>{
- fn witnessed_alias(&self,witness:&CancelToken)->Result<bool,WorkerJobDemandError>{self.has_original_cancel_alias_witness(witness)}
- fn return_alias(&self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,WorkerJobDemandError>{self.return_original_cancel_alias_step(witness,grant)}
- fn close_original(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{self.close_step(cx)}
-}}}
-original_session!(WorkerJobSession);original_session!(MountedWorkerJobSession);original_session!(BatchJobSession);
+use super::{RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 pub struct OriginalJobFixtureCaller{operation:OperationId,generation:Generation,parent:ManuallyDrop<Option<OriginalCallerSourceParent>>,sequence:u64,clock:fn()->Option<u64>,clock_binding:u64,deadline:u64,fuel:u64,clock_stride:super::ClockStride,stock:RetainedCloneGrant,spent:RetainedCloneProgress,born:usize,roots_released:usize,last:RetainedCloneProgress}
 impl OriginalJobFixtureCaller{
     pub fn admit(operation:OperationId,generation:Generation,source:RetainedCloneGrant,clock:fn()->Option<u64>,deadline:u64,mut fuel:u64)->Self{
@@ -42,13 +31,7 @@ impl OriginalJobFixtureCaller{
     pub fn remaining_grant(&self)->RetainedCloneGrant{fixture_remaining(self.stock,self.spent)}
     pub fn fuel_remaining(&self)->u64{self.fuel}
     pub fn terminal_is_empty(&self)->bool{self.parent.is_none()}
-    pub fn close_owner(&mut self,grant:RetainedCloneGrant,owner:&mut impl OriginalFixtureSession)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
-        let step=self.turn(grant,|cx|{let remaining=cx.retained_grant();if cx.should_yield()||remaining.maximum_items==0||remaining.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
-            let witnessed=match owner.witnessed_alias(cx.original_cancel_token()){Ok(value)=>value,Err(WorkerJobDemandError::Contention(_))=>return Ok(WorkerJobCloseStep::Blocked),Err(WorkerJobDemandError::Refused(error))=>return Err(error.into())};
-            if !witnessed{return owner.close_original(cx)}
-            match owner.return_alias(cx.original_cancel_token(),remaining){Ok(Some(step))=>{cx.consume_retained(step.progress())?;cx.consume_fuel(1);Ok(WorkerJobCloseStep::Pending{progress:step.progress()})},Ok(None)|Err(WorkerJobDemandError::Contention(_))=>Ok(WorkerJobCloseStep::Blocked),Err(WorkerJobDemandError::Refused(error))=>Err(OriginalTurnFailure::debit_original(error,cx))}
-        })?;assert_eq!(self.last,step.progress());Ok(step)
-    }
+    pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{self.parent.as_ref().map_or(Ok(Default::default()),OriginalCallerSourceParent::retirement_demands)}
     pub fn receipt(&self)->RetainedCloneProgress{self.last}
     pub fn return_alias(&mut self,token:CancelToken,grant:RetainedCloneGrant){
         assert!(token.is_same_node(self.cancel()));let mut owner=semio_framework_async::CancelTokenRetirement::from_token(token);self.turn(grant,|cx|{let step=owner.return_alias_step(cx.original_cancel_token(),cx.retained_grant()).map_err(|error|match error{semio_framework_async::CancelTokenRetirementError::Refused(error)=>OriginalTurnFailure::from(error),semio_framework_async::CancelTokenRetirementError::Blocked(_)=>OriginalTurnFailure::from(super::ValueError::literal(super::ValueRefusalKind::UnsupportedOwner,"original fixture alias remains blocked"))})?;cx.consume_retained(step.progress())?;cx.consume_fuel(1);Ok(step)}).unwrap();assert!(owner.terminal_is_empty());

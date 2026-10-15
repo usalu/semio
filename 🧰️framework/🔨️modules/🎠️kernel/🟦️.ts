@@ -671,11 +671,6 @@ export function ioConfidenceFromRank(rank: number): IoConfidence {
   return "None";
 }
 
-/** 🗄️ Carrier dialects — mirrors Rust `io_schema::CARRIER_BINARY`/`CARRIER_TEXT`: the payload law's
- * two exceptions, whose native encoding IS the raw external file content. */
-export const CARRIER_BINARY_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.binary", standard: "raw", subset: "*" };
-export const CARRIER_TEXT_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.txt", standard: "utf-8", subset: "*" };
-
 /** 🗂️ One plugin's `list-io-entries` roster, as `IoEntryGraph.build` consumes it. */
 export type IoEntryGraphPlugin = {
   readonly pluginId: string;

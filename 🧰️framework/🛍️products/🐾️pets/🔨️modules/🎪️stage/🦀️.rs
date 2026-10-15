@@ -72,9 +72,9 @@
 
 use crate::clock::pass;
 use crate::draft::{draft_of, sealed, Draft};
-use crate::gesture::{no_shaking, IDLE};
 use crate::population::{summon, survey, tune};
-use crate::schema::{Menagerie, Over, PetMode, Point, Stage, StageEvent};
+use semio_framework_pets_contract::schema::{Menagerie, Over, PetMode, Point, Stage, StageEvent};
+use semio_framework_pets_interaction::gesture::{no_shaking, IDLE};
 
 pub use crate::projection::frame_of;
 

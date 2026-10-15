@@ -3,6 +3,7 @@ import { resolveAssetDeliveryModeV1 } from "../../../../../../../../../🔨️mo
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createWgpuBrowserConfig } from "../🟦️.ts";
+import { COMPILER_FONTS_DIRECTORY } from "../../../../../../../../../🔨️modules/📚️compiler/🌍️world/🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { semioAssetsVitePlugin, semioServeCloseVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { semioBackboneVitePlugin, semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
@@ -21,6 +22,7 @@ export function wgpuCompletedFrameworkRootsV1(profile: "prototype" | "release") 
     bootRoot: resolve(root, "../🚀️browser-boot/🤖️generated"),
     libraryRoot: resolve(root, "../🎬️renderer-boot/🤖️generated"),
     workerRoot: resolve(root, "../🎞️frame-worker/🤖️generated"),
+    fontRoot: resolve(workspace, COMPILER_FONTS_DIRECTORY),
   };
 }
 export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly nativeCatalog?: NativeCatalogV1; readonly catalog: import("../../../../../../🔌️plugin/📇️registry/🟦️.ts").PluginCatalogRowsV1; readonly assets: readonly import("../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts").AssetDeliveryDeclarationV1[] }) {

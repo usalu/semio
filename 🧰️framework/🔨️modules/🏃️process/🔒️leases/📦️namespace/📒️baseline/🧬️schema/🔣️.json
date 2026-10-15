@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://process.leases/OriginalResourceBaselinePolicyV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumBindings",
+    "maximumInventoryRows",
+    "maximumDirectories",
+    "maximumLegacyKeyUtf8Bytes",
+    "maximumNewKeyUtf8Bytes",
+    "maximumTotalKeyUtf8Bytes",
+    "maximumTotalPathUtf8Bytes",
+    "maximumCatalogBytes",
+    "maximumExistingDatabaseReadBytes",
+    "maximumReceiptBytes",
+    "maximumCatalogJournalBytes",
+    "maximumPublicationAuxiliaryBytes",
+    "maximumUninitializedGrowthBytes",
+    "maximumUninitializedJournalBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumBindings": {
+      "const": 8192
+    },
+    "maximumInventoryRows": {
+      "const": 16384
+    },
+    "maximumDirectories": {
+      "const": 8192
+    },
+    "maximumLegacyKeyUtf8Bytes": {
+      "const": 12288
+    },
+    "maximumNewKeyUtf8Bytes": {
+      "const": 4096
+    },
+    "maximumTotalKeyUtf8Bytes": {
+      "const": 4194304
+    },
+    "maximumTotalPathUtf8Bytes": {
+      "const": 2097152
+    },
+    "maximumCatalogBytes": {
+      "const": 8388608
+    },
+    "maximumExistingDatabaseReadBytes": {
+      "const": 1048576
+    },
+    "maximumReceiptBytes": {
+      "const": 4096
+    },
+    "maximumCatalogJournalBytes": {
+      "const": 24576
+    },
+    "maximumPublicationAuxiliaryBytes": {
+      "const": 32768
+    },
+    "maximumUninitializedGrowthBytes": {
+      "const": 24576
+    },
+    "maximumUninitializedJournalBytes": {
+      "const": 24576
+    }
+  }
+}

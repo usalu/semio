@@ -22,6 +22,8 @@ export default defineConfig({
     environment: "jsdom",
     include: [
       "../../../../🧪️tests/📐️overlay-flow/🟦️.ts",
+      "../../../../🧪️tests/🖼️icon-render-camera/🟦️.tsx",
+      "../../../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx",
       "../../../../🧪️tests/🛟️chrome-panel-safe-area/🟦️.ts",
       "../../../../🧪️tests/🛟️chrome-panel-safe-area/🟦️.tsx",
       "../../../../🧪️tests/📣️engagement-status/🟦️.tsx",
@@ -65,7 +67,6 @@ export default defineConfig({
       resolve(root, "../../../../../../../.storybook/🧪️tests/🧪️owned-ui-react-lint/🟦️.ts"),
       resolve(root, "../../../../../../../.storybook/🧪️tests/🧪️scope-resolution/🟦️.ts"),
     ],
-    includeSource: ["../../🟦️.tsx"],
     coverage: { include: ["../../🟦️.tsx"] },
     passWithNoTests: false,
     setupFiles: [resolve(root, "../../../../🧪️tests/🧹️react-environment/🟦️.ts")],

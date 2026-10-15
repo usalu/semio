@@ -10,6 +10,3 @@ impl RetainedWorkBudget{
  pub fn charge(&mut self,receipt:RetainedCloneProgress)->Result<(),ValueError>{if !receipt.fits(self.remaining()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"retained work receipt exceeds original funding"));}self.used_items+=receipt.copied_items;self.used_copy+=receipt.copied_bytes;self.used_capacity+=receipt.retained_capacity_bytes;self.used_release+=receipt.released_bytes;Ok(())}
  pub const fn receipt(&self)->RetainedCloneProgress{RetainedCloneProgress{copied_items:self.used_items,copied_bytes:self.used_copy,retained_capacity_bytes:self.used_capacity,released_bytes:self.used_release}}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

@@ -11,8 +11,12 @@ pub use crate::challenge::*;
 pub use crate::lifecycle::*;
 pub use crate::presence::*;
 pub use crate::randomness::*;
-pub use crate::schema::*;
 pub use crate::scoring::*;
 pub use crate::sheet::*;
 pub use crate::validation::*;
 pub use crate::views::*;
+pub use quiz_schema::{
+    Answer, Badge, Best, Catalog, CatalogView, Challenge, ClassificationAnswer, ClassificationItemResult, Command, CrowdCount, CrowdItem, CrowdScores, CrowdTask, CrowdView, CursorState, DimensionResult, Event, HandleHolder, HandleView, Identity,
+    Leaderboard, LeaderboardPeriod, LeaderboardRow, LearnerView, Limits, MatchingAnswer, MatchingItemResult, Place, PresenceState, Query, Quiz, Rejection, RunResult, RunStatus, RunView, Scale, Screen, SheetTask, SortingAnswer, SortingItem,
+    SortingItemResult, Task, TaskKind, TaskResult, ThinkingAnswer, ThinkingState, Timestamp, CHALLENGES, CROWD_SCORE_BINS, DEFAULT_LIMITS, LEADERBOARD_PERIODS, LEADERBOARD_TOP, MAX_TIMESTAMP, WIRE_VERSION,
+};

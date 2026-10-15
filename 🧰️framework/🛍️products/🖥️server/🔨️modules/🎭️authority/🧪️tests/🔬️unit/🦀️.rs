@@ -1,8 +1,18 @@
 
-use super::*;
-use crate::contract::{CommandId, DeviceId, IdempotencyKey, SessionId, TenantId, TraceContext};
+use crate::authority::*;
+use crate::contract::{ActorKey, CommandEnvelope, CommandId, CommandOutcome, CommandReceipt, DeviceId, EventRecord, HybridLogicalClock, IdempotencyKey, Notice, PolicyDecision, Principal, ProcessId, Rejection, Revision, Scope, SessionId, TenantId, TraceContext};
+use crate::storage::{AuthorityStore, Lease, OutboxEntry, StorageError, TurnCommit};
+use std::sync::Arc;
 use crate::test_instance::{read_counter, CounterDecider, EchoSaga, MemoryAuthorityStore, MirrorDecider, SilentSaga, TestDeciders, TestSagas, COUNTER, MIRROR};
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+fn frame(format: u32, state: &[u8]) -> Vec<u8> {
+    [format.to_le_bytes().as_slice(), state].concat()
+}
+
+fn unframe(format: u32, framed: &[u8]) -> Option<&[u8]> {
+    framed.strip_prefix(format.to_le_bytes().as_slice())
+}
 
 fn key(kind: &str) -> ActorKey {
     actor(kind, "c1")

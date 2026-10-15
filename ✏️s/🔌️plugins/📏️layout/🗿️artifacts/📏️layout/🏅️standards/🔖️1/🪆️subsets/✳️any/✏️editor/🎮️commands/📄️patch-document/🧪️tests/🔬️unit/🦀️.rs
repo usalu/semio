@@ -12,7 +12,7 @@ async fn patch_document_renames_sets_print_target_and_clears_it() {
     let snapshot = app.snapshot().expect("projection");
     assert_eq!(snapshot.name, "Press sheet");
     assert_eq!(snapshot.print_target.as_deref(), Some("cmyk"));
-    assert_eq!(snapshot.data_fields,Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"title".into(),value:semio_framework_value::DslValue::String("A".into())}]}));
+    assert_eq!(snapshot.data_fields,Some(semio_framework_value_dictionary::QuestionDictionary{entries:vec![semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"title".into(),value:semio_framework_value::DslValue::String("A".into())}]}));
     dispatch(&mut app, LayoutCommand::PatchDocument(PatchDocument { field: "printTarget".into(), value: "  ".into() })).await;
     assert_eq!(app.snapshot().expect("projection").print_target, None);
 }

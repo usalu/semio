@@ -64,11 +64,11 @@ fn wire(command: &DrawingCommand) -> Vec<u8> {
     ::protocol::OpBinary::encode_op(command).expect("gesture command encodes")
 }
 
-fn key(operation: u64, generation: u64) -> semio_framework_job::FixedOperationKey {
-    semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(operation), semio_framework_job::Generation(generation))
+fn key(operation: u64, generation: u64) -> semio_framework_job_registry::FixedOperationKey {
+    semio_framework_job_registry::FixedOperationKey::new(semio_framework_job::OperationId(operation), semio_framework_job::Generation(generation))
 }
 
-fn drain(registry: &mut semio_framework_job::FixedOperationRegistry<DrawingGestureOperationOwner, 64>) {
+fn drain(registry: &mut semio_framework_job_registry::FixedOperationRegistry<DrawingGestureOperationOwner, 64>) {
     for operation in 0..64 {
         registry.cancel(key(operation, 0));
     }
@@ -83,7 +83,7 @@ fn drain(registry: &mut semio_framework_job::FixedOperationRegistry<DrawingGestu
 
 #[test]
 fn drawing_gesture_maximum_plus_one_returns_the_exact_owner() {
-    let mut registry = semio_framework_job::FixedOperationRegistry::<DrawingGestureOperationOwner, 64>::new(64 * DRAWING_GESTURE_RETAINED_BYTES);
+    let mut registry = semio_framework_job_registry::FixedOperationRegistry::<DrawingGestureOperationOwner, 64>::new(64 * DRAWING_GESTURE_RETAINED_BYTES);
     for operation in 0..64 {
         if registry.admit(key(operation, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_err() {
             panic!("every distinct fixed slot must admit through the declared maximum");
@@ -105,7 +105,7 @@ fn drawing_gesture_maximum_plus_one_returns_the_exact_owner() {
 
 #[test]
 fn drawing_gesture_stale_generation_and_aba_are_exact() {
-    let mut registry = semio_framework_job::FixedOperationRegistry::<DrawingGestureOperationOwner, 64>::new(DRAWING_GESTURE_RETAINED_BYTES);
+    let mut registry = semio_framework_job_registry::FixedOperationRegistry::<DrawingGestureOperationOwner, 64>::new(DRAWING_GESTURE_RETAINED_BYTES);
     assert!(registry.admit(key(7, 1), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     for _ in 0..64 {
         if registry.cancel_stale_step(semio_framework_job::OperationId(7), semio_framework_job::Generation(2)) {

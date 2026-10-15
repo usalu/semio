@@ -1,4 +1,4 @@
-import {repositoryBuildGraphDataDirectoryV1,withRepositoryBuildGraphFactStoreV1,withRepositoryBuildGraphSelectionV1} from "../📥️inputs/💾️storage/🟨️.mjs";
+import {repositoryBuildGraphDataDirectoryV1,withRepositoryBuildGraphFactStoreV1,withRepositoryBuildGraphSelectionV1,buildGraphWriterResourceV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import {readBuildOwnerRegistryV1,readBuildGraphSelectionV1,closeBuildOwnerAdmissionV1,buildGraphScopeKeyV1,type BuildGraphSelectionV1,type BuildOwnerRegistryV1,type BuildOwnerAdmissionV1} from "./🚪️admission/🟦️.ts";
 import { readdir, readFile, mkdir, writeFile, rename, lstat, rm } from "node:fs/promises";
 import {readFileSync} from "node:fs";
@@ -17,7 +17,7 @@ function graphDeclarationV1(path:string):any{return JSON.parse(createRequire(imp
 
 /** 🧾️ Binds loaded graph behavior and its publication declaration to their original bytes. */
 export interface BuildGraphModuleAuthorityV1{implementation:string;publication:string}
-const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{const implementation=createHash("sha256");for(const path of[new URL(import.meta.url),new URL("./🚪️admission/🟦️.ts",import.meta.url),new URL("../🧬️schema/🚪️selection.json",import.meta.url),new URL("../🧬️schema/📋️owners.json",import.meta.url),new URL("../🧬️schema/🚪️admission.json",import.meta.url),new URL("../📥️inputs/💾️storage/🟨️.mjs",import.meta.url),new URL("../📥️inputs/💾️storage/🧬️schema/💾️quota.json",import.meta.url)])implementation.update(readFileSync(path));return {implementation:implementation.digest("hex"),publication:createHash("sha256").update(readFileSync(new URL("../🧬️schema/📣️publication.json",import.meta.url))).digest("hex")};};
+const graphModuleAuthorityV1=():BuildGraphModuleAuthorityV1=>{const implementation=createHash("sha256");for(const path of[new URL(import.meta.url),new URL("./🚪️admission/🟦️.ts",import.meta.url),new URL("../🧬️schema/🚪️selection.json",import.meta.url),new URL("../🧬️schema/📋️owners.json",import.meta.url),new URL("../🧬️schema/🚪️admission.json",import.meta.url),new URL("../📥️inputs/💾️storage/🟨️.mjs",import.meta.url),new URL("../📥️inputs/💾️storage/🧬️schema/💾️quota.json",import.meta.url),new URL("../📥️inputs/💾️storage/📒️ledger/🟨️.mjs",import.meta.url),new URL("../📥️inputs/💾️storage/🧬️schema/📒️ledger.json",import.meta.url)])implementation.update(readFileSync(path));return {implementation:implementation.digest("hex"),publication:createHash("sha256").update(readFileSync(new URL("../🧬️schema/📣️publication.json",import.meta.url))).digest("hex")};};
 const loadedGraphModuleAuthorityV1=graphModuleAuthorityV1();
 
 /** 🔒️ Refuses a loaded implementation or declaration superseded while an original invocation waited. */
@@ -100,10 +100,11 @@ export function planBuildGraphInvalidationV1(inventory:BuildGraphInvalidationInv
 /** 🔒️ Serializes graph publication and invalidation inside the original enforcing store. */
 async function withBuildGraphStateV1<T>(root:string,invocation:ScriptInvocation,body:(store:RepositoryCacheStoreV1)=>Promise<T>,scope?:string):Promise<T> {
   checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
-  return withRepositoryBuildGraphFactStoreV1(root,invocation,async(store:RepositoryCacheStoreV1)=>{
-    const writer=await acquireQueuedResourceLease({directory:join(root,".cache/b/l/m/data"),resource:"build-graph-state:"+store.root+(scope?":selected:"+scope:""),mode:"exclusive",owner:randomUUID(),control:store.control,signal:store.control.signal});
-    try{requireCurrentGraphModuleV1();return scope?await withRepositoryBuildGraphSelectionV1(root,invocation,scope,body):await body(store);}finally{writer.release();}
-  });
+  const run=async(store:RepositoryCacheStoreV1)=>{
+    const writer=await acquireQueuedResourceLease({directory:join(root,".cache/b/l/m/data"),resource:"build-graph-state:"+store.root+(scope?":selected:"+buildGraphWriterResourceV1(root,"selection",scope).split(":").at(-1):""),mode:"exclusive",owner:randomUUID(),control:store.control,signal:store.control.signal});
+    try{requireCurrentGraphModuleV1();return await body(store);}finally{writer.release();}
+  };
+  return scope?withRepositoryBuildGraphSelectionV1(root,invocation,scope,run):withRepositoryBuildGraphFactStoreV1(root,invocation,run);
 }
 
 /** ♻️ Invalidates current graph authority while retaining charged storage, immutable pins and source facts. */

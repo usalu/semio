@@ -27,15 +27,16 @@
 //! [`StorageProfile`], which the instance opens them from.
 //!
 //! **Four contracts, zero implementations.** This module declares the four roles and nothing that
-//! fulfils them: a [`ServerInstance`](crate::gateway::ServerInstance) names the concrete backend for
+//! fulfils them: a `ServerInstance` names the concrete backend for
 //! each role as an associated type, so the set of backends is closed where the instance is defined
 //! and never here. An instance that really does carry several backends of one role closes them
 //! into one enum in its own crate — the site that closes the set. The reference in-memory semantics every durable backend
 //! must reproduce now live with the test instance that uses them
 //! (`🧪️tests/🧩️instance/🦀️.rs`), because a reference implementation is a test fixture, not a
 //! product surface.
+#![allow(async_fn_in_trait)]
 
-use crate::contract::{ActorKey, CommandReceipt, DeviceId, EventRecord, IdempotencyKey, Principal, Revision, SessionId};
+use semio_framework_server_contract::{ActorKey, CommandReceipt, DeviceId, EventRecord, IdempotencyKey, Principal, Revision, SessionId};
 use protocol::codec::ids::ContentHash;
 use protocol::crypto::RecordHasher;
 use protocol::format::Blake3Hasher;
@@ -45,7 +46,7 @@ use std::future::Future;
 
 //#region 🔖️Profile
 /// 🏗️ Which deployment shape the storage backends are opened in — the one instruction the
-/// framework gives an instance's [`ServerInstance::open`](crate::gateway::ServerInstance::open),
+/// framework gives an instance's `ServerInstance::open`,
 /// and the only thing it says about durability.
 ///
 /// Two variants, because two shapes genuinely exist and are both implemented: a process that keeps
@@ -173,7 +174,7 @@ pub struct TurnCommit<'a> {
 /// transactional outbox and actor leases. The one role whose data cannot be regenerated.
 /// **Send futures, declared not inferred.** Every method of this port returns
 /// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
-/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// style choice: `ServerState` reaches this port behind an
 /// instance's associated type, so the concrete future is opaque at the call site and axum's
 /// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
 /// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
@@ -269,7 +270,7 @@ pub trait AuthorityStore: Send + Sync {
 /// types — the fold is in memory, so there is nothing for a read to fail at.
 /// **Send futures, declared not inferred.** Every method of this port returns
 /// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
-/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// style choice: `ServerState` reaches this port behind an
 /// instance's associated type, so the concrete future is opaque at the call site and axum's
 /// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
 /// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
@@ -316,7 +317,7 @@ pub fn content_hash(bytes: &[u8]) -> ContentHash {
 /// edge, and every later reference is by hash alone. Identical content is stored once.
 /// **Send futures, declared not inferred.** Every method of this port returns
 /// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
-/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// style choice: `ServerState` reaches this port behind an
 /// instance's associated type, so the concrete future is opaque at the call site and axum's
 /// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
 /// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
@@ -365,7 +366,7 @@ pub struct SessionRecord {
 /// live session set is answered from memory.
 /// **Send futures, declared not inferred.** Every method of this port returns
 /// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
-/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// style choice: `ServerState` reaches this port behind an
 /// instance's associated type, so the concrete future is opaque at the call site and axum's
 /// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
 /// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
@@ -393,7 +394,3 @@ pub trait SessionStore: Send + Sync {
 }
 
 //#endregion 🔖️Session
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

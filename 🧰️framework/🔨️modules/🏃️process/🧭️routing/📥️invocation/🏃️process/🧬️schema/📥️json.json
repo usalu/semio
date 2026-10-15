@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:framework:process:envelope-json-admission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "maximumDepth", "maximumNodes", "maximumObjectMembers", "maximumArrayItems", "maximumKeyUtf8Bytes", "maximumStringUtf8Bytes", "maximumTotalUtf8Bytes", "maximumWireUtf8Bytes"],
+  "properties": {
+    "version": {"const": 1},
+    "maximumDepth": {"const": 32},
+    "maximumNodes": {"const": 16384},
+    "maximumObjectMembers": {"const": 4096},
+    "maximumArrayItems": {"const": 8192},
+    "maximumKeyUtf8Bytes": {"const": 256},
+    "maximumStringUtf8Bytes": {"const": 65536},
+    "maximumTotalUtf8Bytes": {"const": 262144},
+    "maximumWireUtf8Bytes": {"const": 262144}
+  }
+}

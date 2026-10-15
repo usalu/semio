@@ -24,6 +24,7 @@ the renderer is one target among possible others. Two cores implement the model 
 | `🔨️modules/👥️presence/` | Presence rooms, the admission problems of presence and cursor states, and the client roster. |
 | `📦️packages/🟦️typescript/` | `@semio-tech/quiz`: package glue only, a barrel over `🧬️schema` and `🔨️modules`. Zero runtime imports. |
 | `📦️packages/🦀️rust/` | Crate `semio-framework-quiz` (lib `quiz`), nx `@semio-tech/quiz-rs`: `#[path]` glue over the Rust twins. |
+| `🧬️schema/📦️packages/🦀️rust/` | Crate `semio-framework-quiz-schema` (lib `quiz_schema`), nx `@semio-tech/quiz-schema-rs`: the contract types of `🧬️schema/🦀️.rs` and, under the `testkit` feature, the fixture test kit the module tests read `🧪️tests/🧫️fixtures` through. `semio-framework-quiz` depends on it and re-exports the types its clients use. |
 | `🎯️targets/⚛️react/` | `@semio-tech/quiz-react`: the web renderer and proctor client. |
 | `🧪️tests/🎚️config/🟦️.ts` | Vitest configuration of the TypeScript core. |
 | `🧪️tests/<case>/` | Unit suites of the TypeScript core (`🟦️.ts` only) and the language-agnostic Protocol v2 cases (`🥒️.feature` with one adapter per language). |

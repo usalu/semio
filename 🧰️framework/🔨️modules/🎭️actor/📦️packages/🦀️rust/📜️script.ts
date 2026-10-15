@@ -7,7 +7,7 @@ import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../🏃️process/�
 import { relative, resolve } from "node:path";
 /** 🦀️ Registers the actor package tasks and semantic typegen commands. */
 
-import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { PreviewGeneratedScript, TypegenScript } from "../../🧬️typegen/🏃️execution/🟦️.ts";
 
@@ -17,21 +17,13 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 🧪️ Names every actual Actor receiving Source law and its canonical ownership regression. */
+function originalActorSourceLawsV1(root:string):string[]{return ["🧪️tests/🟦️.ts", "📃️policy/🧪️tests/🟦️.ts", "🫴️receiving/🧪️tests/🟦️.ts", "🏛️bootstrap/🧪️tests/🟦️.ts", "🎟️supplier/🧪️tests/🟦️.ts", "💼️job/📋️arguments/🧪️tests/🟦️.ts","🪙️loan/🧪️tests/🟦️.ts"].map(test => resolve(root, "../../🎟️retained-turn", test)).concat(resolve(root, "../../🧪️tests/📄️checkpoint/🟦️.ts"),resolve(root,"../../🎟️retained-turn/🎟️context/🧪️tests/🟦️.ts"),resolve(root,"../../🎟️retained-turn/🎟️context/🧪️tests/🏛️boundary/🟦️.ts")).concat(resolve(root,"../../🧬️ownership/🧪️tests/🟦️.ts"));}
+
 /** 🎟️ Verifies original Actor authority with independent neutral schema and SQLite oracles. */
-class OriginalReceivingSourceScript extends BundleScript {
-  private childBudget(): number {
-    const remaining = this.invocation.control.remainingMilliseconds();
-    if (remaining !== null && remaining < 1) throw Error("Original Actor source deadline exhausted");
-    return remaining === null ? 0 : Math.floor(remaining);
-  }
-  async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("Expected test-original-receiving-source");
-    const { runOwnedCommand } = await import("../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
-    const tests = ["🧪️tests/🟦️.ts", "📃️policy/🧪️tests/🟦️.ts", "🫴️receiving/🧪️tests/🟦️.ts", "🏛️bootstrap/🧪️tests/🟦️.ts", "🎟️supplier/🧪️tests/🟦️.ts", "💼️job/📋️arguments/🧪️tests/🟦️.ts","🪙️loan/🧪️tests/🟦️.ts"].map(test => resolve(this.root, "../../🎟️retained-turn", test)).concat(resolve(this.root, "../../🧪️tests/📄️checkpoint/🟦️.ts"),resolve(this.root,"../../🎟️retained-turn/🎟️context/🧪️tests/🟦️.ts"),resolve(this.root,"../../🎟️retained-turn/🎟️context/🧪️tests/🏛️boundary/🟦️.ts"));
-    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], this.repoRoot, "actor:original-receiving:types", this.childBudget(), { signal: this.invocation.control.signal });
-    await runOwnedCommand(process.execPath, ["test", ...tests], this.repoRoot, "actor:original-receiving:source", this.childBudget(), { signal: this.invocation.control.signal });
-  }
-}
+/** 🔬️ Strict checking and actual Source laws share the same original finite control. */
+async function runActorSourceLawsV1(root:string,repoRoot:string,invocation:ScriptInvocation):Promise<void>{const{runOwnedCommand}=await import("../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"),tests=originalActorSourceLawsV1(root),budget=()=>{const remaining=invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original Actor Source deadline exhausted");return remaining===null?0:Math.floor(remaining)};await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--types","bun",...tests],repoRoot,"actor:original-receiving:types",budget(),{signal:invocation.control.signal});await runOwnedCommand(process.execPath,["test",...tests],repoRoot,"actor:original-receiving:source",budget(),{signal:invocation.control.signal});}
+class OriginalReceivingSourceScript extends BundleScript {async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-original-receiving-source");await runActorSourceLawsV1(this.root,this.repoRoot,this.invocation);}}
 
 /** ⏸️ Qualifies the actual original asynchronous turn without widening or replacing its finite caller. */
 class OriginalOwnedAsyncScript extends BundleScript {
@@ -61,12 +53,15 @@ class OriginalContextNativeScript extends BundleScript {
     const mode = readBuildMode(capabilities.buildMode);
     if (readBuildMode(process.env.SEMIO_BUILD_MODE) !== mode) throw Error("Original context build mode differs from its admitted caller");
     await executeCargoRequestV1({version:1,kind:"exact-laws",manifest:relative(this.repoRoot,resolve(this.root,"Cargo.toml")).replaceAll("\\","/"),cwd:".",groups: [
-      { package: "semio-framework-actor", target: { kind: "lib" }, laws: ["component::retained_turn::original_loan_tests::original_actor_semantic_loan_preserves_exact_source_total_and_cutoff","component::retained_turn::context::tests::original_actor_epoch_is_exact_and_cannot_be_rebound_by_a_child", "component::retained_turn::context::tests::original_actor_context_preserves_input_and_paid_authorities_across_admission_loans_and_close", "component::retained_turn::context::tests::original_actor_retirement_binding_preserves_private_source_on_refusal"] },
+      { package: "semio-framework-actor-retained-turn", target: { kind: "lib" }, laws: ["retained_turn::original_loan_tests::original_actor_semantic_loan_preserves_exact_source_total_and_cutoff"] },
+      { package: "semio-framework-actor-retained-context", target: { kind: "lib" }, laws: ["tests::original_actor_epoch_is_exact_and_cannot_be_rebound_by_a_child", "tests::original_actor_context_preserves_input_and_paid_authorities_across_admission_loans_and_close", "tests::original_actor_retirement_binding_preserves_private_source_on_refusal"] },
       { package: "semio-framework-actor", target: { kind: "test", name: "original-retained-receiving" }, laws: ["original_paired_admission::original_public_actor_paired_admission_retains_exact_host_input_and_native_guest_births", "original_paired_admission::original_public_actor_guest_call_returns_actual_failed_body_receipt_and_paid_same_context_close"] },
     ]},this.invocation);
   }
 }
 
+/** 🧱️ Runs the neutral Actor ownership law against its actual Cargo manifests. */
+class OwnershipScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-ownership");await runActorSourceLawsV1(this.root,this.repoRoot,this.invocation);}}
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
     await buildWasmWebV1({control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
@@ -79,5 +74,5 @@ class WasmScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-original-receiving-source", OriginalReceivingSourceScript).register("test-original-owned-async",OriginalOwnedAsyncScript).register("test-original-context-native",OriginalContextNativeScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("wasm", WasmScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-ownership",OwnershipScript).register("test-original-receiving-source", OriginalReceivingSourceScript).register("test-original-owned-async",OriginalOwnedAsyncScript).register("test-original-context-native",OriginalContextNativeScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("wasm", WasmScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

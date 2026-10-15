@@ -1054,8 +1054,8 @@ impl ArtifactEditor for Gis2dPlayApp {
         crate::standards::v1::subsets::any::io::text::snapshot::default_document()
     }
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::from(format!("gis map child projection failed: {error}")))
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::from(format!("gis map child projection failed: {error}")))
     }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
@@ -1108,7 +1108,7 @@ impl ArtifactEditor for Gis2dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <GisMapSnapshot as ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let snapshot = <GisMapSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(semio_framework_plugin::app::document_load_emit(&snapshot, Self::DOCUMENT_SCHEMA))
             }
             _ => Err(MediaError::NotImplemented),

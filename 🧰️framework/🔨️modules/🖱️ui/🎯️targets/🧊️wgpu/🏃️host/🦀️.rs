@@ -139,16 +139,16 @@ impl ClipboardIoJobInitializer {
     pub fn original_write_text(&self) -> Option<&String> { match self.operation.as_ref() { Some(ClipboardIoOperation::Write(text)) => Some(text), _ => None } }
 }
 #[cfg(not(target_arch = "wasm32"))]
-unsafe impl semio_framework_job::WorkerJobInitializer<ClipboardIoJob> for ClipboardIoJobInitializer {
+unsafe impl semio_framework_job_worker_authority::WorkerJobInitializer<ClipboardIoJob> for ClipboardIoJobInitializer {
     fn initialization_demand(&self, _: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Option<ClipboardIoOperation>>() + 3 * std::mem::size_of::<bool>() + std::mem::size_of::<usize>() + semio_framework_job::RetainedPayloadBuilder::empty_carrier_copy_bytes(), depth: 1, ..Default::default() })
     }
-    unsafe fn initialize_step(&mut self, target: *mut std::mem::MaybeUninit<ClipboardIoJob>, grant: semio_framework_job::RetainedCloneGrant) -> Result<semio_framework_job::WorkerJobInitializationStep, semio_framework_value::ValueError> {
+    unsafe fn initialize_step(&mut self, target: *mut std::mem::MaybeUninit<ClipboardIoJob>, grant: semio_framework_job::RetainedCloneGrant) -> Result<semio_framework_job_worker_authority::WorkerJobInitializationStep, semio_framework_value::ValueError> {
         let demand = self.initialization_demand(grant.maximum_copy_bytes)?;
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_depth < demand.depth { return Ok(semio_framework_job::WorkerJobInitializationStep { progress: Default::default(), complete: false }); }
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_depth < demand.depth { return Ok(semio_framework_job_worker_authority::WorkerJobInitializationStep { progress: Default::default(), complete: false }); }
         let target = target.cast::<ClipboardIoJob>();
         unsafe { std::ptr::addr_of_mut!((*target).operation).write(std::mem::ManuallyDrop::new(self.operation.take())); std::ptr::addr_of_mut!((*target).closing).write(false); std::ptr::addr_of_mut!((*target).completed).write(false); std::ptr::addr_of_mut!((*target).cancelled).write(false); std::ptr::addr_of_mut!((*target).fault_cursor).write(0); semio_framework_job::RetainedPayloadBuilder::initialize_empty_at(std::ptr::addr_of_mut!((*target).fault), semio_framework_job::JobPayloadStream::Fault); }
-        Ok(semio_framework_job::WorkerJobInitializationStep { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }, complete: true })
+        Ok(semio_framework_job_worker_authority::WorkerJobInitializationStep { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }, complete: true })
     }
     fn initialization_input_is_empty(&self) -> bool { self.operation.is_none() }
     fn partial_retirement_demands(&self, _: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { Ok(semio_framework_value::RetirementDemand { release_bytes: match self.operation.as_ref() { Some(ClipboardIoOperation::Write(text)) => text.capacity(), _ => 0 }, depth: 1, ..Default::default() }) }

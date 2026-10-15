@@ -1,3 +1,4 @@
+import {withNxGraphAuxiliaryCapacityV1} from "../../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
 import {createHash,randomUUID} from "node:crypto";
 import {lstat,mkdir,readFile,rename,rm,writeFile} from "node:fs/promises";
 import {join} from "node:path";
@@ -10,14 +11,14 @@ export const SELECTED_GRAPH_HANDOFF_ENV="SEMIO_NX_SELECTED_GRAPH_RECEIPT";
 const hash=(value:Uint8Array|string)=>createHash("sha256").update(value).digest("hex");
 
 /** ✍️ Stages one original caller's narrowed proof until that caller's children finish. */
-export async function writeSelectedGraphHandoffV1(directory:string,source:SelectedGraphReuseReceiptV1,signal?:AbortSignal):Promise<Readonly<{environment:string;close():Promise<void>}>>{
+export async function writeSelectedGraphHandoffV1(root:string,directory:string,source:SelectedGraphReuseReceiptV1,environment:Readonly<Record<string,string|undefined>>,signal?:AbortSignal):Promise<Readonly<{environment:string;close():Promise<void>}>>{
  validateSelectedGraphValueV1("ReuseReceiptV1",source);signal?.throwIfAborted();const file="semio-selected-source-"+process.pid+"-"+randomUUID()+".json",path=join(directory,file),temporary=path+".tmp",bytes=JSON.stringify(source);if(path.length>256||Buffer.byteLength(bytes)>8*1024*1024)throw Error("Selected graph handoff capacity refused");
- await mkdir(directory,{recursive:true});try{await writeFile(temporary,bytes,{flag:"wx"});signal?.throwIfAborted();await rename(temporary,path);}finally{await rm(temporary,{force:true});}
+ await withNxGraphAuxiliaryCapacityV1(root,environment,{version:1,extraBytes:Math.ceil(Buffer.byteLength(bytes)/4096)*4096},async()=>{signal?.throwIfAborted();await mkdir(directory,{recursive:true});try{await writeFile(temporary,bytes,{flag:"wx"});signal?.throwIfAborted();await rename(temporary,path);signal?.throwIfAborted();}finally{await rm(temporary,{force:true});}});
  const pointer:SelectedGraphHandoffV1={version:1,file,sha256:hash(bytes)};validateSelectedGraphValueV1("HandoffV1",pointer);return {environment:JSON.stringify(pointer),close:()=>rm(path,{force:true})};
 }
 
 /** 🔐️ Native hashing and cache promotion must still hold the launcher's exact live source handoff. */
-export async function selectedGraphHandoffHoldsV1(root:string,directory:string,environment:string|undefined,ports:Pick<SelectedGraphReusePortsV1,"capture"|"toolingIdentity"|"hashFile">,signal?:AbortSignal):Promise<boolean>{
+export async function selectedGraphHandoffHoldsV1(root:string,directory:string,environment:string|undefined,ports:Pick<SelectedGraphReusePortsV1,"capture"|"toolingIdentity"|"hashFile"|"environment">,signal?:AbortSignal):Promise<boolean>{
  if(environment===undefined)return true;
  try{
   const pointer=JSON.parse(environment) as SelectedGraphHandoffV1;validateSelectedGraphValueV1("HandoffV1",pointer);const path=join(directory,pointer.file);if(path.length>256)return false;

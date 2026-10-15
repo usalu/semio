@@ -5,7 +5,7 @@
     "measure": "Every row is measured with the synthetic advance `charWidth * <characters>` (the ellipsis counts as one character) so both implementations are driven by the SAME measure; in production each presentation passes its own — the wgpu glyph atlas, the browser canvas `measureText`.",
     "implementations": [
       "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs — canvas::text::ellipsize_by_measure",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx — dagEllipsizeByMeasure (the 2D replay overlay)",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🖼️dag-overlays/🟦️.tsx — dagEllipsizeByMeasure (the 2D replay overlay)",
       "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs — fit_overlay_label_text (the wgpu shell)"
     ],
     "ellipsis": "…"

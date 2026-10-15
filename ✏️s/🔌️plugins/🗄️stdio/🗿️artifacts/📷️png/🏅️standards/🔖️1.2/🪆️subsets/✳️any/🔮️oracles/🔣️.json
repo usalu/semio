@@ -21,7 +21,7 @@
       "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"
+          "🧰️framework/🛍️products/💻️os/🖥️host/🖼️media-export-raster/🦀️.rs"
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
         "plan": "Same pre-existing production reachability the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json `png` entry already records (the OS host rasterizes SVG to PNG through this crate) — the dependency-classification gate classifies by reachability, not manifest placement, so registering the SAME package under a second id/capability here surfaces the same debt a second time rather than hiding it. Phase 7 target: once the OS host's PNG writing moves behind ✏️s/🔌️plugins/🗄️stdio's own encode_png, both this entry and the shared one lose their productionDebt and testOnly becomes a fact."
@@ -53,7 +53,7 @@
       "testOnly": true,
       "productionDebt": {
         "reachableFrom": [
-          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
+          "🧰️framework/🛍️products/💻️os/🖥️host/🖼️media-export-raster/🦀️.rs",
           "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/🦀️.rs"
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🖥️host",

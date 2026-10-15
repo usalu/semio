@@ -1,0 +1,27 @@
+# Canonical Process Successor Independent Review
+
+Read-only actual canonical Source review. No Original, gate, signal experiment, physical operation or production edit was performed. Storage’s supplied BOTH/strict results are not independently rerun here. References below use `🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts`.
+
+## Concrete finding
+
+P2: `withScriptInvocationSignalV1` line 94 authenticates/checks the alias at entry but checks the parent invocation after the callback. If the additional signal aborts during an otherwise resolving callback, that final parent check remains healthy; `settle(child)` then drains without checking alias cancellation. The alias operation can therefore fulfill despite its own canceled signal if the body makes no further authority read. Check the alias at the terminal boundary, including after accepted detached work drains if cancellation can occur there. This is a Source path finding, not an executed runtime result. Sent directly to Storage.
+
+## Registration and closure
+
+`track` lines 47–51 checks every ancestor before scheduling its first microtask and registers the same accepted promise in the owner and every parent. Child operations under synchronous controls therefore propagate to the real birth pending set even when the intermediate control has no callback settlement. Closing an ancestor refuses fresh admission; remaining/check functions intentionally remain usable while accepted work drains. Async loan wrappers register their whole settle operation in the parent and separately drain their own children. `settle` closes admission before waiting and marks live=false only afterwards. Canonical timeout and SIGINT/SIGTERM handlers remain installed until the birth settle promise finishes (lines 63–67). Accepted children cannot silently extend handler lifetime beyond an untracked root return.
+
+Failures are recorded when each promise rejects; the first recorded rejection is surfaced if the direct callback succeeded. A direct callback failure takes priority over recorded child failures. This is not an aggregation of every error nor an ordering by admission time. It does not hide all detached failures, but documentation must not call it universal chronological earliest-failure aggregation. Failed children caught by callback code still remain recorded at the owner: accepted-child failure propagation is intentionally stronger than ordinary local promise catching.
+
+## Exact receive and deadlines
+
+The external receiver compares carried wire to actual process.env, consumes a private one-time received flag, and routes through canonical issuance (line 70). Nested calls reuse exact live context identity only if the entire normalized envelope matches (line 62); they do not birth a fresh deadline. The carried envelope deadline is immutable and outgoing invocation environment uses that admitted envelope (lines 102–104). Resource requests narrow both absolute deadline and monotonic elapsed time through every parent control (lines 71–80). Root remaining time also caps wall-clock movement by monotonic elapsed time. Structural copies do not become privately issued controls/invocations.
+
+The canonical JSON owner now refuses Proxy before reflection, checks descriptors rather than invoking getters/toJSON, rejects unsupported prototypes/cycles, bounds nodes/depth/UTF-8, constructs null-prototype objects and defines properties explicitly. This addresses the previous staged Proxy/prototype boundary in actual canonical Source. Serialized acceptance remains separate from the private WeakMap issuance boundary.
+
+## Physical cleanup boundary
+
+Lines 111–121 carve a finite D reserve before effects, create a separate issuer-owned cleanup signal, close body births and drain accepted body work before changing to cleanup phase. The token is frozen/opaque and WeakMap authenticated; exact body-control binding exists at line 127. Cleanup checks phase and whole-operation deadline rather than admitting fresh body authority. Original cancellation is deliberately not copied into the cleanup signal; the reserve ends at the original finite absolute deadline.
+
+However, current repository-wide Source references to read/check/requireAcceptedPhysicalCleanup are only issuer, package reexport and canonical tests. No actual Native platform consumer was found binding a physical resource/guard to this canonical token. The request resource string therefore does not itself prove image custody, and a caller callback is not a provider-owned close operation. The canonical issuer mechanism can be reviewed now; actual effect-resource cleanup integration and no-arbitrary-command authority cannot yet be claimed from these token tests. This is a qualification boundary, not a demand for a generic cleanup callback adapter. The earlier staged provenance concern must move to the actual future provider call seam, not be treated as already migrated by the canonical tests.
+
+Storage confirms the parent check intentionally accommodated Bazel watch teardown aborting its own additional controller. It is authoring an explicit exact-alias handled-stop acknowledgement requiring healthy original parent and actually aborted additional signal, with terminal post-drain rejection for unacknowledged cancellation. That proposed successor was not reread or qualified here. Storage also confirms physical token binding remains unqualified and belongs to the Native cleanup owner.

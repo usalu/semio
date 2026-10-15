@@ -2,7 +2,8 @@
 import {expect,it} from "vitest";
 import Ajv from "ajv";
 import {Box2,Vector2} from "three";
-import {chromePanelSafeArea,type Anchor,type SafeAreaYield} from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { chromePanelSafeArea, type SafeAreaYield } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+import { type Anchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import fixture from "../🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
 
 const box=(row:readonly number[])=>new Box2(new Vector2(row[0],row[1]),new Vector2(row[0]!+row[2]!,row[1]!+row[3]!));

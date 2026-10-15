@@ -9,7 +9,7 @@ import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modu
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-stdio-semio"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-hub-stdio-semio"], this.repoRoot, this.invocation, rest);
   }
 }
 

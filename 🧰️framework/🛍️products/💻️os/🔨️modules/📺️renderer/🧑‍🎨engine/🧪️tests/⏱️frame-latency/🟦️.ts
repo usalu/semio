@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "⏱️frame-latency", "🔣️.json"), "utf8"));
@@ -100,12 +101,12 @@ describe("⏱️ authority-correlated frame latency diagnostics", () => {
 
   test("the WGPU boundaries publish explicit authority domains through dumpFrameStats", () => {
     const latency = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "⏱️frame-latency", "🦀️.rs"), "utf8");
-    const renderer = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🧊️renderer", "🦀️.rs"), "utf8");
+    const renderer = readModuleTreeSource(join(engineRoot, "🎯️targets", "🧊️wgpu", "🧊️renderer", "🦀️.rs"));
     const worker = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🌐️browser-worker", "🦀️.rs"), "utf8");
     const host = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🪟️winit-app", "🦀️.rs"), "utf8");
-    const shell = readFileSync(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
+    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"));
     const bridge = readFileSync(join(engineRoot, "🧱️elements", "🌉️ProgramBridge", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
-    const interpreter = readFileSync(join(engineRoot, "🧱️elements", "🗣️Interpreter", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
+    const interpreter = readModuleTreeSource(join(engineRoot, "🧱️elements", "🗣️Interpreter", "🎯️targets", "🧊️wgpu", "🦀️.rs"));
     expect(latency).toContain("FrameLatencyAuthorityDomain::RendererFrame");
     expect(latency).toContain("FrameLatencyAuthorityDomain::BrowserInputBatch");
     expect(worker).toContain("FrameLatencyAuthority::browser_input_batch");

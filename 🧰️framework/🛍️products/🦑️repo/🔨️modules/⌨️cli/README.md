@@ -14,6 +14,10 @@ a dependency of this crate.
 - `📦️packages/🐹️go` — `github.com/usalu/semio/repo/cli`, entry point in `📦️packages/🐹️go/🚀️bin`
 - `📦️packages/🟦️typescript` — the binary-resolution and invocation helpers
 
+## 🧱️ Rust layout
+
+The lib root mounts three modules: `🧭️repo-cli` (the `repo_cli` facade over `🎮️command-framework`, `🌳️command-tree`, `🗂️tree-source-and-search`, `🚦️verbs` and `🚀️run-and-projection`), `📡️event-stream` (events, Go-twin formatting and the renderers, a leaf every other module reads) and `🔌️mcp-verb` (the production repository of the `repo` MCP server). `🚦️verbs` reaches `🔌️mcp-verb`, which reaches `📡️event-stream` only, so the `mcp` verb and the MCP repository share no cycle.
+
 ## 🧪️ Tests
 
 One `🥒️.feature` per case under `🧪️tests/` with an adapter per implementation, run through the

@@ -4,21 +4,32 @@ name = "semio-framework-pets"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Pets product core: the pets contract types (schema: menageries of rigged species, the stage, its events and frames), validation, deterministic trigonometry in turns, counter-based randomness, the forward kinematics of a rig, animation (clips, springs, blinks), terrain (perches, walls, strides, falls, hops), the swing of ropes and parachutes, climbing (walls, ladders, grappling ropes, routes), behaviour (weights, dwells, encounters, needs, casts), feeling (moods, states, chemistry), gesture recognition, clearance (bodies, claims, the proof that no two overlap), effects (particles), mischief, and the stage that folds events into frames — draft, spacing, schedule, attention, locomotion, sociability, choice, population, clock and projection. Pure functions only, bit for bit the results of the TypeScript twin @semio-tech/pets."
+description = "Pets product façade: the one crate (lib `pets`) the language-agnostic subject hosts link. The pure core is carved into the producer crates semio-framework-pets-contract, -kinematics, -clearance, -traversal, -interaction, -character and -staging; this crate re-exports exactly the names the cases call, bit for bit the results of the TypeScript twin @semio-tech/pets."
 
 [package.metadata.semio]
 role = "product"
 id = "pets"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
 
 [lints]
 workspace = true
 
 [lib]
 name = "pets"
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [dependencies]
-serde = { workspace = true }
+semio-framework-pets-contract = { path = "../../🔨️modules/📜️contract/📦️packages/🦀️rust" }
+semio-framework-pets-kinematics = { path = "../../🔨️modules/⚙️kinematics/📦️packages/🦀️rust" }
+semio-framework-pets-clearance = { path = "../../🔨️modules/🚧️clearance/📦️packages/🦀️rust" }
+semio-framework-pets-traversal = { path = "../../🔨️modules/🧭️traversal/📦️packages/🦀️rust" }
+semio-framework-pets-interaction = { path = "../../🔨️modules/🖱️interaction/📦️packages/🦀️rust" }
+semio-framework-pets-character = { path = "../../🔨️modules/🎭️character/📦️packages/🦀️rust" }
+semio-framework-pets-staging = { path = "../../🔨️modules/🎬️staging/📦️packages/🦀️rust" }
 # 🎯️ `float_roundtrip`: without it serde_json reads a long decimal one unit in the last place off (measured:
 # 0.9421396472025663 came back as 0.9421396472025664), while JSON.parse and Python round correctly. The subject
 # hosts and the unit tests must feed the twins the very doubles the other languages read, or nothing is bit-exact.

@@ -11,7 +11,7 @@ process.env.RUST_MIN_STACK ??= String(32 * 1024 * 1024);
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-wfc"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-hub-wfc"], this.repoRoot, this.invocation, rest);
   }
 }
 

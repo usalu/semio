@@ -16,7 +16,7 @@ class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const names = assertConcreteCompositionOwnership(this.root);
     const { rest } = resolveTestLevel(segments, "quick");
-    await runRepositoryCargoTests(names, this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(names, this.repoRoot, this.invocation, rest);
   }
 }
 

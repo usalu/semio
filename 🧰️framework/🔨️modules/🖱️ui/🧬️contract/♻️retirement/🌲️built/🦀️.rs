@@ -1,7 +1,8 @@
 //! 🌲️ Exact typed built-tree retirement across ordinary and rejected retained child pages.
 
 use super::*;
-use crate::builder::{BuiltChildRetirementNext, BuiltChildrenIntoIter, BuiltNode, UI_BUILT_CHILD_RETIRE_SLOTS};
+use crate::builder::{BuiltChildRetirementNext, BuiltChildrenIntoIter, BuiltNode};
+use semio_framework_ui_contract_budget::UI_BUILT_CHILD_RETIRE_SLOTS;
 use std::mem::ManuallyDrop;
 
 const _: () = {

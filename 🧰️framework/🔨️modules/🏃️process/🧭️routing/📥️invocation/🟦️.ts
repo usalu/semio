@@ -1,5 +1,9 @@
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
-import { requireExactKeys, requireRecord, validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { compileJsonSchemaSubset, requireExactKeys, requireRecord } from "../../../🧬️schema/✅️validator/🟦️.ts";
+import {types} from "node:util";
+
+const scriptPolicyContract = compileJsonSchemaSubset(schema);
+const immutablePolicies = new WeakSet<object>();
 
 /** 🧬️ Names the original caller's finite or ordinary no-deadline command authority. */
 export type ScriptPolicy = Readonly<{ version: 1; owner: string; maximumElapsedMilliseconds: number }>;
@@ -21,7 +25,9 @@ export interface ScriptInvocation<Capabilities extends object = object> {
 
 /** 🔐️ Admits a complete authored wire policy including explicit zero for no deadline. */
 export function readScriptPolicy(value: unknown): ScriptPolicy {
-  if (validateJsonSchemaSubset(schema, value).length) throw Error("Complete Script policy required");
+  if (value !== null && typeof value === "object" && immutablePolicies.has(value)) return value as ScriptPolicy;
+  if (scriptPolicyContract.validate(value).length) throw Error("Complete Script policy required");
+  if (value !== null && typeof value === "object" && !types.isProxy(value) && Object.isFrozen(value) && [null,Object.prototype].includes(Object.getPrototypeOf(value)) && Reflect.ownKeys(value).length === 3 && Reflect.ownKeys(value).every(key=>{const descriptor=Object.getOwnPropertyDescriptor(value,key)!;return typeof key==="string"&&"value"in descriptor&&!descriptor.writable&&!descriptor.configurable&&["string","number"].includes(typeof descriptor.value);})) immutablePolicies.add(value);
   return value as ScriptPolicy;
 }
 

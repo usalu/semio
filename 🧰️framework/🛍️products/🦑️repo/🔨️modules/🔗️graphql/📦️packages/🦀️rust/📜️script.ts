@@ -8,6 +8,7 @@ import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/�
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const CRATE = "semio-framework-repo-graphql";
+const SCHEMA_CRATE = "semio-framework-repo-graphql-schema";
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -18,7 +19,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([CRATE], this.repoRoot, this.invocation, rest);
+    await runRepositoryCargoTests([SCHEMA_CRATE, CRATE], this.repoRoot, this.invocation, rest);
   }
 }
 

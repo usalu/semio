@@ -2,6 +2,10 @@
 use super::*;
 use semio_framework_value::RetirementDemand;
 
+/// 🪪️ Compares a live original payload source without lending its ledger or authority.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct OriginalPayloadSourceIdentity(pub(super) usize);
+
 /// 🎟️ Owns one paid original operation ledger; genuine caller turns borrow it until separate closure.
 pub struct JobPayloadAuthority{original:ManuallyDrop<Option<Arc<JobPayloadOperationLedger>>>}
 impl JobPayloadAuthority{
@@ -9,12 +13,18 @@ impl JobPayloadAuthority{
  fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
  pub fn admit(operation:OperationId,generation:Generation,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{let demand=Self::admission_demand();if !Self::permits(grant,demand){return Ok(None)}let original=Some(Arc::new(JobPayloadOperationLedger::new(operation,generation)));Ok(Some((Self{original:ManuallyDrop::new(original)},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:0})))}
  pub(super) fn original(&self)->Option<&Arc<JobPayloadOperationLedger>>{self.original.as_ref()}
+ pub fn identity(&self)->Option<OriginalPayloadSourceIdentity>{self.original().map(|ledger|OriginalPayloadSourceIdentity(Arc::as_ptr(ledger)as usize))}
+ /// 🧮️ Reads only this original ledger's accounted live backing; custody remains private.
+ pub fn accounted_capacity_bytes(&self)->usize{self.original().map_or(0,|ledger|ledger.process_share_bytes())}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()}
  pub fn retirement_demands(&self)->RetirementDemand{if self.terminal_is_empty(){return Default::default()}RetirementDemand{copy_bytes:Self::admission_demand().copy_bytes,release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<JobPayloadOperationLedger>(),depth:1,..Default::default()}}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.retirement_demands();if !Self::permits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}let original=self.original.take().unwrap();let (copied_bytes,released_bytes)=if let Some(original)=Arc::into_inner(original){drop(original);(demand.copy_bytes,demand.release_bytes)}else{(0,0)};Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes:0,released_bytes}))}
 }
 impl Drop for JobPayloadAuthority{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original payload authority reached Drop before separate paid ledger closure");}}
 
+/// 🪪️ Compares the current live in-place header storage without lending payload or ledger custody.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct OriginalPayloadBuilderIdentity(usize);
 /// 🧱️ Enclosing job admission owns this storage; bounded turns initialize its original fields.
 const JOB_PAYLOAD_BINDINGS_PER_INITIALIZATION_TURN:usize=16;
 pub struct RetainedPayloadBuilder{original:MaybeUninit<RetainedJobPayload>,stream:JobPayloadStream,initialized:usize,ready:bool,sealed:bool}
@@ -29,6 +39,10 @@ impl RetainedPayloadBuilder{
  pub fn original(&self)->Option<&RetainedJobPayload>{self.ready.then(||unsafe{self.original.assume_init_ref()})}
  pub fn published(&self)->Option<&RetainedJobPayload>{if self.sealed{self.original()}else{None}}
  pub fn is_initialized(&self)->bool{self.ready}
+ /// 🪪️ Observes this live storage location; moving its enclosing owner changes the observation.
+ pub fn native_header_identity(&self)->OriginalPayloadBuilderIdentity{OriginalPayloadBuilderIdentity(self.original.as_ptr()as usize)}
+ /// 🏗️ Reads the exact initialized native binding prefix without borrowing uninitialized fields.
+ pub fn initialized_bindings(&self)->usize{self.initialized}
  /// 🏷️ Rebinds only an empty original carrier on one caller-funded metadata turn.
  pub fn select_stream(&mut self,stream:JobPayloadStream,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.stream==stream{return Ok(RetainedCloneStep::Complete(Default::default()))}if !self.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original payload stream rebind requires terminal empty custody"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.stream=stream;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}
  pub fn terminal_is_empty(&self)->bool{!self.ready&&self.initialized==0}

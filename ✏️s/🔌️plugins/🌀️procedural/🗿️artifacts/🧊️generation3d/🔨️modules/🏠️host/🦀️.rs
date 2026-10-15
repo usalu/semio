@@ -69,7 +69,7 @@ struct Generation3dPublicationLease {
     terminal: bool,
 }
 
-impl semio_framework_job::FixedOperationOwner for Generation3dPublicationLease {
+impl semio_framework_job_registry::FixedOperationOwner for Generation3dPublicationLease {
     fn retained_bytes(&self) -> usize {
         size_of::<Self>()
     }
@@ -102,15 +102,15 @@ impl semio_framework_job::FixedOperationOwner for Generation3dPublicationLease {
     }
 }
 
-type Generation3dPublicationRegistry = semio_framework_job::FixedOperationRegistry<Generation3dPublicationLease, GENERATION3D_PUBLICATION_SLOTS>;
+type Generation3dPublicationRegistry = semio_framework_job_registry::FixedOperationRegistry<Generation3dPublicationLease, GENERATION3D_PUBLICATION_SLOTS>;
 
 fn generation3d_publication_leases() -> &'static std::sync::Mutex<Generation3dPublicationRegistry> {
-    static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job::FixedOperationRegistry<Generation3dPublicationLease, GENERATION3D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
+    static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job_registry::FixedOperationRegistry<Generation3dPublicationLease, GENERATION3D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
     LEASES.get_or_init(|| std::sync::Mutex::new(Generation3dPublicationRegistry::new(GENERATION3D_PUBLICATION_SLOTS * size_of::<Generation3dPublicationLease>())))
 }
 
-fn generation3d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::FixedOperationKey {
-    semio_framework_job::FixedOperationKey::new(operation, generation)
+fn generation3d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job_registry::FixedOperationKey {
+    semio_framework_job_registry::FixedOperationKey::new(operation, generation)
 }
 
 #[cfg(test)]
@@ -195,13 +195,13 @@ pub fn generation3d_admit_publication_authority(
 /// an unrelated host publication mapping to the same slot. The host drives one replacement per instance at a time, so this
 /// authority holds exactly one lease and a new self-grant supersedes the load the host already abandoned; it is released
 /// through `generation3d_release_app_publication_authority` at validation, cancellation, fault and initializer close.
-fn generation3d_app_publication_lease() -> &'static std::sync::Mutex<Option<(semio_framework_job::FixedOperationKey, Generation3dPublicationLease)>> {
-    static LEASE: std::sync::OnceLock<std::sync::Mutex<Option<(semio_framework_job::FixedOperationKey, Generation3dPublicationLease)>>> = std::sync::OnceLock::new();
+fn generation3d_app_publication_lease() -> &'static std::sync::Mutex<Option<(semio_framework_job_registry::FixedOperationKey, Generation3dPublicationLease)>> {
+    static LEASE: std::sync::OnceLock<std::sync::Mutex<Option<(semio_framework_job_registry::FixedOperationKey, Generation3dPublicationLease)>>> = std::sync::OnceLock::new();
     LEASE.get_or_init(|| std::sync::Mutex::new(None))
 }
 
 /// 🔎️ One lease by its exact key, from the host table first and the app self-grant second.
-fn generation3d_publication_lease_by_key(key: semio_framework_job::FixedOperationKey) -> Result<Option<Generation3dPublicationLease>, &'static str> {
+fn generation3d_publication_lease_by_key(key: semio_framework_job_registry::FixedOperationKey) -> Result<Option<Generation3dPublicationLease>, &'static str> {
     let leases = generation3d_publication_leases().try_lock().map_err(|_| "generation3d-publication.contended")?;
     if let Some(lease) = leases.get(key) {
         return Ok(Some(*lease));

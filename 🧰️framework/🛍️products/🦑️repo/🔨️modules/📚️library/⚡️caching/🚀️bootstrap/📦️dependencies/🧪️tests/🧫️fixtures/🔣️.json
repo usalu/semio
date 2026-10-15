@@ -71,5 +71,24 @@
     ],
     "forwardBytes": 1000,
     "heartbeatMs": 1000
+  },
+  "graphBindings": [
+    null,
+    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  ],
+  "loadedToolkit": {
+    "field": "SEMIO_NX_TOOLING_ROOT",
+    "expression": "dirname(tooling.modulePath)",
+    "cases": [
+      {
+        "modulePath": "/bounded/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/node_modules",
+        "root": "/bounded/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "modulePath": "/bounded space/nx/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/node_modules",
+        "root": "/bounded space/nx/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ]
   }
 }

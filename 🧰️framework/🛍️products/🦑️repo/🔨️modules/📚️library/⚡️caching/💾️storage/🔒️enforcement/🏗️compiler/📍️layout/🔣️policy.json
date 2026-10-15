@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "buildNamespace": "b",
+  "modes": {
+    "prototype": "p",
+    "release": "r"
+  },
+  "targetNamespace": "t"
+}

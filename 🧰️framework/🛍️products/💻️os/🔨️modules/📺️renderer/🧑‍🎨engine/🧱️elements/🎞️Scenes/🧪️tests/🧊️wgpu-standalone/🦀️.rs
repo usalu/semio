@@ -58,9 +58,9 @@ fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 #[test]
 fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_only() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    const SCENES_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
-    const INTERPRETER_SOURCE: &str = include_str!("../../../🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
-    const ENGINE_CANVAS_SOURCE: &str = include_str!("../../../⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
+    const SCENES_SOURCE: &str = crate::scenes::SCENES_SOURCE;
+    const INTERPRETER_SOURCE: &str = crate::interpreter::INTERPRETER_SOURCE;
+    const ENGINE_CANVAS_SOURCE: &str = crate::engine_canvas::ENGINE_CANVAS_SOURCE;
     const ENGINE_CANVAS_STANDALONE: &str = include_str!("../../../⚙️EngineCanvas/🧪️tests/🧊️wgpu-standalone/🦀️.rs");
     const STANDALONE_SOURCE: &str = include_str!("🦀️.rs");
     assert!(!SCENES_SOURCE.contains(concat!("queue_", "event(")));
@@ -527,7 +527,7 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
 }
 
 #[cfg(test)]
-fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Viewport {
+pub(crate) fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Viewport {
     let mut min_x = f32::INFINITY;
     let mut min_y = f32::INFINITY;
     let mut max_x = f32::NEG_INFINITY;
@@ -556,7 +556,7 @@ fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Vie
 }
 
 #[cfg(test)]
-fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_json: Option<&str>, navigator_viewport: &Viewport, navigator_inner: Rect) -> Option<Rect> {
+pub(crate) fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_json: Option<&str>, navigator_viewport: &Viewport, navigator_inner: Rect) -> Option<Rect> {
     let content_viewport_json = content_viewport_json?;
     let content_camera = Viewport::from_json(content_camera_json);
     let size: Value = serde_json::from_str(content_viewport_json).ok()?;
@@ -603,7 +603,7 @@ fn test_find_ink_item<'a>(blocks: &'a [Value], id: &str) -> Option<&'a Value> {
 }
 
 #[cfg(test)]
-fn ink_items_at_point<'a>(blocks: &'a [Value], overrides: &BTreeMap<String, Value>, x: f64, y: f64) -> Vec<&'a Value> {
+pub(crate) fn ink_items_at_point<'a>(blocks: &'a [Value], overrides: &BTreeMap<String, Value>, x: f64, y: f64) -> Vec<&'a Value> {
     let mut flat = flatten_ink_items(blocks);
     flat.reverse();
     flat.into_iter().filter(|block| ink_effective_bounds(block, overrides).contains_point(x, y)).collect()
@@ -1077,7 +1077,7 @@ pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x:
 }
 
 #[cfg(test)]
-fn cursor_from_click(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, scroll: f32) -> usize {
+pub(crate) fn cursor_from_click(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, scroll: f32) -> usize {
     let Some(editor) = &scene.text_editor else {
         return 0;
     };
@@ -1101,7 +1101,7 @@ fn cursor_from_click(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
 }
 
 #[cfg(test)]
-fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
+pub(crate) fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
     let mut index = 0usize;
     for (line_index, line) in text.lines().enumerate() {
         let next = index + line.len() + 1;

@@ -6,8 +6,8 @@ import {runOwnedCommand} from "../../../../../../🔨️modules/🏃️process/�
 import { scriptInvocationEnvironment,receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {runDeclaredRustBuildV1} from "../../../📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts";
-import {runOwnedNxInvocationV1} from "../../../📚️library/⚡️caching/🚀️bootstrap/📜️script.ts";
-/** ⚙️ Builds, installs and tests the `semio-framework-repo-dashboard` crate and execs its `semio` binary (nx bridge for `repo/dashboard/rs`). */
+import {runOwnedBuildChildInvocationV1} from "../../../📚️library/🏗️build/📜️script.ts";
+/** ⚙️ Builds, installs and tests the `semio-framework-repo-dashboard` crate and execs its `semio` binary (owned build route for `repo/dashboard/rs`). */
 import {join,relative} from "node:path";
 import {runRepositoryCargoTestExecutableV1} from "../../../📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🟦️.ts";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -49,7 +49,7 @@ class LaunchScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
-    if(process.env.NX_TASK_TARGET_PROJECT!=="@semio-tech/repo-dashboard-rs"||process.env.NX_TASK_TARGET_TARGET!=="build"){await runOwnedNxInvocationV1(this.repoRoot,["run","@semio-tech/repo-dashboard-rs:build",...segments],this.invocation);return;}
+    if(process.env.SEMIO_TASK_PROJECT!=="@semio-tech/repo-dashboard-rs"||process.env.SEMIO_TASK_TARGET!=="build"){await runOwnedBuildChildInvocationV1(this.repoRoot,["run","@semio-tech/repo-dashboard-rs:build",...segments],this.invocation);return;}
     await buildAndInstallDashboard(this.root,this.repoRoot,dashboardOptions(this.invocation,this.repoRoot));
   }
 }

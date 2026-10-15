@@ -1,0 +1,9 @@
+# Neutral Prebirth Build Grants
+
+The authored build-grant schema declares neutral repository requests. It now explicitly documents that the selected implementation derives its exact private launches before the Original process envelope is created. Existing GUI declarations remain neutral.
+
+The language-neutral bootstrap corpus covers Nx setup, reset, a translated build request and Bazel. Independent Ajv validates authored declarations; installed Lodash structural equality checks the full expected admitted object. The regression also checks unchanged authored bytes, native resource limits, build mode, idempotent private-launch deduplication and rejection of an unauthorized request, workspace, tool, invalid native limit or conflicting mode.
+
+The genuine Original120 focused RED run exited one: two passes, seven failures, 52 assertions, 489 ms. The three new Nx cases and four existing editor/GUI cases all failed with the exact old error `Prebirth Nx launch declaration required`; the Bazel case and writer-port case passed. The production factory then changed to append only missing exact backend-derived launches and revalidate the complete grant against the caller schema and authored request. It never merges backend native resources into authored limits. The Source change awaits the focused GREEN run.
+
+The focused GREEN run passed nine tests, 160 assertions, zero failures in 1.60 s under a genuine Original120 and the actual installed SDK reader. It covered all four literal bootstrap cases, the tight editor grant, all three relative GUI grants and the actual defining writer-port export list. The graph writer-port corpus now includes the existing prepareBuildGraphOptionalHeadroomV1 export, checked through the existing TypeScript AST and live module export test. These focused results do not qualify a complete workspace graph or every backend runtime.

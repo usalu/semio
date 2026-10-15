@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "module": "euler",
+      "owner": "semio-framework-3d-brep-construction",
+      "namespace": "euler"
+    },
+    {
+      "module": "primitives",
+      "owner": "semio-framework-3d-brep-construction",
+      "namespace": "primitives"
+    },
+    {
+      "module": "staged",
+      "owner": "semio-framework-3d-brep-construction",
+      "namespace": "staged"
+    },
+    {
+      "module": "sew",
+      "owner": "semio-framework-3d-brep-construction",
+      "namespace": "sew"
+    },
+    {
+      "module": "transform",
+      "owner": "semio-framework-3d-brep-construction",
+      "namespace": "transform"
+    },
+    {
+      "module": "boolean",
+      "owner": "semio-framework-3d-brep-boolean",
+      "namespace": ""
+    },
+    {
+      "module": "sweep",
+      "owner": "semio-framework-3d-brep-sweep",
+      "namespace": ""
+    },
+    {
+      "module": "offset",
+      "owner": "semio-framework-3d-brep-offset",
+      "namespace": ""
+    },
+    {
+      "module": "blend",
+      "owner": "semio-framework-3d-brep-offset",
+      "namespace": "blend"
+    }
+  ],
+  "sourceRoots": [
+    "🧰️framework/🔨️modules/🧊️3d/📐️brep",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep"
+  ]
+}

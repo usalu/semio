@@ -2,6 +2,7 @@
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧩️ Puzzle artifact test infrastructure router: `bun ./📜️script.ts test`. */
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -28,7 +29,7 @@ type PublicationGroup = {
   blocker?: string;
 };
 
-type PublicationOwner = { owner: "Puzzle2dPlayApp" | "Puzzle3dPlayApp" | "Puzzle5dPlayApp"; source: string; groups: PublicationGroup[] };
+type PublicationOwner = { owner: "Puzzle2dPlayApp" | "Puzzle3dPlayApp" | "Puzzle5dPlayApp"; source: string; mounted?: string[]; groups: PublicationGroup[] };
 type PublicationFixture = { schema: string; closePageBytes: number; owners: PublicationOwner[]; laws: Record<string, boolean> };
 
 const reserved5d = new Set(["copy", "cut", "paste", "import-media"]);
@@ -208,6 +209,12 @@ function puzzle3dHostileSources(source: string): Map<string, string> {
   ]);
 }
 
+/** 🪓️ One owner's editor source as the unsplit editor file held it: every child the fixture declares as mounted from the root first, then the root, so the root's `UnitTests` region still closes the production prefix the oracle reads. */
+function ownerSource(puzzleRoot: string, owner: PublicationOwner): string {
+  const directory = resolve(puzzleRoot, owner.source, "..");
+  return [...(owner.mounted ?? []).map((path) => readFileSync(resolve(directory, path), "utf8")), readFileSync(resolve(puzzleRoot, owner.source), "utf8")].join("\n");
+}
+
 function ownerOracle(owner: PublicationOwner, source: string): boolean {
   const production = source.split("//#region 🧪️UnitTests")[0]!;
   const pairs = manifestPairs(production);
@@ -327,7 +334,7 @@ class PublicationAuthorityAuditScript extends BundleScript {
       throw new Error(`unknown owner ${JSON.stringify(onlyOwner)}; expected one of ${fixture.owners.map((owner) => owner.owner).join(", ")}`);
     }
     for (const owner of auditedOwners) {
-      const source = await Bun.file(resolve(puzzleRoot, owner.source)).text();
+      const source = ownerSource(puzzleRoot, owner);
       if (!ownerOracle(owner, source)) throw new Error(`${owner.owner} publication authority diverged from the fixture`);
       const blocked = owner.groups.find((group) => group.status === "batch-only-pending-rewrite")?.routes[0];
       if (blocked) {

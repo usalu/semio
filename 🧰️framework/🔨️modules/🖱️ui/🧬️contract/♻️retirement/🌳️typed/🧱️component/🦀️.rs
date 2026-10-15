@@ -166,8 +166,7 @@ typed_scalar!(
 impl UiTypedRetire for UiText {
     fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { Ok(0) }
     fn retire_typed(&mut self, _: &mut [u8], _: &mut Option<UiValueRetirement>, maximum_bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
-        let bytes = self.len().min(maximum_bytes);
-        self.len -= bytes as u16;
+        let bytes = self.retire_bytes(maximum_bytes);
         Ok(UiValueRetirementStep { complete: self.is_empty(), progressed: true, released_items: 0, released_bytes: bytes })
     }
 }

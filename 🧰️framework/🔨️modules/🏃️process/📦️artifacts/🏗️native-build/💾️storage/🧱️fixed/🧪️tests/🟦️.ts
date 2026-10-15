@@ -14,7 +14,8 @@ test("native fixed storage selects every declared desktop platform and refuses f
 });
 
 test("native output path admission rejects dangling symlinks before any materialization",()=>{
- const root=mkdtempSync(join(process.cwd(),".cache/b/l/m/data/p-")),database=new Database(":memory:");
+ if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("Native storage path tests require explicit SEMIO_TEST_ARTIFACT_DIR");
+ const root=mkdtempSync(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR),"p-")),database=new Database(":memory:");
  try{mkdirSync(join(root,"nested"));symlinkSync(join(root,"absent"),join(root,"dangling"),process.platform==="win32"?"junction":"dir");expect(lstatSync(join(root,"dangling")).isSymbolicLink()).toBe(true);for(const row of fixture.paths){const path=resolve(root,row.path),oracle=database.query("SELECT instr(? || '/', ? || '/') = 1 AND ? NOT LIKE 'dangling/%' AS admitted").get(path,root,row.path) as {admitted:number};expect(Boolean(oracle.admitted)).toBe(row.accepted);if(row.accepted)expect(requireNativeStoragePathV1(root,path)).toBe(path);else expect(()=>requireNativeStoragePathV1(root,path)).toThrow();}console.log("[DEBUG] No-follow output path admission refuses dangling symlink and foreign boundary before writes");}finally{database.close();rmSync(root,{recursive:true,force:true});}
 });
 

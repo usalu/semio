@@ -37,25 +37,6 @@ impl Default for JobOutcomeSlot { fn default() -> Self { Self::empty() } }
 impl std::fmt::Debug for JobOutcomeSlot { fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.debug_struct("JobOutcomeSlot").field("original", &self.original()).finish() } }
 impl Drop for JobOutcomeSlot { fn drop(&mut self) { assert!(std::thread::panicking() || self.is_empty(), "job outcome slot abandoned its original carrier"); } }
 
-/// 🧩️ Original inline worker job whose terminal removal never transfers its carrier by value.
-pub struct WorkerJobSource<J>{pub(super) original:MaybeUninit<J>,pub(super) present:bool,pub(super) operation:OperationId,pub(super) generation:Generation}
-impl<J> WorkerJobSource<J>{
-    pub(super) fn from_job(job:J,operation:OperationId,generation:Generation)->Self{Self{original:MaybeUninit::new(job),present:true,operation,generation}}
-    pub(super) fn original(&self)->Option<&J>{if self.present{Some(unsafe{self.original.assume_init_ref()})}else{None}}
-    pub(super) fn original_mut(&mut self)->Option<&mut J>{if self.present{Some(unsafe{self.original.assume_init_mut()})}else{None}}
-    pub(super) fn is_empty(&self)->bool{!self.present}
-    pub(super) fn terminal_removal_demands(&self)->RetirementDemand{if self.present{RetirementDemand{copy_bytes:0,depth:1,..Default::default()}}else{Default::default()}}
-}
-impl<J:InteractiveJob> WorkerJobSource<J>{
-    pub(super) fn remove_terminal(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let demand=self.terminal_removal_demands();turn(demand,grant,|_|{
-        let Some(original)=self.original()else{return Ok((RetainedCloneStep::Complete(Default::default()),true));};
-        if !original.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker job removal precedes its terminal witness"));}
-        unsafe{self.original.assume_init_drop();}self.present=false;
-        Ok((RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()}),true))
-    })}
-}
-impl<J> Drop for WorkerJobSource<J>{fn drop(&mut self){assert!(std::thread::panicking()||self.is_empty(),"worker job slot abandoned its original carrier");}}
-
 /// 🛟️ Original inline fault payload whose terminal carrier is dropped in place under its presence grant.
 pub struct JobPayloadSlot { pub(super) original: MaybeUninit<RetainedJobPayload>, pub(super) present: bool }
 impl JobPayloadSlot {

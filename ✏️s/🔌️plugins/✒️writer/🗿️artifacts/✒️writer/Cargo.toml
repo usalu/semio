@@ -39,10 +39,6 @@ path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️package
 [workspace.dependencies.semio-framework-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-docx]
-path = "../../../🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-docx-base-model]
 path = "../../../🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-json]

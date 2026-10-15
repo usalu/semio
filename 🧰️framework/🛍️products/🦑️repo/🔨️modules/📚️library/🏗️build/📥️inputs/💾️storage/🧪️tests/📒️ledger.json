@@ -1,0 +1,299 @@
+{
+  "version": 1,
+  "incremental": {
+    "maximumBytes": 64,
+    "initialBytes": 4,
+    "publicationBytes": 3,
+    "crashBytes": 13,
+    "orphanBytes": 5,
+    "orphanAgeMilliseconds": 7200000,
+    "crashExitCode": 17
+  },
+  "maximumBytes": 16,
+  "minimumAvailableBytes": 8,
+  "availableBytes": 64,
+  "initialBytes": 4,
+  "publications": [
+    {
+      "plan": {
+        "peakBytes": 10,
+        "retainedDeltaBytes": 6
+      },
+      "accepted": true,
+      "afterBytes": 10
+    },
+    {
+      "plan": {
+        "peakBytes": 7,
+        "retainedDeltaBytes": 1
+      },
+      "accepted": false,
+      "afterBytes": 10
+    },
+    {
+      "plan": {
+        "peakBytes": 6,
+        "retainedDeltaBytes": -4
+      },
+      "accepted": true,
+      "afterBytes": 6
+    }
+  ],
+  "failedPublication": {
+    "peakBytes": 8,
+    "retainedDeltaBytes": 8
+  },
+  "failedPhysicalBytes": 3,
+  "invalidPlans": [
+    {
+      "peakBytes": 1,
+      "retainedDeltaBytes": 2
+    },
+    {
+      "peakBytes": -1,
+      "retainedDeltaBytes": 0
+    },
+    {
+      "peakBytes": 1,
+      "retainedDeltaBytes": 0,
+      "extra": true
+    }
+  ],
+  "concurrency": {
+    "differentIdentityEnters": true,
+    "sameIdentityEnters": false,
+    "contenderMilliseconds": 1500,
+    "firstValue": "first",
+    "secondValue": "second",
+    "publicationBytes": 4096,
+    "optionalMaximumBytes": 1073741824,
+    "firstInput": {
+      "value": 11
+    },
+    "secondInput": {
+      "value": 23
+    }
+  },
+  "writerCases": [
+    {
+      "kind": "selection",
+      "identity": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "kind": "selection",
+      "identity": "0000000000000000000000000000000000000000000000000000000000000001"
+    },
+    {
+      "kind": "selection",
+      "identity": "0000000000000000000000000000000000000000000000000000000000000010"
+    },
+    {
+      "kind": "selection",
+      "identity": "00000000000000000000000000000000000000000000000000000000000000ff"
+    },
+    {
+      "kind": "dataset",
+      "identity": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "kind": "dataset",
+      "identity": "0000000000000000000000000000000000000000000000000000000000000001"
+    },
+    {
+      "kind": "dataset",
+      "identity": "0000000000000000000000000000000000000000000000000000000000000010"
+    },
+    {
+      "kind": "dataset",
+      "identity": "00000000000000000000000000000000000000000000000000000000000000ff"
+    }
+  ],
+  "directoryCases": [
+    {
+      "scope": {
+        "kind": "selection",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "namespace": "build-input-closures",
+      "accepted": true
+    },
+    {
+      "scope": {
+        "kind": "selection",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "namespace": "build-lock-closures",
+      "accepted": true
+    },
+    {
+      "scope": {
+        "kind": "selection",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "namespace": "inference",
+      "accepted": true
+    },
+    {
+      "scope": {
+        "kind": "selection",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "namespace": "admission",
+      "accepted": false
+    },
+    {
+      "scope": {
+        "kind": "dataset",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "namespace": "build-input-closures",
+      "accepted": true
+    },
+    {
+      "scope": {
+        "kind": "dataset",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "namespace": "build-lock-closures",
+      "accepted": true
+    },
+    {
+      "scope": {
+        "kind": "dataset",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "namespace": "inference",
+      "accepted": true
+    },
+    {
+      "scope": {
+        "kind": "dataset",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "namespace": "admission",
+      "accepted": false
+    }
+  ],
+  "leafCases": [
+    {
+      "scope": {
+        "kind": "selection",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "path": "selections/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/np/bbbbbbbbbbbbbbbbbbbbbbbb.json",
+      "accepted": true
+    },
+    {
+      "scope": {
+        "kind": "selection",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "path": "selections/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/np/bbbbbbbbbbbbbbbbbbbbbbbb.json",
+      "accepted": false
+    },
+    {
+      "scope": {
+        "kind": "selection",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "path": "np/bbbbbbbbbbbbbbbbbbbbbbbb.json",
+      "accepted": false
+    },
+    {
+      "scope": {
+        "kind": "selection",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "path": "selections/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/inference/emoji-project-json.receipt.json",
+      "accepted": false
+    },
+    {
+      "scope": {
+        "kind": "dataset",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "path": "contexts/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/np/bbbbbbbbbbbbbbbbbbbbbbbb.json",
+      "accepted": true
+    },
+    {
+      "scope": {
+        "kind": "dataset",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "path": "contexts/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/np/bbbbbbbbbbbbbbbbbbbbbbbb.json",
+      "accepted": false
+    },
+    {
+      "scope": {
+        "kind": "dataset",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "path": "np/bbbbbbbbbbbbbbbbbbbbbbbb.json",
+      "accepted": false
+    },
+    {
+      "scope": {
+        "kind": "dataset",
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "path": "contexts/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/inference/emoji-project-json.receipt.json",
+      "accepted": false
+    }
+  ],
+  "maintenanceCases": [
+    {
+      "kind": "full",
+      "usedBytes": 0,
+      "availableBytes": 2147483648,
+      "due": false
+    },
+    {
+      "kind": "full",
+      "usedBytes": 536870913,
+      "availableBytes": 2147483648,
+      "due": true
+    },
+    {
+      "kind": "full",
+      "usedBytes": 0,
+      "availableBytes": 1073741823,
+      "due": true
+    },
+    {
+      "kind": "selection",
+      "usedBytes": 0,
+      "availableBytes": 2147483648,
+      "due": false
+    },
+    {
+      "kind": "selection",
+      "usedBytes": 536870913,
+      "availableBytes": 2147483648,
+      "due": true
+    },
+    {
+      "kind": "selection",
+      "usedBytes": 0,
+      "availableBytes": 1073741823,
+      "due": true
+    },
+    {
+      "kind": "dataset",
+      "usedBytes": 0,
+      "availableBytes": 2147483648,
+      "due": false
+    },
+    {
+      "kind": "dataset",
+      "usedBytes": 536870913,
+      "availableBytes": 2147483648,
+      "due": true
+    },
+    {
+      "kind": "dataset",
+      "usedBytes": 0,
+      "availableBytes": 1073741823,
+      "due": true
+    }
+  ]
+}

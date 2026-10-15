@@ -1,0 +1,57 @@
+# Immutable Resource Baseline Implementation
+
+The canonical namespace is unchanged. This owner is an isolated, actual-image prototype of the accepted immutable-baseline partition: old keys keep their original guard inode permanently; genuinely absent new keys may later enter a separate finite pool. It is not a path-presence fallback, an enrolled production namespace, or a cross-process reopen implementation.
+
+## Actual Evidence
+
+Prototype 70669 and strict 88172 qualified the initial complete census, original Unicode key, unresolved empty target and queue-only reservation, independent Python SQLite inventory, and genuine Node old-preopen/new-writer/old-reopen exclusion on the same captured inode. Prototype 82761 then qualified constructor-owned image lifetime and connection cleanup. These remain defining snapshots. Strict 98198 exposed two repaired type-only import/cast errors.
+
+The earlier 12457 and 63114 attempts failed at a fixture syntax error, before behavior. They are not evidence of a successful test-driven behavioral refusal. The later genuine hostile RED 50856 (`namespace-baseline-hostile-red1.log`) reported sidecar-only and claim-only targets as `new`, and admitted `a//b`, `a/`, `C:/a` and `C:a`. After precise fixes, 89623 passed those physical baseline cases plus both real quota failures, then exposed the separate canonical capability JSON behavioral RED. Final baseline/JSON prototype 92568 and release 95593 are BOTH GREEN, 17.0/19.9 seconds; expanded ES2022/noUnchecked strict 14003/94122 are BOTH GREEN. The earlier strict 40052 caught one descriptor-narrowing error, which was repaired before that final pair.
+
+The new isolated funding prototype 22818 is GREEN, 19.5 seconds. Final current-fixture prototype 27456 and release 38767 are BOTH GREEN, 21.1/20.5 seconds, with expanded strict 87898/96312 BOTH GREEN, 1.4/1.3 seconds. Its own actual 32 MiB fixed image had 4,145,152 available bytes before admission; independent Python statvfs agreed. Publication refused before creating `n`, leaving the original guard inode intact. The exact image was subsequently retired under genuine Native EX and system mount identity checks. All Storage Originals are terminal, and Nx received the explicit coherent historical-image maintenance handoff.
+
+## Current Ownership
+
+`🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️namespace/📒️baseline/🟦️.ts` constructs and retains its actual issued image for the complete baseline callback and accepted-work drain. It takes the real old queue-catalog EX, seals non-queue directory creation, inventories every physical file/directory, and writes a separately capped SQLite catalog. Its opaque private token retains a real generation SH, read-only SQLite transaction, exact catalog identity and actual image. Classification checks the full logical key. Known baseline acquisition uses only a captured binding and the original physical guard, verifies device/inode before and after acquisition, and releases the actual guard before completing accepted work.
+
+Uninitialized, oversized, foreign and unreadable targets remain unresolved hash reservations. They never acquire a different guard. A hash-only queue directory also reserves its target hash. The policy preserves original 4096 UTF-16-unit keys up to 12,288 UTF-8 bytes, while new-only keys are bounded to 4096 UTF-8 bytes. A complete legacy guard larger than 16 KiB must retain its existing identity and charge; the new prototype does not retrofit the new guard cap onto it.
+
+The immutable partition now reserves sidecar-only target hashes and target hashes carried by initialized claim records. Such records authorize refusal only, never target acquisition or retirement. Actual target bindings supersede provisional hash reservations while all physical inventory rows remain recorded. The fixed parser rejects noncanonical spellings rather than normalizing them: empty root or portable ASCII segments only, with no repeated/trailing separators, drive syntax, dot/dot-dot, trailing dots/spaces, Windows device segments or Unicode normalization aliases. All fourteen hostile namespace requests passed. No `new` classification is used by a production allocator.
+
+## Finite Metadata And Funding
+
+| Material | Current Closed Limit |
+| --- | ---: |
+| Baseline bindings | 8192 |
+| Complete inventory rows / directories | 16384 / 8192 |
+| Aggregate logical key bytes / relative path bytes | 4 MiB / 2 MiB |
+| Actual catalog SQLite file | 8 MiB |
+| Existing database observation | 1 MiB per file |
+| Receipt / publication journal / auxiliary metadata | 4096 / 24576 / 32768 bytes |
+| Existing zero-file growth / journal allowance | 24576 / 24576 bytes per file |
+
+The current pre-publication quote is 8,642,560 bytes, comprising the maximum catalog, journal, auxiliary metadata, one 128 KiB emergency extent and 64 KiB minimum working headroom. Post-census admission additionally accounts for each captured uninitialized target's candidate growth/journal allowance. Actual catalog page size/max_page_count are checked, the actual allocated publication journal is measured before commit, and the receipt is schema-checked, bounded, fsynced and followed by parent-directory fsync. Existing and newly created directory allocations are charged.
+
+These are isolated admission observations, not a reservation against unrelated concurrent image writers. The zero-file allowance still needs a hostile largest-key initialization/journal peak proof. The new-only pool's full logical keys, PINs, GUARDs, catalogs, seed, journals and all bootstrap/image/control overhead remain additional charges. The earlier 64-slot physical quote does not include the new permanent baseline ceiling. Available bytes alone do not fund enrollment.
+
+The prior mandatory pool fixture measured 2,641,920 allocated bytes. Adding the new baseline's entire 8 MiB ceiling, its separate 24 KiB publication journal and 32 KiB auxiliary bound, one 128 KiB reserve and 64 KiB working minimum gives a provisional 11,284,480-byte charge beyond the retained old population. This deliberately excludes the separately subtracted duplicated old fixture reserves; the actual canonical reserve would be charged once and preserve its inode. The number is not an admissible production quote: the old pool fixture has short PIN identities and long GUARD identities, not the required full-key PIN binding rows, and its per-namespace journals are not a qualified simultaneous live peak.
+
+The full-key pool must record namespace plus exact new logical key in the independently readable PIN binding, not just a digest. A catalog lookup takes that PIN SH before releasing catalog SH; only then may it wait for the GUARD. Reassignment must hold catalog EX, obtain PIN EX and GUARD EX without waiting, and update the full binding/generation atomically. If SQLite attached-database atomic commit is selected, its actual master-journal file is another charged artifact and must enter the full-filesystem proof; the earlier two-independent-journal result alone does not qualify that transaction. All 64 choices form one global search space; no permanent four-key hash partition and no shared live guard are permitted. Slot pressure releases lookup state and refuses rather than waiting on nested work.
+
+Every unresolved old zero-file target contributes an additional candidate 49,152-byte worst-case growth/journal allowance until its exact old initialization peak is established. Old already initialized databases and existing directories enter the permanent physical baseline from actual allocated blocks. A complete canonical quote must count actual baseline and pool metadata, possible old pending growth, current bootstrap/control/image guards, remaining mutable old tickets and claims, transient initialization/master journals, and actual minimum free room. It must fund that complete peak inside the unchanged 66,019,328-byte mounted lease filesystem before publication. The recent read-only 30,822,400-byte availability observation is not such funding.
+
+## Remaining Publication Requirements
+
+1. Physical funding, hostile corpus and both count/full-UTF-8 quota rollback/descriptor-close laws are qualified BOTH with expanded strict BOTH. Keep their primary failures and actual cleanup evidence. Reconcile and run the actual process routing suite's old mutable-identity assertions against the new stronger immutable snapshot contract at the next issuer Source window.
+2. Preserve the target/queue/sidecar/claim census in persistent recovery and account for the old mutable queue/ticket tail separately from sealed creation boundaries. Reject busy, ambiguous or unsupported observations rather than inventing another binding.
+3. Qualify authenticated reopen of a committed generation, crash-state recovery and complete funding under the actual global writer. A receipt by itself cannot issue authority. Temporary callback seals are not a persistent enrollment commit.
+4. Integrate the accepted-work registry into the single existing canonical process owner, with synchronous privately derived controls and actual operation registration through release/close. The staged second receiver must be removed, not kept as another supported birth boundary.
+5. Review the complete budget and transaction with Root before touching canonical lease data. Old records, unknown readers, old empty targets and main reserve inode remain intact. No cap increase, deletion or canonical enrollment is authorized by this report.
+
+## Canonical Bounded JSON Precheck
+
+The existing process envelope reader now calls its cohesive `📥️json` owner before recursive policy/envelope schema validation. This is data admission only, not invocation or lease authority. Iterative work frames enforce depth, planned node count, object/array cardinality, UTF-8 key/string/aggregate bytes and exact escaped JSON wire bytes. Own data descriptors are inspected without calling accessors or `toJSON`; cycles, symbols, functions, undefined, nonfinite numbers, invalid Unicode, sparse/decorated arrays and unsupported prototypes refuse. Shared acyclic data remains admissible. The result is a deep immutable snapshot with literal `__proto__` treated as data. The carried receiver also checks wire size before `JSON.parse`.
+
+Actual BOTH-mode laws compare seven neutral cases with independent Ajv and twenty-four constructed hostile cases, plus three bounded-wire checks. They confirm no accessor/serialization hook executed, immutable capture, valid shared-object handling and rejection before recursive validation. The old unbounded recursive freeze helper was removed from the staged issuer. Its registry/drain still has not been merged into the canonical owner; namespace authority, synchronous issued controls, cleanup enrollment and service promotion remain separate pending integration.
+
+Independent review subsequently identified a separate Proxy reflection boundary. Three Proxy specimens and a no-traps observation are now staged, but have not run and the production precheck has not changed during Nx's historical-image maintenance window. The planned actual system `node:util` Proxy check must execute before shape reflection and itself be qualified in Bun/Node. The prior BOTH results cover the ordinary-data defining snapshot, not that new P2. Existing process routing laws that asserted mutable object identity have been strengthened to immutable snapshot assertions; that full routing suite is also pending the next Source window. No private authority is inferred from these data tests.

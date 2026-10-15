@@ -13,7 +13,7 @@ export interface IoEntryDescriptorMirror {
 }
 
 const WRITER = "s.writer.writer@1/*";
-const TXT = "s.stdio.txt@utf-8/*";
+const TXT = "framework.io.text@utf-8/*";
 const JSON_DIALECT = "s.stdio.json@rfc8259/*";
 const MD = "s.stdio.md@commonmark/*";
 const PDF = "s.stdio.pdf@1.4/*";

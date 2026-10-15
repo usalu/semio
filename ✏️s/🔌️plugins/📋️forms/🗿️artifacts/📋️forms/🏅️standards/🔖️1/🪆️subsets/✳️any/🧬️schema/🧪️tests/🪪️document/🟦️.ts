@@ -4,8 +4,7 @@ import {parseFormsJsonDiff} from "../../../🚪️io/📝️text/🔺️diff/�
 import { applyPatch, compare } from "fast-json-patch";
 import { applyFormsDiff } from "../../🔺️diff/🟦️.ts";
 import assert from "node:assert/strict";
-import semioChildSchema from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🔣️.json" with { type: "json" };
-import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
+import { assertDocumentContractOracle, declaredChildDialectSchema } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
 /** 🧪️ Forms persisted fields and child identities agree with independent JSON Schema validation. */
 import { fileURLToPath } from "node:url";
 import ioSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
@@ -21,6 +20,8 @@ import responseSchema from "../../📨️response/🔣️.json";
 import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json" with { type: "json" };
 import importVectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/📥️import/🔣️.json";
 import contactTemplate from "../../../🖼️assets/📇️contact/🔣️.json";
+
+const semioChildSchema = declaredChildDialectSchema("https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json", childSchema.$id, { value: { artifactKind: "s.stdio.semio", standard: "v1", subset: "value" }, table: { artifactKind: "s.stdio.semio", standard: "v1", subset: "table" } });
 
 /** 📥️ Canonical import shares schema and identity checks with an independent JSON Schema oracle. */
 export async function testFormsDesignImport(): Promise<void> {

@@ -11,9 +11,9 @@
 //! @see ../../../🎲️randomness/🦀️.rs — the draws of the world
 
 use super::*;
-use crate::randomness::{random_words, unit_of};
-use crate::schema::Ending;
-use crate::terrain::{fall_step, hop_landing, hop_of, hop_step, landing_of, stride_to, Flight};
+use semio_framework_pets_contract::schema::Ending;
+use semio_framework_pets_kinematics::randomness::{random_words, unit_of};
+use semio_framework_pets_kinematics::terrain::{fall_step, hop_landing, hop_of, hop_step, landing_of, stride_to, Flight};
 
 //#region 🔖️Reference world
 /// 📜️ The rules of the world, each one a switch: the core rules `guard`, `corridors`, `vetting`, `rests`, `projection`, `poof` and `eviction`, without any of which bodies overlap, and the quality rules `heads`, `steering` and `seating`, without which pets poof or fall more often.

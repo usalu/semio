@@ -1,0 +1,350 @@
+[
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-energy-model-session"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🧪️tests/🦀️.rs",
+    "test": true,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-job-preview"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-2d-editor"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/⏯️tool-run/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-2d-preview-eval"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🔨️modules/🏠️host/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🔨️modules/🏠️host/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-2d-host"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/⏯️tool-run/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-3d-preview-eval"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-animate-presentation"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-graph-layout-run"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-sequence-sequence"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🌱️initialization/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🌱️initialization/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-3d-initialization"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-kernel"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-raster-raster"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-raster-raster"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📤️outcomes/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/📬️outcome/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-draw-drawing-host"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-draw-drawing-host"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-process-process3d-host"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/📬️outcome/🦀️.rs",
+    "test": true,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-raster-raster"
+  },
+  {
+    "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-remodel-remodeling-session"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/📤️publication/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-stdio-deflate"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/📤️jobs/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/📤️jobs/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-plugin-puzzle-jobs"
+  },
+  {
+    "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-layout-layout-engine-export"
+  },
+  {
+    "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-layout-layout-engine-json"
+  },
+  {
+    "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-layout-layout-editor"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/📤️publication/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-plugin-wfc-engine"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-gis-gismap"
+  }
+]

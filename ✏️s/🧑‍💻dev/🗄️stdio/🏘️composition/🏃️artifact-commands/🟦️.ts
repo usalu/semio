@@ -4,12 +4,12 @@ import { testStdioArtifactPackageContract, testStdioArtifactPackageGraph, verify
 export class StdioArtifactPackageContractScript extends BundleScript {
   async run(): Promise<void> {
     await verifyStdioCommandOwnership(this.repoRoot);
-    await testStdioArtifactPackageContract(this.repoRoot);
+    await testStdioArtifactPackageContract(this.repoRoot,this.invocation);
   }
 }
 
 export class StdioArtifactPackageGraphScript extends BundleScript {
   async run(): Promise<void> {
-    await testStdioArtifactPackageGraph(this.repoRoot);
+    await testStdioArtifactPackageGraph(this.repoRoot,this.invocation);
   }
 }

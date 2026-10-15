@@ -16,6 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-registry = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
+
 semio-framework = { workspace = true }
 semio-framework-2d = { workspace = true }
 semio-framework-async = { workspace = true }

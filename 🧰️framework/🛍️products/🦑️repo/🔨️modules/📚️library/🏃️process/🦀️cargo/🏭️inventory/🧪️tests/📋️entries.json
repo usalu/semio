@@ -1,0 +1,146 @@
+[
+  {
+    "script": "🧰️framework/🛍️products/💻️os/🎚️config/🏭️bridge/📜️script.ts",
+    "binary": "semio-config-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🔋️energy/🏭️bridge/📜️script.ts",
+    "binary": "semio-energy-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🏙️bim/🏭️bridge/📜️script.ts",
+    "binary": "semio-bim-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🎪️demonstrator/🏭️bridge/📜️script.ts",
+    "binary": "semio-demonstrator-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/📜️imperative/🏭️bridge/📜️script.ts",
+    "binary": "semio-imperative-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🌀️procedural/🏭️bridge/📜️script.ts",
+    "binary": "semio-procedural-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/📐️cad/🏭️bridge/📜️script.ts",
+    "binary": "semio-cad-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/📜️script.ts",
+    "binary": "semio-puzzle-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/📕️norm/🏭️bridge/📜️script.ts",
+    "binary": "semio-norm-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🀄️wfc/🏭️bridge/📜️script.ts",
+    "binary": "semio-wfc-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/💠️lowpoly/🏭️bridge/📜️script.ts",
+    "binary": "semio-lowpoly-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🪐️space/🏭️bridge/📜️script.ts",
+    "binary": "semio-space-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/📖️playbook/🏭️bridge/📜️script.ts",
+    "binary": "semio-playbook-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🖍️draw/🏭️bridge/📜️script.ts",
+    "binary": "semio-draw-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🎞️animate/🏭️bridge/📜️script.ts",
+    "binary": "semio-animate-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/✒️writer/🏭️bridge/📜️script.ts",
+    "binary": "semio-writer-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🌍️gis/🏭️bridge/📜️script.ts",
+    "binary": "semio-gis-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🏗️fem/🏭️bridge/📜️script.ts",
+    "binary": "semio-fem-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/📏️layout/🏭️bridge/📜️script.ts",
+    "binary": "semio-layout-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🎬️sequence/🏭️bridge/📜️script.ts",
+    "binary": "semio-sequence-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/💡️reasoning/🏭️bridge/📜️script.ts",
+    "binary": "semio-reasoning-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/➗️mathematical/🏭️bridge/📜️script.ts",
+    "binary": "semio-mathematical-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🌿️vcs/🏭️bridge/📜️script.ts",
+    "binary": "semio-vcs-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🎥️shooting/🏭️bridge/📜️script.ts",
+    "binary": "semio-shooting-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🏛️architect/🏭️bridge/📜️script.ts",
+    "binary": "semio-architect-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/📋️forms/🏭️bridge/📜️script.ts",
+    "binary": "semio-forms-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🗒️note/🏭️bridge/📜️script.ts",
+    "binary": "semio-note-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🏭️process/🏭️bridge/📜️script.ts",
+    "binary": "semio-process-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🌊️flow/🏭️bridge/📜️script.ts",
+    "binary": "semio-flow-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🖨️raster/🏭️bridge/📜️script.ts",
+    "binary": "semio-raster-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🪵️sourcing/🏭️bridge/📜️script.ts",
+    "binary": "semio-sourcing-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/📸️remodel/🏭️bridge/📜️script.ts",
+    "binary": "semio-remodel-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🔱️trinity/🏭️bridge/📜️script.ts",
+    "binary": "semio-trinity-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🕸️dag/🏭️bridge/📜️script.ts",
+    "binary": "semio-dag-mutation-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🏭️bridge/📜️script.ts",
+    "binary": "semio-semio-v1-base-bridge"
+  },
+  {
+    "script": "✏️s/🔌️plugins/🧱️block/🏭️bridge/📜️script.ts",
+    "binary": "semio-block-mutation-bridge"
+  }
+]

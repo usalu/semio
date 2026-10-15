@@ -16,6 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-fault-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
+semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-jack-graph-query = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

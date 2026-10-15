@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-contract-text"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Canonical UI text foundation"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

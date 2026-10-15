@@ -6,16 +6,16 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../👥️population/🟦️.ts — the TypeScript twin
 
-use crate::behavior::{dwell_of, needs_of, MODE_LIMITS};
 use crate::draft::{actor_key, blink_at, clip_at, crowd_on, hover_of, index_of, release, remove, settle, shift, shoulders, stage_key, surface_of, Draft};
-use crate::feeling::at_rest;
-use crate::gesture::{no_hover, COLD};
 use crate::locomotion::{crowd_out, drop, leave, vanish};
-use crate::randomness::{random_words, unit_of};
-use crate::schema::{Activity, Actor, Facing, Footing, Gaze, Menagerie, Perch, PetMode, Slug, Species, Surface, Surveyed, Ticks};
 use crate::spacing::{quarters, rooms_for, COMFORT_GAP};
-use crate::terrain::{landing_of, larger, perches_of, smaller};
-use crate::trigonometry::clamp;
+use semio_framework_pets_character::behavior::{dwell_of, needs_of, MODE_LIMITS};
+use semio_framework_pets_character::feeling::at_rest;
+use semio_framework_pets_contract::schema::{Activity, Actor, Facing, Footing, Gaze, Menagerie, Perch, PetMode, Slug, Species, Surface, Surveyed, Ticks};
+use semio_framework_pets_interaction::gesture::{no_hover, COLD};
+use semio_framework_pets_kinematics::randomness::{random_words, unit_of};
+use semio_framework_pets_kinematics::terrain::{landing_of, larger, perches_of, smaller};
+use semio_framework_pets_kinematics::trigonometry::clamp;
 
 //#region 🔖️Constants
 pub(crate) const CENTRED: Gaze = Gaze { x: 0.0, y: 0.0, vx: 0.0, vy: 0.0 };

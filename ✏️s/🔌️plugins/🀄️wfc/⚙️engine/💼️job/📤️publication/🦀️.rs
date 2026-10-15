@@ -1,8 +1,7 @@
 //! 📤️ Resumable publication of bounded WFC state, output, and diagnostic bytes.
 
-use semio_framework_job::{
-    InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobPayloadStream, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload, RetainedJobPublication, RetainedPayloadBuilder, StepContext,
-};
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
+use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobPayloadStream, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload, RetainedPayloadBuilder, StepContext};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 
 #[derive(Clone, Copy)]

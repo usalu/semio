@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Managed Editor Cargo Jobs Contract V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "removedEnvironment",
+    "rows"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "removedEnvironment": {
+      "const": "CARGO_BUILD_JOBS"
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 39,
+      "maxItems": 39,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "catalog",
+          "name",
+          "before",
+          "expected"
+        ],
+        "properties": {
+          "catalog": {
+            "enum": [
+              ".vscode/launch.json",
+              ".vscode/🧩️launch.seed.jsonc"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "before": {
+            "type": "object",
+            "required": [
+              "name",
+              "command",
+              "env"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "command": {
+                "type": "string"
+              },
+              "env": {
+                "type": "object"
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "name",
+              "command",
+              "env"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "command": {
+                "type": "string"
+              },
+              "env": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

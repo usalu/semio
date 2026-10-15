@@ -12,9 +12,11 @@ pub use retained_history_source::{RetainedHistorySourceDecode,RetainedHistorySou
 mod retained_history_deflate;
 pub use retained_history_deflate::{RetainedHistoryDeflateDecode,RetainedHistoryDeflatePayload,RetainedHistoryDeflateStep};
 
-use semio_framework_os_pack::{ByteReader, ByteWriter, CodecId, PackSink};
+use semio_framework_os_pack::{ByteReader, ByteWriter, CodecId};
+use semio_framework_pack_source::{PackSink};
 use protocol::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
-use protocol::wire::{DictBuilder, DictReader, ProtocolError, ProtocolLimits, RecordHasher};
+use protocol::ProtocolError;
+use protocol::wire::{DictBuilder, DictReader, ProtocolLimits, RecordHasher};
 use std::collections::{HashMap, HashSet};
 
 

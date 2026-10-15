@@ -1,0 +1,1 @@
+{ "source": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx", "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🥣️context-menu-chrome/🟦️.tsx", "names": ["ContextMenuChrome"], "doc": "🥣 Owns the shared context menu chrome frame that menus and ghost surfaces render inside.", "keepExports": "named" }

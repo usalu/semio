@@ -1,0 +1,9 @@
+import {admitCargoCompilerFlagsV1} from "./../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+const protocol=schema.definitions.Protocol.const,whitespace=new RegExp(protocol.whitespace,"u"),target=new RegExp(protocol.targetPattern,"u");
+function encoded(name:string):boolean{return protocol.encoded.includes(name);}
+function selected(name:string):boolean{return encoded(name)||protocol.plain.includes(name)||target.test(name);}
+/** 🔤️ Decodes Cargo's actual whitespace or unit-separator protocol without interpreting shell quoting. */
+export function repositoryCompilerEnvironmentTokensV1(name:string,value:string):readonly string[]{if(!selected(name))return [];if(typeof value!=="string"||Buffer.byteLength(value)>protocol.maximumValueBytes||value.includes("\0"))throw Error("Bounded compiler environment flags required");const tokens=value===""?[]:encoded(name)?value.split(protocol.separator):value.split(whitespace).filter(Boolean);if(tokens.length>protocol.maximumTokens||tokens.some(token=>token.length>4096))throw Error("Bounded compiler environment tokens required");return Object.freeze(tokens);}
+/** 🚪️ Checks every flag source, including currently shadowed values, before any admitted Cargo writer starts. */
+export function admitRepositoryCompilerEnvironmentV1(environment:Readonly<Record<string,string|undefined>>):void{let sources=0;for(const[name,value]of Object.entries(environment)){if(value===undefined||!selected(name))continue;if(++sources>protocol.maximumSources)throw Error("Compiler environment source limit exceeded");try{admitCargoCompilerFlagsV1(repositoryCompilerEnvironmentTokensV1(name,value),name.includes("RUSTDOC")?"rustdoc":"rustc");}catch(error){throw Error("Compiler environment flags belong to original repository admission",{cause:error});}}}

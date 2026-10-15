@@ -1,0 +1,3 @@
+use super::*;
+#[test]
+fn shared_budget_corpus_matches_actual_formulas(){let value:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧱️foundation/🔣️.json")).unwrap();let actual=serde_json::json!({"pageRows":UI_VALUE_PAGE_ROWS,"rowCollections":UI_VALUE_ROW_COLLECTIONS,"rowItems":UI_VALUE_ROW_ITEMS,"admissionSlots":UI_VALUE_ADMISSION_SLOTS,"aggregateItems":UI_VALUE_AGGREGATE_ITEMS,"handbackWords":UI_VALUE_HANDBACK_WORDS,"patchOps":UI_DOCUMENT_PATCH_OPS,"treeBudget":TREE_WINDOW_BODY_NODE_BUDGET});assert_eq!(actual,value["budgets"]);assert_eq!(UI_BUILT_CHILDREN_MAX,UI_DOCUMENT_NODES);assert_eq!(UI_TEXT_MAX_BYTES,512);}

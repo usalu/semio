@@ -28,7 +28,7 @@ class WasmScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-plugin-trinity-jack-lsp"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-s-plugin-trinity-jack-lsp"], this.repoRoot, this.invocation, rest);
   }
 }
 

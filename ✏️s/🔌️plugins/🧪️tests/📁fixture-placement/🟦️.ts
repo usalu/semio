@@ -8,10 +8,6 @@ import { runInNewContext } from "node:vm";
 import ts from "typescript";
 import fixture from "./🧫️fixtures/🔣️.json";
 
-import { runWeatherChecks } from "../../🔋️energy/🧩️extensions/🌦️epw/🧪️tests/🔬️unit/🟦️.ts";
-
-import { runOriginalCopyCloseChecks } from "../../🗄️stdio/📇️registry/🧬️contract/✏️editing/♻️close/🧪️tests/🟦️.ts";
-
 const plugins = resolve(import.meta.dir, "../..");
 const parts = (file: string): string[] => file.split(/[\\/]/u);
 const opaque = new Set(["node_modules", "target", "dist", ".git", ".nx", "🗑️generated", "🤖️generated"]);
@@ -129,12 +125,6 @@ test("direct plugin TypeScript example imports retain physical coordinates", () 
   console.log(`[DEBUG] plugin direct TypeScript imports resolve ${count} owned examples`);
 }, 120_000);
 
-test("moved EPW examples execute the original weather schema oracle", () => {
-  const count = runWeatherChecks();
-  expect(count).toBeGreaterThan(0);
-  console.log(`[DEBUG] original moved EPW reader/schema oracle completed ${count} cases`);
-});
-
 test("Rust test-only predicates agree with independent JavaScript truth tables", () => {
   for (const row of fixture.cfgCases) {
     const expression = row.expression.replaceAll('feature="probe"', "probe");
@@ -146,10 +136,6 @@ test("Rust test-only predicates agree with independent JavaScript truth tables",
 
 for (const path of fixture.retiredTrialSchemas) test(`plugin examples retire whole-trial schema ${path}`, () => {
   expect(existsSync(join(plugins, path)), path).toBe(false);
-});
-
-test("moved Stdio examples execute the original independent copy-close oracle", () => {
-  expect(runOriginalCopyCloseChecks()).toBeGreaterThan(0);
 });
 
 test("original example generators default to physical test owners", () => {

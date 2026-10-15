@@ -21,11 +21,10 @@
       "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
-          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs"
         ],
-        "owner": "🧰️framework/🔨️modules/🗺️surface",
-        "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
+        "owner": "✏️s/🔌️plugins/🎞️animate",
+        "plan": "The `image` crate is production-reachable TODAY from one place: the 🎞️animate plugin's video engine (🧰️framework/🔨️modules/🗺️surface's tiled-map and paint image uploads now decode through the first-party `semio-framework-pixels` PNG codec and no longer reach `image`). Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: the remaining call site (the 🎞️animate video engine; surface tiled-map and paint no longer reach `image`) wants raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
       },
       "kind": "cross-semio-implementation",
       "engine": {
@@ -55,12 +54,11 @@
       "productionDebt": {
         "reachableFrom": [
           "🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml",
-          "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
           "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
           "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml"
         ],
-        "owner": "🧰️framework/🔨️modules/🗺️surface",
-        "plan": "The same package the `image-bmp` oracle records: raster decode in the framework surface, intrinsic sizing and the os world and renderer crates. None of them is the stdio bmp codec under test. The debt retires when those call sites decode through stdio's own decoders. No path may join."
+        "owner": "🧰️framework/🔨️modules/📏️intrinsic-size",
+        "plan": "The same package the `image-bmp` oracle records: intrinsic sizing and the os world and renderer crates (the framework surface now declares `image` only as a dev-dependency). None of them is the stdio bmp codec under test. The debt retires when those call sites decode through stdio's own decoders. No path may join."
       },
       "productionReachable": false,
       "networkDuringExecution": false,

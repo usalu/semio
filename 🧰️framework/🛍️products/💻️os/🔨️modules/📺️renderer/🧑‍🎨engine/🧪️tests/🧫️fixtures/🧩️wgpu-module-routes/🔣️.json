@@ -9,6 +9,7 @@
   },
   "mounts": {
     "/renderer-modules/wgpu": "compilerRoot",
+    "/renderer-modules/compiler-fonts": "fontRoot",
     "/🚀️boot.js": "bootRoot",
     "/🎞️frame-worker.js": "workerRoot",
     "/🔌️plugin-modules": "moduleRoot",

@@ -367,8 +367,8 @@ pub fn genesis_din18599_child_pack(snapshot: &Din18599Snapshot, slot: &str, chil
 }
 
 /// 🧬️ Bounded projection of the snapshot's composed child fields for a loaded parent.
-pub fn din18599_child_restore_projection(snapshot: &Din18599Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("din18599 child projection failed: {error}")))
+pub fn din18599_child_restore_projection(snapshot: &Din18599Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("din18599 child projection failed: {error}")))
 }
 
 /// 🏗 Realistic DIN V 18599 example subjects (compliant + non-compliant).

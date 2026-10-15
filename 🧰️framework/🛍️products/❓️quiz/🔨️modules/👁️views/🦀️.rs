@@ -24,12 +24,12 @@
 use crate::challenge::{challenge_rules, hints_of};
 use crate::lifecycle::{LearnerState, LoadedQuiz};
 use crate::randomness::fnv1a32;
-use crate::schema::{
+use crate::scoring::scaled;
+use crate::sheet::sheet_of;
+use quiz_schema::{
     Answer, Best, Catalog, CatalogBadgeView, CatalogQuizView, CatalogTaskView, CatalogView, Challenge, CrowdCount, CrowdItem, CrowdScores, CrowdTask, CrowdView, Dimension, DimensionResult, Hint, Id, Identity, Leaderboard, LeaderboardPeriod, LeaderboardRow, LeaderboardWindow, LearnerView, MatchingItemResult,
     MatchingTask, Quiz, RunResult, RunStatus, RunSummary, RunView, Scale, Score, Sheet, Slug, SortingItemResult, Task, TaskKind, TaskResult, Timestamp, CROWD_SCORE_BINS, LEADERBOARD_TOP,
 };
-use crate::scoring::scaled;
-use crate::sheet::sheet_of;
 use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::cmp::Ordering;

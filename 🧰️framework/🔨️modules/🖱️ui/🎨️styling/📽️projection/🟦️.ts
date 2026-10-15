@@ -174,12 +174,6 @@ export function resolveAppearances(tokens: Tokens): Record<string, Record<string
   return out;
 }
 
-//#region 🧪️LevelsTests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("../🧪️tests/🧪️levels-oklabmix/🟦️.ts");
-  await registerTests1(import.meta.vitest, { LEVELS_DEFAULT, join, linearToOklab, loadTokens, oklabMix, resolveAppearances, rgba8ToLinear, toPascalCase }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️LevelsTests
 
 function paletteGroupNames(resolvedAppearances: ReturnType<typeof resolveAppearances>): string[] {
   return Object.keys(resolvedAppearances.light ?? {}).sort();

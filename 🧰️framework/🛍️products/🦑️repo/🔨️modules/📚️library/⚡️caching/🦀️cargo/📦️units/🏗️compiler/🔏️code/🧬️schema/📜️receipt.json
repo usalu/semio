@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "sourceDigest",
+    "sourceSha256",
+    "compiler",
+    "programDigest",
+    "programBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "entry",
+        "sources"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "release"
+        },
+        "entry": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "sourceDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "sourceSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "compiler": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "revision",
+        "target",
+        "format",
+        "minify"
+      ],
+      "properties": {
+        "name": {
+          "const": "Bun"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "target": {
+          "const": "bun"
+        },
+        "format": {
+          "const": "esm"
+        },
+        "minify": {
+          "const": true
+        }
+      }
+    },
+    "programDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "programBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8388608
+    }
+  }
+}

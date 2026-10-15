@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "owner": "@semio-tech/framework-os",
+      "target": "canonical-architecture",
+      "command": "bun ./📜️script.ts test quick --testNamePattern=\"plugin module|hub program resolution|shared directory access policy\"",
+      "arguments": [
+        "bun",
+        "./📜️script.ts",
+        "test",
+        "quick",
+        "--testNamePattern=plugin module|hub program resolution|shared directory access policy"
+      ],
+      "rejection": "Native command requires literal discovered arguments"
+    },
+    {
+      "owner": "@semio-tech/framework-os-dev",
+      "target": "browser-host-staging-check",
+      "command": "bun ./📜️script.ts test quick --testNamePattern='ticket-owned browser host staging'",
+      "arguments": [
+        "bun",
+        "./📜️script.ts",
+        "test",
+        "quick",
+        "--testNamePattern=ticket-owned browser host staging"
+      ],
+      "rejection": "Native command requires literal discovered arguments"
+    }
+  ]
+}

@@ -386,6 +386,18 @@ use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
 use semio_framework_plugin::PluginApp;
 use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
+/// 📚️ The editor module's production source as the unsplit editor file held it: every mounted child first, then the editor file itself, so the `UnitTests` region marker still closes the production prefix.
+pub(crate) fn editor_source() -> String {
+    [
+        include_str!("../../🕹️interaction/🦀️.rs"),
+        include_str!("../../🧰️kit/🦀️.rs"),
+        include_str!("../../🧵️retained/🦀️.rs"),
+        include_str!("../../🖌️session/🦀️.rs"),
+        include_str!("../../🦀️.rs"),
+    ]
+    .concat()
+}
+
 fn cohort_routes_are_cursorized(source: &str) -> bool {
     [
         r#""forceLayout" => Box::new(Puzzle2dForceLayoutWork::default())"#,
@@ -408,7 +420,8 @@ fn cohort_routes_are_cursorized(source: &str) -> bool {
 
 #[test]
 fn cohort_hostile_static_law_rejects_one_grant_complex_routes_and_missing_cursors() {
-    let source = include_str!("../../🦀️.rs");
+    let source = editor_source();
+    let source = source.as_str();
     assert!(cohort_routes_are_cursorized(source));
     for (retained, direct) in [
         (r#""forceLayout" => Box::new(Puzzle2dForceLayoutWork::default())"#, r#""forceLayout" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent))"#),

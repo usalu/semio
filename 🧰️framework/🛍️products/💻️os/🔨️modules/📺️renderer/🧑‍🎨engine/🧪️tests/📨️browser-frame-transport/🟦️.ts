@@ -31,6 +31,7 @@ import { resolveWgpuBootDescriptor, resolveWgpuHostPlatform, type WgpuBootDescri
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-cancellation/🟦️.ts";
 import { browserAssetFailureDisposition } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-failure/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 /** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
@@ -967,7 +968,7 @@ describe("browser frame worker transport", () => {
   it("carries the resolved shell brand row on the boot descriptor", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const serveSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️server/🟦️.ts"), "utf8");
-    const rendererSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"), "utf8");
+    const rendererSource = readModuleTreeSource(join(root, "../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"));
 
     const unbranded = resolveWgpuBootDescriptor({ defaultVariant: "s" });
     expect(unbranded.brandId).toBe("");

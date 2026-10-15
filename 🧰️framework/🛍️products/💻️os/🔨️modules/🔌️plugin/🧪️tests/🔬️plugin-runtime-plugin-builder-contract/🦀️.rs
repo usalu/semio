@@ -1158,7 +1158,7 @@ mod plugin_builder_contract_tests {
                 assert_eq!(actual.standard, row["standard"].as_str().expect("standard"));
                 assert_eq!(actual.subset, row["subset"].as_str().expect("subset"));
             }
-            let structural = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("independent declared structural projection");
+            let structural = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("independent declared structural projection");
             projected.admit_complete((0..structural.len()).map(|index| structural.get(index).expect("declared row"))).expect("complete declared set");
             if !rows.is_empty() { assert!(projected.admit_complete(std::iter::empty()).is_err()); }
         }
@@ -2748,6 +2748,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         ContractComposedApp(app, mounted_policy)
     }
 
+    /// 🧵️ Source text of the mounted artifact instance: the parent file followed by its impl-band children in file order.
+    fn instance_source() -> String {
+        [
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🚪️ingress/🦀️.rs")),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/📨️dispatch/🦀️.rs")),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🖼️render/🦀️.rs")),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🧷️command-routes/🦀️.rs")),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🧾️typed-operations/🦀️.rs")),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🔌️plugin-app-impl/🦀️.rs")),
+        ]
+        .concat()
+    }
+
     /// 🧭️ The bijection has exactly two named residues, and both are asserted as exact sets so a
     /// drift in either direction fails on the clause that names its cause.
     ///
@@ -2801,24 +2815,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(registered.difference(&declared).cloned().collect::<std::collections::BTreeSet<_>>(), framework_registered_without_declaration, "an activated factory without a manifest declaration must be one of the framework's own reserved surface verbs");
         assert_eq!(declared.difference(&registered).cloned().collect::<std::collections::BTreeSet<_>>(), framework_directly_routed_migrated, "a migrated declaration with no activated factory is a dead action unless the framework routes it directly");
         assert!(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")).contains("} else if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | SET_ACTIVE_UTILITY_ACTION_ID) {"),
+            instance_source().contains("} else if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | SET_ACTIVE_UTILITY_ACTION_ID) {"),
             "the only reason `setActiveUtility` may carry no factory is its direct `dispatch_emit` arm in `handle_action_invocation`"
         );
         assert!(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==CANCEL_TYPED_OPERATION_ACTION_ID{returnself.dispatch_operation_cancellation(args,meta).await;}"),
+            instance_source().split_whitespace().collect::<String>().contains("ifaction==CANCEL_TYPED_OPERATION_ACTION_ID{returnself.dispatch_operation_cancellation(args,meta).await;}"),
             "the only reason `cancelTypedOperation` may carry no factory is its direct `dispatch_operation_cancellation` arm at the head of `dispatch_action`"
         );
-        let runtime_source: String = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")).split_whitespace().collect();
+        let runtime_source: String = instance_source().split_whitespace().collect();
         assert!(
             runtime_source.split("ifis_time_travel_action_id(action){").nth(1).and_then(|arm| arm.split('}').next()).is_some_and(|arm| arm.ends_with("returnBox::pin(self.dispatch_time_travel_action(action,args,meta,identity)).await;")),
             "the only reason the history-edit verbs may carry no factory is their host-driven, boxed arm at the head of `dispatch_action`"
         );
         assert!(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==semio_framework::HOST_EVENT_ACTION_ID{returnBox::pin(self.dispatch_host_event_action(args,meta,identity)).await;}"),
+            instance_source().split_whitespace().collect::<String>().contains("ifaction==semio_framework::HOST_EVENT_ACTION_ID{returnBox::pin(self.dispatch_host_event_action(args,meta,identity)).await;}"),
             "the only reason `hostEvent` may carry no factory is its host-driven, boxed arm at the head of `dispatch_action`"
         );
         assert!(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")).split_whitespace().collect::<String>().contains("ifmatches!(action,semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID|semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID){returnErr(Fault::new(FaultOrigin::Framework,FaultCode::new(\"framework.document-transfer.shell-owned\")"),
+            instance_source().split_whitespace().collect::<String>().contains("ifmatches!(action,semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID|semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID){returnErr(Fault::new(FaultOrigin::Framework,FaultCode::new(\"framework.document-transfer.shell-owned\")"),
             "the only reason the document transfer verbs may carry no factory is their shell-owned refusal at the head of `dispatch_action`"
         );
         let platform_visible = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();

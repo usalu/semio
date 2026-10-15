@@ -317,28 +317,26 @@ describe("🎛️ staged mutation-input controls", () => {
   });
 });
 
-import drawingChoiceLaw from "../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/➕️create-layer/🎛️input-choices/🔣️.json";
-import drawingCreateSchema from "../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧬️schema/🔣️.json";
-import drawingDocumentSchema from "../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
+import choiceLaw from "../🧫️fixtures/🎛️staged-arg-choices/🔣️.json";
 import { mutationInputDefs } from "@semio-tech/framework";
 import { semioSchemaAjvV1 } from "../../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 
-for (const locale of drawingChoiceLaw.locales) it(`renders drawing mutation layer choices in ${locale} and refuses unsupported values`, () => {
-  const defs = mutationInputDefs(drawingCreateSchema, (id) => id === drawingDocumentSchema.$id ? drawingDocumentSchema : undefined);
-  const layer = defs.find((def) => def.id === "/layer")!;
-  if (layer.schema.kind !== "object") throw Error("Drawing layer input must be an object");
-  const validate = semioSchemaAjvV1().addSchema(drawingDocumentSchema).compile(drawingCreateSchema);
-  for (const law of drawingChoiceLaw.fields) {
-    const field = layer.schema.fields.find((def) => def.id === `/${law.id}`)!;
+for (const locale of choiceLaw.locales) it(`renders staged mutation choices in ${locale} and refuses unsupported values`, () => {
+  const defs = mutationInputDefs(choiceLaw.mutation, (id) => id === choiceLaw.document.$id ? choiceLaw.document : undefined);
+  const item = defs.find((def) => def.id === "/item")!;
+  if (item.schema.kind !== "object") throw Error("Choice item input must be an object");
+  const validate = semioSchemaAjvV1().addSchema(choiceLaw.document).compile(choiceLaw.mutation);
+  for (const law of choiceLaw.fields) {
+    const field = item.schema.fields.find((def) => def.id === `/${law.id}`)!;
     expect(argControl(field).kind).toBe("select");
-    if (field.schema.kind !== "string") throw Error("Drawing choice must be a string");
+    if (field.schema.kind !== "string") throw Error("Choice field must be a string");
     expect(field.schema.options.map((option) => option.value)).toEqual(law.options);
-    const resolved = { ...field, id: `layer.${law.id}`, label: law.label[locale as "en" | "de"], schema: { ...field.schema, options: field.schema.options.map((option) => ({ ...option, label: (option.label as { native: Record<string, string> }).native[locale as "en" | "de"] })) } } as Def;
+    const resolved = { ...field, id: `item.${law.id}`, label: law.label[locale as "en" | "de"], schema: { ...field.schema, options: field.schema.options.map((option) => ({ ...option, label: (option.label as { native: Record<string, string> }).native[locale as "en" | "de"] })) } } as Def;
     const view = mount(resolved, law.options[0]);
     expect(computeAccessibleName(view.getByRole("combobox"))).toBe(law.label[locale as "en" | "de"]);
-    for (const value of law.options) expect(validate({ mutation: "createLayer", layer: { kind: "shape", blendMode: "normal", [law.id]: value } })).toBe(true);
-    for (const value of law.invalid) expect(validate({ mutation: "createLayer", layer: { kind: "shape", blendMode: "normal", [law.id]: value } })).toBe(false);
+    for (const value of law.options) expect(validate({ mutation: "createItem", item: { kind: "alpha", mode: "plain", [law.id]: value } })).toBe(true);
+    for (const value of law.invalid) expect(validate({ mutation: "createItem", item: { kind: "alpha", mode: "plain", [law.id]: value } })).toBe(false);
     view.unmount();
   }
 });

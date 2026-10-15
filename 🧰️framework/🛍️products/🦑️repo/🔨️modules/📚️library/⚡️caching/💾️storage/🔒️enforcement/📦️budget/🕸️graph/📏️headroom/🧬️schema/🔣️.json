@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "minimumAvailableBytes"
+  ],
+  "properties": {
+    "minimumAvailableBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2684354560
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumEntries": 4096,
+        "maximumSnapshotBytes": 536870912,
+        "maximumReceiptBytes": 67108864,
+        "chunkBytes": 65536,
+        "receiptHeapMiB": 512
+      }
+    }
+  }
+}

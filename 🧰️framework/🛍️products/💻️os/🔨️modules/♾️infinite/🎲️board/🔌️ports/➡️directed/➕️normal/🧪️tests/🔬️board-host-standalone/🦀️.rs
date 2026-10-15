@@ -1,4 +1,15 @@
 #[cfg(test)]
+const BOARD_HOST_SOURCE: &str = concat!(
+    include_str!("../../🦀️.rs"),
+    include_str!("../../🧭️host/🦀️.rs"),
+    include_str!("../../🎨️style/🦀️.rs"),
+    include_str!("../../🪣️fill-job/🦀️.rs"),
+    include_str!("../../🎛️selection-events/🦀️.rs"),
+    include_str!("../../🧹️scene-delete-links/🦀️.rs"),
+    include_str!("../../🖱️pointer-gestures/🦀️.rs"),
+);
+
+#[cfg(test)]
     fn board_property_retirement_credits(properties: &semio_framework_graph_manifest::PropertyBag) -> Result<(usize, usize), BoardEventFault> {
         let mut stack: Box<[Option<(&semio_framework_graph_manifest::PropertyValue, u16)>; BOARD_POINTER_ITEM_CAPACITY]> = Box::new(std::array::from_fn(|_| None));
         let mut stack_len = 0usize;
@@ -73,10 +84,10 @@
         assert!(size_of::<BoardFillCheckpoint>() <= 32 * 1_024);
         assert!(size_of::<BoardFillJob>() <= 32 * 1_024);
         assert!(size_of::<Result<BoardFillJob, BoardFillCheckpoint>>() <= 32 * 1_024);
-        assert!(size_of::<semio_framework_job::WorkerJobOutcome<BoardFillJob>>() <= 32 * 1_024);
-        assert!(size_of::<semio_framework_job::MountedWorkerJobSession<BoardFillJob>>() <= 32 * 1_024);
-        assert!(size_of::<semio_framework_job::WorkerJobSessionAdmissionRejected<BoardFillJob>>() <= 32 * 1_024);
-        assert!(size_of::<Result<semio_framework_job::MountedWorkerJobSession<BoardFillJob>, semio_framework_job::WorkerJobSessionAdmissionRejected<BoardFillJob>>>() <= 32 * 1_024);
+        assert!(size_of::<semio_framework_job_worker::WorkerJobOutcome<BoardFillJob>>() <= 32 * 1_024);
+        assert!(size_of::<semio_framework_job_worker::MountedWorkerJobSession<BoardFillJob>>() <= 32 * 1_024);
+        assert!(size_of::<semio_framework_job_worker::WorkerJobSessionAdmissionRejected<BoardFillJob>>() <= 32 * 1_024);
+        assert!(size_of::<Result<semio_framework_job_worker::MountedWorkerJobSession<BoardFillJob>, semio_framework_job_worker::WorkerJobSessionAdmissionRejected<BoardFillJob>>>() <= 32 * 1_024);
         assert!(!sources.terminal_is_empty());
         assert!(!virtual_handles.terminal_is_empty());
         assert!(BoardFillFixedPages::<u8, { usize::MAX }>::try_new().is_err());
@@ -703,7 +714,7 @@
 #[cfg(test)]
     #[test]
     fn fill_full_commit_candidate_mutations_are_rejected() {
-        let source = include_str!("../../🦀️.rs");
+        let source = BOARD_HOST_SOURCE;
         assert_eq!(BOARD_FILL_COMMIT_BYTES, 10_406);
         assert_eq!(BOARD_FILL_COMMIT_PAGE_COUNT, 1);
         assert!(BOARD_FILL_COMMIT_BYTES <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES * BOARD_FILL_COMMIT_PAGE_COUNT);
@@ -717,7 +728,7 @@
 #[cfg(test)]
     #[test]
     fn fill_commit_candidate_granularity_mutations_are_rejected() {
-        let source = include_str!("../../🦀️.rs");
+        let source = BOARD_HOST_SOURCE;
         assert!(fill_full_commit_candidate_contract(source));
         let text = source.replacen("self.bytes[offset + 2 + self.text_byte] = text.bytes[self.text_byte];", "self.bytes[offset + 2..offset + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES].copy_from_slice(&text.bytes);", 1);
         assert!(!fill_full_commit_candidate_contract(&text));
@@ -753,7 +764,7 @@
 #[cfg(test)]
     #[test]
     fn fill_ingress_granularity_mutations_are_rejected() {
-        let source = include_str!("../../🦀️.rs");
+        let source = BOARD_HOST_SOURCE;
         assert!(fill_ingress_granularity_contract(source));
         let fields = source.replacen("pub fn set_node_bound(&mut self, index: usize, value: f64)", "pub fn push_node(&mut self, bounds: [f64; 4])", 1);
         assert!(!fill_ingress_granularity_contract(&fields));
@@ -779,7 +790,7 @@
 #[cfg(test)]
     #[test]
     fn fill_owned_page_handback_mutation_is_rejected() {
-        let source = include_str!("../../🦀️.rs");
+        let source = BOARD_HOST_SOURCE;
         assert!(fill_owned_page_handback_contract(source));
         let marker = "if let Err(candidate) = state.candidates.try_push_owned(candidate) {";
         let production_end = source.find("impl Drop for BoardFillJob").expect("live fill job drop");

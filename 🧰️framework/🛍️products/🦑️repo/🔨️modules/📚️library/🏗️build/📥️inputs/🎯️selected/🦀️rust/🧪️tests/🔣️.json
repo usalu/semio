@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "supported-unit-aggregate",
+      "request": {
+        "version": 1,
+        "tasks": [
+          {
+            "kind": "aggregate",
+            "inputs": []
+          },
+          {
+            "kind": "unit",
+            "inputs": [
+              "{workspaceRoot}/crate/lib.rs",
+              "{workspaceRoot}/crate/Cargo.toml"
+            ]
+          }
+        ],
+        "engineInputs": [
+          "{workspaceRoot}/engine.ts"
+        ]
+      },
+      "paths": [
+        "crate/Cargo.toml",
+        "crate/lib.rs",
+        "engine.ts",
+        "nx.json",
+        "package.json",
+        "📋️project.json"
+      ]
+    },
+    {
+      "id": "unsupported-task",
+      "request": {
+        "version": 1,
+        "tasks": [
+          {
+            "kind": "other",
+            "inputs": []
+          }
+        ],
+        "engineInputs": []
+      },
+      "paths": null
+    },
+    {
+      "id": "named-input",
+      "request": {
+        "version": 1,
+        "tasks": [
+          {
+            "kind": "unit",
+            "inputs": [
+              "default"
+            ]
+          }
+        ],
+        "engineInputs": []
+      },
+      "paths": null
+    },
+    {
+      "id": "wildcard-input",
+      "request": {
+        "version": 1,
+        "tasks": [
+          {
+            "kind": "unit",
+            "inputs": [
+              "{workspaceRoot}/crate/**/*.rs"
+            ]
+          }
+        ],
+        "engineInputs": []
+      },
+      "paths": null
+    },
+    {
+      "id": "unsupported-input-shape",
+      "request": {
+        "version": 1,
+        "tasks": [
+          {
+            "kind": "unit",
+            "inputs": null
+          }
+        ],
+        "engineInputs": []
+      },
+      "paths": null
+    }
+  ]
+}

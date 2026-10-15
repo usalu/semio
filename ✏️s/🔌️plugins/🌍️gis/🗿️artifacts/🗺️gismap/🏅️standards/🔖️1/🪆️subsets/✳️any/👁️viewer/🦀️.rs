@@ -230,8 +230,8 @@ impl ArtifactViewer for GisMapViewer {
         default_document()
     }
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::from(format!("gis map child projection failed: {error}")))
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::from(format!("gis map child projection failed: {error}")))
     }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {

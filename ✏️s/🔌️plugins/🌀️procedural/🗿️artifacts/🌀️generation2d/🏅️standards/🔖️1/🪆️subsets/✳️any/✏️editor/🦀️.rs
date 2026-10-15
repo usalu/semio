@@ -6,6 +6,7 @@
 //! `🦀️config.rs`, shared compute in the artifact's own inferences. This file is a routing table: `handle`
 //! → `Generation2dCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls
 //! one passthrough per node.
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -1315,8 +1316,8 @@ struct Generation2dImportJob {
     closing: bool,
     completion: Option<ArtifactToolCompletion<EditorApp<Generation2dPlayApp>>>,
     pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Generation2dPlayApp>>>,
-    publication: semio_framework_job::RetainedJobPublication,
-    publishing: Option<semio_framework_job::JobPublicationKind>,
+    publication: semio_framework_job_publication::RetainedJobPublication,
+    publishing: Option<semio_framework_job_publication::JobPublicationKind>,
     source: Vec<u8>,
     delivered: bool,
     active: Option<Box<dyn store::ErasedSnapshotRetirement>>,
@@ -1341,7 +1342,7 @@ impl Generation2dImportJob {
             closing: false,
             completion: Some(request.completion),
             pending_completion_rejection: None,
-            publication: semio_framework_job::RetainedJobPublication::new(),
+            publication: semio_framework_job_publication::RetainedJobPublication::new(),
             publishing: None,
             source: Vec::new(),
             delivered: false,
@@ -1357,12 +1358,12 @@ impl Generation2dImportJob {
     fn stage_fault(&mut self, detail: &str) {
         let bytes = detail.as_bytes();
         self.source = bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec();
-        self.publishing = Some(semio_framework_job::JobPublicationKind::Fault);
+        self.publishing = Some(semio_framework_job_publication::JobPublicationKind::Fault);
     }
 
     fn stage_checkpoint(&mut self, applied_progress: u64) {
         self.source = vec![1];
-        self.publishing = Some(semio_framework_job::JobPublicationKind::Checkpoint { applied_progress });
+        self.publishing = Some(semio_framework_job_publication::JobPublicationKind::Checkpoint { applied_progress });
     }
 
     fn decode(&mut self) -> Option<&'static str> {
@@ -1504,7 +1505,7 @@ impl InteractiveJob for Generation2dImportJob {
             let result = self.publication.advance_from_source(kind, &self.source, cx)?;
             if result.is_some() {
                 self.delivered = true;
-                if matches!(kind, semio_framework_job::JobPublicationKind::Checkpoint { .. }) {
+                if matches!(kind, semio_framework_job_publication::JobPublicationKind::Checkpoint { .. }) {
                     self.publishing = None;
                 }
             }
@@ -1639,8 +1640,8 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// decoded document may replace the store. `Generation2dSnapshot` declares no child slot, so the
     /// projection is honestly empty; without it every replacement faulted with `editor did not declare
     /// a loaded-parent child projection`.
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_2d_model::GENERATION2D_CHILD_PROJECTION), error.to_string()))
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_2d_model::GENERATION2D_CHILD_PROJECTION), error.to_string()))
     }
 
     /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved

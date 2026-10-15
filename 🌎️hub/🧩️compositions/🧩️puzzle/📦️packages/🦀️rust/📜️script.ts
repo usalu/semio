@@ -25,7 +25,7 @@ class WasmScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-puzzle"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-hub-puzzle"], this.repoRoot, this.invocation, rest);
   }
 }
 

@@ -1,0 +1,257 @@
+{
+  "source": "pub fn value()->u32{1}\n",
+  "cases": [
+    {
+      "name": "posix-stable",
+      "request": {
+        "version": 1,
+        "platform": "posix",
+        "root": "/repo",
+        "cwd": "/repo",
+        "text": "out.rlib: /repo/lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 /repo/lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "name": "posix-changed-consumed",
+      "request": {
+        "version": 1,
+        "platform": "posix",
+        "root": "/repo",
+        "cwd": "/repo",
+        "text": "out.rlib: /repo/lib.rs\n# checksum:sha256=b122db92d069c97bbd9e67a168d9aa36a54d3e1808947bf1ac2d790a824ee879 file_len:23 /repo/lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "posix-length-changed",
+      "request": {
+        "version": 1,
+        "platform": "posix",
+        "root": "/repo",
+        "cwd": "/repo",
+        "text": "out.rlib: /repo/lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:24 /repo/lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "posix-missing-checksum",
+      "request": {
+        "version": 1,
+        "platform": "posix",
+        "root": "/repo",
+        "cwd": "/repo",
+        "text": "out.rlib: /repo/lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "posix-unknown-algorithm",
+      "request": {
+        "version": 1,
+        "platform": "posix",
+        "root": "/repo",
+        "cwd": "/repo",
+        "text": "out.rlib: /repo/lib.rs\n# checksum:blake3=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 /repo/lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "posix-extra-source",
+      "request": {
+        "version": 1,
+        "platform": "posix",
+        "root": "/repo",
+        "cwd": "/repo",
+        "text": "out.rlib: /repo/lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 /repo/lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 ../foreign.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "posix-duplicate-checksum",
+      "request": {
+        "version": 1,
+        "platform": "posix",
+        "root": "/repo",
+        "cwd": "/repo",
+        "text": "out.rlib: /repo/lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 /repo/lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 /repo/lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "windows-stable",
+      "request": {
+        "version": 1,
+        "platform": "windows",
+        "root": "C:\\repo",
+        "cwd": "C:\\repo",
+        "text": "out.rlib: C:\\repo\\lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 C:\\repo\\lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "name": "windows-changed-consumed",
+      "request": {
+        "version": 1,
+        "platform": "windows",
+        "root": "C:\\repo",
+        "cwd": "C:\\repo",
+        "text": "out.rlib: C:\\repo\\lib.rs\n# checksum:sha256=b122db92d069c97bbd9e67a168d9aa36a54d3e1808947bf1ac2d790a824ee879 file_len:23 C:\\repo\\lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "windows-length-changed",
+      "request": {
+        "version": 1,
+        "platform": "windows",
+        "root": "C:\\repo",
+        "cwd": "C:\\repo",
+        "text": "out.rlib: C:\\repo\\lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:24 C:\\repo\\lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "windows-missing-checksum",
+      "request": {
+        "version": 1,
+        "platform": "windows",
+        "root": "C:\\repo",
+        "cwd": "C:\\repo",
+        "text": "out.rlib: C:\\repo\\lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "windows-unknown-algorithm",
+      "request": {
+        "version": 1,
+        "platform": "windows",
+        "root": "C:\\repo",
+        "cwd": "C:\\repo",
+        "text": "out.rlib: C:\\repo\\lib.rs\n# checksum:blake3=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 C:\\repo\\lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "windows-extra-source",
+      "request": {
+        "version": 1,
+        "platform": "windows",
+        "root": "C:\\repo",
+        "cwd": "C:\\repo",
+        "text": "out.rlib: C:\\repo\\lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 C:\\repo\\lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 ../foreign.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "name": "windows-duplicate-checksum",
+      "request": {
+        "version": 1,
+        "platform": "windows",
+        "root": "C:\\repo",
+        "cwd": "C:\\repo",
+        "text": "out.rlib: C:\\repo\\lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 C:\\repo\\lib.rs\n# checksum:sha256=64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece file_len:23 C:\\repo\\lib.rs\n",
+        "expected": [
+          {
+            "path": "lib.rs",
+            "digest": "64630bf54478f30f7643fd95b35f41186c1c3dc54c22050542bcdefedbdf9ece",
+            "bytes": 23
+          }
+        ]
+      },
+      "accepted": false
+    }
+  ]
+}

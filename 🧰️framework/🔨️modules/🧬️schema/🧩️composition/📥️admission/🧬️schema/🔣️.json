@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "productionDependencies",
+    "sourceBoundary",
+    "definitions",
+    "limits",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "semio-framework-composition-admission"
+    },
+    "productionDependencies": {
+      "const": [
+        "semio-framework-artifact-reference-borrow",
+        "semio-framework-schema-composition"
+      ]
+    },
+    "sourceBoundary": {
+      "const": {
+        "maxSourceBytes": 65536,
+        "maxSourceFiles": 8,
+        "maxActiveLines": 1000
+      }
+    },
+    "definitions": {
+      "const": [
+        "ChildRestoreProjection",
+        "ChildRestoreProjectionError"
+      ]
+    },
+    "limits": {
+      "const": {
+        "references": 64,
+        "fieldBytes": 256,
+        "visitSteps": 256
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "children",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "slot",
+                "childId",
+                "artifactId",
+                "kind",
+                "standard",
+                "subset"
+              ],
+              "properties": {
+                "slot": {
+                  "type": "string"
+                },
+                "childId": {
+                  "type": "string"
+                },
+                "artifactId": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "standard": {
+                  "type": "string"
+                },
+                "subset": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CallerCorpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "callers"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "callers": {
+          "type": "array",
+          "minItems": 80,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "manifest"
+            ],
+            "properties": {
+              "source": {
+                "type": "string",
+                "pattern": "\\.rs$"
+              },
+              "manifest": {
+                "type": "string",
+                "pattern": "/Cargo\\.toml$"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

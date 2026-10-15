@@ -22,7 +22,7 @@
 //! @see ../📐️trigonometry/🟦️.ts — the TypeScript twin
 #![allow(clippy::excessive_precision, clippy::approx_constant)]
 
-use crate::schema::Turns;
+use semio_framework_pets_contract::schema::Turns;
 
 //#region 🔖️Constants
 const TAU: f64 = 6.283185307179586;

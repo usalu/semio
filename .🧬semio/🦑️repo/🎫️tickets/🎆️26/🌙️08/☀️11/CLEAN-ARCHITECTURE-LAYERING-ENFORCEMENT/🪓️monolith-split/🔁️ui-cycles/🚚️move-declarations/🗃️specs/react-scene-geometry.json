@@ -1,0 +1,1 @@
+{ "source": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx", "target": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/📐️geometry/🟦️.ts", "names": ["Point","Vector","Plane","Camera"], "doc": "📐 Owns the 3D point, vector, plane and camera shapes that scene tools exchange.", "keepExports": "named" }

@@ -1,6 +1,7 @@
 //! 🔗️ Shared artifact references and their history pin authority.
 
-use crate::{BlobRef, FromValue, ToValue};
+use semio_framework_os_store_blob_identity::BlobRef;
+use semio_framework_value::{FromValue,ToValue};
 
 /// 🔗️ An independent-lifecycle reference to another artifact: a PIN (so it can be frozen to
 /// a specific point in the target's history) plus a `role` (the named slot it fills on the
@@ -28,3 +29,8 @@ pub enum LinkPin {
     Checkpoint { id: String },
     Snapshot { blob: BlobRef },
 }
+
+#[path="📦️codec/🦀️.rs"]
+mod codec;
+
+semio_framework_value::artifact_retire_struct!(ArtifactLink { target, pin, role });

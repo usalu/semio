@@ -13,7 +13,7 @@ use owner::OwnerRef;
 
 /// 🔗️ Identifies the channel a document synchronizes through, when one is attached.
 /// 🌱️ `Serialize`/`Deserialize` dropped outright (not even `cfg_attr(test, …)`): no production
-/// consumer (`🖥️host/🦀️.rs`'s `BackboneDocument`, `🔌️plugin/🦀️.rs`'s `backbone_ref()`) requires
+/// consumer (`🖥️host/🔌️plugin-host/🦀️.rs`'s `BackboneDocument`, `🔌️plugin/🦀️.rs`'s `backbone_ref()`) requires
 /// `ArtifactBackboneRef: Serialize`, and no test in this crate uses `serde_json` as a differential
 /// oracle on it — confirmed by repo-wide grep before removing the derive.
 #[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]

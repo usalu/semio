@@ -100,7 +100,7 @@ impl ArtifactViewer for Process3dViewer {
     const DIALECT: Dialect = PROCESS3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCESS_3D_SCHEMA;
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         semio_s_artifact_process_process3d_model::snapshot::process3d_child_restore_projection(snapshot)
     }
 

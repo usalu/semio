@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "slots": 64,
+        "maximumReceiptBytes": 1048576,
+        "maximumInputBytes": 4194304,
+        "maximumFiles": 4096,
+        "maximumMetadataBytes": 16777216,
+        "namespace": ".semio-ready",
+        "entrySuffix": ".json",
+        "stageSuffix": ".stage",
+        "maximumTotalInputBytes": 16777216
+      }
+    },
+    "Resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "workspaceManifest",
+        "lock",
+        "members",
+        "packages",
+        "resolved"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "workspaceManifest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "lock": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "members": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
+        "packages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "manifest",
+              "source"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "manifest": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 4096
+              }
+            }
+          }
+        },
+        "resolved": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "request",
+        "resolutions",
+        "inputs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "request": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "resolutions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/Resolution"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "digest",
+              "bytes"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "digest": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4194304
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

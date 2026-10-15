@@ -1,0 +1,255 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://process.leases/ResourceNamespaceKernelFixtureV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "oldOpener",
+    "queuedOpener",
+    "catalogBarrier",
+    "nestedPin",
+    "reserveTransition",
+    "fullJournal",
+    "oldPendingRefusal"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "allowed"
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "create-file",
+              "create-directory",
+              "rename-parent",
+              "existing-read",
+              "existing-shared",
+              "existing-exclusive",
+              "existing-capped-pragma"
+            ]
+          },
+          "allowed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "oldOpener": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "existingOriginal",
+        "conflict",
+        "newCreation",
+        "uninitializedPublish",
+        "sameInode"
+      ],
+      "properties": {
+        "existingOriginal": {
+          "type": "boolean"
+        },
+        "conflict": {
+          "type": "boolean"
+        },
+        "newCreation": {
+          "type": "boolean"
+        },
+        "uninitializedPublish": {
+          "type": "boolean"
+        },
+        "sameInode": {
+          "type": "boolean"
+        }
+      }
+    },
+    "queuedOpener": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "heldRelease",
+        "pendingContinuation",
+        "lateCreation",
+        "sameInode"
+      ],
+      "properties": {
+        "heldRelease": {
+          "type": "boolean"
+        },
+        "pendingContinuation": {
+          "type": "boolean"
+        },
+        "lateCreation": {
+          "type": "boolean"
+        },
+        "sameInode": {
+          "type": "boolean"
+        }
+      }
+    },
+    "catalogBarrier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preopenedReaderBlocksCatalog",
+        "activeBodyBlocksRetirement",
+        "retiredClosedInode",
+        "replacementDistinctInode"
+      ],
+      "properties": {
+        "preopenedReaderBlocksCatalog": {
+          "type": "boolean"
+        },
+        "activeBodyBlocksRetirement": {
+          "type": "boolean"
+        },
+        "retiredClosedInode": {
+          "type": "boolean"
+        },
+        "replacementDistinctInode": {
+          "type": "boolean"
+        }
+      }
+    },
+    "nestedPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "waiterReleasesCatalog",
+        "newResourceCompletesWhileAIsHeld",
+        "retirementRefusedByPin",
+        "waiterSettlesAfterA",
+        "stableGuardInode"
+      ],
+      "properties": {
+        "waiterReleasesCatalog": {
+          "type": "boolean"
+        },
+        "newResourceCompletesWhileAIsHeld": {
+          "type": "boolean"
+        },
+        "retirementRefusedByPin": {
+          "type": "boolean"
+        },
+        "waiterSettlesAfterA": {
+          "type": "boolean"
+        },
+        "stableGuardInode": {
+          "type": "boolean"
+        }
+      }
+    },
+    "reserveTransition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sameReserveInode",
+        "oldRetainerRefusedBeforeWrite",
+        "initializedHolderReleased",
+        "initializedWaiterSettled",
+        "lateOlderAdmissionRefused"
+      ],
+      "properties": {
+        "sameReserveInode": {
+          "type": "boolean"
+        },
+        "oldRetainerRefusedBeforeWrite": {
+          "type": "boolean"
+        },
+        "initializedHolderReleased": {
+          "type": "boolean"
+        },
+        "initializedWaiterSettled": {
+          "type": "boolean"
+        },
+        "lateOlderAdmissionRefused": {
+          "type": "boolean"
+        }
+      }
+    },
+    "fullJournal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actualFullRefusedMutation",
+        "originalRowsPreserved",
+        "sameReserveInode",
+        "twoJournalsWithinBound",
+        "commitAfterRecovery",
+        "reserveRestoredAtFull",
+        "sameGuardInodes",
+        "independentRowsConfirmed"
+      ],
+      "properties": {
+        "actualFullRefusedMutation": {
+          "type": "boolean"
+        },
+        "originalRowsPreserved": {
+          "type": "boolean"
+        },
+        "sameReserveInode": {
+          "type": "boolean"
+        },
+        "twoJournalsWithinBound": {
+          "type": "boolean"
+        },
+        "commitAfterRecovery": {
+          "type": "boolean"
+        },
+        "reserveRestoredAtFull": {
+          "type": "boolean"
+        },
+        "sameGuardInodes": {
+          "type": "boolean"
+        },
+        "independentRowsConfirmed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "oldPendingRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uninitializedTargetRefused",
+        "uninitializedTargetInodePreserved",
+        "initializedClaimReleased",
+        "missingForeignClaimRefused",
+        "replayedTicketNotGranted",
+        "ownArrivalRemovedAfterRefusal"
+      ],
+      "properties": {
+        "uninitializedTargetRefused": {
+          "type": "boolean"
+        },
+        "uninitializedTargetInodePreserved": {
+          "type": "boolean"
+        },
+        "initializedClaimReleased": {
+          "type": "boolean"
+        },
+        "missingForeignClaimRefused": {
+          "type": "boolean"
+        },
+        "replayedTicketNotGranted": {
+          "type": "boolean"
+        },
+        "ownArrivalRemovedAfterRefusal": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

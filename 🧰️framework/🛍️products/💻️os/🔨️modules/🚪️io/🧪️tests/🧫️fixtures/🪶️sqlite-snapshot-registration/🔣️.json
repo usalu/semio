@@ -1,5 +1,5 @@
 {
-  "sqliteDialect": "s.framework.sqlite-snapshot@1/*",
+  "sqliteDialect": "framework.io.sqlite-snapshot@1/*",
   "fidelity": "Exact",
   "nativeEncodings": ["binary", "text"],
   "nativeSnapshots": [

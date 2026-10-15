@@ -21,7 +21,7 @@ const PDF = "s.stdio.pdf@1.4/*";
 const PPTX = "s.stdio.pptx@ecma-376/*";
 const SVG = "s.stdio.svg@1.1/*";
 const PNG = "s.stdio.png@1.2/*";
-const TXT = "s.stdio.txt@utf-8/*";
+const TXT = "framework.io.text@utf-8/*";
 
 export const ioEntries: IoEntryDescriptorMirror[] = [
   { from: PRESENTATION, into: JSON_DIALECT, fidelity: "Exact", sniffs: false },

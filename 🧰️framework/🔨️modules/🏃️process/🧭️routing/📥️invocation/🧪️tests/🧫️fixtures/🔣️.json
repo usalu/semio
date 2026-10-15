@@ -1,4 +1,11 @@
 {
+  "immutablePolicyCases": [
+    { "kind": "frozen", "validations": 1 },
+    { "kind": "null-prototype", "validations": 1 },
+    { "kind": "mutable", "validations": 2 },
+    { "kind": "accessor", "validations": 2 },
+    { "kind": "proxy", "validations": 2 }
+  ],
   "cases": [
     {
       "id": "original-routing-owner",

@@ -12,10 +12,10 @@ async fn io_dialect(kind: &str, standard: &str, subset: &str) -> semio_framework
 }
 
 /// 🎯️ The fixture EVERY test in this region shares — TWO mock plugins:
-/// - `"stdio"` owns `s.stdio.binary@raw/*` (the binary carrier) `->` `s.stdio.gif@87a/*` at
+/// - `"stdio"` owns `framework.io.binary@raw/*` (the binary carrier) `->` `s.stdio.gif@87a/*` at
 ///   `Exact` fidelity, and declares a sniff.
 /// - `"gif"` owns TWO hops: `s.stdio.gif@87a/*` `->` `s.stdio.gif@89a/*` (the 87a-to-89a
-///   migration, `Canonical` fidelity, no sniff) AND a DIRECT `s.stdio.binary@raw/*` `->`
+///   migration, `Canonical` fidelity, no sniff) AND a DIRECT `framework.io.binary@raw/*` `->`
 ///   `s.stdio.gif@89a/*` shortcut at `Lossy` fidelity (with a sniff) — a real alternate route
 ///   from the carrier straight to 89a, deliberately weaker so `route_prefers_higher_minimum_
 ///   fidelity` below has something genuine to prefer AGAINST.
@@ -25,7 +25,7 @@ async fn io_dialect(kind: &str, standard: &str, subset: &str) -> semio_framework
 /// SAME 2-hop route via `stdio`'s `Exact` hop then `gif`'s `Canonical` migration hop, per
 /// `📓️w1-d-report.md`.
 async fn io_router_w1d_fixture_entries() -> Vec<(&'static str, semio_framework::io_schema::IoEntryDescriptor)> {
-    let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+    let binary_raw = io_dialect("framework.io.binary", "raw", "*").await;
     let gif_87a = io_dialect("s.stdio.gif", "87a", "*").await;
     let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
     vec![
@@ -59,7 +59,7 @@ async fn io_router_route_is_deterministic_across_load_order() {
     let graph_reversed = build_io_entry_graph(&reversed).await;
     assert_eq!(graph_forward, graph_reversed, "the merged graph itself must not depend on registration order");
 
-    let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+    let binary_raw = io_dialect("framework.io.binary", "raw", "*").await;
     let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
     let route_forward = resolve_io_route(&graph_forward, &binary_raw, &gif_89a, 3).expect("forward-order route resolves");
     let route_reversed = resolve_io_route(&graph_reversed, &binary_raw, &gif_89a, 3).expect("reversed-order route resolves");
@@ -73,7 +73,7 @@ async fn io_router_route_is_deterministic_across_load_order() {
 #[semio_framework_async_macros::async_test]
 async fn io_router_route_prefers_higher_minimum_fidelity_over_fewer_hops() {
     let graph = build_io_entry_graph(&io_router_w1d_fixture_entries().await).await;
-    let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+    let binary_raw = io_dialect("framework.io.binary", "raw", "*").await;
     let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
     let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 3).expect("route resolves");
     assert_eq!(route.fidelity, semio_framework::io_schema::IoFidelity::Canonical);
@@ -86,7 +86,7 @@ async fn io_router_route_prefers_higher_minimum_fidelity_over_fewer_hops() {
 #[semio_framework_async_macros::async_test]
 async fn io_router_route_respects_max_hops() {
     let graph = build_io_entry_graph(&io_router_w1d_fixture_entries().await).await;
-    let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+    let binary_raw = io_dialect("framework.io.binary", "raw", "*").await;
     let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
     let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 1).expect("1-hop route resolves");
     assert_eq!(route.hops.len(), 1);
@@ -99,7 +99,7 @@ async fn io_router_route_respects_max_hops() {
 #[semio_framework_async_macros::async_test]
 async fn io_router_run_io_reentrancy_guard_predicate() {
     let graph = build_io_entry_graph(&io_router_w1d_fixture_entries().await).await;
-    let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+    let binary_raw = io_dialect("framework.io.binary", "raw", "*").await;
     let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
     let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 3).expect("route resolves");
     assert_eq!(route_reenters_calling_plugin(&graph, &route, "norm"), None, "a plugin owning neither hop is safe");
@@ -119,16 +119,16 @@ async fn io_router_run_io_reentrancy_guard_predicate() {
 async fn io_router_register_plugin_rejects_conflicting_io_entry_ownership() {
     let graph = build_io_entry_graph(&[(
         "stdio",
-        semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*").await, into: io_dialect("s.stdio.gif", "87a", "*").await, fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true },
+        semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("framework.io.binary", "raw", "*").await, into: io_dialect("s.stdio.gif", "87a", "*").await, fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true },
     )])
     .await;
 
     let same_plugin_reclaim =
-        vec![semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*").await, into: io_dialect("s.stdio.gif", "87a", "*").await, fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true }];
+        vec![semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("framework.io.binary", "raw", "*").await, into: io_dialect("s.stdio.gif", "87a", "*").await, fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true }];
     assert!(io_entries_conflict(&graph, "stdio", &same_plugin_reclaim).is_none(), "the SAME plugin reclaiming its own key must not conflict");
 
     let different_plugin_claim =
-        vec![semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*").await, into: io_dialect("s.stdio.gif", "87a", "*").await, fidelity: semio_framework::io_schema::IoFidelity::Lossy, sniffs: false }];
+        vec![semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("framework.io.binary", "raw", "*").await, into: io_dialect("s.stdio.gif", "87a", "*").await, fidelity: semio_framework::io_schema::IoFidelity::Lossy, sniffs: false }];
     let conflict = io_entries_conflict(&graph, "gif", &different_plugin_claim).expect("a second plugin claiming the same key must conflict");
     assert!(matches!(conflict, PluginHostError::IoEntryRouteConflict(ref detail) if detail.existing_plugin == "stdio" && detail.incoming_plugin == "gif"));
 }
@@ -181,7 +181,7 @@ async fn plugin_instance_handle_io_sniff_decodes_the_confidence_byte() {
     let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance,test_relay_wake_authority()).await;
 
     let payload_bytes = semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).into_bytes();
-    let rank = handle.io_sniff("s.stdio.binary@raw/*", "s.stdio.gif@87a/*", &payload_bytes).await.expect("job-backed io_sniff must decode a Done result");
+    let rank = handle.io_sniff("framework.io.binary@raw/*", "s.stdio.gif@87a/*", &payload_bytes).await.expect("job-backed io_sniff must decode a Done result");
     assert_eq!(rank, 3);
 }
 
@@ -252,7 +252,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     gif_mock.script_job_step(gif_actor, JobStep::Done { output: semio_framework_pack_json::to_json_string(&final_payload).into_bytes() }).await;
     let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_instance,test_relay_wake_authority()).await);
 
-    let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+    let binary_raw = io_dialect("framework.io.binary", "raw", "*").await;
     let gif_87a = io_dialect("s.stdio.gif", "87a", "*").await;
     let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
     router

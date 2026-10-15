@@ -20,16 +20,22 @@
 //! No transport, no runtime, no clock: callers pass the [`HybridLogicalClock`] reading in. The store
 //! sits behind a shared read-write lock ([`SharedStore`]) so a reader of history never waits for a
 //! turn.
+#![allow(async_fn_in_trait)]
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::contract::{ActorKey, CommandEnvelope, CommandOutcome, CommandReceipt, EventRecord, HybridLogicalClock, IdempotencyKey, Notice, PolicyDecision, Principal, ProcessId, Rejection, Revision, Scope};
-use crate::policy::principal_key;
-use crate::storage::{AuthorityStore, Lease, OutboxEntry, StorageError, TurnCommit};
+use semio_framework_server_contract::{ActorKey, CommandEnvelope, CommandOutcome, CommandReceipt, EventRecord, HybridLogicalClock, IdempotencyKey, Notice, PolicyDecision, Principal, ProcessId, Rejection, Revision, Scope};
+use semio_framework_server_policy::principal_key;
+use semio_framework_server_storage::{AuthorityStore, Lease, OutboxEntry, StorageError, TurnCommit};
 use semio_framework_dispatch_macros::dyn_enum;
 use std::future::Future;
 use tokio::sync::RwLock;
+
+/// 📣️ Tell the operator about a fault the caller is not told about: one `[ERROR]` line on stderr.
+pub fn report(context: &str, cause: &dyn std::fmt::Display) {
+    eprintln!("[ERROR] {context}: {cause}");
+}
 
 //#region 🔖️Error
 /// 💥️ What can go wrong inside a turn that is not a domain [`Rejection`]. A rejection is an
@@ -117,7 +123,7 @@ pub enum Decision {
 /// `seq` and `hlc` on every event before committing; only `kind` and `payload` survive.
 /// **Send futures, declared not inferred.** Every method of this port returns
 /// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
-/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// style choice: `ServerState` reaches this port behind an
 /// instance's associated type, so the concrete future is opaque at the call site and axum's
 /// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
 /// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
@@ -144,7 +150,7 @@ pub trait Decider: Send + Sync {
 
 //#region 🔖️Directory
 /// 📇️ One actor kind bound to the implementation that serves it. `D` is the instance's
-/// decider type — [`ServerInstance::Deciders`](crate::gateway::ServerInstance::Deciders).
+/// decider type — `ServerInstance::Deciders`.
 pub struct ActorRegistration<D: Decider> {
     pub actor_kind: String,
     pub decider: D,
@@ -397,7 +403,7 @@ impl<S: AuthorityStore, D: Decider> CommandBus<S, D> {
     ///    answered identically even if the caller's grants or the actor's placement changed since
     ///    the original turn. This is the exactly-once law, and it is the only reason a client may
     ///    retry a timed-out submission.
-    /// 3. **Authorize** — [`PolicyPoint::CommandAdmission`](crate::contract::PolicyPoint); a deny
+    /// 3. **Authorize** — [`PolicyPoint::CommandAdmission`](semio_framework_server_contract::PolicyPoint); a deny
     ///    becomes [`Rejection::Unauthorized`] carrying [`FORBIDDEN`] and the actor is never even
     ///    placed.
     /// 4. **Place** — acquire the activation and its fencing lease; a fresh activation is first
@@ -676,7 +682,7 @@ fn refuse(envelope: &CommandEnvelope, revision: Revision, now: HybridLogicalCloc
 /// 🗄️ A storage or placement failure surfaced as a retryable refusal rather than a panic. The
 /// cause is reported to the operator; the caller learns only that a retry may succeed.
 fn unavailable(envelope: &CommandEnvelope, revision: Revision, now: HybridLogicalClock, cause: &dyn std::fmt::Display) -> CommandOutcome {
-    crate::report("authority turn", cause);
+    report("authority turn", cause);
     let notices = vec![Notice { code: "authority.retryable".into(), message: UNAVAILABLE.to_string() }];
     let reason = Rejection::ActorUnavailable { detail: UNAVAILABLE.to_string() };
     CommandOutcome::Rejected { receipt: acknowledge(envelope, revision, now), reason, notices }
@@ -741,7 +747,7 @@ impl<W: Saga> SagaRunner<W> {
     /// delivered and return the follow-up commands.
     ///
     /// Delivery is at-least-once: a crash between mapping and marking replays the rows, which is
-    /// safe precisely because every command the sagas emit carries an [`IdempotencyKey`](crate::contract::IdempotencyKey) and is
+    /// safe precisely because every command the sagas emit carries an [`IdempotencyKey`](semio_framework_server_contract::IdempotencyKey) and is
     /// deduplicated by [`CommandBus::submit`]. Rows without an event are pure effects and belong to
     /// the effect dispatcher, not to a saga; they are drained here so one cursor advances.
     pub async fn drain_outbox<S: AuthorityStore + ?Sized>(&mut self, store: &mut S, limit: usize) -> Vec<CommandEnvelope> {
@@ -759,7 +765,3 @@ impl<W: Saga> SagaRunner<W> {
     }
 }
 //#endregion 🔖️Saga
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

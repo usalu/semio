@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-server-storage"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Server storage roles: the four durability contracts an authority needs (authority store, rebuildable projections, content-addressed blobs, sessions) and no implementation of any of them."
+
+[package.metadata.semio]
+role = "product"
+id = "server-storage"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-server-contract = { path = "../../../🧬️contract/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+serde = { version = "1.0.219", features = ["derive"] }
+semio-framework-dispatch-macros = { workspace = true }

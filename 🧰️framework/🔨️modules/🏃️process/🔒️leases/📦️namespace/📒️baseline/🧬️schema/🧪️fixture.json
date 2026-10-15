@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "observations",
+    "requests",
+    "hostileNamespaces"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actualIssuedImageRequired",
+        "structuralControlRefused",
+        "knownBindingCaptured",
+        "preopenedOldReaderExcludesNewWriter",
+        "newWriterExcludesOldReopener",
+        "oldReopenerExcludesNewWriter",
+        "idleMembershipPersists",
+        "uninitializedHashReserved",
+        "queueOnlyHashReserved",
+        "absentNewKeyClassified",
+        "legacyUtf8KeyPreserved",
+        "newUtf8OverflowRefused",
+        "generationWriterExcluded",
+        "generationRetiredAfterScope",
+        "independentSqliteInventoryMatches",
+        "capturedGuardInodePreserved",
+        "namespaceAliasesRefused",
+        "sidecarOnlyHashReserved",
+        "claimOnlyHashReserved",
+        "legacyOversizeGuardPreserved"
+      ],
+      "properties": {
+        "actualIssuedImageRequired": {
+          "type": "boolean"
+        },
+        "structuralControlRefused": {
+          "type": "boolean"
+        },
+        "knownBindingCaptured": {
+          "type": "boolean"
+        },
+        "preopenedOldReaderExcludesNewWriter": {
+          "type": "boolean"
+        },
+        "newWriterExcludesOldReopener": {
+          "type": "boolean"
+        },
+        "oldReopenerExcludesNewWriter": {
+          "type": "boolean"
+        },
+        "idleMembershipPersists": {
+          "type": "boolean"
+        },
+        "uninitializedHashReserved": {
+          "type": "boolean"
+        },
+        "queueOnlyHashReserved": {
+          "type": "boolean"
+        },
+        "absentNewKeyClassified": {
+          "type": "boolean"
+        },
+        "legacyUtf8KeyPreserved": {
+          "type": "boolean"
+        },
+        "newUtf8OverflowRefused": {
+          "type": "boolean"
+        },
+        "generationWriterExcluded": {
+          "type": "boolean"
+        },
+        "generationRetiredAfterScope": {
+          "type": "boolean"
+        },
+        "independentSqliteInventoryMatches": {
+          "type": "boolean"
+        },
+        "capturedGuardInodePreserved": {
+          "type": "boolean"
+        },
+        "namespaceAliasesRefused": {
+          "type": "boolean"
+        },
+        "sidecarOnlyHashReserved": {
+          "type": "boolean"
+        },
+        "claimOnlyHashReserved": {
+          "type": "boolean"
+        },
+        "legacyOversizeGuardPreserved": {
+          "type": "boolean"
+        }
+      }
+    },
+    "requests": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "resource",
+          "kind"
+        ],
+        "properties": {
+          "resource": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "baseline",
+              "unresolved",
+              "new"
+            ]
+          }
+        }
+      }
+    },
+    "hostileNamespaces": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

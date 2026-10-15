@@ -32,6 +32,7 @@ name = "retirement_law"
 path = "../../📎️references/🧪️tests/⚖️retirement-law/🦀️.rs"
 
 [dependencies]
+semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-3d-brep-representation = { workspace = true }
 semio-framework-3d-brep-tessellation = { workspace = true }

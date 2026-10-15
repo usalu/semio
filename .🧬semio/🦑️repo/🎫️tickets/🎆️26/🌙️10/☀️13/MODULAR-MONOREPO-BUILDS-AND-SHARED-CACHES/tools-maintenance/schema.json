@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "commands", "original", "store", "minimumAvailableBytes", "requiredCalls", "forbiddenCalls", "forbiddenSource"],
+  "properties": {
+    "version": {"const": 1},
+    "commands": {"const": ["preview", "prune"]},
+    "original": {"const": "original"},
+    "store": {"const": "store"},
+    "minimumAvailableBytes": {"const": 1610612736},
+    "requiredCalls": {"type": "object", "additionalProperties": false, "required": ["receiveScriptProcessInvocation", "withRepositoryToolingStoreV1", "retireManagedToolingGenerationsV1", "statfs", "store.recheck"], "properties": {"receiveScriptProcessInvocation": {"const": 1}, "withRepositoryToolingStoreV1": {"const": 1}, "retireManagedToolingGenerationsV1": {"const": 1}, "statfs": {"const": 1}, "store.recheck": {"const": 2}}},
+    "forbiddenCalls": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "forbiddenSource": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  }
+}

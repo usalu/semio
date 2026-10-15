@@ -40,7 +40,8 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
   };
 });
 
-import { WindowInstanceIdContext, World3dHost } from "../../🟦️.tsx";
+import { World3dHost } from "../../🟦️.tsx";
+import { WindowInstanceIdContext } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 
 const dispatched: string[] = [];
 

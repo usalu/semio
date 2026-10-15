@@ -1,3 +1,5 @@
+import {withManagedToolingProvisionV1,type ManagedToolingPublisherV1} from "../🧹️retention/📥️physical/🟦️.ts";
+import retentionSchema from "../🧹️retention/📥️physical/🧬️schema/🔣️.json";
 import type {RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
@@ -44,7 +46,7 @@ export function bunArchiveExecutable(archive: Buffer, member: string): Buffer {
 }
 
 /** 🔐️ Acquires and atomically publishes a pinned workspace-owned installer with cancellation. */
-export async function prepareBun(workspace: string, version: string, store:RepositoryToolingStoreV1): Promise<string> {
+export async function prepareBun(workspace: string, version: string, store:RepositoryToolingStoreV1,publisher?:ManagedToolingPublisherV1): Promise<string> {
   requireNativeStorageReservationV1(store.storage,store.control);await store.storage.recheck();const signal=store.control.signal;signal.throwIfAborted();
   if (process.versions.bun === version) return process.execPath;
   const report = process.platform === "linux" ? process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } : undefined;
@@ -55,16 +57,19 @@ export async function prepareBun(workspace: string, version: string, store:Repos
     catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     if (dirname(current) === current) break;
   }
-  mkdirSync(base, { recursive: true });
-  return withResourceLeases({ directory: join(workspace, ".cache/b/l/m/data"), signal,control:store.control, resources: [{ resource: `bun-${row.sha256}`, mode: "exclusive" }] }, async () => {
+  const lease={directory:join(workspace,".cache/b/l/m/data"),signal,control:store.control},resource=`bun-${row.sha256}`;
     const validate = async (): Promise<string> => {
       const stat = lstatSync(executable), receipt = JSON.parse(readFileSync(join(directory, ".toolchain.json"), "utf8"));
       if (!stat.isFile() || stat.isSymbolicLink() || lstatSync(directory).isSymbolicLink() || receipt.archive !== row.sha256 || receipt.executable !== createHash("sha256").update(readFileSync(executable)).digest("hex")) throw new Error("Bun installation checksum mismatch");
       if ((await captureOwnedCommandV1(executable,["--version"],directory,{control:store.control,env:store.environment,output:{maximumBytes:65536,maximumLines:1024}})).trim() !== version) throw new Error("Bun executable version mismatch");
       return executable;
     };
-    try { lstatSync(directory); return await validate(); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+    const ready=await withResourceLeases({...lease,resources:[{resource,mode:"shared"}]},async()=>{try{lstatSync(directory);return await validate();}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}});if(ready)return ready;
     if(nativeCallerPhaseV1(store.invocation,workspace).authority.network.offline)throw Error("Original offline pinned Bun parser absent");
+    const publish:ManagedToolingPublisherV1=publisher??((job,quote)=>withManagedToolingProvisionV1(workspace,store,{version:1,minimumAvailableBytes:retentionSchema.definitions.Protocol.const.minimumInstallerAvailableBytes},original=>original(job,quote)));
+    return publish(()=>withResourceLeases({...lease,resources:[{resource,mode:"exclusive"}]},async()=>{
+    try { lstatSync(directory); return await validate(); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+    await store.recheck();mkdirSync(base,{recursive:true});
     const staging = mkdtempSync(join(base, ".prepare-")), progress = setInterval(() => console.log(`Acquiring pinned Bun ${version}…`), 10000);
     try {
       console.log(`Acquiring pinned Bun ${version} for ${row.platform}/${row.arch}…`);
@@ -80,5 +85,5 @@ export async function prepareBun(workspace: string, version: string, store:Repos
       writeFileSync(join(staging, ".toolchain.json"), JSON.stringify({ archive: row.sha256, executable: createHash("sha256").update(payload).digest("hex") }));
       signal.throwIfAborted(); renameSync(staging, directory); return executable;
     } finally { clearInterval(progress); rmSync(staging, { recursive: true, force: true }); }
-  });
+  }));
 }

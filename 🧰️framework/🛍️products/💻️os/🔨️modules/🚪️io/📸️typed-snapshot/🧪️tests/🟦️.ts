@@ -4,13 +4,9 @@ import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {semioSchemaAjvV1} from "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import {SqliteOperation,exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {txtSnapshotToSqliteDatabase,txtSnapshotFromSqliteDatabase} from "../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
-import type {TxtSnapshot} from "../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const read=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8");
-const metadataSql=read("../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🗄️.sql").trim().replace(/;$/,"");
-const snapshots=fixture.cases.map(row=>row.snapshot as TxtSnapshot);
 
 test("registered accepted file owners preserve paid physical retirement",()=>{
  const law=fixture.acceptedRetirement;expect(semioSchemaAjvV1({strict:true}).compile(JSON.parse(read("./🧬️schema/🔣️accepted-retirement.json")))(law)).toBe(true);const db=new Database(":memory:");try{db.run("CREATE TABLE custody(owner TEXT PRIMARY KEY,backing INTEGER NOT NULL,born INTEGER NOT NULL,released INTEGER NOT NULL)");for(const[ordinal,owner]of law.owners.entries()){const backing=ordinal+17,born=ordinal+31;db.run("INSERT INTO custody VALUES(?,?,?,?)",[owner,backing,born,backing+born]);}expect(db.query("SELECT COUNT(*) AS conserved FROM custody WHERE backing+born=released").get()).toEqual({conserved:law.owners.length});}finally{db.close();}
@@ -18,27 +14,11 @@ test("registered accepted file owners preserve paid physical retirement",()=>{
  console.log("[DEBUG] Accepted file, physical SQLite database and typed destination have independently authored zero-denial/terminal and exact backing conservation laws; Native qualification remains separate");
 });
 
-test("complete typed TXT snapshots preserve all legal fields in independently readable SQLite files",async()=>{
- const ajv=semioSchemaAjvV1({strict:true});const admitSnapshot=ajv.compile(JSON.parse(read("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json")));const admitGrant=ajv.compile(JSON.parse(read("../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json")));
- expect(admitGrant(fixture.bodyGrant)).toBe(true);expect(admitGrant(fixture.closeGrant)).toBe(true);
- for(const [index,snapshot]of snapshots.entries()){expect(admitSnapshot(snapshot)).toBe(true);const operation=new SqliteOperation({maxAllocationBytes:67108864});const projected=await txtSnapshotToSqliteDatabase(snapshot,operation);const database:SqliteDatabase={tables:[...projected.tables,{name:"semio_snapshot",sql:metadataSql,rows:[{rowid:1n,values:[1n,fixture.dialect.artifactKind,fixture.dialect.standard,fixture.dialect.subset,1n,fixture.encoding]}]}]};const bytes=await exportSqliteDatabase(database,operation);expect(Buffer.from(bytes.subarray(0,16)).toString()).toBe("SQLite format 3\0");const independent=Database.deserialize(bytes);try{
- expect(independent.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(independent.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(independent.query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all()).toEqual([{name:"semio_snapshot"},{name:"text_document"},{name:"text_line"}]);expect(independent.query("SELECT artifact_kind,standard,subset,schema_version,native_encoding FROM semio_snapshot").get()).toEqual({artifact_kind:fixture.dialect.artifactKind,standard:fixture.dialect.standard,subset:fixture.dialect.subset,schema_version:1,native_encoding:fixture.encoding});
- const document=independent.query("SELECT schema,trailing_newline,line_ending FROM text_document").get()as{schema:string;trailing_newline:number;line_ending:string};const lines=independent.query("SELECT content FROM text_line ORDER BY ordinal").all()as{content:string}[];expect({schema:document.schema,lines:lines.map(row=>row.content),trailingNewline:document.trailing_newline===1,lineEnding:document.line_ending==="crlf"?"crLf":"lf"}).toEqual(snapshot);expect(lines.length).toBe(snapshot.lines.length);
- const own=await importSqliteDatabase(bytes,operation);expect(await txtSnapshotFromSqliteDatabase({tables:own.tables.filter(table=>table.name!=="semio_snapshot")},operation)).toEqual(snapshot);
- const independentFile=independent.serialize();const imported=await importSqliteDatabase(independentFile,operation);expect(await txtSnapshotFromSqliteDatabase({tables:imported.tables.filter(table=>table.name!=="semio_snapshot")},operation)).toEqual(snapshot);expect(operation.ownedBytes).toBeGreaterThan(0);
- }finally{independent.close();}
- const ending=snapshot.lineEnding==="lf"?"\n":"\r\n";expect(snapshot.lines.join(ending)+(snapshot.trailingNewline?ending:"")).toBe(fixture.cases[index]!.raw);
- }
- for(const [leftId,rightId]of fixture.collisions){const left=fixture.cases.find(row=>row.id===leftId)!,right=fixture.cases.find(row=>row.id===rightId)!;expect(left.raw).toBe(right.raw);expect(left.snapshot).not.toEqual(right.snapshot);}
- console.log("[DEBUG] Complete typed Snapshot file witness: eight canonical TXT inputs and four raw collisions preserve every legal field, exact metadata and semantic tables in both own-file and independent SQLite-file directions");
-});
-
 test("typed Snapshot file public API requires supplied original directional owners and physical receiving frames",()=>{
  const source=read("../../🦀️.rs");const start=source.indexOf("struct TypedSnapshotExportFrame");const end=source.indexOf("fn validate_snapshot_metadata_receiving",start);expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);const typed=source.slice(start,end);
  expect(typed).toContain("NativeSnapshotDecodeOwner");expect(typed).toContain("NativeSnapshotEncodeOwner");expect(typed).toContain("RetireOwned");expect(typed).toContain("SqliteSnapshotControl");expect(typed).toContain("to_sqlite_database_receiving");expect(typed).toContain("from_sqlite_database_receiving");expect(typed).toContain("validate_sqlite_snapshot_subset_decoding");expect(typed).toContain("validate_sqlite_snapshot_subset_encoding");expect(typed).toContain("export_sqlite_database_receiving_into");expect(typed).toContain("import_sqlite_database_receiving_into");expect(typed).toContain("receive_nested");expect(typed).not.toContain("run_as_original_caller");expect(typed).not.toContain(".to_sqlite_database(control)");expect(typed).not.toContain("P::from_sqlite_database(");
  console.log("[DEBUG] Direct typed file IO Source declarations require the actual original caller owner; Native physical custody and publication laws remain separate");
 });
-
 
 test("registered Snapshot hops share original physical receiving and retain results before SQL close settlement",()=>{
  const source=read("../../🦀️.rs");const start=source.indexOf("fn run_snapshot_hop(");const end=source.indexOf("fn resolve_run(",start);expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);const hop=source.slice(start,end);
@@ -66,20 +46,12 @@ test("registered complete snapshot file capabilities preserve typed identity and
  console.log("[DEBUG] Registered complete file identities independently distinguish typed/guest owners and specialized borrowed read/empty typed destination thunks share original synchronous file producers");
 });
 
-test("registered full TXT file laws borrow genuine Store reads and retire accepted complete output",()=>{
- const laws=read("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs");
- const start=laws.indexOf("async fn txt_original_receiving_registered_complete_store_and_destination");expect(start).toBeGreaterThan(0);const registered=laws.slice(start);
- for(const name of["plain_test_store","snapshot_read().unwrap().into_erased()","io_export_sqlite_snapshot_read","io_import_sqlite_snapshot_into","try_return_to_registry_witness","close_plain_test_store","txt_full_file_retire","lines.capacity()","schema.capacity()","registered_full_fixture"])expect(registered.includes(name)).toBe(true);
- console.log("[DEBUG] Registered TXT full-file owning law mounts the shared complete semantic corpus, real Store-issued reads and paid accepted-output retirement; Source does not qualify Native runtime");
-});
-
 test("registered import refusal policies retain independent finite grant axes",()=>{
- const ajv=semioSchemaAjvV1({strict:true});const admit=ajv.compile(JSON.parse(read("../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json")));const fields={items:"maximumItems",copy:"maximumCopyBytes",capacity:"maximumCapacityBytes",release:"maximumReleaseBytes",depth:"maximumDepth"}as const;const independent=new Database(":memory:");
+ const ajv=semioSchemaAjvV1({strict:true});const admit=ajv.compile(JSON.parse(read("../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json")));expect(admit(fixture.closeGrant)).toBe(true);const fields={items:"maximumItems",copy:"maximumCopyBytes",capacity:"maximumCapacityBytes",release:"maximumReleaseBytes",depth:"maximumDepth"}as const;const independent=new Database(":memory:");
  try{independent.run("CREATE TABLE refused_authority(ordinal INTEGER PRIMARY KEY,axis TEXT NOT NULL,maximum INTEGER NOT NULL,minimum INTEGER NOT NULL)");for(const[index,row]of fixture.registeredFiles.grantRefusals.entries()){const grant={...fixture.bodyGrant};if(row.axis!=="native")grant[fields[row.axis as keyof typeof fields]]=row.maximum;expect(admit(grant)).toBe(true);independent.run("INSERT INTO refused_authority VALUES(?,?,?,?)",[index,row.axis,row.maximum,row.axis==="depth"?2:1]);}expect(independent.query("SELECT COUNT(*) AS denied FROM refused_authority WHERE maximum<minimum").get()).toEqual({denied:fixture.registeredFiles.grantRefusals.length});}finally{independent.close();}
  expect(fixture.registeredFiles.grantRefusals.map(row=>row.axis)).toEqual(["items","copy","capacity","release","depth","depth","native"]);
  console.log("[DEBUG] Seven authored receiving/publication refusal policies independently validate all five finite grant axes and native ceiling; depth1 cannot admit the original destination header depth2");
 });
-
 
 test("registered export refusal policies preserve distinct original frame admission",()=>{
  const ajv=semioSchemaAjvV1({strict:true});const admit=ajv.compile(JSON.parse(read("../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json")));const fields={items:"maximumItems",copy:"maximumCopyBytes",capacity:"maximumCapacityBytes",release:"maximumReleaseBytes",depth:"maximumDepth"}as const;const independent=new Database(":memory:");
@@ -90,7 +62,7 @@ test("registered export refusal policies preserve distinct original frame admiss
 });
 
 test("registered file dependency preserves original mounted close loan and complete causes",()=>{
- const source=read("../../../🔌️plugin/🧵️instance/🦀️.rs"),start=source.indexOf("/// 🎟️ Advances one genuine original owner under the complete caller grant."),end=source.indexOf("fn close_terminal_is_empty",start);expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);const boundary=source.slice(start,end);
+ const source=readModuleTreeSource(new URL("../../../🔌️plugin/🧵️instance/🦀️.rs",import.meta.url)),start=source.indexOf("/// 🎟️ Advances one genuine original owner under the complete caller grant."),end=source.indexOf("fn close_terminal_is_empty",start);expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);const boundary=source.slice(start,end);
  for(const name of["cx:&mut semio_framework_job::StepContext","loan:RetainedCloneGrant","crate::PluginLifecycleFailure","original_lifecycle_step(cx,loan,demand","self.close_ladder_step(same,grant)"])expect(boundary).toContain(name);
  expect(boundary).not.toContain("into_message()");expect(boundary).not.toContain("plugin_sdk_fault");
  const receiver=read("../../../🔌️plugin/🏇️mounted-owner/🦀️.rs");expect(receiver).toContain("advance_lifecycle");

@@ -57,10 +57,6 @@ path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦�
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
 
-[workspace.dependencies.semio-s-artifact-stdio-dwg-model]
-path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-dwg-geometry]
 path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-dwg-read]
@@ -74,18 +70,11 @@ path = "../../../🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀�
 [workspace.dependencies.semio-s-artifact-stdio-pdf]
 path = "../../../🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-s-artifact-stdio-semio-base]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-drawing]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-semio-text]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/📦️packages/🦀️rust"
-
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-text-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📦️packages/🦀️rust"

@@ -5563,6 +5563,13 @@ mod surface_canvas {
         ((f64::from(logical.max(1)) * dpr.max(1.0)).round() as u32).max(1)
     }
 
+    /// 🔤️ The compiler-font door: the host hands the five font files it fetched (`FontRole::ALL` order) before it
+    /// opens a session, so math, emoji and text icons resolve; without it those icons stay empty.
+    #[wasm_bindgen(js_name = flowSetCompilerFonts)]
+    pub fn flow_set_compiler_fonts(math: Vec<u8>, serif: Vec<u8>, serif_italic: Vec<u8>, mono: Vec<u8>, emoji: Vec<u8>) -> Result<(), JsValue> {
+        canvas::install_compiler_font_bytes(math, serif, serif_italic, mono, emoji).map_err(|error| JsValue::from_str(&error.to_string()))
+    }
+
     /// 🔌️ Binds one flow surface's canvas to a WebGPU device. Resolves `true` when the canvas will
     /// present on the GPU and `false` when no adapter/device/surface could be had — never rejects,
     /// because a host without WebGPU must still reach a painted canvas through the 2D replay path.

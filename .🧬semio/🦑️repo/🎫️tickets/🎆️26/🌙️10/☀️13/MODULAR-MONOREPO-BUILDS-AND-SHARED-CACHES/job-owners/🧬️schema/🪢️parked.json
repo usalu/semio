@@ -1,0 +1,16 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,"required":["version","operation","cases"],
+  "properties":{
+    "version":{"const":1},"operation":{"const":"original-parked-alias-return"},
+    "cases":{"type":"array","minItems":8,"maxItems":8,"items":{
+      "type":"object","additionalProperties":false,"required":["name","phase","stage","params","sameRoot","grant","effect","receipt"],
+      "properties":{
+        "name":{"type":"string","minLength":1},"phase":{"type":"integer","minimum":0,"maximum":8},"stage":{"type":"integer","minimum":0,"maximum":4},"params":{"type":"boolean"},"sameRoot":{"type":"boolean"},
+        "grant":{"type":"array","minItems":5,"maxItems":5,"items":{"type":"integer","minimum":0,"maximum":1}},
+        "effect":{"enum":["returned","pending","blocked","not-alias-frontier","contention"]},
+        "receipt":{"type":"array","minItems":4,"maxItems":4,"items":{"type":"integer","minimum":0,"maximum":1}}
+      }
+    }}
+  }
+}

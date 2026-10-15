@@ -11,6 +11,7 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framewor
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
 import {runOwnedCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 //#region 💡️InferencePortCheck
 /** 💡️ One rendered phase of the host-owned inference port, restated independently of production. */
 type OraclePreview = { schema: "semio.hub.gis-map-inference-preview/v1"; jobId: string; proposalHash: string; regionId: string; ring: readonly [readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number]] };
@@ -214,7 +215,7 @@ async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<stri
   if (!deepEqual(routes, fixture.ordinaryHistory)) throw new Error("Shell history arbitration disagrees with the neutral corpus");
 
   const worker = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🟦️.ts"), "utf8") + readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
-  const shell = readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🧱️elements", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+  const shell = readModuleTreeSource(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
   const conforms = (candidateWorker: string, candidateShell: string): boolean =>
     candidateWorker.includes('owner.abort.abort(new Error("gis map approval undo owner rebootstrap"));')
     && candidateWorker.includes("idempotencyKey: owner.idempotencyKey,")
@@ -467,7 +468,7 @@ async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
   const expected = fixture.clients.map((client: { clientInstanceId: string }) => ({ phase: "live", currentPair: fixture.published.aggregateSha256, uiOwner: client.clientInstanceId, frontier: fixture.published.frontier, scene: fixture.published.scene }));
   if (!deepEqual(observed, expected) || !deepEqual(observed[0]?.frontier, observed[1]?.frontier) || !deepEqual(observed[0]?.scene, observed[1]?.scene)) throw new Error("GIS Map peer rebootstrap model diverged");
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
-  const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
+  const shell = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"));
   const conforms = (candidateWorker: string, candidateShell: string): boolean =>
     candidateWorker.includes("control.space_id !== binding.spaceId || control.document_id !== state.config.documentId") &&
     candidateWorker.includes("await requireArtifactRebootstrap(state);") &&
@@ -522,7 +523,7 @@ async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
   };
   if (!deepEqual(observed, fixture.expected)) throw new Error("mounted GIS Map independent projection differs from the corpus");
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
-  const shell = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🪟️presentation/🟦️.tsx"), "utf8") + readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
+  const shell = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🪟️presentation/🟦️.tsx"), "utf8") + readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"));
   const conforms = (candidateWorker: string, candidateShell: string): boolean =>
     candidateWorker.includes('kind: "browser-actor-ui-mounted"')
     && candidateWorker.includes("this.acknowledgedUiRevision !== this.renderedUiRevision")

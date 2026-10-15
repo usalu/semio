@@ -1,0 +1,1272 @@
+{
+  "version": 1,
+  "removedEnvironment": "CARGO_BUILD_JOBS",
+  "rows": [
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "🧰️Framework 🌱️Value 🔭️Borrowed Observer 🦀️Whole Original Test",
+      "before": {
+        "name": "🧰️Framework 🌱️Value 🔭️Borrowed Observer 🦀️Whole Original Test",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --success-output immediate",
+        "cwd": "/Users/ueli/Documents/semio",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mo3/a"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586072
+        }
+      },
+      "expected": {
+        "name": "🧰️Framework 🌱️Value 🔭️Borrowed Observer 🦀️Whole Original Test",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --success-output immediate",
+        "cwd": "/Users/ueli/Documents/semio",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mo3/a"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586072
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️gate🏢️semio-tech🎡️play📄️payload-full-grant-native",
+      "before": {
+        "name": "⚖️gate🏢️semio-tech🎡️play📄️payload-full-grant-native",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-job-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E \"test(job_payload_retirement_)\"",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/document-continuation-2026-10-08/job-payload-original"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 11.5301
+        }
+      },
+      "expected": {
+        "name": "⚖️gate🏢️semio-tech🎡️play📄️payload-full-grant-native",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-job-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E \"test(job_payload_retirement_)\"",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/document-continuation-2026-10-08/job-payload-original"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 11.5301
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-capacity-admission🌱️value🦀️",
+      "before": {
+        "name": "⚖️test-original-capacity-admission🌱️value🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache -- long --lib -E 'test(native_encoding_capacity_admission_consumes_the_same_counter_owner) | test(native_capacity_closed_vectors_preserve_the_consumed_admission_owner)'",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "NEXTEST_SUCCESS_OUTPUT": "immediate"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.03662
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-capacity-admission🌱️value🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache -- long --lib -E 'test(native_encoding_capacity_admission_consumes_the_same_counter_owner) | test(native_capacity_closed_vectors_preserve_the_consumed_admission_owner)'",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "NEXTEST_SUCCESS_OUTPUT": "immediate"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.03662
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "🧪️test🌱️value🔗️owned-projection🦀️",
+      "before": {
+        "name": "🧪️test🌱️value🔗️owned-projection🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache -- --lib -E \"test(paged_native_owned_projection_)\"",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "1",
+          "SEMIO_TEST_LEVEL": "long",
+          "NEXTEST_SUCCESS_OUTPUT": "immediate"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.05809469
+        }
+      },
+      "expected": {
+        "name": "🧪️test🌱️value🔗️owned-projection🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache -- --lib -E \"test(paged_native_owned_projection_)\"",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_LEVEL": "long",
+          "NEXTEST_SUCCESS_OUTPUT": "immediate"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.05809469
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "🧪️test🌱️value🌐️original-retained-grant-wire",
+      "before": {
+        "name": "🧪️test🌱️value🌐️original-retained-grant-wire",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_retained_grant_wire_preserves_independent_axes_and_refuses_malformed_authority --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094787
+        }
+      },
+      "expected": {
+        "name": "🧪️test🌱️value🌐️original-retained-grant-wire",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_retained_grant_wire_preserves_independent_axes_and_refuses_malformed_authority --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094787
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "🧪️test🎒️pack🔤️json🎟️original-refusal-receipts",
+      "before": {
+        "name": "🧪️test🎒️pack🔤️json🎟️original-refusal-receipts",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-pack-json-rs:test-native --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib -E 'test(json_failed_original_frontier_retains_only_actual_dsl_effects) | test(json_refusal_receipt_preserves_actual_work_before_cancellation) | test(json_dsl_original_receipt_conserves_prefix_backing_release_and_depth) | test(json_original_error_retirement_keeps_actual_duplicate_name_and_native_diagnostic)' --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094788
+        }
+      },
+      "expected": {
+        "name": "🧪️test🎒️pack🔤️json🎟️original-refusal-receipts",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-pack-json-rs:test-native --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib -E 'test(json_failed_original_frontier_retains_only_actual_dsl_effects) | test(json_refusal_receipt_preserves_actual_work_before_cancellation) | test(json_dsl_original_receipt_conserves_prefix_backing_release_and_depth) | test(json_original_error_retirement_keeps_actual_duplicate_name_and_native_diagnostic)' --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094788
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "🧪️test🎒️pack🔤️json🎟️original-normal-receipts",
+      "before": {
+        "name": "🧪️test🎒️pack🔤️json🎟️original-normal-receipts",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-pack-json-rs:test-native --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_json_normal_frontiers_preserve_actual_independent_receipts --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094792
+        }
+      },
+      "expected": {
+        "name": "🧪️test🎒️pack🔤️json🎟️original-normal-receipts",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-pack-json-rs:test-native --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_json_normal_frontiers_preserve_actual_independent_receipts --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094792
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "🧪️test🧵️job🎟️original-step-retained-wallet",
+      "before": {
+        "name": "🧪️test🧵️job🎟️original-step-retained-wallet",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-job-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib -E \"test(original_failed_job_close_preserves_actual_allocated_receipt_before_refusal) | test(original_job_failed_receipt_ingress_keeps_actual_external_recipient) | test(original_job_step_context_conserves_actual_independent_retained_wallet) | test(original_worker_job_retains_actual_step_receipt_across_producer_panic) | test(retained_step_context_owner_turns_use_original_ledger_without_heap_birth) | test(retained_step_context_owner_preserves_original_ledger_until_context_and_writer_return) | test(worker_original_typed_wake_retirement_preserves_native_lease_aliases_and_physical_payload)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094793
+        }
+      },
+      "expected": {
+        "name": "🧪️test🧵️job🎟️original-step-retained-wallet",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-job-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib -E \"test(original_failed_job_close_preserves_actual_allocated_receipt_before_refusal) | test(original_job_failed_receipt_ingress_keeps_actual_external_recipient) | test(original_job_step_context_conserves_actual_independent_retained_wallet) | test(original_worker_job_retains_actual_step_receipt_across_producer_panic) | test(retained_step_context_owner_turns_use_original_ledger_without_heap_birth) | test(retained_step_context_owner_preserves_original_ledger_until_context_and_writer_return) | test(worker_original_typed_wake_retirement_preserves_native_lease_aliases_and_physical_payload)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094793
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "🧪️test🌱️value🧾️actual-failed-retirement-receipt🦀️native",
+      "before": {
+        "name": "🧪️test🌱️value🧾️actual-failed-retirement-receipt🦀️native",
+        "type": "node-terminal",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094799
+        },
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib -E \"test(original_controlled_narrow_child_keeps_real_semantic_minimum_and_same_grant) | test(original_controlled_root_transfer_preserves_same_source_with_narrow_copy_policy) | test(original_controlled_failed_reservation_retains_actual_receipt_and_same_owner) | test(original_retirement_queue_keeps_actual_controlled_child_failure_receipt) | test(original_retained_grant_wire_preserves_independent_axes_and_refuses_malformed_authority) | test(original_retained_progress_wire_preserves_actual_physical_axes) | test(original_retained_wire_restores_parent_workload_after_nested_axes) | test(controlled_value_refusal_codec_closed_wire_matches_original_kind_message_and_serde) | test(controlled_value_refusal_codec_rejects_every_non_closed_record_without_mutating_input) | test(controlled_value_refusal_codec_keeps_cancellation_and_cumulative_ownership_causes)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture"
+      },
+      "expected": {
+        "name": "🧪️test🌱️value🧾️actual-failed-retirement-receipt🦀️native",
+        "type": "node-terminal",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094799
+        },
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib -E \"test(original_controlled_narrow_child_keeps_real_semantic_minimum_and_same_grant) | test(original_controlled_root_transfer_preserves_same_source_with_narrow_copy_policy) | test(original_controlled_failed_reservation_retains_actual_receipt_and_same_owner) | test(original_retirement_queue_keeps_actual_controlled_child_failure_receipt) | test(original_retained_grant_wire_preserves_independent_axes_and_refuses_malformed_authority) | test(original_retained_progress_wire_preserves_actual_physical_axes) | test(original_retained_wire_restores_parent_workload_after_nested_axes) | test(controlled_value_refusal_codec_closed_wire_matches_original_kind_message_and_serde) | test(controlled_value_refusal_codec_rejects_every_non_closed_record_without_mutating_input) | test(controlled_value_refusal_codec_keeps_cancellation_and_cumulative_ownership_causes)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture"
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "🧪️test🌱️value🌐️original-retained-wire-all",
+      "before": {
+        "name": "🧪️test🌱️value🌐️original-retained-wire-all",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_retained_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094789
+        }
+      },
+      "expected": {
+        "name": "🧪️test🌱️value🌐️original-retained-wire-all",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_retained_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094789
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-heap-owner-native🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-heap-owner-native🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(original_heap_and_reverse_preserve_backing_and_full_retirement_receipts) | test(erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_ownership)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "NEXTEST_SUCCESS_OUTPUT": "immediate",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/mesh-output/heap-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.05860644
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-heap-owner-native🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(original_heap_and_reverse_preserve_backing_and_full_retirement_receipts) | test(erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_ownership)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "NEXTEST_SUCCESS_OUTPUT": "immediate",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/mesh-output/heap-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.05860644
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-fold-set-native📡️🦀️",
+      "before": {
+        "name": "⚖️test-original-fold-set-native📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(bounded_history_set_retains_original_keys_and_each_physical_allocation)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "NEXTEST_SUCCESS_OUTPUT": "immediate",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/mesh-output/set-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.05860642
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-fold-set-native📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(bounded_history_set_retains_original_keys_and_each_physical_allocation)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "NEXTEST_SUCCESS_OUTPUT": "immediate",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/mesh-output/set-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.05860642
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-fold-index-entry-native📡️🦀️",
+      "before": {
+        "name": "⚖️test-original-fold-index-entry-native📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_fold_index_lazy_entry_preserves_source_and_full_grant_receipts)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-fold-index-entry"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586065
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-fold-index-entry-native📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_fold_index_lazy_entry_preserves_source_and_full_grant_receipts)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-fold-index-entry"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586065
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-ordered-full-receipt-native🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-ordered-full-receipt-native🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_typed_owner_preserves_mixed_physical_receipt)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586069
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-ordered-full-receipt-native🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_typed_owner_preserves_mixed_physical_receipt)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586069
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-neutral-simultaneous-demand🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-neutral-simultaneous-demand🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_controlled_retirement_exposes_simultaneous_physical_demands)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586071
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-neutral-simultaneous-demand🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_controlled_retirement_exposes_simultaneous_physical_demands)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586071
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-ordered-deque-physical-demand🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-ordered-deque-physical-demand🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_deque_declares_physical_handoff_demand)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586073
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-ordered-deque-physical-demand🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_deque_declares_physical_handoff_demand)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586073
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-value-full-grant-regressions🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-value-full-grant-regressions🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586072
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-value-full-grant-regressions🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586072
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-ordered-full-receipt-parents🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-ordered-full-receipt-parents🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_typed_owner_preserves_mixed_physical_receipt) or test(ordered_retirement_composes_real_generic_owner_under_independent_category_grants) or test(ordered_partial_mutations_compose_typed_retirement_at_every_neutral_cancel_frontier)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.058607
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-ordered-full-receipt-parents🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_typed_owner_preserves_mixed_physical_receipt) or test(ordered_retirement_composes_real_generic_owner_under_independent_category_grants) or test(ordered_partial_mutations_compose_typed_retirement_at_every_neutral_cancel_frontier)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.058607
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-fold-index-admitted-insertion📡️🦀️",
+      "before": {
+        "name": "⚖️test-original-fold-index-admitted-insertion📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(original_fold_index_admitted_insert_keeps_each_physical_page) | test(original_fold_index_reuses_each_detached_slot_without_heap_growth) | test(original_fold_membership_admitted_insert_keeps_each_original_key)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/index-insertion-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586077
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-fold-index-admitted-insertion📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(original_fold_index_admitted_insert_keeps_each_physical_page) | test(original_fold_index_reuses_each_detached_slot_without_heap_growth) | test(original_fold_membership_admitted_insert_keeps_each_original_key)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/index-insertion-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586077
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/launch.json",
+      "name": "⚖️test-original-fold-index-family📡️🦀️",
+      "before": {
+        "name": "⚖️test-original-fold-index-family📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(/causal::transition::retained_fold::index::tests::/)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/index-insertion-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586078
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-fold-index-family📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(/causal::transition::retained_fold::index::tests::/)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/index-insertion-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586078
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "🧰️Framework 🌱️Value 🔭️Borrowed Observer 🦀️Whole Original Test",
+      "before": {
+        "name": "🧰️Framework 🌱️Value 🔭️Borrowed Observer 🦀️Whole Original Test",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --success-output immediate",
+        "cwd": "/Users/ueli/Documents/semio",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mo3/a"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586072
+        }
+      },
+      "expected": {
+        "name": "🧰️Framework 🌱️Value 🔭️Borrowed Observer 🦀️Whole Original Test",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --success-output immediate",
+        "cwd": "/Users/ueli/Documents/semio",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mo3/a"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586072
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️gate🏢️semio-tech🎡️play📄️payload-full-grant-native",
+      "before": {
+        "name": "⚖️gate🏢️semio-tech🎡️play📄️payload-full-grant-native",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-job-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E \"test(job_payload_retirement_)\"",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/document-continuation-2026-10-08/job-payload-original"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 11.5301
+        }
+      },
+      "expected": {
+        "name": "⚖️gate🏢️semio-tech🎡️play📄️payload-full-grant-native",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-job-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E \"test(job_payload_retirement_)\"",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/document-continuation-2026-10-08/job-payload-original"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 11.5301
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-capacity-admission🌱️value🦀️",
+      "before": {
+        "name": "⚖️test-original-capacity-admission🌱️value🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache -- long --lib -E 'test(native_encoding_capacity_admission_consumes_the_same_counter_owner) | test(native_capacity_closed_vectors_preserve_the_consumed_admission_owner)'",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "NEXTEST_SUCCESS_OUTPUT": "immediate"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.03662
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-capacity-admission🌱️value🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache -- long --lib -E 'test(native_encoding_capacity_admission_consumes_the_same_counter_owner) | test(native_capacity_closed_vectors_preserve_the_consumed_admission_owner)'",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "NEXTEST_SUCCESS_OUTPUT": "immediate"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.03662
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "🧪️test🌱️value🔗️owned-projection🦀️",
+      "before": {
+        "name": "🧪️test🌱️value🔗️owned-projection🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache -- --lib -E \"test(paged_native_owned_projection_)\"",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "1",
+          "SEMIO_TEST_LEVEL": "long",
+          "NEXTEST_SUCCESS_OUTPUT": "immediate"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.05809469
+        }
+      },
+      "expected": {
+        "name": "🧪️test🌱️value🔗️owned-projection🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache -- --lib -E \"test(paged_native_owned_projection_)\"",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_LEVEL": "long",
+          "NEXTEST_SUCCESS_OUTPUT": "immediate"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.05809469
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "🧪️test🌱️value🌐️original-retained-grant-wire",
+      "before": {
+        "name": "🧪️test🌱️value🌐️original-retained-grant-wire",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_retained_grant_wire_preserves_independent_axes_and_refuses_malformed_authority --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094787
+        }
+      },
+      "expected": {
+        "name": "🧪️test🌱️value🌐️original-retained-grant-wire",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_retained_grant_wire_preserves_independent_axes_and_refuses_malformed_authority --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094787
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "🧪️test🎒️pack🔤️json🎟️original-normal-receipts",
+      "before": {
+        "name": "🧪️test🎒️pack🔤️json🎟️original-normal-receipts",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-pack-json-rs:test-native --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_json_normal_frontiers_preserve_actual_independent_receipts --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094792
+        }
+      },
+      "expected": {
+        "name": "🧪️test🎒️pack🔤️json🎟️original-normal-receipts",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-pack-json-rs:test-native --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_json_normal_frontiers_preserve_actual_independent_receipts --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094792
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "🧪️test🧵️job🎟️original-step-retained-wallet",
+      "before": {
+        "name": "🧪️test🧵️job🎟️original-step-retained-wallet",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-job-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib -E \"test(original_failed_job_close_preserves_actual_allocated_receipt_before_refusal) | test(original_job_failed_receipt_ingress_keeps_actual_external_recipient) | test(original_job_step_context_conserves_actual_independent_retained_wallet) | test(original_worker_job_retains_actual_step_receipt_across_producer_panic) | test(retained_step_context_owner_turns_use_original_ledger_without_heap_birth) | test(retained_step_context_owner_preserves_original_ledger_until_context_and_writer_return) | test(worker_original_typed_wake_retirement_preserves_native_lease_aliases_and_physical_payload)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094793
+        }
+      },
+      "expected": {
+        "name": "🧪️test🧵️job🎟️original-step-retained-wallet",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-job-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib -E \"test(original_failed_job_close_preserves_actual_allocated_receipt_before_refusal) | test(original_job_failed_receipt_ingress_keeps_actual_external_recipient) | test(original_job_step_context_conserves_actual_independent_retained_wallet) | test(original_worker_job_retains_actual_step_receipt_across_producer_panic) | test(retained_step_context_owner_turns_use_original_ledger_without_heap_birth) | test(retained_step_context_owner_preserves_original_ledger_until_context_and_writer_return) | test(worker_original_typed_wake_retirement_preserves_native_lease_aliases_and_physical_payload)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094793
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "🧪️test🌱️value🧾️actual-failed-retirement-receipt🦀️native",
+      "before": {
+        "name": "🧪️test🌱️value🧾️actual-failed-retirement-receipt🦀️native",
+        "type": "node-terminal",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094799
+        },
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib -E \"test(original_controlled_narrow_child_keeps_real_semantic_minimum_and_same_grant) | test(original_controlled_root_transfer_preserves_same_source_with_narrow_copy_policy) | test(original_controlled_failed_reservation_retains_actual_receipt_and_same_owner) | test(original_retirement_queue_keeps_actual_controlled_child_failure_receipt) | test(original_retained_grant_wire_preserves_independent_axes_and_refuses_malformed_authority) | test(original_retained_progress_wire_preserves_actual_physical_axes) | test(original_retained_wire_restores_parent_workload_after_nested_axes) | test(controlled_value_refusal_codec_closed_wire_matches_original_kind_message_and_serde) | test(controlled_value_refusal_codec_rejects_every_non_closed_record_without_mutating_input) | test(controlled_value_refusal_codec_keeps_cancellation_and_cumulative_ownership_causes)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture"
+      },
+      "expected": {
+        "name": "🧪️test🌱️value🧾️actual-failed-retirement-receipt🦀️native",
+        "type": "node-terminal",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094799
+        },
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib -E \"test(original_controlled_narrow_child_keeps_real_semantic_minimum_and_same_grant) | test(original_controlled_root_transfer_preserves_same_source_with_narrow_copy_policy) | test(original_controlled_failed_reservation_retains_actual_receipt_and_same_owner) | test(original_retirement_queue_keeps_actual_controlled_child_failure_receipt) | test(original_retained_grant_wire_preserves_independent_axes_and_refuses_malformed_authority) | test(original_retained_progress_wire_preserves_actual_physical_axes) | test(original_retained_wire_restores_parent_workload_after_nested_axes) | test(controlled_value_refusal_codec_closed_wire_matches_original_kind_message_and_serde) | test(controlled_value_refusal_codec_rejects_every_non_closed_record_without_mutating_input) | test(controlled_value_refusal_codec_keeps_cancellation_and_cumulative_ownership_causes)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture"
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "🧪️test🌱️value🌐️original-retained-wire-all",
+      "before": {
+        "name": "🧪️test🌱️value🌐️original-retained-wire-all",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_retained_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2"
+        },
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094789
+        }
+      },
+      "expected": {
+        "name": "🧪️test🌱️value🌐️original-retained-wire-all",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib original_retained_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {},
+        "presentation": {
+          "group": "9_gates",
+          "order": 900.058094789
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-heap-owner-native🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-heap-owner-native🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(original_heap_and_reverse_preserve_backing_and_full_retirement_receipts) | test(erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_ownership)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "NEXTEST_SUCCESS_OUTPUT": "immediate",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/mesh-output/heap-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.05860644
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-heap-owner-native🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(original_heap_and_reverse_preserve_backing_and_full_retirement_receipts) | test(erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_ownership)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "NEXTEST_SUCCESS_OUTPUT": "immediate",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/mesh-output/heap-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.05860644
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-fold-set-native📡️🦀️",
+      "before": {
+        "name": "⚖️test-original-fold-set-native📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(bounded_history_set_retains_original_keys_and_each_physical_allocation)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "NEXTEST_SUCCESS_OUTPUT": "immediate",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/mesh-output/set-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.05860642
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-fold-set-native📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(bounded_history_set_retains_original_keys_and_each_physical_allocation)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "NEXTEST_SUCCESS_OUTPUT": "immediate",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/mesh-output/set-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.05860642
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-fold-index-entry-native📡️🦀️",
+      "before": {
+        "name": "⚖️test-original-fold-index-entry-native📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_fold_index_lazy_entry_preserves_source_and_full_grant_receipts)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-fold-index-entry"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586065
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-fold-index-entry-native📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_fold_index_lazy_entry_preserves_source_and_full_grant_receipts)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-fold-index-entry"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586065
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-ordered-full-receipt-native🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-ordered-full-receipt-native🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_typed_owner_preserves_mixed_physical_receipt)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586069
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-ordered-full-receipt-native🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_typed_owner_preserves_mixed_physical_receipt)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586069
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-neutral-simultaneous-demand🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-neutral-simultaneous-demand🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_controlled_retirement_exposes_simultaneous_physical_demands)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586071
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-neutral-simultaneous-demand🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_controlled_retirement_exposes_simultaneous_physical_demands)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586071
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-ordered-deque-physical-demand🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-ordered-deque-physical-demand🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_deque_declares_physical_handoff_demand)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586073
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-ordered-deque-physical-demand🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_deque_declares_physical_handoff_demand)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586073
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-value-full-grant-regressions🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-value-full-grant-regressions🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586072
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-value-full-grant-regressions🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586072
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-ordered-full-receipt-parents🌱️🦀️",
+      "before": {
+        "name": "⚖️test-original-ordered-full-receipt-parents🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_typed_owner_preserves_mixed_physical_receipt) or test(ordered_retirement_composes_real_generic_owner_under_independent_category_grants) or test(ordered_partial_mutations_compose_typed_retirement_at_every_neutral_cancel_frontier)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.058607
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-ordered-full-receipt-parents🌱️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/value-rs:test --skip-cache --exclude-dependencies -- long --offline -E 'test(original_ordered_typed_owner_preserves_mixed_physical_receipt) or test(ordered_retirement_composes_real_generic_owner_under_independent_category_grants) or test(ordered_partial_mutations_compose_typed_retirement_at_every_neutral_cancel_frontier)' --success-output immediate",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/native-ordered-receipt"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.058607
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-fold-index-admitted-insertion📡️🦀️",
+      "before": {
+        "name": "⚖️test-original-fold-index-admitted-insertion📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(original_fold_index_admitted_insert_keeps_each_physical_page) | test(original_fold_index_reuses_each_detached_slot_without_heap_growth) | test(original_fold_membership_admitted_insert_keeps_each_original_key)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/index-insertion-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586077
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-fold-index-admitted-insertion📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(original_fold_index_admitted_insert_keeps_each_physical_page) | test(original_fold_index_reuses_each_detached_slot_without_heap_growth) | test(original_fold_membership_admitted_insert_keeps_each_original_key)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/index-insertion-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586077
+        }
+      }
+    },
+    {
+      "catalog": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️test-original-fold-index-family📡️🦀️",
+      "before": {
+        "name": "⚖️test-original-fold-index-family📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(/causal::transition::retained_fold::index::tests::/)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CARGO_BUILD_JOBS": "2",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/index-insertion-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586078
+        }
+      },
+      "expected": {
+        "name": "⚖️test-original-fold-index-family📡️🦀️",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-replication-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E 'test(/causal::transition::retained_fold::index::tests::/)' -- --nocapture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/sol-2026-10-08/index-insertion-native"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.0586078
+        }
+      }
+    }
+  ]
+}

@@ -44,7 +44,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-flow"], this.repoRoot, this.invocation.control, rest, { ...process.env, RUST_TEST_THREADS: "1" });
+    await runRepositoryCargoTests(["semio-hub-flow"], this.repoRoot, this.invocation, rest, { ...process.env, RUST_TEST_THREADS: "1" });
   }
 }
 

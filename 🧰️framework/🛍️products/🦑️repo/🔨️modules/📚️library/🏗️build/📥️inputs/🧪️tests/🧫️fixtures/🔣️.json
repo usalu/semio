@@ -1,0 +1,51 @@
+{
+  "contract": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "root", "inputs", "expected", "compilations"],
+    "properties": {
+      "id": { "type": "string" },
+      "root": { "type": "string" },
+      "inputs": { "type": "array", "items": { "anyOf": [{ "type": "string" }, { "type": "object", "additionalProperties": false, "required": ["env"], "properties": { "env": { "type": "string" } } }] } },
+      "expected": { "type": "array", "items": { "anyOf": [{ "type": "string" }, { "type": "object", "additionalProperties": false, "required": ["env"], "properties": { "env": { "type": "string" } } }] } },
+      "compilations": { "type": "integer", "minimum": 0 }
+    }
+  },
+  "cases": [
+    {
+      "id": "normalized-duplicates-compile-once",
+      "root": "src",
+      "inputs": ["{workspaceRoot}/src/a.ts", "{workspaceRoot}/src/a.js", "{workspaceRoot}/src/b.ts", "{workspaceRoot}/src/nested/c.ts", "{workspaceRoot}/src/nested/d.ts", "{workspaceRoot}/src/.hidden.ts", "!{workspaceRoot}/src/**/a.{ts,js}", "!{projectRoot}/**/a.{ts,js}", "!{projectRoot}/nested/+(c|d).ts", "!^dependency", "!{projectRoot}/**", "!{workspaceRoot}/[", { "env": "ORIGINAL_FIXTURE" }],
+      "expected": [{ "env": "ORIGINAL_FIXTURE" }],
+      "compilations": 3
+    },
+    {
+      "id": "unreachable-malformed-pattern-remains-lazy",
+      "root": ".",
+      "inputs": ["{workspaceRoot}/a.ts", "{workspaceRoot}/nested/.hidden.ts", "!{workspaceRoot}/**", "!{workspaceRoot}/["],
+      "expected": [],
+      "compilations": 1
+    },
+    {
+      "id": "no-exact-input-retains-original-array",
+      "root": "src",
+      "inputs": ["{projectRoot}/**/*.ts", "!{workspaceRoot}/["],
+      "expected": ["{projectRoot}/**/*.ts", "!{workspaceRoot}/["],
+      "compilations": 0
+    }
+  ],
+  "matches": [
+    { "path": "src/nested/a.ts", "pattern": "src/**/a.{ts,js}", "expected": true },
+    { "path": "src/a.js", "pattern": "src/**/a.{ts,js}", "expected": true },
+    { "path": "src/nested/c.ts", "pattern": "src/nested/+(c|d).ts", "expected": true },
+    { "path": "src/nested/e.ts", "pattern": "src/nested/+(c|d).ts", "expected": false },
+    { "path": "src/.hidden.ts", "pattern": "src/**", "expected": true },
+    { "path": "src/🧪️/a1.ts", "pattern": "src/!(generated)/a[0-9].ts", "expected": true },
+    { "path": "src/generated/a1.ts", "pattern": "src/!(generated)/a[0-9].ts", "expected": false },
+    { "path": "src/a.ts", "pattern": "src/a?.ts", "expected": false }
+  ],
+  "errors": [
+    { "inputs": ["{workspaceRoot}/a.ts", "!{workspaceRoot}/[", "!{workspaceRoot}/**"], "message": "Unclosed source input class" },
+    { "inputs": ["{workspaceRoot}/a.ts", "!{workspaceRoot}/{"], "message": "Unclosed source input alternatives" }
+  ]
+}

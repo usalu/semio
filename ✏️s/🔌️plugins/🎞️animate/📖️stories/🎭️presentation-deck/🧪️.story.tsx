@@ -1,15 +1,10 @@
 // #region 🧲️Header
 // 💻️ ✏️s/🔌️plugins/🎞️animate/📖️stories/🎭️presentation-deck/🧪️.story.tsx
-// Specs: `PresentationDeck` (`animate/presentation/renderer/react/component.tsx`, exported via `@semio-tech/presentation-react`)
-// mounts a declarative `Presentation` (`@semio-tech/presentation`) — `Presentation → Chapter[] →
+// Specs: `PresentationDeck` (the framework product `@semio-tech/presentation-react`) mounts a declarative `Presentation` (`@semio-tech/presentation`) — `Presentation → Chapter[] →
 // Sequence[] → Thought[] → Slide[]` — through reveal.js. The component's own module already does
-// `import "reveal.js/dist/reveal.css"` (see that file's header: "📽️ React + reveal.js renderer for
-// `@semio-tech/presentation` declarative decks"), so reveal's structural CSS needs no extra import
-// here. The `--r-*` custom-property theming lives in a separate `./globals.css` package export (real
-// production usage: `mit-bestand/präsentation/33.projektetage/globals.css` does
-// `@import "…/animate/presentation/renderer/react/globals.css"`)
-// which is NOT pulled in by the component or the root Storybook globals — imported explicitly below via the
-// package's declared `exports["./globals.css"]` subpath.
+// `import "reveal.js/dist/reveal.css"`, so reveal's structural CSS needs no extra import here. The `--r-*` custom-property
+// theming lives in the product's stylesheet package export, which is NOT pulled in by the component or the root Storybook
+// globals — imported explicitly below via the package's declared stylesheet subpath.
 // Summary: A minimal 3-slide deck (one chapter, one sequence, one thought) with plain text embodiments.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header

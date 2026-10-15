@@ -48,16 +48,8 @@ path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀�
 [workspace.dependencies.semio-s-artifact-stdio-semio]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio-table]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-semio-table-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📦️packages/🦀️rust"
-[workspace.dependencies.semio-s-artifact-stdio-semio-value]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-semio-value-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-tsv]
@@ -65,10 +57,6 @@ path = "../../../🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀�
 
 [workspace.dependencies.semio-s-artifact-stdio-txt]
 path = "../../../🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-xlsx]
-path = "../../../🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust"
-
 
 [workspace.dependencies.semio-s-artifact-stdio-xlsx-base]
 path = "../../../🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust"

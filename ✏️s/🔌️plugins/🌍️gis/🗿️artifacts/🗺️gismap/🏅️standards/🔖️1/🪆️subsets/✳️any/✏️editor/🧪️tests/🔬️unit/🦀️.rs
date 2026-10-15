@@ -227,7 +227,7 @@ fn every_gis_map_parent_snapshot_projects_its_canonical_child_handles() {
     use pack::snapshot::ArtifactPack;
 
     let admit = |label: &str, snapshot: &GisMapSnapshot| {
-        let projection = store::ChildRestoreProjection::from_snapshot(snapshot).unwrap_or_else(|error| panic!("{label} parent is not projectable: {error:?} (drawing {:?}/{:?}, image {:?}, value {:?}/{:?})", snapshot.drawing.child_id, snapshot.drawing.target, snapshot.image, snapshot.value.child_id, snapshot.value.target));
+        let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).unwrap_or_else(|error| panic!("{label} parent is not projectable: {error:?} (drawing {:?}/{:?}, image {:?}, value {:?}/{:?})", snapshot.drawing.child_id, snapshot.drawing.target, snapshot.image, snapshot.value.child_id, snapshot.value.target));
         assert_eq!(projection.len(), 2, "{label} parent declares exactly the drawing and value children");
         for index in 0..projection.len() {
             let (slot, fields) = projection.get(index).expect("admitted row");
@@ -311,7 +311,7 @@ async fn drive_gis_map_live_load(app: &mut Gis2dApp, handle: semio_framework_plu
             return last;
         }
         app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one GIS live maintenance turn");
-        let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job_worker::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         last = app.advance_artifact_envelope_load(handle).expect("GIS live load advancement after maintenance");
         if !matches!(last, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Progress) {
             return last;

@@ -23,8 +23,8 @@ use semio_framework::kernel::UiDirtyScope;
 use serde_json::Value;
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/🫀️settle-pump/🔣️.json");
-const SHELL_SOURCE: &str = include_str!("../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
-const RENDERER_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+const SHELL_SOURCE: &str = crate::shell::SHELL_SOURCE;
+const RENDERER_SOURCE: &str = crate::RENDERER_SOURCE;
 
 fn fixture() -> Value {
     serde_json::from_str(FIXTURE).expect("settle pump fixture parses")
@@ -136,7 +136,7 @@ fn a_frame_drains_its_input_actions_before_it_takes_a_settle_step() {
 fn the_boot_arms_the_settle_lane_instead_of_converging_and_the_frame_loop_drives_it() {
     assert!(SHELL_SOURCE.contains("self.owe_settle();\n        Ok(())\n    }"), "settle_boot arms the settle lane and returns instead of driving flush_deferred_actions to a fixed point");
     let settle_boot = SHELL_SOURCE.split("async fn settle_boot").nth(1).expect("the shell declares settle_boot");
-    let settle_boot = settle_boot.split("\n    async fn ").next().expect("settle_boot has a body");
+    let settle_boot = &settle_boot[..["\n    async fn ", "\n    pub(crate) async fn "].iter().filter_map(|marker| settle_boot.find(marker)).min().unwrap_or(settle_boot.len())];
     assert!(!settle_boot.contains("self.flush_deferred_actions("), "settle_boot no longer converges the chain before the first paint");
     assert!(RENDERER_SOURCE.contains("cursor.settle = self.shell.settle_pump_pending();"), "the frame-finish boundary re-reads the settle predicate every frame");
     assert!(RENDERER_SOURCE.contains("interaction.shell.settle_pump_step().await"), "the frame's deferred owner is the ONE caller of the settle step");

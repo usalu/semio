@@ -1,4 +1,7 @@
-import { isMainThread, parentPort, workerData } from "node:worker_threads";
+import {withNxDaemonJournalReaderV1,type NxDaemonJournalDeploymentV1} from "../../../../🏁️startup/🚦️service/🟦️.ts";
+import {requireNxGraphNativeDirectoryV1} from "../../../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
+import witnessSchema from "../../../../../🚀️bootstrap/🛠️tools/📥️use/🧬️schema/📥️witness.json" with {type:"json"};
+import { isMainThread, parentPort, workerData, threadId } from "node:worker_threads";
 import { createRequire } from "node:module";
 import { createServer, type Socket } from "node:net";
 import { mkdir, unlink, lstat, writeFile, rename, readFile } from "node:fs/promises";
@@ -10,44 +13,45 @@ import { loadedFilesystemJournalToolingIdentityV1, readFilesystemJournalRpcReque
 import { isGlobalGraphIdentityPathV1 } from "../../../🎯️selection/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import type { FilesystemJournalChangeV1, FilesystemJournalControlV1 } from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
-import { acquireResourceLease, type ResourceLease } from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 
 /** 👷️ The immutable journal thread receives only its actual daemon-owned deployment. */
-export type FilesystemJournalWorkerOptionsV1 = Readonly<{ version: 1; kind: "filesystem-journal"; root: string; directory: string; generation: string; socketPath: string; toolingIdentity: string }>;
+export type FilesystemJournalWorkerOptionsV1 = NxDaemonJournalDeploymentV1;
 
 /** 🧬️ Checks the actual worker deployment before opening native observation or a socket. */
 export function readFilesystemJournalWorkerOptionsV1(value: unknown): FilesystemJournalWorkerOptionsV1 {
-  if (validateJsonSchemaSubset(schema, value).length) throw Error("Closed filesystem journal worker deployment required");
+  if (validateJsonSchemaSubset(schema, value,schema,[witnessSchema]).length) throw Error("Closed filesystem journal worker deployment required");
   const options = value as FilesystemJournalWorkerOptionsV1;
+  if (process.platform!=="win32"&&Buffer.byteLength(options.socketPath)>95)throw Error("Filesystem journal socket byte limit exceeded");
   if (!isAbsolute(options.root) || !isAbsolute(options.directory)) throw Error("Actual filesystem journal worker directories required");
   return options;
 }
 
 /** 🕸️ Observes and serves independently of Nx's graph compilation event loop. */
 export async function runFilesystemJournalWorkerV1(value: unknown): Promise<void> {
-  const options = readFilesystemJournalWorkerOptionsV1(value), require = createRequire(import.meta.url), identity = loadedFilesystemJournalToolingIdentityV1(dirname(require.resolve("nx/package.json")));
-  if (identity !== options.toolingIdentity || !parentPort || isMainThread) throw Error("Original immutable daemon journal worker required");
-  const { Watcher, WorkspaceContext } = require("nx/src/native"), transport = require("nx/src/utils/consume-messages-from-socket"), framing = require("nx/src/daemon/socket-utils");
+  const options = readFilesystemJournalWorkerOptionsV1(value);
+  if (!parentPort || isMainThread) throw Error("Original immutable daemon journal worker required");
+  const port=parentPort;return withNxDaemonJournalReaderV1(options,threadId,async original=>{
+  const require = createRequire(import.meta.url), identity = loadedFilesystemJournalToolingIdentityV1(dirname(require.resolve("nx/package.json")));
+  if(identity!==options.toolingIdentity)throw Error("Original immutable daemon journal toolkit required");
   const lifetime = new AbortController(), subscribers = new Set<(error: unknown, events: readonly FilesystemJournalChangeV1[]) => void>(), pending: FilesystemJournalChangeV1[] = [], sockets = new Set<Socket>();
-  let watcher: any, journal: Awaited<ReturnType<typeof createRepositoryFilesystemJournalV1>> | undefined, server: ReturnType<typeof createServer> | undefined, closing: Promise<void> | undefined, toolkit: ResourceLease | undefined;
-  const metadata = join(options.directory, "service.json");
+  let watcher: any, journal: Awaited<ReturnType<typeof createRepositoryFilesystemJournalV1>> | undefined, server: ReturnType<typeof createServer> | undefined, closing: Promise<void> | undefined;
+  const metadata = join(options.directory, "service.json");let settled!:()=>void,refused!:(error:unknown)=>void;const terminal=new Promise<void>((accept,reject)=>{settled=accept;refused=reject;});
+  void terminal.catch(()=>{});
   const close = (): Promise<void> => closing ??= Promise.resolve().then(async () => {
     lifetime.abort(Error("Original daemon journal worker retired")); for (const socket of sockets) socket.destroy();
     if (server?.listening) await new Promise<void>(accept => server!.close(() => accept()));
     await journal?.close(); await watcher?.stop();
-    toolkit?.release(); toolkit = undefined;
     if (process.platform !== "win32") await unlink(options.socketPath).catch(() => {});
     try { const current = JSON.parse(await readFile(metadata, "utf8")); if (current.generation === options.generation) await unlink(metadata); } catch {}
-    parentPort?.close();
-  });
-  const cancel = () => { void close(); };
-  parentPort.once("close", cancel); parentPort.on("message", message => { if (message?.type === "stop") cancel(); });
+    parentPort?.close();settled();
+  }).catch(error=>{refused(error);throw error;});
+  const cancel = () => { void close().catch(error=>parentPort?.postMessage({type:"refused",reason:String(error)})); };
+  port.once("close", cancel); port.on("message", message => { if (message?.type === "stop") cancel(); });
   try {
   const policy = await repositoryFilesystemJournalPolicyV1(options.root), excluded = (path: string) => policy.roots.some(root => path === root || path.startsWith(root + "/")) || path.split("/").some(part => policy.names.includes(part));
   const control: FilesystemJournalControlV1 = { signal: lifetime.signal, remainingMilliseconds: () => null, publish: async progress => { parentPort?.postMessage({ type: "progress", progress }); }, yieldContinuation: () => new Promise(resolve => setImmediate(resolve)) };
-  const toolkitDirectory = dirname(fileURLToPath(import.meta.url));
-  if (toolkitDirectory.split(/[\\/]/u).at(-1) !== identity) throw Error("Original immutable journal bundle directory required");
-  toolkit = await acquireResourceLease({ directory: join(options.root, ".cache/b/l/m/data"), resource: "nx-tooling:" + identity, mode: "shared", signal: control.signal, control: { signal: control.signal, remainingMilliseconds: control.remainingMilliseconds, publish: async progress => { parentPort?.postMessage({ type: "toolkit-wait", progress }); }, yieldContinuation: control.yieldContinuation } });
+  original.control.signal.throwIfAborted();lifetime.signal.throwIfAborted();
+  const { Watcher, WorkspaceContext } = require("nx/src/native"), transport = require("nx/src/utils/consume-messages-from-socket"), framing = require("nx/src/daemon/socket-utils");
   await mkdir(options.directory, { recursive: true });
   for (let path = options.directory; ; path = dirname(path)) { const status = await lstat(path); if (!status.isDirectory() || status.isSymbolicLink()) throw Error("Original journal worker directory ancestry required"); if (dirname(path) === path) break; }
   let native: any, refusal: unknown;
@@ -61,12 +65,12 @@ export async function runFilesystemJournalWorkerV1(value: unknown): Promise<void
     else { pending.push(...selected); if (pending.length > 200_000) refusal = Error("Native journal worker startup overflow"); }
   };
   watcher.watch((error: unknown, events: FilesystemJournalChangeV1[] | null) => receive(error, events ?? []));
-  native = new WorkspaceContext(options.root, join(options.directory, "native"));
+  native = new WorkspaceContext(options.root, requireNxGraphNativeDirectoryV1(options.root,process.env));
   journal = await createRepositoryFilesystemJournalV1(options.root, {
     watch(callback) { subscribers.add(callback); callback(refusal, pending.splice(0)); return () => { subscribers.delete(callback); }; },
     async flush() { await control.yieldContinuation(); if (refusal) throw refusal; const events = watcher.forceFlushPending(); if (events.some((event: FilesystemJournalChangeV1) => !event || typeof event.path !== "string" || !["create", "update", "delete"].includes(event.type))) throw Error("Native journal worker flush refused"); return events.filter((event: FilesystemJournalChangeV1) => !excluded(event.path)); },
-    async census() { return native.allFileData().map((row: { file: string }) => row.file); },
-    async admittedPaths(paths) { native.incrementalUpdate([...paths], []); return native.glob([...paths]); },
+    async census() { requireNxGraphNativeDirectoryV1(options.root,process.env);return native.allFileData().map((row: { file: string }) => row.file); },
+    async admittedPaths(paths) { requireNxGraphNativeDirectoryV1(options.root,process.env);native.incrementalUpdate([...paths], []);return native.glob([...paths]); },
     isGlobalIdentity: isGlobalGraphIdentityPathV1
   }, control);
   lifetime.signal.throwIfAborted();
@@ -89,10 +93,12 @@ export async function runFilesystemJournalWorkerV1(value: unknown): Promise<void
     }, () => socket.destroy()));
   });
   await new Promise<void>((accept, reject) => { server!.once("error", reject); server!.listen(options.socketPath, accept); });
-  const service = { version: 1, root: options.root, processId: process.pid, generation: options.generation, socketPath: options.socketPath, toolingIdentity: identity };
+  const service = { version: 1, root: options.root, processId: process.pid, generation: options.generation, socketPath: options.socketPath, toolingIdentity: identity, graphIdentity:options.graphIdentity,implementationIdentity:options.implementationIdentity };
   const temporary = metadata + "." + options.generation.slice(0, 12) + ".tmp"; await writeFile(temporary, JSON.stringify(service) + "\n", { flag: "wx" }); await rename(temporary, metadata);
-  lifetime.signal.throwIfAborted(); parentPort.postMessage({ type: "ready", ...service });
+  lifetime.signal.throwIfAborted(); parentPort!.postMessage({ type: "ready", ...service });
+  await terminal;
   } catch (error) { parentPort?.postMessage({ type: "refused", reason: String(error) }); await close(); throw error; }
+  });
 }
 
 if (!isMainThread && workerData?.kind === "filesystem-journal") void runFilesystemJournalWorkerV1(workerData).catch(error => { parentPort?.postMessage({ type: "refused", reason: String(error) }); parentPort?.close(); });

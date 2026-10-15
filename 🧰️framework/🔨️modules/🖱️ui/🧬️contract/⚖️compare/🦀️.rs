@@ -120,11 +120,6 @@ macro_rules! byte_field {
         }
     };
 }
-impl UiText {
-    fn comparison_bytes(&self) -> &[u8] {
-        &self.bytes[..self.len()]
-    }
-}
 byte_field!(UiText, comparison_bytes);
 byte_field!(UiFixedBytes, as_slice);
 

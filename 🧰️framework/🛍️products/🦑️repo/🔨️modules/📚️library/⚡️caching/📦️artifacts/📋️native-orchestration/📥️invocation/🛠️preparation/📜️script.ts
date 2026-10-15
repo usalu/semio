@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{withCompilerWorkspaceWriteV1}from"../../../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {randomBytes} from "node:crypto";
 import {cargoPreparationStorageFromEnvironmentV1} from "../../../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import {cargoPreparationControlV1,withRepositoryCargoPreparationV1} from "./🟦️.ts";
@@ -42,4 +43,4 @@ export class SynchronizeScript extends Script {
 }
 
 
-if(import.meta.main) await receiveScriptProcessInvocation(process.env,original=>{const root=getWorkspaceRoot();return withRepositoryCargoPreparationV1(findWorkspaceRoot(import.meta.dir),root,original,process.env,async(environment,phase)=>{class BoundedPreparationScript extends PreparationScript{protected override readonly environment=environment;protected override phase(){return phase;}}class BoundedSynchronizeScript extends SynchronizeScript{protected override readonly environment=environment;protected override phase(){return phase;}}await new ScriptRouter(root).register("prepare",BoundedPreparationScript).register("synchronize",BoundedSynchronizeScript).run(process.argv.slice(2),original);});});
+if(import.meta.main) await receiveScriptProcessInvocation(process.env,original=>{const root=getWorkspaceRoot();return withRepositoryCargoPreparationV1(findWorkspaceRoot(import.meta.dir),root,original,process.env,async(environment,phase,store)=>{class BoundedPreparationScript extends PreparationScript{protected override readonly environment=environment;protected override phase(){return phase;}}class BoundedSynchronizeScript extends SynchronizeScript{protected override readonly environment=environment;protected override phase(){return phase;}protected override execute(command:string,args:string[],cwd:string,label:string,budget:number,options:OwnedCommandOptions):Promise<void>{return withCompilerWorkspaceWriteV1(store.storage,cargoPreparationStorageFromEnvironmentV1(environment).leaseDirectory,phase.leaseControl,()=>super.execute(command,args,cwd,label,budget,options));}}await new ScriptRouter(root).register("prepare",BoundedPreparationScript).register("synchronize",BoundedSynchronizeScript).run(process.argv.slice(2),original);});});

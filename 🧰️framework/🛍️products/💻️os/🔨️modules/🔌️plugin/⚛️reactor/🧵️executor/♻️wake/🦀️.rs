@@ -1,7 +1,7 @@
 //! 🚦️ Only this executor's native wake issuer can hand its original atomic signal lease to a Worker.
 use super::*;
 use std::mem::{ManuallyDrop,size_of};
-use semio_framework_job::{RetainedWorkerWake,admit_original_worker_wake,original_worker_wake_admission_demands};
+use semio_framework_job_worker::{RetainedWorkerWake,admit_original_worker_wake,original_worker_wake_admission_demands};
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 
 struct ExecutorSignalLease{source:ManuallyDrop<Option<Arc<ExecutorWakeSignal>>>,id:Option<TaskId>}

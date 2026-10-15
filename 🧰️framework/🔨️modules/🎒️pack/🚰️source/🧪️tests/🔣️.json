@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "owner": "semio-framework-pack-source",
+  "sourceBoundary": {
+    "maxSourceBytes": 16384,
+    "maxSourceFiles": 4,
+    "maxActiveLines": 250
+  },
+  "reads": [
+    {
+      "name": "empty",
+      "input": "",
+      "offset": "0",
+      "length": 3,
+      "output": "",
+      "truncatedAt": null
+    },
+    {
+      "name": "middle",
+      "input": "68656c6c6f",
+      "offset": "1",
+      "length": 3,
+      "output": "656c6c",
+      "truncatedAt": null
+    },
+    {
+      "name": "short",
+      "input": "6869",
+      "offset": "0",
+      "length": 5,
+      "output": "6869",
+      "truncatedAt": null
+    },
+    {
+      "name": "end",
+      "input": "6869",
+      "offset": "2",
+      "length": 3,
+      "output": "",
+      "truncatedAt": null
+    },
+    {
+      "name": "past",
+      "input": "6869",
+      "offset": "3",
+      "length": 1,
+      "output": "",
+      "truncatedAt": "3"
+    },
+    {
+      "name": "maximum",
+      "input": "00",
+      "offset": "18446744073709551615",
+      "length": 1,
+      "output": "",
+      "truncatedAt": "18446744073709551615"
+    },
+    {
+      "name": "binary",
+      "input": "00ff807f",
+      "offset": "1",
+      "length": 2,
+      "output": "ff80",
+      "truncatedAt": null
+    },
+    {
+      "name": "zero",
+      "input": "6869",
+      "offset": "1",
+      "length": 0,
+      "output": "",
+      "truncatedAt": null
+    }
+  ],
+  "exact": [
+    {
+      "input": "010203",
+      "offset": "1",
+      "length": 2,
+      "output": "0203",
+      "truncatedAt": null
+    },
+    {
+      "input": "010203",
+      "offset": "1",
+      "length": 3,
+      "output": "0203",
+      "truncatedAt": "3"
+    }
+  ],
+  "writes": [
+    {
+      "chunks": [],
+      "output": ""
+    },
+    {
+      "chunks": [
+        "00",
+        "ff80",
+        "",
+        "7f"
+      ],
+      "output": "00ff807f"
+    }
+  ],
+  "consumers": [
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/⚙️codec/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml"
+  ]
+}

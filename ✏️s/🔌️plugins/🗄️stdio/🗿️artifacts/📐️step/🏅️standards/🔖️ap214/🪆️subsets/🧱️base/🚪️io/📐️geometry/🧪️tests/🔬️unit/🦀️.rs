@@ -1,6 +1,6 @@
 use super::*;
 use semio_framework_3d_brep_engine::BrepKernel;
-use semio_framework_3d_brep_operations::primitives::make_box;
+use semio_framework_3d_brep_construction::primitives::make_box;
 
 #[semio_framework_async_macros::async_test]
 async fn box_round_trip_topology_counts() {

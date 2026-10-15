@@ -1,0 +1,97 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "errorOwner",
+    "cryptoOwner",
+    "errorBoundary",
+    "cryptoBoundary",
+    "cases",
+    "crypto"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "errorOwner": {
+      "const": "semio-framework-replication-error"
+    },
+    "cryptoOwner": {
+      "const": "semio-framework-replication-crypto"
+    },
+    "errorBoundary": {
+      "const": {
+        "maxSourceBytes": 65536,
+        "maxSourceFiles": 12,
+        "maxActiveLines": 1000
+      }
+    },
+    "cryptoBoundary": {
+      "const": {
+        "maxSourceBytes": 16384,
+        "maxSourceFiles": 4,
+        "maxActiveLines": 250
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "first",
+          "second",
+          "text",
+          "message"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "chain",
+              "tail",
+              "critical",
+              "dictionary",
+              "order",
+              "verifier",
+              "signature",
+              "frame",
+              "limit",
+              "malformed",
+              "io"
+            ]
+          },
+          "first": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "second": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "crypto": {
+      "const": {
+        "scheme": "fixture/identity",
+        "key": "caller-owned-key",
+        "message": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+        "signature": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      }
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "observations": {
+    "actualIssuedImageRequired": true,
+    "structuralControlRefused": true,
+    "knownBindingCaptured": true,
+    "preopenedOldReaderExcludesNewWriter": true,
+    "newWriterExcludesOldReopener": true,
+    "oldReopenerExcludesNewWriter": true,
+    "idleMembershipPersists": true,
+    "uninitializedHashReserved": true,
+    "queueOnlyHashReserved": true,
+    "absentNewKeyClassified": true,
+    "legacyUtf8KeyPreserved": true,
+    "newUtf8OverflowRefused": true,
+    "generationWriterExcluded": true,
+    "generationRetiredAfterScope": true,
+    "independentSqliteInventoryMatches": true,
+    "capturedGuardInodePreserved": true,
+    "namespaceAliasesRefused": true,
+    "sidecarOnlyHashReserved": true,
+    "claimOnlyHashReserved": true,
+    "legacyOversizeGuardPreserved": true
+  },
+  "requests": [
+    {
+      "resource": "old-a",
+      "kind": "baseline"
+    },
+    {
+      "resource": "old-empty",
+      "kind": "unresolved"
+    },
+    {
+      "resource": "old-queue-only",
+      "kind": "unresolved"
+    },
+    {
+      "resource": "brand-new",
+      "kind": "new"
+    },
+    {
+      "resource": "old-sidecar-only",
+      "kind": "unresolved"
+    },
+    {
+      "resource": "old-claim-only",
+      "kind": "unresolved"
+    }
+  ],
+  "hostileNamespaces": [
+    "a//b",
+    "a/",
+    "./a",
+    "a/../b",
+    "C:/a",
+    "C:a",
+    "/a",
+    "a\\b",
+    "a.",
+    "a ",
+    "CON",
+    "nul.txt",
+    "a/é",
+    "a/é"
+  ]
+}

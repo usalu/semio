@@ -27,7 +27,7 @@ use semio_s_artifact_procedural_3d_geometry_value::Outputs;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, GeometryHandle, ShapeRoot, ShapeValue};
-use semio_framework_3d_brep_operations::boolean::BooleanOp;
+use semio_framework_3d_brep_boolean::BooleanOp;
 use semio_framework_3d_brep_analysis::{manifold_report, topology_counts, validity, IssueSeverity, ManifoldReport, ShapeScope, ValidityReport, Watertightness};
 use semio_framework_3d::mesh::{HalfedgeMesh, MeshQualityReport};
 use std::collections::BTreeMap;

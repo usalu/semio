@@ -30,3 +30,6 @@ semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️produc
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-procedural-generation2d = { path = "../🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-generation3d = { path = "../🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust" }
+
+[profile.prototype]
+inherits = "dev"

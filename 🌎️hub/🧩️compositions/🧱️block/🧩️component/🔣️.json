@@ -16524,8 +16524,47 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.json",
-          "standard": "rfc8259",
+          "artifactKind": "framework.io.text",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "framework.io.text",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "framework.io.text",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "framework.io.text",
+          "standard": "utf-8",
           "subset": "*"
         },
         "direction": "export"
@@ -16537,8 +16576,8 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.txt",
-          "standard": "utf-8",
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
           "subset": "*"
         },
         "direction": "export"
@@ -16563,8 +16602,8 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.json",
-          "standard": "rfc8259",
+          "artifactKind": "framework.io.text",
+          "standard": "utf-8",
           "subset": "*"
         },
         "direction": "export"
@@ -16576,8 +16615,8 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.txt",
-          "standard": "utf-8",
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
           "subset": "*"
         },
         "direction": "export"
@@ -16602,8 +16641,8 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.json",
-          "standard": "rfc8259",
+          "artifactKind": "framework.io.text",
+          "standard": "utf-8",
           "subset": "*"
         },
         "direction": "export"
@@ -16615,8 +16654,8 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.txt",
-          "standard": "utf-8",
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
           "subset": "*"
         },
         "direction": "export"
@@ -16669,45 +16708,6 @@
         "counterpart": {
           "artifactKind": "s.stdio.json",
           "standard": "rfc8259",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.block.block2d",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.txt",
-          "standard": "utf-8",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.block.block3d",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.txt",
-          "standard": "utf-8",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.block.block5d",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.txt",
-          "standard": "utf-8",
           "subset": "*"
         },
         "direction": "import"

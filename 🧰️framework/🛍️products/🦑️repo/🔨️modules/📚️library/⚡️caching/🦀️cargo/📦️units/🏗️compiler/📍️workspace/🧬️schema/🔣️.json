@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "root",
+        "mode",
+        "directory",
+        "temporary",
+        "platform"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "temporary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "enum": [
+            "posix",
+            "win32"
+          ]
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "request",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "request": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "root",
+            "mode",
+            "directory",
+            "temporary",
+            "platform"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "root": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mode": {
+              "enum": [
+                "prototype",
+                "release"
+              ]
+            },
+            "directory": {
+              "type": "string",
+              "minLength": 1
+            },
+            "temporary": {
+              "type": "string",
+              "minLength": 1
+            },
+            "platform": {
+              "enum": [
+                "posix",
+                "win32"
+              ]
+            }
+          }
+        },
+        "expected": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

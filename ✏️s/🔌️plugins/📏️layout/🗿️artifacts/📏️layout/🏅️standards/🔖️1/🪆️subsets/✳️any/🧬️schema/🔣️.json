@@ -91,7 +91,7 @@
       "x-semio-state": "artifact"
     },
     "dataFields": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/question-dictionary.json",
       "x-semio-state": "artifact"
     },
     "backgroundDrawing": {

@@ -92,7 +92,7 @@ fn an_unpublished_host_appearance_reads_light() {
 /// (the realm that runs it has no `window` to ask).
 #[test]
 fn the_browser_appearance_door_is_wired_end_to_end() {
-    let renderer = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs")).expect("renderer source");
+    let renderer = crate::RENDERER_SOURCE;
     assert!(renderer.contains("js_name = semioWgpuSetHostAppearance"), "the renderer exports the appearance hook");
     let code_asks_the_window = renderer.lines().any(|line| line.contains("match_media") && !line.trim_start().starts_with("//"));
     assert!(!code_asks_the_window, "the renderer no longer asks a `window` it does not have — the phrase survives only in the docstring that explains why");

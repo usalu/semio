@@ -66,6 +66,12 @@
       ]
     },
     {
+      "name": "@semio-tech/artifact-reference-borrow-rs",
+      "root": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️borrow/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️borrow/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/assets",
       "root": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
       "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📋️project.json",
@@ -279,6 +285,12 @@
       "name": "@semio-tech/component-deployment-contract",
       "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/composition-admission-rs",
+      "root": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -1138,6 +1150,42 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/framework-job-worker-rs",
+      "root": "🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-job-worker-authority-rs",
+      "root": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-job-registry-rs",
+      "root": "🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-job-scope-rs",
+      "root": "🧰️framework/🔨️modules/🧵️job/👶️scope/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧵️job/👶️scope/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-job-progress-rs",
+      "root": "🧰️framework/🔨️modules/🧵️job/📡️progress/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧵️job/📡️progress/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-job-conformance-rs",
+      "root": "🧰️framework/🔨️modules/🧵️job/🧪️conformance/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧵️job/🧪️conformance/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/framework-kernel",
       "root": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
       "manifest": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📋️project.json",
@@ -1413,18 +1461,6 @@
       ]
     },
     {
-      "name": "@semio-tech/mutation-diff",
-      "root": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff",
-      "manifest": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📋️project.json",
-      "packages": []
-    },
-    {
-      "name": "@semio-tech/mutation-diff-rs",
-      "root": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust",
-      "manifest": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/📋️project.json",
-      "packages": []
-    },
-    {
       "name": "@semio-tech/framework-replication-rs",
       "root": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json",
@@ -1457,9 +1493,39 @@
       ]
     },
     {
+      "name": "@semio-tech/framework-server-authority-rs",
+      "root": "🧰️framework/🛍️products/🖥️server/🔨️modules/🎭️authority/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🖥️server/🔨️modules/🎭️authority/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-server-contract-rs",
+      "root": "🧰️framework/🛍️products/🖥️server/🔨️modules/🧬️contract/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🖥️server/🔨️modules/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-server-policy-rs",
+      "root": "🧰️framework/🛍️products/🖥️server/🔨️modules/🛡️policy/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🖥️server/🔨️modules/🛡️policy/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/framework-server-rs",
       "root": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-server-storage-rs",
+      "root": "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-server-throttle-rs",
+      "root": "🧰️framework/🛍️products/🖥️server/🔨️modules/🚦️throttle/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🖥️server/🔨️modules/🚦️throttle/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -1892,6 +1958,18 @@
       ]
     },
     {
+      "name": "@semio-tech/mutation-diff",
+      "root": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/mutation-diff-rs",
+      "root": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/neural-engine-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/📋️project.json",
@@ -2318,6 +2396,36 @@
       ]
     },
     {
+      "name": "@semio-tech/pets-character-rs",
+      "root": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎭️character/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎭️character/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/pets-clearance-rs",
+      "root": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🚧️clearance/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🚧️clearance/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/pets-contract-rs",
+      "root": "🧰️framework/🛍️products/🐾️pets/🔨️modules/📜️contract/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🐾️pets/🔨️modules/📜️contract/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/pets-interaction-rs",
+      "root": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🖱️interaction/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🖱️interaction/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/pets-kinematics-rs",
+      "root": "🧰️framework/🛍️products/🐾️pets/🔨️modules/⚙️kinematics/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🐾️pets/🔨️modules/⚙️kinematics/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/pets-react",
       "root": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
       "manifest": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
@@ -2329,6 +2437,18 @@
       "name": "@semio-tech/pets-rs",
       "root": "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/pets-staging-rs",
+      "root": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎬️staging/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎬️staging/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/pets-traversal-rs",
+      "root": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🧭️traversal/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🧭️traversal/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -2624,6 +2744,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/quiz-schema-rs",
+      "root": "🧰️framework/🛍️products/❓️quiz/🧬️schema/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/❓️quiz/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/raster-js",
       "root": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
       "manifest": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/📋️project.json",
@@ -2790,6 +2916,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/repo-graphql-fs-rs",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🗄️fs-context/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🗄️fs-context/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/repo-graphql-go",
       "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go/📋️project.json",
@@ -2799,6 +2931,12 @@
       "name": "@semio-tech/repo-graphql-rs",
       "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/repo-graphql-schema-rs",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🏗️repo-schema/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🏗️repo-schema/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -3122,6 +3260,12 @@
       "packages": [
         "@semio-tech/s-note-composition-tests"
       ]
+    },
+    {
+      "name": "@semio-tech/s-plugin-composition",
+      "root": "✏️s/🧪️tests/🏘️plugin-composition",
+      "manifest": "✏️s/🧪️tests/🏘️plugin-composition/📋️project.json",
+      "packages": []
     },
     {
       "name": "@semio-tech/s-puzzle-composition-tests",
@@ -4052,6 +4196,24 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/ui-contract-budget-rs",
+      "root": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📏️budget/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📏️budget/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/ui-contract-text-rs",
+      "root": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔤️text/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔤️text/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/ui-contract-identity-rs",
+      "root": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🆔️identity/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🆔️identity/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/ui-declaration-rs",
       "root": "🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust/📋️project.json",
@@ -4235,6 +4397,12 @@
       "name": "@semio-tech/value-derive-rs",
       "root": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/value-dictionary-rs",
+      "root": "🧰️framework/🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -4724,27 +4892,21 @@
       "packages": []
     },
     {
-      "name": "repo-build-reports",
-      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting",
-      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/📋️project.json",
-      "packages": []
-    },
-    {
       "name": "repo-build-file-membership",
       "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/📋️project.json",
       "packages": []
     },
     {
-      "name": "repo-configured-source",
-      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured",
-      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured/📋️project.json",
+      "name": "repo-build-reports",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/📋️project.json",
       "packages": []
     },
     {
-      "name": "repo-task-closure",
-      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure",
-      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure/📋️project.json",
+      "name": "repo-configured-source",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured/📋️project.json",
       "packages": []
     },
     {
@@ -4769,6 +4931,12 @@
       "name": "repo-storybook-storage",
       "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/💾️storage",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/💾️storage/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "repo-task-closure",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure/📋️project.json",
       "packages": []
     },
     {
@@ -4960,9 +5128,27 @@
       "packages": []
     },
     {
-      "name": "semio-framework-3d-brep-operations",
+      "name": "semio-framework-3d-brep-construction",
       "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-framework-3d-brep-boolean",
+      "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-framework-3d-brep-sweep",
+      "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-framework-3d-brep-offset",
+      "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -5228,6 +5414,12 @@
       "packages": [
         "semio-framework-pixels"
       ]
+    },
+    {
+      "name": "semio-framework-plugin-ownership",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
     },
     {
       "name": "semio-framework-surface-component",
@@ -5962,9 +6154,381 @@
       "packages": []
     },
     {
+      "name": "semio-s-artifact-energy-model-diff-patch",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-diff-splice",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/✂️splice/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/✂️splice/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-editor",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-editor-commands",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-editor-config",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-editor-edit",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-editor-interaction",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-editor-panels",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-editor-results",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-examples",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-export",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-import",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-s-artifact-energy-model-inferences",
       "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-io",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-air-loop",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️air-loop/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️air-loop/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-battery",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪫️battery/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪫️battery/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-boundary",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️boundary/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️boundary/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-construction",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️construction/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️construction/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-day-schedule",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️day-schedule/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️day-schedule/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-daylight-zone",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️daylight-zone/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️daylight-zone/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-enclosure",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️enclosure/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️enclosure/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-equipment-gain",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️equipment-gain/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️equipment-gain/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-fault",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️fault/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️fault/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-fenestration",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️fenestration/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️fenestration/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-finish",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️finish/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️finish/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-fixed-schedule",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕐️fixed-schedule/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕐️fixed-schedule/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-glazing",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️glazing/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️glazing/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-humidistat",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️humidistat/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️humidistat/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-ideal-loads",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💯️ideal-loads/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💯️ideal-loads/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-infiltration",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️infiltration/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️infiltration/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-leakage",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️leakage/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️leakage/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-lighting-gain",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️lighting-gain/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️lighting-gain/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-load-center",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️load-center/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️load-center/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-material",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️material/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️material/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-model",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️model/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️model/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-outdoor-air",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️outdoor-air/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️outdoor-air/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-people-gain",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️people-gain/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️people-gain/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-plant-loop",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️plant-loop/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️plant-loop/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-pv-system",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-refrigeration",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️refrigeration/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️refrigeration/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-room-air",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️room-air/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️room-air/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-run",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏯️run/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏯️run/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-setpoint",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️setpoint/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️setpoint/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-shading",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️shading/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️shading/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-shading-device",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️shading-device/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️shading-device/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-shw-system",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️shw-system/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️shw-system/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-site",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-sizing",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️sizing/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️sizing/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-solar-thermal",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️solar-thermal/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️solar-thermal/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-space",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️space/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️space/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-space-list",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️space-list/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️space-list/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-surface",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️surface/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️surface/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-thermostat",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️thermostat/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️thermostat/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-time-series",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️time-series/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️time-series/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-ventilation",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️ventilation/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️ventilation/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-water-system",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️water-system/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️water-system/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-week-schedule",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗓️week-schedule/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗓️week-schedule/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-window-layer",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥂️window-layer/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥂️window-layer/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-year-schedule",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️year-schedule/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️year-schedule/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-zone",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏡️zone/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏡️zone/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mut-zone-equipment",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️zone-equipment/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️zone-equipment/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mutation-fixtures",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixtures/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixtures/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-mutations",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -5974,9 +6538,21 @@
       "packages": []
     },
     {
+      "name": "semio-s-artifact-energy-model-session",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-s-artifact-energy-model-snapshot",
       "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-viewer",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8296,15 +8872,9 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-docx-test-oracle",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-stdio-docx-transitional",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-stdio-docx-base",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8320,21 +8890,21 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-docx-base-mutations",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
       "name": "semio-s-artifact-stdio-docx-base-model",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-docx-base",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-stdio-docx-base-mutations",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-docx-strict",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8344,9 +8914,15 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-docx-strict",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-stdio-docx-test-oracle",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-docx-transitional",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8389,6 +8965,18 @@
       "name": "semio-s-artifact-stdio-dwg-exports-proto",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🛰️proto/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🛰️proto/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-dwg-exports-rust",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🦀️rust/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🦀️rust/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-dwg-exports-typescript",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🟦️typescript/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🟦️typescript/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8494,18 +9082,6 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-dwg-exports-rust",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🦀️rust/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🦀️rust/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-stdio-dwg-exports-typescript",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🟦️typescript/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🟦️typescript/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
       "name": "semio-s-artifact-stdio-dxf-test-oracle",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🔮️oracles/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
@@ -8527,30 +9103,6 @@
       "name": "semio-s-artifact-stdio-gltf-editor",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-stdio-gltf-inferences",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-stdio-gltf-model",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-stdio-gltf-mutations",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-stdio-gltf-test-oracle",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🔮️oracles/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8581,6 +9133,30 @@
       "name": "semio-s-artifact-stdio-gltf-exports-typescript",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🟦️typescript/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🟦️typescript/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-gltf-inferences",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-gltf-model",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-gltf-mutations",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-gltf-test-oracle",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🔮️oracles/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8740,15 +9316,9 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-pptx-test-oracle",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-stdio-pptx-transitional",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-stdio-pptx-base",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8764,21 +9334,21 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-pptx-base-mutations",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
       "name": "semio-s-artifact-stdio-pptx-base-model",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-pptx-base",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-stdio-pptx-base-mutations",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-pptx-strict",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8788,9 +9358,15 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-pptx-strict",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-stdio-pptx-test-oracle",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-pptx-transitional",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -9418,15 +9994,9 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-xlsx-test-oracle",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-stdio-xlsx-transitional",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-stdio-xlsx-base",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -9442,21 +10012,21 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-xlsx-base-mutations",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
       "name": "semio-s-artifact-stdio-xlsx-base-model",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-xlsx-base",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-stdio-xlsx-base-mutations",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-xlsx-strict",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -9466,9 +10036,15 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-stdio-xlsx-strict",
-      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-stdio-xlsx-test-oracle",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-xlsx-transitional",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -9631,6 +10207,12 @@
       "name": "semio-s-imperative-extension-sdk",
       "root": "✏️s/🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust",
       "manifest": "✏️s/🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-mutation-vectors",
+      "root": "✏️s/🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust",
+      "manifest": "✏️s/🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -9994,390 +10576,6 @@
       "packages": []
     },
     {
-      "name": "semio-s-artifact-energy-model-diff-patch",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-diff-splice",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/✂️splice/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/✂️splice/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-editor",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-editor-commands",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-editor-config",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-editor-edit",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-editor-interaction",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-editor-panels",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-editor-results",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-examples",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-export",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-import",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-io",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-air-loop",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️air-loop/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️air-loop/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-battery",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪫️battery/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪫️battery/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-boundary",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️boundary/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️boundary/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-construction",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️construction/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️construction/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-day-schedule",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️day-schedule/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️day-schedule/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-daylight-zone",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️daylight-zone/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️daylight-zone/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-enclosure",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️enclosure/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️enclosure/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-equipment-gain",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️equipment-gain/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️equipment-gain/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-fault",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️fault/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️fault/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-fenestration",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️fenestration/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️fenestration/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-finish",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️finish/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️finish/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-fixed-schedule",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕐️fixed-schedule/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕐️fixed-schedule/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-glazing",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️glazing/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️glazing/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-humidistat",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️humidistat/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️humidistat/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-ideal-loads",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💯️ideal-loads/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💯️ideal-loads/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-infiltration",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️infiltration/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️infiltration/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-leakage",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️leakage/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️leakage/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-lighting-gain",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️lighting-gain/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️lighting-gain/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-load-center",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️load-center/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️load-center/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-material",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️material/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️material/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-model",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️model/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️model/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-outdoor-air",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️outdoor-air/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️outdoor-air/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-people-gain",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️people-gain/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️people-gain/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-plant-loop",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️plant-loop/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️plant-loop/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-pv-system",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-refrigeration",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️refrigeration/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️refrigeration/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-room-air",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️room-air/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️room-air/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-run",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏯️run/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏯️run/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-setpoint",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️setpoint/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️setpoint/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-shading",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️shading/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️shading/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-shading-device",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️shading-device/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️shading-device/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-shw-system",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️shw-system/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️shw-system/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-site",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-sizing",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️sizing/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️sizing/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-solar-thermal",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️solar-thermal/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️solar-thermal/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-space",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️space/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️space/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-space-list",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️space-list/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️space-list/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-surface",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️surface/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️surface/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-thermostat",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️thermostat/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️thermostat/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-time-series",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️time-series/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️time-series/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-ventilation",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️ventilation/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️ventilation/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-water-system",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️water-system/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️water-system/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-week-schedule",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗓️week-schedule/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗓️week-schedule/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-window-layer",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥂️window-layer/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥂️window-layer/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-year-schedule",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️year-schedule/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️year-schedule/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-zone",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏡️zone/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏡️zone/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mut-zone-equipment",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️zone-equipment/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️zone-equipment/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mutation-fixtures",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixtures/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixtures/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-mutations",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-session",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-energy-model-viewer",
-      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
       "name": "semio-s-plugin-flow-bim-component",
       "root": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/🧩️component/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/🧩️component/📦️packages/🦀️rust/Cargo.toml",
@@ -10471,12 +10669,6 @@
       "name": "semio-s-plugin-norm-compliance",
       "root": "✏️s/🔌️plugins/📕️norm/⚖️compliance/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/📕️norm/⚖️compliance/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-mutation-vectors",
-      "root": "✏️s/🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust",
-      "manifest": "✏️s/🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -10702,6 +10894,54 @@
       "packages": [
         "workspace"
       ]
+    },
+    {
+      "name": "@semio-tech/os-store-blob-identity-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/os-store-link-schema-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/pack-source-rs",
+      "root": "🧰️framework/🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-job-preview-rs",
+      "root": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-job-fault-publication-rs",
+      "root": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-job-publication-rs",
+      "root": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/replication-error-rs",
+      "root": "🧰️framework/🔨️modules/📡️replication/⚠️error/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/⚠️error/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/replication-crypto-rs",
+      "root": "🧰️framework/🔨️modules/📡️replication/🔐️crypto/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/🔐️crypto/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
     }
   ],
   "catalogProviders": [

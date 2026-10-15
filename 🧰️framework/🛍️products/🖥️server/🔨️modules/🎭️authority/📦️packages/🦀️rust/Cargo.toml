@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-server-authority"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Server authority: the actor turn protocol, with fenced activation, the admit, dedupe, authorize, decide, commit pipeline, deterministic deciders shared with the optimistic replica, and the saga seam for cross-actor workflows."
+
+[package.metadata.semio]
+role = "product"
+id = "server-authority"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-server-contract = { path = "../../../🧬️contract/📦️packages/🦀️rust" }
+semio-framework-server-storage = { path = "../../../🗄️storage/📦️packages/🦀️rust" }
+semio-framework-server-policy = { path = "../../../🛡️policy/📦️packages/🦀️rust" }
+semio-framework-dispatch-macros = { workspace = true }
+tokio = { version = "1", features = ["sync"] }

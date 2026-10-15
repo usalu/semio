@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Evidence": {
+      "const": {
+        "version": 1,
+        "code": {
+          "version": 1,
+          "digest": "6013cbc0b38262821df16abaedaefa0dc6514fd70fd09bac552080fd2cbad94c",
+          "sourceDigest": "76152b8686d1ac14fe53eaf3027e62f015a633087791b3f3ab45a1539c1280b1",
+          "program": ".cache/b/t/m/rc/6013cbc0b38262821df16abaedaefa0dc6514fd70fd09bac552080fd2cbad94c/entry.mjs",
+          "programDigest": "1df6e2670be27a00709d3ba0f9f34df99891258a4034e622a1834e99e8b34c5b",
+          "programBytes": 136463,
+          "receipt": ".cache/b/t/m/rc/6013cbc0b38262821df16abaedaefa0dc6514fd70fd09bac552080fd2cbad94c/receipt.json",
+          "receiptDigest": "810602fcf506d6b0db126fa1ce03cd4daef69f6639ab0b67ff3eee4aaa5c8e41",
+          "receiptBytes": 14489
+        },
+        "imageDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed",
+        "leaseDirectory": ".cache/b/l/m/data",
+        "imageResourcePrefix": "native-fixed-image:",
+        "sourceWitnesses": [
+          {
+            "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+            "sha256": "0d5870ad0181479dd186c38b951cc2e1affd357d025e85f7c7ffdc8a312d4a06"
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+            "sha256": "9c30f9d5bb1ff1c0914dee648d0de3a259c68a173d709304dd424d89417202e5"
+          }
+        ],
+        "charges": {
+          "prototype": {
+            "version": 1,
+            "mode": "prototype",
+            "allocation": "9198ef11dead054182778c3cad78a2c8",
+            "owner": "repo:compiler:prototype",
+            "bytes": 4294967296
+          },
+          "release": {
+            "version": 1,
+            "mode": "release",
+            "allocation": "3544182cd46f67a136fa96b73127f0c4",
+            "owner": "repo:compiler:release",
+            "bytes": 4294967296
+          }
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "preview"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "preview": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "type": "object"
+}

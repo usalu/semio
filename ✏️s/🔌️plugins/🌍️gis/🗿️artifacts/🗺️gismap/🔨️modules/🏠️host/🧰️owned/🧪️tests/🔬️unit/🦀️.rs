@@ -224,7 +224,7 @@ fn close_candidate_store(store: store::ArtifactStore<GisMapSnapshot, GisMapMutat
 ///
 /// 🩺️ Why here and not beside the snapshot law: the pump
 /// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`, `AwaitingMembers`) calls
-/// `store::ChildRestoreProjection::from_snapshot(candidate.snapshot_ref())` and maps EVERY
+/// `semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(candidate.snapshot_ref())` and maps EVERY
 /// `ChildRestoreProjectionError` onto the single opaque string `candidate parent child projection is
 /// invalid` — the fault `gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed`
 /// reports (ticket 26/09/19). The sibling law
@@ -260,7 +260,7 @@ async fn the_initialization_candidate_projects_its_canonical_child_handles() {
             }
             if let Some(early) = ArtifactStoreInitializationAuthority::take_candidate(&mut authority) {
                 let early_root = early.snapshot_root();
-                let projection = format!("{:?}", store::ChildRestoreProjection::from_snapshot(&*early_root));
+                let projection = format!("{:?}", semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&*early_root));
                 drop(early_root);
                 close_candidate_store(early);
                 panic!("{label}: a candidate was handed over before the initializer reported Complete (it projects {projection}) — the pump would see the placeholder handles");
@@ -271,7 +271,7 @@ async fn the_initialization_candidate_projects_its_canonical_child_handles() {
         let candidate = ArtifactStoreInitializationAuthority::take_candidate(&mut authority).unwrap_or_else(|| panic!("{label} candidate handoff"));
         {
             let root = candidate.snapshot_root();
-            let projection = store::ChildRestoreProjection::from_snapshot(&*root).unwrap_or_else(|error| {
+            let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&*root).unwrap_or_else(|error| {
                 panic!("{label} candidate parent is not projectable: {error:?} (drawing {:?}/{:?}, image {:?}, value {:?}/{:?})", root.drawing.child_id, root.drawing.target, root.image, root.value.child_id, root.value.target)
             });
             assert_eq!(projection.len(), 2, "{label} candidate declares exactly the drawing and value children");

@@ -13,48 +13,30 @@ import { panelTabFirstDraggableElementId } from "@semio-tech/framework";
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
-import { Tree, type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeSelectionMode } from "../🌳️Tree/🟦️.tsx";
+import { Tree } from "../🌳️Tree/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { dropZoneReadyFillClass } from "../../🎯️targets/⚛️react/🟦️";
+import { dropZoneReadyFillClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
-import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, chromeHostedPanelCapRowStyle, endPanelTreeUnitDrag, flowFromAnchor, publishShellChromePanelBox, readActivePanelTreeUnitDrag, safeAreaBoxFromRect, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../🎯️targets/⚛️react/🟦️";
+import { WindowChrome } from "../🗂️WindowChrome/🟦️.tsx";
+import { useNativeDragArm, useUiDriverDragSurface } from "../🚗️UiDriver/🟦️.tsx";
+import { type UiStatus } from "@semio-tech/ui-styling";
+import { chromeHostedPanelCapRowStyle, publishShellChromePanelBox, safeAreaBoxFromRect, useShellNavbarTrailingEndWidthPx } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+import { PANEL_TREE_UNIT_MIME, beginPanelTreeUnitDrag, endPanelTreeUnitDrag, readActivePanelTreeUnitDrag, usePanelDockContext, usePanelTreeUnitDragActive } from "../../🔨️modules/🧲️panel-dock/🟦️.tsx";
+import { type Anchor, anchorHorizontal, anchorPositionStyle, chromeHostedOpenPanelPositionStyle, flowFromAnchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
+import { PanelGhostRoot } from "../👻️PanelGhost/🟦️.tsx";
 import { PanelTabBar, type PanelTabNode, type PanelTabSelectionOptions, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, resolvePanelBranchBodyLeaf, usePanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
 import { Icon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
+import { type TreePanelConfig, type TreePanelDefinition, type TreePanelSource } from "./🌲️tree-source/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧭️Panel
-// Collapsible panel growing from one of the display's eight anchors (four corners plus four edge middles), with tabbed content.
-// Consumers MUST provide PanelTabNode entries (see {@link PanelTabNode} in #region 🩻️Ribbon Components).
 
-export interface TreePanelConfig {
-  sections: TreeDataSection[];
-  dragAndDropController?: TreeDragAndDropController;
-  selectionMode?: TreeSelectionMode;
-  selectedIds?: string[];
-  defaultSelectedIds?: string[];
-  onSelectionChange?: (selectedIds: string[], items: TreeDataItem[]) => void;
-  highlightedIds?: readonly string[];
-  emptyState?: React.ReactNode;
-  indentMultiplier?: number;
-  className?: string;
-  /** ↕️ Override section-reorder grips; defaults to enabled when {@link sections} has more than one entry. */
-  sortableSections?: boolean;
-  onSectionsReorder?: (orderedIds: readonly string[]) => void;
-}
 
-export interface TreePanelDefinition {
-  resolveTree(): TreePanelConfig;
-  /** 📡️ Present on a LIVE source ({@link liveTreePanelDefinition}): its content changes on its own, `resolveTree`
-   * answers one object per change, and the pane re-reads it on every notification. */
-  subscribe?(listener: () => void): () => void;
-}
-
-export type TreePanelSource = TreePanelConfig | TreePanelDefinition;
 
 /** 📡️ A LIVE tree source: `read` answers the value the tree is built from (a new object only when it changed), `build`
  * turns it into the config once per value, and the pane re-reads it on every `subscribe` notification — so content that moves

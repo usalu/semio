@@ -59,7 +59,7 @@ import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "./🧰️
 import { canonicalArchitectureEnvironment } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, fileKindIdForSourcePath, createRustMutationCodecOwnershipInspector, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustModuleGraphFacts, inspectRustModuleGraph, inspectRustRunnableTests, inspectRustStructure, inspectRustChildKindMetadata, inspectRustSourceIdentities, createRustMutationInputInspector, resolveRustPathAttributes, renderSemanticCensusJson, renderSemanticCensusMarkdown, renderSemanticDuplicatesJson, renderSemanticDuplicatesMarkdown, taxonomyRelativePathIsExcluded, taxonomyImplementationFilesystemFindings, workspaceAuthorityPath, noFollowDirectoryAncestry, semanticOwnedInputFileSnapshot, inventorySchemaScopes, renderSchemaCatalog, renderSchemaCatalogDocument, renderSchemaCheckReport, schemaRustEntryDiagnostics, type SchemaRustEntryDump, type SchemaScopeDiagnostic, type SchemaScopeInventory, loadCatalogTaxonomy, mutationPayloadSchemaRelativePath, mutationPayloadSchemaProblems, jsonDocumentDuplicateKeys, mutationOwnerIdentity, subsetDirectoryNameForId, subsetIdForDirectoryName } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { pathEmojiStatuteFindings, type PathEmojiEntry } from "./🧰️framework/🔨️modules/🪪️identity/🛣️path/🟦️.ts";
-import { POLICY_SKIP_DIRS, policyReadFileSafe, policyReaddirSafe } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
+import { POLICY_SKIP_DIRS, POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadFileSafe, policyReadModuleTreeSource, policyReaddirSafe } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
 import { artifactIoArchitectureBreaches, missingArtifactDiffWireTypes } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚪️io/🏛️architecture/🟦️.ts";
 import { policyWalkRelFiles } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🚶️file-walk/🟦️.ts";
 import { policyLineOfIndex } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📍️source-coordinate/🟦️.ts";
@@ -1157,9 +1157,15 @@ function toolJobConcreteFactoryExact(files: ReadonlyMap<string, string>, proof: 
 
 
 
+/** 🪓️ The plugin production sources the tool-job census reads: a declared split root stands for its whole module tree and its mounted children are no census entries of their own, so owner, proof, factory and row evidence stays in one text. */
+function toolJobPluginProductionSources(root: string): Map<string, string> {
+  const mounted = new Set(POLICY_SPLIT_SOURCE_ROOTS.filter((path) => path.includes("✏️s/🔌️plugins/")).flatMap((path) => policyModuleTreeFiles(root, path).slice(1)));
+  return new Map(policyAllRustFiles(root).filter((file) => file.includes("✏️s/🔌️plugins/") && !file.includes("/🧪️tests/") && !mounted.has(file)).map((file) => [file, toolJobProductionProtocolSource(POLICY_SPLIT_SOURCE_ROOTS.includes(file) ? policyReadModuleTreeSource(root, file) : policyReadFileSafe(root, file))]));
+}
+
 /** 🧪️ Scans every production app catalog for an exact compiler factory witness and rejects custom-covered generic rows. */
 export function toolJobFactoryProofActivationScan(root: string): { owners: number; customRows: number; genericRows: number; failures: string[] } {
-  const sources = new Map(policyAllRustFiles(root).filter((file) => file.includes("✏️s/🔌️plugins/") && !file.includes("/🧪️tests/")).map((file) => [file, toolJobProductionProtocolSource(policyReadFileSafe(root, file))]));
+  const sources = toolJobPluginProductionSources(root);
   const proofs = toolJobProofs(sources);
   const failures = toolJobProofCatalogFailures(sources, toolJobStaticRows(sources), toolJobDispositions(sources), proofs).filter((failure) => failure.startsWith("forged bounded reducer factory or compiler witness"));
   return { owners: new Set(proofs.map((proof) => proof.ownerFile)).size, customRows: proofs.filter((proof) => proof.factoryType !== undefined).length, genericRows: proofs.filter((proof) => proof.factoryType === undefined).length, failures };
@@ -5514,7 +5520,7 @@ function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string;
     if (result !== law.expected) throw new Error(`[verify interactivity tool-jobs shared-action-fixture] hostile law ${law.id} differs from its expected result.`);
     return `${law.id}:${result}`;
   });
-  const shell = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
+  const shell = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
   const dispatch = interactivityCheckedRustBlockScope(shell, "pub fn dispatch_action<'a>(&'a mut self, mut action: ActionDescriptor) -> ShellTurn<'a, Result<(), String>>", "shared-action accepted tutorial dispatch", sourceFailures)?.replace(/\s+/g, "") ?? "";
   const arming = dispatch.indexOf("letrecord_tutorial_after_acceptance=action.action==semio_framework::RECORD_TUTORIAL_ACTION_ID;");
   const accepted = dispatch.indexOf("letanswer=program.handle_action(session.instance_id,&action_json,&live_view_state).await;letmutresult=answer.map_err(|refusal|self.refused_guest_call(refusal,&session.app))?;", arming);
@@ -6240,7 +6246,7 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
     seenRows.add(key);
   }
   const intentionalWriterDuplicates = duplicateRows.filter((row) => row.file.includes("✏️s/🔌️plugins/✒️writer/") && row.id === "setEditorSetting");
-  const productionFiles = new Map(policyAllRustFiles(root).filter((file) => file.includes("✏️s/🔌️plugins/") && !file.includes("/🧪️tests/")).map((file) => [file, toolJobProductionProtocolSource(policyReadFileSafe(root, file))]));
+  const productionFiles = toolJobPluginProductionSources(root);
   const staticRows = toolJobStaticRows(productionFiles);
   const appOwnedRows = toolJobAppOwnedRows(productionFiles);
   const registeredAppOwnedKeys = new Set(appOwnedRows.map((row) => `${row.ownerFile}\0${row.toolId}`));
@@ -6261,17 +6267,17 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   const channel = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs");
   const actor = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎭️actor/🦀️.rs");
   const kernel = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs");
-  const pluginHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
-  const mcpWorkspace = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs");
+  const pluginHost = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
+  const mcpWorkspace = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs");
   const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs");
-  const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+  const wgpuHost = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
   const nativeIo = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs");
   const shardHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
   const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
   const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-  const puzzle2d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+  const puzzle2d = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const semio = policyReadFileSafe(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs");
-  const manifest = policyReadFileSafe(root, "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs");
+  const manifest = policyReadModuleTreeSource(root, "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs");
   const componentWit = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit");
   const reactor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs");
   const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️.rs");
@@ -8092,7 +8098,7 @@ export class VerifyScript extends Script {
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_UI_ENGINE_FILE),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_WINIT_HOST_FILE),
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
+      policyReadModuleTreeSource(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
     );
     if (failures.length > 0) throw new Error(`[verify interactivity p5e] ${failures.join("; ")}`);
     console.log("[verify interactivity p5e] live-source and hostile mutations clean.");
@@ -8102,16 +8108,16 @@ export class VerifyScript extends Script {
   private runInteractivityP3mn(): void {
     interactivityMountedEngineSurfaceLifetimeSelfTests(this.root);
     const failures = interactivityMountedEngineSurfaceLifetimeFailures(
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE),
+      policyReadModuleTreeSource(this.root, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE),
       policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_WINIT_HOST_FILE),
       policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"),
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
+      policyReadModuleTreeSource(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
       policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs"),
       policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"),
-      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"),
+      policyReadModuleTreeSource(this.root, "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"),
       policyReadFileSafe(this.root, "🧰️framework/🔨️modules/✍️editor/🦀️.rs"),
-      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"),
+      policyReadModuleTreeSource(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"),
     );
     if (failures.length > 0) throw new Error(`[verify interactivity p3mn] ${failures.join("; ")}`);
     console.log("[verify interactivity p3mn] live-source and hostile mutations clean.");
@@ -8147,10 +8153,10 @@ export class VerifyScript extends Script {
       const actor = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎭️actor/🦀️.rs");
       const shard = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
       const executor = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧵️executor/🦀️.rs");
-      const wgpu = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+      const wgpu = policyReadModuleTreeSource(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
       const actionBus = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs");
       const pluginApp = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
-      const pluginHost = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
+      const pluginHost = policyReadModuleTreeSource(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
       const programBridge = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");
       const mutations = args.includes("--self-test") ? toolJobLiveFixedReplaySelfTests(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge) : 0;
       if (!toolJobLiveFixedReplayExact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge)) throw new Error("[verify interactivity tool-jobs p2c] live fixed replay contract failed.");
@@ -9038,10 +9044,10 @@ const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
     inScope: false, // 🏃️run/ is not under any INTERACTIVITY_AUDIT_UI_ROOTS prefix today; pre-declared for when scope widens.
   },
   {
-    file: "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
-    lineHint: 1985,
+    file: "🧰️framework/🛍️products/💻️os/🖥️host/🔌️plugin-host/🦀️.rs",
+    lineHint: 1359,
     pattern: "block_on",
-    reason: "CORRECTED: verified test-only, not production. All block_on calls at this anchor (1956-2055) sit inside `#[cfg(test)] mod tests` under `pub mod host` — a local hygienic block_on helper the R4-clause-5 test-entry-point precedent already sanctions. The audit's test-mod exclusion filters these out on its own; this entry is kept for the record the master ticket asked for, not because the scanner would otherwise flag it.",
+    reason: "CORRECTED: verified test-only, not production. All block_on calls at this anchor (the `🧪️tests/🔬️host-unit` file `include!`d at the end of `pub mod host`) sit inside `#[cfg(test)] mod tests` — a local hygienic block_on helper the R4-clause-5 test-entry-point precedent already sanctions. The audit's test-mod exclusion filters these out on its own; this entry is kept for the record the master ticket asked for, not because the scanner would otherwise flag it.",
     phase: "PERMANENT (test-only)",
     inScope: true,
     expectedNeverToMatch: true,
@@ -9283,7 +9289,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
     INTERACTIVITY_AUDIT_UI_PRESENT_FILE,
   ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn + tableKit + tableKitFixtures + commandBridge + commandBridgeFixtures;
   const reactorPatches = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
-  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_REACTOR_TURN_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
+  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_REACTOR_TURN_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => POLICY_SPLIT_SOURCE_ROOTS.includes(file) ? policyReadModuleTreeSource(repoRoot, file) : policyReadFileSafe(repoRoot, file)).join("\n");
   for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor, uiValue, uiSchema)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
   interactivityMountedLayoutTextSelfTests(repoRoot);
   const mountedLayout = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🦀️.rs");
@@ -9292,7 +9298,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const mountedPaint = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🦀️.rs");
   const mountedEvents = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🦀️.rs");
   const mountedSlots = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📨️scene_slots/🦀️.rs");
-  const mountedInterpreter = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
+  const mountedInterpreter = policyReadModuleTreeSource(repoRoot, INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE);
   for (const failure of interactivityMountedLayoutTextFailures(mountedLayout, mountedEngine, mountedTree, mountedPaint, mountedEvents, mountedSlots, mountedInterpreter, rendererGlue)) findings.push({ category: "blocking-bridge", file: "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🦀️.rs", line: 0, text: failure });
   interactivityMountedFrameTransactionSelfTests(repoRoot);
   const mountedFrameJob = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
@@ -9303,7 +9309,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const mountedFrameServices = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_OS_SERVICES_FILE);
   const mountedFrameEngineCanvas = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE);
   const mountedFrameWorld3d = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_WORLD3D_FILE);
-  const mountedFrameScenes = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
+  const mountedFrameScenes = policyReadModuleTreeSource(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
   for (const failure of interactivityMountedFrameTransactionFailures(rendererGlue, mountedFrameJob, mountedFrameHost, mountedFrameSnapshot, headlessUiRuntimeGlue, mountedFrameShell, mountedFrameEngineCanvas, mountedFrameWorld3d, preparedRaster, preparedRasterGpu, preparedRasterDraw, mountedInterpreter, mountedEngine, mountedPaint, mountedSlots, mountedFrameScenes, mountedFrameServices)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
@@ -14200,7 +14206,7 @@ export class PublishScript extends Script {
 //#endregion 🔖️PublishScript
 
 //#region 🔖️MicroCommitScript
-/** 🎆️Stages WIP changes and writes deterministic micro-commit templates (GitKraken + CLI). */
+/** 🎆️Writes micro-commit templates from the index that is already staged. */
 export class MicroCommitScript extends Script {
   run(segments: string[]): void {
     runMicroCommit(this.root, segments);
@@ -16919,22 +16925,26 @@ function policyReadRustSourceEvidence(repoRoot: string, sourcePath: string): Pol
   if (isAbsolute(sourcePath) || normalizedSourcePath.split("/").includes("..")) throw new Error(`[policy rust evidence] invalid production path: ${sourcePath}`);
   const source = policyReadFileSafe(repoRoot, normalizedSourcePath);
   if (!source) throw new Error(`[policy rust evidence] production source missing: ${normalizedSourcePath}`);
-  const owner = posix.dirname(normalizedSourcePath);
   const tests: PolicyRustSourceEntry[] = [];
-  for (const module of inspectRustModuleGraphFacts(source).modules) {
-    if (module.inline || !module.conditional || module.pathTarget === null) continue;
-    const target = posix.normalize(posix.join(owner, module.pathTarget));
-    const segments = target.split("/");
-    const testsAt = segments.lastIndexOf("🧪️tests");
-    if (testsAt < 0) continue;
-    if (testsAt !== segments.length - 3 || segments.at(-1) !== "🦀️.rs" || !segments.at(-2)) {
-      throw new Error(`[policy rust evidence] conditional external module ${module.modulePath.join("::")} is not canonical: ${target}`);
+  const split = POLICY_SPLIT_SOURCE_ROOTS.includes(normalizedSourcePath);
+  for (const file of split ? policyModuleTreeFiles(repoRoot, normalizedSourcePath) : [normalizedSourcePath]) {
+    const owner = posix.dirname(file);
+    for (const module of inspectRustModuleGraphFacts(file === normalizedSourcePath ? source : policyReadFileSafe(repoRoot, file)).modules) {
+      if (module.inline || !module.conditional || module.pathTarget === null) continue;
+      const target = posix.normalize(posix.join(owner, module.pathTarget));
+      const segments = target.split("/");
+      const testsAt = segments.lastIndexOf("🧪️tests");
+      if (testsAt < 0) continue;
+      if (testsAt !== segments.length - 3 || segments.at(-1) !== "🦀️.rs" || !segments.at(-2)) {
+        throw new Error(`[policy rust evidence] conditional external module ${module.modulePath.join("::")} is not canonical: ${target}`);
+      }
+      if (tests.some((entry) => entry.path === target)) continue;
+      const targetSource = policyReadFileSafe(repoRoot, target);
+      if (!targetSource) throw new Error(`[policy rust evidence] declared canonical test source missing: ${target}`);
+      tests.push({ path: target, source: targetSource });
     }
-    const targetSource = policyReadFileSafe(repoRoot, target);
-    if (!targetSource) throw new Error(`[policy rust evidence] declared canonical test source missing: ${target}`);
-    tests.push({ path: target, source: targetSource });
   }
-  return { production: { path: normalizedSourcePath, source }, tests };
+  return { production: { path: normalizedSourcePath, source: split ? policyReadModuleTreeSource(repoRoot, normalizedSourcePath) : source }, tests };
 }
 
 function policyMutateRustSourceEvidence(evidence: PolicyRustSourceEvidence, from: string, to: string, last = false): PolicyRustSourceEvidence {
@@ -16953,7 +16963,8 @@ const POLICY_RUST_TEST_EVIDENCE_BOUNDARY = "\n//#region 🧪️DeclaredCanonical
 
 function policyReadRustPolicySource(repoRoot: string, sourcePath: string): string {
   const source = policyReadFileSafe(repoRoot, sourcePath);
-  if (!source || posix.extname(sourcePath) !== ".rs") return source;
+  if (!source) return source;
+  if (posix.extname(sourcePath) !== ".rs") return POLICY_SPLIT_SOURCE_ROOTS.includes(sourcePath) ? policyReadModuleTreeSource(repoRoot, sourcePath) : source;
   const evidence = policyReadRustSourceEvidence(repoRoot, sourcePath);
   return evidence.production.source + evidence.tests.map((entry) => `${POLICY_RUST_TEST_EVIDENCE_BOUNDARY}${entry.path}\n${entry.source}`).join("");
 }

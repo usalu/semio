@@ -565,18 +565,11 @@ import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, to
 import {
   type UiInterpreterContext,
   usePluginSurfaceActions,
-  useShellContextMenuFallback,
-  openSurfaceContextMenu,
-  surfaceContextMenuTitleKey,
-  type SurfaceContextMenuResult,
   uiNodeDomId,
   interpretUiNode,
   InterpretedUiNode,
   UiNodeView,
-  wireLabel,
-  parseSceneJsonField,
   PluginSurfaceActionsContext,
-  ShellContextMenuFallbackContext,
   UiPresenceOverlayContext,
   usePresenceOverlayEntry,
   type UiPresenceOverlayEntry,
@@ -612,8 +605,6 @@ export { nodeGraphActions, textEditorActions };
 //#region 🔖️types
 import {
   uiInspectorMixedPlaceholder,
-  type ViewModel,
-  type PluginManifest,
   type PluginPanelStatus,
   type PluginSupervisorState,
   type SpawnedAppEntry,
@@ -643,8 +634,9 @@ import {
   type PeerInteractionRoster,
   derivePeerInteractionByDomain,
   peerIdsSelecting,
-  peerIdsHovering,
+  peerIdsHovering
 } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import type { ViewModel, PluginManifest } from "../../🧱️elements/🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 export {
   uiInspectorMixedPlaceholder,
   type ViewModel,
@@ -829,8 +821,6 @@ export { ShellFaultBoundary };
 import {
   SetWindowTitleContext,
   SetWindowIconContext,
-  useAppKeybindingsByActionId,
-  useMapContextMenuSpecs,
   TutorialRecorder,
   type FrameworkOsShellProps,
   FrameworkOsShell,
@@ -1025,10 +1015,12 @@ export { CANVAS_CAMERA_ZOOM_MIN, CANVAS_CAMERA_ZOOM_MAX, type CanvasCamera, clam
 //#endregion 🔖️Canvas2dHost
 
 //#region 🔖️World3dHost
-import { world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, world3dInstanceInteractionTarget, world3dInstanceInteractionTargets, world3dSelectionTargetsActionArgs, type World3dMarkerLayer, type World3dMarkerInteractionFields, type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, world3dFitProjectionContent, world3dFramingInstances, world3dProjectionContentFrameMounted, world3dFrameVisibleOverlayOffered, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, world3dCameraDomJson, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, resolveVortexPointerDownIntent, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, gumballIdentityDelta, worldPaintStep, WORLD_PAINT_IDLE, type WorldPaintGesture, type WorldPaintEvent, type WorldPaintOrigin, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, worldGhostMeshUrl, suggestionMenuItems, resolveWorldMergeMode, world3dContextMenuSurfaceV1, meshBoundsCorners, raycastGroundPoint,
+import { world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, world3dInstanceInteractionTarget, world3dInstanceInteractionTargets, world3dSelectionTargetsActionArgs, type World3dMarkerLayer, type World3dMarkerInteractionFields, type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, world3dFitProjectionContent, world3dFramingInstances, world3dProjectionContentFrameMounted, world3dFrameVisibleOverlayOffered, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, world3dCameraDomJson, resolveWorldContextMenuTarget, worldInstancePickBlocked, resolveVortexPointerDownIntent, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, gumballIdentityDelta, worldPaintStep, WORLD_PAINT_IDLE, type WorldPaintGesture, type WorldPaintEvent, type WorldPaintOrigin, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, worldGhostMeshUrl, suggestionMenuItems, resolveWorldMergeMode, world3dContextMenuSurfaceV1, meshBoundsCorners, raycastGroundPoint,
   resolveClickInstanceIdFromProjected,
   world3dProjectedAabbContainsClick,
-  world3dSuggestionsGestureArmed, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, type WorldGumballTransformPreview, subscribeWorldGumballTransformPreview, getWorldGumballTransformPreview, getWorldGumballTransformPreviewServerSnapshot, setWorldGumballTransformPreview, clearWorldGumballTransformPreview, worldVorticesWithGumballPreview, worldAttractionsWithGumballPreview, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, world3dProjectionPaneElementId, WorldOrbitProjectionSwitchPane, World3dHost } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+  world3dSuggestionsGestureArmed, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, type WorldGumballTransformPreview, subscribeWorldGumballTransformPreview, getWorldGumballTransformPreview, getWorldGumballTransformPreviewServerSnapshot, setWorldGumballTransformPreview, clearWorldGumballTransformPreview, worldVorticesWithGumballPreview, worldAttractionsWithGumballPreview, registerPendingWorldProjection, clearPendingWorldProjection, world3dProjectionPaneElementId, WorldOrbitProjectionSwitchPane, World3dHost } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { useShellContextMenuFallback, openSurfaceContextMenu, surfaceContextMenuTitleKey, type SurfaceContextMenuResult, ShellContextMenuFallbackContext, useAppKeybindingsByActionId, useMapContextMenuSpecs, mapContextMenuSpecs } from "../../🧱️elements/🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { wireLabel, parseSceneJsonField, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, WindowInstanceIdContext } from "../../🧱️elements/🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 export { world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, world3dInstanceInteractionTarget, world3dInstanceInteractionTargets, world3dSelectionTargetsActionArgs, type World3dMarkerLayer, type World3dMarkerInteractionFields, type WorldInstanceRecord, worldMeshMaterialRevision, resolveMeshStyle, resolveMeshSelectionPreviewStyle, type SemanticColors, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, mergeWorldViewportCamera, world3dViewportCameraSeedKey, world3dFitProjectionContent, world3dFramingInstances, world3dProjectionContentFrameMounted, world3dFrameVisibleOverlayOffered, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, worldCameraPoseApproxEqual, shouldReattachWorldViewportCamera, world3dCameraDomJson, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, mapContextMenuSpecs, resolveWorldContextMenuTarget, worldInstancePickBlocked, resolveVortexPointerDownIntent, isCurveOnlyWorldMesh, isWorldTransformGumballMode, gumballTransformDeltaBetweenPoses, gumballIdentityDelta, worldPaintStep, WORLD_PAINT_IDLE, type WorldPaintGesture, type WorldPaintEvent, type WorldPaintOrigin, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, type WorldGumballLivePreviewDelta, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, applyGumballLivePreviewPoseToObject3D, gumballConfigForTransformMode, worldGumballConfigForProjection, worldVortexMaterialRevision, worldGhostMeshUrl, suggestionMenuItems, resolveWorldMergeMode, world3dContextMenuSurfaceV1, meshBoundsCorners, raycastGroundPoint, parsePuzzle3dCatalogueDragPayload, snapWorldPointToGrid, subscribeWorldCatalogueDropPreview, getWorldCatalogueDropPreview, getWorldCatalogueDropPreviewServerSnapshot, setWorldCatalogueDropPreview, clearWorldCatalogueDropPreview, registerWorldCatalogueDropHost, worldCatalogueDropHostContainsPoint, type WorldSelectionPreview, subscribeWorldSelectionPreview, getWorldSelectionPreview, getWorldSelectionPreviewServerSnapshot, setWorldSelectionPreview, clearWorldSelectionPreview, type WorldGumballTransformPreview, subscribeWorldGumballTransformPreview, getWorldGumballTransformPreview, getWorldGumballTransformPreviewServerSnapshot, setWorldGumballTransformPreview, clearWorldGumballTransformPreview, worldVorticesWithGumballPreview, worldAttractionsWithGumballPreview, WindowInstanceIdContext, registerPendingWorldProjection, clearPendingWorldProjection, world3dProjectionPaneElementId, WorldOrbitProjectionSwitchPane, World3dHost };
 //#endregion 🔖️World3dHost
 

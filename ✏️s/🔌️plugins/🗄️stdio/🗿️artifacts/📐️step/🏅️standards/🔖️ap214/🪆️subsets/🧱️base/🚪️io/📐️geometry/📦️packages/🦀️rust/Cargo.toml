@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-3d-brep-construction.workspace = true
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

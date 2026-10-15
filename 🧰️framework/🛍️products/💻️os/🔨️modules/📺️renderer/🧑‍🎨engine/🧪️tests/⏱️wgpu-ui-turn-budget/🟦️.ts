@@ -13,6 +13,7 @@ import {
 } from "../../🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts";
 import { BrowserFrameTransport, type BrowserFrameFallbackState, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStepReport } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
 import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 /** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
@@ -108,7 +109,7 @@ describe("wgpu UI-turn budget", () => {
     expect(sustained?.[1]).toBeDefined();
     expect(SUSTAINED_TURN_OVERRUN_TURNS).toBe(Number(sustained![1]));
     expect(UI_TURN_BUDGET_MS).toBe(2);
-    expect(readFileSync(SHELL_HOST_TSX, "utf8")).toContain(`RUNTIME_DIAGNOSTICS_KEY = "${TURN_DIAGNOSTICS_KEY}"`);
+    expect(readModuleTreeSource(SHELL_HOST_TSX)).toContain(`RUNTIME_DIAGNOSTICS_KEY = "${TURN_DIAGNOSTICS_KEY}"`);
   });
 
   it("charges executing time only — a turn parked across a real 50 ms suspension measures nothing", async () => {

@@ -1,0 +1,9 @@
+# Physical Cargo Workspace Identity
+
+The actual Framework workspace now declares the construction package under its real name and binds the existing boolean, sweep and offset split packages. Five remaining Cargo manifest inheritors use the construction name. The initial real native composition route exposed the old construction key; successor 38027 exposed the missing sweep key. The edits target six physical manifests including the workspace root. No compatibility alias or replacement package was introduced.
+
+A closed portable two-case corpus distinguishes a current physical package identity from a stale name after a package rename. The independent oracle is actual Cargo dependency resolution with `generate-lockfile --offline`; independent `@iarna/toml` also verifies all 41 current Framework workspace path dependency declarations against their physical package names. The new law is registered in the canonical Cargo workspace contract and focused Nx/editor gates, in both modes.
+
+The first broad preparation attempt 37541 returned two passing and thirteen failing tests. The new identity law first demonstrated that `cargo metadata --no-deps` does not resolve the name mismatch. A focused successor also showed that full metadata is not an appropriate compiler-free dependency oracle under the default compiler guard. The final law uses genuine lock resolution rather than changing that guard. Focused prototype 70256 and release 78905 both passed one test and 87 assertions (282ms/502ms test process; 405ms/636ms Nx duration). Final strict 93242 exited zero. The broad preparation suite remains red; its separate stale authority, Source-literal, evaluation and simultaneous membership failures were reported to Ingress.
+
+These outcomes validate physical dependency names and the selected composition native tests. They do not establish that all changing BREP source modules or all monorepo crates compile.

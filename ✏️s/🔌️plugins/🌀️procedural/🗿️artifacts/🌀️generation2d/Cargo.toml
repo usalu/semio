@@ -111,23 +111,8 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-dwg]
-path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-dxf]
-path = "../../../🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-s-artifact-stdio-json]
 path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-pdf]
-path = "../../../🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-png]
-path = "../../../🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-semio]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-base]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust"
@@ -137,12 +122,6 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/�
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-drawing-export]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-svg]
-path = "../../../🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-txt]
-path = "../../../🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust"
 
 [workspace.dependencies.serde]
 version = "1.0.228"

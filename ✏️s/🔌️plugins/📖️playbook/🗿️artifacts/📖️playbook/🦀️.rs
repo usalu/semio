@@ -185,8 +185,8 @@ pub fn playbook_fault_notices() -> &'static [(&'static str, semio_framework_ui_l
 }
 
 /// 🪆️ The loaded-parent child projection: the one `flow` child `snapshot` names, so a reload restores exactly that member.
-pub fn playbook_child_restore_projection(snapshot: &PlaybookSnapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| playbook_fault(PLAYBOOK_FLOW_PROJECTION, error.to_string()))
+pub fn playbook_child_restore_projection(snapshot: &PlaybookSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| playbook_fault(PLAYBOOK_FLOW_PROJECTION, error.to_string()))
 }
 
 /// 🌊️ The `flow` child content `snapshot` names, read through `children` (design §20.15: readers compose on read, never through

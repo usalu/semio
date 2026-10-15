@@ -77,7 +77,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, oneshot, watch, Mutex, Notify};
 use tokio::time::{Instant, MissedTickBehavior};
 
-use crate::authority::{AdmissionHook, AuthorityDirectory, AuthorityError, CommandBus, Committed, Decider, PolicyHook, Saga, SagaRunner, SharedStore, DIRECTORY_CAPACITY, SNAPSHOT_INTERVAL, UNAVAILABLE};
+use crate::authority::{report, AdmissionHook, AuthorityDirectory, AuthorityError, CommandBus, Committed, Decider, PolicyHook, Saga, SagaRunner, SharedStore, DIRECTORY_CAPACITY, SNAPSHOT_INTERVAL, UNAVAILABLE};
 use crate::contract::{
     ActorKey, CommandEnvelope, CommandOutcome, CommandReceipt, EphemeralFrame, EventRecord, HybridLogicalClock, ModuleManifest, OpaqueJson, PolicyDecision, PolicyPoint, PolicyTemplate, PresenceEntry, PresenceFrame, Principal, QueryEnvelope,
     QueryResult, Rejection, Revision, Scope, ServerInstanceDefinition, TenantId,
@@ -235,7 +235,7 @@ pub struct ErrorBody {
 impl IntoResponse for ServerError {
     fn into_response(self) -> Response {
         if let Self::Internal(detail) = &self {
-            crate::report("gateway", detail);
+            report("gateway", detail);
         }
         let wait = self.retry_after();
         let body = ErrorBody { kind: self.kind().to_string(), message: self.message(), retry_after_ms: wait.map(|wait| u64::try_from(wait.as_millis()).unwrap_or(u64::MAX).max(1)), allowance: self.allowance().map(str::to_string) };
@@ -254,7 +254,7 @@ impl From<StorageError> for ServerError {
         match error {
             StorageError::NotFound => Self::NotFound("storage entry not found".to_string()),
             StorageError::Conflict(_) | StorageError::SequenceGap { .. } | StorageError::LeaseLost => {
-                crate::report("gateway storage conflict", &error);
+                report("gateway storage conflict", &error);
                 Self::Conflict("the write contradicts what is stored".to_string())
             }
             StorageError::Backend(detail) => Self::Internal(detail),
@@ -1767,7 +1767,7 @@ pub const EVENT_STREAM_INBOUND_BYTES: usize = 1024;
 /// `listener.tap_io(undelayed)`.
 pub fn undelayed(connection: &mut tokio::net::TcpStream) {
     if let Err(error) = connection.set_nodelay(true) {
-        crate::report("a connection keeps delaying small writes", &error);
+        report("a connection keeps delaying small writes", &error);
     }
 }
 //#endregion 🔖️Edge

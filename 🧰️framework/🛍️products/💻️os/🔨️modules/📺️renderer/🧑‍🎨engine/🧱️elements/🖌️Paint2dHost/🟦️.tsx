@@ -30,12 +30,12 @@ import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/canvas-react-renderer";
 import { GestureRecognizer, type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type MergeMode, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type RasterWasmSession, createRasterSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
-import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { PixelEditingOverlay } from "./✍️editing/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `Canvas2dHost`/`🟦️Interpreter` already landed in a prior batch.
 import { type CanvasCamera, canvasPinchCamera, worldToScreenLogical, wheelCameraAtScreen } from "../📐️Canvas2dHost/🟦️.tsx";
-import { WindowInstanceIdContext, world3dHoverActionArgs, world3dSelectionActionArgs } from "../🌐️World3dHost/🟦️.tsx";
-import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
+import { world3dHoverActionArgs, world3dSelectionActionArgs } from "../🌐️World3dHost/🟦️.tsx";
+import { useMapContextMenuSpecs, useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 
 /** 🕹️ Raster's framework-owned layer interaction domain and its one granularity (`✏️editor/🦀️.rs`
  * `.interaction(InteractionDefinition { id: "layers", granularities: [layer] })`). */

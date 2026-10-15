@@ -123,7 +123,7 @@ struct UiWindow {
     draw: DrawList,
     viewport: (f32, f32),
     layout_job: Option<MountedLayoutJob>,
-    layout_session: Option<semio_framework_job::MountedWorkerJobSession<MountedLayoutJob>>,
+    layout_session: Option<semio_framework_job_worker::MountedWorkerJobSession<MountedLayoutJob>>,
     layout_admission: LayoutWorkerAdmission,
     layout_session_generation: Option<u64>,
     layout_closing: bool,
@@ -510,17 +510,17 @@ pub enum UiSurfaceCloseStep {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct UiWorkerRetirementRefusal { pub stage: &'static str, pub kind: semio_framework_value::ValueRefusalKind, pub progress:semio_framework_value::RetainedCloneProgress }
 
-fn close_layout_worker_session(session:&mut semio_framework_job::MountedWorkerJobSession<MountedLayoutJob>,cx:&mut StepContext<'_>)->Result<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_job::OriginalTurnFailure>{
- use semio_framework_job::{WorkerJobDemandError,WorkerJobCloseStep};
+fn close_layout_worker_session(session:&mut semio_framework_job_worker::MountedWorkerJobSession<MountedLayoutJob>,cx:&mut StepContext<'_>)->Result<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_job::OriginalTurnFailure>{
+ use semio_framework_job_worker::{WorkerJobDemandError};use semio_framework_job_worker_authority::{WorkerJobCloseStep};
  let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0{return Ok(Some(Default::default()))}
- if session.poll()!=semio_framework_job::WorkerJobPoll::CheckedOut{session.begin_close();let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(WorkerJobDemandError::Contention(_))=>return Ok(None),Err(WorkerJobDemandError::Refused(error))=>return Err(error.into())};if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(Some(Default::default()))}}
+ if session.poll()!=semio_framework_job_worker::WorkerJobPoll::CheckedOut{session.begin_close();let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(WorkerJobDemandError::Contention(_))=>return Ok(None),Err(WorkerJobDemandError::Refused(error))=>return Err(error.into())};if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(Some(Default::default()))}}
  let step=session.close_step(cx)?;match step{WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>Ok(Some(progress)),WorkerJobCloseStep::Complete{progress}if progress.fits(grant)&&session.terminal_is_empty()=>Ok(Some(progress)),WorkerJobCloseStep::Blocked=>Ok(None),step=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"UI original worker retirement receipt invariant violated").with_retained_progress(step.progress()).into())}
 }
 
 /// 🚪️ Keeps original pending parameters until session admission or paid cancellation retirement.
 #[derive(Default)]
 struct LayoutWorkerAdmission {
-    params: std::mem::ManuallyDrop<Option<semio_framework_job::BatchJobParams>>,
+    params: std::mem::ManuallyDrop<Option<semio_framework_job_worker_authority::BatchJobParams>>,
     cancel: std::mem::ManuallyDrop<Option<semio_framework_async::CancelTokenRetirement>>,
     failure: std::mem::ManuallyDrop<Option<semio_framework_value::ValueError>>,
     failure_close: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::ValueError>>>,
@@ -2278,7 +2278,7 @@ impl Ui {
             if window.layout_session_generation != Some(window.layout_generation) {
                 window.layout_closing = true;
             }
-            if session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut {
+            if session.poll() == semio_framework_job_worker::WorkerJobPoll::CheckedOut {
                 if let Some((issued, original)) = session.checked_out_retained_step_receipt() {
                     if !original.fits(*issued) {
                         let refusal = UiWorkerRetirementRefusal { stage: "Layout.OriginalReceiptInvariant", kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: *original };
@@ -2317,11 +2317,11 @@ impl Ui {
                         return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.ReturnOriginalCancel", nodes: progress.copied_items, glyphs: 0 };
                     }
                     Ok(None) => {}
-                    Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => {
+                    Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => {
                         self.enqueue_layout(window_id.as_ref());
                         return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.ReturnOriginalCancel", nodes: 0, glyphs: 0 };
                     }
-                    Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => {
+                    Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => {
                         let refusal = UiWorkerRetirementRefusal { stage: "Layout.ReturnOriginalCancel", kind: error.kind, progress: error.retained_progress() };
                         window.layout_retirement_refusal = Some(refusal);
                         return UiLayoutStep::Refused { window_id, lane, refusal };
@@ -2339,7 +2339,7 @@ impl Ui {
                 self.enqueue_layout(window_id.as_ref());
                 return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseSession", nodes: 1, glyphs: 0 };
             }
-            if session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut {
+            if session.poll() == semio_framework_job_worker::WorkerJobPoll::CheckedOut {
                 if let Some(failure) = session.checked_out_failure() {
                     let refusal=UiWorkerRetirementRefusal{stage:"Layout.WorkerRefusal",kind:failure.primary_value().map_or(semio_framework_value::ValueRefusalKind::InvariantViolated,|error|error.kind),progress:failure.primary.retained_progress()};
                     window.layout_retirement_refusal = Some(refusal);
@@ -2396,8 +2396,8 @@ impl Ui {
             let poll = session.pump_one(pool, worker_lane(lane), cx.retained_grant());
             self.enqueue_layout(window_id.as_ref());
             return match poll {
-                Ok(semio_framework_job::WorkerJobPoll::Submitted) => UiLayoutStep::Awaiting { window_id, lane },
-                Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => UiLayoutStep::Yielded { window_id, lane, stage: "Layout.WorkerTake", nodes: 0, glyphs: 0 },
+                Ok(semio_framework_job_worker::WorkerJobPoll::Submitted) => UiLayoutStep::Awaiting { window_id, lane },
+                Ok(semio_framework_job_worker::WorkerJobPoll::Outcome | semio_framework_job_worker::WorkerJobPoll::Terminal) => UiLayoutStep::Yielded { window_id, lane, stage: "Layout.WorkerTake", nodes: 0, glyphs: 0 },
                 _ => UiLayoutStep::Yielded { window_id, lane, stage: "Layout.WorkerPool.UserVisible", nodes: 0, glyphs: 0 },
             };
         }
@@ -2434,18 +2434,18 @@ impl Ui {
                         self.enqueue_layout(window_id.as_ref());
                         return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.AdmissionParameters", nodes: 0, glyphs: 0 };
                     }
-                    *window.layout_admission.params = Some(semio_framework_job::BatchJobParams {
+                    *window.layout_admission.params = Some(semio_framework_job_worker_authority::BatchJobParams {
                         operation: cx.operation(),
                         generation: cx.generation(),
                         cancel: cx.cancel_token(),
-                        config: semio_framework_job::BatchDriveConfig { retained: cx.retained_grant(), site: "ui.layout-text.worker", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+                        config: semio_framework_job_worker_authority::BatchDriveConfig { retained: cx.retained_grant(), site: "ui.layout-text.worker", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
                         now_us: cx.clock_source(),
                     });
                     cx.consume_retained(progress).expect("original layout parameter metadata was admitted before transfer");
                     self.enqueue_layout(window_id.as_ref());
                     return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.AdmissionParameters", nodes: progress.copied_items, glyphs: 0 };
                 }
-                match semio_framework_job::MountedWorkerJobSession::try_admit_owned(&mut window.layout_job, &mut window.layout_admission.params, cx) {
+                match semio_framework_job_worker::MountedWorkerJobSession::try_admit_owned(&mut window.layout_job, &mut window.layout_admission.params, cx) {
                     Ok(Some((session, progress))) => {
                         window.layout_session = Some(session);
                         window.layout_session_generation = Some(window.layout_generation);

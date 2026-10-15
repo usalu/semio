@@ -3,6 +3,20 @@ mod typed_command_full_operation_tests {
     use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
     use crate::publication_fixture::{ChangePublicationPresence, PublicationPresence, PublicationPresenceMutation};
 
+    /// 🧵️ Source text of the mounted artifact instance: the parent file followed by its impl-band children in file order.
+    fn instance_source() -> String {
+        [
+            include_str!("../../🧵️instance/🦀️.rs"),
+            include_str!("../../🧵️instance/🚪️ingress/🦀️.rs"),
+            include_str!("../../🧵️instance/📨️dispatch/🦀️.rs"),
+            include_str!("../../🧵️instance/🖼️render/🦀️.rs"),
+            include_str!("../../🧵️instance/🧷️command-routes/🦀️.rs"),
+            include_str!("../../🧵️instance/🧾️typed-operations/🦀️.rs"),
+            include_str!("../../🧵️instance/🔌️plugin-app-impl/🦀️.rs"),
+        ]
+        .concat()
+    }
+
     const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️full-operation/🧪️tests/🧫️fixtures/🔣️.json");
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1376,7 +1390,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn typed_child_publication_has_one_retained_async_group_owner_and_never_clone_publishes() {
-        let source = include_str!("../../🧵️instance/🦀️.rs");
+        let source = instance_source();
         let child_start = source.rfind("async fn publish_mounted_typed_child_operation_unit(").expect("retained child publisher");
         let child_end = source[child_start..].find("fn publish_mounted_typed_operation_unit(").map(|offset| child_start + offset).expect("retained child publisher end");
         let child_publisher = &source[child_start..child_end];
@@ -1403,7 +1417,7 @@ mod typed_command_full_operation_tests {
     /// is asserted directly, as the order decoder → gate → reducer entry.
     #[test]
     fn full_operation_source_rejects_generic_reducers_and_old_monolithic_shells() {
-        let source = [include_str!("../../🧵️retained-command/🔄️full-operation/🦀️.rs"), include_str!("../../🧵️instance/🦀️.rs")].concat();
+        let source = [include_str!("../../🧵️retained-command/🔄️full-operation/🦀️.rs").to_string(), instance_source()].concat();
         let start = source.find("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>").expect("typed full-operation job");
         let end = source[start..].find("struct TypedCommandFullOperationJobFactory").map(|offset| start + offset).expect("typed full-operation factory");
         let job = &source[start..end];
@@ -1441,7 +1455,7 @@ mod typed_command_full_operation_tests {
     /// named by its own call — a new `.await` anywhere in the publisher fails here by name.
     #[test]
     fn fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers() {
-        let source = include_str!("../../🧵️instance/🦀️.rs");
+        let source = instance_source();
         let admission_marker = ["async fn admit_command_json_with_", "proof(&self"].concat();
         let admission_start = source.rfind(&admission_marker).expect("production raw JSON admission");
         let admission_end = source[admission_start..].find("pub async fn new(app: A, actor").map(|offset| admission_start + offset).expect("admission route end");
@@ -1523,7 +1537,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn host_configuration_uses_one_bounded_event_sourced_lane_before_the_generic_gate() {
-        let source = include_str!("../../🧵️instance/🦀️.rs");
+        let source = instance_source();
         let start = source.find("pub(crate) async fn dispatch_action").expect("action route");
         let end = source[start..].find("async fn dispatch_command(").map(|offset| start + offset).expect("command route");
         let route = &source[start..end];

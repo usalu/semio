@@ -1,4 +1,5 @@
 //! 🏠️ Artifact document-store and publication authorities.
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -54,7 +55,7 @@ struct Generation2dPublicationLease {
     terminal: bool,
 }
 
-impl semio_framework_job::FixedOperationOwner for Generation2dPublicationLease {
+impl semio_framework_job_registry::FixedOperationOwner for Generation2dPublicationLease {
     fn retained_bytes(&self) -> usize {
         size_of::<Self>()
     }
@@ -87,10 +88,10 @@ impl semio_framework_job::FixedOperationOwner for Generation2dPublicationLease {
     }
 }
 
-type Generation2dPublicationRegistry = semio_framework_job::FixedOperationRegistry<Generation2dPublicationLease, GENERATION2D_PUBLICATION_SLOTS>;
+type Generation2dPublicationRegistry = semio_framework_job_registry::FixedOperationRegistry<Generation2dPublicationLease, GENERATION2D_PUBLICATION_SLOTS>;
 
 fn generation2d_publication_leases() -> &'static std::sync::Mutex<Generation2dPublicationRegistry> {
-    static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job::FixedOperationRegistry<Generation2dPublicationLease, GENERATION2D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
+    static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job_registry::FixedOperationRegistry<Generation2dPublicationLease, GENERATION2D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
     LEASES.get_or_init(|| std::sync::Mutex::new(Generation2dPublicationRegistry::new(GENERATION2D_PUBLICATION_SLOTS * size_of::<Generation2dPublicationLease>())))
 }
 
@@ -130,13 +131,13 @@ pub fn generation2d_admit_publication_authority(
 /// an unrelated host publication mapping to the same slot. The host drives one replacement per instance at a time, so this
 /// authority holds exactly one lease and a new self-grant supersedes the load the host already abandoned; it is released
 /// through `generation2d_release_app_publication_authority` at validation, cancellation, fault and initializer close.
-fn generation2d_app_publication_lease() -> &'static std::sync::Mutex<Option<(semio_framework_job::FixedOperationKey, Generation2dPublicationLease)>> {
-    static LEASE: std::sync::OnceLock<std::sync::Mutex<Option<(semio_framework_job::FixedOperationKey, Generation2dPublicationLease)>>> = std::sync::OnceLock::new();
+fn generation2d_app_publication_lease() -> &'static std::sync::Mutex<Option<(semio_framework_job_registry::FixedOperationKey, Generation2dPublicationLease)>> {
+    static LEASE: std::sync::OnceLock<std::sync::Mutex<Option<(semio_framework_job_registry::FixedOperationKey, Generation2dPublicationLease)>>> = std::sync::OnceLock::new();
     LEASE.get_or_init(|| std::sync::Mutex::new(None))
 }
 
 /// 🔎️ One lease by its exact key, from the host table first and the app self-grant second.
-fn generation2d_publication_lease_by_key(key: semio_framework_job::FixedOperationKey) -> Result<Option<Generation2dPublicationLease>, &'static str> {
+fn generation2d_publication_lease_by_key(key: semio_framework_job_registry::FixedOperationKey) -> Result<Option<Generation2dPublicationLease>, &'static str> {
     let leases = generation2d_publication_leases().try_lock().map_err(|_| "generation2d-publication.contended")?;
     if let Some(lease) = leases.get(key) {
         return Ok(Some(*lease));
@@ -224,7 +225,7 @@ struct Generation2dStoreInitializationAuthority {
     closer: std::mem::ManuallyDrop<Option<semio_framework_plugin::ArtifactStoreInitializationJob<Generation2dSnapshot, Generation2dMutation>>>,
     snapshot_factory: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Generation2dSnapshot>>>>,
     factory_close: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
-    publication: semio_framework_job::RetainedJobPublication,
+    publication: semio_framework_job_publication::RetainedJobPublication,
     edit_index: store::ArtifactStoreInitializationEditIndex,
     phase: Generation2dStoreInitializationPhase,
     resume_phase: Option<Generation2dStoreInitializationPhase>,
@@ -550,13 +551,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
                         return JobOutcomeBorrow::admit_cancelled(cx);
                     }
                     self.phase = Generation2dStoreInitializationPhase::Fault;
-                    return self.publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(GENERATION2D_INITIALIZER_DEFAULT_FAULT), cx);
+                    return self.publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(GENERATION2D_INITIALIZER_DEFAULT_FAULT), cx);
                 }
                 Err(_) => self.fail(b"generation2d-store.initializer-close"),
             },
             Generation2dStoreInitializationPhase::Complete => return JobOutcomeBorrow::admit_complete(cx, None, None),
             Generation2dStoreInitializationPhase::Cancelled => return JobOutcomeBorrow::admit_cancelled(cx),
-            Generation2dStoreInitializationPhase::Fault => return self.publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(GENERATION2D_INITIALIZER_DEFAULT_FAULT), cx),
+            Generation2dStoreInitializationPhase::Fault => return self.publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(GENERATION2D_INITIALIZER_DEFAULT_FAULT), cx),
         }
         cx.consume_fuel(1);
         Ok(None)
@@ -613,8 +614,8 @@ pub const GENERATION2D_MOUNTED_CONTROL_CREDITS: usize = 1;
 
 const GENERATION2D_PUBLICATION_SLOTS: usize = 4;
 
-fn generation2d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::FixedOperationKey {
-    semio_framework_job::FixedOperationKey::new(operation, generation)
+fn generation2d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job_registry::FixedOperationKey {
+    semio_framework_job_registry::FixedOperationKey::new(operation, generation)
 }
 
 /// 🧮️ Domain credits admitted together for one publication authority.
@@ -876,7 +877,7 @@ impl Generation2dStoreInitializationAuthority {
             closer: std::mem::ManuallyDrop::new(None),
             snapshot_factory: std::mem::ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()))),
             factory_close: std::mem::ManuallyDrop::new(None),
-            publication: semio_framework_job::RetainedJobPublication::new(),
+            publication: semio_framework_job_publication::RetainedJobPublication::new(),
             edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             resume_phase: None,
             phase: Generation2dStoreInitializationPhase::ValidateEnvelope,

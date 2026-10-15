@@ -14,7 +14,7 @@ use semio_framework_plugin::ExampleSource;
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use std::sync::OnceLock;
 
-/// 🎯️ `s.stdio.binary@raw/*` — `CARRIER_BINARY` in `semio_framework::io_schema`.
+/// 🎯️ `s.stdio.binary@raw/*` — this artifact's own dialect; its native `Binary` payload equals the framework carrier `CARRIER_BINARY`.
 pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

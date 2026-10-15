@@ -35,7 +35,7 @@ fn applied() -> LayoutSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn stores_the_complete_typed_dictionary() {
     let after = applied();
-    assert_eq!(after.data_fields, Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"client".into(),value:semio_framework_value::DslValue::String("acme".into())}]}), "change-data-fields preserves the typed client value");
+    assert_eq!(after.data_fields, Some(semio_framework_value_dictionary::QuestionDictionary{entries:vec![semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"client".into(),value:semio_framework_value::DslValue::String("acme".into())}]}), "change-data-fields preserves the typed client value");
     assert!(after.print_target.is_none(), "change-data-fields must not touch the print target");
     assert_eq!(after.name, "Fixture Layout", "change-data-fields must not rename the document");
     assert_eq!(after, expected_after(), "change-data-fields/attaches-a-data-fields-payload: applied state differs from the committed after-snapshot");
@@ -80,7 +80,7 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-data-fields/attaches-a-data-fields-payload: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    assert_eq!(produced.diff().data_fields, Some(semio_s_artifact_layout_layout_diff::LayoutDataFieldsDelta { presence: Some(semio_s_artifact_layout_layout_diff::DataFieldsPresence::Created), entries: Some(semio_s_artifact_layout_layout_diff::LayoutDataEntriesDelta { inserted: vec![semio_s_artifact_layout_layout_diff::LayoutDataEntryInsertion { index: 0, row: semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry { question_id: "client".into(), value: semio_framework_value::DslValue::String("acme".into()) } }], ..Default::default() }) }), "change-data-fields replaces the optional dictionary");
+    assert_eq!(produced.diff().data_fields, Some(semio_s_artifact_layout_layout_diff::LayoutDataFieldsDelta { presence: Some(semio_s_artifact_layout_layout_diff::DataFieldsPresence::Created), entries: Some(semio_s_artifact_layout_layout_diff::LayoutDataEntriesDelta { inserted: vec![semio_s_artifact_layout_layout_diff::LayoutDataEntryInsertion { index: 0, row: semio_framework_value_dictionary::QuestionDictionaryEntry { question_id: "client".into(), value: semio_framework_value::DslValue::String("acme".into()) } }], ..Default::default() }) }), "change-data-fields replaces the optional dictionary");
     assert!(produced.diff().print_target.is_none(), "change-data-fields leaves `print_target` untouched in the diff");
 }
 

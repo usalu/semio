@@ -823,7 +823,7 @@ fn agent_lane_uncarried_lanes(publication: &AgentLanePublication<'_>) -> Vec<&'s
     AGENT_LANE_UNCARRIED_LANES.into_iter().filter(|lane| found.contains(lane) && (publication.carried_ops == 0 || !AGENT_LANE_PRESENTATION_LANES.contains(lane))).collect()
 }
 
-/// 🏃️ Drives one previewed job on the calling turn through the SAME [`semio_framework_job::BatchJobSession`] step,
+/// 🏃️ Drives one previewed job on the calling turn through the SAME [`semio_framework_job_worker::BatchJobSession`] step,
 /// checkpoint and close protocol a worker runs: every step is bounded by the job's own contract (`params.config`),
 /// the run by [`AGENT_LANE_PREVIEW_WALL_US`], [`AGENT_LANE_PREVIEW_TURNS`] and `params.cancel`, and every progress,
 /// checkpoint or yield payload is released before the next step. Answers how many outcomes the job reported up to
@@ -843,7 +843,7 @@ pub(crate) struct ChildEmissionPreviewJob<A:ArtifactApp>{
     pub(crate) completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
     pub(crate) maximum_bytes:usize,
     pub(crate) wire_mode:bool,
-    pub(crate) fault_publication:semio_framework_job::RetainedFaultPublication,
+    pub(crate) fault_publication:semio_framework_job_fault_publication::RetainedFaultPublication,
     pub(crate) closing:bool,
 }
 
@@ -943,7 +943,7 @@ pub(crate) struct AgentLanePreview<A:ArtifactApp>{
     pub(crate) completion_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletion<A>>>,
     pub(crate) lease:Option<crate::tool_cancellation::ToolCancellationLease>,
     pub(crate) lease_close:Option<Box<crate::tool_cancellation::ToolCancellationLeaseRetirement>>,
-    pub(crate) config:semio_framework_job::BatchDriveConfig,
+    pub(crate) config:semio_framework_job_worker_authority::BatchDriveConfig,
     pub(crate) maximum_bytes:usize,
     pub(crate) steps:u64,
     pub(crate) publication:Option<ArtifactToolCompletionValue<A>>,
@@ -977,8 +977,8 @@ impl<A:ArtifactApp> AgentLanePreview<A>{
 }
 pub(crate) struct OriginalPreviewDrive<J:semio_framework_job::InteractiveJob+'static>{
     pending:Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<J>>,
-    session:Option<semio_framework_job::BatchJobSession<J>>,
-    config:semio_framework_job::BatchDriveConfig,
+    session:Option<semio_framework_job_worker::BatchJobSession<J>>,
+    config:semio_framework_job_worker_authority::BatchDriveConfig,
     source:(semio_framework_job::OperationId,semio_framework_job::Generation),
     steps:u64,
     acknowledgement_pending:bool,
@@ -988,10 +988,10 @@ pub(crate) struct OriginalPreviewDrive<J:semio_framework_job::InteractiveJob+'st
     verdict_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Result<u64,semio_framework_job::OriginalTurnFailure>>>,
 }
 impl<J:semio_framework_job::InteractiveJob+'static> OriginalPreviewDrive<J>{
-    pub(crate) fn new(job:J,config:semio_framework_job::BatchDriveConfig,cx:&semio_framework_job::StepContext<'_>)->Self{Self{pending:Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()))),session:None,config,source:(cx.operation(),cx.generation()),steps:0,acknowledgement_pending:false,resume_pending:false,closing:false,verdict:None,verdict_close:None}}
+    pub(crate) fn new(job:J,config:semio_framework_job_worker_authority::BatchDriveConfig,cx:&semio_framework_job::StepContext<'_>)->Self{Self{pending:Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()))),session:None,config,source:(cx.operation(),cx.generation()),steps:0,acknowledgement_pending:false,resume_pending:false,closing:false,verdict:None,verdict_close:None}}
     pub(crate) fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         if let Some(owner)=self.pending.as_ref(){return owner.retirement_demands(body)}
-        if let Some(owner)=self.session.as_ref(){return owner.retirement_demands(body).map_err(|source|match source{semio_framework_job::WorkerJobDemandError::Refused(source)=>source,semio_framework_job::WorkerJobDemandError::Contention(_)=>semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original preview producer remains checked out")})}
+        if let Some(owner)=self.session.as_ref(){return owner.retirement_demands(body).map_err(|source|match source{semio_framework_job_worker::WorkerJobDemandError::Refused(source)=>source,semio_framework_job_worker::WorkerJobDemandError::Contention(_)=>semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original preview producer remains checked out")})}
         semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.verdict,&self.verdict_close,body)
     }
     pub(crate) fn begin_close(&mut self){self.closing=true;if let Some(session)=self.session.as_mut(){session.begin_close()}}
@@ -1003,7 +1003,8 @@ impl<J:semio_framework_job::InteractiveJob+'static> OriginalPreviewDrive<J>{
         Ok(if self.cancellation_terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()}})
     }
     pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_job::{InteractiveJobCloseStep as Close,WorkerJobCloseStep as Worker};
+        use semio_framework_job::{InteractiveJobCloseStep as Close};
+use semio_framework_job_worker_authority::{WorkerJobCloseStep as Worker};
         if self.source!=(cx.operation(),cx.generation()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview close requires its original initiating source").into())}
         if cx.should_yield(){return Ok(Close::Pending{progress:Default::default()})}
         self.begin_close();
@@ -1013,7 +1014,7 @@ impl<J:semio_framework_job::InteractiveJob+'static> OriginalPreviewDrive<J>{
     }
 }
 pub(crate) fn drive_agent_lane_preview<J:semio_framework_job::InteractiveJob+'static>(owner:&mut OriginalPreviewDrive<J>,verb:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<u64>,semio_framework_job::OriginalTurnFailure>{
-    use semio_framework_job::WorkerJobPoll as Poll;
+    use semio_framework_job_worker::{WorkerJobPoll as Poll};
     if owner.source!=(cx.operation(),cx.generation()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview continuation requires its initiating source").into())}
     if cx.should_yield(){return Ok(None)}
     if owner.closing{

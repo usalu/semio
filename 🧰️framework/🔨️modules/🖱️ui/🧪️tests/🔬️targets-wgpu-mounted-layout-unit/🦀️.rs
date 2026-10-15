@@ -176,16 +176,16 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     let mut job = text_job(&tree, root);
     let source=ui_contract::UI_WORKER_RETIREMENT_POLICY;let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(29),semio_framework_job::Generation(11),source,clock_zero,1000,1);
     assert!(matches!(admit(&mut job, &tree, caller.cancel()), LayoutJobStep::Yield { .. }));
-    let params = semio_framework_job::BatchJobParams {
+    let params = semio_framework_job_worker_authority::BatchJobParams {
         operation: semio_framework_job::OperationId(29),
         generation: semio_framework_job::Generation(11),
         cancel: caller.admit_alias(source),
-        config: semio_framework_job::BatchDriveConfig { retained:ui_contract::UI_WORKER_RETIREMENT_POLICY, site: "ui.layout-text.worker.law", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
+        config: semio_framework_job_worker_authority::BatchDriveConfig { retained:ui_contract::UI_WORKER_RETIREMENT_POLICY, site: "ui.layout-text.worker.law", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: clock_zero,
     };
     let mut original_job = Some(job);
     let mut original_params = Some(params);
-    let (admitted, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(source,|cx|semio_framework_job::MountedWorkerJobSession::try_admit_owned(&mut original_job,&mut original_params,cx).map_err(semio_framework_job::OriginalTurnFailure::from)));
+    let (admitted, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(source,|cx|semio_framework_job_worker::MountedWorkerJobSession::try_admit_owned(&mut original_job,&mut original_params,cx).map_err(semio_framework_job::OriginalTurnFailure::from)));
     let (mut session, birth) = admitted.expect("original mounted worker authority").expect("mounted worker session credit");
     assert_eq!((birth.retained_capacity_bytes, birth.released_bytes), (heap.requested_bytes, heap.released_bytes));
     assert_eq!(caller.receipt(), birth);
@@ -196,7 +196,7 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     let lane = semio_framework_async::Lane::UserVisible;
     for _ in 0..10_000 {
         let _ = session.pump_one(&pool, lane, ui_contract::UI_WORKER_RETIREMENT_POLICY);
-        if session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut {
+        if session.poll() == semio_framework_job_worker::WorkerJobPoll::CheckedOut {
             break;
         }
         std::thread::yield_now();

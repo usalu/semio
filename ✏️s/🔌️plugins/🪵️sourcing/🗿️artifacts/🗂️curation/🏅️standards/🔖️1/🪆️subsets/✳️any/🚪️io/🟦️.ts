@@ -20,7 +20,7 @@ const PNG = "s.stdio.png@1.2/*";
 const JSON_DIALECT = "s.stdio.json@rfc8259/*";
 const STL = "s.stdio.stl@ascii/*";
 const OBJ = "s.stdio.obj@3.0/*";
-const TXT = "s.stdio.txt@utf-8/*";
+const TXT = "framework.io.text@utf-8/*";
 
 export const ioEntries: IoEntryDescriptorMirror[] = [
   { from: CURATION, into: ZIP, fidelity: "Lossy", sniffs: false },

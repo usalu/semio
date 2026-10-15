@@ -115,7 +115,7 @@ pub fn handle(payload: &PatchDocument, doc: &ArtifactView<'_, LayoutSnapshot>, _
     let mutation = match payload.field.as_str() {
         "name" => LayoutMutation::RenameLayout(RenameLayout { new_name: payload.value.clone() }),
         "printTarget" => LayoutMutation::ChangePrintTarget(ChangePrintTarget { new_print_target: present(&payload.value) }),
-        "dataFields"=>{let new_fields=if payload.value.is_empty(){None}else{Some(semio_framework_pack_json::from_json_str::<semio_s_artifact_forms_forms::schema::dictionary::FormDictionary>(&payload.value,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|Fault::new(semio_framework_diagnostic::FaultOrigin::App,"layout.dictionary.invalid",error.into_message()))?)};LayoutMutation::ChangeDataFields(ChangeDataFields{new_fields})},
+        "dataFields"=>{let new_fields=if payload.value.is_empty(){None}else{Some(semio_framework_pack_json::from_json_str::<semio_framework_value_dictionary::QuestionDictionary>(&payload.value,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|Fault::new(semio_framework_diagnostic::FaultOrigin::App,"layout.dictionary.invalid",error.into_message()))?)};LayoutMutation::ChangeDataFields(ChangeDataFields{new_fields})},
         "baselineGrid" => match payload.value.parse::<f64>() {
             Ok(baseline_grid) => LayoutMutation::UpdateGrid(UpdateGrid { baseline_grid, baseline_offset: grid.baseline_offset, snap_to_baseline: grid.snap_to_baseline }),
             Err(_) => return Ok(Emit::default()),

@@ -17,3 +17,21 @@ pub fn layout() -> WindowLayout {
     create_default_layout(&[world::WINDOW_KIND_ID.into(), plan::WINDOW_KIND_ID.into()], "row", Some(&[60.0, 40.0]), None)
 }
 //#endregion 🔖️Definition
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod windows {
+    #[path = "."]
+    pub mod world {
+        #[path = "🪟️windows/🧊️world/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod plan {
+        #[path = "🪟️windows/🗺️plan/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+}
+//#endregion 🧩️Modules

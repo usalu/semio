@@ -22,6 +22,7 @@ import { NODE_DRAG_OPERATION, NODE_DRAG_ROW_FIELDS } from "../../../../../../../
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
@@ -39,7 +40,7 @@ const law = JSON.parse(readFileSync(resolve(engineRoot, "🧪️tests/🧫️fix
   readonly operationFields: Record<string, readonly string[]>;
 };
 
-const canvas = readFileSync(canvasSource, "utf8");
+const canvas = readModuleTreeSource(canvasSource);
 const guest = readFileSync(guestSource, "utf8");
 
 /** 🔗️ The field names the GUEST reads out of one `nodeGraphEdit` sub-operation: the closed field list its own match arm
@@ -76,7 +77,7 @@ describe("node graph gestures", () => {
   });
 
   it("writes each of those fields, under that name, in the ONE row encoder both renderers use", () => {
-    const dag = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"), "utf8");
+    const dag = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"));
     const encoder = dag.slice(dag.indexOf("pub fn write_dag_graph_edit_rows"));
     const body = encoder.slice(0, encoder.indexOf("\n}\n"));
     for (const [operation, fields] of Object.entries(law.operationFields)) {
@@ -149,12 +150,12 @@ describe("node graph gestures", () => {
     // 🩸️ A bounded drag wrote the new positions into the fixture layout and told the guest nothing, so
     // every dragged node snapped back on the next fixture push; an absolute position per node then made the
     // guest's edit unreplayable on any other base. Every host now writes the ONE gesture record (design §13.3).
-    const dag = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"), "utf8");
+    const dag = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"));
     const plan = dag.slice(dag.indexOf("pub fn plan_graph_edits"));
     const body = plan.slice(0, plan.indexOf("\n    }\n"));
     expect(body).toContain("plan.drag.filter(|_| plan.previous_active && matches!(plan.next.gesture, DagProjectionGesture::Idle))");
     expect(body).toContain("DagGraphEdit::Move { gesture_id: dag_drag_gesture_id(drag.press), node_ids, dx: drag.dx, dy: drag.dy }");
-    const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
+    const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🔷️diagram-node/🟦️.tsx"), "utf8");
     const dragStop = reactGraph.slice(reactGraph.indexOf("onNodeDragStop={"));
     expect(dragStop.slice(0, dragStop.indexOf("onConnect="))).toContain("nodeDragRow(");
     expect(law.rules.aReleasedDragPublishesMove).toContain("once, on release");
@@ -173,7 +174,7 @@ describe("node graph gestures", () => {
     expect(commitBody).toContain("if let Err(refusal) = self.journal_gesture_moves(&baseline)");
     expect(commitBody).toContain("self.dag.carry_journal_refusal(refusal);");
     expect(flowHost).toContain("self.dag.journal_port_insert(widget_id, side, index);");
-    const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
+    const reactGraph = readModuleTreeSource(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"));
     expect(reactGraph).not.toContain("commitFixture");
     expect(reactGraph).not.toContain("hostSnapshotChanged");
     expect(reactGraph).toContain("dispatchGraphEdits();");
@@ -181,7 +182,7 @@ describe("node graph gestures", () => {
   });
 
   it("publishes the flow-graph viewport only after a camera gesture settles, not on every selection sync", () => {
-    const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
+    const reactGraph = readModuleTreeSource(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"));
     let searchFrom = 0;
     let emitCount = 0;
     while (searchFrom < reactGraph.length) {
@@ -202,7 +203,7 @@ describe("node graph gestures", () => {
     // pressing and seeing what happened. `DagScreenHit` is the one classification, `is_screen_path`
     // routes from it and `is_draggable_body` reports from it, so a press can never be explained by a
     // different hit test than the one that routed it.
-    const dag = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"), "utf8");
+    const dag = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"));
     const begins = dag.slice(dag.indexOf("pub fn screen_pointer_gesture_begins_at"));
     expect(begins.slice(0, begins.indexOf("\n    }\n"))).toContain("self.screen_hit(sx, sy).is_screen_path()");
     const hit = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🦀️.rs"), "utf8");

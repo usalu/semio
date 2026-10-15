@@ -16,7 +16,7 @@ use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{BrepError, BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepOperation, BrepOperationAdmission, BrepOperationJob, BrepOperationStep, GeometryHandle, GeometryKind};
-use semio_framework_3d_brep_operations::boolean::BooleanOp;
+use semio_framework_3d_brep_boolean::BooleanOp;
 use std::collections::VecDeque;
 use std::sync::Arc;
 

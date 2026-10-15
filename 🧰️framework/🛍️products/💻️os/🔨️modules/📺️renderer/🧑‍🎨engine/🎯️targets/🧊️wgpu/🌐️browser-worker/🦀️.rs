@@ -229,7 +229,7 @@ impl BrowserRendererWorker {
     #[wasm_bindgen(js_name=admitOriginalFrame)]
     pub fn admit_original_frame(&mut self,operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize)->bool{
         let original=self.original_frame.as_mut().expect("original frame entry available").admit_step(original_frame_input(operation,generation,epoch,items,copy,capacity,release,depth));
-        let reply=semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply::borrow_original(&original);self.original_receipt.write_admission(&reply);reply.ready
+        let reply=semio_framework_actor::retained_context::OriginalActorAdmissionReply::borrow_original(&original);self.original_receipt.write_admission(&reply);reply.ready
     }
     /// 🧾️ Scalar reads borrow the same inline native tuple without an output allocation.
     #[wasm_bindgen(js_name=originalFrameReceiptScalar)]
@@ -469,7 +469,7 @@ impl BrowserRendererWorker {
     #[wasm_bindgen(js_name=closeOriginalFrameContext)]
     pub fn close_original_frame_context(&mut self,operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize)->bool{
         let original=self.original_frame.as_mut().expect("original frame entry available").close_step(original_frame_input(operation,generation,epoch,items,copy,capacity,release,depth));
-        let reply=semio_framework_actor::retained_turn::context::OriginalActorCloseReply::borrow_original(&original);self.original_receipt.write_close(&reply);reply.complete
+        let reply=semio_framework_actor::retained_context::OriginalActorCloseReply::borrow_original(&original);self.original_receipt.write_close(&reply);reply.complete
     }
     /// 🧵️ Executes one private decoder opportunity without producing a frame or input acknowledgement.
     #[wasm_bindgen(js_name = assetDecodeStep)]
@@ -495,7 +495,7 @@ impl BrowserRendererWorker {
         let entry=self.original_frame.as_mut().expect("original frame entry available");
         if entry.original_job_refusal().is_some()||entry.original_fault().is_some(){
             let original=entry.publish_failure_call(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),&mut recipient,original_frame_now_us);
-            let authority=match &original.result{Err(semio_framework_actor::retained_turn::context::OriginalActorCallError::Authority(error))=>Some(error.kind),_=>None};
+            let authority=match &original.result{Err(semio_framework_actor::retained_context::OriginalActorCallError::Authority(error))=>Some(error.kind),_=>None};
             self.original_receipt.write(semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedCall{input:original.input,spent:original.receipt_spent,work_units_spent:original.work_units_spent,kind:semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedKind::Failure{authority}});
             return match original.result{Ok(Some(descriptor))=>{self.original_failure_output=Some(descriptor);Ok(2)},Ok(None)=>Ok(0),Err(_)=>Err(js_error("original-frame-failure-publication","original failure publication retains its native cause"))};
         }

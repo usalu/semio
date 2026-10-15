@@ -20,3 +20,6 @@ semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️produc
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-space-home = { path = "../🗿️artifacts/🏠️home/📦️packages/🦀️rust" }
 semio-s-artifact-space-space = { path = "../🗿️artifacts/🪐️space/📦️packages/🦀️rust" }
+
+[profile.prototype]
+inherits = "dev"

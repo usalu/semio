@@ -8,9 +8,11 @@ import { type JsonMap, readStdioJson, slashStdioPath, STDIO_RELATIVE_ROOT, stdio
 import { assertStdioArtifactSchema, assertStdioArtifactSourceContract } from "../../🏘️composition/🛂️artifact-contract/🟦️.ts";
 import { assertStdioArtifactCargoMetadata, assertStdioArtifactBuildGraph, stdioCargoMetadata,readStdioArtifactBuildGraphPin } from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
 import Ajv from "ajv";
+import type {ScriptInvocation} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import pinSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️pin.json";
 
 type CommandOwnership = Readonly<{
+  cargoMetadata:Readonly<{owner:string;function:string;invocation:string;custody:readonly string[];capture:string;program:string;control:string;maximumBytes:number;maximumLines:number}>;
   packageRouting:readonly Readonly<{platform:"posix"|"win32";root:string;package:string;script:string;target:string;accepted:boolean}>[];
   owners: readonly Readonly<{ id: string; path: string; exports: readonly string[] }>[];
   routers: readonly Readonly<{ id: "root" | "composition-package"; path: string; defaultCommand: string; commands: readonly string[] }>[];
@@ -58,20 +60,20 @@ function routedCommands(path: string): Readonly<{ commands: string[]; defaultCom
 }
 
 /** 🔍️ Validates schema fixtures, declarations, workspaces and Cargo's own metadata projection. */
-export async function testStdioArtifactPackageContract(repoRoot: string): Promise<void> {
+export async function testStdioArtifactPackageContract(repoRoot:string,invocation:ScriptInvocation): Promise<void> {
   const stdioRoot = join(repoRoot, STDIO_RELATIVE_ROOT);
   const contract = stdioArtifactPackageContract(repoRoot, stdioRoot);
   await assertStdioArtifactSchema(contract, stdioRoot);
   await assertStdioArtifactSourceContract(repoRoot, contract, stdioRoot);
-  assertStdioArtifactCargoMetadata(repoRoot, contract, await stdioCargoMetadata(repoRoot));
+  assertStdioArtifactCargoMetadata(repoRoot, contract, await stdioCargoMetadata(repoRoot,invocation));
   console.log(`[stdio-package-contract] source packages=${contract.packages.length} dag=valid`);
 }
 
 /** 🕸️ Compares declared artifact dependencies with Cargo metadata and the portable build graph. */
-export async function testStdioArtifactPackageGraph(repoRoot: string): Promise<void> {
+export async function testStdioArtifactPackageGraph(repoRoot:string,invocation:ScriptInvocation): Promise<void> {
   verifyStdioBuildGraphPinFixtures(repoRoot);
   const contract = stdioArtifactPackageContract(repoRoot);
-  await assertStdioArtifactBuildGraph(repoRoot, contract, await stdioCargoMetadata(repoRoot));
+  await assertStdioArtifactBuildGraph(repoRoot, contract, await stdioCargoMetadata(repoRoot,invocation));
 }
 
 /** 📌️ Checks exact-pin admission and changed-byte refusal against independent schema and SHA oracles. */
@@ -86,6 +88,15 @@ export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot())
   const stdioRoot = join(repoRoot, STDIO_RELATIVE_ROOT);
   const compositionRoot = join(repoRoot, "✏️s/🧑‍💻dev/🗄️stdio");
   const fixture = readStdioJson(join(compositionRoot, "🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json")) as CommandOwnership;
+  const metadata=fixture.cargoMetadata,source=sourceFile(join(repoRoot,metadata.owner)),entry=source.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===metadata.function);assert(entry,"Current Stdio metadata owner required");
+  const original=entry.parameters.find(node=>ts.isIdentifier(node.name)&&node.name.text===metadata.invocation);assert(original&&!original.questionToken&&!original.initializer,"Required Original Stdio invocation required");
+  const calls:ts.CallExpression[]=[];const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node))calls.push(node);ts.forEachChild(node,visit);};visit(entry);
+  for(const name of [...metadata.custody,metadata.capture,"checkScriptInvocation","nativeCallerPhaseV1"])assert(calls.some(node=>ts.isIdentifier(node.expression)&&node.expression.text===name),`Stdio metadata misses original owned ${name}`);
+  assert(calls.filter(node=>ts.isPropertyAccessExpression(node.expression)&&node.expression.expression.getText(source)==="phase"&&node.expression.name.text==="advance").length>=2,"Original Stdio admission and per-manifest progress required");
+  const capture=calls.find(node=>ts.isIdentifier(node.expression)&&node.expression.text===metadata.capture)!;assert.equal(capture.arguments[0]?.getText(source),metadata.program);
+  const options=capture.arguments[3];assert(options&&ts.isObjectLiteralExpression(options));const control=options.properties.find(node=>(ts.isPropertyAssignment(node)||ts.isShorthandPropertyAssignment(node))&&node.name.getText(source)==="control");assert.equal(control&&(ts.isPropertyAssignment(control)?control.initializer.getText(source):ts.isShorthandPropertyAssignment(control)?control.name.text:undefined),metadata.control);
+  const parents:string[]=[];for(let node:ts.Node|undefined=capture.parent;node;node=node.parent)if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression))parents.push(node.expression.text);for(const name of metadata.custody)assert(parents.includes(name),`Stdio capture escapes ${name}`);
+  assert(!source.statements.some(node=>ts.isImportDeclaration(node)&&ts.isStringLiteral(node.moduleSpecifier)&&node.moduleSpecifier.text==="node:child_process"),"Stdio metadata cannot own an unbound process launcher");
   for (const owner of fixture.owners) {
     const path = join(repoRoot, owner.path);
     assert(existsSync(path), `missing stdio owner ${owner.id}: ${owner.path}`);

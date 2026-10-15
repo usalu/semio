@@ -591,7 +591,7 @@ impl ArtifactEditor for PlaybookPlayApp {
     }
 
     /// 🪆️ The one `flow` member a loaded parent restores — see `crate::playbook_child_restore_projection`.
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         crate::playbook_child_restore_projection(snapshot)
     }
 

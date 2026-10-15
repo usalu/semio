@@ -155,7 +155,7 @@ export function readBuildGraphAncestorSelectionV1(root:string,value:unknown):Bui
  if(validateJsonSchemaSubset(authoringSchema,caller).length||typeof caller.workspaceRoot!=="string"||!isAbsolute(caller.workspaceRoot)||resolve(caller.workspaceRoot)!==resolve(root))throw Error("Original nested build caller authority required");
  const namespace=caller.arguments![0];if(!["repo","nx"].includes(namespace!)||caller.selection![0]!==namespace||!caller.launches!.some(launch=>JSON.stringify(launch)===JSON.stringify(caller.selection)))throw Error("Original nested build launch authority required");
  const selection=(args:readonly string[])=>{if(args[0]!==namespace)throw Error("Original nested build namespace changed");const parsed=parseBuildInvocationV1(args.slice(1),{SEMIO_BUILD_TOOL:caller.tool??"nx"});return buildInvocationGraphSelectionV1(resolveBuildInvocationV1(root,parsed.args,{SEMIO_BUILD_MODE:caller.buildMode}).args);},ancestor=selection(caller.arguments!);
- if(!caller.launches!.some(launch=>JSON.stringify(selection(launch))===JSON.stringify(ancestor)))throw Error("Original nested build request is undeclared");
+ if(!caller.launches!.some(launch=>launch[0]===namespace&&JSON.stringify(selection(launch))===JSON.stringify(ancestor)))throw Error("Original nested build request is undeclared");
  return ancestor;
 }
 

@@ -1,7 +1,7 @@
 use super::*;
 use crate::test_support::{observe_tessellation_system, MESH_RELEASES, OBSERVED_MESH, OBSERVED_RELEASE_BYTES, OBSERVED_SAMPLE, SAMPLE_RELEASES};
-use {semio_framework_3d_brep_operations::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
-use semio_framework_3d_brep_operations::primitives::{make_cylinder, make_rectangle_wire, make_sphere};
+use {semio_framework_3d_brep_construction::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use semio_framework_3d_brep_construction::primitives::{make_cylinder, make_rectangle_wire, make_sphere};
 use semio_framework_3d_brep_representation::arena::ArenaId;
 use semio_framework_3d_brep_curve::{Curve2, Curve3};
 use semio_framework_3d_brep_surface::Surface;
@@ -579,8 +579,8 @@ fn tessellation_cold_admission_does_not_collect_original_topology_before_a_grant
     let before=job.progress().units_done;assert!(matches!(job.step(&body,TessellationInput::Solid(solid),1).unwrap(),TessellationStep::Working(_)));assert_eq!(job.progress().units_done,before+1);
     let (mesh,_)=job.run_to_completion(&body,TessellationInput::Solid(solid)).unwrap();assert_eq!(mesh.face_groups.len(),fixture["box"]["faces"].as_u64().unwrap() as usize);assert_eq!(mesh.edge_groups.len(),12);assert_eq!(mesh.index.len()/3,12);assert!((triangle_area_sum(&mesh)-6.0).abs()<1e-6);
     let volume=mesh.index.chunks_exact(3).map(|tri| {let p=|id:u32|Vec3::new(mesh.position[id as usize*3] as f64,mesh.position[id as usize*3+1] as f64,mesh.position[id as usize*3+2] as f64);p(tri[0]).dot(p(tri[1]).cross(p(tri[2])))/6.0}).sum::<f64>().abs();assert!((volume-fixture["box"]["volume"].as_f64().unwrap()).abs()<1e-6);
-    use semio_framework_3d_brep_operations::staged::{StageStep, StagedOperation};
-    let mut caller=semio_framework_3d_brep_operations::boolean::SplitJob::new(&body,solid,Pnt3::new(0.5,0.0,0.0),Vec3::new(1.0,0.0,0.0),0.1).unwrap();
+    use semio_framework_3d_brep_construction::staged::{StageStep, StagedOperation};
+    let mut caller=semio_framework_3d_brep_boolean::SplitJob::new(&body,solid,Pnt3::new(0.5,0.0,0.0),Vec3::new(1.0,0.0,0.0),0.1).unwrap();
     for turn in 0..fixture["cold"]["callerProbeTurns"].as_u64().unwrap() as usize {
         assert_eq!(caller.advance(&mut body,&mut rec).unwrap(),StageStep::Working);
         assert_eq!(caller.progress().phase,"tessellate","original Split Plan advanced before its cold child produced a mesh");assert_eq!(caller.progress().done,turn+1);assert!(caller.progress().total>=caller.progress().done);

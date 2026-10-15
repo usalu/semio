@@ -6,7 +6,7 @@ pub const ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES: usize = 35;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
-#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorUiPatchReceipt {
     pub lifetime: ActorInstanceLifetime,
     #[cfg_attr(test, serde(with = "decimal_generation"))]

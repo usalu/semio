@@ -270,7 +270,8 @@
       "required": [
         "version",
         "arguments",
-        "lifecycle"
+        "lifecycle",
+        "diagnostics"
       ],
       "properties": {
         "version": {
@@ -288,6 +289,38 @@
           "minItems": 1,
           "items": {
             "$ref": "#/definitions/LifecycleCase"
+          }
+        },
+        "diagnostics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "partition",
+            "directory",
+            "sameFilesystem",
+            "allCacheTestBranches",
+            "specificHelpers",
+            "asyncChildren"
+          ],
+          "properties": {
+            "partition": {
+              "const": "diagnostics"
+            },
+            "directory": {
+              "const": ".cache/b/o/m/tests"
+            },
+            "sameFilesystem": {
+              "const": true
+            },
+            "allCacheTestBranches": {
+              "const": true
+            },
+            "specificHelpers": {
+              "const": true
+            },
+            "asyncChildren": {
+              "const": true
+            }
           }
         }
       }
@@ -347,6 +380,44 @@
             "minLength": 1,
             "maxLength": 4096
           }
+        }
+      }
+    },
+    "CapturePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumBytes",
+        "maximumLines"
+      ],
+      "properties": {
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "maximumLines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        }
+      }
+    },
+    "GeneratedCapturePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maximumBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
         }
       }
     }

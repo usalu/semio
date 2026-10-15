@@ -17,7 +17,7 @@ import { cargoTargetDirectory } from "../../../🦑️repo/🔨️modules/📚�
 import { CARGO_BUILD_OWNER_PID_ENV, cargoBinarySourcesFreshnessV1, parseCargoBinarySourcesV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 
 //#region 🔖️BinaryPath
-/** 📦️ Nx owns the executable separately from mutable compiler state. */
+/** 📦️ The build target owns the executable separately from mutable compiler state. */
 export const MCP_ARTIFACT_REL = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build";
 /** 📦️ Where the optimized distribution binary is staged. Separate from {@link MCP_ARTIFACT_REL} so a
  * release build never clobbers the dev-loop artifact `.mcp.json` and every black-box gate exec. */
@@ -53,7 +53,7 @@ export function resolveMcpBinaryPath(repoRoot: string, env: NodeJS.ProcessEnv = 
   return override ? pathApi(platform).resolve(repoRoot, override) : pathApi(platform).resolve(repoRoot, MCP_ARTIFACT_REL, platform === "win32" ? `${MCP_BINARY_NAME}.exe` : MCP_BINARY_NAME);
 }
 
-/** 🎯 The single Nx target that stages the debug `semio-os-mcp` every `.mcp.json` / `dev mcp` route reads. */
+/** 🎯 The neutral target that stages the debug `semio-os-mcp` every `.mcp.json` / `dev mcp` route reads. */
 export const MCP_BINARY_TARGET = "@semio-tech/framework-os-mcp-rs:build";
 
 /** 🧾️ The sources record the build stages beside the binary (`buildCargoArtifacts`' `sourcesRecord`):
@@ -65,40 +65,24 @@ export function resolveMcpBinarySourcesPath(binary: string, platform: NodeJS.Pla
   return pathApi(platform).join(pathApi(platform).dirname(binary), MCP_BINARY_SOURCES_FILE);
 }
 
-/** 🏗️ Injectable staging boundary: one attempt that returns the exit status of the Nx build target. */
+/** 🏗️ Injectable staging boundary: one attempt returning the neutral build target's exit status. */
 export type McpBinaryStaging = Readonly<{ stage: (progress: (line: string) => void) => number }>;
 
 const nativeMcpBinaryStagingFor = (repoRoot: string): McpBinaryStaging => ({
   stage: (progress) => {
-    // Prefer the package verb directly: under fleet load the Nx daemon HASH_TASKS / socket path
-    // stalls for minutes, while `bun ./📜️script.ts build` is the same deliverable.
-    const packageRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust");
-    progress(`[semio-os-mcp] staging via bun ./📜️script.ts build (cwd=${packageRoot})`);
-    const child = spawnSync("bun", ["./📜️script.ts", "build"], {
-      cwd: packageRoot,
-      encoding: "utf8",
-      maxBuffer: 16 * 1024 * 1024,
-      shell: false,
-      env: { ...process.env, CARGO_INCREMENTAL: process.env.CARGO_INCREMENTAL ?? "0", [CARGO_BUILD_OWNER_PID_ENV]: String(process.pid) },
-    });
-    const combined = `${child.stdout ?? ""}${child.stderr ?? ""}`;
-    for (const line of combined.split(/\r?\n/)) {
-      if (line.trim()) progress(line);
-    }
-    if ((child.status ?? -1) === 0) return 0;
-    progress(`[semio-os-mcp] package verb failed (status ${child.status}); falling back to bun nx run ${MCP_BINARY_TARGET}`);
-    const nx = spawnSync("bun", ["nx", "run", MCP_BINARY_TARGET, "--output-style=stream"], {
+    progress(`[semio-os-mcp] staging via bun repo run ${MCP_BINARY_TARGET}`);
+    const result = spawnSync("bun", ["repo", "run", MCP_BINARY_TARGET, "--output=stream"], {
       cwd: repoRoot,
       encoding: "utf8",
       maxBuffer: 16 * 1024 * 1024,
       shell: false,
       env: { ...process.env, CARGO_INCREMENTAL: process.env.CARGO_INCREMENTAL ?? "0", [CARGO_BUILD_OWNER_PID_ENV]: String(process.pid) },
     });
-    const nxOut = `${nx.stdout ?? ""}${nx.stderr ?? ""}`;
-    for (const line of nxOut.split(/\r?\n/)) {
+    const combined = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+    for (const line of combined.split(/\r?\n/)) {
       if (line.trim()) progress(line);
     }
-    return nx.status ?? -1;
+    return result.status ?? -1;
   },
 });
 
@@ -142,7 +126,7 @@ export function requireMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = proc
  * Explicit `SEMIO_OS_MCP_BIN` overrides skip staging (tests inject a subject). Freshness is the
  * staged build's own sources record ({@link mcpBinaryFreshness}): Cargo's dep-info for the binary,
  * i.e. the whole dependency closure — a kernel or plugin-host change the gateway links is as stale as
- * an edit in this module — stat-checked, so a warm tree answers in milliseconds. Any build of the Nx
+ * an edit in this module — stat-checked, so a warm tree answers in milliseconds. Any build of the neutral
  * target (a gate's `dependsOn`, `bun ./📜️script.ts build`) publishes the record with the binary, so
  * `.mcp.json`'s `initialize` never re-stages a binary a build just produced. `workspace:setup` /
  * `bun ./📜️script.ts setup` calls this so a first-ever compile never lands inside a client's
@@ -328,33 +312,27 @@ export function mcpServerEntries(repoRoot: string): Record<string, McpServerEntr
   return servers;
 }
 
-/** 🎯️ The ONE plugin, artifact kind and verb the os journey dispatches against. A gate that picked
- * its target from a fuzzy `capabilities_search` measured whichever plugin BM25 happened to rank
- * first that day: the same journey read `animate` on 2026-09-20 18:00 and `energy` four hours later
- * purely because 20 more descriptors became decodable in between (`📓️a3b-descriptor-sweep.md` §6),
- * and `energy` has no compiled component at all — three red rows that say nothing about the
- * dispatch lane. `🗒️note` is the plugin whose guest the two-phase prepare/apply law is proven
- * against (`📓️wr4-typed-command-dispatch-and-gates.md` §5.1, the same `addBlock` verb), and its
- * component is the smallest of the rebuilt set (64 MB against `🌍️gis`'s 202 MB, which is what wedged
- * an earlier run behind a 240 s request wall). `capabilities_search` keeps its own step — see
- * `capabilitySearchRankingVerdict`, which asserts ranking PROPERTIES over the compiled catalog and
- * needs no guest at all. */
-export const CLIENT_E2E_PINNED_PLUGIN_ID = "note";
-export const CLIENT_E2E_PINNED_ARTIFACT_KIND = "s.note.note";
-export const CLIENT_E2E_PINNED_CAPABILITY_ID = "note.s.note.note@1/*#editor.addBlock";
-/** 📭️ A verb of the pinned kind that changes nothing on a document with no selection: its preview
- * produces no operation, which the gateway must answer as a committed no-change, never INTERNAL. */
-export const CLIENT_E2E_NO_CHANGE_CAPABILITY_ID = "note.s.note.note@1/*#editor.duplicateSelection";
-
-/** 💡️ The inference the journey runs, pinned for the same reason and against the same kind of
- * drift: `inference_list` returns the UNION of every installed plugin's declared roster, and taking
- * `declared[0]` handed the gate `🌍️gis` — whose 202 MB component is the one that wedges a journey
- * and whose guest answers `inference instantiate: wasmtime: failed to convert function to given
- * type` (measured 22:38). `🀄️wfc` declares five real inference services of its own, and its
- * component is staged and current. */
-export const CLIENT_E2E_PINNED_INFERENCE_PLUGIN_ID = "wfc";
-export const CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND = "s.wfc.bitmap";
-export const CLIENT_E2E_PINNED_INFERENCE_SCHEMA = "s.wfc.bitmap.solve";
+/** 🎯️ The ONE plugin, artifact kind and verb, plus the one inference service, the os journey dispatches
+ * against. The caller injects them: a gate that picked its target from a fuzzy `capabilities_search`
+ * measured whichever plugin BM25 happened to rank first that day, so the pin is explicit data owned by
+ * the specific layer that knows its plugins, never a constant of this neutral driver.
+ * `capabilities_search` keeps its own step — see `capabilitySearchRankingVerdict`, which asserts ranking
+ * PROPERTIES over the compiled catalog and needs no guest at all. */
+export type McpClientE2ePinsV1 = {
+  readonly pluginId: string;
+  readonly artifactKind: string;
+  readonly capabilityId: string;
+  /** 🔎️ Natural-language query the ranking step searches the pinned kind's mutations with. */
+  readonly searchQuery: string;
+  /** 📭️ A verb of the pinned kind that changes nothing on a document with no selection: its preview
+   * produces no operation, which the gateway must answer as a committed no-change, never INTERNAL. */
+  readonly noChangeCapabilityId: string;
+  /** 💡️ The plugin whose declared inference the journey runs, pinned against the same kind of drift:
+   * `inference_list` returns the UNION of every installed plugin's declared roster. */
+  readonly inferencePluginId: string;
+  readonly inferenceArtifactKind: string;
+  readonly inferenceSchema: string;
+};
 
 /** 📁️ Where every plugin component is staged, and in which order a profile wins — the TypeScript
  * twin of `PLUGIN_COMPONENT_PROFILE_DIRS` in `🌉️mcp/🏠️workspace/🦀️.rs`, so the
@@ -381,7 +359,7 @@ export function verifyStagedPluginComponent(repoRoot: string, pluginId: string):
   try {
     rows = JSON.parse(readFileSync(registryPath, "utf8"));
   } catch (error) {
-    return { ok: false, detail: `the generated plugin registry ${PLUGIN_REGISTRY_REL} is unreadable (${String(error)}) — run \`bun nx run @semio-tech/plugin-registry:generate\`` };
+    return { ok: false, detail: `the generated plugin registry ${PLUGIN_REGISTRY_REL} is unreadable (${String(error)}) — run \`bun repo run @semio-tech/plugin-registry:generate\`` };
   }
   const row = rows.find((entry) => entry.pluginId === pluginId);
   if (!row?.cratePath || !row.wasmOut) return { ok: false, detail: `\`${pluginId}\` is not a row of the generated plugin registry — this gate's pinned target names a plugin that is not installed` };
@@ -391,7 +369,7 @@ export function verifyStagedPluginComponent(repoRoot: string, pluginId: string):
   try {
     declaredWasmSha256 = (JSON.parse(readFileSync(descriptorPath, "utf8")) as { hashes?: { wasmSha256?: string } }).hashes?.wasmSha256;
   } catch (error) {
-    return { ok: false, detail: `\`${pluginId}\` has no readable committed descriptor at ${descriptorPath} (${String(error)}) — describe it: \`bun nx run-many -t describe --projects <the Nx project of ${row.cratePath}>\`` };
+    return { ok: false, detail: `\`${pluginId}\` has no readable committed descriptor at ${descriptorPath} (${String(error)}) — describe it: \`bun repo run-many --targets=describe --projects <the project owning ${row.cratePath}>\`` };
   }
   if (!declaredWasmSha256) return { ok: false, detail: `\`${pluginId}\`'s committed descriptor declares no \`hashes.wasmSha256\`, so a staged component cannot be checked against it` };
   const tried: string[] = [];
@@ -408,10 +386,10 @@ export function verifyStagedPluginComponent(repoRoot: string, pluginId: string):
     if (staged === declaredWasmSha256) return { ok: true, detail: `${pluginId}: ${profile}/${row.wasmOut} ${bytes.length} B, sha256 ${staged.slice(0, 12)}… matches its committed descriptor` };
     return {
       ok: false,
-      detail: `${pluginId}: the staged ${profile}/${row.wasmOut} (${bytes.length} B, sha256 ${staged.slice(0, 12)}…) is NOT the build its committed descriptor describes (${declaredWasmSha256.slice(0, 12)}…) — the catalog would type this verb from a descriptor that no longer describes the guest that runs it; re-describe it: \`bun nx run-many -t describe --projects <the Nx project of ${row.cratePath}>\``,
+      detail: `${pluginId}: the staged ${profile}/${row.wasmOut} (${bytes.length} B, sha256 ${staged.slice(0, 12)}…) is NOT the build its committed descriptor describes (${declaredWasmSha256.slice(0, 12)}…) — the catalog would type this verb from a descriptor that no longer describes the guest that runs it; re-describe it: \`bun repo run-many --targets=describe --projects <the project owning ${row.cratePath}>\``,
     };
   }
-  return { ok: false, detail: `${pluginId}: no compiled component is staged (tried ${tried.join(", ")}) — build it: \`bun nx run @semio-tech/framework-os-dev:build -- ${pluginId}\`` };
+  return { ok: false, detail: `${pluginId}: no compiled component is staged (tried ${tried.join(", ")}) — build it: \`bun repo run @semio-tech/framework-os-dev:build -- ${pluginId}\`` };
 }
 
 /** 🔎️ The ranking properties a compiled capability catalog owes an agent, asserted over one
@@ -659,7 +637,7 @@ export async function runRepoMcpClientJourney(repoRoot: string): Promise<readonl
  * `inference_run` with its job progress and a cancel. `folder` binds the headless workspace; the
  * capability catalog itself is always compiled from the repo's installed plugin registry, so a
  * throwaway folder still sees every real plugin. */
-export async function runOsMcpClientJourney(repoRoot: string, folder: string): Promise<readonly McpClientStep[]> {
+export async function runOsMcpClientJourney(repoRoot: string, folder: string, pins: McpClientE2ePinsV1): Promise<readonly McpClientStep[]> {
   const entry = mcpServerEntries(repoRoot).semio;
   if (!entry) return [mcpStepFailure("os: .mcp.json entry", "`.mcp.json` declares no `semio` server")];
   // 🔒️ `--no-bridge` PINS this gate to the headless lane. Without it the gateway publishes a
@@ -699,7 +677,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    the ONE component every dispatch row below is pinned to staged, and is it the build its
     //    committed descriptor describes? Both answers are a file read; neither is worth a 240 s
     //    request wall to discover.
-    const staged = [CLIENT_E2E_PINNED_PLUGIN_ID, CLIENT_E2E_PINNED_INFERENCE_PLUGIN_ID].map((pluginId) => verifyStagedPluginComponent(repoRoot, pluginId));
+    const staged = [pins.pluginId, pins.inferencePluginId].map((pluginId) => verifyStagedPluginComponent(repoRoot, pluginId));
     announce(steps, { step: "os: every pinned component is staged and current", ok: staged.every((verdict) => verdict.ok), detail: staged.map((verdict) => verdict.detail).join(" | "), wire: staged });
     if (!staged.every((verdict) => verdict.ok)) return steps;
 
@@ -738,28 +716,28 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    for the properties a ranking owes an agent (ordered, filtered, unambiguous, reaching the
     //    verb a client would look for) over the COMPILED CATALOG alone — no guest, no component, no
     //    artifact. What it deliberately no longer does is hand the dispatch rows below their target.
-    const mutations = await session.call("capabilities_search", { query: "add a block to the note", kind: ["mutation"], artifactKind: CLIENT_E2E_PINNED_ARTIFACT_KIND });
+    const mutations = await session.call("capabilities_search", { query: pins.searchQuery, kind: ["mutation"], artifactKind: pins.artifactKind });
     const mutationHits = (mutations.structuredContent?.results ?? []) as Array<Record<string, any>>;
-    const ranking = capabilitySearchRankingVerdict(mutationHits, CLIENT_E2E_PINNED_CAPABILITY_ID, CLIENT_E2E_PINNED_ARTIFACT_KIND);
+    const ranking = capabilitySearchRankingVerdict(mutationHits, pins.capabilityId, pins.artifactKind);
     announce(steps, { step: "os: capabilities_search ranking properties", ok: mutations.isError !== true && ranking.ok, detail: mutations.isError === true ? JSON.stringify(mutations.structuredContent).slice(0, 240) : ranking.detail, wire: mutationHits.slice(0, 5) });
 
-    const described = await session.call("capabilities_describe", { capabilityId: CLIENT_E2E_PINNED_CAPABILITY_ID });
+    const described = await session.call("capabilities_describe", { capabilityId: pins.capabilityId });
     const inputSchema = described.structuredContent?.inputSchema ?? described.structuredContent?.capability?.inputSchema;
     const input = minimalInputForSchema(inputSchema);
     const describedKind = String(described.structuredContent?.artifactKind ?? described.structuredContent?.capability?.artifactKind ?? "");
     announce(steps, {
       step: "os: capabilities_describe (the pinned verb)",
-      ok: described.isError !== true && describedKind === CLIENT_E2E_PINNED_ARTIFACT_KIND,
+      ok: described.isError !== true && describedKind === pins.artifactKind,
       detail:
         described.isError === true
-          ? `${CLIENT_E2E_PINNED_CAPABILITY_ID}: ${JSON.stringify(described.structuredContent).slice(0, 240)}`
-          : describedKind === CLIENT_E2E_PINNED_ARTIFACT_KIND
-            ? `${CLIENT_E2E_PINNED_CAPABILITY_ID} artifactKind=${describedKind} input=${JSON.stringify(input).slice(0, 120)}`
-            : `${CLIENT_E2E_PINNED_CAPABILITY_ID} is typed against \`${describedKind || "<none>"}\`, not the pinned \`${CLIENT_E2E_PINNED_ARTIFACT_KIND}\``,
+          ? `${pins.capabilityId}: ${JSON.stringify(described.structuredContent).slice(0, 240)}`
+          : describedKind === pins.artifactKind
+            ? `${pins.capabilityId} artifactKind=${describedKind} input=${JSON.stringify(input).slice(0, 120)}`
+            : `${pins.capabilityId} is typed against \`${describedKind || "<none>"}\`, not the pinned \`${pins.artifactKind}\``,
       wire: described.structuredContent,
     });
 
-    const typedKind = CLIENT_E2E_PINNED_ARTIFACT_KIND;
+    const typedKind = pins.artifactKind;
     const typedArtifactId = `${artifactId}-typed`;
     const typedCreated = await session.call("artifact_create", { artifactId: typedArtifactId, kind: typedKind });
     announce(steps, { step: "os: artifact_create (a real plugin artifact kind)", ok: typedCreated.isError !== true && typedCreated.structuredContent?.kind === typedKind, detail: typedCreated.isError === true ? `kind=${typedKind}: ${JSON.stringify(typedCreated.structuredContent).slice(0, 260)}` : `artifactId=${typedArtifactId} kind=${typedCreated.structuredContent?.kind} pluginId=${typedCreated.structuredContent?.pluginId} sizeBytes=${typedCreated.structuredContent?.sizeBytes}`, wire: typedCreated.structuredContent });
@@ -781,7 +759,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     const packBefore = String(untrustedContent(beforeSnapshot).packBase64 ?? "");
     const documentBefore = snapshotDocumentBase64(beforeSnapshot);
 
-    const prepared = await session.call("action_prepare", { capabilityId: CLIENT_E2E_PINNED_CAPABILITY_ID, input });
+    const prepared = await session.call("action_prepare", { capabilityId: pins.capabilityId, input });
     const baselineRevision = revisionOf(prepared);
     // 🗿️ ONE artifact identity across the whole journey. `RevisionStamp.artifactId` used to carry
     //    the PLUGIN id (`🌉️mcp/🏠️workspace/🦀️.rs` stamped `entry.plugin_id`), so `artifact_create`,
@@ -789,8 +767,8 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    `artifact_snapshot(revisionAfter.artifactId)` answered `no such artifact: note`
     //    (`📓️ce1-…` §8 gap 4). Ticket 26/09/18 slice M8 binds the channel's session document to the
     //    artifact this workspace created from the plugin's genesis; this row is what holds it there.
-    announce(steps, { step: "os: the prepared revision names the ARTIFACT, not the plugin", ok: baselineRevision?.artifactId === typedArtifactId, detail: `revision.artifactId=${baselineRevision?.artifactId ?? "<none>"} artifact_create used ${typedArtifactId} (pinned plugin is ${CLIENT_E2E_PINNED_PLUGIN_ID})`, wire: baselineRevision });
-    announce(steps, { step: "os: action_prepare", ok: prepared.isError !== true, detail: prepared.isError === true ? `${CLIENT_E2E_PINNED_CAPABILITY_ID} input=${JSON.stringify(input)}: ${JSON.stringify(prepared.structuredContent).slice(0, 260)}` : `handle=${prepared.structuredContent?.preparedHandle} baseline=${stampText(baselineRevision)}`, wire: prepared.structuredContent });
+    announce(steps, { step: "os: the prepared revision names the ARTIFACT, not the plugin", ok: baselineRevision?.artifactId === typedArtifactId, detail: `revision.artifactId=${baselineRevision?.artifactId ?? "<none>"} artifact_create used ${typedArtifactId} (pinned plugin is ${pins.pluginId})`, wire: baselineRevision });
+    announce(steps, { step: "os: action_prepare", ok: prepared.isError !== true, detail: prepared.isError === true ? `${pins.capabilityId} input=${JSON.stringify(input)}: ${JSON.stringify(prepared.structuredContent).slice(0, 260)}` : `handle=${prepared.structuredContent?.preparedHandle} baseline=${stampText(baselineRevision)}`, wire: prepared.structuredContent });
     if (prepared.isError === true) return steps;
 
     // 🔔️ `resources/subscribe` on the very artifact the prepared action will mutate — the one URI
@@ -831,7 +809,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     const documentAfter = snapshotDocumentBase64(afterSnapshot);
     announce(steps, { step: "os: the snapshot shows the mutation", ok: documentBefore.length > 0 && documentAfter.length > 0 && documentAfter !== documentBefore, detail: documentBefore.length === 0 ? `the pre-mutation snapshot answered no bytes: ${JSON.stringify(beforeSnapshot.structuredContent).slice(0, 200)}` : documentAfter === documentBefore ? `${typedArtifactId} is byte-identical across the commit (pack ${packAfter.length}, spr ${String(untrustedContent(afterSnapshot).sprBase64 ?? "").length} base64 chars) — the snapshot is reading a frozen row, not the document the mutation went to` : `${documentBefore.length} → ${documentAfter.length} base64 chars across the commit (pack ${packBefore.length} → ${packAfter.length}, spr ${String(untrustedContent(beforeSnapshot).sprBase64 ?? "").length} → ${String(untrustedContent(afterSnapshot).sprBase64 ?? "").length})`, wire: { before: documentBefore.slice(0, 24), after: documentAfter.slice(0, 24) } });
 
-    const headAfterInvoke = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
+    const headAfterInvoke = await headRevision(session, pins.capabilityId, input);
     announce(steps, { step: "os: live head advanced", ok: headAfterInvoke !== undefined && headAfterInvoke.headEditId === revisionAfter?.headEditId && headAfterInvoke.headEditId !== baselineRevision?.headEditId, detail: `re-read head ${stampText(headAfterInvoke)} (baseline ${stampText(baselineRevision)}, invoke reported ${stampText(revisionAfter)})`, wire: headAfterInvoke });
 
     if (!undoToken) {
@@ -839,7 +817,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
       return steps;
     }
     const undone = await session.call("history_undo", { undoToken });
-    const headAfterUndo = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
+    const headAfterUndo = await headRevision(session, pins.capabilityId, input);
     // ⚠️ `members` is the COUNT OF MEMBERS ATTEMPTED (`ActionAdapter::fan_out` returns
     //    `undo.members.len()` whether or not a member failed) — a per-member failure travels in
     //    `warnings`, and only an all-members failure is a tool error. A gate that read `members > 0`
@@ -848,40 +826,40 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     announce(steps, { step: "os: history_undo (mutation reverted)", ok: undone.isError !== true && Number(undone.structuredContent?.members ?? 0) > 0 && undoWarnings.length === 0 && headAfterUndo?.headEditId === baselineRevision?.headEditId, detail: undone.isError === true ? JSON.stringify(undone.structuredContent).slice(0, 300) : `members=${undone.structuredContent?.members} warnings=${undoWarnings.length === 0 ? "none" : undoWarnings.join(" / ").slice(0, 200)} head ${stampText(headAfterUndo)} (baseline ${stampText(baselineRevision)})`, wire: undone.structuredContent });
 
     const redone = await session.call("history_redo", { undoToken });
-    const headAfterRedo = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
+    const headAfterRedo = await headRevision(session, pins.capabilityId, input);
     const redoWarnings = (redone.structuredContent?.warnings ?? []) as string[];
     announce(steps, { step: "os: history_redo (mutation restored)", ok: redone.isError !== true && Number(redone.structuredContent?.members ?? 0) > 0 && redoWarnings.length === 0 && headAfterRedo?.headEditId !== undefined && headAfterRedo.headEditId !== baselineRevision?.headEditId, detail: redone.isError === true ? JSON.stringify(redone.structuredContent).slice(0, 300) : `members=${redone.structuredContent?.members} warnings=${redoWarnings.length === 0 ? "none" : redoWarnings.join(" / ").slice(0, 200)} head ${stampText(headAfterRedo)} (undone head was ${stampText(headAfterUndo)})`, wire: redone.structuredContent });
 
-    const noChangePrepared = await session.call("action_prepare", { capabilityId: CLIENT_E2E_NO_CHANGE_CAPABILITY_ID, input: {} });
+    const noChangePrepared = await session.call("action_prepare", { capabilityId: pins.noChangeCapabilityId, input: {} });
     const noChange = noChangePrepared.isError === true ? noChangePrepared : await session.call("action_invoke", { preparedActionHandle: noChangePrepared.structuredContent?.preparedHandle });
     const noChangeWarnings = (noChange.structuredContent?.warnings as string[] | undefined) ?? [];
     announce(steps, {
       step: "os: an action that changes nothing answers no-change, never INTERNAL",
       ok: noChange.isError !== true && noChange.structuredContent?.status === "SUCCEEDED" && noChangeWarnings.some((warning) => warning.startsWith("no-change:")) && JSON.stringify(noChange.structuredContent?.revisionAfter) === JSON.stringify(noChange.structuredContent?.revisionBefore) && noChange.structuredContent?.undoToken == null,
-      detail: noChange.isError === true ? `${CLIENT_E2E_NO_CHANGE_CAPABILITY_ID}: ${JSON.stringify(noChange.structuredContent).slice(0, 300)}` : `status=${noChange.structuredContent?.status} opsCount=${JSON.stringify(noChangePrepared.structuredContent?.preview?.opsCount)} warnings=${noChangeWarnings.join(" / ").slice(0, 120)} undoToken=${noChange.structuredContent?.undoToken ?? "none"}`,
+      detail: noChange.isError === true ? `${pins.noChangeCapabilityId}: ${JSON.stringify(noChange.structuredContent).slice(0, 300)}` : `status=${noChange.structuredContent?.status} opsCount=${JSON.stringify(noChangePrepared.structuredContent?.preview?.opsCount)} warnings=${noChangeWarnings.join(" / ").slice(0, 120)} undoToken=${noChange.structuredContent?.undoToken ?? "none"}`,
       wire: noChange.structuredContent,
     });
 
-    const sagaMember = await session.call("action_prepare", { capabilityId: CLIENT_E2E_PINNED_CAPABILITY_ID, input });
+    const sagaMember = await session.call("action_prepare", { capabilityId: pins.capabilityId, input });
     const began = await session.call("transaction_begin", { preparedHandles: [sagaMember.structuredContent?.preparedHandle] });
     const transactionHandle = began.structuredContent?.transactionHandle as string | undefined;
     announce(steps, { step: "os: transaction_begin", ok: began.isError !== true && typeof transactionHandle === "string", detail: began.isError === true ? JSON.stringify(began.structuredContent).slice(0, 300) : `transactionHandle=${transactionHandle} members=1`, wire: began.structuredContent });
     const rolledBack = await session.call("transaction_rollback", { transactionHandle });
-    const headAfterRollback = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
+    const headAfterRollback = await headRevision(session, pins.capabilityId, input);
     announce(steps, { step: "os: transaction_rollback (no change)", ok: rolledBack.isError !== true && headAfterRollback?.headEditId === headAfterRedo?.headEditId, detail: rolledBack.isError === true ? JSON.stringify(rolledBack.structuredContent).slice(0, 300) : `rolledBack=${rolledBack.structuredContent?.rolledBack} head ${stampText(headAfterRollback)} unchanged from ${stampText(headAfterRedo)}`, wire: rolledBack.structuredContent });
 
     const listed = await session.call("inference_list", {});
     const declared = (listed.structuredContent?.declared ?? []) as Array<Record<string, any>>;
     // 💡️ The roster must CONTAIN the pinned service — the list is a union over every installed
     //    plugin's declared roster, so which entry is first is another thing the gate must not read.
-    const service = declared.find((row) => row.artifactKind === CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND && row.inferenceSchema === CLIENT_E2E_PINNED_INFERENCE_SCHEMA);
+    const service = declared.find((row) => row.artifactKind === pins.inferenceArtifactKind && row.inferenceSchema === pins.inferenceSchema);
     // 📜️ A declared row is not enough: an agent also has to be able to READ what to send. The row
     //    must publish its payload contract (`payloadSchemaId` + an input schema), because without
     //    one `inference_run` can only ever dispatch `{}` and the guest answers a decode fault after
     //    the whole component has been compiled (`📓️pz2-…md` §5.2 measured 240 s of exactly that).
     const contract = service?.payload as Record<string, any> | undefined;
     const contractOk = typeof contract?.payloadSchemaId === "string" && typeof contract?.inputSchema === "string" && contract.inputSchema.length > 0;
-    announce(steps, { step: "os: inference_list declares the pinned service", ok: listed.isError !== true && service !== undefined && contractOk, detail: listed.isError === true ? JSON.stringify(listed.structuredContent).slice(0, 200) : service ? `${declared.length} declared inference(s), including ${CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND}/${CLIENT_E2E_PINNED_INFERENCE_SCHEMA} by ${service.contributor || service.owner}${contractOk ? `, contract ${contract?.payloadSchemaId} (binds \`${contract?.artifactBinding?.field ?? "<none>"}\`, ${String(contract?.inputSchema ?? "").length} B input schema)` : ", publishing NO payload contract — a client cannot know what to send"}` : `${declared.length} declared inference(s), none of them ${CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND}/${CLIENT_E2E_PINNED_INFERENCE_SCHEMA}: ${declared.map((row) => `${row.artifactKind}/${row.inferenceSchema}`).join(", ")}`, wire: declared.slice(0, 8) });
+    announce(steps, { step: "os: inference_list declares the pinned service", ok: listed.isError !== true && service !== undefined && contractOk, detail: listed.isError === true ? JSON.stringify(listed.structuredContent).slice(0, 200) : service ? `${declared.length} declared inference(s), including ${pins.inferenceArtifactKind}/${pins.inferenceSchema} by ${service.contributor || service.owner}${contractOk ? `, contract ${contract?.payloadSchemaId} (binds \`${contract?.artifactBinding?.field ?? "<none>"}\`, ${String(contract?.inputSchema ?? "").length} B input schema)` : ", publishing NO payload contract — a client cannot know what to send"}` : `${declared.length} declared inference(s), none of them ${pins.inferenceArtifactKind}/${pins.inferenceSchema}: ${declared.map((row) => `${row.artifactKind}/${row.inferenceSchema}`).join(", ")}`, wire: declared.slice(0, 8) });
     if (!service) return steps;
     // 🗿️ The artifact the inference is RUN ON — its own kind, created through the same
     //    `artifact_create` every other artifact in this journey goes through. It carries no row of
@@ -889,8 +867,8 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    fails is visible in the `inference_run` row it serves (the gateway then refuses by name,
     //    `INPUT_INVALID … artifactId`, instead of dispatching a body no guest can decode).
     const inferenceArtifactId = `${artifactId}-inference`;
-    const inferenceArtifact = await session.call("artifact_create", { artifactId: inferenceArtifactId, kind: CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND });
-    if (inferenceArtifact.isError === true) console.log(`[client-e2e] artifact_create ${CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND}: ${JSON.stringify(inferenceArtifact.structuredContent).slice(0, 200)}`);
+    const inferenceArtifact = await session.call("artifact_create", { artifactId: inferenceArtifactId, kind: pins.inferenceArtifactKind });
+    if (inferenceArtifact.isError === true) console.log(`[client-e2e] artifact_create ${pins.inferenceArtifactKind}: ${JSON.stringify(inferenceArtifact.structuredContent).slice(0, 200)}`);
     // 📈️ The spec's own progress mechanism, on the one tool that mints a job: the call carries
     // `_meta.progressToken`, and every `JobRegistry` row of that job must arrive as a
     // `notifications/progress` carrying that exact token — no `job_get` poll in this step.
@@ -903,7 +881,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    not a cold-compile budget, it is a solve that does not return, so the budget stays at the
     //    journey's own 240 s and the row says so.
     const inferenceEnvelope = await session
-      .request("tools/call", { name: "inference_run", arguments: { artifactKind: service.artifactKind, inferenceSchema: service.inferenceSchema, pluginId: CLIENT_E2E_PINNED_INFERENCE_PLUGIN_ID, artifactId: inferenceArtifactId, cancellationId: `${artifactId}-cancel` }, _meta: { progressToken } })
+      .request("tools/call", { name: "inference_run", arguments: { artifactKind: service.artifactKind, inferenceSchema: service.inferenceSchema, pluginId: pins.inferencePluginId, artifactId: inferenceArtifactId, cancellationId: `${artifactId}-cancel` }, _meta: { progressToken } })
       .catch((error: Error): McpEnvelope => ({ jsonrpc: "2.0", id: null, error: { code: -32000, message: error.message } }));
     const inference = (inferenceEnvelope.error ? { isError: true, structuredContent: { code: `JSONRPC_${inferenceEnvelope.error.code}`, message: inferenceEnvelope.error.message } } : (inferenceEnvelope.result ?? {})) as McpToolReply;
     const progressRows = session.serverNotifications().slice(progressBefore).filter((envelope) => envelope.method === "notifications/progress" && (envelope.params as any)?.progressToken === progressToken);
@@ -944,8 +922,8 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
 
 /** 🏁️ Both `.mcp.json` servers, one report. Returns every step so a caller can print the table and
  * exit non-zero on the first red — the gate never summarises a failure away. */
-export async function runMcpClientEndToEnd(repoRoot: string, folder: string): Promise<readonly McpClientStep[]> {
-  const os = await runOsMcpClientJourney(repoRoot, folder);
+export async function runMcpClientEndToEnd(repoRoot: string, folder: string, pins: McpClientE2ePinsV1): Promise<readonly McpClientStep[]> {
+  const os = await runOsMcpClientJourney(repoRoot, folder, pins);
   const repo = await runRepoMcpClientJourney(repoRoot);
   return [...os, ...repo];
 }

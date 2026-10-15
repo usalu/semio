@@ -14,3 +14,9 @@ pub const SNAPSHOT_JSON: &str = include_str!("../../🖼️assets/🎬️demo/�
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }
+
+//#region 🧩️Modules
+#[cfg(test)]
+#[path = "🧪️tests/🧩️example/🦀️.rs"]
+mod tests;
+//#endregion 🧩️Modules

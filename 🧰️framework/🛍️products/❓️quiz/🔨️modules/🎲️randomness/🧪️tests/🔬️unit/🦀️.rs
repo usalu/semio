@@ -89,7 +89,7 @@ fn shuffle_draws_from_the_end() {
 
 #[test]
 fn shared_vectors_of_the_python_reference_hold() {
-    use crate::schema::tests::{entries, fixture};
+    use quiz_schema::testkit::{entries, fixture};
     let vectors = fixture("seeded-randomness");
     let number = |value: &serde_json::Value| value.as_u64().unwrap_or(u64::MAX);
     let numbers = |value: &serde_json::Value| entries(value).iter().map(number).collect::<Vec<_>>();

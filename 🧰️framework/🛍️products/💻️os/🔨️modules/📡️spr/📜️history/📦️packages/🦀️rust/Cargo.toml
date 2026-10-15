@@ -26,6 +26,7 @@ default = ["deflate"]
 deflate = ["protocol/deflate", "semio-framework-os-pack/deflate"]
 
 [dependencies]
+semio-framework-pack-source = { path = "../../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 semio-framework-os-history-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-history-codec = { path = "../../⚙️codec/📦️packages/🦀️rust" }
 semio-framework-os-history-record-decode = { path = "../../🛬️decode/📋️record-set/📦️packages/🦀️rust" }

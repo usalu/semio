@@ -1,0 +1,42 @@
+{
+  "contract": "semio.job.payload-capacity-observation.v1",
+  "readOnly": true,
+  "cases": [
+    {
+      "name": "empty",
+      "pages": [],
+      "expectedCapacity": 0,
+      "expectedLength": 0
+    },
+    {
+      "name": "partial",
+      "pages": [
+        {
+          "capacity": 8192,
+          "length": 17
+        }
+      ],
+      "expectedCapacity": 8192,
+      "expectedLength": 17
+    },
+    {
+      "name": "three-pages",
+      "pages": [
+        {
+          "capacity": 8192,
+          "length": 8192
+        },
+        {
+          "capacity": 8192,
+          "length": 8192
+        },
+        {
+          "capacity": 8192,
+          "length": 617
+        }
+      ],
+      "expectedCapacity": 24576,
+      "expectedLength": 17001
+    }
+  ]
+}

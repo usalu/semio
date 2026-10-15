@@ -24,7 +24,7 @@ use serde::{Deserialize, Serialize};
 /// mirrors `align` under RTL and leaves `side` alone.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum OverlaySide {
     Top,
     Right,
@@ -62,7 +62,7 @@ impl OverlaySide {
 /// physical top/bottom and carry no direction, which is exactly what React's `alignedTop` does.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum OverlayAlign {
     Start,
     #[default]
@@ -248,7 +248,7 @@ pub const TOOLTIP_HOVER_OUT_SECONDS: f32 = 0.4;
 /// paths cannot disagree about what a `Tooltip` or a `Dialog` is.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum OverlayKind {
     SelectPopup,
     ContextMenu,

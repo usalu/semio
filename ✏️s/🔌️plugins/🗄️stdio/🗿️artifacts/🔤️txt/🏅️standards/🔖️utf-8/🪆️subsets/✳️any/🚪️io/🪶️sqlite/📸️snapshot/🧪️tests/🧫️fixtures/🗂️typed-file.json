@@ -1,0 +1,124 @@
+{
+  "dialect": {
+    "artifactKind": "s.stdio.txt",
+    "standard": "utf-8",
+    "subset": "*"
+  },
+  "encoding": "text",
+  "cases": [
+    {
+      "id": "empty-lines",
+      "snapshot": {
+        "schema": "empty schema",
+        "lines": [],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "raw": ""
+    },
+    {
+      "id": "one-empty-line",
+      "snapshot": {
+        "schema": "empty schema",
+        "lines": [
+          ""
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "raw": ""
+    },
+    {
+      "id": "embedded-separator",
+      "snapshot": {
+        "schema": "literal schema",
+        "lines": [
+          "first\nsecond"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "raw": "first\nsecond"
+    },
+    {
+      "id": "two-separate-lines",
+      "snapshot": {
+        "schema": "literal schema",
+        "lines": [
+          "first",
+          "second"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "raw": "first\nsecond"
+    },
+    {
+      "id": "schema-nul-unicode",
+      "snapshot": {
+        "schema": "schema\u0000文🌠",
+        "lines": [
+          "first",
+          "second"
+        ],
+        "trailingNewline": false,
+        "lineEnding": "lf"
+      },
+      "raw": "first\nsecond"
+    },
+    {
+      "id": "empty-crlf",
+      "snapshot": {
+        "schema": "empty schema",
+        "lines": [],
+        "trailingNewline": false,
+        "lineEnding": "crLf"
+      },
+      "raw": ""
+    },
+    {
+      "id": "literal-crlf-line",
+      "snapshot": {
+        "schema": "chosen ending",
+        "lines": [
+          "a\r\nb\u0000文🌠",
+          ""
+        ],
+        "trailingNewline": true,
+        "lineEnding": "crLf"
+      },
+      "raw": "a\r\nb\u0000文🌠\r\n\r\n"
+    },
+    {
+      "id": "trailing-empty-lf",
+      "snapshot": {
+        "schema": "",
+        "lines": [
+          "",
+          ""
+        ],
+        "trailingNewline": true,
+        "lineEnding": "lf"
+      },
+      "raw": "\n\n"
+    }
+  ],
+  "collisions": [
+    [
+      "empty-lines",
+      "one-empty-line"
+    ],
+    [
+      "embedded-separator",
+      "two-separate-lines"
+    ],
+    [
+      "two-separate-lines",
+      "schema-nul-unicode"
+    ],
+    [
+      "empty-lines",
+      "empty-crlf"
+    ]
+  ]
+}

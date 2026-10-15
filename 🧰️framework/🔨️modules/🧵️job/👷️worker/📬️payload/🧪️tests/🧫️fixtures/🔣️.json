@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "operation": 99701,
+  "generation": 3,
+  "fuel": 100000,
+  "deadline": 18446744073709551615,
+  "grant": {
+    "maximumItems": 256,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 128
+  },
+  "denials": [
+    "maximum_items",
+    "maximum_copy_bytes",
+    "maximum_capacity_bytes",
+    "maximum_depth"
+  ],
+  "expected": {
+    "deniedHeapBytes": 0,
+    "deniedReceiptItems": 0,
+    "sourcesPreserved": true,
+    "birthEqualsReceipt": true,
+    "releasedEqualsBirth": true,
+    "terminalDropBytes": 0
+  }
+}

@@ -25,9 +25,9 @@ fn move_frame(frame_id: &str, x: f64) -> LayoutDiff {
 #[semio_framework_async_macros::async_test]
 async fn set_data_fields_diff_applies_onto_the_base_snapshot() {
     let base = default_document();
-    let operation = semio_s_artifact_layout_layout_mutations::LayoutMutation::ChangeDataFields(semio_s_artifact_layout_layout_mutations_content::change_data_fields::ChangeDataFields { new_fields: Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary::default()) });
+    let operation = semio_s_artifact_layout_layout_mutations::LayoutMutation::ChangeDataFields(semio_s_artifact_layout_layout_mutations_content::change_data_fields::ChangeDataFields { new_fields: Some(semio_framework_value_dictionary::QuestionDictionary::default()) });
     let diff: LayoutDiff = operation.diff(&base).into_parts().0;
-    assert_eq!(apply(&diff, &base).data_fields, Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary::default()));
+    assert_eq!(apply(&diff, &base).data_fields, Some(semio_framework_value_dictionary::QuestionDictionary::default()));
 }
 
 /// 🩹 Two frame patches of one frame fold into one page patch whose application equals the sequence.

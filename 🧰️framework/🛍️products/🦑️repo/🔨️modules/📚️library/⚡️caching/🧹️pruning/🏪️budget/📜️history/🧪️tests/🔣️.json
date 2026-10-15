@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "preview": true
+      },
+      "accepted": true
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "preview": false
+      },
+      "accepted": true
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "preview": true
+      },
+      "accepted": true
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "preview": false
+      },
+      "accepted": true
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "old",
+        "preview": true
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "preview": true,
+        "root": "/tmp"
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "mode": "prototype",
+        "preview": true
+      },
+      "accepted": false
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import {ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,art
 import {encodeIeee754Cells,readBinary64,readBinary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 import {type Binary64,type Binary32} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {SEMIO_DRAWING_SQLITE_SCHEMA,projectSemioDrawingSqliteComponent,semioDrawingSnapshotFromSqliteComponent} from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
-import{projectFormDictionary,reconstructFormDictionary}from"./🧾️dictionary/🟦️.ts";
+import{projectQuestionDictionary,reconstructQuestionDictionary}from"./🧾️dictionary/🟦️.ts";
 import{LayoutRows}from"./🔍️rows/🟦️.ts";
 import sql from "./🗄️.sql" with {type:"text"};
 export const LAYOUT_SQLITE_SCHEMA:string=sql+"\n"+SEMIO_DRAWING_SQLITE_SCHEMA;
@@ -33,7 +33,7 @@ export async function layoutSnapshotToSqliteDatabase(s:LayoutArtifact,options:Ar
  for(let i=0;i<s.spreads.length;i++){const v=s.spreads[i]!,id=await put("spread",[1n,BigInt(i),v.id,v.name]);await strings("spread_page",id,v.pageIds);}
  if(s.backgroundDrawing!==undefined){const v=s.backgroundDrawing,h=v.handle,t=h.target,di=t.dialect;await projectSemioDrawingSqliteComponent(v.content,p,options);await put("drawing_component",[h.childId,di.artifactKind,di.standard,di.subset,t.artifactId,1n],1n);}
  if(s.referencedModel!==undefined){const v=s.referencedModel,t=v.target,di=t.dialect;await put("model_link",[di.artifactKind,di.standard,di.subset,t.artifactId,v.role,v.pin.kind],1n);switch(v.pin.kind){case"head":break;case"checkpoint":await put("model_checkpoint",[v.pin.id],1n);break;case"snapshot":await put("model_snapshot",[v.pin.blob.hash,...halves(v.pin.blob.size),v.pin.blob.mediaType],1n);break;default:throw Error("unknown Layout link pin");}}
- if(s.dataFields!==undefined)await projectFormDictionary(s.dataFields,put,d);
+ if(s.dataFields!==undefined)await projectQuestionDictionary(s.dataFields,put,d);
  return p.finish();
 }
 /** 📥️ Reconstruct each declared owned relation, refusing orphan or multiply owned component rows. */
@@ -52,7 +52,7 @@ export async function layoutSnapshotFromSqliteDatabase(input:SqliteDatabase,opti
  const layer=async(r:SqliteRow):Promise<Layer>=>{if((r.values[1]===null)===(r.values[2]===null))throw Error("ambiguous Layout layer owner");return{id:text(r,4),name:text(r,5),visible:boolean(r,6),locked:boolean(r,7),objectIds:await strings("layer_object",r.rowid)}};
  const frame=async(r:SqliteRow):Promise<Frame>=>{if((r.values[1]===null)===(r.values[2]===null))throw Error("ambiguous Layout frame owner");const base={id:text(r,5),layerId:text(r,6),bounds:await bounds(r,7),locked:await nullable(r,8,boolean),visible:await nullable(r,9,boolean)};switch(text(r,4)){case"rect":{const v=await take("frame_rect",r.rowid);return{kind:"rect",...base,fill:await nullable(v,1,color),stroke:await nullable(v,2,color)}}case"text":{const v=await take("frame_text",r.rowid);return{kind:"text",...base,storyId:text(v,1),threadNext:await nullable(v,2,text),columns:readU32(v,3),inset:await rect(v,4),wrapMode:text(v,5)}}case"image":return{kind:"image",...base,linkId:text(await take("frame_image",r.rowid),1)};default:throw Error("unknown Layout frame variant")}};
  const document=await take("document",1n),grid=await take("grid",1n),s:LayoutArtifact={schema:text(document,1),name:text(document,2),grid:{baselineGrid:await d(grid,1),baselineOffset:await d(grid,2),snapToBaseline:boolean(grid,3)},paragraphStyles:[],characterStyles:[],stories:[],links:[],parentPages:[],spreads:[],pages:[],printTarget:await nullable(document,3,text)};
- if(peek("form_dictionary",1n)!==undefined)s.dataFields=await reconstructFormDictionary(take,list,d,operation);
+ if(peek("form_dictionary",1n)!==undefined)s.dataFields=await reconstructQuestionDictionary(take,list,d,operation);
  for(const r of await list("paragraph_style",1n))s.paragraphStyles.push({id:text(r,3),name:text(r,4),fontFamily:text(r,5),fontSize:await d(r,6),fontWeight:readU32(r,7),leading:await d(r,8),tracking:await d(r,9),alignment:text(r,10)});
  for(const r of await list("character_style",1n))s.characterStyles.push({id:text(r,3),name:await nullable(r,4,text),fontFamily:await nullable(r,5,text),fontSize:await nullable(r,6,d),fontWeight:await nullable(r,7,readU32),italic:await nullable(r,8,boolean),color:await nullable(r,9,color),tracking:await nullable(r,10,d)});
  for(const r of await list("story",1n)){const styleRuns=[];for(const v of await list("style_run",r.rowid))styleRuns.push({start:wide(v,3),end:wide(v,5),paragraphStyleId:await nullable(v,7,text),characterStyleId:await nullable(v,8,text)});s.stories.push({id:text(r,3),content:text(r,4),styleRuns})}

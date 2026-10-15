@@ -25,15 +25,15 @@ dependencies = [
 
 [[package]]
 name = "arrayvec"
-version = "0.7.6"
+version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
+checksum = "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56"
 
 [[package]]
 name = "autocfg"
-version = "1.5.0"
+version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
+checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
 name = "bitflags"
@@ -43,28 +43,28 @@ checksum = "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06"
 
 [[package]]
 name = "bumpalo"
-version = "3.20.2"
+version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d20789868f4b01b2f2caec9f5c4e0213b41e3e5702a50157d699ae31ced2fcb"
+checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 
 [[package]]
 name = "bytemuck"
-version = "1.25.0"
+version = "1.25.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8efb64bd706a16a1bdde310ae86b351e4d21550d98d056f22f8a7f7a2183fec"
+checksum = "95832e849adfb21180ccb6826a99da14e5d266ae5c2e668e1602cf234f153797"
 dependencies = [
  "bytemuck_derive",
 ]
 
 [[package]]
 name = "bytemuck_derive"
-version = "1.10.2"
+version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9abbd1bc6865053c427f7198e6af43bfdedc55ab791faed4fbd361d789575ff"
+checksum = "6a1f896587b6f2c069c73d2f0913e2d590c3990285cd2f0b6aa02b786b4c679c"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 3.0.9",
 ]
 
 [[package]]
@@ -75,9 +75,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "cfg-if"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
+checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 
 [[package]]
 name = "downcast-rs"
@@ -87,9 +87,9 @@ checksum = "75b325c5dbd37f80359721ad39aca5a29fb04c89279657cffdda8736d0c0b9d2"
 
 [[package]]
 name = "either"
-version = "1.15.0"
+version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
+checksum = "0e9c71c2167ca323c882b99918929403426e2373ea17242ff5653e0d5e1058be"
 
 [[package]]
 name = "ena"
@@ -102,9 +102,9 @@ dependencies = [
 
 [[package]]
 name = "equivalent"
-version = "1.0.2"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
+checksum = "00d174d5400e5e8fd687ad1049e2f578285fa914201b1af7e8b112a4546bd826"
 
 [[package]]
 name = "foldhash"
@@ -114,9 +114,9 @@ checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 
 [[package]]
 name = "futures"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b147ee9d1f6d097cef9ce628cd2ee62288d963e16fb287bd9286455b241382d"
+checksum = "9a31d2a3fbaaeb2af2368bbdd904aa8e812d3c04a1ee10d3171f52d556e5d0a3"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -129,9 +129,9 @@ dependencies = [
 
 [[package]]
 name = "futures-channel"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07bbe89c50d7a535e539b8c17bc0b49bdb77747034daa8087407d655f3f7cc1d"
+checksum = "b1f9e3d69d39e4862ffed03ed071a76f9a13ba1d9109d355b0f0aa6b15e393c4"
 dependencies = [
  "futures-core",
  "futures-sink",
@@ -139,15 +139,15 @@ dependencies = [
 
 [[package]]
 name = "futures-core"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e3450815272ef58cec6d564423f6e755e25379b217b0bc688e295ba24df6b1d"
+checksum = "92d699e522242e69e3003b94ecc1f960f3a5e015aa7c5d7486e65ad01dd94f5e"
 
 [[package]]
 name = "futures-executor"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "baf29c38818342a3b26b5b923639e7b1f4a61fc5e76102d4b1981c6dc7a7579d"
+checksum = "031b47cf1a3c6cc8bc2fc76cd437f521619387907d469316e7c0bc278f1f5432"
 dependencies = [
  "futures-core",
  "futures-task",
@@ -156,38 +156,38 @@ dependencies = [
 
 [[package]]
 name = "futures-io"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cecba35d7ad927e23624b22ad55235f2239cfa44fd10428eecbeba6d6a717718"
+checksum = "53c0fa8157de1303bfffdaa1cc2a673bfffb60102f76b0ef4441659124373fed"
 
 [[package]]
 name = "futures-macro"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e835b70203e41293343137df5c0664546da5745f82ec9b84d40be8336958447b"
+checksum = "9fb9654ba8355388abeb8dcb4fc62f511300867002afc858860463bdd9fe0c44"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 3.0.9",
 ]
 
 [[package]]
 name = "futures-sink"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c39754e157331b013978ec91992bde1ac089843443c49cbc7f46150b0fad0893"
+checksum = "1944426bf7d03f1d14f708785e4b33efd750b36d48a157b836b3efc15ede8e1d"
 
 [[package]]
 name = "futures-task"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "037711b3d59c33004d3856fbdc83b99d4ff37a24768fa1be9ce3538a1cde4393"
+checksum = "cd417de3d1d015fc3bfd2b1ea46dfc7bab72ef86f1cc7cc9c78e728b34a6d1fd"
 
 [[package]]
 name = "futures-util"
-version = "0.3.32"
+version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "389ca41296e6190b48053de0321d02a77f32f8a5d2461dd38762c0593805c6d6"
+checksum = "0d50a92467f8ba5dd6e3ee5d4bd04d73ab2e4e1c44474a0674821dfce14b79bc"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -253,9 +253,9 @@ checksum = "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954"
 
 [[package]]
 name = "indexmap"
-version = "2.14.0"
+version = "2.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9"
+checksum = "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
 dependencies = [
  "equivalent",
  "hashbrown 0.17.1",
@@ -271,9 +271,9 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "js-sys"
-version = "0.3.103"
+version = "0.3.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53b44bfcdb3f8d5837a46dae1ca9660a837176eee74a28b229bc626816589102"
+checksum = "7883d941dae510fb2d978fc3fe018c71c9e2892fd38854de3e8b92c2e5ad9cc5"
 dependencies = [
  "cfg-if",
  "futures-util",
@@ -288,9 +288,9 @@ checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
 
 [[package]]
 name = "libc"
-version = "0.2.186"
+version = "0.2.190"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
+checksum = "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
 
 [[package]]
 name = "libm"
@@ -300,9 +300,9 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "log"
-version = "0.4.29"
+version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
+checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "macro-string"
@@ -312,14 +312,14 @@ checksum = "59a9dbbfc75d2688ed057456ce8a3ee3f48d12eec09229f560f3643b9f275653"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.119",
 ]
 
 [[package]]
 name = "matrixmultiply"
-version = "0.3.10"
+version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a06de3016e9fae57a36fd14dba131fccf49f74b40b7fbdb472f96e361ec71a08"
+checksum = "3f607c237553f086e7043417a51df26b2eb899d3caff94e6a67592ff992fedc7"
 dependencies = [
  "autocfg",
  "rawpointer",
@@ -327,15 +327,15 @@ dependencies = [
 
 [[package]]
 name = "memchr"
-version = "2.8.0"
+version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
+checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "mio"
-version = "1.2.1"
+version = "1.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02bd0af71c67b473010cbbc60715ee815645a4dc942899111f494b4b737d6fda"
+checksum = "1788edb87fdc09c7e26304471e2f5be8cdefb1b6930d6e3985fc02ff53bf86ee"
 dependencies = [
  "libc",
  "wasi",
@@ -359,9 +359,9 @@ dependencies = [
 
 [[package]]
 name = "num-bigint"
-version = "0.4.6"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
+checksum = "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367"
 dependencies = [
  "num-integer",
  "num-traits",
@@ -384,14 +384,14 @@ checksum = "ed3955f1a9c7c0c15e092f9c887db08b1fc683305fdf6eb6684f22555355e202"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.119",
 ]
 
 [[package]]
 name = "num-integer"
-version = "0.1.46"
+version = "0.1.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7969661fd2958a5cb096e56c8e1ad0444ac2bbcd0061bd28660485a44879858f"
+checksum = "7ce2d95d4b3734dc35aa2f45e1aa22cd416814592a4f9d9205e11affd5b8e10b"
 dependencies = [
  "num-traits",
 ]
@@ -477,23 +477,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
 dependencies = [
  "proc-macro2",
- "syn",
+ "syn 2.0.119",
 ]
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.106"
+version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
+checksum = "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.45"
+version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
+checksum = "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001"
 dependencies = [
  "proc-macro2",
 ]
@@ -523,15 +523,15 @@ dependencies = [
 
 [[package]]
 name = "rustc-hash"
-version = "2.1.2"
+version = "2.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94300abf3f1ae2e2b8ffb7b58043de3d399c73fa6f4b73826402a5c457614dbe"
+checksum = "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d"
 
 [[package]]
 name = "rustversion"
-version = "1.0.22"
+version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
+checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 
 [[package]]
 name = "safe_arch"
@@ -575,29 +575,89 @@ dependencies = [
 name = "semio-framework-2d"
 version = "0.1.0"
 dependencies = [
- "semio-framework-font-anta-latin-ext-regular",
- "semio-framework-font-anta-latin-regular",
- "semio-framework-font-anta-math-regular",
- "semio-framework-font-anta-symbols-regular",
- "semio-framework-font-kelly-slab-cyrillic-regular",
- "semio-framework-font-kelly-slab-latin-ext-regular",
- "semio-framework-font-kelly-slab-latin-regular",
- "semio-framework-font-noto-emoji-activities-regular",
- "semio-framework-font-noto-emoji-faces-regular",
- "semio-framework-font-noto-emoji-flags-regular",
- "semio-framework-font-noto-emoji-food-regular",
- "semio-framework-font-noto-emoji-joined-forms-regular",
- "semio-framework-font-noto-emoji-nature-regular",
- "semio-framework-font-noto-emoji-objects-regular",
- "semio-framework-font-noto-emoji-people-regular",
- "semio-framework-font-noto-emoji-regions-regular",
- "semio-framework-font-noto-emoji-supplement-regular",
- "semio-framework-font-noto-emoji-symbols-regular",
- "semio-framework-font-noto-emoji-travel-regular",
- "semio-framework-font-share-tech-mono-latin-regular",
+ "semio-framework-2d-booleans",
+ "semio-framework-2d-compute",
+ "semio-framework-2d-engine",
+ "semio-framework-2d-path-flatten",
+ "semio-framework-2d-path-stroke",
+ "semio-framework-2d-regions",
+ "semio-framework-2d-retire",
+ "semio-framework-2d-text",
+ "semio-framework-2d-trace",
+]
+
+[[package]]
+name = "semio-framework-2d-booleans"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-engine",
+ "semio-framework-2d-path-flatten",
+ "semio-framework-2d-retire",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-2d-compute"
+version = "0.1.0"
+dependencies = [
  "semio-framework-hash",
+]
+
+[[package]]
+name = "semio-framework-2d-engine"
+version = "0.1.0"
+dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-2d-path-flatten"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-engine",
+ "semio-framework-2d-retire",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-2d-path-stroke"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-engine",
+ "semio-framework-2d-retire",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-2d-regions"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-booleans",
+ "semio-framework-2d-engine",
+]
+
+[[package]]
+name = "semio-framework-2d-retire"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-2d-text"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-2d-trace"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-engine",
+ "semio-framework-2d-retire",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -629,9 +689,13 @@ dependencies = [
 name = "semio-framework-actor"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-actor-job-publication",
+ "semio-framework-actor-pack",
+ "semio-framework-actor-retained-context",
+ "semio-framework-actor-retained-turn",
+ "semio-framework-actor-vocabulary",
  "semio-framework-async",
  "semio-framework-job",
- "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
@@ -639,14 +703,71 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-actor-job-publication"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor-pack",
+ "semio-framework-actor-vocabulary",
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-actor-pack"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-actor-retained-context"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor-retained-turn",
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-value",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-actor-retained-turn"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor-pack",
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-actor-vocabulary"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor-pack",
+ "semio-framework-actor-retained-turn",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+]
+
+[[package]]
 name = "semio-framework-artifact-reference"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference-borrow",
  "semio-framework-dsl-record",
  "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-value",
 ]
+
+[[package]]
+name = "semio-framework-artifact-reference-borrow"
+version = "0.1.0"
 
 [[package]]
 name = "semio-framework-async"
@@ -664,7 +785,15 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "semio-framework-composition-admission"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference-borrow",
+ "semio-framework-schema-composition",
 ]
 
 [[package]]
@@ -690,7 +819,7 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -741,7 +870,7 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -772,86 +901,6 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
 ]
-
-[[package]]
-name = "semio-framework-font-anta-latin-ext-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-anta-latin-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-anta-math-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-anta-symbols-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-kelly-slab-cyrillic-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-kelly-slab-latin-ext-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-kelly-slab-latin-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-activities-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-faces-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-flags-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-food-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-joined-forms-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-nature-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-objects-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-people-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-regions-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-supplement-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-symbols-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-noto-emoji-travel-regular"
-version = "0.1.0"
-
-[[package]]
-name = "semio-framework-font-share-tech-mono-latin-regular"
-version = "0.1.0"
 
 [[package]]
 name = "semio-framework-geometry"
@@ -972,6 +1021,45 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-job-fault-publication"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-job-publication"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-job-worker"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-job-worker-authority",
+ "semio-framework-trace",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-job-worker-authority"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-trace",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -992,7 +1080,7 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -1104,6 +1192,7 @@ dependencies = [
  "semio-framework-os-history-schema",
  "semio-framework-os-pack",
  "semio-framework-pack-json",
+ "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
 ]
@@ -1117,6 +1206,7 @@ dependencies = [
  "semio-framework-os-history-schema",
  "semio-framework-os-pack",
  "semio-framework-pack-json",
+ "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
 ]
@@ -1177,6 +1267,7 @@ dependencies = [
  "js-sys",
  "semio-framework-artifact-reference",
  "semio-framework-async",
+ "semio-framework-composition-admission",
  "semio-framework-deflate",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
@@ -1188,6 +1279,9 @@ dependencies = [
  "semio-framework-io-schema",
  "semio-framework-io-sqlite-snapshot",
  "semio-framework-job",
+ "semio-framework-job-publication",
+ "semio-framework-job-worker",
+ "semio-framework-job-worker-authority",
  "semio-framework-mutation-diff",
  "semio-framework-os-channel",
  "semio-framework-os-command",
@@ -1198,10 +1292,12 @@ dependencies = [
  "semio-framework-os-inference",
  "semio-framework-os-kernel-dsl-derive",
  "semio-framework-os-pack",
+ "semio-framework-os-store-blob-identity",
  "semio-framework-os-store-command",
  "semio-framework-os-store-cursor",
  "semio-framework-os-store-envelope",
  "semio-framework-os-store-ephemeral",
+ "semio-framework-os-store-link-schema",
  "semio-framework-os-store-message-ledger",
  "semio-framework-os-store-one-item",
  "semio-framework-os-store-projection",
@@ -1209,6 +1305,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pack-json-retained-schema",
+ "semio-framework-pack-source",
  "semio-framework-plugin-component-receipt",
  "semio-framework-replication",
  "semio-framework-schema-composition",
@@ -1240,7 +1337,7 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "serde_json",
- "syn",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -1255,6 +1352,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-pack-record-token",
+ "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
  "serde_json",
@@ -1267,6 +1365,15 @@ dependencies = [
  "semio-framework-io-control",
  "semio-framework-pack-json",
  "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-os-store-blob-identity"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "serde",
 ]
 
 [[package]]
@@ -1319,6 +1426,17 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-snapshot-read",
+]
+
+[[package]]
+name = "semio-framework-os-store-link-schema"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-dsl-record",
+ "semio-framework-os-store-blob-identity",
+ "semio-framework-pack-json",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -1375,6 +1493,7 @@ dependencies = [
  "semio-framework-io-sqlite-snapshot",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
+ "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
 ]
@@ -1411,6 +1530,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-pack-source"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-error",
+]
+
+[[package]]
 name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
@@ -1419,6 +1545,7 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-artifact-reference",
  "semio-framework-async",
+ "semio-framework-composition-admission",
  "semio-framework-diagnostic",
  "semio-framework-dispatch-macros",
  "semio-framework-dsl",
@@ -1427,10 +1554,15 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
+ "semio-framework-job-fault-publication",
+ "semio-framework-job-publication",
+ "semio-framework-job-worker",
+ "semio-framework-job-worker-authority",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin-mounted-owner",
+ "semio-framework-plugin-ownership",
  "semio-framework-replication",
  "semio-framework-schema",
  "semio-framework-schema-composition",
@@ -1472,6 +1604,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-ownership"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-replication"
 version = "0.1.0"
 dependencies = [
@@ -1482,6 +1628,9 @@ dependencies = [
  "semio-framework-mutation-diff",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
+ "semio-framework-pack-source",
+ "semio-framework-replication-crypto",
+ "semio-framework-replication-error",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-trace",
@@ -1490,6 +1639,22 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-replication-crypto"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-replication-error",
+]
+
+[[package]]
+name = "semio-framework-replication-error"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-pack-error",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -1519,7 +1684,7 @@ dependencies = [
  "quote",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
- "syn",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -1572,6 +1737,7 @@ dependencies = [
  "semio-framework-ui",
  "semio-framework-ui-locale",
  "semio-framework-value",
+ "semio-framework-value-shared-issuance",
  "serde",
 ]
 
@@ -1614,11 +1780,36 @@ dependencies = [
 name = "semio-framework-ui-contract"
 version = "0.1.0"
 dependencies = [
- "semio-framework-replication",
  "semio-framework-schema-registry",
+ "semio-framework-ui-contract-budget",
+ "semio-framework-ui-contract-identity",
+ "semio-framework-ui-contract-text",
  "semio-framework-ui-styling",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-ui-contract-budget"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-ui-contract-identity"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-ui-contract-text",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-ui-contract-text"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-ui-contract-budget",
+ "semio-framework-value",
  "serde",
 ]
 
@@ -1799,7 +1990,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
- "syn",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -2044,6 +2235,8 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-io-base64",
  "semio-framework-job",
+ "semio-framework-job-worker",
+ "semio-framework-job-worker-authority",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
@@ -2698,6 +2891,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-job",
+ "semio-framework-job-fault-publication",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
@@ -2775,6 +2969,7 @@ name = "semio-s-plugin-puzzle-jobs"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job",
+ "semio-framework-job-publication",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-value",
@@ -2803,9 +2998,9 @@ checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
 
 [[package]]
 name = "serde"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
+checksum = "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
 dependencies = [
  "serde_core",
  "serde_derive",
@@ -2813,29 +3008,29 @@ dependencies = [
 
 [[package]]
 name = "serde_core"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41d385c7d4ca58e59fc732af25c3983b67ac852c1a25000afe1175de458b67ad"
+checksum = "67dca2c9c51e58a4791a4b1ed58308b39c64224d349a935ab5039aa360942a48"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79"
+checksum = "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 3.0.9",
 ]
 
 [[package]]
 name = "serde_json"
-version = "1.0.149"
+version = "1.0.154"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83fc039473c5595ace860d8c4fafa220ff474b3fc6bfdb4293327f1a37e94d86"
+checksum = "e7e9cc8b1b85264074fbcc02a88680c4096b1e47df8f739dceb03bf482f04bd6"
 dependencies = [
  "itoa",
  "memchr",
@@ -2865,15 +3060,15 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "smallvec"
-version = "1.15.1"
+version = "1.16.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
+checksum = "5b3dc8af474f516a851ff4bd12db780f948b9250ad37211e4eec0bccea54e01b"
 
 [[package]]
 name = "socket2"
-version = "0.6.4"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
+checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
  "windows-sys",
@@ -2899,9 +3094,20 @@ checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
 name = "syn"
-version = "2.0.117"
+version = "2.0.119"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99"
+checksum = "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-ident",
+]
+
+[[package]]
+name = "syn"
+version = "3.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d78c8dee4c7bf0e14673097256fed6142ce9d3b85a408189d07482442145823b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2925,14 +3131,14 @@ checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.119",
 ]
 
 [[package]]
 name = "tokio"
-version = "1.52.3"
+version = "1.53.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fc7f01b389ac15039e4dc9531aa973a135d7a4135281b12d7c1bc79fd57fffe"
+checksum = "ce3335fa71841cda333a58d7615b03901380ecf09d59b3296d21f8bbac0dde4e"
 dependencies = [
  "libc",
  "mio",
@@ -2944,13 +3150,13 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "2.7.0"
+version = "2.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "385a6cb71ab9ab790c5fe8d67f1645e6c450a7ce006a33de03daa956cf70a496"
+checksum = "78773a2a397f451582ce068015985c33193cf6dea8b74d2a639fe457b2f07b0e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 3.0.9",
 ]
 
 [[package]]
@@ -2961,9 +3167,9 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.24"
+version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
 
 [[package]]
 name = "unicode-xid"
@@ -2979,9 +3185,9 @@ checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.126"
+version = "0.2.129"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b067c0c11094aef6b7a801c1e34a26affafdf3d051dba08456b868789aaf9a4"
+checksum = "9bb54f33acc68fd454578d9820b0bde1a1a3d17aa17bb7b6595806d02886d409"
 dependencies = [
  "cfg-if",
  "once_cell",
@@ -2992,9 +3198,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.126"
+version = "0.2.129"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "167ce5e579f6bcf889c4f7175a8a5a585de84e8ff93976ce393efa5f2837aab1"
+checksum = "2e29d0c35b16e224a7eeb5cd2d25e3e1968fbd65604117b44d3b789d00ee8535"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -3002,22 +3208,22 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.126"
+version = "0.2.129"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3997c7839262f4ef12cf90b818d6340c18e80f263f1a94bf157d0ec4420380e"
+checksum = "6f501a8bc3719dba86ef8ae4728879c08001bea749eb1333ac5b91e040e2a6b7"
 dependencies = [
  "bumpalo",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 3.0.9",
  "wasm-bindgen-shared",
 ]
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.126"
+version = "0.2.129"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc1b4cb0cc549fcf58d7dfc081778139b3d283a081644e833e84682ad71cea24"
+checksum = "23f0c9c52aa7cd7d77769a4cfe2a9adb1b331f489a41d912ce14513d5ab995c6"
 dependencies = [
  "unicode-ident",
 ]
@@ -3058,9 +3264,9 @@ dependencies = [
 
 [[package]]
 name = "web-sys"
-version = "0.3.103"
+version = "0.3.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8622dcb61c0bcc9fffa6938bed81210af2da9a7e4a1a834b2e37a59b6dfb6141"
+checksum = "88261b9deccee56594c11a3460c462c41f58d148598fe70ad77070126a68aba4"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
@@ -3121,7 +3327,7 @@ dependencies = [
  "heck",
  "indexmap",
  "prettyplease",
- "syn",
+ "syn 2.0.119",
  "wasm-metadata",
  "wit-bindgen-core",
  "wit-component",
@@ -3138,7 +3344,7 @@ dependencies = [
  "prettyplease",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.119",
  "wit-bindgen-core",
  "wit-bindgen-rust",
 ]
@@ -3183,6 +3389,6 @@ dependencies = [
 
 [[package]]
 name = "zmij"
-version = "1.0.21"
+version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
+checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"

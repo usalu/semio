@@ -70,9 +70,9 @@ async function waitProgress(options: LeaseOptions, progress: LeaseWait, started:
 }
 
 export type ResourceLease = ResourceAccess & { release(): void };
-const originalLeases=new WeakMap<ResourceLease,{path:string;signal:AbortSignal;live:boolean}>();
+const originalLeases=new WeakMap<ResourceLease,{path:string;signal:AbortSignal;live:boolean;mode:ResourceAccess["mode"]}>();
 /** 🪪️ Requires the exact live system transaction issued for this original catalog writer. */
-export function requireResourceLeaseCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued?.live||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||lease.mode!=="exclusive"||lease.resource!==resource)throw Error("Original live catalog writer custody required");}
+export function requireResourceLeaseCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued?.live||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||issued.mode!=="exclusive"||lease.mode!==issued.mode||lease.resource!==resource)throw Error("Original live catalog writer custody required");}
 
 type LeaseDatabase = { exec(sql: string): void; read(sql: string, ...values: string[]): Record<string, unknown> | undefined; close(): void };
 const APPLICATION_ID = 0x534d4c53;
@@ -131,6 +131,9 @@ function initialize(database: LeaseDatabase, resource: string): void {
   } catch (error) { try{database.exec("ROLLBACK");}catch{}throw error; }
 }
 
+/** 📖️ Requires the privately issued shared mode through the exact live original reader. */
+export function requireResourceLeaseReadCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued?.live||issued.mode!=="shared"||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||lease.mode!==issued.mode||lease.resource!==resource)throw Error("Original live resource reader custody required");}
+
 /** 🔒️ Waits cancellably for shared or exclusive access; release only after the protected operation stops. */
 export async function acquireResourceLease(options: LeaseOptions): Promise<ResourceLease> {
   options.signal.throwIfAborted();
@@ -157,7 +160,7 @@ export async function acquireResourceLease(options: LeaseOptions): Promise<Resou
         if (remaining(options, started) <= 0 && options.timeoutMs !== 0) throw new Error(`Resource lease timed out: ${options.resource}`);
         acquired = true;
         let released = false;
-        const issued={path,signal:options.signal,live:true};const lease:ResourceLease={ resource: options.resource, mode: options.mode, release() {
+        const issued={path,signal:options.signal,live:true,mode:options.mode};const lease:ResourceLease={ resource: options.resource, mode: options.mode, release() {
           if (released) return;
           released = true;issued.live=false;
           try { database.exec("ROLLBACK"); } finally { database.close(); }

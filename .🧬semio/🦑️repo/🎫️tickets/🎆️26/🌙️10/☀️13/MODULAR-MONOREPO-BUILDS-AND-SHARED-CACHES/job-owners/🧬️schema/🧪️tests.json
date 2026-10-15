@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "tests"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "tests": {
+      "type": "array",
+      "minItems": 103,
+      "maxItems": 103,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "source",
+          "target"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^🧰️framework/"
+          },
+          "target": {
+            "enum": [
+              "lib",
+              "original-borrowed-authority",
+              "original-caller-capture",
+              "original-caller-source",
+              "original-child-source",
+              "original-clock-stride",
+              "original-close-context",
+              "original-context-owner",
+              "original-core-budget",
+              "original-fault-binding",
+              "original-fixture-caller",
+              "original-header-initialization",
+              "original-native-preparation",
+              "original-normal-failure",
+              "original-outcome-descriptor",
+              "original-page-limit",
+              "original-paged-source",
+              "original-payload",
+              "original-payload-builder",
+              "original-physical-page-close",
+              "original-reconcile",
+              "original-retained-loan",
+              "original-semantic-loan",
+              "original-source-publication",
+              "original-staged-metadata",
+              "original-turn-failure",
+              "original-weak-return",
+              "original-work-grant",
+              "original-worker-turn"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

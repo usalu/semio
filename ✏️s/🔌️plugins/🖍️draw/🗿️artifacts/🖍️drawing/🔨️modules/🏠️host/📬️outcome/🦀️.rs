@@ -1,6 +1,7 @@
 //! 📬️ Every Drawing job lends its yield, complete, cancelled and fault outcome from custody it owns until a paid close.
 
-use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedJobPublication, StepContext};
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
+use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 

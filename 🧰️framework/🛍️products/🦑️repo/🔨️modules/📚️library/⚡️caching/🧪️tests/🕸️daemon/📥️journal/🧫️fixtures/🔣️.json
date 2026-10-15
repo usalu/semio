@@ -57,7 +57,9 @@
     "directory": "<private-data>",
     "socketPath": "<owned-socket>",
     "toolingIdentity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "graphIdentity": null,
+    "implementationIdentity": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
   },
   "configuredSocketLength": 89,
   "toolingLifetime": {

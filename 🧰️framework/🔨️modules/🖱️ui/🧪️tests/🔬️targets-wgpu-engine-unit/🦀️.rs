@@ -3283,7 +3283,8 @@ fn retained_input_discard_projects_the_shared_draft_law_and_schedules_paint() {
 
 #[test]
 fn original_layout_admission_params_cancel_and_full_error_close_with_system_receipts(){
- use semio_framework_job::{BatchJobParams,BatchDriveConfig,OperationId,Generation,InteractiveStage,RetainedCloneGrant};
+ use semio_framework_job::{OperationId,Generation,InteractiveStage,RetainedCloneGrant};
+use semio_framework_job_worker_authority::{BatchJobParams,BatchDriveConfig};
  use semio_framework_value::{ValueError,ValueRefusalKind};
  use crate::wgpu::host::physical_job_close_tests::measured;
  let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🫴️receiving.json")).unwrap();

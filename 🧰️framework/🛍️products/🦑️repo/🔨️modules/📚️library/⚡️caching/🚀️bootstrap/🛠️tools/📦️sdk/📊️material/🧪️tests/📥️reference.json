@@ -1,0 +1,107 @@
+{
+  "reference": {
+    "version": 1,
+    "kind": "shared-pristine",
+    "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sourceIndex": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "ownedPackages": [
+      "nx"
+    ]
+  },
+  "cases": [
+    {
+      "name": "exact material reference",
+      "value": {
+        "version": 1,
+        "kind": "shared-pristine",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sourceIndex": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedPackages": [
+          "nx"
+        ]
+      },
+      "accept": true
+    },
+    {
+      "name": "extra authority field",
+      "value": {
+        "version": 1,
+        "kind": "shared-pristine",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "retire": true,
+        "sourceIndex": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedPackages": [
+          "nx"
+        ]
+      },
+      "accept": false
+    },
+    {
+      "name": "wrong owner kind",
+      "value": {
+        "version": 1,
+        "kind": "patched-installation",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "accept": false
+    },
+    {
+      "name": "wrong version",
+      "value": {
+        "version": 2,
+        "kind": "shared-pristine",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sourceIndex": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedPackages": [
+          "nx"
+        ]
+      },
+      "accept": false
+    },
+    {
+      "name": "traversal instead of digest",
+      "value": {
+        "version": 1,
+        "kind": "shared-pristine",
+        "snapshot": "../sdk",
+        "sourceIndex": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedPackages": [
+          "nx"
+        ]
+      },
+      "accept": false
+    },
+    {
+      "name": "uppercase noncanonical digest",
+      "value": {
+        "version": 1,
+        "kind": "shared-pristine",
+        "snapshot": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "sourceIndex": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedPackages": [
+          "nx"
+        ]
+      },
+      "accept": false
+    },
+    {
+      "name": "missing material reference",
+      "value": null,
+      "accept": false
+    }
+  ],
+  "paths": [
+    {
+      "name": "POSIX tools partition",
+      "platform": "posix",
+      "root": "/repo/.cache/b/t/m",
+      "expected": "/repo/.cache/b/t/m/sdk/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "name": "Windows tools partition",
+      "platform": "win32",
+      "root": "C:\\repo\\.cache\\b\\t\\m",
+      "expected": "C:\\repo\\.cache\\b\\t\\m\\sdk\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}

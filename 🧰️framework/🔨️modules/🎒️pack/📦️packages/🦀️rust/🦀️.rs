@@ -9,8 +9,7 @@
 #![allow(async_fn_in_trait)]
 #![allow(ambiguous_glob_reexports, unused_imports)]
 
-// 📡️ Codec primitives, container identity and pack sources are owned by the replication module —
-// the `.spk` container and the `.spr` record stream share one codec floor.
+// 📡️ Container and record streams share replication codecs and the independent pack byte owner.
 #[cfg(test)]
 #[path = "../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
 pub(crate) mod test_allocation;
@@ -22,7 +21,6 @@ extern crate self as pack;
 
 pub use protocol::codec;
 pub use protocol::codec::ids;
-pub use protocol::source;
 /// 🌱️ Re-exported so a crate that already depends on `pack` (e.g. `🏗️mesh-engine`) can implement
 /// `ToValue`/`FromValue` for its own types without taking a second, direct dependency on
 /// `replication` — implementing a foreign trait for a local type is allowed by the orphan rule.
@@ -51,7 +49,6 @@ pub use component::*;
 
 pub use protocol::codec::ids::*;
 pub use protocol::codec::*;
-pub use protocol::source::*;
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🧭️producer-authority/🦀️.rs"]

@@ -58,7 +58,7 @@ async fn io_declaration_registers_every_declared_hop() {
     }
     foreign.sort_unstable();
     foreign.dedup();
-    assert_eq!(foreign, vec!["s.stdio.csv", "s.stdio.json", "s.stdio.obj", "s.stdio.stl", "s.stdio.txt"]);
+    assert_eq!(foreign, vec!["framework.io.text", "s.stdio.csv", "s.stdio.json", "s.stdio.obj", "s.stdio.stl"]);
 }
 
 #[test]

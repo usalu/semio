@@ -488,8 +488,8 @@ pub fn energy_genesis_child_pack(snapshot: &EnergyModelSnapshot, slot: &str, chi
 
 /// 🧬️ The bounded projection of this snapshot's two child handles, as both surfaces hand it to the
 /// framework (`ArtifactEditor::child_restore_projection` / `ArtifactViewer::child_restore_projection`).
-pub fn energy_child_restore_projection(snapshot: &EnergyModelSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("energy model child projection failed: {error}")))
+pub fn energy_child_restore_projection(snapshot: &EnergyModelSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("energy model child projection failed: {error}")))
 }
 //#endregion 🌱️GenesisChildren
 

@@ -26,13 +26,15 @@ description: >-
 
 ## Execute (every trigger, no variation)
 
-Run these **two** shell steps in the same turn (no text between them):
+Run **`diff` then `prepare`**. Do not stage. Do not run `micro-commit stage`, `git add`, or `git add -A`.
 
 ```bash
-bun ./📜️script.ts micro-commit stage && bun ./📜️script.ts micro-commit diff
+bun ./📜️script.ts micro-commit diff
 ```
 
-Read the diff **silently** (do not paste it to the user). Write 1–8 bullets from **this** diff only — not chat memory. **Cover every staged area** that matters (see below)—the script rejects commits that skip an entire area. **Sort by impact**: highest-impact bullet first, then descending (never alphabetical or file-path order). For each line, choose **whatever single emoji best fits that specific change** (no fixed palette).
+Read the diff **silently** (do not paste it to the user). That diff is **only the index**. Unstaged and untracked paths are not part of this commit. If stdout is empty, do not invent bullets and do not stage anything to create a diff — run `prepare` with empty stdin and reply with its error fence.
+
+When the diff is non-empty, write 1–8 bullets from **this** diff only — not chat memory. **Cover every staged area** that matters (see below)—the script rejects commits that skip an entire area. **Sort by impact**: highest-impact bullet first, then descending (never alphabetical or file-path order). For each line, choose **whatever single emoji best fits that specific change** (no fixed palette).
 
 ```bash
 bun ./📜️script.ts micro-commit prepare [gc|gp|g.] <<'EOF'
@@ -41,7 +43,7 @@ bun ./📜️script.ts micro-commit prepare [gc|gp|g.] <<'EOF'
 EOF
 ```
 
-(`prepare` already runs `git add -A`; `stage` keeps the index explicit. Success prints **only** the commit message on stdout.)
+(`prepare` uses the index as it already is and does not run `git add`. Success prints **only** the commit message on stdout.)
 
 ## Your reply
 
@@ -124,6 +126,6 @@ Only `⛳️wip` or `🏗️dev`.
 
 ## Forbidden
 
-Reasoning in the open, codebase search, tickets MCP, goals, `gh pr create`, hand-editing counter/timestamp/Signed-off-by, inventing bullets without reading this turn's diff, bullets sorted by file name or diff hunk order instead of impact, **omitting whole staged areas** (especially `.cursor/plans/` or repo infra) while only describing unrelated tweaks, leading `-` on bullets, a space after the emoji (`🗺️ Fix …`), reusing one emoji for every bullet when the changes differ, **reserved lead emojis** (`🎆️` `📊️` `🔢️` `🚩️`) or copying the `🎆️YY🌙️MM☀️DD` date pattern into bullets, **stripping or merging newlines** in the fenced commit message reply.
+Reasoning in the open, codebase search, tickets MCP, goals, `gh pr create`, `micro-commit stage`, `git add`, staging unstaged or untracked paths, hand-editing counter/timestamp/Signed-off-by, inventing bullets without reading this turn's diff, bullets sorted by file name or diff hunk order instead of impact, **omitting whole staged areas** (especially `.cursor/plans/` or repo infra) while only describing unrelated tweaks, leading `-` on bullets, a space after the emoji (`🗺️ Fix …`), reusing one emoji for every bullet when the changes differ, **reserved lead emojis** (`🎆️` `📊️` `🔢️` `🚩️`) or copying the `🎆️YY🌙️MM☀️DD` date pattern into bullets, **stripping or merging newlines** in the fenced commit message reply.
 
 Related: `.agents/skills/merging/SKILL.md`, `.agents/skills/commit/SKILL.md`.

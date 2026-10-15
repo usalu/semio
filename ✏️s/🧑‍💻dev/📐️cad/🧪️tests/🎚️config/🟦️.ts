@@ -47,7 +47,7 @@ export default defineConfig({
     mode: "test",
     include: ["✏️s/🔌️plugins/📐️cad/🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔬️layering/🟦️.ts"],
     includeSource: DOMAIN_FILES,
-    coverage: { include: DOMAIN_FILES },
+    coverage: { include: [...DOMAIN_FILES, `${ARTIFACT_EDITOR_ENGINE}/📺️renderer/*/🟦️.{ts,tsx}`] },
     environment: "node",
     passWithNoTests: false,
     server: {

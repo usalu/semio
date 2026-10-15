@@ -152,6 +152,12 @@ export function cargoTestPlanV1(request:CargoTestRequestV1, input:CargoTestPolic
   return [step("build",["test","--no-run",...compiler,...packages,...split.buildArgs]),step("assert",["test",...compiler,...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip])];
 }
 
+/** 📥️ Shares the exact admitted compiler selection with dependency preparation before assertion filters are applied. */
+export function cargoTestCompilerArgumentsV1(request:CargoTestRequestV1,input:CargoTestPolicyV1):string[]{
+ const policy=admitPolicy(input);cargoTestPlanV1(request,policy,join(policy.artifactDirectory,"binaries-metadata.json"));const split=partitionNextestExecutionFilters(request.extraArgs??[]);
+ return["test","--no-run","--profile",buildModePolicy(policy.mode).cargoProfile,"--manifest-path",request.manifestPath,...request.packages.flatMap(name=>["-p",name]),...split.buildArgs];
+}
+
 /** 🔌️ Supplies a caller-owned executable for the Cargo command grammar. */
 export type CargoTestExecutionPortV1=Readonly<{command:string;args:readonly string[]}>;
 
@@ -180,7 +186,7 @@ async function admitCargoExecutionV1(request:CargoTestRequestV1,policy:CargoTest
 
 /** 🏃️ Executes only after actual backing and selected Source admission, under unchanged original authority. */
 export async function runCargoTestsV1(request:CargoTestRequestV1,input:CargoTestPolicyV1,admission:CargoTestAdmissionV1,port:CargoTestExecutionPortV1={command:"cargo",args:[]}):Promise<void>{
- const policy=admitPolicy(input),split=partitionNextestExecutionFilters(request.extraArgs??[]),compilerArgs=["test","--no-run","--profile",buildModePolicy(policy.mode).cargoProfile,"--manifest-path",request.manifestPath,...request.packages.flatMap(name=>["-p",name]),...split.buildArgs],env=await admitCargoExecutionV1(request,policy,admission,compilerArgs),control=admission.control;
+ const policy=admitPolicy(input),compilerArgs=cargoTestCompilerArgumentsV1(request,policy),env=await admitCargoExecutionV1(request,policy,admission,compilerArgs),control=admission.control;
  mkdirSync(policy.artifactDirectory,{recursive:true});const directory=mkdtempSync(join(policy.artifactDirectory,"semio-nextest-")),metadata=join(directory,"binaries-metadata.json");requireNativeStoragePathV1(admission.storage.backing.root,directory);
  let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
  try{const plan=cargoTestPlanV1(request,policy,metadata),identity=cargoTestBuildLeaseIdentityV1(request,policy);lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,targetDirectory:policy.targetDirectory,args:["--profile",identity.profile],signal:control.signal,control});

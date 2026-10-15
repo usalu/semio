@@ -48,7 +48,7 @@ pub struct LayoutSnapshot {
     pub print_target: Option<String>,
     #[state(artifact)]
     #[value(rename = "dataFields", default, skip_serializing_if = "Option::is_none")]
-    pub data_fields: Option<semio_s_artifact_forms_forms::schema::dictionary::FormDictionary>,
+    pub data_fields: Option<semio_framework_value_dictionary::QuestionDictionary>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[value(rename = "backgroundDrawing", default, skip_serializing_if = "Option::is_none")]
@@ -100,6 +100,6 @@ pub mod drawing_child;
 /// 🧹️ Releases recursive child and dictionary owners before the plain snapshot fields.
 pub fn retire(mut value: LayoutSnapshot) {
     if let Some(child) = value.background_drawing.take() { drawing_child::retire(child); }
-    if let Some(dictionary) = value.data_fields.take() { <semio_s_artifact_forms_forms::schema::dictionary::FormDictionary as semio_framework_value::FromValue>::retire_decoded(dictionary); }
+    if let Some(dictionary) = value.data_fields.take() { <semio_framework_value_dictionary::QuestionDictionary as semio_framework_value::FromValue>::retire_decoded(dictionary); }
     drop(value);
 }

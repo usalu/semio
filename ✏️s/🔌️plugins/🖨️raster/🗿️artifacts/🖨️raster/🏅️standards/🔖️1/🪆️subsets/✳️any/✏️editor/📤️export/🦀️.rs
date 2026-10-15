@@ -1,4 +1,5 @@
 //! 📤️ Cancellable layer-to-PNG export with sealed, credited output pages.
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_io::RasterStackPreparation;
 use crate::{RasterPlayApp, RasterCommand};
@@ -6,7 +7,7 @@ use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework_plugin::{ArtifactOwnedToolJobRequest,ArtifactToolCompletion,ArtifactDownloadOutput,EphemeralEmit};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_pixels::{compositing::layers::RasterStackJob,png_encoding::PngEncodeJob};
-use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeKind,JobOutcomeView,JobPublicationKind,Operation,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedJobPublication,StepContext};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_plugin::{ArtifactMediaExportJobRequest,ArtifactReservedJob,ArtifactReservedToolJob,ArtifactToolPublicationContract,ArtifactToolPublicationLane,EditorApp,Fault,MediaClass,MediaForm,MediaType};
 use semio_framework_plugin::app::{ArtifactMediaExportCompletion,ArtifactMediaExportCredit,ArtifactMediaExportResult,ArtifactOutputChunks,ArtifactSnapshotCloseLease};

@@ -118,7 +118,7 @@ async fn draft_backbone_port_concrete() -> Arc<BackbonePorts> {
 /// instance-ownership invariant and keeps Space global-state closure red. `register_studio_port`'s two real callers
 /// (`create_folder_studio`/`bind_studio_file` in the Home editor's `create-studio`/`bind-space-file`
 /// commands) source `port` from `semio_framework_os::open_folder_space_backbone`/
-/// `open_file_space_backbone` — both declared in `🖥️host/🦀️.rs` (out of this packet's owned
+/// `open_file_space_backbone` — both declared in `🖥️host/🗃️document-backbone/🦀️.rs` (out of this packet's owned
 /// path) as returning `Arc<dyn OsBackbonePort>` directly, already type-erased before this file ever
 /// sees the value; there is no concrete type left to recover into a closed enum variant, and no `Any`
 /// bound on `OsBackbonePort` to downcast through even if there were. The correct fix is a host-created,

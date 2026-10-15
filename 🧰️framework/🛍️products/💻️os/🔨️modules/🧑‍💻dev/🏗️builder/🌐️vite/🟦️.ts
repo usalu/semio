@@ -20,6 +20,7 @@ import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODUL
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import { devStreamMuxServer, semioAgentBridgeRendezvousVitePlugin, semioAgentCredentialInstallVitePlugin, semioLocalHubSessionVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioServiceWorkerScopeVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
+import { COMPILER_FONTS_DIRECTORY, COMPILER_FONTS_ROUTE } from "../../../../../../🔨️modules/📚️compiler/🌍️world/🟦️.ts";
 import { loadFrameworkOsPlaygroundCatalog as _semioPlaygroundGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
 
 import { developmentRuntimeRoot, playgroundSessionViteAlias, readActivationReceipt } from "../../♻️activation/🟦️.ts";
@@ -240,6 +241,7 @@ return {
       ...pluginModuleDirNames.map((name) => ({ kind: "static-dir" as const, route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
       { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${MODULE_VENDOR_DIRECTORY}`, root: path.relative(repoRoot, fontsDir) },
       { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: path.relative(repoRoot, installedExtensionsDir) },
+      ...(renderer === "wgpu" ? [{ kind: "static-dir" as const, route: COMPILER_FONTS_ROUTE, root: COMPILER_FONTS_DIRECTORY }] : []),
     ])),
     // 🏷️ A brand's own static assets (e.g. the Aggregator's funding/partner logos) mount at `/<assetsDir>`
     // alongside the shared `framework/ui/asset` mount above.

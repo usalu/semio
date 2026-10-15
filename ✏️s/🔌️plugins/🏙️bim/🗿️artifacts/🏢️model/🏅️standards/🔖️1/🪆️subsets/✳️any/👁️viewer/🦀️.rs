@@ -344,8 +344,8 @@ impl ArtifactViewer for BimModelViewer {
     const DOCUMENT_SCHEMA: &'static str = BIM_MODEL_DOCUMENT_SCHEMA;
 
     /// 🧬️ The loaded-parent child projection, read off the snapshot's own composition fields; without it a live envelope load faults before the decoded document can replace the store.
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| refusal("bim.model.viewer.child-projection", &error.to_string()))
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| refusal("bim.model.viewer.child-projection", &error.to_string()))
     }
 
     fn initial_snapshot() -> ModelSnapshot {
@@ -564,3 +564,8 @@ pub fn create_bim_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️Modules
+#[path = "🎭️modes/🦀️.rs"]
+pub mod modes;
+//#endregion 🧩️Modules

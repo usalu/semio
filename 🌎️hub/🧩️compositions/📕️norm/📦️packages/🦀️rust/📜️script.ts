@@ -126,7 +126,7 @@ function validateUniqueTaxonomy(value: MutationLeafTaxonomy): boolean {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-norm"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-hub-norm"], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -246,7 +246,7 @@ class ResultsWindowConfigSourceScript extends BundleScript {
 class ResultsWindowConfigTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-artifact-norm-contract"], this.repoRoot, this.invocation.control, ["--test", "config_mutation", ...rest]);
+    await runRepositoryCargoTests(["semio-s-artifact-norm-contract"], this.repoRoot, this.invocation, ["--test", "config_mutation", ...rest]);
   }
 }
 
@@ -308,7 +308,7 @@ class SurfaceRenderSourceScript extends BundleScript {
 class SurfaceRenderTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-norm"], this.repoRoot, this.invocation.control, ["--test", "surface_render", ...rest], { ...process.env, RUST_MIN_STACK: "67108864" });
+    await runRepositoryCargoTests(["semio-hub-norm"], this.repoRoot, this.invocation, ["--test", "surface_render", ...rest], { ...process.env, RUST_MIN_STACK: "67108864" });
   }
 }
 

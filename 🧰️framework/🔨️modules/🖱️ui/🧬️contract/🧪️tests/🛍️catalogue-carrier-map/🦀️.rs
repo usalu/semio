@@ -157,9 +157,9 @@ fn a_javascript_ordered_carrier_map_decodes_through_from_value() {
     let value: serde_json::Value = serde_json::from_str(&fixture.data_attributes_json).expect("fixture object parses");
     let mut entries = Vec::new();
     for key in &fixture.javascript_keys {
-        entries.push((key.clone(), protocol::value::DslValue::String(value[key].as_str().expect("fixture entry").to_string())));
+        entries.push((key.clone(), semio_framework_value::DslValue::String(value[key].as_str().expect("fixture entry").to_string())));
     }
-    let map = <UiFixedMap<UiText> as protocol::value::FromValue>::from_value(protocol::value::DslValue::Object(entries)).unwrap_or_else(|error| panic!("a carrier map must decode from any pack object order: {error:?}"));
+    let map = <UiFixedMap<UiText> as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Object(entries)).unwrap_or_else(|error| panic!("a carrier map must decode from any pack object order: {error:?}"));
     let keys: Vec<String> = map.iter().map(|(key, _)| key.as_str().to_string()).collect();
     assert_eq!(keys, fixture.ascending_keys, "a decoded fixed map is sorted regardless of pack order");
 }

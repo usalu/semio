@@ -21,6 +21,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { HUB_OBSERVABILITY_SCHEMA, type HubObservabilityV1 } from "../../📊️observability/🟦️.ts";
+import { readModuleTreeSource } from "../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const hubRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (...parts: string[]) => JSON.parse(readFileSync(join(hubRoot, ...parts), "utf8"));
@@ -138,7 +139,7 @@ function readmeSection(heading: string): string {
 
 /** 🛣️ The `.route("…")` paths the hub's router registers (the boot server's included). */
 function registeredRoutes(): Set<string> {
-  const source = readFileSync(join(hubRoot, "🏗️bootstrap", "🦀️.rs"), "utf8");
+  const source = readModuleTreeSource(join(hubRoot, "🏗️bootstrap", "🦀️.rs"));
   return new Set([...source.matchAll(/\.route\(\s*"([^"]+)"/gu)].map((match) => match[1]!));
 }
 

@@ -98,11 +98,22 @@ export function memoizedObservedComputationV1(cache,key,compute) {
  finally{retainObservationsV1(parent,nested.values());retainSourceFactsV1(nested.values());}
 }
 
+const validatedAsyncDeliveriesV1=new WeakMap();
+
+/** 🪬️ Reuses only a fully delivered validated hit in the exact live receiving frames. */
+function validatedAsyncDeliveryV1(entry,parent,capture,validation,remember=false){
+ if(!parent||!capture||!validation)return false;
+ let parents=validatedAsyncDeliveriesV1.get(entry);if(!parents){if(!remember)return false;validatedAsyncDeliveriesV1.set(entry,parents=new WeakMap());}
+ let captures=parents.get(parent);if(!captures){if(!remember)return false;parents.set(parent,captures=new WeakMap());}
+ let validations=captures.get(capture);if(!validations){if(!remember)return false;captures.set(capture,validations=new WeakSet());}
+ const delivered=validations.has(validation);if(remember)validations.add(validation);return delivered;
+}
+
 /** 🌊️ Retains complete observations while an original caller yields asynchronous inference. */
 export async function memoizedObservedAsyncComputationV1(cache,key,compute,checkpoint) {
  if(typeof checkpoint!=="function")throw Error("Original asynchronous inference checkpoint required");
- const parent=scopes.getStore(),previous=cache.get(key);
- if(previous){let holds=true;for(const row of previous.observations){await checkpoint();if(!projectObservationHoldsV1(row,parent)){holds=false;break;}}if(holds){retainObservationsV1(parent,previous.observations);retainSourceFactsV1(previous.observations);return previous.value;}}
+ const parent=scopes.getStore(),capture=sourceCaptures.getStore(),validation=inferenceValidationScopes.getStore()??parent,previous=cache.get(key);
+ if(previous){if(validatedAsyncDeliveryV1(previous,parent,capture,validation)){await checkpoint(true);return previous.value;}let holds=true;for(const row of previous.observations){await checkpoint();if(!projectObservationHoldsV1(row,parent)){holds=false;break;}}if(holds){retainObservationsV1(parent,previous.observations);retainSourceFactsV1(previous.observations);validatedAsyncDeliveryV1(previous,parent,capture,validation,true);return previous.value;}}
  const nested=new Map();
  try{const value=await scopes.run(nested,compute);if(value!==null)cache.set(key,{value,observations:[...nested.values()]});return value;}
  finally{retainObservationsV1(parent,nested.values());retainSourceFactsV1(nested.values());}

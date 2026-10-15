@@ -5,7 +5,7 @@ use semio_framework_job::{Generation,JobPayloadAuthority,OperationId,OriginalCal
 use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use std::mem::ManuallyDrop;
 
-use semio_framework_actor::retained_turn::context::{OriginalActorAdmission,OriginalActorContextError,OriginalActorContext,OriginalActorCall,OriginalActorCallError,OriginalActorContextSlot,OriginalActorAdmissionReply,OriginalActorCloseReply};
+use semio_framework_actor::retained_context::{OriginalActorAdmission,OriginalActorContextError,OriginalActorContext,OriginalActorCall,OriginalActorCallError,OriginalActorContextSlot,OriginalActorAdmissionReply,OriginalActorCloseReply};
 fn metadata(complete:bool)->RetainedCloneStep{let progress=RetainedCloneProgress{copied_items:1,..Default::default()};if complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)}}
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 

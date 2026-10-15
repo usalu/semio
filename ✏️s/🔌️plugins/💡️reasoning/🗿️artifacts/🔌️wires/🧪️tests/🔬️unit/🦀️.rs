@@ -63,9 +63,9 @@ async fn content_handle_is_content_addressed_and_deterministic() {
 #[semio_framework_async_macros::async_test]
 async fn wires_child_restore_projection_accepts_the_exact_owned_content() {
     let snapshot = empty_wires_snapshot();
-    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Wires content child");
+    let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Wires content child");
     assert_eq!(projection.len(), 1);
-    assert!(projection.admits_member(WIRES_CONTENT_SLOT, &snapshot.content.target));
+    assert!(projection.admits_member(WIRES_CONTENT_SLOT, snapshot.content.target.borrowed()));
     assert_eq!(snapshot.content.child_id, snapshot.content.target.artifact_id);
 }
 
@@ -91,6 +91,6 @@ fn the_curated_example_projects_into_drawable_canvas_layers() {
 #[test]
 fn the_child_restore_projection_names_every_declared_child_slot() {
     let snapshot = empty_wires_snapshot();
-    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("the loaded-parent child projection");
+    let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("the loaded-parent child projection");
     assert_eq!(projection.len(), <WiresSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots().len());
 }

@@ -5,6 +5,7 @@
 //! dispatches through the single typed `RasterCommand` channel via `app_commands!` — mirrors
 //! `shooting_ui`'s B1 pilot.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 extern crate semio_framework_os_kernel as dsl;
@@ -33,7 +34,7 @@ use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pack_json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPublication, StepContext};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
@@ -1274,8 +1275,8 @@ impl ArtifactEditor for RasterPlayApp {
     /// Without it every live envelope load faults with `editor did not declare a loaded-parent child
     /// projection` before the decoded document can replace the store. `assets` declares no child slot
     /// (see `🧬️schema/📸️snapshot`), so the projection is honestly empty.
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("raster.child-projection"), error.to_string()))
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("raster.child-projection"), error.to_string()))
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {

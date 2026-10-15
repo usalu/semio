@@ -39,3 +39,29 @@ The focused prototype successor reached genuine cold, warm and deleted-output re
 The next focused prototype stopped at its exact240-second law deadline before its first Nx child. Read-only live evidence showed its sole PID91818 holding repository-graph-facts EX, a graph snapshotSH and the mounted graph4 reader. Graph optional maintenance requested NativeEX beneath that held callback. Root owns the nested-maintenance regression/fix; no further seven-phase retries proceed until that and admitted-byte SDK publication qualify. Shared Sources are open for development again.
 
 Compiler identity now delegates to the privately issued complete tools8 Rustup generation, retaining driver/LLVM/std/src authority and explicit target selection, rather than repeatedly hashing one launcher and sysroot files. An invented compiler before any physical read was a genuine RED (received ENOENT); the new bridge refuses it at Original generation authority. Strict current integration passed. The actual32MiB compiler oracle borrows that real generation through the retained compiler-store callback, and the DAG probes use the actual projected store environment. The expanded identity integration awaits Storage’s pure SDK identity extraction because its new retention import currently drags the full tools installer into the sealed entry and exposes an unresolved opaque CJS require.
+
+## Current Sealed Prototype Ordinary Checkpoint
+
+The current canonical ordinary Nx prototype completed one test / 285 assertions in 117.28 seconds. It uses the declared package build intent and the actual selected graph → per-unit producer → sealed Bun compiler entry → TaskOrchestrator route, with production supported-unit cache authority unchanged. SDK `37243d801b182ca885992197ec64be75e4bd16d8794187d64d3f9cbf5fc6ddde` stayed exact throughout the operation; the compiler is the privately retained complete Rustup generation, with Cargo's independently observed driver SHA checked separately.
+
+| Phase | Compiler unit misses | Actual Nx runner duration |
+| --- | ---: | ---: |
+| Cold | 3 | 8.7 s |
+| Warm | 0 | 222 ms |
+| Deleted-output restore | 0 | 296 ms |
+| Unrelated workspace member | 1 (new member only) | 2.7 s |
+| Cargo.lock comment | 0 | 877 ms |
+| CARGO_PKG_DESCRIPTION change | 2 (base + consumer) | 7.1 s |
+| Base Source change | 2 (base + consumer) | 4.3 s |
+
+Every unchanged sibling retains its real Nx hash, exact receipt and allocation charge. Both package environment and changed Source invalidate the producer and dependent. The added unrelated member intentionally becomes a selected dependency, so its sole cold compile is expected; prior units stay unchanged despite Cargo row index changes. Deleted outputs restore exact artifacts through the actual cache custody hook.
+
+Full phase startup is still slow. Retained last-phase parent timings are lock 15.180 s total / 11.230 s bootstrap+child, package 19.843 / 14.929, and changed 17.756 / 12.901. Earlier parent timers rolled out of the finite captured output; complete per-phase child logs remain. The warm child shows a 2,961.76 ms specified configuration glob for the literal root `📋️project.json`, and 3,696.67 ms project graph creation, while task execution is 222 ms. This indicates full lazy native inventory construction before graph reuse. Engine Source closure loading/parsing is 76 ms. Source capture and native ignore semantics remain required. No warm speed claim is warranted.
+
+Release is running as the original next operation. This checkpoint qualifies prototype only. Direct rustc consumed-byte ABA protection remains unimplemented, as detailed in `rust-direct-compiler-consumed-bytes.md`.
+
+## Current Complete Ordinary Pair
+
+The release successor completed one test / 285 assertions in 128.48 seconds. Prototype and release now both qualify the current seven-phase law with misses `3/0/0/1/0/2/2`, exact unchanged sibling Nx hashes/receipts/allocation charges, actual deleted-output restore, and stable SDK `37243d801b182ca885992197ec64be75e4bd16d8794187d64d3f9cbf5fc6ddde`. The new member is the sole workspace-phase miss. Cargo package environment changes still invalidate base and its consumer.
+
+Release retained full phase / child timings are lock 14.326 / 10.030 seconds, package 22.672 / 18.564, changed 27.163 / 21.289. These demonstrate correct supported-unit reuse, not fast warm startup or complete workspace coverage. Raw compiler choices outside the privately issued generation, wrappers, and unqualified compiler kinds retain explicit refusal or declared uncached bounded Cargo fallback semantics. The concurrent Rust Source consumed-byte frontier remains open and is the next owned correctness task.

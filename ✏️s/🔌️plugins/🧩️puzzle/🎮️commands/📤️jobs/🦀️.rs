@@ -1,4 +1,5 @@
 //! 🧵️ The job-side lifecycle every puzzle job shares: a bounded outbox that lends payload outcomes, a staged owner bundle that retires through the controlled owner, and counted ladders for engine-owned scaffolds.
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 
 extern crate semio_framework_os_kernel as dsl;
@@ -7,7 +8,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, JobPublicationKind, RetainedJobPublication, RetainedPayloadBuilder, StepContext};
+use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, RetainedPayloadBuilder, StepContext};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::{controlled::ControlledRetirement, RetireOwned};
 use semio_framework_value::{RetirementDemand, ValueError};

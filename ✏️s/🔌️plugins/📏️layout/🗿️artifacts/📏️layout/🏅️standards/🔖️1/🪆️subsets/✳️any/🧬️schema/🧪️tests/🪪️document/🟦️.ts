@@ -8,7 +8,7 @@ import blobSchema from "../../../../../../../../../../../../🧰️framework/�
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import linkSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔣️.json" with { type: "json" };
 import drawingSchema from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🔣️.json" with { type: "json" };
-import dictionarySchema from "../../../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️dictionary/🔣️.json" with { type: "json" };
+import dictionarySchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };

@@ -42,7 +42,7 @@ export class CachePruneScript extends BundleScript {
         console.log(`[DEBUG] Incremental compaction result=${JSON.stringify(result)}`);return;
       }
       const control=scriptCompilerAdmissionControlV1(this.invocation,"cache:shared-maintenance",buildBudgetMs());
-      await withCargoCacheMaintenanceV1({leaseDirectory:join(this.repoRoot,".cache","b","l","m","data"),buildDirectory:cargoDirectories(this.repoRoot).build,control},async()=>{
+      await withCargoCacheMaintenanceV1({leaseDirectory:join(this.repoRoot,".cache","b","l","m","data"),buildDirectory:cargoDirectories(this.repoRoot).build,control,wait:true},async()=>{
         const areas = await scanCacheAreas(this.repoRoot, control, (area, unit) => console.log(`[cache-prune] scanned ${area}/${unit.path}`));
         const plan: PrunePlan = planCachePrune(areas, Date.now(), CACHE_POLICY.storage.guardAgeMs);
         let deletedBytes = 0,

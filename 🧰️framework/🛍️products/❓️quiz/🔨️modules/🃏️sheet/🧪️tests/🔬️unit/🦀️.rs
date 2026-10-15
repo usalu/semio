@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::randomness::uniform_index;
-use crate::schema::{Axis, Category, ClassificationItem, ClassificationTask, Dimension, MatchingItem, Quantity, Scale, SortingTask, CHALLENGES};
+use quiz_schema::{Axis, Category, ClassificationItem, ClassificationTask, Dimension, MatchingItem, Quantity, Scale, SortingTask, CHALLENGES};
 use std::collections::BTreeMap;
 
 pub(crate) fn text(value: &str) -> Text {
@@ -362,7 +362,7 @@ fn sheet_items_never_say_which_number_is_theirs() {
 
 #[test]
 fn shared_sheets_of_the_python_reference_hold() {
-    use crate::schema::tests::{assert_close, entries, fixture, json, typed};
+    use quiz_schema::testkit::{assert_close, entries, fixture, json, typed};
     let vectors = fixture("sheet-assembly");
     let quizzes: Vec<Quiz> = entries(&vectors["quizzes"]).iter().map(typed).collect();
     for vector in entries(&vectors["sheets"]) {

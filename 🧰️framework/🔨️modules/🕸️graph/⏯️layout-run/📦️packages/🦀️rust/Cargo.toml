@@ -18,6 +18,7 @@ name = "semio_framework_graph_layout_run"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-job-publication = { path = "../../../../🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 # 🎒️ `ToValue`/`FromValue` derives; the derive output is rooted at `::semio_framework_os_kernel::`.

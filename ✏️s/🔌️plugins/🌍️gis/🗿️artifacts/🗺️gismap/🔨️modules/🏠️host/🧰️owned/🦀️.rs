@@ -1,5 +1,6 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::{GisMapSnapshot, MapFeature};
 use protocol::{Mutation, OpBinary};
@@ -23,7 +24,7 @@ struct GisMapStoreInitializationAuthority {
     cancel_requested: bool,
     fault: Option<Vec<u8>>,
     fault_detail: Option<Vec<u8>>,
-    publication: semio_framework_job::RetainedJobPublication,
+    publication: semio_framework_job_publication::RetainedJobPublication,
     terminal_handoff: bool,
 }
 
@@ -39,7 +40,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
             GisMapInitializerTurn::Cancelled => semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx),
             GisMapInitializerTurn::Fault => {
                 let detail = self.fault_detail.as_deref().unwrap_or(b"gis-map-store.initializer-fault");
-                self.publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, detail, cx)
+                self.publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, detail, cx)
             }
         }
     }
@@ -335,7 +336,7 @@ impl GisMapStoreInitializationAuthority {
             cancel_requested: false,
             fault: None,
             fault_detail: None,
-            publication: semio_framework_job::RetainedJobPublication::new(),
+            publication: semio_framework_job_publication::RetainedJobPublication::new(),
             terminal_handoff: false,
         }
     }

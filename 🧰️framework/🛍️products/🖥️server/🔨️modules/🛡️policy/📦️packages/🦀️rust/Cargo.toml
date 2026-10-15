@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-server-policy"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Server policy: authorization evaluated at every decision point from policy templates held as data, principals resolved through an instance-supplied credential ladder, and the administration gate."
+
+[package.metadata.semio]
+role = "product"
+id = "server-policy"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-server-contract = { path = "../../../🧬️contract/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+semio-framework-dispatch-macros = { workspace = true }

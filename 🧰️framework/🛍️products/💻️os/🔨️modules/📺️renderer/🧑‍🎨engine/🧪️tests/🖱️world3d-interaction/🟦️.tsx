@@ -91,7 +91,8 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
   };
 });
 
-import { clearPendingWorldProjection, clearPendingWorldProjections, componentPickMergeMode, leftoverBrushRetainGuestHoverV1, registerPendingWorldProjection, WindowInstanceIdContext, World3dHost, World3dWindowViewRegistryV1, World3dWindowViewStoreContext, World3dWindowViewStoreV1, world3dSelectionActionArgs } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { clearPendingWorldProjection, clearPendingWorldProjections, componentPickMergeMode, leftoverBrushRetainGuestHoverV1, registerPendingWorldProjection, World3dHost, World3dWindowViewRegistryV1, World3dWindowViewStoreContext, World3dWindowViewStoreV1, world3dSelectionActionArgs } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { WindowInstanceIdContext } from "../../🧱️elements/🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { SetWindowIconContext, SetWindowTitleContext } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 
 describe("leftover brush guest hover retain", () => {

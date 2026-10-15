@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "profile": {
+    "startTime": 1000,
+    "endTime": 1400,
+    "nodes": [
+      { "id": 1, "callFrame": { "functionName": "(root)", "url": "", "lineNumber": -1, "columnNumber": -1 }, "children": [2, 7, 8] },
+      { "id": 2, "callFrame": { "functionName": "a", "url": "file:///repo/a.ts", "lineNumber": 9, "columnNumber": 2 }, "children": [3, 5] },
+      { "id": 3, "callFrame": { "functionName": "b", "url": "file:///repo/b.ts", "lineNumber": 19, "columnNumber": 3 }, "children": [4] },
+      { "id": 4, "callFrame": { "functionName": "a", "url": "file:///repo/a.ts", "lineNumber": 9, "columnNumber": 2 }, "children": [6] },
+      { "id": 5, "callFrame": { "functionName": "readFileSync", "url": "", "lineNumber": -1, "columnNumber": -1 } },
+      { "id": 6, "callFrame": { "functionName": "c", "url": "file:///repo/c.ts", "lineNumber": 29, "columnNumber": 4 } },
+      { "id": 7, "callFrame": { "functionName": "(idle)", "url": "", "lineNumber": -1, "columnNumber": -1 } },
+      { "id": 8, "callFrame": { "functionName": "(garbage collector)", "url": "", "lineNumber": -1, "columnNumber": -1 } }
+    ],
+    "samples": [2, 3, 4, 6, 5, 7, 8, 6],
+    "timeDeltas": [10, 20, 30, 40, 50, 60, 70, 80]
+  },
+  "expected": {
+    "samples": 8,
+    "spanMicroseconds": 400,
+    "deltaSumMicroseconds": 360,
+    "tailMicroseconds": 40,
+    "frames": [
+      { "function": "(root)", "self": 0, "inclusive": 8 },
+      { "function": "a", "self": 2, "inclusive": 6, "selfMicroseconds": 40, "inclusiveMicroseconds": 230, "line": 10, "column": 3 },
+      { "function": "b", "self": 1, "inclusive": 4, "selfMicroseconds": 20, "inclusiveMicroseconds": 170 },
+      { "function": "c", "self": 2, "inclusive": 2, "selfMicroseconds": 120, "inclusiveMicroseconds": 120 },
+      { "function": "readFileSync", "self": 1, "inclusive": 1 },
+      { "function": "(idle)", "self": 1, "inclusive": 1 },
+      { "function": "(garbage collector)", "self": 1, "inclusive": 1 }
+    ]
+  },
+  "invalid": ["sample-delta-length", "negative-delta", "unknown-sample", "duplicate-parent", "cycle", "orphan"]
+}

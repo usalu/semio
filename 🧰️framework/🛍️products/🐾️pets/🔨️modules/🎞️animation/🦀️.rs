@@ -14,8 +14,8 @@
 //! @see ../🎞️animation/🟦️.ts — the TypeScript twin
 
 use crate::rig::{rest_pose, BonePose, Pose};
-use crate::schema::{Channel, Clip, Ease, Species, Ticks, Track, TICKS_PER_SECOND};
 use crate::trigonometry::{lerp, smoothstep};
+use semio_framework_pets_contract::schema::{Channel, Clip, Ease, Species, Ticks, Track, TICKS_PER_SECOND};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Easing

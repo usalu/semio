@@ -62,11 +62,15 @@ wgpu-engine = [
     "dep:semio-framework-job",
     "dep:semio-framework-async",
     "dep:semio-framework-pixels",
+  "dep:semio-framework-job-worker", "dep:semio-framework-job-worker-authority",
 ]
 # 🧬️ Enables the owned TypeScript schema projection for the `wgpu` boundary types.
 typegen = ["wgpu"]
 
 [dependencies]
+semio-framework-job-worker = { path = "../../../🧵️job/👷️worker/📦️packages/🦀️rust", optional = true }
+semio-framework-job-worker-authority = { path = "../../../🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust", optional = true }
+
 semio-framework-ui-surface-identity = { path = "../../🪟️surface/🪪️identity/📦️packages/🦀️rust", optional = true }
 semio-framework-ui-draw-contract = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust", optional = true }
 semio-framework-ui-prepared = { path = "../../🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", optional = true }
@@ -163,6 +167,8 @@ wgpu = { version = "29.0.4", default-features = false, features = ["std", "metal
 arboard = { version = "3", optional = true }
 
 [dev-dependencies]
+semio-framework-job-worker = { path = "../../../🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
+
 semio-framework-ui-prepared = { path = "../../🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-ui-draw-contract = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-ui-raster-owner = { path = "../../🖼️raster/🧵️ownership/📦️packages/🦀️rust", features = ["testkit"] }

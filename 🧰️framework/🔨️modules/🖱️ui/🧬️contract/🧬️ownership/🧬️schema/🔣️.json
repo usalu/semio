@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "valueOwner",
+    "forbiddenDependency",
+    "forbiddenPath"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "semio-framework-ui-contract"
+    },
+    "valueOwner": {
+      "const": "semio-framework-value"
+    },
+    "forbiddenDependency": {
+      "const": "semio-framework-replication"
+    },
+    "forbiddenPath": {
+      "const": "protocol::value"
+    }
+  }
+}

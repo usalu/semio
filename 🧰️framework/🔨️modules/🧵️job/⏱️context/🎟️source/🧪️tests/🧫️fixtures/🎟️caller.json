@@ -55,5 +55,14 @@
     "maximumReleaseBytes": 512,
     "maximumDepth": 8
   },
-  "parentMetadataCopyBytes": 0
+  "parentMetadataCopyBytes": 0,
+  "initialFuel": 100000,
+  "initialDeadline": 1000000,
+  "initialStock": {
+    "maximumItems": 256,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 131072,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  }
 }

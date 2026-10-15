@@ -1,7 +1,7 @@
 //#region 🧬️GraphContract
 import type { Component, UiContractViolation, UiDocumentLimits, UiNodeRecord } from "../../../../../🛂️manifest/🟦️.ts";
 import type { RetainedUiComponent, RetainedUiNodeRecord } from "../../📦️wire/🧾️typed/🟦️.ts";
-import type { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../../🟦️.ts";
+import type { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../../🧮️tables/🟦️.ts";
 import { numberLimitValues, numberRangeIsValid, snapsAreValid } from "../../../🛡️limits/🟦️.ts";
 
 type Program<T> = Generator<number, T, void>;

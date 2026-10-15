@@ -10,8 +10,8 @@
 //! @see ../../🧬️schema/🦀️.rs — `Species`, `Bone`, `Eye`, `Point`, `Degrees`
 //! @see ../🦴️rig/🟦️.ts — the TypeScript twin
 
-use crate::schema::{Bone, Degrees, Eye, Point, Species};
 use crate::trigonometry::{cos_turns, sin_turns};
+use semio_framework_pets_contract::schema::{Bone, Degrees, Eye, Point, Species};
 use serde::{Deserialize, Serialize};
 
 const PUPIL_RIM: f64 = 0.25;

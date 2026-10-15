@@ -128,11 +128,11 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     owner.install_local_retirement_factory(factory).unwrap();
     let job = CapturedLocalJob { read: Some(ControlledRetirement::new(owner.local_read().unwrap()).unwrap_or_else(|_| panic!("original controlled read"))), closing: false };
     let cancel = semio_framework_job::root_cancel_token();
-    let params = semio_framework_job::BatchJobParams {
+    let params = semio_framework_job_worker_authority::BatchJobParams {
         operation: semio_framework_job::allocate_operation_id(),
         generation: semio_framework_job::Generation(0),
         cancel: cancel.clone(),
-        config: semio_framework_job::BatchDriveConfig { retained: CLOSE_GRANT, site: "presence.local.capture", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 8000 },
+        config: semio_framework_job_worker_authority::BatchDriveConfig { retained: CLOSE_GRANT, site: "presence.local.capture", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 8000 },
         now_us: semio_framework_job::default_now_us,
     };
     let operation=params.operation;let generation=params.generation;
@@ -145,8 +145,8 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     let now=original.now_us;let deadline=now().expect("original capture clock")+original.config.step_budget_us;
     let admission_grant=RetainedCloneGrant { maximum_copy_bytes: 1 << 20, ..CLOSE_GRANT };
     let mut admission_receipt=RetainedCloneProgress::default();
-    let mut admission=semio_framework_job::WorkerJobAdmissionContext::new(original.operation,original.generation,semio_framework_job::StepBudget::new(original.config.fuel_per_step,deadline,admission_grant),now,&mut admission_receipt).unwrap();
-    let(admitted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::MountedWorkerJobSession::try_admit_owned(&mut job,&mut params,&mut admission));
+    let mut admission=semio_framework_job_worker_authority::WorkerJobAdmissionContext::new(original.operation,original.generation,semio_framework_job::StepBudget::new(original.config.fuel_per_step,deadline,admission_grant),now,&mut admission_receipt).unwrap();
+    let(admitted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job_worker::MountedWorkerJobSession::try_admit_owned(&mut job,&mut params,&mut admission));
     let(mut session,receipt)=admitted.unwrap().expect("original fixture grant funds exact mounted capture admission");drop(admission);
     assert!(job.is_none()&&params.is_none());assert_eq!(receipt,admission_receipt);assert!(receipt.fits(admission_grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
     let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
@@ -180,7 +180,7 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
             let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_cx.with_retained_loan(denied,|cx|session.close_step(cx)).unwrap());
             assert_eq!(close_cx.retained_progress(),before.checked_add(step.progress()).unwrap());
             assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
-            assert!(matches!(step, semio_framework_job::WorkerJobCloseStep::Pending { .. }));
+            assert!(matches!(step, semio_framework_job_worker_authority::WorkerJobCloseStep::Pending { .. }));
             let progress = step.progress();
             assert_eq!(serde_json::json!({"releasedItems": progress.copied_items, "releasedBytes": progress.released_bytes}), law["workerUndergrant"]);
             assert_eq!(session.close_phase(), phase);

@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }

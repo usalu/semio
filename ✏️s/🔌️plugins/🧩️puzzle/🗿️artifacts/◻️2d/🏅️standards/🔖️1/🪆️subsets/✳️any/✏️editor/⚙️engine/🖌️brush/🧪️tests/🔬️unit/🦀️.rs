@@ -3,10 +3,8 @@ mod tests {
     use crate::editor::puzzle2d::engine::canvas::Point;
     use crate::editor::puzzle2d::engine::{handle_position_on_circle, BoardHost, HandleDescriptor, NodeDescriptor, SceneDescriptor};
     use crate::editor::puzzle2d::engine::{BoardFillCaptureStep, BoardFillCheckpoint, BoardFillCommitCandidate, BoardFillJob, BoardFillPlacement};
-    use semio_framework_job::{
-        BatchDriveConfig, BatchJobParams, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobOutcomeView, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, StepBudget, WorkerJobAdmissionContext,
-        WorkerJobCloseStep, WorkerJobPoll,
-    };
+    use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,InteractiveStage,JobOutcomeView,Operation,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,StepBudget};
+use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobAdmissionContext,WorkerJobCloseStep};
     use semio_framework_pack_json::json;
 
     const FILL_TEST_PUMP_LIMIT: usize = 4_000_000;
@@ -39,7 +37,7 @@ mod tests {
         panic!("fill capture exceeded bounded cursor opportunities");
     }
 
-    type FillSession = semio_framework_job::MountedWorkerJobSession<BoardFillJob>;
+    type FillSession = semio_framework_job_worker::MountedWorkerJobSession<BoardFillJob>;
 
     const FILL_TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 4096, maximum_copy_bytes: 8 << 20, maximum_capacity_bytes: 8 << 20, maximum_release_bytes: 8 << 20, maximum_depth: 256 };
 
@@ -175,15 +173,15 @@ mod tests {
         for _ in 0..FILL_TEST_PUMP_LIMIT {
             match session.pump_one(pool, semio_framework_async::Lane::Background, FILL_TEST_GRANT) {
                 Ok(poll) => return poll,
-                Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(
+                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Pool(
                     semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated,
                 ))) => std::thread::yield_now(),
-                Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Contention(_))) => std::thread::yield_now(),
-                Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(kind))) => panic!("mounted fill pump fault: the worker pool refused the step submission ({kind:?})"),
-                Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::SequenceExhausted)) => panic!("mounted fill pump fault: the step sequence is exhausted"),
-                Err(semio_framework_job::MountedWorkerJobPumpFault::Take(_)) => panic!("mounted fill pump fault: the finished step could not be taken back"),
-                Err(semio_framework_job::MountedWorkerJobPumpFault::MissingTicket) => panic!("mounted fill pump fault: the session holds no ticket"),
-                Err(semio_framework_job::MountedWorkerJobPumpFault::CheckedOut) => panic!("mounted fill pump fault: an outcome is still checked out"),
+                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Contention(_))) => std::thread::yield_now(),
+                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Pool(kind))) => panic!("mounted fill pump fault: the worker pool refused the step submission ({kind:?})"),
+                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::SequenceExhausted)) => panic!("mounted fill pump fault: the step sequence is exhausted"),
+                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Take(_)) => panic!("mounted fill pump fault: the finished step could not be taken back"),
+                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::MissingTicket) => panic!("mounted fill pump fault: the session holds no ticket"),
+                Err(semio_framework_job_worker::MountedWorkerJobPumpFault::CheckedOut) => panic!("mounted fill pump fault: an outcome is still checked out"),
             }
         }
         panic!("mounted fill pump never won admission within its bounded opportunities")
@@ -846,7 +844,7 @@ mod tests {
         let mut refused = mount_fill_session(refused_job, refused_params);
         let unavailable = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         unavailable.shutdown().expect("bounded snapshot operation succeeds");
-        assert!(matches!(refused.pump_one(&unavailable, semio_framework_async::Lane::Background, FILL_TEST_GRANT), Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(_))));
+        assert!(matches!(refused.pump_one(&unavailable, semio_framework_async::Lane::Background, FILL_TEST_GRANT), Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(_))));
         close_fill_session(&mut refused);
 
         let complete_operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(19), semio_framework_job::Generation(8), 29);
@@ -917,7 +915,7 @@ mod tests {
         let mut session = mount_fill_session(BoardFillJob::with_operation(capture_fill_snapshot(&host), 4, operation), params);
         let saturated = matches!(
             session.pump_one(&pool, semio_framework_async::Lane::Background, FILL_TEST_GRANT),
-            Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Saturated)))
+            Err(semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Saturated)))
         );
         gate.store(true, std::sync::atomic::Ordering::Release);
         close_fill_session(&mut session);

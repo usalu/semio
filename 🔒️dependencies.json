@@ -1450,7 +1450,6 @@
         "production-runtime"
       ],
       "users": [
-        "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json"
@@ -1655,7 +1654,6 @@
         "production-runtime"
       ],
       "users": [
-        "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
       ],
       "productionReachable": true

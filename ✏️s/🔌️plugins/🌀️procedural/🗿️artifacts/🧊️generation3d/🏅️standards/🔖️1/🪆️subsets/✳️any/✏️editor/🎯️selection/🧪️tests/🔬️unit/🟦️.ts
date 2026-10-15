@@ -87,6 +87,4 @@ test("selected geometry inputs use exact labels for analytic operations", () => 
 });
 
 import {generation3dWidgetInputSelfTests} from "../../../🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🟦️.ts";
-import {testGeneration3dMeshSurface,testGeneration3dPolygonImport} from "../../../../🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts";
 test("widget input edits use the neutral public polygon parser",()=>{expect(generation3dWidgetInputSelfTests()).toBeGreaterThan(0);});
-test("mesh IO consumers use the neutral public polygon contract",()=>{expect(testGeneration3dMeshSurface()).toBeGreaterThan(0);expect(testGeneration3dPolygonImport()).toBeGreaterThan(0);});

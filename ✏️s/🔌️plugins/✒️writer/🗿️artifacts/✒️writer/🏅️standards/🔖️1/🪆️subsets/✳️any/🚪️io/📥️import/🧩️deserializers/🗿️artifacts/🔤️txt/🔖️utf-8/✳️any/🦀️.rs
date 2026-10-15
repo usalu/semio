@@ -1,4 +1,4 @@
-//! 📥️ Foreign leaf — deserialize `WriterSnapshot` FROM `s.stdio.txt@utf-8/*`. `s.stdio.txt` is a
+//! 📥️ Foreign leaf — deserialize `WriterSnapshot` FROM `framework.io.text@utf-8/*`. `framework.io.text` is a
 //! CARRIER dialect (design.md §3): its native `Text` `IoPayload` IS the raw external file text,
 //! verbatim, so `TxtSnapshot::parse_dsl` is an identity wrap over that raw text. The whole raw body
 //! becomes the writer document's plain-text content — a fresh document, never writer's own
@@ -8,10 +8,10 @@
 use crate::{writer_snapshot_with_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
-use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use semio_framework_artifact_reference::Dialect;
 use semio_s_artifact_stdio_txt::TxtSnapshot;
 
-pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
+pub const TXT_DIALECT: Dialect = semio_framework::io_schema::CARRIER_TEXT;
 
 //#region 🔖️Deserializer
 pub struct TxtIntoWriter;

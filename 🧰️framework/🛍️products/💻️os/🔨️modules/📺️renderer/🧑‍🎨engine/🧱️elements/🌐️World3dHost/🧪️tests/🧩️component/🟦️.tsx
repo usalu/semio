@@ -85,7 +85,8 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
 });
 
 import { setRuntimeDiagnostics } from "../../../🏛️ShellHost/🟦️.tsx";
-import { WindowInstanceIdContext, World3dHost, world3dComponentInteractionTarget, buildMeshVisuals, disposeMeshVisuals, world3dGumballSelectionArgsV1, getWorldGumballTransformPreview } from "../../🟦️.tsx";
+import { World3dHost, world3dComponentInteractionTarget, buildMeshVisuals, disposeMeshVisuals, world3dGumballSelectionArgsV1, getWorldGumballTransformPreview } from "../../🟦️.tsx";
+import { WindowInstanceIdContext } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 
 type Batch = { readonly mesh: number; readonly verdict: string; readonly count: number };
 

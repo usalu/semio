@@ -6,8 +6,8 @@
 
 use super::*;
 use crate::rig::solve_rig;
-use crate::schema::tests::{entries, fixture, number, typed};
-use crate::schema::Key;
+use semio_framework_pets_contract::schema::Key;
+use semio_framework_pets_contract::testkit::{entries, fixture, number, typed};
 use serde_json::Value;
 
 const TOLERANCE: f64 = 1e-9;

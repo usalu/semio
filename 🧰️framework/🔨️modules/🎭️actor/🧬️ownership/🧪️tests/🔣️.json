@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "owners": [
+    {
+      "name": "semio-framework-actor-pack",
+      "root": "🧵️pack",
+      "symbols": [
+        "PackError"
+      ],
+      "dependencies": []
+    },
+    {
+      "name": "semio-framework-actor-retained-turn",
+      "root": "🎟️retained-turn",
+      "symbols": [
+        "RetainedTurnInput",
+        "OriginalActorInput"
+      ],
+      "dependencies": [
+        "semio-framework-actor-pack"
+      ]
+    },
+    {
+      "name": "semio-framework-actor-retained-context",
+      "root": "🎟️retained-turn/🎟️context",
+      "symbols": [
+        "OriginalActorContext"
+      ],
+      "dependencies": [
+        "semio-framework-actor-retained-turn"
+      ]
+    },
+    {
+      "name": "semio-framework-actor-vocabulary",
+      "root": "📖️vocabulary",
+      "symbols": [
+        "ActorId",
+        "JobPublication",
+        "Envelope",
+        "TurnResult",
+        "JobReplayRequest"
+      ],
+      "dependencies": [
+        "semio-framework-actor-pack",
+        "semio-framework-actor-retained-turn"
+      ]
+    },
+    {
+      "name": "semio-framework-actor-job-publication",
+      "root": "💼️job/📨️publication",
+      "symbols": [
+        "JobReplayLog",
+        "JobProgressOverlayStore"
+      ],
+      "dependencies": [
+        "semio-framework-actor-pack",
+        "semio-framework-actor-vocabulary"
+      ]
+    },
+    {
+      "name": "semio-framework-actor",
+      "root": ".",
+      "symbols": [
+        "Scheduler",
+        "Kernel"
+      ],
+      "dependencies": [
+        "semio-framework-actor-pack",
+        "semio-framework-actor-retained-turn",
+        "semio-framework-actor-vocabulary",
+        "semio-framework-actor-job-publication",
+        "semio-framework-actor-retained-context"
+      ]
+    }
+  ],
+  "limits": {
+    "version": 1,
+    "maxSourceBytes": 262144,
+    "maxSourceFiles": 32,
+    "maxActiveLines": 4000
+  },
+  "valueConsumers": [
+    ".",
+    "🎟️retained-turn",
+    "📖️vocabulary",
+    "💼️job/📨️publication"
+  ],
+  "runtimeLaws": [
+    "original_actor_wire_refusals_preserve_exact_original_backing_without_heap",
+    "original_actor_zero_spend_replay_cannot_return_authority_for_a_new_issued_epoch",
+    "original_actor_epoch_overflow_refuses_before_removing_the_original_envelope",
+    "original_actor_unissued_completion_refuses_before_metrics_and_preserves_result",
+    "original_actor_issued_turn_refuses_forgery_and_duplicate_then_conserves_every_axis",
+    "original_actor_lane_policy_preserves_supplied_retained_input_without_heap_or_renewal",
+    "original_actor_wire_producers_retain_invalid_original_input_and_output"
+  ]
+}

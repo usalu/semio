@@ -1,0 +1,43 @@
+MODULES = {
+ 'startup':           ('🚀️startup',           '🚀️', 'process startup: errors, catalog control, supervisors, instance composition'),
+ 'support':           ('🧰️http-support',      '🧰️', 'HTTP support shared by every route family'),
+ 'presence':          ('👥️presence',          '👥️', 'document scope keys, presence leases and colour leases'),
+ 'state':             ('🧠️state',             '🧠️', 'the shared `HubState` and its test gates'),
+ 'socket_grants':     ('🎟️socket-grants',     '🎟️', 'the socket grant ledger and live-lease authority'),
+ 'open_plan':         ('🧭️open-plan',         '🧭️', 'the document open plan capability and ledger'),
+ 'guard':             ('🛡️guard',             '🛡️', 'caller authentication and administrator authorization'),
+ 'readiness':         ('🩺️readiness',         '🩺️', 'hub mode, readiness reports, checkpoint policy, liveness and health routes'),
+ 'transport':         ('🚦️transport',         '🚦️', 'transport middlewares: forwarded TLS, refusal typing, rate limiting, CORS, route metrics'),
+ 'access_grants':     ('🔑️access-grants',     '🔑️', 'document and directory socket grants, open plans and execution-target leases'),
+ 'pair_blobs':        ('🪞️pair-blobs',        '🪞️', 'canonical checkpoint pair, document status and blob routes'),
+ 'check_in':          ('📌️check-in',          '📌️', 'checkpoint publication and document check-in'),
+ 'document_socket':   ('🔌️document-socket',   '🔌️', 'the document WebSocket and its wire projection'),
+ 'directory_commands':('📇️directory-commands','📇️', 'directory identity, commands, spaces, administration pages and invites'),
+ 'directory_events':  ('📣️directory-events',  '📣️', 'directory event pages, event stream and directory WebSockets'),
+ 'artifact_creation': ('🌱️artifact-creation', '🌱️', 'space artifact creation over HTTP'),
+ 'session_agent':     ('🪪️session-agent',     '🪪️', 'session, credential and agent delegation routes'),
+ 'admin':             ('🛠️admin',             '🛠️', 'administrator API: intents, operations, overview and listings'),
+ 'assets':            ('🧩️assets',            '🧩️', 'extension assets, trusted plugin modules and the administrator page'),
+ 'inference':         ('💡️inference',         '💡️', 'GIS map inference job routes'),
+ 'routes':            ('🛣️routes',            '🛣️', 'the route table'),
+ 'lifecycle':         ('🛑️lifecycle',         '🛑️', 'worker pool, storage connection, socket drain and termination signals'),
+}
+RANGES = [
+ (112,198,'startup'),(199,219,'support'),(221,748,'startup'),
+ (750,914,'presence'),(916,1106,'state'),(1108,1122,'socket_grants'),(1124,1619,'socket_grants'),
+ (1621,2071,'open_plan'),(2073,2104,'socket_grants'),(2106,2563,'state'),(2565,2594,'support'),
+ (2595,2737,'guard'),(2739,3109,'readiness'),(3111,3128,'guard'),(3130,3246,'transport'),(3248,3350,'guard'),
+ (3351,3992,'access_grants'),(3994,4322,'pair_blobs'),(4323,4965,'check_in'),(4966,5994,'document_socket'),
+ (5995,6018,'directory_commands'),(6020,6075,'startup'),(6078,6278,'document_socket'),(6280,6331,'directory_commands'),
+ (6333,6931,'artifact_creation'),(6933,6933,'support'),(6942,6988,'directory_events'),(6990,7757,'directory_commands'),
+ (7759,8583,'directory_events'),(8584,9264,'session_agent'),(9266,9471,'transport'),
+ (9472,10477,'admin'),(10478,10489,'transport'),(10491,10703,'admin'),(10705,10866,'assets'),(10868,10976,'readiness'),
+ (10977,11155,'inference'),(11157,11165,'routes'),(11168,11168,'inference'),(11169,11251,'routes'),(11253,11572,'lifecycle'),
+]
+OVERRIDES = {
+ 'PRESENCE_LEASE_TTL_MS':'presence',
+ 'DOCUMENT_OPEN_PLAN_REQUEST_MAX_BYTES':'access_grants','DOCUMENT_OPEN_PLAN_DEADLINE_MS':'access_grants','DOCUMENT_OPEN_PLAN_EXCHANGE_REQUEST_MAX_BYTES':'access_grants',
+ 'ADMIN_OPERATION_DEADLINE':'admin','ADMIN_OPERATION_SHUTDOWN_DEADLINE':'admin','ADMIN_TERMINAL_RETRY_DEADLINE':'admin','ADMIN_EFFECT_PRE_EFFECT':'admin','ADMIN_EFFECT_ADMITTED':'admin','ADMIN_EFFECT_CANCELLED':'admin',
+ 'DocumentStatusResponse':'pair_blobs',
+}
+ROOT_KEEP = {'main','serve','hub_shutdown_record','trusted_catalog_command','credential_command','test_artifact_root','tests','two_client_document'}

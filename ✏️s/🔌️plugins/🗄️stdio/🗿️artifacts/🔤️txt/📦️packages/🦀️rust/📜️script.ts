@@ -22,4 +22,4 @@ class OriginalTxtReceivingScript extends BundleScript{
   else await runArtifactRustTests("semio-s-artifact-stdio-txt",this.repoRoot,["--lib","txt_original_receiving_","--no-fail-fast","--success-output","immediate"],this.invocation.control);
  }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-txt", { commands:{"test-original-encoding":OriginalTxtEncodingScript,"test-original-receiving":OriginalTxtReceivingScript}, snapshotSqliteTests: ["../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-txt", { commands:{"test-original-encoding":OriginalTxtEncodingScript,"test-original-receiving":OriginalTxtReceivingScript}, snapshotSqliteTests: ["../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", "../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🗂️typed-file/🟦️.ts"] });

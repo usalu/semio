@@ -24,10 +24,10 @@
 use crate::badges::earned_badges;
 use crate::challenge::{acted, challenge_rules};
 use crate::randomness::run_seed;
-use crate::schema::{Answer, BadgeAward, Catalog, Challenge, Command, Event, Id, Identity, Limits, Quiz, Rejection, RunResult, RunStatus, Slug, Timestamp};
 use crate::scoring::score_run;
 use crate::sheet::sheet_of;
 use crate::validation::{answer_complete, answer_rejection, command_rejection, normalize_handle};
+use quiz_schema::{Answer, BadgeAward, Catalog, Challenge, Command, Event, Id, Identity, Limits, Quiz, Rejection, RunResult, RunStatus, Slug, Timestamp};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 

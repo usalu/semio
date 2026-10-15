@@ -1,0 +1,16 @@
+import {posix,win32} from "node:path";
+import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {cargoDepInfoSourcesV1} from "../🟦️.ts";
+import schema from "./🧬️schema/🔣️.json";
+export interface RustCompilerConsumedFileV1 {readonly path:string;readonly digest:string;readonly bytes:number}
+export interface RustCompilerConsumedBytesV1 {readonly version:1;readonly algorithm:"sha256";readonly files:readonly RustCompilerConsumedFileV1[]}
+interface RequestV1 {version:1;platform:"posix"|"windows";root:string;cwd:string;text:string;expected:RustCompilerConsumedFileV1[]}
+export const RUST_COMPILER_CONSUMED_BYTES_PROTOCOL_V1=Object.freeze(schema.definitions.Protocol.const);
+function refuse(detail:string):never{throw Error("Rust compiler consumed-byte "+detail);}
+/** 🔏️ Matches rustc's consumed Source membership, checksums and lengths against the original admitted bytes. */
+export function readRustCompilerConsumedBytesV1(value:unknown):RustCompilerConsumedBytesV1{
+ if(validateJsonSchemaSubset(schema.definitions.Request,value,schema).length)refuse("closed evidence required");const row=value as RequestV1,paths=row.platform==="windows"?win32:posix,protocol=schema.definitions.Protocol.const;if(Buffer.byteLength(row.text)>protocol.maximumBytes||!paths.isAbsolute(row.root)||!paths.isAbsolute(row.cwd)||paths.resolve(row.root)!==row.root||paths.resolve(row.cwd)!==row.cwd)refuse("bounded canonical scope required");
+ const normalize=(path:string):string=>{if(!path||path.length>protocol.maximumPathUnits||/[\u0000-\u001f\u007f]/u.test(path))refuse("portable Source path required");const absolute=paths.resolve(row.cwd,path),relative=paths.relative(row.root,absolute);if(absolute.length>protocol.maximumPathUnits||!relative||relative===".."||relative.startsWith(".."+paths.sep)||paths.isAbsolute(relative))refuse("owned Source path required");return relative.replaceAll("\\","/");},expected=new Map<string,RustCompilerConsumedFileV1>();for(const file of row.expected){if(expected.has(file.path)||normalize(paths.resolve(row.root,file.path))!==file.path)refuse("unique admitted Source paths required");expected.set(file.path,file);}
+ const files:RustCompilerConsumedFileV1[]=[],seen=new Set<string>();for(const line of row.text.split(/\r?\n/u)){if(!line.startsWith("# checksum"))continue;const match=/^# checksum:sha256=([a-f0-9]{64}) file_len:([0-9]+) (.+)$/u.exec(line);if(!match)refuse("supported checksum evidence required");const path=normalize(match[3]!),bytes=Number(match[2]),digest=match[1]!,original=expected.get(path);if(!Number.isSafeInteger(bytes)||seen.has(path)||!original||original.digest!==digest||original.bytes!==bytes)refuse("Source checksum or membership differs: "+path);seen.add(path);files.push({path,digest,bytes});if(files.length>protocol.maximumFiles)refuse("file capacity exceeded");}
+ const sources=new Set(cargoDepInfoSourcesV1(row.text).map(normalize));if(files.length!==expected.size||sources.size!==expected.size||[...sources].some(path=>!seen.has(path)))refuse("complete Source evidence required");const receipt={version:1 as const,algorithm:"sha256" as const,files:files.sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0)};if(validateJsonSchemaSubset(schema,receipt,schema).length)refuse("closed observed receipt required");return receipt;
+}

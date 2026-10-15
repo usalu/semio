@@ -1,8 +1,14 @@
 import {readFileSync} from "node:fs";
+import {createHash} from "node:crypto";
 import {resolve,relative,isAbsolute,sep} from "node:path";
-const schema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url),"utf8"));
-const nativeSchema=JSON.parse(readFileSync(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+const schemaSource=readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url)),schema=JSON.parse(schemaSource.toString("utf8"));
+const nativeSchemaSource=readFileSync(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url)),nativeSchema=JSON.parse(nativeSchemaSource.toString("utf8"));
 const key="SEMIO_OWNER_ARGUMENTS";
+const argumentSourceIdentity=(captured=false)=>createHash("sha256").update(JSON.stringify([readFileSync(new URL(import.meta.url)),captured?schemaSource:readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url)),captured?nativeSchemaSource:readFileSync(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url))].map(bytes=>createHash("sha256").update(bytes).digest("hex")))).digest("hex"),loadedArgumentSourceIdentity=import.meta.semioFrozenAuthorizers?undefined:argumentSourceIdentity(true);
+
+/** 🔏️ Binds the evaluated argument owner to its own unchanged physical implementation and contracts. */
+export function ownerArgumentsSourceIdentityV1(){if(!loadedArgumentSourceIdentity)throw Error("Live private Nx argument Source identity required");if(argumentSourceIdentity()!==loadedArgumentSourceIdentity)throw Error("Loaded private Nx argument Source changed");return loadedArgumentSourceIdentity;}
+
 
 /** 🧬️ Admits the closed native caller and command contracts in the Node executor. */
 export function conformsOwnerContractV1(contract,value){

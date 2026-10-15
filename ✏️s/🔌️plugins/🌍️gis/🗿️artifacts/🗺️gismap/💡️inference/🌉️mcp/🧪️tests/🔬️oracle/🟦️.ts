@@ -7,7 +7,7 @@
  *    language-agnostic corpus the hub's own Rust laws and Bun oracle read. Reused, never forked, so
  *    a hub-side change to the closed error vocabulary, the lifecycle, the visibility law or the
  *    fixed limits fails here loudly instead of drifting;
- * 2. the **hub's registered axum routes**, read as text out of `🌎️hub/🏗️bootstrap/🦀️.rs`,
+ * 2. the **hub's registered axum routes**, read as text out of `🌎️hub/🏗️bootstrap/🛣️routes/🦀️.rs`,
  *    so the MCP client's four path builders are checked against the server that serves them.
  *
  * The wire-shape half is a real third-party oracle: AJV compiles the five hub-owned request/response
@@ -222,7 +222,7 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   for (const row of jobVectors.cases) must((eventPage(row.response) && row.response.jobId === row.requestedJobId) === (row.expectedError === null), "owner job page schema and requested identity agree");
   const fixtureRoot = resolve(repoRoot, "🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1");
   const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🔣️.json"), "utf8"));
-  const hubBinSource = readFileSync(resolve(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
+  const hubBinSource = readFileSync(resolve(repoRoot, "🌎️hub/🏗️bootstrap/🛣️routes/🦀️.rs"), "utf8");
 
   let ajv = 0;
   // 🧬️ The corpus no longer carries a fixture-local schema: its parts are validated against the

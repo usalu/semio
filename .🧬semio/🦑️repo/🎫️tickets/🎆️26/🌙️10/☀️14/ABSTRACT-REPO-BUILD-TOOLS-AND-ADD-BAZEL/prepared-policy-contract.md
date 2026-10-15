@@ -1,0 +1,19 @@
+# Module-Owned Script Policy Preparation
+
+The actual OS-dev CPU profile mapped every sampled generic schema-validation stack to `readScriptPolicy`, reached through original invocation progress/check boundaries. Root authorized preparing only this imported module-owned schema once. Generic mutable-schema behavior and validation of every current policy value remain unchanged.
+
+Before the implementation change, three new focused tests produced two passes and one failure: semantic/control cases passed, while the TypeScript architectural witness found zero module-level schema preparations where the declared ownership contract requires one. Actual terminal result was nonzero, 75 assertions, 1.226 seconds. Evidence is `🗑️generated/prepared-policy-red.txt`.
+
+Core then changed only invocation schema preparation: import the existing public compiler from the owned validator root, prepare the imported policy schema into a private module constant, and call that contract's `validate(value)` on every `readScriptPolicy`. The generic validator implementation, mutable-schema API, original policy/control/capability identities, all three `advanceScriptInvocation` checks and all progress/cancellation/deadline checks are unchanged.
+
+The full existing finite invocation test file subsequently passed: **four tests, 100 assertions, 2.24 seconds, terminal exit 0**. This includes the prior finite/null/ordinary-host law unchanged. Evidence is `🗑️generated/prepared-policy-green.txt`.
+
+The separately authorized single profile comparison is retained in `cpu-profile-results.md`. Repeated generic schema preparation has no samples inside the after normalizer interval, while actual value checks remain sampled. This supplements the contract proof; the single elapsed timing pair is not a full ALL runtime acceptance or reliable CPU saving estimate.
+
+The language-neutral fixture adds a same-object mutation sequence covering valid and invalid owner values, negative and ordinary zero budgets, undeclared fields, and removal/restoration of required version. Independent Ajv agrees on every current value. The real compiler is exercised with a schema-read Proxy: preparation reads the schema once; repeated value validation performs no further schema reads; the generic validation API continues reading mutable schemas. An independent mutable-schema case proves a prepared snapshot retains its original schema while generic validation sees subsequent caller schema changes.
+
+The control vectors cover finite, exhausted, expanded, finite/null, ordinary, ordinary/finite and aborted authority; an independent Node process agrees on acceptance. Awaited publication/yield cases mutate the original policy, abort the original signal or expire the original remaining clock. Exact effect order and original remaining-clock call counts prove checks before publication, after awaited publication and after awaited continuation remain effective. Policy, control and capabilities retain object identity.
+
+The architectural test uses the actual declaring TypeScript compiler to inspect the production invocation module: exactly one top-level preparation of the imported schema, use of that prepared contract for every read, and no generic compiler/validator call inside `readScriptPolicy`. It tests this module's preparation ownership rather than introducing a general schema cache.
+
+Files updated are the existing invocation `🟦️.ts` (Core), existing `🧪️tests/⏱️finite/🟦️.ts`, and existing `🧪️tests/🧫️fixtures/⏱️finite.json`. No public API, policy budget, runtime dependency, alternative task path or extra production script was added. The result establishes the bounded contract; it is not a new profile or proof that the complete ALL producer now fits its original deadline. Exhaustive planner and actual Stdio remain held for a genuine ALL pin and Root release.

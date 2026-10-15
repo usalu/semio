@@ -4,11 +4,6 @@
 //! the `protocol` replication contract.
 //!
 //! An instance (hub, zentrale) is a value, not a fork: it registers modules against this product's
-//! registries and runs the same host.
-
-pub use crate::contract::*;
-
-/// 📣️ Tell the operator about a fault the caller is not told about: one `[ERROR]` line on stderr.
-pub(crate) fn report(context: &str, cause: &dyn std::fmt::Display) {
-    eprintln!("[ERROR] {context}: {cause}");
-}
+//! registries and runs the same host. The contract, storage, policy, authority and throttle modules
+//! are producer crates re-exported under their module names by `📦️packages/🦀️rust/🦀️.rs`; the gateway
+//! and the reference instance its tests run on live in this crate.

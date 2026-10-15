@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "artifactDatabaseRole": "artifact-cache",
+  "phases": [
+    {
+      "name": "publish",
+      "graph": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "restore": false
+    },
+    {
+      "name": "same-graph",
+      "graph": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "restore": false
+    },
+    {
+      "name": "changed-graph",
+      "graph": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "restore": false
+    },
+    {
+      "name": "deleted-restore",
+      "graph": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "restore": true
+    }
+  ],
+  "bytes": "graph-independent-artifact",
+  "terminal": "graph-independent-terminal",
+  "taskDetails": {
+    "project": "index",
+    "target": "compile"
+  },
+  "publicationRefusal": {
+    "operation": "busy-physical-writer",
+    "entered": false,
+    "hit": false,
+    "taskDetailsRows": 0
+  }
+}

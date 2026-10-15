@@ -80,7 +80,7 @@ test("parallel incremental inference settles concurrent edits onto serial full i
   expect(scenario.halfWritten!.persisted!.foreignLibraryFacts).toBe(fixture.foreignLibraryFacts);
   expect(scenario.halfWritten!.persisted!.authorityRows).toBe(0);
  }finally{
-  try{await receiveScriptProcessInvocation(process.env,original=>Promise.all(runs.map(run=>withRepositoryBuildInferenceDatasetV1(process.cwd(),original,run.dataset,scope=>{scope.retire();expect(existsSync(scope.root)).toBe(false);}))));}
+  try{await receiveScriptProcessInvocation(process.env,original=>Promise.all(runs.map(run=>withRepositoryBuildInferenceDatasetV1(process.cwd(),original,run.dataset,async scope=>{await scope.retire();expect(existsSync(scope.root)).toBe(false);}))));}
   finally{for(const run of runs)rmSync(run.root,{recursive:true,force:true});rmSync(dirname(input),{recursive:true,force:true});}
  }
 },300_000);

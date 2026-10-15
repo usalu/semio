@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-composition-admission"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Bounded borrowed child restore projection admission"
+build = false
+
+[package.metadata.semio]
+role = "framework"
+id = "composition-admission"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 65536
+maxSourceFiles = 8
+maxActiveLines = 1000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "composition-admission-neutral"
+path = "../../🧪️tests/🦀️.rs"
+
+[dependencies]
+semio-framework-schema-composition = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-artifact-reference-borrow = { path = "../../../../🗿️artifact-reference/🔗️borrow/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

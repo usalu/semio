@@ -1001,7 +1001,7 @@ impl WalTailWindow {
     }
 }
 
-/// 🪞️ A `pack::PackSink` over one segment's `WalTailWindow`. `protocol::SprWriter` owns one
+/// 🪞️ A `semio_framework_pack_source::PackSink` over one segment's `WalTailWindow`. `protocol::SprWriter` owns one
 /// clone and `SegmentWriter` another to flush the unflushed suffix to `db_storage::WalStorage` —
 /// `SprWriter` has no public accessor for its private `sink` field. Every write is admitted first
 /// (`admit`), so a full process budget refuses a transaction before any of its bytes exist.
@@ -1089,7 +1089,7 @@ impl SharedBuf {
     }
 }
 
-impl pack::PackSink for SharedBuf {
+impl semio_framework_pack_source::PackSink for SharedBuf {
     async fn write_all(&mut self, bytes: &[u8]) -> Result<(), pack::PackError> {
         let mut cursor = 0;
         while cursor < bytes.len() {
@@ -1133,7 +1133,7 @@ fn protocol_err(err: protocol::ProtocolError) -> DbError {
 
 struct WalPageSource<'pages>(&'pages db_storage::DbIoPages);
 
-impl protocol::PackSource for WalPageSource<'_> {
+impl semio_framework_pack_source::PackSource for WalPageSource<'_> {
     async fn len(&self) -> u64 {
         self.0.len() as u64
     }

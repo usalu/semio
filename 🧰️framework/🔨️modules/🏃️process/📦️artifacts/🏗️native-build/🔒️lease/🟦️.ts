@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { existsSync, realpathSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { acquireQueuedResourceLease, checkResourceLeaseControl, type LeaseWait, type ResourceLeaseControl, type ResourceLease } from "../../../🔒️leases/🟦️.ts";
+import { acquireResourceLease, acquireQueuedResourceLease, checkResourceLeaseControl, type LeaseWait, type ResourceLeaseControl, type ResourceLease } from "../../../🔒️leases/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {bindCargoTargetStoreV1} from "./🎯️target/🟦️.ts";
 
@@ -75,3 +75,6 @@ export async function acquireCargoStoreLeaseV1(options:Readonly<{directory:strin
   catch(error){options.signal.throwIfAborted();throw error;}
 }
 
+
+/** 🚦️ Refuses a busy exact store immediately when a retained compiler writer cannot safely queue. */
+export function acquireCargoStoreMaintenanceLeaseV1(options:Readonly<{directory:string;buildDirectory:string;signal:AbortSignal;control:ResourceLeaseControl}>):Promise<ResourceLease>{const identity=cargoBuildLeaseIdentityV1(options.buildDirectory,[]),resource=JSON.stringify([schema.definitions.StoreProtocol.const.namespace,identity.buildDirectory]);return acquireResourceLease({directory:options.directory,resource,mode:"exclusive",signal:options.signal,control:options.control,timeoutMs:0});}

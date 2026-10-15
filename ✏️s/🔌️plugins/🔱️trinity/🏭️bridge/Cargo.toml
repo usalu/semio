@@ -23,3 +23,6 @@ semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️produc
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-trinity-jack = { path = "../🗿️artifacts/🔌️jack/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-rewriting = { path = "../🗿️artifacts/♻️rewriting/📦️packages/🦀️rust" }
+
+[profile.prototype]
+inherits = "dev"

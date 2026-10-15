@@ -3,8 +3,8 @@
 //! @see ../../🦀️.rs — the implementation under test
 
 use super::*;
-use crate::schema::{BadgeRule, Challenge, ClassificationAnswer, Introduction, LeaderboardPeriod, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetMatchingTask, SheetSortingTask, SortingAnswer, TaskKind, CHALLENGES};
 use crate::sheet::tests::{quantity, quiz, text};
+use quiz_schema::{BadgeRule, Challenge, ClassificationAnswer, Introduction, LeaderboardPeriod, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetMatchingTask, SheetSortingTask, SortingAnswer, TaskKind, CHALLENGES};
 use unicode_normalization::{is_nfc, UnicodeNormalization};
 
 fn issue(path: &str, code: IssueCode) -> ValidationIssue {
@@ -365,7 +365,7 @@ fn sorting_guesses_must_name_items_be_finite_and_ascend_along_the_order() {
 
 #[test]
 fn shared_answer_vectors_of_the_python_reference_hold() {
-    use crate::schema::tests::{entries, fixture, typed};
+    use quiz_schema::testkit::{entries, fixture, typed};
     let vectors = fixture("answer-validation");
     let sheet_tasks: Vec<SheetTask> = entries(&vectors["sheetTasks"]).iter().map(typed).collect();
     let mut differing = Vec::new();
@@ -386,7 +386,7 @@ fn shared_answer_vectors_of_the_python_reference_hold() {
 
 #[test]
 fn schema_violations_are_refused_by_serde_or_reported() {
-    use crate::schema::tests::{entries, fixture, typed};
+    use quiz_schema::testkit::{entries, fixture, typed};
     for vector in entries(&fixture("schema-conformance")["rejected"]) {
         let document = vector["document"].clone();
         let issues = match vector["definition"].as_str() {
@@ -608,7 +608,7 @@ fn ids_are_32_lowercase_hex_and_commands_and_queries_are_held_to_them() {
 
 #[test]
 fn shared_identity_shapes_of_the_python_reference_hold() {
-    use crate::schema::tests::{assert_close, entries, fixture, json, typed};
+    use quiz_schema::testkit::{assert_close, entries, fixture, json, typed};
     let vectors = fixture("identity-shapes");
     assert!(!entries(&vectors["handles"]).is_empty() && !entries(&vectors["shapes"]).is_empty());
     for vector in entries(&vectors["handles"]) {

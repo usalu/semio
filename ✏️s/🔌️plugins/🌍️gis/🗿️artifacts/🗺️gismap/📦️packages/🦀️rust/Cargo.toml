@@ -16,6 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
@@ -59,6 +61,9 @@ semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-scene = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job-worker = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-job-worker-authority = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust", features = ["testkit"] }
+
 tokio = { workspace = true }
 # 🔮 Test-only GeoJSON ORACLE: the third-party `geojson` crate reads what the rfc8259/geojson writer emits and writes what its reader must accept.
 geojson = { version = "1.0.0", default-features = false }

@@ -1,6 +1,6 @@
 # Source Inventory
 
-The owned inventory contains 1616 paths: 1533 source/interface/owned-product paths and 83 retained ticket inputs/reports. Exact paths are recorded in `📥️files.json`.
+The owned inventory contains 1802 paths: 1607 source/interface/owned-product paths and 195 retained ticket inputs/reports. Exact paths are recorded in `📥️files.json`.
 
 Read-only scoped Git whitespace validation exited 0. 0 existing recorded paths exceed 256 UTF-16 units including the absolute workspace root. No modifying Git command was used.
 

@@ -2,7 +2,7 @@ use super::*;
 
 fn request() -> KernelActivationRequest {
     let package = PackageId("reserved-map".into());
-    KernelActivationRequest { package: package.clone(), plugin_ordinal: 7, kind: ActorKind::PluginApp { plugin: package, app_id: "map".into(), instance_id: 1 }, lane: Lane::Interactive, window: None, event: ActivationEvent::Manual, retained: RetainedTurnInput { operation: 71, generation: 3, epoch: 19, work: OriginalActorTurnWork { clock_binding: 1871, absolute_deadline_us: 1000000, fuel: 64 }, grant: protocol::value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: 262144, maximum_depth: 64 } }, loan: OriginalActorTurnLoan { retained_policy: protocol::value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: 262144, maximum_depth: 64 }, work_fuel: 64, deadline_us: 1000000 } }
+    KernelActivationRequest { package: package.clone(), plugin_ordinal: 7, kind: ActorKind::PluginApp { plugin: package, app_id: "map".into(), instance_id: 1 }, lane: Lane::Interactive, window: None, event: ActivationEvent::Manual, retained: RetainedTurnInput { operation: 71, generation: 3, epoch: 19, work: OriginalActorTurnWork { clock_binding: 1871, absolute_deadline_us: 1000000, fuel: 64 }, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: 262144, maximum_depth: 64 } }, loan: OriginalActorTurnLoan { retained_policy: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: 262144, maximum_depth: 64 }, work_fuel: 64, deadline_us: 1000000 } }
 }
 
 fn binding(reservation: &KernelActivationReservation) -> ActorShardKey {
@@ -47,7 +47,7 @@ async fn neutral_reservation_traces_gate_dispatch_until_exact_binding() {
                     assert_eq!(kernel.request_exclusive(actor).await, Err(KernelError::InvalidTransition));
                     assert_eq!(kernel.link_extension(actor, actor).await, Err(KernelError::InvalidTransition));
                     let result = TurnResult {
-                        retained_receipt: request().retained.return_original(Default::default()).unwrap(),
+                        retained_receipt: request().retained.return_original(Default::default(),0).unwrap(),
                         ui_patches: vec![],
                         effects: vec![],
                         command_ingress: vec![],
@@ -58,7 +58,7 @@ async fn neutral_reservation_traces_gate_dispatch_until_exact_binding() {
                         status: TurnStatus::Idle,
                         usage: Usage::default(),
                     };
-                    assert_eq!(kernel.complete(actor, &result, 0).await, Err(KernelError::InvalidTransition));
+                    assert_eq!(kernel.complete(actor, &result, 0).await, Err(KernelError::TurnNotIssued));
                     assert_eq!(kernel.actor_status(actor).await, Some(&ActorStatus::Activating));
                     assert_eq!(kernel.shards.shard_of(actor).await, Some(reservation.as_ref().unwrap().shard()));
                 }

@@ -25,6 +25,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixturePath = resolve(here, "../../🧫️fixtures/🫀️settle-pump/🔣️.json");
@@ -170,7 +171,7 @@ describe("the wgpu host's runtime-owned settle pump", () => {
    * no input at all — the `F` pressed 1.1 s in reached the node-graph fit 7 632 ms after its key-down. */
   it("lets an input gesture declare the chain and never converge it inside its own dispatch", () => {
     expect(fixture.gestureRows.length).toBeGreaterThanOrEqual(4);
-    const sources = new Map(Object.entries(gestureSourcePaths).map(([name, path]) => [name, readFileSync(path, "utf8")]));
+    const sources = new Map(Object.entries(gestureSourcePaths).map(([name, path]) => [name, readModuleTreeSource(path)]));
     for (const row of fixture.gestureRows) {
       const source = sources.get(row.source);
       expect(source, `${row.id}: the oracle names a source this suite reads`).toBeDefined();

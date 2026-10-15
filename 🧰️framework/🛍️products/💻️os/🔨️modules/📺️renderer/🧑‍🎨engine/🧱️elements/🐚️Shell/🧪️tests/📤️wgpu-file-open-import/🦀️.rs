@@ -18,7 +18,7 @@
 
 use super::*;
 
-const WGPU_SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
+const WGPU_SHELL_SOURCE: &str = crate::shell::SHELL_SOURCE;
 
 #[derive(serde::Deserialize)]
 struct ArgumentChunk {

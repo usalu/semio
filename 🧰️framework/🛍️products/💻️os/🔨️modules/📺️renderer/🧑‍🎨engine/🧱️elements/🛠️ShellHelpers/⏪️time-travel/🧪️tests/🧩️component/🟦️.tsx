@@ -35,6 +35,7 @@ import { RowActionRefusalsContext, TREE_ROW_TONE_CLASSES, UiPresenceOverlayConte
 import { TIME_TRAVEL_CODE_LABELS, TIME_TRAVEL_LABELS } from "../../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
 import { HISTORY_NOTICE_LABELS, historyReprojectionStatus } from "../../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import { documentLoadCancelledV1, HISTORY_SILENT_REFUSALS_V1, historyFaultNoticeV1, historyLaneNoticeV1, historyOutputNoticeV1, historySilentRefusalOfFaultV1, historySilentRefusalOfOutputV1, IMPORT_ABORT_ACTION_ID, importOpenedFilesV1 } from "../../../🟦️.tsx";
+import { readModuleTreeSource } from "../../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const { computeAccessibleName, computeAccessibleDescription, getRole }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 const { roles: ariaRoles, aria: ariaProperties } = createRequire(import.meta.url)("aria-query") as { readonly roles: ReadonlyMap<string, { readonly props: Readonly<Record<string, unknown>> }>; readonly aria: ReadonlyMap<string, unknown> };
@@ -525,7 +526,7 @@ describe("🕰️ the framework history body renders through the interpreter", (
   });
 
   it("keeps no host-built history tab or frozen history labels in the shell", () => {
-    const shellHost = readFileSync(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+    const shellHost = readModuleTreeSource(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"));
     const helpers = readFileSync(join(shellHelpers, "🟦️.tsx"), "utf8");
     for (const gone of ["frameworkUtilitiesHistoryTab", "historyPanelText", "checkinDialog", "s-checkin-message"]) expect(shellHost.includes(gone), gone).toBe(false);
     for (const gone of ["HISTORY_PANEL_LABELS", "SHELL_OWNED_PANEL_TAB_IDS", "shellRendersPanelTabItself"]) expect(helpers.includes(gone), gone).toBe(false);
@@ -830,7 +831,7 @@ describe("♿️ the draft editor is named, operable by keyboard alone and says 
   });
 
   it("mounts the shell's bottom bands in the layout's subfooter row — in flow, never an absolute overlay over the footer or a panel", () => {
-    const host = readFileSync(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+    const host = readModuleTreeSource(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"));
     const slot = host.slice(host.indexOf("subfooter={"), host.indexOf("panels={Object.fromEntries"));
     expect([host.split("subfooter={").length - 1, slot.includes("<TimeTravelBand "), slot.includes("<HistoryReprojectionStatus "), slot.includes("<LocalFolderReconnectBand"), slot.includes("data-semio-checkin-band"), /\babsolute\b|\bfixed\b/u.test(slot)], "every bottom band sits in the one subfooter slot, none positioned out of flow").toEqual([1, true, true, true, true, false]);
     expect(host.slice(0, host.indexOf("subfooter={")).includes("<TimeTravelBand "), "no second mount of the band outside the slot").toBe(false);
@@ -1567,7 +1568,7 @@ describe("📡️ a history change replaying before adoption is announced outsid
       [cleared[key]?.reprojection, cleared["other#2"] === remote, programHistoryProjectionsWithLoadV1(cleared, key, null) === cleared, programHistoryProjectionsWithLoadV1(cleared, "", { completed: 1, total: 2 }) === cleared, programHistoryProjectionsWithLoadV1(cleared, "unknown#9", null) === cleared],
       "only the loading program's projection moves; no program or nothing to end is the same map",
     ).toEqual([null, true, true, true, true]);
-    const host = readFileSync(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+    const host = readModuleTreeSource(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"));
     const load = host.slice(host.indexOf("const task = documentTransferRef.current.trackDocumentTransfer(file, baseSession.pluginId);"), host.indexOf("`Effect::LoadDocument` is pack+spr bytes only"));
     expect(
       [load.split("programHistoryProjectionsWithLoadV1(").length - 1, /progress: \(status\) => \{[^}]*showLoad\(status\);/u.test(load), /\} finally \{\s*showLoad\(null\);/u.test(load)],

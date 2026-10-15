@@ -1,5 +1,8 @@
 //! 🔭️ Original caller turns drive one native preview through borrowed results and paid physical closure.
-use super::*;
+use semio_framework_job::*;
+use semio_framework_job_worker::*;
+use semio_framework_job_worker_authority::{WorkerJobCloseStep};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand};
 /// 🕰️ Caller-authored limits stay fixed across every preview transition.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct JobPreviewLimits{pub maximum_turns:u64,pub maximum_wall_us:u64}
@@ -23,9 +26,9 @@ impl JobPreviewDriver{
  pub fn new(limits:JobPreviewLimits)->Self{Self{limits,binding:None,phase:JobPreviewPhase::Run,turns:0,outcomes:0,terminal:false,status:JobPreviewStatus::Complete,receipt:None}}
  fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"preview requires its original session, identity and caller receipt")}
  fn metadata(cx:&mut StepContext<'_>)->Result<bool,ValueError>{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
- fn matches<S:OriginalPreviewSession>(&self,session:&S,cx:&StepContext<'_>)->bool{self.binding.is_some_and(|(pointer,operation,generation,_)|pointer==session as*const _ as usize&&operation==cx.operation()&&generation==cx.generation())}
+ fn matches<S:OriginalPreviewSession+?Sized>(&self,session:&S,cx:&StepContext<'_>)->bool{self.binding.is_some_and(|(pointer,operation,generation,_)|pointer==session as*const S as*const () as usize&&operation==cx.operation()&&generation==cx.generation())}
  fn verdict(&self)->JobPreviewVerdict{JobPreviewVerdict{status:self.status,outcomes:self.outcomes}}
- fn close_intent<S:OriginalPreviewSession>(&mut self,session:&mut S){session.begin_close();self.phase=JobPreviewPhase::Close;}
+ fn close_intent<S:OriginalPreviewSession+?Sized>(&mut self,session:&mut S){session.begin_close();self.phase=JobPreviewPhase::Close;}
  /// 📬️ Consumes the original raw callback receipt once before any semantic loan or acknowledgement.
  fn receive(&mut self,cx:&mut StepContext<'_>,original:RetainedCloneGrant)->Result<(),OriginalTurnFailure>{
   let(issued,progress)=self.receipt.take().ok_or_else(Self::invalid)?;
@@ -33,8 +36,8 @@ impl JobPreviewDriver{
   if !fits{return Err(OriginalTurnFailure::debit_original(Self::invalid().with_retained_progress(progress),cx))}cx.consume_retained(progress)?;Ok(())
  }
  /// ▶️ Advances one funded transition without constructing another context, root or authority.
- pub fn advance<'session,S:OriginalPreviewSession>(&mut self,session:&'session mut S,cx:&mut StepContext<'_>)->Result<JobPreviewStep<'session>,OriginalTurnFailure>{
-  if let Some((pointer,operation,generation,_))=self.binding{if pointer!=session as*const _ as usize||operation!=cx.operation()||generation!=cx.generation(){return Err(Self::invalid().into())}}
+ pub fn advance<'session,S:OriginalPreviewSession+?Sized>(&mut self,session:&'session mut S,cx:&mut StepContext<'_>)->Result<JobPreviewStep<'session>,OriginalTurnFailure>{
+  if let Some((pointer,operation,generation,_))=self.binding{if pointer!=session as*const S as*const () as usize||operation!=cx.operation()||generation!=cx.generation(){return Err(Self::invalid().into())}}
   if self.phase==JobPreviewPhase::Complete{return Ok(JobPreviewStep::Complete(self.verdict()))}
   if self.receipt.is_some(){return Err(Self::invalid().into())}
   if cx.should_yield(){return Ok(JobPreviewStep::Pending)}
@@ -43,7 +46,7 @@ impl JobPreviewDriver{
    let identity=match session.original_identity(){Ok(Some(identity))=>identity,Ok(None)|Err(_)=>return Err(Self::invalid().into())};
    if identity!=(cx.operation(),cx.generation())||self.limits.maximum_turns==0||self.limits.maximum_wall_us==0{return Err(Self::invalid().into())}
    let deadline=cx.now_us().and_then(|now|now.checked_add(self.limits.maximum_wall_us)).ok_or_else(Self::invalid)?;
-   if Self::metadata(cx)?{self.binding=Some((session as*const _ as usize,identity.0,identity.1,deadline));}
+   if Self::metadata(cx)?{self.binding=Some((session as*const S as*const () as usize,identity.0,identity.1,deadline));}
    return Ok(JobPreviewStep::Pending);
   }
   match self.phase{
@@ -99,12 +102,12 @@ impl JobPreviewDriver{
   }
  }
  /// ✅️ The caller signals that its original borrowed Fault input has been retained before ACK.
- pub fn accept_fault_input<S:OriginalPreviewSession>(&mut self,session:&S,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
+ pub fn accept_fault_input<S:OriginalPreviewSession+?Sized>(&mut self,session:&S,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
   if !self.matches(session,cx)||self.phase!=JobPreviewPhase::FaultInput{return Err(Self::invalid())}
   if cx.should_yield()||!Self::metadata(cx)?{return Ok(false)}self.phase=JobPreviewPhase::Acknowledge;Ok(true)
  }
  /// 🛑️ Cancellation changes intent and retains every original producer owner for paid closure.
- pub fn cancel<S:OriginalPreviewSession>(&mut self,session:&mut S,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
+ pub fn cancel<S:OriginalPreviewSession+?Sized>(&mut self,session:&mut S,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
   if !self.matches(session,cx){return Err(Self::invalid())}
   if cx.should_yield()||!Self::metadata(cx)?{return Ok(false)}self.status=JobPreviewStatus::Cancelled;self.close_intent(session);Ok(true)
  }
@@ -114,3 +117,7 @@ impl JobPreviewDriver{
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
 
+
+#[cfg(test)]
+#[global_allocator]
+static PREVIEW_TEST_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

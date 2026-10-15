@@ -1,0 +1,1 @@
+{ "source": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx", "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📱️mobile/🟦️.tsx", "names": ["UiMobileContext","UiMobileProvider","useUiMobile"], "doc": "📱 Owns the mobile layout context that tells chrome whether to adapt to a handheld surface.", "keepExports": "named" }

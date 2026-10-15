@@ -12,7 +12,7 @@ fn collect_fixture_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescripto
 #[cfg(test)]
 #[test]
 fn realize_fault_remains_scheduled_until_the_aborted_cursor_is_terminal() {
-    let glue = include_str!("../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+    let glue = crate::RENDERER_SOURCE;
     let native = include_str!("../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
     assert!(glue.contains("cursor.phase = AppPresentPhase::Aborted;\n                            if self.retained_fault.is_none()"));
     assert!(glue.contains("return Ok(AppPresentStep::Pending);"));

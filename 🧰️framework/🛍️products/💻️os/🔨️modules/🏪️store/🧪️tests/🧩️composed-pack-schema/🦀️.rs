@@ -72,14 +72,19 @@ fn graph_json(spec: &semio_framework_dsl_record::RecordSpec) -> serde_json::Valu
     serde_json::from_str(&semio_framework_pack_json::to_string(&crate::os_pack::PackSchemaGraph::of(spec).to_json())).expect("graph json")
 }
 
+fn link_record_producer()->semio_framework_dsl_record::RecordSpecProducer {
+    let semio_framework_dsl_record::Shape::Record(producer)=<ArtifactLink as semio_framework_dsl_record::DslField>::shape()else{unreachable!()};
+    producer
+}
+
 fn renamed_role_link_spec() -> semio_framework_dsl_record::RecordSpec {
-    let mut spec = artifact_link_spec();
+    let mut spec = (link_record_producer().ordinary)();
     spec.fields.iter_mut().find(|field| field.key == "role").expect("link role field").key = "purpose".into();
     spec
 }
 
 fn renamed_role_link_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, semio_framework_value::ValueError> {
-    let mut spec = artifact_link_spec_controlled(control)?;
+    let mut spec = control.produce(&link_record_producer())?;
     let field = spec.fields.iter_mut().find(|field| field.key == "role").ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "link role field"))?;
     field.key = control.copy_text("purpose")?;
     Ok(spec)
@@ -106,7 +111,7 @@ fn derived_graph_matches_the_language_agnostic_fixture() {
     assert_eq!(graph_json(&ComposedSnapshot::__dsl_spec()), fixture["graph"]);
     let child_keys: Vec<String> = artifact_child_spec().fields.iter().map(|field| field.key.to_string()).collect();
     assert_eq!(serde_json::json!(child_keys), fixture["childFields"]);
-    let link_keys: Vec<String> = artifact_link_spec().fields.iter().map(|field| field.key.to_string()).collect();
+    let link_keys: Vec<String> = (link_record_producer().ordinary)().fields.iter().map(|field| field.key.to_string()).collect();
     assert_eq!(serde_json::json!(link_keys), fixture["linkFields"]);
 }
 
@@ -128,7 +133,7 @@ fn pack_schema_hash_differs_when_the_structure_differs() {
     let without_links = crate::os_pack::schema_hash(&ComposedWithoutLinks::__dsl_spec());
     let renamed_child = crate::os_pack::schema_hash(&ComposedRenamedChild::__dsl_spec());
     let renamed_link_role = crate::os_pack::schema_hash(&with_link_spec(renamed_role_link_producer()));
-    assert_eq!(crate::os_pack::schema_hash(&with_link_spec(artifact_link_spec_producer())), composed);
+    assert_eq!(crate::os_pack::schema_hash(&with_link_spec(link_record_producer())), composed);
     assert_ne!(composed, without_links);
     assert_ne!(composed, renamed_child);
     assert_ne!(composed, renamed_link_role);

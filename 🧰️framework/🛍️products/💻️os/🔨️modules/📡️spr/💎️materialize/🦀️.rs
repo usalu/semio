@@ -12,7 +12,8 @@
 
 use crate::os_pack::{ByteReader, ByteWriter};
 use crate::os_spr::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, VerificationLevel, HEADER_SIZE};
-use crate::os_spr::wire::{DictReader, ProtocolError, ProtocolLimits, RecordHasher};
+use protocol::ProtocolError;
+use crate::os_spr::wire::{DictReader, ProtocolLimits, RecordHasher};
 use std::collections::HashMap;
 
 //#region 🔖️Snapshot

@@ -6,15 +6,15 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../🕰️clock/🟦️.ts — the TypeScript twin
 
-use crate::animation::BLINK_TICKS;
 use crate::attention::{gaze_rests, heading_of, look, perk, presence_of, swivel, watched, wink, PERK_LINGER, POINTER_TICKS, TURN_REST};
 use crate::choice::conclude;
 use crate::draft::{remove, settle, Draft};
 use crate::locomotion::{fly, plunge, stride};
 use crate::population::spawn;
 use crate::schedule::{arrival_tick, pairing_tick};
-use crate::schema::{Activity, Menagerie, PetMode, Ticks};
 use crate::sociability::{meet, pair};
+use semio_framework_pets_contract::schema::{Activity, Menagerie, PetMode, Ticks};
+use semio_framework_pets_kinematics::animation::BLINK_TICKS;
 
 //#region 🔖️Constants
 const FADE_STEP: f64 = 0.0625;

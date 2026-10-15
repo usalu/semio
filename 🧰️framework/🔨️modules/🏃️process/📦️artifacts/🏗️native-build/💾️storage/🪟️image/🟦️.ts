@@ -2,8 +2,8 @@ import {lstatSync,mkdirSync,existsSync,statfsSync} from "node:fs";
 import {dirname} from "node:path";
 import {captureOwnedCommandV1} from "../../../../🎛️owned-execution/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../🔒️leases/🟦️.ts";
-import {openNativeFixedPlatformV1,nativeFixedVhdFooterV1,readNativeFixedVhdFooterV1,type NativeFixedPlatformOptionsV1,type NativeFixedPlatformPortV1} from "../🧱️fixed/🟦️.ts";
-import type {NativeImageStorageV1} from "../🌐️platform/📋️contract/🟦️.ts";
+import {openNativeFixedPlatformV1,retireNativeFixedPlatformV1,nativeFixedVhdFooterV1,readNativeFixedVhdFooterV1,type NativeFixedPlatformOptionsV1,type NativeFixedPlatformPortV1} from "../🧱️fixed/🟦️.ts";
+import type {NativeImageStorageV1,NativeImageMaintenanceRequestV1} from "../🌐️platform/📋️contract/🟦️.ts";
 
 const literal=(value:string)=>"'"+value.replace(/'/gu,"''")+"'";
 const windows:NativeFixedPlatformPortV1={filename:"fixed.vhd",prepare:async(options,image,root,fresh)=>{
@@ -16,7 +16,10 @@ const windows:NativeFixedPlatformPortV1={filename:"fixed.vhd",prepare:async(opti
  checkResourceLeaseControl(options.control);const file=lstatSync(image),size=nativeFixedVhdFooterV1(readNativeFixedVhdFooterV1(image),file.size,options.maximumPhysicalBytes,options.filesystemBytes);
  const script=`$ErrorActionPreference='Stop';$f=${literal(image)};$r=${literal(root+"\\")};$v=Get-DiskImage -ImagePath $f;if(!$v.Attached){throw 'Owned VHD not attached'};$d=@($v|Get-Disk);if($d.Count-ne 1){throw 'Exact owned VHD disk required'};$p=@($d[0]|Get-Partition|Where-Object {$_.AccessPaths-contains $r});if($p.Count-ne 1){throw 'Exact owned VHD mount required'};$fs=$p[0]|Get-Volume;if($fs.FileSystem-ne 'NTFS'-or $fs.Size-gt ${size}){throw 'Finite owned NTFS required'};@{image=$v.ImagePath;device=$v.DevicePath;disk=$d[0].Number;unique=$d[0].UniqueId;partition=$p[0].PartitionNumber;volume=$fs.UniqueId;bytes=$fs.Size}|ConvertTo-Json -Compress`;
  const text=await captureOwnedCommandV1("powershell.exe",["-NoLogo","-NoProfile","-NonInteractive","-Command",script],dirname(options.directory),{control:options.control}),record=JSON.parse(text);if(typeof record.device!=="string"||typeof record.unique!=="string"||typeof record.volume!=="string"||!Number.isSafeInteger(record.bytes)||record.bytes<1||record.bytes>size)throw Error("Actual Windows volume identity required");return JSON.stringify(record);
-}};
+},detach:async(options,image)=>{const script=`$ErrorActionPreference='Stop';$f=${literal(image)};Dismount-DiskImage -ImagePath $f; if((Get-DiskImage -ImagePath $f).Attached){throw 'Owned VHD remains attached'}`;await captureOwnedCommandV1("powershell.exe",["-NoLogo","-NoProfile","-NonInteractive","-Command",script],dirname(options.directory),{control:options.control});}};
 
 /** 🪟️ Opens only a fixed, checksummed VHD with the exact attached NTFS mount; missing system capability refuses. */
 export async function openNativeWindowsImageStorageV1(options:NativeFixedPlatformOptionsV1):Promise<NativeImageStorageV1>{checkResourceLeaseControl(options.control);if(process.platform!=="win32")throw Error("Windows fixed VHD backend unavailable on this platform");return openNativeFixedPlatformV1(options,windows);}
+
+/** ♻️ Retires the exact quiescent fixed VHD through normal dismount. */
+export async function retireNativeWindowsImageStorageV1(options:NativeFixedPlatformOptionsV1,request?:NativeImageMaintenanceRequestV1):Promise<boolean>{if(process.platform!=="win32")throw Error("Windows fixed VHD backend unavailable on this platform");return retireNativeFixedPlatformV1(options,windows,request);}

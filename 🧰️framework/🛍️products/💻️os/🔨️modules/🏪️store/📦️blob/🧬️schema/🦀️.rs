@@ -1,6 +1,6 @@
 //! 📦️ Shared durable identity and metadata for content-addressed blob storage.
 
-use crate::{FromValue, ToValue};
+use semio_framework_value::{FromValue, ToValue};
 
 /// 📦️ A content-addressed blob's identity + metadata. Never carries the bytes themselves —
 /// callers that just put/read a blob already hold those; this is what gets embedded in a document
@@ -16,3 +16,5 @@ pub struct BlobRef {
     pub size: u64,
     pub media_type: String,
 }
+
+semio_framework_value::artifact_retire_struct!(BlobRef { hash, size, media_type });

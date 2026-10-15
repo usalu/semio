@@ -6,7 +6,7 @@
 
 use super::*;
 use crate::randomness::random_between;
-use crate::schema::tests::{bits, entries, fixture, number, typed};
+use semio_framework_pets_contract::testkit::{bits, entries, fixture, number, typed};
 use serde_json::Value;
 
 const BOUND: f64 = 1e-12;

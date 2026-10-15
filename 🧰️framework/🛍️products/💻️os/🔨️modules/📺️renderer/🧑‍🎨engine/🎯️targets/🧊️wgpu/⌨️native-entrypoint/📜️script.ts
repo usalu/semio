@@ -12,6 +12,7 @@ import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runTool} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import { COMPILER_FONTS_DIRECTORY } from "../../../../../../../../🔨️modules/📚️compiler/🌍️world/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 import { nativeRendererBinary } from "../🏗️compiler/🦀️native/📜️script.ts";
@@ -97,7 +98,7 @@ class RunScript extends BundleScript {
       // 🧭️ An explicit `--flag` is spelled FIRST, because the binary's `arg_value` reads the first
       // occurrence; the playground row then supplies the per-server defaults (`app`, `brand`) the wgpu
       // serve injects as `<meta name="semio-*">` for the browser.
-      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime }, repo, controller.signal, row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
+      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime, SEMIO_COMPILER_FONTS: join(repo, COMPILER_FONTS_DIRECTORY) }, repo, controller.signal, row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
     } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   }
 }

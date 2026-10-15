@@ -18,7 +18,8 @@ mod native {
     use std::sync::Mutex;
 
     use crate::format::{Manifest, PackWriter, RecoveryReport, WriteOptions};
-    use crate::{PackLimits, PackSink, PackSource};
+    use crate::{PackLimits};
+use semio_framework_pack_source::{PackSink, PackSource};
     use semio_framework_pack_error::{PackError,PackTransportContext,PackTransportPhase,PackTransportCategory,PackRetryDisposition};
     use semio_framework_value::ValueRefusalKind;
 

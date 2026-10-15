@@ -22,6 +22,11 @@ class OwnedVerifyScript extends BundleScript {
       await runRepositoryCommand(this.invocation,process.execPath,["test", tests],this.repoRoot,"cad-unmounted-reference-owner-syntax",{version:1,maximumElapsedMilliseconds:0,output:null});
       return;
     }
+    if (segments.length === 1 && segments[0] === "owned-target") {
+      const tests = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪪️owned-target/🟦️.test.ts");
+      await runRepositoryCommand(this.invocation,process.execPath,["test", tests],this.repoRoot,"cad-owned-target-admission",{version:1,maximumElapsedMilliseconds:0,output:null});
+      return;
+    }
     if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
       const subset = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
       const sources = ["🧬️schema/📸️snapshot/🟦️.ts", "🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts", "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"].map(file => resolve(subset, file));

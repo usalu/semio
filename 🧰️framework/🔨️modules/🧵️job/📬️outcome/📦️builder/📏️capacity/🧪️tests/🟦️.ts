@@ -1,0 +1,7 @@
+/** 📏️ Read-only page capacities and logical lengths agree with independent relational sums. */
+import{test,expect}from"bun:test";
+import Ajv from"ajv";
+import{Database}from"bun:sqlite";
+import law from"./🧫️fixtures/🔣️.json";
+import schema from"../🧬️schema/🔣️.json";
+test("payload capacity observations preserve actual extent separately from initialized bytes",()=>{const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,readOnly:false})).toBe(false);const database=new Database(":memory:");try{database.exec("create table pages(owner text,page integer,capacity integer,length integer,primary key(owner,page),check(length<=capacity))");for(const row of law.cases){row.pages.forEach((page,index)=>database.query("insert into pages values(?,?,?,?)").run(row.name,index,page.capacity,page.length));const own=row.pages.reduce((sum,page)=>({capacity:sum.capacity+page.capacity,length:sum.length+page.length}),{capacity:0,length:0});expect(own).toEqual({capacity:row.expectedCapacity,length:row.expectedLength});expect(database.query("select coalesce(sum(capacity),0) as capacity,coalesce(sum(length),0) as length from pages where owner=?").get(row.name)).toEqual(own);}console.log("[DEBUG] Ajv/SQLite payload read-only actual capacity0/8192/24576 separately from initialized length0/17/17001; no authority or mutation exported");}finally{database.close();}});

@@ -18,7 +18,7 @@
 
 use crate::challenge::{challenge_rules, task_seconds, ChallengeRules};
 use crate::randomness::{shuffle, Mt19937};
-use crate::schema::{Axis, Category, Challenge, Icon, MatchingTask, Quiz, Sheet, SheetAxis, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SheetTask, SortingItem, Task, TaskKind, Text};
+use quiz_schema::{Axis, Category, Challenge, Icon, MatchingTask, Quiz, Sheet, SheetAxis, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SheetTask, SortingItem, Task, TaskKind, Text};
 use std::cmp::Ordering;
 
 /// 🎰️ Present `quiz` for `seed` at `challenge`. Expects a quiz free of

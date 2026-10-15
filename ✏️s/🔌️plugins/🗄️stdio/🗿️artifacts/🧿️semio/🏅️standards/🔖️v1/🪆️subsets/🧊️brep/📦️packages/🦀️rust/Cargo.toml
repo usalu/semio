@@ -43,9 +43,12 @@ semio-s-artifact-stdio-semio-base = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-3d-brep-construction = { workspace = true }
+semio-framework-3d-brep-boolean.workspace = true
+semio-framework-3d-brep-sweep.workspace = true
+semio-framework-3d-brep-offset.workspace = true
 semio-framework-3d-brep-validation.workspace = true
 semio-framework-3d-brep-engine = { workspace = true }
-semio-framework-3d-brep-operations = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

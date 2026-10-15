@@ -31,9 +31,6 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 [workspace.dependencies.semio-framework-mesh-engine]
 path = "../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-s-artifact-stdio-semio-brep-export]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/📦️packages/🦀️rust"
 

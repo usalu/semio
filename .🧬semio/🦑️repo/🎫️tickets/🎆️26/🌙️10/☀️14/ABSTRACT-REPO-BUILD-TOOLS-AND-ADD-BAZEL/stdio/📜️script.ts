@@ -11,5 +11,6 @@ const {assertStdioArtifactSchema}=await import(join(root,"✏️s/🧑‍💻dev
 const {verifyStdioCommandOwnership,testStdioArtifactPackageGraph}=await import(join(root,"✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts"));
 await assertStdioArtifactSchema(stdioArtifactPackageContract(root),join(root,"✏️s/🔌️plugins/🗄️stdio"));
 await verifyStdioCommandOwnership(root);
-await testStdioArtifactPackageGraph(root);
+const {receiveScriptProcessInvocation}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"));
+await receiveScriptProcessInvocation(process.env,original=>testStdioArtifactPackageGraph(root,original));
 console.log("[DEBUG] Stdio schema, command ownership and actual portable build graph verified");

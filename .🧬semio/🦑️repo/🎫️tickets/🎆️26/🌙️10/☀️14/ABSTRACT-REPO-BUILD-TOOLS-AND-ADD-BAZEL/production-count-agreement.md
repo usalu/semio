@@ -1,0 +1,11 @@
+# Production Coverage Receipt Agreement
+
+The retained `production-counts/📜️script.ts` accepts trusted outputs from three separately executed qualification steps: Core's genuine current ALL producer, the literal command audit, and exhaustive Bazel planning. Source authority must already have been admitted by the producer; this helper checks receipt agreement and does not reauthorize Source or execute tasks.
+
+The independent SQLite predicates require version-3 ALL admission; the same immutable path/digest; matching project, dependency, base-target and configured-target counts; positive project, target, configuration, observation and expanded coverage; planned count equal to base plus configurations; and zero command/plan failures. The actual branch additionally requires positive unique expansion and maximum closure. Empty generic ALL graphs remain valid schema fixtures, but cannot pass this production coverage check.
+
+One positive and seventeen language-neutral refusal vectors passed. Refusals cover empty coverage, mismatched counts or digests, selected admission, old authority, failed commands/plans and incomplete enumeration. The database closes after both fixture and actual paths. Generated fixture output is `production-count-guards.log` and will be removed at ticket closure.
+
+Actual production receipt reconciliation exited zero against ALL17 pin `fa53c2c277685b941612a86ba130c62f75b7f3a6ccc5cc87b33d0bd51c0d252f`: 2,205 projects, 58,657 dependencies, 12,988 base targets, 25,946 configurations and 164,316 observations. Command and plan totals agree; 38,934 plans expand to 302,068 entries, 25,969 unique tasks and maximum closure 1,739, with zero failures. Root read the actual `production-count-agreement.json` and log; Low independently checked positive plan and command receipts. All three use the same absolute immutable path and digest.
+
+This records the qualified ALL17 snapshot. Subsequent Nx graph-cache storage changes require fresh Source qualification and corresponding receipts. Stdio failed before its child on cache ENOSPC; no Stdio or final nested runtime success is implied by count agreement. Generated receipts and logs are removed at closure after their material evidence is retained in Markdown.

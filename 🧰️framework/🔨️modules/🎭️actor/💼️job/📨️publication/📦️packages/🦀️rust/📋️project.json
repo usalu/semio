@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-actor-job-publication-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

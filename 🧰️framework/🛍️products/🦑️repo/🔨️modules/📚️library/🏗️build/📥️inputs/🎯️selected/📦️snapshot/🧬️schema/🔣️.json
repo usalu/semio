@@ -28,7 +28,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 256,
-            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*[\\\\\\u0000-\\u001f])[^:]+$"
+            "pattern": "^(?!/)(?!\\.semio-native-index(?:/|$))(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*[\\\\\\u0000-\\u001f])[^:]+$"
           },
           "digest": {
             "type": "string",
@@ -53,7 +53,10 @@
         "maximumSourceFiles",
         "slots",
         "maximumPathCharacters",
-        "maximumGrantBytes"
+        "maximumGrantBytes",
+        "initializationFile",
+        "maximumInitializationBytes",
+        "recheckFiles"
       ],
       "properties": {
         "version": {
@@ -73,6 +76,15 @@
         },
         "maximumGrantBytes": {
           "const": 4194304
+        },
+        "initializationFile": {
+          "const": ".semio-native-index"
+        },
+        "maximumInitializationBytes": {
+          "const": 1024
+        },
+        "recheckFiles": {
+          "const": 32
         }
       }
     },

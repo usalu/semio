@@ -19,17 +19,17 @@ import { useGLTF } from "@react-three/drei/core/Gltf.js";
 // 🧱️core: sceneHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // sceneHostPort.drei.Line at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
-import { sceneHostPort } from "../🔌️Ports/🟦️.tsx";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { sceneHostPort, HostThreeCanvas, reactHostPort } from "../🔌️Ports/🟦️.tsx";
 
 const { useFrame, useThree } = sceneHostPort.fiber;
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { ActionDropdown } from "../⚡️ActionGroup/🟦️.tsx";
+import { ActionDropdown, type ActionDropdownOption } from "../⚡️ActionGroup/🟦️.tsx";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
-import { HostThreeCanvas, uiSpacingPx, resolveSemanticColorHex, resolveColorHex, themeColorVar, tokenVar, resolveSpatialAxisColors, type ActionDropdownOption, CameraIcon, type Point, type Vector, type Plane, type Camera } from "../../🎯️targets/⚛️react/🟦️";
-import { GripVerticalIcon } from "../🔣️Icons/🟦️.tsx";
+import { uiSpacingPx, resolveSemanticColorHex, resolveColorHex, themeColorVar, tokenVar, resolveSpatialAxisColors } from "@semio-tech/ui-styling";
+import { CameraIcon, GripVerticalIcon } from "../🔣️Icons/🟦️.tsx";
+import { type Point, type Vector, type Plane, type Camera } from "./📐️geometry/🟦️.ts";
 // #endregion 🔌️Adapters
 // #region 📍️Scene
 // 3D scene viewer built on React Three Fiber.

@@ -16,7 +16,7 @@ import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
-import { STYLING_DOM, STYLING_METRICS, domSizePx, sizeVar, uiSpacingLen, uiSpacingPx } from "@semio-tech/ui-styling";
+import { STYLING_DOM, STYLING_METRICS, domSizePx, uiSpacingLen, uiSpacingPx } from "@semio-tech/ui-styling";
 export { uiSpacingLen };
 import { type IconName } from "@semio-tech/assets";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
@@ -37,23 +37,17 @@ import { childElementId, elementIdSegment, isElementId } from "../🆔️Element
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { interactiveActiveFillClass, interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
-import {
-  dropZoneReadyFillClass,
-  dropZoneReadyTextClass,
-  loadingBorderStateClass,
-  waitingBorderStateClass,
-  panelTabIconSlotClass,
-  panelTabLabelClass,
-  windowMeasureTreeGroupLabelClass,
-  windowMeasureTreeLeafLabelClass,
-  windowPaneChromeToggleClass,
-} from "../../🎯️targets/⚛️react/🟦️";
+import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
+import { windowPaneChromeToggleClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
+import { dropZoneReadyFillClass, dropZoneReadyTextClass, panelTabIconSlotClass, panelTabLabelClass, windowMeasureTreeGroupLabelClass, windowMeasureTreeLeafLabelClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText, useControlTooltipText } from "../🏷️Label/🟦️.tsx";
 import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useShellFloatingSurfaceHost, useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { DisabledReasonHint } from "../💡️ChromeControlHint/🟦️.tsx";
-import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME, interactionMergeFromModifiers } from "../../🎯️targets/⚛️react/🟦️";
+import { useUiDriverDragSurface } from "../🚗️UiDriver/🟦️.tsx";
+import { TREE_SECTION_REORDER_MIME } from "../../🔨️modules/🧲️panel-dock/🟦️.tsx";
+import { usePanelGhost, interactionMergeFromModifiers } from "../👻️PanelGhost/🟦️.tsx";
 import { Icon, renderControlIcon, type ControlIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { ContextMenu, type ContextMenuItem } from "../🖱️ContextMenu/🟦️.tsx";
@@ -61,6 +55,8 @@ import { Button } from "../🔘️Button/🟦️.tsx";
 // 🕹️wave-0: imported directly from the module's own source (see react/🟦️.tsx's header comment on
 // this same import for why not via `@semio-tech/framework`'s barrel).
 import { nextSelection, validateState, type DomainSelection, type DomainTopology, type InteractionDefinition } from "../../../🕹️interaction/🟦️.ts";
+import { PropertyValueColumnContext, TreeAlignedRow, TreeContext, type TreeDirection, TreeRowAlignmentContext, detailPanelHeaderLineCenterPx, detailPanelIndentLen, detailPanelIndentPx, detailPanelPropertyControlClassName, detailPanelPropertyRowClassName, indentationLineLen, treeGuideLineStrokeClassName, treeHeaderMainClassName, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeItemLabelStyle } from "./📏️row-alignment/🟦️.tsx";
+import { resolveHoverRow, rowForBranch, treeBranchSlots, treeRowSlots } from "./🧭️hover-path/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 📜️Tree
@@ -191,17 +187,7 @@ const assertNoNestedTreeSections = (children: React.ReactNode, ownerName: "TreeS
   visitNestedChildren(children);
 };
 
-/** 🧭️ Vertical unfold direction for a tree's foldable groups — `"up"` mirrors the {@link Ribbon} `"up"` pattern: a group's children render above its own header row, in reverse order, so the tree grows toward a fixed anchor (e.g. a bottom corner panel's pinned chrome) instead of away from it. */
-export type TreeDirection = "down" | "up";
 
-export const TreeContext = reactHostPort.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean; indentMultiplier: number; direction?: TreeDirection }>({
-  level: 0,
-  isLastAtLevel: [],
-  showLines: true,
-  isTree: false,
-  indentMultiplier: 1,
-  direction: "down",
-});
 
 /** 🧭️ Fold-affordance chevron for a tree group row — points toward where the content actually is: along the block axis when open (down, or up when {@link direction} is `"up"`), along the {@link FlowInline}-mirrored inline axis when closed (right in ltr/down or rtl/up, left in ltr/up or rtl/down). */
 export function treeFoldChevronIcon(direction: TreeDirection, inline: FlowInline, open: boolean): React.ComponentType<{ className?: string }> {
@@ -209,34 +195,14 @@ export function treeFoldChevronIcon(direction: TreeDirection, inline: FlowInline
   const towardStart = direction === "up";
   return towardStart === (inline === "rtl") ? ChevronRightIcon : ChevronLeftIcon;
 }
-export const TreeRowAlignmentContext = reactHostPort.createContext(false);
-// True when children are rendered inside the value column of a Label property row.
-export const PropertyValueColumnContext = reactHostPort.createContext(false);
-export const detailPanelIndentLen = (level: number, multiplier = 1): string => `calc(${level * multiplier} * var(--tree-indent-per-level))`;
-export const detailPanelIndentPx = (level: number, multiplier = 1): number => domSizePx("treeIndentPerLevelUiSpacing") * level * multiplier;
-/** 📏️ The ONE tree row pitch, straight off `dom.treeRowUiSpacing` — every row shell is exactly this tall and every sibling gap is zero, so a virtual window's spacers are `rows × treeRowHeightPx` and nothing else. */
-export const treeRowHeightPx = domSizePx("treeRowUiSpacing");
-export const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
 const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--tree-row-height))] max-h-[var(--tree-row-max-height,var(--tree-row-height))] w-full min-w-0 select-none overflow-hidden";
-const treeRowLayoutClassName = "grid min-w-0 h-full w-full";
-const treeRowContentClassName = "min-w-0 h-full flex items-center";
 const detailPanelPropertyLabelColumnWidthPx = domSizePx("propertyLabelColumnUiSpacing");
-export const detailPanelPropertyInlineGapPx = domSizePx("propertyInlineGapUiSpacing");
 const detailPanelPropertyStackedRowGapPx = domSizePx("propertyStackedGapUiSpacing");
-export const detailPanelPropertyStackedToInlineHysteresisPx = domSizePx("propertyStackedHysteresisUiSpacing");
-export const detailPanelPropertyRowClassName = "group grid min-w-0 items-start gap-x-tiny min-h-workbench";
-export const detailPanelPropertyControlClassName =
-  "min-w-0 w-full self-start flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
-export const treeInspectorInnerRowClassName = "min-w-0 w-full";
-export const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-double";
-export const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-double overflow-hidden";
 const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
 const treePropertyHeaderGridClassName = "grid min-w-0 w-full items-center gap-x-tiny min-h-[var(--tree-row-min-height,var(--tree-row-height))]";
 const treePropertyHeaderGridStyle: React.CSSProperties = { gridTemplateColumns: `minmax(0, 1fr) var(--tree-value-column, ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)})` };
 const treeItemControlClassName =
   "min-w-0 w-full flex items-stretch justify-[var(--tree-value-justify,flex-end)] [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
-const indentationLineLen = (i: number, multiplier = 1): string => `calc(${detailPanelIndentLen(i, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeIndentLineExtraUiSpacing)})`;
-const indentationLinePx = (i: number, multiplier = 1): number => detailPanelIndentPx(i, multiplier) + domSizePx("treeIndentLineExtraUiSpacing");
 /** 🌳️ Ancestor guide indices for a branch at {@link level}: parent level always continues through expanded children; deeper ancestors stop after last siblings. */
 const treeBranchGuideIndices = (level: number, isLastAtLevel: readonly boolean[]): number[] => Array.from({ length: level }, (_, index) => index).filter((index) => index === level - 1 || !isLastAtLevel[index]);
 const treeRowInlineGapPx = domSizePx("propertyInlineGapUiSpacing");
@@ -248,9 +214,7 @@ const treeItemContentPaddingTopPx = 0;
 export const treeCompactSiblingGapPx = 0;
 const treeSubtreeGapPx = 0;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
-export const treeItemLabelStyle: React.CSSProperties = {};
 const treePresentationLabelStyle: React.CSSProperties = { fontSize: "var(--tree-label-size, var(--text-xs))", lineHeight: "var(--tree-label-line-height, 1)" };
-const treeGuideLineStrokeClassName = "bg-muted-foreground/40 group-hover/tree-row:bg-emphasized transition-[width,background-color] duration-150";
 const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none select-text";
 export const treeItemSecondaryTextClassName = "text-2xs leading-none text-muted-foreground";
 const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide text-element transition-colors select-text";
@@ -264,23 +228,12 @@ const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconN
   </span>
 );
 const treeGutterSlotLeftLen = (level: number, extraMultiplier = 0, multiplier = 1): string => (extraMultiplier > 0 ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraMultiplier)})` : detailPanelIndentLen(level, multiplier));
-const treeGutterSlotLeftPx = (level: number, extraLeftPx = 0, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + extraLeftPx;
-const treeGutterAnchorTop = (_anchorOffsetPx?: number): string => "var(--tree-gutter-center, calc(var(--tree-row-height) / 2))";
-const treeGutterSlotStyle = (level: number, extraLeftPx = 0, multiplier = 1, anchorOffsetPx?: number): React.CSSProperties => ({
-  top: treeGutterAnchorTop(anchorOffsetPx),
-  insetInlineStart: extraLeftPx > 0 ? `calc(${detailPanelIndentLen(level, multiplier)} + ${extraLeftPx}px)` : detailPanelIndentLen(level, multiplier),
-});
-const treeGutterWidthLen = (level: number, multiplier = 1): string => `calc(${detailPanelIndentLen(level, multiplier)} + var(--tree-toggle-width))`;
 const treeGutterWidthPx = (level: number, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + treeToggleSlotWidthPx;
 const treeBranchContentStyle = (topPaddingPx = 0): React.CSSProperties => ({
   rowGap: treeBranchRowGapPx > 0 ? `${treeBranchRowGapPx}px` : "0",
   ...(topPaddingPx > 0 ? { paddingTop: `${topPaddingPx}px` } : {}),
 });
 export const getTreeSiblingGapPx = (_previousKind: string, _currentKind: string): number => treeCompactSiblingGapPx;
-const treeAlignedRowStyle = (level: number, multiplier = 1): React.CSSProperties => ({
-  gridTemplateColumns: `${treeGutterWidthLen(level, multiplier)} minmax(0, 1fr)`,
-  columnGap: sizeVar("spacingDouble"),
-});
 
 /** IndentationLines holds the data fields for a IndentationLines record.
  **/
@@ -302,91 +255,9 @@ const IndentationLines: React.FC<{ level: number; showLines: boolean }> = ({ lev
   );
 };
 
-interface TreeDocumentGutterProps {
-  level: number;
-  showLines: boolean;
-  slot?: React.ReactNode;
-  connectCurrentLevel?: boolean;
-  /** 🌿️ Draw the current-level stem from the row anchor toward this group's children (`down` → bottom, `up` → top). */
-  extendBranchStem?: boolean;
-  slotOffsetPx?: number;
-  anchorOffsetPx?: number;
-}
 
-const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, extendBranchStem = false, slotOffsetPx = 0, anchorOffsetPx }) => {
-  const { indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
-  const currentGuidePx = indentationLinePx(level, indentMultiplier);
-  const parentGuidePx = level > 0 ? indentationLinePx(level - 1, indentMultiplier) : 0;
-  const hasSlot = slot !== null && slot !== undefined && slot !== false;
-  const slotLeftPx = treeGutterSlotLeftPx(level, slotOffsetPx, indentMultiplier);
-  const elbowEndPx = hasSlot ? slotLeftPx : currentGuidePx;
-  const elbowWidthPx = Math.max(elbowEndPx - parentGuidePx, 0);
-  const positionedSlot = hasSlot ? (
-    <span data-slot="tree-gutter-slot" className="absolute flex -translate-y-1/2 items-center justify-center" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier, anchorOffsetPx)}>
-      {slot}
-    </span>
-  ) : null;
-  const branchStemStyle: React.CSSProperties =
-    direction === "up"
-      ? { top: 0, bottom: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: `calc(${indentationLineLen(level, indentMultiplier)} - var(--stroke-hairline) / 2)` }
-      : { top: treeGutterAnchorTop(anchorOffsetPx), bottom: 0, insetInlineStart: `calc(${indentationLineLen(level, indentMultiplier)} - var(--stroke-hairline) / 2)` };
 
-  return (
-    <div data-dim data-slot="tree-gutter" className="relative min-h-full" style={{ width: treeGutterWidthLen(level, indentMultiplier), minWidth: treeGutterWidthLen(level, indentMultiplier) }}>
-      {showLines && level > 0 && connectCurrentLevel && (
-        <div
-          data-slot="tree-branch-elbow"
-          className={cn("pointer-events-none absolute h-px -translate-y-1/2", treeGuideLineStrokeClassName)}
-          style={{ top: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: indentationLineLen(level - 1, indentMultiplier), width: `${elbowWidthPx}px` }}
-        />
-      )}
-      {showLines && extendBranchStem && <div data-slot="tree-branch-stem" className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)} style={branchStemStyle} />}
-      {positionedSlot}
-    </div>
-  );
-};
 
-interface TreeAlignedRowProps {
-  level: number;
-  isLastAtLevel: boolean[];
-  showLines: boolean;
-  slot?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-  contentClassName?: string;
-  contentChromeClassName?: string;
-  align?: "start" | "center";
-  connectCurrentLevel?: boolean;
-  extendBranchStem?: boolean;
-  slotOffsetPx?: number;
-  anchorOffsetPx?: number;
-}
-
-export const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
-  level,
-  isLastAtLevel,
-  showLines,
-  slot,
-  children,
-  className,
-  contentClassName,
-  contentChromeClassName,
-  align = "center",
-  connectCurrentLevel = false,
-  extendBranchStem = false,
-  slotOffsetPx = 0,
-  anchorOffsetPx,
-}) => {
-  const { indentMultiplier } = reactHostPort.useContext(TreeContext);
-  return (
-    <div data-slot="tree-row-layout" className={cn(treeRowLayoutClassName, align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
-      <TreeDocumentGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendBranchStem={extendBranchStem} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
-      <div data-slot="tree-row-content" className={cn(align === "start" ? "min-w-0 h-full" : treeRowContentClassName, contentChromeClassName, contentClassName)}>
-        {children}
-      </div>
-    </div>
-  );
-};
 
 /**
  * Wrapper rendering tree children with connecting lines.
@@ -3226,13 +3097,6 @@ export interface FileTreeNode {
 }
 
 //#region 🎃️TreeHoverPath
-// 🌳️Branch containers that hold child rows and render IndentationLines.
-const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content", "window-measure-tree-content"]);
-// 🔷️Row-level elements that own an elbow connector.
-const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "control-tree-row", "window-measure-tree-row"]);
-const treeHoverPathRowSelector =
-  '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"], [data-slot="tree-content"], [data-slot="window-measure-tree-row"]';
-const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"], [data-slot="window-measure-tree-content"]';
 const treeHoverPathAttr = "data-tree-hover-path";
 const treeSelectionPathAttr = "data-tree-selection-path";
 
@@ -3244,46 +3108,7 @@ const clearTreeHoverPath = (root: HTMLElement) => {
   clearTreePath(root, treeHoverPathAttr);
 };
 
-/**
- * 📦️Derive the row element that owns a branch container.
- * Handles all DOM shapes: tree-item-row/control-tree-row/tree-property-item siblings (branch below for `down`, above for `up`),
- * tree-section-row beside collapsible-content.
- */
-const rowForBranch = (branch: Element): Element | null => {
-  const prev = branch.previousElementSibling;
-  if (prev) {
-    const prevSlot = prev.getAttribute("data-slot");
-    if (prevSlot && treeRowSlots.has(prevSlot)) return prev;
-  }
-  const next = branch.nextElementSibling;
-  if (next) {
-    const nextSlot = next.getAttribute("data-slot");
-    if (nextSlot && treeRowSlots.has(nextSlot)) return next;
-  }
-  const parent = branch.parentElement;
-  const parentSlot = parent?.getAttribute("data-slot");
-  if (parentSlot === "collapsible-content") {
-    const previousRow = parent!.previousElementSibling;
-    if (previousRow?.getAttribute("data-slot") === "tree-section-row") return previousRow;
-    const nextRow = parent!.nextElementSibling;
-    if (nextRow?.getAttribute("data-slot") === "tree-section-row") return nextRow;
-  }
-  return null;
-};
 
-/**
- * 🎛️Resolve the conceptual tree row from a pointer target.
- * First tries matching a known row slot via closest(). When no row wrapper
- * exists (pass-through TreeRow, raw controls), falls back to the nearest
- * branch container and returns its owner row.
- */
-export const resolveHoverRow = (target: HTMLElement, root: HTMLElement): Element | null => {
-  const direct = target.closest(treeHoverPathRowSelector);
-  if (direct && root.contains(direct)) return direct;
-  const branch = target.closest(treeHoverPathBranchSelector);
-  if (branch && root.contains(branch)) return rowForBranch(branch);
-  return null;
-};
 
 const markTerminalBranch = (row: Element, pathAttr: string) => {
   const slot = row.getAttribute("data-slot");
@@ -3334,39 +3159,6 @@ const markTreeRowPath = (row: Element, root: HTMLElement, pathAttr: string) => {
   }
 };
 
-export const markGhostTreeInteraction = (target: Element, region: Element): HTMLElement[] => {
-  const row = resolveHoverRow(target as HTMLElement, region as HTMLElement);
-  if (!row) return [];
-
-  const marked = new Set<HTMLElement>();
-  const mark = (element: Element | null, attribute: "data-active-interaction" | "data-active-ancestor") => {
-    if (!(element instanceof HTMLElement)) return;
-    element.setAttribute(attribute, "");
-    marked.add(element);
-  };
-  const markRow = (element: Element, active: boolean) => {
-    mark(element, active ? "data-active-interaction" : "data-active-ancestor");
-    for (const gutter of Array.from(element.querySelectorAll('[data-slot="tree-gutter"]'))) {
-      mark(gutter, "data-active-ancestor");
-    }
-  };
-
-  markRow(row, true);
-  let element: Element | null = row.parentElement;
-  while (element && element !== region) {
-    const slot = element.getAttribute("data-slot");
-    if (slot && treeBranchSlots.has(slot)) {
-      mark(element, "data-active-ancestor");
-      for (const child of Array.from(element.children)) {
-        if (child.getAttribute("data-slot") === "tree-guide") mark(child, "data-active-ancestor");
-      }
-      const ownerRow = rowForBranch(element);
-      if (ownerRow) markRow(ownerRow, false);
-    }
-    element = element.parentElement;
-  }
-  return [...marked];
-};
 
 const applyTreeHoverPath = (row: Element, root: HTMLElement) => {
   clearTreeHoverPath(root);

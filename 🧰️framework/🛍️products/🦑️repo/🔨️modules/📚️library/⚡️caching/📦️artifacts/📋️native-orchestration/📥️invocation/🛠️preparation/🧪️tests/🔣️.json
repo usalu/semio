@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "steps": 16384,
+  "stepMilliseconds": 1,
+  "publications": 17,
+  "selectedOperation": "list",
+  "refusalOperation": 16384
+}

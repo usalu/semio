@@ -230,6 +230,27 @@
         "command": "bun ./📜️script.ts test native-artifacts"
       }
     },
+    "test-native-storage-platform": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test native-storage-platform"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
     "test-wasm-build": {
       "executor": "repo:script",
       "cache": false,

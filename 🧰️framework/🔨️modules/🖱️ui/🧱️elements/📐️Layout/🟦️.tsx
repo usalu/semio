@@ -18,7 +18,11 @@ import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar,
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
 import { LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
-import { type Anchor, ANCHORS, UiMobileProvider, GhostProvider, PanelGhostRoot, chromeStatusBorderClass, shellChromeFrameLayerClass } from "../../🎯️targets/⚛️react/🟦️";
+import { chromeStatusBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
+import { type Anchor, ANCHORS } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
+import { shellChromeFrameLayerClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { UiMobileProvider } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
+import { GhostProvider, PanelGhostRoot } from "../👻️PanelGhost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🪨️Layout

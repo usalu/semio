@@ -1,8 +1,14 @@
 /** 🚪️ Physical artifact routes and coordinate codecs. */
 import { parseArtifactDialect, type ArtifactDialect, type ArtifactRef } from "../../🧬️schema/🗿️artifact-reference/🟦️.ts";
 
+/** 🗄️ Framework-owned carrier dialect for raw untyped bytes — mirrors Rust `io_schema::CARRIER_BINARY`, the payload law's binary exception. */
+export const CARRIER_BINARY: Readonly<ArtifactDialect> = Object.freeze({ artifactKind: "framework.io.binary", standard: "raw", subset: "*" });
+
+/** 🗄️ Framework-owned carrier dialect for raw untyped UTF-8 text — mirrors Rust `io_schema::CARRIER_TEXT`, the payload law's text exception. */
+export const CARRIER_TEXT: Readonly<ArtifactDialect> = Object.freeze({ artifactKind: "framework.io.text", standard: "utf-8", subset: "*" });
+
 /** 🪶️ Standalone SQLite carrier for one exact native artifact snapshot. */
-export const SQLITE_SNAPSHOT: Readonly<ArtifactDialect> = Object.freeze({ artifactKind: "s.framework.sqlite-snapshot", standard: "1", subset: "*" });
+export const SQLITE_SNAPSHOT: Readonly<ArtifactDialect> = Object.freeze({ artifactKind: "framework.io.sqlite-snapshot", standard: "1", subset: "*" });
 
 function record(value: unknown, keys: readonly string[]): Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("IO contract value must be an object");

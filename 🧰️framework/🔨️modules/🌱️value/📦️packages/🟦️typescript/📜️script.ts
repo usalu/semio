@@ -18,4 +18,13 @@ class NumericApiScript extends ValueApiScript { protected readonly testFile = "�
 /** ⚠️ Verifies typed refusal and exact IEEE scalar authority through their published interfaces. */
 class ScalarsApiScript extends ValueApiScript { protected readonly testFile = "⚠️scalars/🟦️.ts"; }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, invocation => runScriptMain(new ScriptRouter(import.meta.dir).register("test-numeric-api", NumericApiScript).register("test-scalars-api", ScalarsApiScript), { invocation }));
+/** 🧾️ Verifies question dictionaries against their independent JSON Schema oracle and the native JSON limbs. */
+class DictionaryScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Dictionary checks accept no arguments");
+    const test = resolve(this.root, "../../🧾️dictionary/🧪️tests/🟦️.ts");
+    await runOwnedCommand(process.execPath, ["test", test], this.repoRoot, "value:dictionary:source", scriptInvocationBudget(this.invocation, 30_000), { signal: this.invocation.control.signal });
+  }
+}
+
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, invocation => runScriptMain(new ScriptRouter(import.meta.dir).register("test-numeric-api", NumericApiScript).register("test-scalars-api", ScalarsApiScript).register("test-dictionary", DictionaryScript), { invocation }));

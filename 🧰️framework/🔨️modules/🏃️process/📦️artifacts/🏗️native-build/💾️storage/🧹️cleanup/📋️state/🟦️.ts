@@ -1,0 +1,77 @@
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import continuation from "../🧬️schema/📥️continuation.json" with {type:"json"};
+import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/🟦️.ts";
+
+/** 🪙️ Describes already accepted finite time; this immutable data is never an execution grant. */
+export type NativeImageCleanupFundingV1=Readonly<{version:1;acceptedAtMilliseconds:number;wholeDeadlineMilliseconds:number;bodyDeadlineMilliseconds:number;reserveMilliseconds:10000}>;
+/** ⚠️ Names every independently retained settlement failure role. */
+export type NativeImageCleanupFailureV1="body"|"progress"|"cleanup"|"handoff"|"guard"|"admission";
+/** 🗂️ Preserves actual failure values, including thrown undefined, in settlement order. */
+export type NativeImageCleanupFailureRecordV1=Readonly<{role:NativeImageCleanupFailureV1;cause:unknown}>;
+/** 📋️ Keeps physical and pending-work evidence without carrying a resource or command capability. */
+export type NativeImageCleanupStateV1=Readonly<{received:boolean;enrolled:boolean;owned:boolean;stopped:boolean;closing:boolean;persistent:boolean;transferred:boolean;refused:boolean;acceptedWork:number;activationPending:boolean;progressPending:boolean;deactivationPending:boolean;deactivationAttempts:0|1;physical:"unknown"|"active"|"inactive";changed:boolean;expired:boolean;guardFailed:boolean;failures:readonly NativeImageCleanupFailureV1[]}>;
+/** 📎️ Describes settlement obligations while leaving actual authority in the canonical issuer. */
+export type NativeImageCleanupTraceV1=Readonly<{deactivationAttempts:0|1;bodyAdmissionsAfterStop:0;guardRelease:"after-physical-settlement"|"after-unresolved-handoff"|"persistent-reader-release"|"held"|"never-acquired";settlement:"physical"|"persistent"|"unresolved"|"refused";failures:readonly NativeImageCleanupFailureV1[];absoluteDeadlineRenewed:false}>;
+
+/** 🌱️ Begins unaccepted evidence; no receipt, signal or structural control can activate it. */
+export function nativeImageCleanupStateV1():NativeImageCleanupStateV1{return Object.freeze({received:false,enrolled:false,owned:false,stopped:false,closing:false,persistent:false,transferred:false,refused:false,acceptedWork:0,activationPending:false,progressPending:false,deactivationPending:false,deactivationAttempts:0,physical:"unknown",changed:false,expired:false,guardFailed:false,failures:Object.freeze([])});}
+
+/** 🪙️ Computes preaccepted funding data without minting an Original or cleanup capability. */
+export function nativeImageCleanupFundingV1(value:unknown):NativeImageCleanupFundingV1{
+ if(validateJsonSchemaSubset(schema,value).length)throw Error("Finite closed image cleanup funding required");
+ const row=value as {version:1;acceptedAtMilliseconds:number;wholeDeadlineMilliseconds:number;reserveMilliseconds:10000},bodyDeadlineMilliseconds=row.wholeDeadlineMilliseconds-row.reserveMilliseconds;
+ if(bodyDeadlineMilliseconds<=row.acceptedAtMilliseconds)throw Error("Original image operation cannot fund its terminal reserve");
+ return Object.freeze({...row,bodyDeadlineMilliseconds});
+}
+
+/** ⏱️ Seals one terminal phase within the already accepted whole-operation absolute bound. */
+export function nativeImageCleanupTerminalDeadlineV1(funding:NativeImageCleanupFundingV1,closingMilliseconds:number):number{
+ if(validateJsonSchemaSubset(schema.definitions.Funding,funding,schema).length||funding.bodyDeadlineMilliseconds!==funding.wholeDeadlineMilliseconds-funding.reserveMilliseconds||funding.bodyDeadlineMilliseconds<=funding.acceptedAtMilliseconds||!Number.isFinite(closingMilliseconds)||closingMilliseconds<funding.acceptedAtMilliseconds)throw Error("Actual accepted image cleanup funding facts required");
+ const deadline=Math.min(funding.wholeDeadlineMilliseconds,closingMilliseconds+funding.reserveMilliseconds);if(deadline<=closingMilliseconds)throw Error("Original image cleanup absolute deadline exhausted");return deadline;
+}
+
+/** 🔄️ Reduces accepted evidence events; consumers must separately prove private issuance before any effect. */
+export function nativeImageCleanupTransitionV1(state:NativeImageCleanupStateV1,event:string):NativeImageCleanupStateV1{
+ if(!continuation.definitions.Case.properties.schedule.items.enum.includes(event))throw Error("Closed image cleanup transition required");
+ const next={...state,failures:[...state.failures]},failure=(role:NativeImageCleanupFailureV1)=>{if(!next.failures.includes(role))next.failures.push(role);};
+ if(next.refused)throw Error("Refused image cleanup evidence cannot be renewed");
+ if(event==="receive-original")next.received=true;
+ else if(event==="present-copied-grant"||event==="refuse-expired-original"){next.refused=true;failure("admission");}
+ else if(event==="enroll-funded-cleanup"){if(!next.received||next.enrolled)throw Error("One received cleanup enrollment required");next.enrolled=true;}
+ else if(event==="create-owned-backing"){if(!next.enrolled||next.stopped||next.owned)throw Error("One accepted live image backing required before creation");next.owned=true;next.physical="inactive";}
+ else if(event==="submit-activation"){if(!next.owned||next.stopped)throw Error("Accepted live image backing required before activation");next.activationPending=true;}
+ else if(event==="join-activation-child")next.activationPending=false;
+ else if(event==="submit-body-work"){if(!next.enrolled||next.stopped)throw Error("Live accepted image body work required");next.acceptedWork++;}
+ else if(event==="join-body-work"){if(next.acceptedWork<1)throw Error("Actual accepted image work join required");next.acceptedWork--;}
+ else if(event==="activation-child-fails")failure("body");
+ else if(event==="observe-exact-active")next.physical="active";
+ else if(event==="observe-exact-inactive")next.physical="inactive";
+ else if(event==="publish-body-progress"){if(next.stopped)throw Error("Image body progress admission closed");next.progressPending=true;}
+ else if(event==="join-body-progress")next.progressPending=false;
+ else if(event==="reject-body-progress"){failure("progress");next.stopped=true;}
+ else if(event==="cancel-body"||event==="expire-body-cutoff"){failure("body");next.stopped=true;}
+ else if(event==="fail-persistent-publication"){failure("handoff");next.stopped=true;}
+ else if(event==="accept-persistent-handoff"){if(!next.enrolled||next.closing||next.activationPending||next.physical!=="active"||next.changed)throw Error("Settled exact persistent handoff required");next.persistent=true;}
+ else if(event==="close-first"||event==="close-second"||event==="close-after-settlement"){if(!next.enrolled)throw Error("Accepted image cleanup enrollment required");next.stopped=true;next.closing=true;}
+ else if(event==="replace-backing"){next.changed=true;failure("cleanup");}
+ else if(event==="fail-observation"){next.physical="unknown";failure("cleanup");}
+ else if(event==="fail-deactivation"||event==="observe-still-active"){next.physical="active";failure("cleanup");}
+ else if(event==="join-deactivation-child")next.deactivationPending=false;
+ else if(event==="expire-cleanup-absolute-bound"){next.expired=true;if(next.progressPending)failure("progress");failure("cleanup");}
+ else if(event==="accept-unresolved-handoff"){if(!next.closing||next.acceptedWork||next.activationPending||next.progressPending||next.deactivationPending||!next.failures.length)throw Error("Settled accepted unresolved ownership transfer required");next.transferred=true;}
+ else if(event==="fail-guard-release"){next.guardFailed=true;failure("guard");}
+ if(next.closing&&!next.persistent&&!next.transferred&&!next.acceptedWork&&!next.activationPending&&!next.progressPending&&!next.deactivationPending&&!next.changed&&!next.expired&&!next.failures.includes("cleanup")&&next.physical==="active"&&next.deactivationAttempts===0){next.deactivationAttempts=1;next.deactivationPending=true;}
+ return Object.freeze({...next,failures:Object.freeze(next.failures)});
+}
+
+/** 🧾️ Projects every failure and guard obligation without releasing physical custody. */
+export function nativeImageCleanupResultV1(state:NativeImageCleanupStateV1):NativeImageCleanupTraceV1{
+ const pending=state.acceptedWork>0||state.activationPending||state.progressPending||state.deactivationPending,settlement=state.refused?"refused":state.guardFailed?"unresolved":state.persistent&&state.closing?"persistent":state.closing&&!pending&&!state.changed&&state.physical==="inactive"?"physical":"unresolved",guardRelease=state.refused?"never-acquired":state.guardFailed||pending?"held":settlement==="persistent"?"persistent-reader-release":settlement==="physical"?"after-physical-settlement":state.transferred?"after-unresolved-handoff":"held";
+ return Object.freeze({deactivationAttempts:state.deactivationAttempts,bodyAdmissionsAfterStop:0,guardRelease,settlement,failures:state.failures,absoluteDeadlineRenewed:false});
+}
+
+/** 📚️ Projects a complete language-neutral schedule; serialized evidence never becomes authority. */
+export function nativeImageCleanupTraceV1(schedule:readonly string[]):NativeImageCleanupTraceV1{return nativeImageCleanupResultV1(schedule.reduce(nativeImageCleanupTransitionV1,nativeImageCleanupStateV1()));}
+
+/** 🧯️ Reports retained failures only after the actual physical owner has settled or transferred. */
+export function throwNativeImageCleanupFailuresV1(failures:readonly NativeImageCleanupFailureRecordV1[]):void{if(failures.length===1)throw failures[0]!.cause;if(failures.length>1)throw new AggregateError(failures.map(row=>row.cause),"Accepted image body and settlement failures: "+failures.map(row=>row.role).join(", "));}

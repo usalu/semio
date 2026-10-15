@@ -16,6 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

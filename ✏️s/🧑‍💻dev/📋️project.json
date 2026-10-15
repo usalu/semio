@@ -16,6 +16,24 @@
         "forwardAllArgs": true
       }
     },
+    "mcp-client-e2e": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ]
+        }
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts mcp-client-e2e",
+        "cwd": "✏️s/🧑‍💻dev",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "source-check": {
       "executor": "repo:script",
       "cache": false,

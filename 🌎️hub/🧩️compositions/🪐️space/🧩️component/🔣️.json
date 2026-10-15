@@ -17402,7 +17402,19 @@
         "scope": "app"
       }
     ],
-    "topicContributions": [],
+    "topicContributions": [
+      {
+        "topic": "os.space-index",
+        "payload": {
+          "dialect": {
+            "artifactKind": "s.space.space",
+            "standard": "1",
+            "subset": "*"
+          },
+          "documentSchema": "s.space"
+        }
+      }
+    ],
     "commands": [],
     "artifactKinds": []
   },
@@ -17432,6 +17444,19 @@
   },
   "quotas": {},
   "contributions": {
+    "topicContributions": [
+      {
+        "topic": "os.space-index",
+        "payload": {
+          "dialect": {
+            "artifactKind": "s.space.space",
+            "standard": "1",
+            "subset": "*"
+          },
+          "documentSchema": "s.space"
+        }
+      }
+    ],
     "panels": [
       {
         "kind": {

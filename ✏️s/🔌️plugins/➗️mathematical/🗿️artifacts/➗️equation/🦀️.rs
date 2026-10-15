@@ -1034,8 +1034,8 @@ pub mod viewer {
 /// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
 /// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
 /// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn equation_child_restore_projection(snapshot: &EquationSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("equation.child-projection"), error.to_string()))
+pub fn equation_child_restore_projection(snapshot: &EquationSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("equation.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection
 

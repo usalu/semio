@@ -5,11 +5,11 @@
 
 use super::*;
 use crate::draft::{BLINK_HIGH, BLINK_LOW};
-use crate::rig::{rest_pose, solve_rig};
 use crate::schedule::arrival_tick;
-use crate::schema::{Hushed, Over, Pointed, Rate, StageEvent, Ticked, Tuned};
 use crate::stage::tests::{actor_of, clicked, meadow, rested, run, summoned, surveyed, ticked, troupe, FAR, TROUPE};
 use crate::stage::{advance, frame_of, open_stage};
+use semio_framework_pets_contract::schema::{Hushed, Over, Pointed, Rate, StageEvent, Ticked, Tuned};
+use semio_framework_pets_kinematics::rig::{rest_pose, solve_rig};
 
 #[test]
 fn the_summoned_arrive_in_menagerie_order_and_fade_in() {

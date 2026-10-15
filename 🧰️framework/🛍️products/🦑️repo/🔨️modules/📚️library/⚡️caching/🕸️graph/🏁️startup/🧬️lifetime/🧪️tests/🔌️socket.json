@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "workspaceRoot": "/workspace/first",
+      "watcherIdentity": null,
+      "accepted": true,
+      "graphIdentity": null
+    },
+    {
+      "workspaceRoot": "/workspace/second",
+      "watcherIdentity": null,
+      "accepted": true,
+      "graphIdentity": null
+    },
+    {
+      "workspaceRoot": "/workspace/first",
+      "watcherIdentity": "111111111111111111111111",
+      "accepted": true,
+      "graphIdentity": null
+    },
+    {
+      "workspaceRoot": "relative",
+      "watcherIdentity": null,
+      "accepted": false,
+      "graphIdentity": null
+    },
+    {
+      "workspaceRoot": "/workspace/first",
+      "watcherIdentity": "../escape",
+      "accepted": false,
+      "graphIdentity": null
+    },
+    {
+      "workspaceRoot": "/workspace/first",
+      "watcherIdentity": null,
+      "graphIdentity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": true
+    },
+    {
+      "workspaceRoot": "/workspace/first",
+      "watcherIdentity": null,
+      "graphIdentity": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "accepted": true
+    },
+    {
+      "workspaceRoot": "/workspace/first",
+      "watcherIdentity": "111111111111111111111111",
+      "graphIdentity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "accepted": true
+    },
+    {
+      "workspaceRoot": "/workspace/first",
+      "watcherIdentity": null,
+      "graphIdentity": "../escape",
+      "accepted": false
+    }
+  ]
+}

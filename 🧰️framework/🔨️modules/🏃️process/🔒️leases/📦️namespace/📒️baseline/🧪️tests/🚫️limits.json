@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "mode": "issuer-baseline-count-drain",
+      "count": 8192,
+      "expected": "Complete baseline key budget exceeded"
+    },
+    {
+      "mode": "issuer-baseline-keybytes-drain",
+      "count": 342,
+      "expected": "Complete baseline key budget exceeded"
+    }
+  ],
+  "funding": {
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 34603008,
+    "maximumAvailableBeforeAttempt": 4194304,
+    "expected": "Complete bounded baseline publication capacity required",
+    "observations": {
+      "actualInsufficientBackingRefused": true,
+      "noPublishedMetadataCreated": true,
+      "originalGuardInodePreserved": true,
+      "independentAvailableBytesMatch": true,
+      "actualExclusiveImageRetirementCompleted": true,
+      "acceptedFailureStillRejectsOriginal": true
+    }
+  },
+  "observations": {
+    "realQuotaRefusedBeforePublication": true,
+    "rollbackLeavesNoPublishedTables": true,
+    "allConnectionsClosedBeforeOwnCleanup": true,
+    "acceptedFailureStillRejectsOriginal": true
+  }
+}

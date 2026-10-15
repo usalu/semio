@@ -8,10 +8,10 @@ use crate::clock::SHY_STEP;
 use crate::draft::{draft_of, sealed};
 use crate::locomotion::stroll;
 use crate::population::CENTRED;
-use crate::rig::{rest_pose, solve_rig};
-use crate::schema::{Hushed, Menagerie, Over, PetMode, Pointed, Rate, StageEvent, Ticked, Tuned, Unpointed};
 use crate::stage::tests::{meadow, plain, pointed, rested, run, ticked, troupe, LEVEL};
 use crate::stage::{advance, frame_of};
+use semio_framework_pets_contract::schema::{Hushed, Menagerie, Over, PetMode, Pointed, Rate, StageEvent, Ticked, Tuned, Unpointed};
+use semio_framework_pets_kinematics::rig::{rest_pose, solve_rig};
 
 /// 🫡️ The stage after its only actor greeted towards `x`.
 fn greeted(menagerie: &Menagerie, stage: Stage, x: f64) -> Stage {

@@ -4,7 +4,7 @@
 //! @see ../../../../🧫️fixtures/🎲️counter-randomness/🔣️.json — numpy's answers (case 🎲️counter-randomness)
 
 use super::*;
-use crate::schema::tests::{entries, fixture, number};
+use semio_framework_pets_contract::testkit::{entries, fixture, number};
 use serde_json::Value;
 
 const SEED: u32 = 20_261_002;

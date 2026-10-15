@@ -1,6 +1,7 @@
 //! 🧪️ Actual phased compute metadata keeps the initiating cancellation node and clock.
 use semio_framework_os_services::ComputeJobParamsPreparation;
-use semio_framework_job::{OriginalJobFixtureCaller,BatchDriveConfig,OperationId,Generation,InteractiveStage};
+use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation,InteractiveStage};
+use semio_framework_job_worker_authority::{BatchDriveConfig};
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 #[test]

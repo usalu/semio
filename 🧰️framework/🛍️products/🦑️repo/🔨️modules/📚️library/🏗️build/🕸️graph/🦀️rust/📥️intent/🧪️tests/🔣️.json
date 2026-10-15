@@ -1,4 +1,48 @@
 {
+  "neutralRouting": [
+    {
+      "project": "@semio-tech/repo-yaml-rs",
+      "target": "build",
+      "environment": {},
+      "selected": false
+    },
+    {
+      "project": "@semio-tech/repo-yaml-rs",
+      "target": "build",
+      "environment": {
+        "SEMIO_TASK_PROJECT": "@semio-tech/repo-yaml-rs",
+        "SEMIO_TASK_TARGET": "build"
+      },
+      "selected": true
+    },
+    {
+      "project": "@semio-tech/repo-yaml-rs",
+      "target": "build",
+      "environment": {
+        "SEMIO_TASK_PROJECT": "@semio-tech/repo-dashboard-rs",
+        "SEMIO_TASK_TARGET": "build"
+      },
+      "selected": false
+    },
+    {
+      "project": "@semio-tech/repo-dashboard-rs",
+      "target": "compile",
+      "environment": {
+        "SEMIO_TASK_PROJECT": "@semio-tech/repo-dashboard-rs",
+        "SEMIO_TASK_TARGET": "compile"
+      },
+      "selected": true
+    },
+    {
+      "project": "@semio-tech/repo-dashboard-rs",
+      "target": "compile",
+      "environment": {
+        "SEMIO_TASK_PROJECT": "@semio-tech/repo-dashboard-rs",
+        "SEMIO_TASK_TARGET": "build"
+      },
+      "selected": false
+    }
+  ],
   "accepted": [
     {
       "intent": {
@@ -414,5 +458,96 @@
       "scope": "binary",
       "binary": "semio"
     }
-  ]
+  ],
+  "fallbackTarget": {
+    "execution": {
+      "kind": "command",
+      "command": "bun leaf/📜️script.ts build",
+      "env": {
+        "BASE": "original"
+      }
+    },
+    "cache": true,
+    "outputs": [
+      "leaf/old"
+    ],
+    "configurations": {
+      "prototype": {
+        "execution": {
+          "args": [
+            "prototype"
+          ],
+          "env": {
+            "MODE": "prototype"
+          }
+        }
+      },
+      "release": {
+        "execution": {
+          "args": [
+            "release"
+          ],
+          "env": {
+            "MODE": "release"
+          }
+        }
+      }
+    }
+  },
+  "orchestration": {
+    "parent": {
+      "project": "parent",
+      "target": "build"
+    },
+    "children": [
+      {
+        "project": "child",
+        "target": "compile"
+      }
+    ],
+    "requests": [
+      [
+        "repo",
+        "run",
+        "parent:build"
+      ],
+      [
+        "repo",
+        "run",
+        "child:compile"
+      ]
+    ],
+    "rejected": [
+      {
+        "version": 1,
+        "kind": "orchestration",
+        "children": [
+          {
+            "project": "parent",
+            "target": "build"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "kind": "orchestration",
+        "children": [
+          {
+            "project": "missing",
+            "target": "compile"
+          }
+        ]
+      },
+      {
+        "version": 1,
+        "kind": "orchestration",
+        "children": [
+          {
+            "project": "child",
+            "target": "missing"
+          }
+        ]
+      }
+    ]
+  }
 }

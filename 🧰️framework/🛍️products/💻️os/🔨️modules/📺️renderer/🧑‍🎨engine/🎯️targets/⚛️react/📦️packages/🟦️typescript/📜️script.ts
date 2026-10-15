@@ -15,6 +15,7 @@ import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️
 
 import { SceneShadingPixelCheckScript } from "../../../../🔮️oracles/🎨️world3d-scene-shading/📜️script.ts";
 import { semioSchemaAjvV1 } from "../../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const MODULE_SCHEMAS = {
   renderer: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
@@ -181,8 +182,8 @@ export function directoryHomeBootstrapOracle(repoRoot: string): number {
   assert(receipt(fixture.receipt));
   for (const row of fixture.hostile) assert.equal(receipt({ ...structuredClone(fixture.receipt), ...row.patch }), false, row.id);
   const owner = readFileSync(join(contractRoot, "🟦️.tsx"), "utf8");
-  const shell = readFileSync(join(contractRoot, "../🟦️.tsx"), "utf8");
-  const runtime = readFileSync(join(contractRoot, "../../🔌️PluginRuntime/🟦️.tsx"), "utf8");
+  const shell = readModuleTreeSource(join(contractRoot, "../🟦️.tsx"));
+  const runtime = readModuleTreeSource(join(contractRoot, "../../🔌️PluginRuntime/🟦️.tsx"));
   assert(owner.includes("await owner.plugin.handleAction") && owner.includes("parseDirectoryProjectionReceiptV1(await settle.terminalOutputOf(operation))"));
   // 🧾️ The receipt is the SETTLED typed operation's terminal publication, never the admitting reply:
   // `applyDirectoryEventPage` is job-routed, so its admission carries the `{ operationId, generation }`
@@ -320,7 +321,7 @@ export function directoryInviteCapabilityOracle(repoRoot: string): number {
   assert.deepEqual(Object.keys(fixture.labels).sort(), ["de", "en"]);
   assert(Object.values(fixture.labels).every((labels) => labels.length === 3 && labels.every((label) => label.length > 0)));
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
-  const shell = readFileSync(join(contractRoot, "../🟦️.tsx"), "utf8");
+  const shell = readModuleTreeSource(join(contractRoot, "../🟦️.tsx"));
   const pane = readFileSync(join(contractRoot, "../../🛂️SpaceAdministration/🟦️.tsx"), "utf8");
   const request = worker.slice(worker.indexOf("function requestDirectoryAdministrationCapability"), worker.indexOf("function settleDirectoryAdministrationCapability"));
   const settle = worker.slice(worker.indexOf("function settleDirectoryAdministrationCapability"), worker.indexOf("function closeDirectoryAdministration"));
@@ -379,18 +380,18 @@ export function scopedPresenceOracle(repoRoot: string): number {
   );
   assert.notEqual(fixture.close.clearsRuntimeKey, fixture.close.preservesRuntimeKey);
   assert.deepEqual(fixture.rejected, ["missing-scope", "mismatched-scope", "missing-surface", "mismatched-surface"]);
-  const shell = readFileSync(join(contractRoot, "../🟦️.tsx"), "utf8");
+  const shell = readModuleTreeSource(join(contractRoot, "../🟦️.tsx"));
   const hostBootstrap = readFileSync(join(contractRoot, "../🪪️host-bootstrap/🟦️.tsx"), "utf8");
   const projection = readFileSync(join(contractRoot, "🟦️.ts"), "utf8");
   const browser = readFileSync(join(contractRoot, "🌐️browser/🟦️.tsx"), "utf8");
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
-  const wire = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"), "utf8");
+  const wire = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"));
   assert(shell.includes("scopedPresencePeersV1") && shell.includes("presencePeersByRuntimeKey"));
   assert(shell.includes("portByRuntimeKey") && shell.includes("operationRuntimeKey") && !shell.includes("portByDocumentId"));
   assert(shell.includes("inferencePortOwnerRef") && shell.includes("owners.length === 1"));
   assert(shell.includes("inferencePortStatusRuntimeKeyV1(inferencePortOwnerRef.current") && hostBootstrap.includes("message.scope.spaceId !== owner.scope.spaceId") && hostBootstrap.includes("message.scope.documentId !== owner.scope.documentId"));
   assert(shell.includes("retainInferencePortOwnerAfterCloseV1(inferenceOwner, runtimeKey)") && worker.includes('documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...inferencePort.scope }) === runtimeKey'));
-  assert(shell.includes('from "./👥️presence-scope/🟦️.ts"'));
+  assert(shell.includes('from "../👥️presence-scope/🟦️.ts"'));
   assert(!shell.includes("presencePeersJson"));
   assert(shell.includes("entry.plugin.bindDocumentPort(entry.session.instanceId") && !shell.includes("registerPluginBackboneRoute("));
   assert(shell.includes("documentId: entry.documentId") && shell.includes("spaceId: entry.scope.spaceId"));

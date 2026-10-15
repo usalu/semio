@@ -26,4 +26,11 @@ class PathLiteralsScript extends BundleScript {
     await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../📁️paths/🧪️tests/🟦️.ts")], this.root, "compiler:syntax:rust:paths", 30000);
   }
 }
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-absence", AbsenceScript).register("test-path-literals", PathLiteralsScript), { invocation: original, ...({ defaultCommand: "test" }) }));
+/** 🌳️ Checks module tree reading of split sources against the Rust grammar, the Rust compiler and the TypeScript parser. */
+class ModuleTreeScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Expected test-module-tree");
+    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../../🌳️module-tree/🧪️tests/🟦️.ts")], this.root, "compiler:syntax:module-tree", 60000);
+  }
+}
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-absence", AbsenceScript).register("test-path-literals", PathLiteralsScript).register("test-module-tree", ModuleTreeScript), { invocation: original, ...({ defaultCommand: "test" }) }));

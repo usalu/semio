@@ -4,5 +4,8 @@
   "maximumSourceFiles": 8192,
   "slots": 16,
   "maximumPathCharacters": 256,
-  "maximumGrantBytes": 4194304
+  "maximumGrantBytes": 4194304,
+  "initializationFile": ".semio-native-index",
+  "maximumInitializationBytes": 1024,
+  "recheckFiles": 32
 }

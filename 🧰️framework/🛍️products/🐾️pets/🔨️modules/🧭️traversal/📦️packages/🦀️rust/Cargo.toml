@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-pets-traversal"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Pets traversal: the swing of ropes and parachutes and climbing (walls, ladders, grappling ropes, routes). Pure functions only, bit for bit the results of the TypeScript twin @semio-tech/pets."
+
+[package.metadata.semio]
+role = "product"
+id = "pets-traversal"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust" }
+semio-framework-pets-kinematics = { path = "../../../⚙️kinematics/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = { workspace = true, features = ["float_roundtrip"] }

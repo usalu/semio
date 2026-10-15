@@ -5,9 +5,9 @@
 
 use super::*;
 use crate::draft::{draft_of, sealed};
-use crate::schema::{Facing, StageEvent, Ticked};
 use crate::stage::tests::{actor_of, summoned, surveyed, ticked, troupe};
 use crate::stage::{advance, open_stage};
+use semio_framework_pets_contract::schema::{Facing, StageEvent, Ticked};
 
 #[test]
 fn a_hopper_that_finds_somebody_in_its_way_in_mid_hop_finishes_the_hop_on_the_spot() {

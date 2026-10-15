@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-actor-vocabulary-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

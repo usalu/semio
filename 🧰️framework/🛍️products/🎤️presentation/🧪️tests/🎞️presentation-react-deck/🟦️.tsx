@@ -1,12 +1,12 @@
 import { buildResolutionScope, collectPresentationSlides, expandThoughtSlides, intro, remapSplitDispositions, resolveArrangement, split, splitFigureGrid, tile } from "@semio-tech/presentation";
 import Reveal from "reveal.js";
-import type { AutoAnimateMatcherHost, DispositionPosition, PdfCanvasDocument, PdfCanvasPort, PdfEmbodiment, Presentation, Slide } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import type { AutoAnimateMatcherHost, DispositionPosition, PdfCanvasDocument, PdfCanvasPort, PdfEmbodiment, Presentation, Slide } from "../../🎯️targets/⚛️react/🟦️.tsx";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
 /** 🎞️ The presentation react deck: mounting, reveal lifecycle, auto-animate matching, ghost anchors, surface chrome, the
  * neutral deck contract and the JSON preview renderer, driven through the module's own exports. */
-export async function registerPresentationReactDeckTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx"), "FIGURE_WHEEL_ZOOM_MAX" | "jsonPreview" | "PRESENTATION_MANY_TO_ONE_MORPH_CLASS" | "PresentationDeck" | "SLIDE_INTERACTIVE_ENLARGE_FRAME" | "buildInteractiveSlideLayout" | "clearRevealAutoAnimateInlineLayout" | "clientToSectionFraction" | "dispositionHasEphemeralLayout" | "dispositionPlacementContainer" | "elementIsInteractiveFigureDisposition" | "elementIsSourceGhostAnchor" | "elementIsTargetGhostAnchor" | "figureBackgroundSizeScrollAxis" | "figureBackgroundSizeZoomed" | "figureCoverOverflowAxis" | "figureCoverScrollContentSize" | "figureCoverScrollElementStyle" | "figureCropBackgroundPosition" | "figureCropBackgroundSize" | "figureCropBackgroundVars" | "figureCropBackgroundVarsTargetGhost" | "figureCropScrollBackgroundSize" | "figureEmbodimentScrollEnabled" | "figureScrollOffsetForBackgroundPosition" | "figureScrollOverlayThumbMetrics" | "figureWheelZoomStep" | "finalizeRevealAutoAnimateRestState" | "flowDispositionManipulationRect" | "flowDispositionOffsetStyle" | "flowPixelOffsetToSectionRect" | "flowPointerDeltaToLocal" | "groupBoundingRect" | "interactiveDispositionChromeStyle" | "interactiveDispositionContentScale" | "interactiveDispositionContentScaleStyle" | "isFlowPixelOffsetTransform" | "isManyToOneMorphTransition" | "isNormalizedSlideFrame" | "isRevealAutoAnimatePairSource" | "isRevealSlideAutoAnimating" | "isSectionAutoAnimating" | "isUsableMeasuredRect" | "marqueeSelectionRule" | "marqueeSelects" | "measureDispositionBoundsInContainer" | "measureDispositionBoundsInSection" | "mediaTeaserActive" | "morphFrameCssVars" | "mosaicWindowedCoverVars" | "mountPresentation" | "normalizeMarquee" | "patchAutoAnimateUniformScale" | "patchPresentationAutoAnimateRunStyleSheet" | "patchPresentationAutoAnimateStyleSheet" | "pdfAdjacentPage" | "pdfCanGoToNextPage" | "pdfCanGoToPreviousPage" | "pdfCoverScale" | "pdfEmbodimentInitialPage" | "pdfPageNavEnabled" | "pdfScrollCoverScale" | "pointerNearSlideResetHotspot" | "prepareArrangementBeforeAutoAnimate" | "presentationAutoAnimateMatcher" | "readPresentationSlideIndicesFromUrl" | "rectContains" | "rectsIntersect" | "relaxHiddenPreflight" | "renderJsonTree" | "resetPdfCanvasPort" | "resizeDispositionRect" | "resolvePresentationAssetUrl" | "resolvePresentationAutoAnimateRunSlides" | "resolveRevealArrangement" | "revealDeckInOverview" | "revealInkMeasureForAutoAnimate" | "revealTextAutoAnimatePairOptions" | "scaleRectWithinGroup" | "setPdfCanvasPort" | "slideCoordinateRoot" | "slideHasEphemeralLayout" | "slidesShareAutoAnimateId" | "suppressRevealOverviewSlideNavigation" | "syncArrangementSettledState" | "syncManyToOneGhostMorphFramesFromDom" | "syncPresentationSlideUrl" | "tightElementBoundsRect" | "toggleEnlargeRect" | "transformFrameStyle" | "translateDispositionRect" | "unmountPresentation">, source: TestSource): Promise<void> {
+export async function registerPresentationReactDeckTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🎯️targets/⚛️react/🟦️.tsx"), "FIGURE_WHEEL_ZOOM_MAX" | "jsonPreview" | "PRESENTATION_MANY_TO_ONE_MORPH_CLASS" | "PresentationDeck" | "SLIDE_INTERACTIVE_ENLARGE_FRAME" | "buildInteractiveSlideLayout" | "clearRevealAutoAnimateInlineLayout" | "clientToSectionFraction" | "dispositionHasEphemeralLayout" | "dispositionPlacementContainer" | "elementIsInteractiveFigureDisposition" | "elementIsSourceGhostAnchor" | "elementIsTargetGhostAnchor" | "figureBackgroundSizeScrollAxis" | "figureBackgroundSizeZoomed" | "figureCoverOverflowAxis" | "figureCoverScrollContentSize" | "figureCoverScrollElementStyle" | "figureCropBackgroundPosition" | "figureCropBackgroundSize" | "figureCropBackgroundVars" | "figureCropBackgroundVarsTargetGhost" | "figureCropScrollBackgroundSize" | "figureEmbodimentScrollEnabled" | "figureScrollOffsetForBackgroundPosition" | "figureScrollOverlayThumbMetrics" | "figureWheelZoomStep" | "finalizeRevealAutoAnimateRestState" | "flowDispositionManipulationRect" | "flowDispositionOffsetStyle" | "flowPixelOffsetToSectionRect" | "flowPointerDeltaToLocal" | "groupBoundingRect" | "interactiveDispositionChromeStyle" | "interactiveDispositionContentScale" | "interactiveDispositionContentScaleStyle" | "isFlowPixelOffsetTransform" | "isManyToOneMorphTransition" | "isNormalizedSlideFrame" | "isRevealAutoAnimatePairSource" | "isRevealSlideAutoAnimating" | "isSectionAutoAnimating" | "isUsableMeasuredRect" | "marqueeSelectionRule" | "marqueeSelects" | "measureDispositionBoundsInContainer" | "measureDispositionBoundsInSection" | "mediaTeaserActive" | "morphFrameCssVars" | "mosaicWindowedCoverVars" | "mountPresentation" | "normalizeMarquee" | "patchAutoAnimateUniformScale" | "patchPresentationAutoAnimateRunStyleSheet" | "patchPresentationAutoAnimateStyleSheet" | "pdfAdjacentPage" | "pdfCanGoToNextPage" | "pdfCanGoToPreviousPage" | "pdfCoverScale" | "pdfEmbodimentInitialPage" | "pdfPageNavEnabled" | "pdfScrollCoverScale" | "pointerNearSlideResetHotspot" | "prepareArrangementBeforeAutoAnimate" | "presentationAutoAnimateMatcher" | "readPresentationSlideIndicesFromUrl" | "rectContains" | "rectsIntersect" | "relaxHiddenPreflight" | "renderJsonTree" | "resetPdfCanvasPort" | "resizeDispositionRect" | "resolvePresentationAssetUrl" | "resolvePresentationAutoAnimateRunSlides" | "resolveRevealArrangement" | "revealDeckInOverview" | "revealInkMeasureForAutoAnimate" | "revealTextAutoAnimatePairOptions" | "scaleRectWithinGroup" | "setPdfCanvasPort" | "slideCoordinateRoot" | "slideHasEphemeralLayout" | "slidesShareAutoAnimateId" | "suppressRevealOverviewSlideNavigation" | "syncArrangementSettledState" | "syncManyToOneGhostMorphFramesFromDom" | "syncPresentationSlideUrl" | "tightElementBoundsRect" | "toggleEnlargeRect" | "transformFrameStyle" | "translateDispositionRect" | "unmountPresentation">, source: TestSource): Promise<void> {
   const { FIGURE_WHEEL_ZOOM_MAX, jsonPreview, PRESENTATION_MANY_TO_ONE_MORPH_CLASS, PresentationDeck, SLIDE_INTERACTIVE_ENLARGE_FRAME, buildInteractiveSlideLayout, clearRevealAutoAnimateInlineLayout, clientToSectionFraction, dispositionHasEphemeralLayout, dispositionPlacementContainer, elementIsInteractiveFigureDisposition, elementIsSourceGhostAnchor, elementIsTargetGhostAnchor, figureBackgroundSizeScrollAxis, figureBackgroundSizeZoomed, figureCoverOverflowAxis, figureCoverScrollContentSize, figureCoverScrollElementStyle, figureCropBackgroundPosition, figureCropBackgroundSize, figureCropBackgroundVars, figureCropBackgroundVarsTargetGhost, figureCropScrollBackgroundSize, figureEmbodimentScrollEnabled, figureScrollOffsetForBackgroundPosition, figureScrollOverlayThumbMetrics, figureWheelZoomStep, finalizeRevealAutoAnimateRestState, flowDispositionManipulationRect, flowDispositionOffsetStyle, flowPixelOffsetToSectionRect, flowPointerDeltaToLocal, groupBoundingRect, interactiveDispositionChromeStyle, interactiveDispositionContentScale, interactiveDispositionContentScaleStyle, isFlowPixelOffsetTransform, isManyToOneMorphTransition, isNormalizedSlideFrame, isRevealAutoAnimatePairSource, isRevealSlideAutoAnimating, isSectionAutoAnimating, isUsableMeasuredRect, marqueeSelectionRule, marqueeSelects, measureDispositionBoundsInContainer, measureDispositionBoundsInSection, mediaTeaserActive, morphFrameCssVars, mosaicWindowedCoverVars, mountPresentation, normalizeMarquee, patchAutoAnimateUniformScale, patchPresentationAutoAnimateRunStyleSheet, patchPresentationAutoAnimateStyleSheet, pdfAdjacentPage, pdfCanGoToNextPage, pdfCanGoToPreviousPage, pdfCoverScale, pdfEmbodimentInitialPage, pdfPageNavEnabled, pdfScrollCoverScale, pointerNearSlideResetHotspot, prepareArrangementBeforeAutoAnimate, presentationAutoAnimateMatcher, readPresentationSlideIndicesFromUrl, rectContains, rectsIntersect, relaxHiddenPreflight, renderJsonTree, resetPdfCanvasPort, resizeDispositionRect, resolvePresentationAssetUrl, resolvePresentationAutoAnimateRunSlides, resolveRevealArrangement, revealDeckInOverview, revealInkMeasureForAutoAnimate, revealTextAutoAnimatePairOptions, scaleRectWithinGroup, setPdfCanvasPort, slideCoordinateRoot, slideHasEphemeralLayout, slidesShareAutoAnimateId, suppressRevealOverviewSlideNavigation, syncArrangementSettledState, syncManyToOneGhostMorphFramesFromDom, syncPresentationSlideUrl, tightElementBoundsRect, toggleEnlargeRect, transformFrameStyle, translateDispositionRect, unmountPresentation } = dependencies;
   const { describe, expect, it, beforeEach, afterEach } = vitest;
 
@@ -14,7 +14,8 @@ export async function registerPresentationReactDeckTests(vitest: NonNullable<Imp
   const { readFileSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");
-  const globalsCssSource = readFileSync(join(dirname(fileURLToPath(source.url)), "🎨️.css"), "utf8");
+  const stylesheetRelativePath = "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️.css";
+  const globalsCssSource = readFileSync(join(dirname(fileURLToPath(source.url)), stylesheetRelativePath), "utf8");
 
   function stockRevealAutoAnimateMatcherHost(): AutoAnimateMatcherHost {
     return {
@@ -834,7 +835,7 @@ export async function registerPresentationReactDeckTests(vitest: NonNullable<Imp
       const { readFileSync } = await import("node:fs");
       const { dirname, resolve } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), "🎨️.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), stylesheetRelativePath), "utf8");
       expect(css).toContain("presentation-figure-crop-morph-from-rest");
       expect(css).toContain("presentation-figure-crop-morph-grid-to-focus");
       expect(css.match(/presentation-morph-crop-from[\s\S]*?presentation-figure-crop-morph-from-rest/)).toBeTruthy();
@@ -848,7 +849,7 @@ export async function registerPresentationReactDeckTests(vitest: NonNullable<Imp
       const { readFileSync } = await import("node:fs");
       const { dirname, resolve } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const cssPath = resolve(dirname(fileURLToPath(source.url)), "🎨️.css");
+      const cssPath = resolve(dirname(fileURLToPath(source.url)), stylesheetRelativePath);
       const css = readFileSync(cssPath, "utf8");
       const restRule = css.match(/\.reveal \.presentation-target-ghost \{[\s\S]*?\}/)?.[0] ?? "";
       expect(restRule).toContain("opacity: 0");
@@ -870,7 +871,7 @@ export async function registerPresentationReactDeckTests(vitest: NonNullable<Imp
       const { readFileSync } = await import("node:fs");
       const { dirname, resolve } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), "🎨️.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), stylesheetRelativePath), "utf8");
       expect(css).toContain(".presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected");
       expect(css).toContain(".presentation-morph-slot--figure::after");
       expect(css).not.toMatch(/\.presentation-interactive-disposition--kind-figure\.presentation-interactive-disposition--selected[\s\S]*?\.presentation-morph-slot--figure\s*\{[^}]*background-color:\s*var\(--color-primary\)/);
@@ -1048,7 +1049,7 @@ export async function registerPresentationReactDeckTests(vitest: NonNullable<Imp
       const { readFileSync } = await import("node:fs");
       const { dirname, resolve } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), "🎨️.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), stylesheetRelativePath), "utf8");
       expect(css).toContain(".presentation-figure-scroll-viewport--axis-x");
       expect(css).toContain(".presentation-figure-scroll-viewport--axis-y");
       expect(css).toContain(".presentation-figure-scroll-scroller--axis-x");
@@ -2094,7 +2095,7 @@ export async function registerPresentationReactDeckTests(vitest: NonNullable<Imp
       const { readFileSync } = await import("node:fs");
       const { dirname, resolve } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const cssPath = resolve(dirname(fileURLToPath(source.url)), "🎨️.css");
+      const cssPath = resolve(dirname(fileURLToPath(source.url)), stylesheetRelativePath);
       const css = readFileSync(cssPath, "utf8");
       expect(css).toContain(".reveal .presentation-source-ghost");
       expect(css).toContain('section[data-auto-animate="pending"] .presentation-source-ghost');

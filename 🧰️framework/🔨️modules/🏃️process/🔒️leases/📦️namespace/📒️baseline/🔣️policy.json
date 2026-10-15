@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "maximumBindings": 8192,
+  "maximumInventoryRows": 16384,
+  "maximumDirectories": 8192,
+  "maximumLegacyKeyUtf8Bytes": 12288,
+  "maximumNewKeyUtf8Bytes": 4096,
+  "maximumTotalKeyUtf8Bytes": 4194304,
+  "maximumTotalPathUtf8Bytes": 2097152,
+  "maximumCatalogBytes": 8388608,
+  "maximumExistingDatabaseReadBytes": 1048576,
+  "maximumReceiptBytes": 4096,
+  "maximumCatalogJournalBytes": 24576,
+  "maximumPublicationAuxiliaryBytes": 32768,
+  "maximumUninitializedGrowthBytes": 24576,
+  "maximumUninitializedJournalBytes": 24576
+}

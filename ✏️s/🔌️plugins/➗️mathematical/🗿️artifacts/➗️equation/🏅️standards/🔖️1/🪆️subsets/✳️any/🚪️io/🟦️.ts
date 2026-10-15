@@ -17,7 +17,7 @@ const EQUATION = "s.mathematical.equation@1/*";
 const CSV = "s.stdio.csv@rfc4180/*";
 const MD = "s.stdio.md@commonmark/*";
 const JSON_DIALECT = "s.stdio.json@rfc8259/*";
-const TXT = "s.stdio.txt@utf-8/*";
+const TXT = "framework.io.text@utf-8/*";
 
 export const ioEntries: IoEntryDescriptorMirror[] = [
   { from: EQUATION, into: CSV, fidelity: "Lossy", sniffs: false },

@@ -7,13 +7,13 @@ use semio_framework_value::{retirement::controlled::ControlledRetirement,Retirem
 /// 📥️ The existing registered-job source schema carries one owned kind, input and optional checkpoint.
 #[derive(Debug,serde::Serialize,serde::Deserialize,semio_framework_value_derive::FromValue,semio_framework_value_derive::ToValue,semio_framework_value::RetireOwned)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-#[value(crate="::protocol::value",rename_all="camelCase")]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct OriginalJobSource{pub job:u64,pub kind:String,pub input:Option<Vec<u8>>,pub checkpoint:Option<Vec<u8>>}
 
 /// ⏱️ The original caller deadline is absolute and shares the caller clock across the actual guest loan.
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,semio_framework_value_derive::FromValue,semio_framework_value_derive::ToValue)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-#[value(crate="::protocol::value",rename_all="camelCase")]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct OriginalJobBudget{pub input:RetainedTurnInput,pub retained_policy:RetainedCloneGrant,pub fuel:u64,pub deadline_us:u64,pub cancelled:bool}
 impl OriginalJobBudget{
  pub fn borrow_original(input:RetainedTurnInput,cx:&StepContext<'_>)->Result<Self,ValueError>{input.validate()?;cx.original_source_parent()?;if input.work.clock_binding!=cx.original_clock_binding().ok_or_else(||refusal("original job loan lacks its issuer clock binding"))?||input.work.absolute_deadline_us!=cx.original_absolute_deadline_us()||input.work.fuel>cx.original_total_fuel_remaining(){return Err(refusal("original job loan changed its original clock deadline or renewed total work"))}if (input.operation,input.generation)!=(cx.operation().0,cx.generation().0){return Err(refusal("original job budget belongs to another caller"))}let grant=cx.retained_grant();if grant.maximum_items>input.grant.maximum_items||grant.maximum_copy_bytes>input.grant.maximum_copy_bytes||grant.maximum_capacity_bytes>input.grant.maximum_capacity_bytes||grant.maximum_release_bytes>input.grant.maximum_release_bytes||grant.maximum_depth>input.grant.maximum_depth{return Err(refusal("original job budget exceeds the issuing turn"))}Ok(Self{input,retained_policy:grant,fuel:cx.fuel_remaining(),deadline_us:cx.deadline_us(),cancelled:cx.is_cancelled()})}

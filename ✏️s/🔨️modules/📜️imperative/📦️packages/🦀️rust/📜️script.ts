@@ -7,7 +7,7 @@ import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/�
 
 class TestScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
-    await runRepositoryCargoTests(["semio-s-imperative"], this.repoRoot, this.invocation.control);
+    await runRepositoryCargoTests(["semio-s-imperative"], this.repoRoot, this.invocation);
   }
 }
 

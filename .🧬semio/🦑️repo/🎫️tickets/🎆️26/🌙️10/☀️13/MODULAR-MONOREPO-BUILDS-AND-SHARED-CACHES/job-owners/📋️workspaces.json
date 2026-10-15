@@ -1,0 +1,22 @@
+[
+  "🧰️framework/Cargo.toml",
+  "Cargo.toml",
+  "✏️s/🔌️plugins/🀄️wfc/Cargo.toml",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.toml",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.toml",
+  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.toml",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.toml",
+  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.toml",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.toml",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.toml",
+  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.toml",
+  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.toml",
+  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.toml",
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml",
+  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.toml",
+  "✏️s/🔌️plugins/🗄️stdio/Cargo.toml",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/Cargo.toml",
+  "✏️s/🔌️plugins/🧩️puzzle/Cargo.toml",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.toml",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.toml"
+]

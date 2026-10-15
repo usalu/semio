@@ -71,6 +71,28 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
+    },
+    "test-ownership": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-ownership",
+        "forwardAllArgs": false
+      },
+      "outputs": [],
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
     }
   },
   "namedInputs": {

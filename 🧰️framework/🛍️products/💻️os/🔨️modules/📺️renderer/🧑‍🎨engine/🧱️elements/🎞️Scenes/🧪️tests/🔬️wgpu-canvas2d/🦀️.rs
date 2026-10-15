@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_the_successor() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let mut owner = crate::interpreter::fixture_scene_pointer_target("nested-close-window", "nested-close-surface", "old-mount");
+    let mut owner = crate::element_contracts::fixture_scene_pointer_target("nested-close-window", "nested-close-surface", "old-mount");
     owner.kind = SurfaceKind::Canvas2d;
     assert!(mount_scene_identity(&owner));
     SCENE_STATE.with(|cell| {
@@ -44,10 +44,10 @@ fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_t
 #[test]
 fn a_second_component_retirement_yields_before_detaching_its_live_owner() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let mut first = crate::interpreter::fixture_scene_pointer_target("retirement-window", "retirement-document-a", "scene-a");
+    let mut first = crate::element_contracts::fixture_scene_pointer_target("retirement-window", "retirement-document-a", "scene-a");
     first.kind = SurfaceKind::Canvas2d;
     first.host_id = "retirement-host-a".into();
-    let mut second = crate::interpreter::fixture_scene_pointer_target("retirement-window", "retirement-document-b", "scene-b");
+    let mut second = crate::element_contracts::fixture_scene_pointer_target("retirement-window", "retirement-document-b", "scene-b");
     second.kind = SurfaceKind::Canvas2d;
     second.host_id = "retirement-host-b".into();
     assert!(mount_scene_identity(&first));

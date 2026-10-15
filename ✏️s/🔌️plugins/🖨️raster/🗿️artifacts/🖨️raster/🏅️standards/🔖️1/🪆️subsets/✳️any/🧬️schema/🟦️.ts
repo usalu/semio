@@ -1,6 +1,9 @@
 /** 🧬️ Raster artifact schema — every field with its state class. */
-import type { SemioImageSnapshot } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🟦️.ts";
-export type { SemioImageSnapshot } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🟦️.ts";
+export type SemioColorspace = "rgb" | "rgba" | "grayscale" | "grayscaleAlpha" | "indexed";
+export interface SemioImageFrame { delayMs: number; rgba8: number[] }
+export interface SemioImageMetadataEntry { key: string; value: string }
+/** 🖼️ Decoded raster asset: the shape parsed below; its conformance to the stored Semio image schema is checked where plugins may meet. */
+export interface SemioImageSnapshot { schema: string; width: number; height: number; colorspace: SemioColorspace; bitDepth: number; frames: SemioImageFrame[]; icc: number[] | null; metadata: SemioImageMetadataEntry[] }
 import { parseIntrinsicValue, type IntrinsicValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 

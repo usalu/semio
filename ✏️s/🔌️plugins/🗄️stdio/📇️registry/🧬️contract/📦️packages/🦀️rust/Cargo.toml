@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 testing = []
 
 [dependencies]
+semio-framework-job-fault-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

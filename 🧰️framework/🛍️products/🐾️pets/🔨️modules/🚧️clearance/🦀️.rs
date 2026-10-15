@@ -23,8 +23,8 @@
 //! @see ../../🧬️schema/🦀️.rs — `Claim`, `Extent`, `Slice`, `Perch`, `Point`, `Size`, `Facing`, `Ticks`
 //! @see <https://en.wikipedia.org/wiki/Isotonic_regression> — pool-adjacent-violators, the seating of [`seat_of`]
 
-use crate::schema::{Claim, Extent, Facing, Perch, Point, Size, Slice, Slug, Ticks, TICKS_PER_SECOND};
-use crate::terrain::{larger, smaller};
+use semio_framework_pets_contract::schema::{Claim, Extent, Facing, Perch, Point, Size, Slice, Slug, Ticks, TICKS_PER_SECOND};
+use semio_framework_pets_kinematics::terrain::{larger, smaller};
 use std::cmp::max;
 
 //#region 🔖️Constants

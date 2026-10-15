@@ -1,0 +1,12 @@
+import { policyModuleTreeFiles, policyReadModuleTreeSource, POLICY_SPLIT_SOURCE_ROOTS } from "../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
+const repoRoot = new URL("../../../../../../../../../", import.meta.url).pathname;
+const path = "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs";
+console.log("registered", POLICY_SPLIT_SOURCE_ROOTS.includes(path));
+const files = policyModuleTreeFiles(repoRoot, path);
+console.log(files.length, files.map((f) => f.split("/").slice(-3).join("/")));
+const map = policyReadModuleTreeSource(repoRoot, path);
+const start = map.indexOf("pub struct MapHostRetirement"), end = map.indexOf("enum MapInteraction");
+console.log("slice", start, end, end > start);
+const slice = map.slice(start, end);
+for (const needle of ["let MapHost {", "self.released\n            && self.positions.is_empty()", "self.vector_tiles.is_empty()", "self.events.is_empty()"]) console.log(JSON.stringify(needle), slice.includes(needle));
+console.log("ManuallyDrop::drop", slice.includes("ManuallyDrop::drop"));

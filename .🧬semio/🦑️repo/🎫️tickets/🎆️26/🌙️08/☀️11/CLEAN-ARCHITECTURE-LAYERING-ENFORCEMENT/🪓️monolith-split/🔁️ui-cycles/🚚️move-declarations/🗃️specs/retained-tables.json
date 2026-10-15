@@ -1,0 +1,6 @@
+{
+  "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts",
+  "target": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️tables/🟦️.ts",
+  "names": ["Table", "SiblingKeys"],
+  "doc": "🗂️ Owns the bounded retained numeric table and sibling-key containers shared by retained graph validation and patch transactions."
+}

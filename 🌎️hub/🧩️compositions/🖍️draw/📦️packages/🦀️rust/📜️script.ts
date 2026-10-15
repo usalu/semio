@@ -9,12 +9,12 @@ import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/�
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-draw"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-hub-draw"], this.repoRoot, this.invocation, rest);
   }
 }
 
 class GuestInstanceCheckScript extends BundleScript {
-  async run(segments:string[]){resolveTestLevel(segments,"quick");await runRepositoryCargoTests(["semio-hub-draw"], this.repoRoot, this.invocation.control, ["--lib","guest_instance_tests","--","--nocapture"]);}
+  async run(segments:string[]){resolveTestLevel(segments,"quick");await runRepositoryCargoTests(["semio-hub-draw"], this.repoRoot, this.invocation, ["--lib","guest_instance_tests","--","--nocapture"]);}
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("guest-instance-check",GuestInstanceCheckScript);
 

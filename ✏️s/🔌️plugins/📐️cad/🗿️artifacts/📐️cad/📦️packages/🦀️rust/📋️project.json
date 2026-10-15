@@ -25,6 +25,23 @@
         }
       }
     },
+    "verify-owned-target": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify owned-target",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "cad-owned-target"
+          ]
+        }
+      }
+    },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
       "cache": false,

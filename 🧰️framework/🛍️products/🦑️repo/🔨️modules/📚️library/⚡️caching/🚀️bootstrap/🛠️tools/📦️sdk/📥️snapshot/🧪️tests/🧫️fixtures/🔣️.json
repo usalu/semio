@@ -32,7 +32,7 @@
       "patches/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch": "--- a/source.js\n+++ b/source.js\n@@ -1 +1 @@\n-old\n+new\n"
     },
     "invalidSource": ".semio-authorizer-source.json",
-    "expected": "f5d327849c362fc8099c6d08c2a94b87a613c415c78a347214589bc79132fddb"
+    "expected": "5b2a0c36eb66760873dd802f20f467c3745072d9081594018a4eb0b09fc686d5"
   },
   "patches": [
     {

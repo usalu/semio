@@ -5,6 +5,12 @@
     {
       "owner": "Puzzle2dPlayApp",
       "source": "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "mounted": [
+        "🕹️interaction/🦀️.rs",
+        "🧰️kit/🦀️.rs",
+        "🧵️retained/🦀️.rs",
+        "🖌️session/🦀️.rs"
+      ],
       "groups": [
         {
           "status": "migrated",
@@ -336,6 +342,16 @@
     {
       "owner": "Puzzle5dPlayApp",
       "source": "🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "mounted": [
+        "🧩️entities/🦀️.rs",
+        "🧭️view/🦀️.rs",
+        "🗂️catalog/🦀️.rs",
+        "🕹️interaction/🦀️.rs",
+        "🖌️session/🦀️.rs",
+        "🧵️retained/🦀️.rs",
+        "👆️gestures/🦀️.rs",
+        "🧰️kit/🦀️.rs"
+      ],
       "groups": [
         {
           "status": "migrated",

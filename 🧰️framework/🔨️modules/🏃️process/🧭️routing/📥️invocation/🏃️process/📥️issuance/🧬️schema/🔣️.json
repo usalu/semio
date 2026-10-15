@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://process.routing/OriginalProcessResourceControlV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "birth",
+    "control",
+    "retirement"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "birth": {
+      "const": "actual-process-envelope"
+    },
+    "control": {
+      "const": "same-signal-intersected-deadline"
+    },
+    "retirement": {
+      "const": "callback-settled"
+    }
+  }
+}

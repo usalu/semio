@@ -28,7 +28,7 @@ fn is_false(value: &bool) -> bool {
 /// is genuinely part of what the node IS this revision, not an ephemeral input-frequency signal.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Activity {
     Waiting,
     Loading,
@@ -44,7 +44,7 @@ pub enum Activity {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct PeerMark {
     pub actor: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -64,7 +64,7 @@ pub struct PeerMark {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct OwnPresence {
     #[serde(default, skip_serializing_if = "is_false")]
     #[value(default, skip_serializing_if = "is_false")]
@@ -95,7 +95,7 @@ pub struct OwnPresence {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct PresenceUpdate {
     pub surface: crate::SurfaceId,
     /// 🔑️ [`crate::UiNodeRecord::key`], not [`crate::UiNodeId`] — presence must still land on the

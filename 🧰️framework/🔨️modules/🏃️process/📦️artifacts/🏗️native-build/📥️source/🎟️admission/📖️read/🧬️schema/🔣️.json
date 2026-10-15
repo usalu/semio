@@ -71,6 +71,13 @@
           "type": "boolean"
         }
       }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumChunkBytes": 65536,
+        "verification": "descriptor-byte-replay"
+      }
     }
   }
 }

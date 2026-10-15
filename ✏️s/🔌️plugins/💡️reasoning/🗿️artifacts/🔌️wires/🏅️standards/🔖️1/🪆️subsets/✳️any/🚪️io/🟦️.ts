@@ -19,7 +19,7 @@ const MD = "s.stdio.md@commonmark/*";
 const JSON_DIALECT = "s.stdio.json@rfc8259/*";
 const SVG = "s.stdio.svg@1.1/*";
 const PNG = "s.stdio.png@1.2/*";
-const TXT = "s.stdio.txt@utf-8/*";
+const TXT = "framework.io.text@utf-8/*";
 
 export const ioEntries: IoEntryDescriptorMirror[] = [
   { from: WIRES, into: CSV, fidelity: "Lossy", sniffs: false },

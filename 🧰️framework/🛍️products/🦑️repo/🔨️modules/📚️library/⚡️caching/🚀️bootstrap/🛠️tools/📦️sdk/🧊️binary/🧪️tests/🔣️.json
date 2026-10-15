@@ -1,0 +1,60 @@
+{
+  "paths": [
+    {
+      "path": "node_modules/tree-sitter-wasms/out/tree-sitter-rust.wasm",
+      "shared": true
+    },
+    {
+      "path": "node_modules/@nx/native/host.node",
+      "shared": true
+    },
+    {
+      "path": "node_modules/parser/src/parser.c",
+      "shared": false
+    },
+    {
+      "path": "node_modules/nx/dist/index.js",
+      "shared": false
+    },
+    {
+      "path": "node_modules/parser/package.json",
+      "shared": false
+    },
+    {
+      "path": "../foreign.wasm",
+      "shared": false
+    }
+  ],
+  "objects": [
+    {
+      "path": "node_modules/parser/a.wasm",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "bytes": 8
+    },
+    {
+      "path": "node_modules/@nx/native/a.node",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "bytes": 16
+    }
+  ],
+  "moduleBytes": [
+    0,
+    97,
+    115,
+    109,
+    1,
+    0,
+    0,
+    0
+  ],
+  "customSection": {
+    "id": 0,
+    "prefix": "original-",
+    "nonceBytes": 16
+  },
+  "unknownMutable": {
+    "path": "node_modules/probe/mutable.js",
+    "alias": "node_modules/probe/alias.js",
+    "source": "export const original=7;\n"
+  }
+}

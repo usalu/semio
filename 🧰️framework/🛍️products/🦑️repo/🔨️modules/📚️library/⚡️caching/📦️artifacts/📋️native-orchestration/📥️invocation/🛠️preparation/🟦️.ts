@@ -1,9 +1,13 @@
+import authoredProgress from "./🔣️policy.json" with {type:"json"};
+import progressSchema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import type {CargoPreparationControlV1} from "../../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import type {NativeCallerPhaseV1} from "../🟦️.ts";
 
 /** 🎚️ Delegates Cargo custody, recipe transport and deadlines to the admitted repository caller. */
-export function cargoPreparationControlV1(phase:NativeCallerPhaseV1):CargoPreparationControlV1{
- return{signal:phase.leaseControl.signal,advance:progress=>phase.advance("cargo:preparation:"+progress.operation+":"+progress.completedOperations),childBudget:requested=>{if(!Number.isFinite(requested)||requested<=0)throw Error("Declared Cargo recipe budget required");return Math.min(requested,phase.budget());},childOptions:environment=>{const options=phase.options(environment);if(options.signal!==phase.leaseControl.signal||!options.output)throw Error("Original Cargo recipe transport required");return{...options,signal:phase.leaseControl.signal,output:options.output};}};
+export function cargoPreparationControlV1(phase:NativeCallerPhaseV1,nowMilliseconds:()=>number=()=>performance.now()):CargoPreparationControlV1{
+ if(validateJsonSchemaSubset(progressSchema,authoredProgress).length)throw Error("Closed preparation progress policy required");let lastPublished=-Infinity,lastObserved=-Infinity;
+ return{signal:phase.leaseControl.signal,advance:async progress=>{phase.leaseControl.signal.throwIfAborted();phase.budget();const now=nowMilliseconds();if(!Number.isFinite(now)||now<lastObserved)throw Error("Monotonic preparation progress clock required");lastObserved=now;if(now-lastPublished>=authoredProgress.progressMilliseconds){lastPublished=now;await phase.advance("cargo:preparation:"+progress.operation+":"+progress.completedOperations);}else await phase.leaseControl.yieldContinuation();phase.budget();phase.leaseControl.signal.throwIfAborted();},childBudget:requested=>{if(!Number.isFinite(requested)||requested<=0)throw Error("Declared Cargo recipe budget required");return Math.min(requested,phase.budget());},childOptions:environment=>{const options=phase.options(environment);if(options.signal!==phase.leaseControl.signal||!options.output)throw Error("Original Cargo recipe transport required");return{...options,signal:phase.leaseControl.signal,output:options.output};}};
 }
 
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "../../../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";

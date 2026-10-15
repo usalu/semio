@@ -19,7 +19,7 @@ fn is_default<T: Default + PartialEq>(value: &T) -> bool {
 /// role) and [`Emphasis`] (how prominent).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Variant {
     #[default]
     Solid,
@@ -33,7 +33,7 @@ pub enum Variant {
 /// packet report.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum SizeToken {
     Xs,
     Sm,
@@ -48,7 +48,7 @@ pub enum SizeToken {
 /// between them — no dedicated token for the middle case exists yet.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Density {
     Compact,
     #[default]
@@ -62,7 +62,7 @@ pub enum Density {
 /// surrounding surface/text color.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Tone {
     #[default]
     Neutral,
@@ -78,7 +78,7 @@ pub enum Tone {
 /// 🔆️ Visual prominence, orthogonal to [`Variant`] and [`Tone`].
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Emphasis {
     Subtle,
     #[default]
@@ -91,7 +91,7 @@ pub enum Emphasis {
 /// field is omitted from the wire at its default, so a default-styled node costs nothing to encode.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct StyleSpec {
     #[serde(default, skip_serializing_if = "is_default")]
     #[value(default, skip_serializing_if = "is_default")]

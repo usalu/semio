@@ -343,7 +343,7 @@ async fn window_transient_is_exact_instance_local_and_resets_on_reload() {
 }
 
 /// 🧹️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave S. A mounted worker job session is admitted out of a
-/// FIXED process-wide array of `semio_framework_job::WORKER_JOB_SESSION_SLOTS` retirement slots, and an
+/// FIXED process-wide array of `semio_framework_job_worker::WORKER_JOB_SESSION_SLOTS` retirement slots, and an
 /// app dropped while an operation is still mounted parks its node there instead of freeing it. ONLY a
 /// live app's cooperative-maintenance round robin hands that slot back. Without that pump the array
 /// filled up for the life of the process: from then on EVERY typed operation had its worker session
@@ -358,13 +358,13 @@ async fn an_abandoned_app_hands_its_worker_session_admission_back_to_the_next_ap
     drop(abandoned);
     let mut live = app().await;
     for _ in 0..RETIREMENT_RECLAIM_TURNS {
-        if !semio_framework_job::worker_job_retirements_are_parked() {
+        if !semio_framework_job_worker::worker_job_retirements_are_parked() {
             break;
         }
         live.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("one cooperative maintenance unit");
     }
     assert!(
-        !semio_framework_job::worker_job_retirements_are_parked(),
+        !semio_framework_job_worker::worker_job_retirements_are_parked(),
         "a live app's maintenance round robin must reclaim every parked worker-job retirement slot, or the process runs out of session admissions"
     );
     dispatch(&mut live, "setCamera", Some(&json!({ "position": [4.0, 5.0, 6.0], "target": [0.0, 0.0, 0.0] })), None).await.expect("the next app still quiesces on a plain view action");

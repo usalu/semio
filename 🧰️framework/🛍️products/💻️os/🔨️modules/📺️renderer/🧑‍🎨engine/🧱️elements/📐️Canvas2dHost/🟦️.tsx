@@ -12,10 +12,9 @@ import { type WasmCanvasSession, WasmCanvas, type CanvasInputModifiers } from "@
 import { ContextMenuController, CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragData, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
 import { fitCanvasFrame, type Canvas2dFraming, applyPinchToCamera, type ComponentSceneHostProps, type PinchStep } from "@semio-tech/framework";
 import { currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
-import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
-import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // 🐢️ Direct element-to-element import — `🟦️Interpreter` and `Canvas2dHost` landed in the same batch.
-import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
+import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
+import { useMapContextMenuSpecs, useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { Canvas2dGumballOverlay } from "./🧭️gumball/🟦️.tsx";
 import { createGestureSampleLaneV1, type GestureSampleLaneV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";

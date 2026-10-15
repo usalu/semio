@@ -9,14 +9,19 @@
 // #region 🔌️Adapters
 import { describe, expect, it } from "vitest";
 import ts from "typescript";
-import shellSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
+import panelHostingSource from "../../🧱️elements/🏛️ShellHost/📋️panel-hosting/🟦️.tsx?raw";
+import shellActionsSource from "../../🧱️elements/🏛️ShellHost/🖱️shell-actions/🟦️.ts?raw";
+import documentTransferTabsSource from "../../🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🟦️.tsx?raw";
+
+const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/*/🟦️.ts", "../../🧱️elements/🏛️ShellHost/*/🟦️.tsx"], { query: "?raw", import: "default", eager: true })).join("\n");
 // #endregion 🔌️Adapters
 
 //#region 🧪️Laws
 describe("actor window actions", () => {
   it("hands every actor-rendered window and panel the shell's input funnel, never a handler that drops actions", () => {
-    expect(shellSource).not.toContain("refuseBrowserActorActionDescriptor");
-    const tree = ts.createSourceFile("ShellHost.tsx", shellSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    expect(shellTreeSource).toContain("onActionStable");
+    expect(shellTreeSource).not.toContain("refuseBrowserActorActionDescriptor");
+    const tree = ts.createSourceFile("panel-hosting.tsx", panelHostingSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     const windows: ts.JsxSelfClosingElement[] = [];
     const visit = (node: ts.Node): void => {
       if (ts.isJsxSelfClosingElement(node) && node.tagName.getText(tree) === "InterpretedUiNode") windows.push(node);
@@ -37,11 +42,11 @@ describe("actor window actions", () => {
     expect(primaryStores).toHaveLength(1);
     expect(primaryStores[0]!.operatorToken.kind).toBe(ts.SyntaxKind.QuestionQuestionToken);
     expect(ts.isCallExpression(primaryStores[0]!.right) && primaryStores[0]!.right.expression.getText(tree)).toBe("builtNodeStoreFor");
-    expect(shellSource).toContain("{ stores: new Map(currentBrowserActorUi.panels), onIntent: browserActorPanelIntent, onAction: onActionStable }");
+    expect(documentTransferTabsSource).toContain("{ stores: new Map(currentBrowserActorUi.panels), onIntent: browserActorPanelIntent, onAction: onActionStable }");
   });
 
   it("forwards a funnelled action of an actor-bound session to its verified browser actor", () => {
-    const funnel = shellSource.slice(shellSource.indexOf("const onAction = useCallback("), shellSource.indexOf("const onActionStable = useCallback("));
+    const funnel = shellActionsSource.slice(shellActionsSource.indexOf("const onAction = useCallback("), shellActionsSource.indexOf("const onActionStable = useCallback("));
     expect(funnel.length).toBeGreaterThan(0);
     expect(funnel).toContain("directBrowserActor = directBrowserActorForSession(targetSession);");
     expect(funnel).toMatch(/if \(directBrowserActor !== null\) \{[\s\S]*?await dispatchDirectBrowserActorCommand\(\s*directBrowserActor,/u);

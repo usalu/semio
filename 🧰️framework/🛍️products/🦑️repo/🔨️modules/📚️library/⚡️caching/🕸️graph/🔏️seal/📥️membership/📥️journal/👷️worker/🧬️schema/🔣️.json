@@ -10,7 +10,12 @@
     "directory",
     "socketPath",
     "toolingIdentity",
-    "generation"
+    "generation",
+    "repositoryRoot",
+    "serviceWitness",
+    "readerToken",
+    "graphIdentity",
+    "implementationIdentity"
   ],
   "properties": {
     "version": {
@@ -41,6 +46,33 @@
     "generation": {
       "type": "string",
       "pattern": "^[a-f0-9]{32}$"
+    },
+    "repositoryRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "serviceWitness": {
+      "$ref": "schema://repo.caching/NxToolingUseWitnessV1"
+    },
+    "readerToken": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "graphIdentity": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      ]
+    },
+    "implementationIdentity": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
     }
   },
   "$defs": {
@@ -53,7 +85,9 @@
         "generation",
         "socketPath",
         "toolingIdentity",
-        "processId"
+        "processId",
+        "graphIdentity",
+        "implementationIdentity"
       ],
       "properties": {
         "version": {
@@ -80,6 +114,21 @@
         "processId": {
           "type": "integer",
           "minimum": 1
+        },
+        "graphIdentity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "implementationIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         }
       }
     }

@@ -43,7 +43,7 @@ pub(crate) struct ActiveMediaExport{
  pub(crate) parts:std::mem::ManuallyDrop<Option<MediaExportOwnedParts>>,
  pub(crate) parts_retirement:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<MediaExportOwnedParts>>>,
  pub(crate) operation:semio_framework_job::Operation,pub(crate) contract:semio_framework::ToolExecutionContract,
- pub(crate) session:Option<semio_framework_job::MountedWorkerJobSession<ArtifactReservedToolJob>>,pub(crate) session_rejected:Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<ArtifactReservedToolJob>>,
+ pub(crate) session:Option<semio_framework_job_worker::MountedWorkerJobSession<ArtifactReservedToolJob>>,pub(crate) session_rejected:Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<ArtifactReservedToolJob>>,
  pub(crate) outcome_pending:bool,pub(crate) resume_pending:bool,
  pub(crate) lease:std::mem::ManuallyDrop<Option<ToolCancellationLease>>,
  pub(crate) cancellation_retirement:Option<Box<crate::tool_cancellation::ToolCancellationLeaseRetirement>>,
@@ -88,14 +88,14 @@ impl ActiveMediaExport {
         if let Some(session) = self.session.as_ref() {
             if self.outcome_pending || !session.terminal_is_empty() { return match session.retirement_demands(body) {
                 Ok(demand) => Ok(demand),
-                Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => Ok(item),
-                Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => Err(error),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => Ok(item),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => Err(error),
             }; }
             if session.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(session), ..item }); }
             return match session.retirement_demands(body) {
                 Ok(demand) => Ok(demand),
-                Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => Ok(item),
-                Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => Err(error),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => Ok(item),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => Err(error),
             };
         }
         if let Some(owner)=self.parts_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(item)}else{owner.selected_demand(body)}}
@@ -123,7 +123,7 @@ impl ActiveMediaExport {
         }
         if let Some(session)=self.session.as_mut(){
             if session.terminal_is_empty(){let bytes=size_of_val(session);if grant.maximum_copy_bytes<bytes{return Ok(PluginLifecycleStep::Progress(Default::default()));}drop(self.session.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));}
-            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"media original worker quote awaits its handback"}),Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(error.into())};
+            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"media original worker quote awaits its handback"}),Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(error.into())};
             return original_worker_lifecycle(cx,demand,grant,"media original mounted worker awaits its handback",|cx|{let step=session.close_step(cx)?;Ok((step,session.terminal_is_empty()))});
         }
         if let Some(owner)=self.parts_retirement.as_mut(){

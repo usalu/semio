@@ -1,0 +1,116 @@
+# Shared Pristine SDK Derivatives
+
+The normal current SDK publication Original 41519 refused before publication or activation. After canonical retirement, actual tools availability was 1,022,734,336 bytes, below the authenticated full-clone quote. The independent pristine census counted 11,701 entries and 117,764,096 copied extent bytes; its existing complete clone allowance was 1,023,012,864 bytes. The 8 GiB tools envelope and cold installer threshold remain unchanged.
+
+## Permanent ownership split
+
+The pristine dependency base remains content-addressed by the exact dependency manifest/lock/environment. First-party Nx patches and both admitted authorizer source closures define the derivative generation separately. The derivative recreates its complete module namespace, hardlinks authenticated immutable non-Nx files, and copies the full Nx package to independent writable inodes before applying the first-party patch. Package-directory symlinks were rejected because Node realpaths imported dependency modules and would resolve their Nx peer against the pristine base.
+
+Every created directory, link and file remains charged by the genuine derivative quote. Only actual copied file extents are excluded for authenticated hardlinked source inodes. The existing 128 MiB publication allowance covers bounded index, authorizer and patch publication; it is not an exact RSS limit. The private quote still requires the actual provisioning registry EX and fresh physical availability at publication start. Publication is serialized and drained through the existing managed publisher.
+
+## Source index custody
+
+The projection retains the exact base snapshot SH. The source index records the full bounded sorted namespace, file SHA, size and executable status, and contained relative link targets. The first admitted copy seals the authenticated source under nonblocking exact snapshot EX, then reacquires SH before copying. Sealing requires the privately issued exact capture, the exact live private projection, real ResourceLease EX and the admitted copy ALS. Public structural capture bytes or arbitrary stamp arrays confer no authority; exposed bytes are defensive copies.
+
+Non-Nx readers authenticate the generation identity, authorizer receipt and sealed material reference before their first base physical read, then retain the base SH through all dependency use. Shared groups require the exact verified base inode and readonly mode. Unknown hardlinks remain refused. The existing full-clone owner also consumes the verified shared-source map, preserving future pristine transformations without a generic link exception.
+
+## Current qualification
+
+The initial missing-module neutral test was genuinely RED. The language-neutral disposition/path corpus agrees with independent Ajv and SQLite (prototype successor passed). Focused derivative strict Original 8195 and the later strict session 71244 completed exit 0. Expanded publisher/use/material strict sessions 77710 (prototype) and 66203 (release) both completed exit 0. Portable successor tests completed both modes: two tests / 26 assertions, 257 ms prototype and 326 ms release, including counterfeit capture rows refused before physical access. Root actual issued derivative runtime Original 54464 is running; it covers real registry exclusion, private projection claims, one-use copying, Node peer resolution and accepted detached-copy drainage. No successful physical derivative publication, new SDK preflight or normal build claim is made yet.
+
+The exported seal P1 found by independent review is corrected in Source; runtime hostile sealing assertions remain to be collected. Material report routes have not been run. Pristine-base retirement is not implemented; old unrecognized bases remain charged. The current private invocation continuity gate remains blocked until a coherent new normal SDK is published and tested in both modes.
+
+## First physical gate observation
+
+The retained runtime prototype log contains `Original Script deadline refused` in the outer owned capture and no emitted inner test transcript. This is not a physical runtime pass. A read-only canonical path check subsequently found the 2,016,560-byte source index and no `.stage-drv*` directories. This proves only that sealing occurred and the observed temporary directories were absent at that check; it does not establish the exact stage that exhausted the finite Original or prove complete copy/peer/drain laws. No retry, budget increase or new publication has been performed by this agent.
+
+The observed sealed index contains 11,701 entries / 10,189 regular files. Of these, 1,459 Nx files contain 18,982,856 logical bytes; non-Nx files contain 149,419,802 logical bytes. These are read-only index facts, not an admission quote or copied physical extent census.
+
+## Remaining generation-retirement consumer
+
+A read-only follow-up found that `tools/retention/physical` still recognizes only authenticated binary hardlinks during generation census. A newly released shared-pristine derivative would therefore be retained by its unknown-hardlink refusal. Before normal publication, its existing authenticated generation EX path should retain the referenced base SH through verification and removal, accept only the exact verified source inode map, and preserve unknown historical material. This does not authorize pristine-base eviction. That narrow integration is now authored: existing generation EX surrounds the new reader callback, which retains base SH and supplies only its verified readonly inode map through census and removal. Missing or unknown material remains untouched. Expanded strict 68261 and final timer-inclusive strict 98872 passed. Actual shared-generation retirement has not yet been executed or qualified.
+
+The private runtime prerequisite is being changed by Root to persist bounded child stdout/stderr before failure. Production projection/index/copy now emit bounded temporary `[DEBUG]` stage elapsed times so the next unchanged 120-second runtime can attribute authentication, namespace capture, source recensus, sealing and copy. No deadline or capacity ceiling was raised.
+
+## Static performance inventory awaiting measured successor
+
+`requireNxSdkDerivativeProjectionV1` performs a complete projection recensus before returning facts. The quote factory verifies at entry and callback return. `requireNxSdkClonePublicationV1` invokes that same recensus, including callers in the test, managed publisher and admitted operation. Clone verifies before and after its private copy, and the copy itself recensuses before and after materialization. Each recensus rereads exact metadata and iterates all 11,701 stamps; each row calls the generic no-follow path guard, which restats every existing ancestor from the tools root. This is an identified repetition in Source, not yet timing attribution or justification to remove checks.
+
+Initial sealed-base projection also separately verifies binary links, hashes every indexed shared-source file, and captures/hashes the complete namespace again. Any optimization must retain a privately issued, exact live base reader and truthful input/consumed-byte facts; a cached boolean, unchecked index or stamp-only substitute cannot grant publication. Production remains frozen pending the instrumented successor.
+
+## Persistent runtime 39987 and anchored traversal checkpoint
+
+Root collected Original 39987 terminal exit 1 at the unchanged 120-second deadline. Its persistent transcript provides the causal stages: indexed Source verification 46,548 ms; namespace capture 20,855 ms; first projection held at 68,883 ms; provisioning entered at 69,102 ms; first quote held at 99,665 ms. There was no first-copy-settled marker, so this is still not copy, peer-resolution or physical publication qualification.
+
+A concurrent sealed-capture refinement now computes one complete captured namespace and compares it with the canonical index, removing the preliminary duplicate hash pass. That refinement and the genuine shared-lease accessor are preserved. The new operation-local tree owner retains exact unique directory identities, checks each direct parent and no-follow consumed descriptor, and checks all retained directories plus enforcing root ancestry after the complete operation. Capture, indexed verification and projection recensus use it; full file SHA hashing remains. It replaces repeated generic full-ancestor restats for every file. Original quote admission, single-use checks, physical availability, complete namespace capture and publication lifetime remain in their owners.
+
+The new portable ancestry law was genuinely RED at the absent tree module. Prototype successor completed five tests / 97 assertions in 1.436 seconds, including a real canonical tools-backed synthetic namespace, SHA/SQLite agreement, writable/changed/extra-file refusals and an actual directory replacement refusal. The exact fixture directory is removed under its existing test scope; no other data was retired. Release completed five tests / 97 assertions in 1.067 seconds; final expanded publisher/use/material strict 50937 completed exit 0. This is the coherent Source checkpoint for the next unchanged 120-second full derivative runtime. No new full derivative runtime or SDK publication has been launched by this agent.
+
+## Final coherent traversal Source handback
+
+The helper now synchronously closes new read births when its body returns, drains every accepted metadata read, preserves a primary body failure over cleanup failures, and refuses escaped operations before physical access. Actual tools-backed fixture laws verify accepted-read settlement, late recheck refusal, detached read failure propagation and primary failure precedence. Final portable/physical suite passed both modes: five tests / 101 assertions (prototype 1.322 s, release 1.860 s). Expanded publisher/use/material strict 91694 completed exit 0 after the final Source changes.
+
+`requireNxPristineSdkV1` now returns its actual already-authenticated readonly binary inode map; the projection consumes that exact result instead of immediately hashing the same binary objects a second time. This removes a concrete duplicate call while retaining the original binary verifier. No quote, floor, Original, unknown-file or descriptor-hash check was relaxed. Production Source is frozen for Root's next full 120-second runtime; none was launched by this agent.
+
+## Runtime 58166: measured speedup, physical admission refusal
+
+The third persistent runtime reached complete namespace capture in 6,182 ms, held the first projection at 6,869 ms and held its first quote at 9,248 ms. The child then exited 1 after 13.829 seconds with `Released managed tooling capacity required before SDK publication` (eight assertions). No first-copy-settled marker exists. This is a physical admission refusal before copy, not a deadline failure or complete runtime pass. Compared with 39987, the measured projection-held stage fell from 68,883 ms to 6,869 ms while full consumed hashes and rooted checks remained.
+
+A subsequent independent bounded `statvfs`/sealed-index census observed 924,803,072 available bytes, 4,096-byte allocation units, 11,701 entries and 23,171,072 owned Nx copied-extent bytes. The unchanged formula gives 928,419,840 bytes, a diagnostic deficit of 3,616,768 bytes. This independent calculation is not an issued quote or write authority. No threshold was lowered.
+
+The only observed generic `nx/.stage-*` names were `.stage-M8ty9s` and `.stage-ko0XAB`. A bounded top-level inspection found node_modules/package.json/patches and no final tooling/material receipt. Exact-name searches in this ticket's retained Markdown/log/JSON/stdout/stderr evidence found no match. These paths remain unadmitted and untouched; their names or apparent incompleteness confer no retirement authority. No further copy, SDK publication, Native or ordinary run was launched by this agent.
+
+
+## Derived Publication Writer Closure Checkpoint
+
+The real third derivative runtime `58166` settled with a physical admission refusal, not a deadline. Its retained persistent child records Source capture 6,182 ms, projection held 6,869 ms and quote held 9,248 ms; terminal 13.829 s / eight assertions. No first-copy-settled marker occurred. Compared with runtime `39987`, the measured initial projection improved from 68,883 ms to 6,869 ms while retaining full consumed descriptor hashes and rooted post-recensus. The observed free space was 924,803,072 bytes versus the old derivative use of the full-clone allowance requiring 928,419,840 bytes. Unknown stages remain untouched.
+
+Root owns the schema-derived derivative allowance, 108,068,864 bytes: one bounded captured snapshot (24,117,248), two bounded programs (16,777,216 aggregate), installed inputs (16,777,216), optional index (16,777,216), patch post-images (33,554,432), and generated receipts (65,536). This is separate from the unchanged full-clone 128 MiB allowance and cold 1.5 GiB floor. Actual statfs and private publication custody remain mandatory.
+
+The producer now computes every patch batch before replacing any file. Actual replacement buffers must fit the fixed aggregate 32 MiB policy; the original 16 MiB patch input bound is retained before reading. Overlapping patches use the previously computed private post-image. Binary and tooling receipt buffers share a fixed 65,536-byte aggregate check before their respective writes. The captured snapshot check includes its trailing newline, and the compiler program remains bounded by the existing 8 MiB output policy. The final authorizer temporary file is atomically renamed to its final output, so those are the same program allocation rather than two coexisting payloads.
+
+The compiler child and Node preflight roles now use the closed schema-owned environment projector. It forces `BUN_RUNTIME_TRANSPILER_CACHE_PATH=0` and `NODE_DISABLE_COMPILE_CACHE=1`; nonempty `BUN_OPTIONS`, `NODE_OPTIONS`, and `NODE_V8_COVERAGE` refuse rather than introducing additional profiler, preload or coverage writers. Other roles retain their own environment. The role projector is applied at the actual authorizer child call and inside the actual preflight owner, including activation and ready validation.
+
+A genuine missing-environment-module RED preceded implementation (`sdk-derivative-env-red.log`: seven pass / one fail). The existing patch-output feature likewise had a genuine missing-module RED. The language-neutral corpus checks exact boundary and boundary-plus-one aggregate extents with independent SQLite blob lengths. Actual unified-diff post-images agree with the independent `diff` package. The environment corpus uses independent Ajv and SQLite.
+
+Current focused production gates are terminal GREEN: prototype `45743`, nine tests / 124 assertions in 2.17 s; release `50626`, nine / 124 in 5.60 s. Expanded actual publisher/use/material ES2022 strict/noUnchecked gates `67508` and `88707` both exited zero. Logs are `sdk-derivative-writer-prototype1.log`, `sdk-derivative-writer-release1.log`, `sdk-derivative-writer-types2.log`, and `sdk-derivative-writer-types-release2.log` under the ticket generated directory.
+
+The real managed pinned Bun 1.3.14 probe imported an authored synthetic TypeScript fixture larger than 4 KiB and compiled it with `Bun.build` without an output directory; the actual Node runtime probe called its compile-cache API. Both observed the projected cache-disable values and the actual funded fixture TMPDIR, and neither created a cache or temporary file in the independently censused fixture directories. This is the measured role behavior, not a universal assertion about all runtime internals. Official primary runtime documentation describes the Bun environment switch and Node disabling switch: <https://bun.com/docs/runtime/environment-variables>, <https://nodejs.org/api/module.html#module-compile-cache>.
+
+Parent Bun startup may already have selected its transpiler cache before this projector exists, and the parent in-process `compileNxAuthorizerSnapshotV1` memory build runs with the parent process TMPDIR. The child overlay does not close those separate process-start/implicit-temporary frontiers. No additional parent `Bun.build` disk writer was observed in this role probe, but its general internal temporary allocation has no claimed numeric bound here. The formula covers the enumerated first-party publication payload writers; it is not an exact RSS, total host-process startup, or all-runtime-temporary bound. Full physical copy/publication success remains pending the next genuine Root runtime, followed by both authenticated callback gates and then Native/ordinary qualification.
+
+
+### Native Loader Publication Follow-Up (Read-Only)
+
+The authenticated pristine Nx package loader at `dist/src/native/index.js` has a real `copyFileSync` Native binding cache path, enabled unless `NX_SKIP_NATIVE_FILE_CACHE` is exactly `true`. The current patch does not replace this loader. Shared binary inodes do not themselves account for such additional copies. Normal actual Nx runtime binds `NX_NATIVE_FILE_CACHE_DIRECTORY` under its Rust16 namespace and therefore follows that runtime owner, outside the derivative producer payload formula.
+
+The currently authenticated older `60f95...` bundle contains exactly two `nx/src/native` references, inside deferred selected-graph and worker functions (byte offsets 261877 and 266648). Current production Source references are likewise in those function bodies. A bare publication preflight import does not invoke these functions, so this read-only evidence finds no current eager Native-copy writer in that role. An external allowlist entry by itself does not imply eager loading. An actual require-cache negative assertion during preflight would protect this premise as Source evolves; it has not yet been added or run. No production mutation was made during runtime `48297` for this inspection.
+
+
+## Fourth Runtime Slowdown And Bounded Attribution Checkpoint
+
+Runtime `48297` is terminal exit one at the unchanged 120-second outer deadline. Fresh completed persistent stdout, read after collection, contains `SDK source index captured` with 11,701 entries / 168,402,658 bytes / 110,850 ms and `first-projection-held` at 119,336 ms. Thus the preliminary statement that no final capture marker existed was stale; the full captured tail attributes the dominant time to complete capture. Runtime `58166` had captured the same entry and byte counts in 6,182 ms and held its first projection at 6,869 ms. No cause is inferred from the cache environment or concurrent processes alone.
+
+The index owner now has gated bounded phase/count diagnostics under the existing `SEMIO_NX_SETUP_PHASE_DIAGNOSTIC=1`. At most one cumulative sample per 1,024 completed entries plus the final record exposes exact file/byte/chunk counts and open/stat/read/control-check/yield/close times; walk timings cover parent, lstat, control checks, progress publish, continuation yield and store recheck. No path or source content is logged. All descriptor hashes, checks, cancellation points and rooted post-recensus remain. No traversal optimization was made without phase evidence.
+
+Diagnostic Source checkpoint: expanded strict `69051` / `96792` both exited zero. Actual focused gates with transpiler/Node cache-disable flags already set before startup passed prototype `93558` (nine / 124, 10.11 s) and release `48512` (nine / 124, 8.15 s). The physical tiny-fixture samples report exactly two files / 48 bytes / two chunks, matching its independent filesystem/hash fixture. The full-operation slowdown remains unassigned until the next real 120-second run supplies these samples. No physical SDK copy or publication was launched by this lane at this checkpoint.
+
+
+## Actual Profiled Derivative Prototype Qualification
+
+Original `83241` is explicitly collected terminal exit zero: actual runtime prototype one test / 24 assertions in 100.36 seconds, under the unchanged 120-second limit. The outer log is `nx-sdk-derivative-index-diagnostic-prototype1.log`; persistent child evidence is `root-sdk-derivative-child-runtime-prototype-67e4a30e-6a98-4b54-9a9a-01dddcc266b4.{stdout,stderr}`. No normal SDK publication occurred. The fixture completed both genuine material copies, independent actual provisioning EX evidence, Node peer-module resolution, forged seal unchanged-index refusal, and detached accepted-copy drainage through real quote/base-reader settlement.
+
+| Actual Phase | Elapsed milliseconds |
+| --- | ---: |
+| First index capture (11701 entries / 168402658 bytes) | 23698 |
+| First projection held | 26286 |
+| Before first provision | 26548 |
+| First quote held | 34242 |
+| First copy settled | 54082 |
+| Before second drain projection | 58787 |
+| Second full index capture (same exact entries and bytes) | 6270 |
+| Complete test, including cleanup and settled ownership | 100259.57 |
+
+The first capture consumed 10189 files / 12155 chunks. File open/stat/read/close measurements were 2915 / 3507 / 5005 / 1704 ms; direct-parent and lstat measurements were 3146 / 2565 ms; storage rechecks 1239 ms. File and walk control checks totaled 185 ms, continuation yields 334 ms, progress publication 24 ms. The second exact full capture measured open/stat/read/close 784 / 417 / 2623 / 196 ms, parent/lstat 510 / 561 ms, storage recheck 591 ms, checks 61 ms, yields 87 ms, publication 5 ms. These counters locate the observed cost predominantly in filesystem awaits. They do not establish the physical cause of the variation or justify attributing it to a specific competing process. The 110850-ms fourth-run slowdown was not deterministically reproduced by the same traversal; no speculative traversal optimization or skipped authentication was introduced.
+
+Both runtime cache-disable variables were set before the diagnostic parent startup and inherited by its actual child. The exact source tree remained unchanged by this lane during execution. Release and normal publication remain pending Root's coherent captured-input API / formula / promotion checkpoint. The capacity `values()` strict diagnostic was traced to generator completion type `void` versus the `MapIterator` required `undefined`; this lane did not author or edit that owner's captured-input API, and sent Root the mechanical explicit return-type recommendation without changing its Source.

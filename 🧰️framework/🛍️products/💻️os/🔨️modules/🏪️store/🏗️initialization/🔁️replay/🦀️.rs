@@ -1,11 +1,12 @@
 //! 🔁️ The framework-default retained store initializer: a ledger replay under the grant-based retained-clone contract.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use super::{
     ActorId, ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreInitializationAuthority, ArtifactStoreInitializationEditAdmission, ArtifactStoreInitializationEditIndex, ArtifactStoreInitializationOwnerCatalog,
     ArtifactStoreInitializationRuntime, CursorRevisionAccumulator, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, MutationId, OpBinary, OpText, ReturnedSnapshotReadRetirement, ToValue, artifact_retirement_admit_owned, artifact_retirement_box_close_step,
     artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, fold_operation, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,
 };
-use semio_framework_job::{Generation, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, OperationId, RetainedJobPublication, StepContext};
+use semio_framework_job::{Generation, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, OperationId, StepContext};
 use semio_framework_value::retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::{controlled::ControlledRetirement, RetireOwned};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};

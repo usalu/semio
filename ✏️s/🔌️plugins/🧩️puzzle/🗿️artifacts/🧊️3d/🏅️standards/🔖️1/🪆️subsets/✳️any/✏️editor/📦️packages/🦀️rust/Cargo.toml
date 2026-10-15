@@ -54,6 +54,9 @@ pack = { workspace = true }
 wasm-bindgen = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job-worker = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-job-worker-authority = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust", features = ["testkit"] }
+
 semio-framework-async-macros = { workspace = true }
 semio-framework-io-base64 = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

@@ -4,7 +4,7 @@ async fn cad_imported_geometry_members_install_exact_typed_publication_authority
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     use {semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation, semio_s_artifact_stdio_semio_brep::schema::mutations::create_vertex::CreateVertex};
     let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
+    let text = include_str!("🧫️fixtures/⬅️before.obj");
     let imported = crate::standards::v1::subsets::any::io::import_obj_object(text).unwrap();
     macro_rules! member {
         ($snapshot:ty, $mutation:ty, $operation:expr, $index:expr) => {{

@@ -1,7 +1,7 @@
 /** 🔺️ Dag sparse durable delta; omitted slots are untouched. */
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import { parseSemioChild, type ArtifactChild } from "../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🟦️.ts";
-import { parseDagArtifact, type DagArtifact } from "../🟦️.ts";
+import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseDagArtifact, parseDagContentChild, type DagArtifact } from "../🟦️.ts";
 
 export interface DagDiff {
   /** @state artifact */ schema?: "dag.dag";
@@ -16,7 +16,7 @@ export function parseDagDiff(value: unknown, at = "$"): DagDiff {
     if (row.schema !== "dag.dag") throw new Error(`${at}.schema: invalid Dag marker`);
     diff.schema = row.schema;
   }
-  if (Object.hasOwn(row, "content")) diff.content = parseSemioChild(row.content, "graph", `${at}.content`);
+  if (Object.hasOwn(row, "content")) diff.content = parseDagContentChild(row.content, `${at}.content`);
   return diff;
 }
 

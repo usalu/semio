@@ -2,7 +2,7 @@
 //!
 //! Three layers stay strictly separate and are never collapsed into one "message" abstraction:
 //! the **CQRS dual bus** ([`CommandEnvelope`]/[`QueryEnvelope`]) carries application intent and
-//! projection reads; the **actor turn protocol** ([`ActorKey`], [`Decision`](crate::authority::Decision)) is the consistency
+//! projection reads; the **actor turn protocol** ([`ActorKey`], `Decision`) is the consistency
 //! boundary a command is serialized through; the **replication protocol** (`protocol` crate) moves
 //! causal state between replicas. A UI action is none of the three and never reaches this crate.
 //!

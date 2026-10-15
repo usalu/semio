@@ -1,5 +1,6 @@
 //! 📤️ Deterministic, resumable Layout export jobs.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 extern crate semio_framework_os_kernel as dsl;
@@ -24,8 +25,10 @@ use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 #[cfg(test)]
-use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, RevisionId};
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, Operation, RetainedJobPublication, StepContext};
+use semio_framework_job::{Generation, InteractiveStage, RevisionId};
+#[cfg(test)]
+use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -2435,7 +2438,7 @@ pub fn run_layout_export_headless_batch(operation: Operation, request: LayoutExp
         config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "layout.export.batch", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: semio_framework_job::default_now_us,
     };
-    let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
+    let mut session = match semio_framework_job_worker::BatchJobSession::try_new(job, params) {
         Ok(session) => session,
         Err(mut rejected) => {
             rejected.begin_close();

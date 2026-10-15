@@ -99,14 +99,8 @@ path = "../../../🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀�
 [workspace.dependencies.semio-s-artifact-stdio-json]
 path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-md]
-path = "../../../🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-s-artifact-stdio-obj]
 path = "../../../🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-semio]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-base]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust"

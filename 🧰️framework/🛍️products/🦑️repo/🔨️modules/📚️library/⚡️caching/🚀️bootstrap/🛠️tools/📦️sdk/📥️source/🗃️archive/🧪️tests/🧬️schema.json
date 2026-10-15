@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "files",
+    "invalid",
+    "extended",
+    "metadata",
+    "refusedMetadata",
+    "limits"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "files": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "text"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^package/"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "checksum",
+          "traversal",
+          "absolute",
+          "link",
+          "sparse",
+          "duplicate",
+          "padding",
+          "truncated",
+          "missing-footer",
+          "foreign-prefix",
+          "unaligned-footer",
+          "case-collision",
+          "normalized-collision",
+          "case-ancestor"
+        ]
+      }
+    },
+    "extended": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "text"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^package/"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "encoding",
+          "path",
+          "text"
+        ],
+        "properties": {
+          "encoding": {
+            "enum": [
+              "pax",
+              "gnu"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "refusedMetadata": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "enum": [
+          "linkpath",
+          "GNU.sparse.map",
+          "SCHILY.xattr.user.unsafe"
+        ]
+      }
+    },
+    "limits": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 6,
+      "items": {
+        "enum": [
+          "compressed",
+          "inflated",
+          "file",
+          "entries",
+          "metadata",
+          "path"
+        ]
+      }
+    }
+  }
+}

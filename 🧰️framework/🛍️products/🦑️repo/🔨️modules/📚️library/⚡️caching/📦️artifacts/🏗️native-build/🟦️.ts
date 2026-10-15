@@ -1,3 +1,4 @@
+import{withCompilerWorkspaceWriteV1}from"../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {withRepositoryCargoInputsV1,type CargoDependencyNetworkV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { requestedCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readFileSync } from "node:fs";
@@ -38,6 +39,6 @@ export async function buildRepositoryCargoArtifacts(manifest: string, args: stri
   await withRepositoryCompilerStoreV1(root,policy.mode,control,environment,async store=>{
     const storage={...repositoryCargoPreparationStorageV1(root),directory:requireNativeStoragePathV1(store.root,join(store.buildDirectory,"preparation"))},preparedEnvironment={...store.environment,CARGO_NET_OFFLINE:String(options.network.offline)},request=cargoWorkspacePreparationInvocationV1(storage,root,[options.command??"build","--manifest-path",path,...args],root,preparedEnvironment);
     if(request){await store.storage.recheck();const output=await captureOwnedCommandV1(request.command,[...request.args],request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});if(output)process.stderr.write(output);await store.storage.recheck();}
-    return withRepositoryCargoInputsV1({workspace:root,manifest:path,args,network:options.network,control,storage:store.storage,environment:preparedEnvironment},environment=>buildCargoArtifacts(path,args,{...policy,buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory},{...options,control,storage:store.storage,sourceBoundary:store.sourceBoundary,environment}));
+    return withRepositoryCargoInputsV1({workspace:root,cwd:policy.cwd,manifest:path,args,network:options.network,control,storage:store.storage,environment:preparedEnvironment},environment=>withCompilerWorkspaceWriteV1(store.storage,join(root,".cache/b/l/m/data"),control,()=>buildCargoArtifacts(path,args,{...policy,buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory},{...options,control,storage:store.storage,sourceBoundary:store.sourceBoundary,environment})));
   });
 }

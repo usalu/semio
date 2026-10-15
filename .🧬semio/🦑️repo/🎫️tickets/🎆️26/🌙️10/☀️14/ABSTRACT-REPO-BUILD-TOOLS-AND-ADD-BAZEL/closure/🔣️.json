@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "entries": [
+    "a.ts",
+    "b.ts"
+  ],
+  "files": {
+    "a.ts": "import \"./shared.ts\"; import \"./asset.bin?raw\"; export const a=1;\n",
+    "b.ts": "import type {Marker} from \"./types.ts\"; import \"./shared.ts\"; import \"./raw.ts?raw\"; export const b=1;\n",
+    "shared.ts": "import \"./leaf.ts\"; export const shared=1;\n",
+    "leaf.ts": "export const leaf=1;\n",
+    "leaf2.ts": "export const leaf2=2;\n",
+    "raw.ts": "import \"./leaf2.ts\"; export const raw=2;\n",
+    "types.ts": "export interface Marker {value:number}\n"
+  },
+  "binary": {
+    "path": "asset.bin",
+    "base64": "AAECA//+"
+  },
+  "expected": [
+    "a.ts",
+    "asset.bin",
+    "b.ts",
+    "leaf.ts",
+    "raw.ts",
+    "shared.ts"
+  ],
+  "modules": [
+    "a.ts",
+    "b.ts",
+    "leaf.ts",
+    "shared.ts"
+  ],
+  "resources": [
+    "asset.bin",
+    "raw.ts"
+  ],
+  "promotion": "raw.ts",
+  "promoted": [
+    "a.ts",
+    "asset.bin",
+    "b.ts",
+    "leaf.ts",
+    "leaf2.ts",
+    "raw.ts",
+    "shared.ts"
+  ],
+  "mutation": {
+    "path": "shared.ts",
+    "before": "./leaf.ts",
+    "after": "./leaf2.ts",
+    "expected": [
+      "a.ts",
+      "asset.bin",
+      "b.ts",
+      "leaf2.ts",
+      "raw.ts",
+      "shared.ts"
+    ]
+  },
+  "missing": "absent.ts",
+  "cancelReason": "original warmed closure replay cancelled"
+}

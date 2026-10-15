@@ -431,5 +431,23 @@
       "reason": "Original complete Rust compiler generation required"
     }
   ],
-  "compilerEvidence": {"programDigest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","generationDigest":"9999999999999999999999999999999999999999999999999999999999999999","changedProgramDigest":"8888888888888888888888888888888888888888888888888888888888888888"}
+  "compilerEvidence": {
+    "programDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "generationDigest": "9999999999999999999999999999999999999999999999999999999999999999",
+    "changedProgramDigest": "8888888888888888888888888888888888888888888888888888888888888888"
+  },
+  "compilerEnvironmentRefusals": [
+    {
+      "name": "RUSTC",
+      "value": "/invented/compiler"
+    },
+    {
+      "name": "RUSTC_WRAPPER",
+      "value": "/invented/compiler"
+    },
+    {
+      "name": "RUSTC_WORKSPACE_WRAPPER",
+      "value": "/invented/compiler"
+    }
+  ]
 }

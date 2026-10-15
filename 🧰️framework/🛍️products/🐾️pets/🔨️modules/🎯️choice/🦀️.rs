@@ -6,17 +6,17 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../🎯️choice/🟦️.ts — the TypeScript twin
 
-use crate::animation::clip_ticks;
 use crate::attention::watched;
-use crate::behavior::{activity_weights, dwell_of, Situation, MODE_LIMITS};
 use crate::draft::{actor_key, clip_at, clip_of, release, settle, shift, Draft};
 use crate::locomotion::{hops_of, leave, paced, stroll};
-use crate::randomness::{random_pick, random_words, unit_of};
-use crate::schema::{Activity, Footing, Gait, Ticks, ACTIVITIES};
 use crate::sociability::{reconcile, sulk};
 use crate::spacing::{clearway, rooms_for, COMFORT_GAP};
-use crate::terrain::{larger, perch_at};
-use crate::trigonometry::clamp;
+use semio_framework_pets_character::behavior::{activity_weights, dwell_of, Situation, MODE_LIMITS};
+use semio_framework_pets_contract::schema::{Activity, Footing, Gait, Ticks, ACTIVITIES};
+use semio_framework_pets_kinematics::animation::clip_ticks;
+use semio_framework_pets_kinematics::randomness::{random_pick, random_words, unit_of};
+use semio_framework_pets_kinematics::terrain::{larger, perch_at};
+use semio_framework_pets_kinematics::trigonometry::clamp;
 
 //#region 🔖️Constants
 const STROLL_LEAST: f64 = 0.75;

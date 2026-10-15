@@ -1,0 +1,35 @@
+{
+  "name": "@semio-tech/framework-job-publication-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ],
+  "targets": {
+    "test-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-native",
+        "forwardAllArgs": false
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    }
+  }
+}

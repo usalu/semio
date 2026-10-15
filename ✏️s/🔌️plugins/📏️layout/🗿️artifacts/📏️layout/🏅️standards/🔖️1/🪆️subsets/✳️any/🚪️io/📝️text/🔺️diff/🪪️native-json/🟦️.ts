@@ -1,6 +1,6 @@
-import {type FormDictionary} from "../../../../🧬️schema/🟦️.ts";
+import {type QuestionDictionary} from "../../../../🧬️schema/🟦️.ts";
 import {parseLayoutDiff,type LayoutDiff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
-import{formDictionaryEntryNativeJson,formDictionaryEntryFromNativeJson}from"../../../../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧾️dictionary/🪪️native-json/🟦️.ts";
+import{questionDictionaryEntryNativeJson,questionDictionaryEntryFromNativeJson}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🪪️native-json/🟦️.ts";
 import {row,array,fields,paragraph,character,run,story,frame,page,child,link,image,rgba} from "../../📸️snapshot/🪪️native-json/🟦️.ts";
 
 function delta(v:unknown,added:(v:unknown,out:boolean)=>unknown,out:boolean,patched?:(v:unknown,out:boolean)=>unknown):unknown{const r={...row(v)};r.inserted=array(r.inserted).map(v=>{const entry={...row(v)};entry.row=added(entry.row,out);return entry;});if(patched)r.modified=array(r.modified).map(v=>{const entry={...row(v)};entry.patch=patched(entry.patch,out);return entry;});return r;}
@@ -17,7 +17,7 @@ function pagePatch(v:unknown,out:boolean):unknown{
 }
 function diff(v:unknown,out:boolean):unknown{
  const r={...row(v)};
- if(r.dataFields!=null){const change={...row(r.dataFields)};if(change.entries!=null){const entries={...row(change.entries)},convert=(v:unknown)=>out?formDictionaryEntryNativeJson(v as FormDictionary["entries"][number]):formDictionaryEntryFromNativeJson(v);entries.inserted=array(entries.inserted).map(v=>{const entry={...row(v)};entry.row=convert(entry.row);return entry;});change.entries=entries;}r.dataFields=change;}
+ if(r.dataFields!=null){const change={...row(r.dataFields)};if(change.entries!=null){const entries={...row(change.entries)},convert=(v:unknown)=>out?questionDictionaryEntryNativeJson(v as QuestionDictionary["entries"][number]):questionDictionaryEntryFromNativeJson(v);entries.inserted=array(entries.inserted).map(v=>{const entry={...row(v)};entry.row=convert(entry.row);return entry;});change.entries=entries;}r.dataFields=change;}
  if(r.grid!=null)r.grid=fields(r.grid,["baselineGrid","baselineOffset"],out);
  if(r.paragraphStyles!=null)r.paragraphStyles=delta(r.paragraphStyles,paragraph,out,paragraph);
  if(r.characterStyles!=null)r.characterStyles=delta(r.characterStyles,character,out,character);

@@ -1,0 +1,106 @@
+{
+  "capturedInputs": [
+    {
+      "material": {
+        "version": 1,
+        "entries": 3,
+        "copyAllocatedBytes": 4096,
+        "inputBytes": 0
+      },
+      "minimumAvailableBytes": 95686656
+    },
+    {
+      "material": {
+        "version": 1,
+        "entries": 11701,
+        "copyAllocatedBytes": 23171072,
+        "inputBytes": 262144
+      },
+      "minimumAvailableBytes": 885755904
+    },
+    {
+      "material": {
+        "version": 1,
+        "entries": 11701,
+        "copyAllocatedBytes": 23171072,
+        "inputBytes": 16777216
+      },
+      "minimumAvailableBytes": 902270976
+    }
+  ],
+  "valid": [
+    {
+      "material": {
+        "version": 1,
+        "entries": 3,
+        "copyAllocatedBytes": 4096
+      },
+      "minimumAvailableBytes": 138612736,
+      "minimumDerivativeAvailableBytes": 112463872
+    },
+    {
+      "material": {
+        "version": 1,
+        "entries": 2048,
+        "copyAllocatedBytes": 16777216
+      },
+      "minimumAvailableBytes": 289406976,
+      "minimumDerivativeAvailableBytes": 263258112
+    },
+    {
+      "material": {
+        "version": 1,
+        "entries": 8192,
+        "copyAllocatedBytes": 67108864
+      },
+      "minimumAvailableBytes": 742391808,
+      "minimumDerivativeAvailableBytes": 716242944
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "entries": 0,
+      "copyAllocatedBytes": 0
+    },
+    {
+      "version": 1,
+      "entries": 2,
+      "copyAllocatedBytes": -1
+    },
+    {
+      "version": 1,
+      "entries": 2,
+      "copyAllocatedBytes": 0,
+      "minimumAvailableBytes": 1
+    },
+    {
+      "version": 1,
+      "entries": 200001,
+      "copyAllocatedBytes": 0
+    }
+  ],
+  "capture": {
+    "paths": [
+      "package.json",
+      "bun.lock",
+      ".semio-authorizer-source.json",
+      ".semio-authorizer-compiler.json",
+      ".semio-sdk-material.json",
+      "patches/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch"
+    ],
+    "invalidPaths": [
+      "../package.json",
+      "/package.json",
+      "C:/package.json",
+      "patches/../package.json",
+      "patches\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch",
+      "patches/deep/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch",
+      "patches/A.patch",
+      ".semio-nx-tooling.json",
+      "node_modules/nx/package.json"
+    ],
+    "before": "before capture",
+    "after": "later bytes"
+  }
+}

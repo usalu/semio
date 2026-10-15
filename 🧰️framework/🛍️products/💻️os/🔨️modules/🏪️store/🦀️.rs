@@ -16,6 +16,7 @@
 // R3) or by making a trait method sync (contradicts O1/R1).
 #![allow(async_fn_in_trait)]
 
+use semio_framework_composition_admission::{ChildRestoreProjection,ChildRestoreProjectionError,CHILD_RESTORE_MAXIMUM_FIELD_BYTES};
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use genesis_pack_admission::ArtifactGenesisPackCapture;
 #[path="🚪️io/💾️binary/🌱️genesis/🦀️.rs"]
@@ -355,138 +356,6 @@ pub fn content_id(prefix: &str, bytes: &[u8]) -> String {
 #[path = "🪆️child/🧬️retained-clone/🦀️.rs"]
 mod artifact_child_retained_clone;
 
-/// 📏️ Fixed restore admission bounds; sparse container walks consume their own step budget.
-pub const CHILD_RESTORE_MAXIMUM_REFERENCES: usize = 64;
-pub const CHILD_RESTORE_MAXIMUM_FIELD_BYTES: usize = 256;
-pub const CHILD_RESTORE_MAXIMUM_VISIT_STEPS: usize = 256;
-
-/// 🛑️ Exact loaded-parent projection failures, before opening or publishing any child store.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ChildRestoreProjectionError {
-    InvalidSlot,
-    InvalidReference,
-    DuplicateChild,
-    SingularSlot,
-    ReferenceLimit,
-    TraversalLimit,
-    IncompleteSet,
-}
-
-impl std::fmt::Display for ChildRestoreProjectionError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "child restore projection: {self:?}")
-    }
-}
-
-impl std::error::Error for ChildRestoreProjectionError {}
-
-/// 🌳️ Bounded borrowed authority derived only from the loaded parent's declared child fields.
-#[derive(Debug)]
-pub struct ChildRestoreProjection<'a> {
-    slots: &'static [semio_framework_schema_composition::ChildSlotSpec],
-    rows: [Option<(&'static str, semio_framework_schema_composition::ChildRefFields<'a>)>; CHILD_RESTORE_MAXIMUM_REFERENCES],
-    length: usize,
-    steps: usize,
-}
-
-impl<'a> ChildRestoreProjection<'a> {
-    /// 🔎️ Visits actual typed snapshot fields without cloning handles, leases or child content.
-    pub fn from_snapshot<S: semio_framework_schema_composition::ArtifactCompositionFields>(snapshot: &'a S) -> Result<Self, ChildRestoreProjectionError> {
-        let slots = S::child_slots();
-        if slots.len() > CHILD_RESTORE_MAXIMUM_REFERENCES {
-            return Err(ChildRestoreProjectionError::ReferenceLimit);
-        }
-        for (index, slot) in slots.iter().enumerate() {
-            if slot.name.is_empty()
-                || slot.name.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES
-                || slot.selection.id().len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES
-                || !match slot.selection { semio_framework_schema_composition::ChildSlotSelection::ArtifactKind(kind) => semio_framework_artifact_reference::is_canonical_artifact_kind(kind), semio_framework_schema_composition::ChildSlotSelection::Capability(capability) => semio_framework_schema_composition::is_canonical_child_capability(capability) }
-                || slots[..index].iter().any(|prior| prior.name == slot.name)
-            {
-                return Err(ChildRestoreProjectionError::InvalidSlot);
-            }
-        }
-        let mut projection = Self { slots, rows: [None; CHILD_RESTORE_MAXIMUM_REFERENCES], length: 0, steps: 0 };
-        snapshot.visit_child_refs(&mut projection)?;
-        Ok(projection)
-    }
-
-    /// 🧮️ Number of exact child references carried by this loaded parent.
-    pub fn len(&self) -> usize {
-        self.length
-    }
-
-    /// 🍃️ Whether this projection has no populated child fields.
-    pub fn is_empty(&self) -> bool {
-        self.length == 0
-    }
-
-    /// 🌿️ Reads one admitted typed child row without copying handles or payload owners.
-    pub fn get(&self, index: usize) -> Option<(&'static str, semio_framework_schema_composition::ChildRefFields<'a>)> {
-        self.rows.get(index).copied().flatten()
-    }
-
-    /// 🪪️ Checks one member against the actual loaded parent, without treating it as a full batch.
-    pub fn admits_member(&self, slot: &str, expected: &semio_framework_artifact_reference::ArtifactRef) -> bool {
-        self.rows[..self.length]
-            .iter()
-            .flatten()
-            .any(|(name, fields)| *name == slot && fields.artifact_id == expected.artifact_id && fields.artifact_kind == expected.dialect.artifact_kind && fields.standard == expected.dialect.standard && fields.subset == expected.dialect.subset)
-    }
-
-    /// ⚖️ Admits exactly one unordered complete set: no omission, substitution or duplicate.
-    pub fn admit_complete<'b>(&self, incoming: impl IntoIterator<Item = (&'b str, semio_framework_schema_composition::ChildRefFields<'b>)>) -> Result<(), ChildRestoreProjectionError> {
-        let mut seen = [false; CHILD_RESTORE_MAXIMUM_REFERENCES];
-        let mut count = 0;
-        for (slot, fields) in incoming {
-            if count == CHILD_RESTORE_MAXIMUM_REFERENCES {
-                return Err(ChildRestoreProjectionError::ReferenceLimit);
-            }
-            let index = self.rows[..self.length].iter().position(|entry| entry.as_ref().is_some_and(|(name, expected)| *name == slot && *expected == fields)).ok_or(ChildRestoreProjectionError::IncompleteSet)?;
-            if seen[index] {
-                return Err(ChildRestoreProjectionError::DuplicateChild);
-            }
-            seen[index] = true;
-            count += 1;
-        }
-        if count != self.length {
-            return Err(ChildRestoreProjectionError::IncompleteSet);
-        }
-        Ok(())
-    }
-}
-
-impl<'a> semio_framework_schema_composition::ChildRefVisitor<'a> for ChildRestoreProjection<'a> {
-    type Error = ChildRestoreProjectionError;
-    fn step(&mut self) -> Result<(), Self::Error> {
-        if self.steps == CHILD_RESTORE_MAXIMUM_VISIT_STEPS {
-            return Err(Self::Error::TraversalLimit);
-        }
-        self.steps += 1;
-        Ok(())
-    }
-    fn child(&mut self, slot: &'static str, fields: semio_framework_schema_composition::ChildRefFields<'a>) -> Result<(), Self::Error> {
-        if self.length == CHILD_RESTORE_MAXIMUM_REFERENCES {
-            return Err(Self::Error::ReferenceLimit);
-        }
-        let spec = self.slots.iter().find(|spec| spec.name == slot).ok_or(Self::Error::InvalidSlot)?;
-        if !spec.selection.accepts_kind(fields.artifact_kind) || !semio_framework_artifact_reference::is_canonical_artifact_kind(fields.artifact_kind) || [fields.child_id, fields.artifact_id, fields.artifact_kind, fields.standard, fields.subset].iter().any(|field| field.is_empty() || field.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES) {
-            return Err(Self::Error::InvalidReference);
-        }
-        for (name, prior) in self.rows[..self.length].iter().flatten() {
-            if prior.child_id == fields.child_id || prior.artifact_id == fields.artifact_id {
-                return Err(Self::Error::DuplicateChild);
-            }
-            if *name == slot && !spec.many {
-                return Err(Self::Error::SingularSlot);
-            }
-        }
-        self.rows[self.length] = Some((slot, fields));
-        self.length += 1;
-        Ok(())
-    }
-}
-
 /// 🏠️ The ownership stamp placed on the CHILD's own `ArtifactEnvelope.owner` (not only on
 /// the parent's `ArtifactChild` handle), so ownership is queryable directly from the child side —
 /// e.g. "is this document embeddable standalone, or does deleting it require going through its
@@ -494,9 +363,7 @@ impl<'a> semio_framework_schema_composition::ChildRefVisitor<'a> for ChildRestor
 use semio_framework_os_store_envelope::owner as artifact_child_owner_schema;
 pub use artifact_child_owner_schema::OwnerRef;
 
-#[path = "🔗️link/🧬️schema/🦀️.rs"]
-mod artifact_link_schema;
-pub use artifact_link_schema::{ArtifactLink, LinkPin};
+pub use semio_framework_os_store_link_schema::{ArtifactLink,LinkPin};
 
 /// 🌳️ Lets a snapshot type declare its own composed children / referenced links. Both
 /// methods default to empty, so a leaf artifact (the overwhelming majority) needs zero
@@ -749,82 +616,6 @@ impl semio_framework_dsl_record::DslField for OwnerRef {
     }
 }
 
-impl semio_framework_dsl_record::DslField for LinkPin {
-    /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
-    fn shape() -> semio_framework_dsl_record::Shape {
-        semio_framework_dsl_record::Shape::Record(link_pin_spec_producer())
-    }
-    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
-        control.checkpoint()?;
-        Ok(semio_framework_dsl_record::Shape::Record(link_pin_spec_producer()))
-    }
-    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
-        semio_framework_dsl_record::FieldValue::Record(link_pin_to_record(self))
-    }
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, ValueError> {
-        link_pin_to_record_controlled(self, control).map(semio_framework_dsl_record::FieldValue::Record)
-    }
-    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
-        link_pin_to_record_controlled(self, control)
-    }
-    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
-        match value {
-            semio_framework_dsl_record::FieldValue::Record(record) => link_pin_from_record(record),
-            other => Err(format!("expected Record, found {other:?}")),
-        }
-    }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
-            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected link pin Record"));
-        };
-        link_pin_from_record_controlled(record, control)
-    }
-    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        link_pin_from_record_controlled(record, control)
-    }
-}
-impl semio_framework_dsl_record::BorrowedDslRecord for ArtifactLink{
- const RECORD:semio_framework_dsl_record::BorrowedRecordSpec=semio_framework_dsl_record::BorrowedRecordSpec{keyword:None,layout:semio_framework_dsl_record::RecordLayout::Inline,fields:&[
- semio_framework_dsl_record::BorrowedFieldSpec::new(0,"target",<semio_framework_artifact_reference::ArtifactRef as semio_framework_dsl_record::BorrowedDslField>::SHAPE),
- semio_framework_dsl_record::BorrowedFieldSpec::new(1,"pin",semio_framework_dsl_record::BorrowedShape::Record(link_pin_borrowed_spec)),
- semio_framework_dsl_record::BorrowedFieldSpec::new(2,"role",semio_framework_dsl_record::BorrowedShape::Text)]};
-}
-impl semio_framework_dsl_record::BorrowedDslField for ArtifactLink{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);}
-
-impl semio_framework_dsl_record::DslField for ArtifactLink {
-    /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
-    fn shape() -> semio_framework_dsl_record::Shape {
-        semio_framework_dsl_record::Shape::Record(artifact_link_spec_producer())
-    }
-    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
-        control.checkpoint()?;
-        Ok(semio_framework_dsl_record::Shape::Record(artifact_link_spec_producer()))
-    }
-    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
-        semio_framework_dsl_record::FieldValue::Record(artifact_link_to_record(self))
-    }
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, ValueError> {
-        artifact_link_to_record_controlled(self, control).map(semio_framework_dsl_record::FieldValue::Record)
-    }
-    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
-        artifact_link_to_record_controlled(self, control)
-    }
-    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
-        match value {
-            semio_framework_dsl_record::FieldValue::Record(record) => artifact_link_from_record(record),
-            other => Err(format!("expected Record, found {other:?}")),
-        }
-    }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
-            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact link Record"));
-        };
-        artifact_link_from_record_controlled(record, control)
-    }
-    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        artifact_link_from_record_controlled(record, control)
-    }
-}
 //#endregion 🔖️CompositionDsl
 //#endregion 🔖️Composition
 
@@ -9103,9 +8894,7 @@ use backbone_retirement::ArtifactStoreBackboneRetirement;
 
 //#region 🔖️BlobStore
 //#region 🔖️BlobStore
-#[path = "📦️blob/🧬️schema/🦀️.rs"]
-mod blob_reference_schema;
-pub use blob_reference_schema::BlobRef;
+pub use semio_framework_os_store_blob_identity::BlobRef;
 
 /// 🗄️ Content-addressed blob persistence backing any `ArtifactKind::ContentAddressedBlob`-
 /// shaped field that needs to reference bytes durably without embedding them inline. `put` is
@@ -10180,10 +9969,10 @@ macro_rules! space_members {
             fn owner_ref(&self) -> Option<$crate::os_store::OwnerRef> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::owner_ref(m.as_ref())),+ }
             }
-            fn child_restore_projection(&self) -> Result<$crate::os_store::ChildRestoreProjection<'_>, $crate::os_store::ChildRestoreProjectionError> {
+            fn child_restore_projection(&self) -> Result<$crate::semio_framework_composition_admission::ChildRestoreProjection<'_>, $crate::semio_framework_composition_admission::ChildRestoreProjectionError> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::child_restore_projection(m.as_ref())),+ }
             }
-            fn child_restore_projection_for_read<'read>(&self,read:&'read $crate::os_store::snapshot_read::ErasedSnapshotRead)->Result<$crate::os_store::ChildRestoreProjection<'read>,$crate::os_store::ChildRestoreProjectionError>{
+            fn child_restore_projection_for_read<'read>(&self,read:&'read $crate::os_store::snapshot_read::ErasedSnapshotRead)->Result<$crate::semio_framework_composition_admission::ChildRestoreProjection<'read>,$crate::semio_framework_composition_admission::ChildRestoreProjectionError>{
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::child_restore_projection_for_read(m.as_ref(),read)),+ }
             }
             fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {

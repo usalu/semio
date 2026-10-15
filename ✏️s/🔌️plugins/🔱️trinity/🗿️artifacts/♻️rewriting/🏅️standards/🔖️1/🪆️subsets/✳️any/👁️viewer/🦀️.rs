@@ -69,7 +69,7 @@ impl ArtifactViewer for TrinityRewritingViewer {
 
     const DIALECT: Dialect = TRINITY_REWRITING_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::rewriting_child_restore_projection`).
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         crate::rewriting_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;

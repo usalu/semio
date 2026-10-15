@@ -113,9 +113,6 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
     [workspace.dependencies.semio-s-artifact-stdio-png]
     path = "../../../🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust"
 
-    [workspace.dependencies.semio-s-artifact-stdio-semio]
-    path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
-
     [workspace.dependencies.semio-s-artifact-stdio-svg]
     path = "../../../🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust"
 

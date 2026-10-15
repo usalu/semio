@@ -281,3 +281,9 @@ pub mod testing {
     }
 }
 //#endregion 🔖️Testing
+
+//#region 🧩️Modules
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧩️Modules

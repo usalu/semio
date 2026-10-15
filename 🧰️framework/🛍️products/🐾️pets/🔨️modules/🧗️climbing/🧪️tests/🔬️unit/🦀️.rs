@@ -7,10 +7,10 @@
 //! @see ../../../../🧫️fixtures/🎣️grapple-reach/🔣️.json
 
 use super::*;
-use crate::schema::tests::{entries, fixture, json, number, typed};
-use crate::schema::Wall;
 use crate::swing::{REEL_CAP, REEL_RAMP, REEL_SPEED};
-use crate::terrain::walls_of;
+use semio_framework_pets_contract::schema::Wall;
+use semio_framework_pets_contract::testkit::{entries, fixture, json, number, typed};
+use semio_framework_pets_kinematics::terrain::{walls_of, WALL_LIP};
 use serde_json::{json, Value};
 
 const SOURCE: &str = include_str!("../../🦀️.rs");
@@ -1044,7 +1044,7 @@ fn the_constants_are_the_starting_values_of_the_research_brief() {
 #[test]
 fn committed_wall_climbing_holds_surveys_climbs_grips_slides_mantles_and_routes_are_reproduced() {
     let vectors = fixture("wall-climbing");
-    let constants = json!({ "wallLip": crate::terrain::WALL_LIP, "handHeight": HAND_HEIGHT, "climbRise": CLIMB_RISE, "climbDescent": CLIMB_DESCENT, "climbRamp": CLIMB_RAMP, "gripSpacing": GRIP_SPACING, "gripBudget": GRIP_BUDGET, "gripClimb": GRIP_CLIMB, "gripHang": GRIP_HANG, "gripRest": GRIP_REST, "gripBite": GRIP_BITE, "wallFollow": WALL_FOLLOW, "slideStart": SLIDE_START, "slideGain": SLIDE_GAIN, "slideSpeed": SLIDE_SPEED, "slipPush": SLIP_PUSH, "slipLift": SLIP_LIFT, "wallGrabTicks": WALL_GRAB_TICKS, "wallHangTicks": WALL_HANG_TICKS, "mantleTicks": MANTLE_TICKS, "mantleInset": MANTLE_INSET, "hoistHump": HOIST_HUMP, "hoistRise": HOIST_RISE, "crossReach": CROSS_REACH, "lungeTicks": LUNGE_TICKS });
+    let constants = json!({ "wallLip": WALL_LIP, "handHeight": HAND_HEIGHT, "climbRise": CLIMB_RISE, "climbDescent": CLIMB_DESCENT, "climbRamp": CLIMB_RAMP, "gripSpacing": GRIP_SPACING, "gripBudget": GRIP_BUDGET, "gripClimb": GRIP_CLIMB, "gripHang": GRIP_HANG, "gripRest": GRIP_REST, "gripBite": GRIP_BITE, "wallFollow": WALL_FOLLOW, "slideStart": SLIDE_START, "slideGain": SLIDE_GAIN, "slideSpeed": SLIDE_SPEED, "slipPush": SLIP_PUSH, "slipLift": SLIP_LIFT, "wallGrabTicks": WALL_GRAB_TICKS, "wallHangTicks": WALL_HANG_TICKS, "mantleTicks": MANTLE_TICKS, "mantleInset": MANTLE_INSET, "hoistHump": HOIST_HUMP, "hoistRise": HOIST_RISE, "crossReach": CROSS_REACH, "lungeTicks": LUNGE_TICKS });
     assert_close("constants", &constants, &vectors["constants"]);
     for vector in entries(&vectors["crossings"]) {
         let (size, pitches): (Size, Vec<Pitch>) = (typed(&vector["size"]), typed(&vector["pitches"]));

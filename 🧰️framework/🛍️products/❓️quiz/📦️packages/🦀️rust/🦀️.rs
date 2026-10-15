@@ -1,8 +1,5 @@
 //! 📦️ Package glue — wiring only. Domain lives at the owner `🦀️.rs` files.
 
-#[path = "../../🧬️schema/🦀️.rs"]
-pub mod schema;
-
 #[path = "../../🔨️modules/🎲️randomness/🦀️.rs"]
 pub mod randomness;
 

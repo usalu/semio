@@ -791,7 +791,7 @@ struct JackStoreInitializationAuthority {
     cancel_requested: bool,
     fault: std::mem::ManuallyDrop<Option<semio_framework_diagnostic::Fault>>,
     fault_close: std::mem::ManuallyDrop<Option<ControlledRetirement<semio_framework_diagnostic::Fault>>>,
-    fault_publication: semio_framework_job::RetainedFaultPublication,
+    fault_publication: semio_framework_job_fault_publication::RetainedFaultPublication,
     terminal_handoff: bool,
 }
 
@@ -816,7 +816,7 @@ impl JackStoreInitializationAuthority {
             cancel_requested: false,
             fault: std::mem::ManuallyDrop::new(None),
             fault_close: std::mem::ManuallyDrop::new(None),
-            fault_publication: semio_framework_job::RetainedFaultPublication::new(),
+            fault_publication: semio_framework_job_fault_publication::RetainedFaultPublication::new(),
             terminal_handoff: false,
         }
     }

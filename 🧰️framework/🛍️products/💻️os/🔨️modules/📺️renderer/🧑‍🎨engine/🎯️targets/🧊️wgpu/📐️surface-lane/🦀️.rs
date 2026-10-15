@@ -1,7 +1,8 @@
 //! 📐️ Generation-qualified, fixed-capacity resize preparation for primary presentation surfaces.
 
 use semio_framework_async::Lane;
-use semio_framework_job::{BatchDriveConfig, BatchJobParams, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobPayloadStream, MountedWorkerJobSession, StepContext, StepOutcome, WorkerJobCloseStep};
+use semio_framework_job::{CommitCandidate,InteractiveJob,InteractiveJobCloseStep,JobPayloadStream,StepContext,StepOutcome};
+use semio_framework_job_worker::{MountedWorkerJobSession};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobCloseStep};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, Ordering};
 
@@ -177,7 +178,7 @@ impl SurfaceResizeLaneAdmissionRejected {
 
 enum SurfaceResizeSession {
     Admitted(MountedWorkerJobSession<SurfaceResizeJob>),
-    Rejected(semio_framework_job::WorkerJobSessionAdmissionRejected<SurfaceResizeJob>),
+    Rejected(semio_framework_job_worker::WorkerJobSessionAdmissionRejected<SurfaceResizeJob>),
 }
 
 pub(crate) struct MountedSurfaceResizeLane {

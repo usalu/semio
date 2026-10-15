@@ -1217,6 +1217,54 @@
         }
       }
     },
+    "native-storage-cleanup-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute native-storage-cleanup-contract prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute native-storage-cleanup-contract release"
+        }
+      }
+    },
+    "native-storage-cleanup-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute native-storage-cleanup-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute native-storage-cleanup-types release"
+        }
+      }
+    },
+    "native-storage-cleanup": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute native-storage-cleanup prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute native-storage-cleanup release"
+        }
+      }
+    },
     "native-storage-image": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -3286,6 +3334,2134 @@
         "prototype": {},
         "release": {
           "command": "bun ./📜️script.ts execute cargo-launcher-types release"
+        }
+      }
+    },
+    "cache-test-artifact-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cache-test-artifact-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cache-test-artifact-types release"
+        }
+      }
+    },
+    "cargo-capture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-capture",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-capture release"
+        }
+      }
+    },
+    "cargo-capture-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-capture-types",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-capture-types release"
+        }
+      }
+    },
+    "cargo-launcher-all": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-launcher-all prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-launcher-all release"
+        }
+      }
+    },
+    "mutation-cargo-bridge": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-cargo-bridge",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-cargo-bridge release"
+        }
+      }
+    },
+    "graph-ledger": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute graph-ledger prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute graph-ledger release"
+        }
+      }
+    },
+    "graph-ledger-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute graph-ledger-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute graph-ledger-types release"
+        }
+      }
+    },
+    "graph-concurrency": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute graph-concurrency prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute graph-concurrency release"
+        }
+      }
+    },
+    "graph-optional-regression": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute graph-optional-regression prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute graph-optional-regression release"
+        }
+      }
+    },
+    "bootstrap-parsers": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute bootstrap-parsers prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute bootstrap-parsers release"
+        }
+      }
+    },
+    "bootstrap-parser-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute bootstrap-parser-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute bootstrap-parser-types release"
+        }
+      }
+    },
+    "mutation-cargo-bridge-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-cargo-bridge-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-cargo-bridge-types release"
+        }
+      }
+    },
+    "composition-admission": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute composition-admission prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute composition-admission release"
+        }
+      }
+    },
+    "crate-frontier-composition-admission": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-composition-admission prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-composition-admission release"
+        }
+      }
+    },
+    "crate-frontier-composition-admission-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-composition-admission-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-composition-admission-tests release"
+        }
+      }
+    },
+    "composition-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute composition-native prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute composition-native release"
+        }
+      }
+    },
+    "cargo-preparation-progress": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-preparation-progress",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-preparation-progress release"
+        }
+      }
+    },
+    "composition-admission-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute composition-admission-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute composition-admission-types release"
+        }
+      }
+    },
+    "cargo-shell-ingress": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-shell-ingress",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-shell-ingress release"
+        }
+      }
+    },
+    "nx-admission-store": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute nx-admission-store prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute nx-admission-store release"
+        }
+      }
+    },
+    "cargo-workspace-identity": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-workspace-identity prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-workspace-identity release"
+        }
+      }
+    },
+    "cargo-workspace-identity-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-workspace-identity-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-workspace-identity-types release"
+        }
+      }
+    },
+    "mutation-grid2d-lock": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-grid2d-lock",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-grid2d-lock release"
+        }
+      }
+    },
+    "job-lock": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-lock",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-lock release"
+        }
+      }
+    },
+    "job-core-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-core-native",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-core-native release"
+        }
+      }
+    },
+    "job-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-owners",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-owners release"
+        }
+      }
+    },
+    "mutation-rich-providers": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-rich-providers",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-rich-providers release"
+        }
+      }
+    },
+    "mutation-rich-provider-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-rich-provider-types",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-rich-provider-types release"
+        }
+      }
+    },
+    "mutation-rich-home": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-rich-home",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-rich-home release"
+        }
+      }
+    },
+    "mutation-rich-space": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-rich-space",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-rich-space release"
+        }
+      }
+    },
+    "mutation-rich-3d": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-rich-3d",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-rich-3d release"
+        }
+      }
+    },
+    "mutation-rich-grid3d": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-rich-grid3d",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-rich-grid3d release"
+        }
+      }
+    },
+    "mutation-rich-bitmap": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-rich-bitmap",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-rich-bitmap release"
+        }
+      }
+    },
+    "mutation-rich-2d": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-rich-2d",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-rich-2d release"
+        }
+      }
+    },
+    "mutation-rich-locks": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-rich-locks",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-rich-locks release"
+        }
+      }
+    },
+    "mutation-grid2d": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-grid2d",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-grid2d release"
+        }
+      }
+    },
+    "mutation-grid2d-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-grid2d-check",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-grid2d-check release"
+        }
+      }
+    },
+    "reference-borrow": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute reference-borrow prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute reference-borrow release"
+        }
+      }
+    },
+    "reference-borrow-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute reference-borrow-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute reference-borrow-types release"
+        }
+      }
+    },
+    "crate-frontier-reference-borrow": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-reference-borrow prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-reference-borrow release"
+        }
+      }
+    },
+    "crate-frontier-reference-borrow-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-reference-borrow-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-reference-borrow-tests release"
+        }
+      }
+    },
+    "crate-frontier-reference-owned": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-reference-owned prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-reference-owned release"
+        }
+      }
+    },
+    "crate-frontier-reference-owned-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-reference-owned-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-reference-owned-tests release"
+        }
+      }
+    },
+    "actor-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute actor-ownership prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute actor-ownership release"
+        }
+      }
+    },
+    "crate-frontier-actor": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-actor prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-actor release"
+        }
+      }
+    },
+    "crate-frontier-actor-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-actor-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-actor-tests release"
+        }
+      }
+    },
+    "blob-identity": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute blob-identity prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute blob-identity release"
+        }
+      }
+    },
+    "blob-identity-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute blob-identity-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute blob-identity-types release"
+        }
+      }
+    },
+    "crate-frontier-blob-identity": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-blob-identity prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-blob-identity release"
+        }
+      }
+    },
+    "crate-frontier-blob-identity-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-blob-identity-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-blob-identity-tests release"
+        }
+      }
+    },
+    "link-schema": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute link-schema prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute link-schema release"
+        }
+      }
+    },
+    "link-schema-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute link-schema-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute link-schema-types release"
+        }
+      }
+    },
+    "crate-frontier-link-schema": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-link-schema prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-link-schema release"
+        }
+      }
+    },
+    "crate-frontier-link-schema-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-link-schema-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-link-schema-tests release"
+        }
+      }
+    },
+    "daemon-lifetime": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute daemon-lifetime prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute daemon-lifetime release"
+        }
+      }
+    },
+    "daemon-lifetime-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute daemon-lifetime-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute daemon-lifetime-types release"
+        }
+      }
+    },
+    "job-leaves-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-leaves-native",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-leaves-native release"
+        }
+      }
+    },
+    "job-downstream-locks": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-downstream-locks",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-downstream-locks release"
+        }
+      }
+    },
+    "job-worker-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-worker-contract",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-worker-contract release"
+        }
+      }
+    },
+    "brep-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute brep-owners prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute brep-owners release"
+        }
+      }
+    },
+    "ui-value-owner": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute ui-value-owner prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute ui-value-owner release"
+        }
+      }
+    },
+    "ui-value-owner-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute ui-value-owner-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute ui-value-owner-types release"
+        }
+      }
+    },
+    "crate-frontier-ui-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-ui-contract prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-ui-contract release"
+        }
+      }
+    },
+    "job-core-contracts": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-core-contracts",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-core-contracts release"
+        }
+      }
+    },
+    "job-brep-lock": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-brep-lock",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-brep-lock release"
+        }
+      }
+    },
+    "brep-owners-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute brep-owners-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute brep-owners-types release"
+        }
+      }
+    },
+    "editor-managed-jobs-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute editor-managed-jobs-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute editor-managed-jobs-types release"
+        }
+      }
+    },
+    "cargo-registry-ready": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-registry-ready prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-registry-ready release"
+        }
+      }
+    },
+    "cargo-registry-ready-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-registry-ready-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-registry-ready-types release"
+        }
+      }
+    },
+    "editor-managed-jobs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute editor-managed-jobs prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute editor-managed-jobs release"
+        }
+      }
+    },
+    "ui-foundation": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute ui-foundation prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute ui-foundation release"
+        }
+      }
+    },
+    "ui-foundation-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute ui-foundation-native prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute ui-foundation-native release"
+        }
+      }
+    },
+    "interpreter-editor": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute interpreter-editor prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute interpreter-editor release"
+        }
+      }
+    },
+    "interpreter-editor-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute interpreter-editor-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute interpreter-editor-types release"
+        }
+      }
+    },
+    "ui-foundation-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute ui-foundation-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute ui-foundation-types release"
+        }
+      }
+    },
+    "interpreter-completed-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute interpreter-completed-source prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute interpreter-completed-source release"
+        }
+      }
+    },
+    "interpreter-poll-input-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute interpreter-poll-input-source prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute interpreter-poll-input-source release"
+        }
+      }
+    },
+    "pack-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute pack-source prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute pack-source release"
+        }
+      }
+    },
+    "pack-source-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute pack-source-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute pack-source-types release"
+        }
+      }
+    },
+    "pack-source-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute pack-source-native prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute pack-source-native release"
+        }
+      }
+    },
+    "crate-frontier-pack-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-pack-source prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-pack-source release"
+        }
+      }
+    },
+    "crate-frontier-pack-source-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-pack-source-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-pack-source-tests release"
+        }
+      }
+    },
+    "daemon-lifetime-runtime": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute daemon-lifetime-runtime prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute daemon-lifetime-runtime release"
+        }
+      }
+    },
+    "job-root-lock": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-root-lock",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-root-lock release"
+        }
+      }
+    },
+    "cargo-callers": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-callers prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-callers release"
+        }
+      }
+    },
+    "cargo-callers-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-callers-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-callers-types release"
+        }
+      }
+    },
+    "cargo-callers-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-callers-native prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-callers-native release"
+        }
+      }
+    },
+    "tooling-admission": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute tooling-admission prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute tooling-admission release"
+        }
+      }
+    },
+    "tooling-admission-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute tooling-admission-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute tooling-admission-types release"
+        }
+      }
+    },
+    "job-preview-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-preview-native",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-preview-native release"
+        }
+      }
+    },
+    "compiler-layout": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute compiler-layout prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute compiler-layout release"
+        }
+      }
+    },
+    "compiler-layout-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute compiler-layout-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute compiler-layout-types release"
+        }
+      }
+    },
+    "compiler-layout-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute compiler-layout-native prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute compiler-layout-native release"
+        }
+      }
+    },
+    "job-owners-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-owners-types",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-owners-types release"
+        }
+      }
+    },
+    "crate-frontier-layout-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-layout-oracle prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-layout-oracle release"
+        }
+      }
+    },
+    "job-fault-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-fault-native",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-fault-native release"
+        }
+      }
+    },
+    "job-fault-locks": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-fault-locks",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-fault-locks release"
+        }
+      }
+    },
+    "tools-maintenance-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute tools-maintenance-source prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute tools-maintenance-source release"
+        }
+      },
+      "dependsOn": []
+    },
+    "tools-maintenance-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute tools-maintenance-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute tools-maintenance-types release"
+        }
+      },
+      "dependsOn": []
+    },
+    "lease-fixture-recover": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts execute lease-fixture-recover prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute lease-fixture-recover release"
+        }
+      },
+      "outputs": [],
+      "dependsOn": []
+    },
+    "cargo-preparation-arguments": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-preparation-arguments prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-preparation-arguments release"
+        }
+      }
+    },
+    "cargo-preparation-arguments-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-preparation-arguments-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-preparation-arguments-types release"
+        }
+      }
+    },
+    "cargo-preparation-arguments-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-preparation-arguments-native prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-preparation-arguments-native release"
+        }
+      }
+    },
+    "cargo-registry-ready-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-registry-ready-native prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-registry-ready-native release"
+        }
+      }
+    },
+    "sdk-clone-capacity": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute sdk-clone-capacity prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute sdk-clone-capacity release"
+        }
+      }
+    },
+    "sdk-clone-capacity-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute sdk-clone-capacity-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute sdk-clone-capacity-types release"
+        }
+      }
+    },
+    "lease-metadata-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts execute lease-metadata-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute lease-metadata-types release"
+        }
+      },
+      "outputs": [],
+      "dependsOn": []
+    },
+    "lease-namespace-kernel": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts execute lease-namespace-kernel prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute lease-namespace-kernel release"
+        }
+      },
+      "outputs": [],
+      "dependsOn": []
+    },
+    "job-publication-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-publication-native",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-publication-native release"
+        }
+      }
+    },
+    "job-publication-locks": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-publication-locks",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-publication-locks release"
+        }
+      }
+    },
+    "job-core-unit": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-core-unit",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-core-unit release"
+        }
+      }
+    },
+    "cargo-evidence-lifetime": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-evidence-lifetime prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-evidence-lifetime release"
+        }
+      }
+    },
+    "cargo-evidence-lifetime-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-evidence-lifetime-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-evidence-lifetime-types release"
+        }
+      }
+    },
+    "cargo-evidence-lifetime-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-evidence-lifetime-native prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-evidence-lifetime-native release"
+        }
+      }
+    },
+    "job-authority-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-authority-native",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-authority-native release"
+        }
+      }
+    },
+    "sdk-package-archive": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute sdk-package-archive prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute sdk-package-archive release"
+        }
+      }
+    },
+    "sdk-package-archive-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute sdk-package-archive-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute sdk-package-archive-types release"
+        }
+      }
+    },
+    "sdk-base": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute sdk-base prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute sdk-base release"
+        }
+      }
+    },
+    "sdk-base-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute sdk-base-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute sdk-base-types release"
+        }
+      }
+    },
+    "sdk-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute sdk-source prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute sdk-source release"
+        }
+      }
+    },
+    "sdk-source-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute sdk-source-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute sdk-source-types release"
+        }
+      }
+    },
+    "job-worker-parked": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-worker-parked",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-worker-parked release"
+        }
+      }
+    },
+    "job-worker-unit": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute job-worker-unit",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute job-worker-unit release"
+        }
+      }
+    },
+    "replication-owners": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute replication-owners prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute replication-owners release"
+        }
+      }
+    },
+    "replication-owners-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute replication-owners-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute replication-owners-types release"
+        }
+      }
+    },
+    "crate-frontier-replication-error": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-replication-error prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-replication-error release"
+        }
+      }
+    },
+    "crate-frontier-replication-error-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-replication-error-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-replication-error-tests release"
+        }
+      }
+    },
+    "crate-frontier-replication-crypto": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-replication-crypto prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-replication-crypto release"
+        }
+      }
+    },
+    "crate-frontier-replication-crypto-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-replication-crypto-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-replication-crypto-tests release"
+        }
+      }
+    },
+    "rust-capacity": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rust-capacity prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute rust-capacity release"
+        }
+      }
+    },
+    "rust-capacity-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rust-capacity-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute rust-capacity-types release"
+        }
+      }
+    },
+    "cargo-retirement-historical-preview": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-retirement-historical-preview prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-retirement-historical-preview release"
+        }
+      }
+    },
+    "cargo-retirement-historical-retire": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-retirement-historical-retire prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-retirement-historical-retire release"
         }
       }
     }

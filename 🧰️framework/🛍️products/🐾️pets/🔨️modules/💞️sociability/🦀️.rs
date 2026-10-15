@@ -6,15 +6,15 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../💞️sociability/🟦️.ts — the TypeScript twin
 
-use crate::behavior::{affinity_of, dwell_of, encounter_of, needs_after, rapport_after, rapport_faded, MODE_LIMITS};
 use crate::draft::{actor_key, clip_at, index_of, shift, stage_key, Draft};
 use crate::locomotion::{attend, paced, stroll};
-use crate::randomness::{random_pick, random_words, unit_of};
 use crate::schedule::{pairing_tick, sociable};
-use crate::schema::{Activity, Menagerie, Rapport, Ticks};
 use crate::spacing::{clearway, COMFORT_GAP, MEET_GAP};
-use crate::terrain::{larger, smaller};
-use crate::trigonometry::clamp;
+use semio_framework_pets_character::behavior::{affinity_of, dwell_of, encounter_of, needs_after, rapport_after, rapport_faded, MODE_LIMITS};
+use semio_framework_pets_contract::schema::{Activity, Menagerie, Rapport, Ticks};
+use semio_framework_pets_kinematics::randomness::{random_pick, random_words, unit_of};
+use semio_framework_pets_kinematics::terrain::{larger, smaller};
+use semio_framework_pets_kinematics::trigonometry::clamp;
 
 //#region 🔖️Constants
 const ENCOUNTER_REACH: f64 = 12.0;

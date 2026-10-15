@@ -1,3 +1,4 @@
+import {withNxGraphAuxiliaryCapacityV1} from "../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
 import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join, sep } from "node:path";
@@ -79,7 +80,7 @@ async function graphStamps(workspaceData: string): Promise<Record<string, Stamp>
  * ✍️ Seals the graph a finished Nx process (`pid`, started at `startedAt`) left in `workspaceData`, when both plugin receipts are that
  * process's and the graph was written after them; otherwise removes any seal. Returns whether a seal was written.
  */
-export async function writeNxGraphSeal(root: string, workspaceData: string, pid: number, startedAt: number, expectedMembership:string, signal?:AbortSignal): Promise<boolean> {
+export async function writeNxGraphSeal(root: string, workspaceData: string, pid: number, startedAt: number, expectedMembership:string, environment:Readonly<Record<string,string|undefined>>, signal?:AbortSignal): Promise<boolean> {
   const sealPath = join(workspaceData, SEAL_FILE);
   await rm(sealPath, { force: true });
   const graph = await graphStamps(workspaceData), receipts: Record<string, string> = {};
@@ -98,10 +99,9 @@ export async function writeNxGraphSeal(root: string, workspaceData: string, pid:
   if (JSON.stringify(await graphStamps(workspaceData)) !== JSON.stringify(graph)||!await verifyNxGraphSealV2(root,workspaceData,seal,signal,expectedMembership))return false;
   await mkdir(workspaceData, { recursive: true });
   const temporary = `${sealPath}.${process.pid}.tmp`, text = JSON.stringify(seal);
-  await writeFile(temporary, text);
-  await rename(temporary, sealPath);
-  await writeFile(`${temporary}.previous`, text);
-  await rename(`${temporary}.previous`, join(workspaceData, PREVIOUS_SEAL_FILE));
+  await withNxGraphAuxiliaryCapacityV1(root,environment,{version:1,extraBytes:2*Math.ceil(Buffer.byteLength(text)/4096)*4096},async()=>{
+    signal?.throwIfAborted();try{await writeFile(temporary,text,{flag:"wx"});signal?.throwIfAborted();await rename(temporary,sealPath);await writeFile(`${temporary}.previous`,text,{flag:"wx"});signal?.throwIfAborted();await rename(`${temporary}.previous`,join(workspaceData,PREVIOUS_SEAL_FILE));signal?.throwIfAborted();}finally{await rm(temporary,{force:true});await rm(`${temporary}.previous`,{force:true});}
+  });
   return true;
 }
 

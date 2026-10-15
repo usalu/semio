@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "owner": "semio-framework-composition-admission",
+  "productionDependencies": [
+    "semio-framework-artifact-reference-borrow",
+    "semio-framework-schema-composition"
+  ],
+  "sourceBoundary": {
+    "maxSourceBytes": 65536,
+    "maxSourceFiles": 8,
+    "maxActiveLines": 1000
+  },
+  "definitions": [
+    "ChildRestoreProjection",
+    "ChildRestoreProjectionError"
+  ],
+  "limits": {
+    "references": 64,
+    "fieldBytes": 256,
+    "visitSteps": 256
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "children": [],
+      "accepted": true
+    },
+    {
+      "id": "one",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "duplicate-child",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        },
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "y",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "duplicate-artifact",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        },
+        {
+          "slot": "members",
+          "childId": "b",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "wrong-kind",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.other",
+          "standard": "v1",
+          "subset": "all"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "empty-field",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "empty-standard",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "",
+          "subset": "all"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "empty-subset",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": ""
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "childId-utf8-256",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "childId-utf8-258",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "äääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "artifactId-utf8-256",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "artifactId-utf8-258",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "äääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "standard-utf8-256",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää",
+          "subset": "all"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "standard-utf8-258",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "äääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää",
+          "subset": "all"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "subset-utf8-256",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "subset-utf8-258",
+      "children": [
+        {
+          "slot": "members",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "äääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "unknown-slot",
+      "children": [
+        {
+          "slot": "other",
+          "childId": "a",
+          "artifactId": "x",
+          "kind": "s.test.member",
+          "standard": "v1",
+          "subset": "all"
+        }
+      ],
+      "accepted": false
+    }
+  ]
+}

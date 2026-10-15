@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "operation": "original-parked-alias-return",
+  "cases": [
+    {"name":"same-root-metadata-only","phase":7,"stage":3,"params":false,"sameRoot":true,"grant":[1,0,0,0,1],"effect":"returned","receipt":[1,0,0,0]},
+    {"name":"missing-item","phase":7,"stage":3,"params":false,"sameRoot":true,"grant":[0,0,0,0,1],"effect":"pending","receipt":[0,0,0,0]},
+    {"name":"missing-depth","phase":7,"stage":3,"params":false,"sameRoot":true,"grant":[1,0,0,0,0],"effect":"pending","receipt":[0,0,0,0]},
+    {"name":"different-root","phase":7,"stage":3,"params":false,"sameRoot":false,"grant":[1,0,0,0,1],"effect":"blocked","receipt":[0,0,0,0]},
+    {"name":"parameters-still-owned","phase":7,"stage":3,"params":true,"sameRoot":true,"grant":[1,0,0,0,1],"effect":"not-alias-frontier","receipt":[0,0,0,0]},
+    {"name":"earlier-close-frontier","phase":7,"stage":2,"params":false,"sameRoot":true,"grant":[1,0,0,0,1],"effect":"not-alias-frontier","receipt":[0,0,0,0]},
+    {"name":"checked-out","phase":6,"stage":3,"params":false,"sameRoot":true,"grant":[1,0,0,0,1],"effect":"contention","receipt":[0,0,0,0]},
+    {"name":"submitted","phase":2,"stage":3,"params":false,"sameRoot":true,"grant":[1,0,0,0,1],"effect":"contention","receipt":[0,0,0,0]}
+  ]
+}

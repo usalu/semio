@@ -58,10 +58,6 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/�
 [workspace.dependencies.semio-s-artifact-stdio-semio-flow]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio-text]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-semio-text-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-txt]

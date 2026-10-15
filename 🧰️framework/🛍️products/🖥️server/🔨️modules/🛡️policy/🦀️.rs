@@ -20,6 +20,7 @@
 //! Authentication is a separate concern that answers "who is this", handled by [`ResolverChain`]:
 //! the ladder is generic here, its rungs are supplied by the instance. [`AdminGate`] guards the
 //! administration plane before policy is consulted at all.
+#![allow(async_fn_in_trait)]
 
 use std::collections::BTreeMap;
 
@@ -27,7 +28,7 @@ use serde::{Deserialize, Serialize};
 use semio_framework_dispatch_macros::dyn_enum;
 use std::future::Future;
 
-use crate::contract::{CapabilityProof, DeviceId, PolicyDecision, PolicyGrant, PolicyPoint, PolicyTemplate, Principal, Scope, SessionId};
+use semio_framework_server_contract::{CapabilityProof, DeviceId, PolicyDecision, PolicyGrant, PolicyPoint, PolicyTemplate, Principal, Scope, SessionId};
 
 //#region 🔖️Matching
 /// 🪪️ The stable key a principal is assigned templates under: `user:alice`, `service:indexer`,
@@ -226,7 +227,7 @@ pub struct Resolved {
 /// refusal is policy's job at [`PolicyEngine::evaluate`], not authentication's.
 /// **Send futures, declared not inferred.** Every method of this port returns
 /// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
-/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// style choice: `ServerState` reaches this port behind an
 /// instance's associated type, so the concrete future is opaque at the call site and axum's
 /// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
 /// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
@@ -248,7 +249,7 @@ pub trait PrincipalResolver: Send + Sync {
 /// and no rung is hard-coded into this crate. First match wins, so the most specific rung is pushed
 /// first and the broadest last.
 ///
-/// `R` is the instance's rung type — [`ServerInstance::Resolvers`](crate::gateway::ServerInstance::Resolvers).
+/// `R` is the instance's rung type — `ServerInstance::Resolvers`.
 /// An instance with one rung names that rung directly; an instance with several closes
 /// them into one enum in its own crate. This module deliberately holds no
 /// rung of its own, so there is nothing here for an instance to inherit or work around.
@@ -325,7 +326,3 @@ impl AdminGate {
     }
 }
 //#endregion 🔖️Admin
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

@@ -1,5 +1,6 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
@@ -22,7 +23,7 @@ struct Process3dPublicationLease {
     terminal: bool,
 }
 
-impl semio_framework_job::FixedOperationOwner for Process3dPublicationLease {
+impl semio_framework_job_registry::FixedOperationOwner for Process3dPublicationLease {
     fn retained_bytes(&self) -> usize {
         size_of::<Self>()
     }
@@ -55,10 +56,10 @@ impl semio_framework_job::FixedOperationOwner for Process3dPublicationLease {
     }
 }
 
-type Process3dPublicationRegistry = semio_framework_job::FixedOperationRegistry<Process3dPublicationLease, PROCESS3D_PUBLICATION_SLOTS>;
+type Process3dPublicationRegistry = semio_framework_job_registry::FixedOperationRegistry<Process3dPublicationLease, PROCESS3D_PUBLICATION_SLOTS>;
 
 fn process3d_publication_leases() -> &'static std::sync::Mutex<Process3dPublicationRegistry> {
-    static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job::FixedOperationRegistry<Process3dPublicationLease, PROCESS3D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
+    static LEASES: std::sync::OnceLock<std::sync::Mutex<semio_framework_job_registry::FixedOperationRegistry<Process3dPublicationLease, PROCESS3D_PUBLICATION_SLOTS>>> = std::sync::OnceLock::new();
     LEASES.get_or_init(|| std::sync::Mutex::new(Process3dPublicationRegistry::new(PROCESS3D_PUBLICATION_SLOTS * size_of::<Process3dPublicationLease>())))
 }
 
@@ -107,13 +108,13 @@ pub fn process3d_admit_publication_authority(
 /// authority holds exactly one lease and a new self-grant supersedes the load the host already
 /// abandoned; the happy path releases through `process3d_release_app_publication_authority` at
 /// validation or initializer retirement.
-fn process3d_app_publication_lease() -> &'static std::sync::Mutex<Option<(semio_framework_job::FixedOperationKey, Process3dPublicationLease)>> {
-    static LEASE: std::sync::OnceLock<std::sync::Mutex<Option<(semio_framework_job::FixedOperationKey, Process3dPublicationLease)>>> = std::sync::OnceLock::new();
+fn process3d_app_publication_lease() -> &'static std::sync::Mutex<Option<(semio_framework_job_registry::FixedOperationKey, Process3dPublicationLease)>> {
+    static LEASE: std::sync::OnceLock<std::sync::Mutex<Option<(semio_framework_job_registry::FixedOperationKey, Process3dPublicationLease)>>> = std::sync::OnceLock::new();
     LEASE.get_or_init(|| std::sync::Mutex::new(None))
 }
 
 /// 🔎️ One lease by its exact key, from the host table first and the app self-grant second.
-fn process3d_publication_lease_by_key(key: semio_framework_job::FixedOperationKey) -> Result<Option<Process3dPublicationLease>, &'static str> {
+fn process3d_publication_lease_by_key(key: semio_framework_job_registry::FixedOperationKey) -> Result<Option<Process3dPublicationLease>, &'static str> {
     let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
     if let Some(lease) = leases.get(key) {
         return Ok(Some(*lease));
@@ -204,7 +205,7 @@ struct Process3dStoreInitializationAuthority {
     resume_phase: Option<Process3dStoreInitializationPhase>,
     cancel_requested: bool,
     fault: Option<Vec<u8>>,
-    publication: semio_framework_job::RetainedJobPublication,
+    publication: semio_framework_job_publication::RetainedJobPublication,
     terminal_handoff: bool,
 }
 
@@ -610,7 +611,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             Process3dTurn::Cancelled => semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx),
             Process3dTurn::Fault => {
                 let detail = self.fault.as_deref().unwrap_or(b"process3d-store.initializer-fault");
-                self.publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, detail, cx)
+                self.publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, detail, cx)
             }
         }
     }
@@ -722,8 +723,8 @@ pub const PROCESS3D_MOUNTED_CONTROL_CREDITS: usize = 1;
 
 const PROCESS3D_PUBLICATION_SLOTS: usize = 4;
 
-fn process3d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::FixedOperationKey {
-    semio_framework_job::FixedOperationKey::new(operation, generation)
+fn process3d_publication_key(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job_registry::FixedOperationKey {
+    semio_framework_job_registry::FixedOperationKey::new(operation, generation)
 }
 
 /// 🛣️ The ONE lane every test that admits into the process-global publication registry takes first.
@@ -759,8 +760,8 @@ pub fn process3d_publication_authority_lane() -> std::sync::MutexGuard<'static, 
 /// the enumeration `FixedOperationRegistry` does not offer, kept only so the lane above can drain a
 /// stranded lease.
 #[cfg(test)]
-fn process3d_publication_test_admissions() -> &'static std::sync::Mutex<Vec<semio_framework_job::FixedOperationKey>> {
-    static ADMITTED: std::sync::OnceLock<std::sync::Mutex<Vec<semio_framework_job::FixedOperationKey>>> = std::sync::OnceLock::new();
+fn process3d_publication_test_admissions() -> &'static std::sync::Mutex<Vec<semio_framework_job_registry::FixedOperationKey>> {
+    static ADMITTED: std::sync::OnceLock<std::sync::Mutex<Vec<semio_framework_job_registry::FixedOperationKey>>> = std::sync::OnceLock::new();
     ADMITTED.get_or_init(|| std::sync::Mutex::new(Vec::new()))
 }
 
@@ -1523,7 +1524,7 @@ impl Process3dStoreInitializationAuthority {
             phase: Process3dStoreInitializationPhase::ValidateEnvelope,
             cancel_requested: false,
             fault: None,
-            publication: semio_framework_job::RetainedJobPublication::new(),
+            publication: semio_framework_job_publication::RetainedJobPublication::new(),
             terminal_handoff: false,
         }
     }

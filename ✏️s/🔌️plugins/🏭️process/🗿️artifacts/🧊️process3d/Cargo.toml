@@ -51,23 +51,14 @@ path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference
 [workspace.dependencies.semio-framework-tool-machine]
 path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-dwg]
-path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-s-artifact-stdio-gltf]
 path = "../../../🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-ifc]
-path = "../../../🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-json]
 path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-obj]
 path = "../../../🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-png]
-path = "../../../🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-semio]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
@@ -89,9 +80,6 @@ path = "../../../🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀�
 path = "../../../🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-stl]
 path = "../../../🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-txt]
-path = "../../../🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust"
 
 [workspace.dependencies.serde_json]
 version = "1.0.149"

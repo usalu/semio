@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "path": "node_modules",
+      "kind": "directory"
+    },
+    {
+      "path": "node_modules/pkg",
+      "kind": "directory"
+    },
+    {
+      "path": "node_modules/pkg/a.js",
+      "kind": "file"
+    },
+    {
+      "path": "node_modules/pkg/deep",
+      "kind": "directory"
+    },
+    {
+      "path": "node_modules/pkg/deep/b.js",
+      "kind": "file"
+    },
+    {
+      "path": "node_modules/pkg/deep/c.js",
+      "kind": "file"
+    },
+    {
+      "path": "node_modules/link",
+      "kind": "link"
+    }
+  ],
+  "rechecks": [
+    0,
+    1,
+    2
+  ],
+  "retainedNamespace": {
+    "entries": 11701,
+    "directories": 1478,
+    "files": 10189,
+    "links": 34,
+    "origin": "public-nx-sdk-phases.log exact captured/copied counts; not current disk census"
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "observations": {
+    "originalAccepted": true,
+    "forgedInvocationRefused": true,
+    "forgedControlRefused": true,
+    "sameSignal": true,
+    "boundedDeadline": true,
+    "requestedDeadline": true,
+    "escapedControlRefused": true,
+    "escapedInvocationRefused": true,
+    "interruptionObserved": true,
+    "retiredAfterInterruption": true,
+    "physicalImageAccepted": true,
+    "fabricatedImageRefused": true,
+    "escapedImageRefused": true,
+    "expiredResourceControlRefused": true,
+    "forgedControlCannotOpenImage": true,
+    "secondProcessBirthRefused": true,
+    "additionalCancellationOnlyNarrows": true,
+    "derivedDeadlineDoesNotRenew": true,
+    "parentWaitsForAcceptedChild": true,
+    "delayedNewAdmissionRefused": true,
+    "acceptedChildRemainsLiveDuringDrain": true,
+    "acceptedChildSettlesBeforeOriginalRetires": true,
+    "acceptedFailureRejectsOriginal": true,
+    "detachedFailureRejectsOriginal": true,
+    "interruptionDrainRetainsHandlersUntilChildStop": true,
+    "interruptionDrainSettlesWithOriginalFailure": true,
+    "nestedParentWaitsForAcceptedChild": true,
+    "nestedLateAdmissionRefused": true,
+    "nestedChildSettlesBeforeParentRetires": true,
+    "imageAdmissionRetainedThroughCallbackAndClose": true,
+    "lateImageAdmissionRefused": true,
+    "acceptedImageObservationsDrained": true,
+    "realImageDescriptorClosedBeforeParentSettles": true,
+    "imageTokenRetiredAfterDrain": true,
+    "detachedPublicFailureNeverUnhandled": true,
+    "detachedPathFailureNeverUnhandled": true,
+    "detachedPathFailureRejectsOriginal": true,
+    "detachedPathImageRetainedUntilCallbackStops": true
+  },
+  "requests": [
+    {
+      "value": {
+        "version": 1,
+        "command": "lease:closed",
+        "maximumElapsedMilliseconds": 0
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "version": 1,
+        "command": "lease:closed",
+        "maximumElapsedMilliseconds": 100
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "version": 1,
+        "command": "lease:closed",
+        "maximumElapsedMilliseconds": -1
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "command": "lease:closed",
+        "maximumElapsedMilliseconds": 0.5
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "command": "",
+        "maximumElapsedMilliseconds": 100
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "command": "lease:closed",
+        "maximumElapsedMilliseconds": 100,
+        "invented": true
+      },
+      "accepted": false
+    }
+  ]
+}

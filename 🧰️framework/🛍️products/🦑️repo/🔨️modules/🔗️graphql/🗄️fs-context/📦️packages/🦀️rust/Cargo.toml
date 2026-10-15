@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-repo-graphql-fs"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "semio repo GraphQL production context: FsRepoContext, the provider-backed goal management and the coordinator event emitter behind the RepoContext port"
+
+[package.metadata.semio]
+role = "library"
+id = "repo-graphql-fs"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+serde_json = { workspace = true }
+semio-framework-repo-codebase = { path = "../../../../🗂️codebase/📦️packages/🦀️rust" }
+semio-framework-repo-contributors = { path = "../../../../🧑️contributors/📦️packages/🦀️rust" }
+semio-framework-repo-events = { path = "../../../../📡️events/📦️packages/🦀️rust" }
+semio-framework-repo-goals = { path = "../../../../🎯️goals/📦️packages/🦀️rust" }
+semio-framework-repo-graphql = { path = "../../../../🔗️graphql/📦️packages/🦀️rust" }
+semio-framework-repo-identity = { path = "../../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-repo-languages = { path = "../../../../🗣️languages/📦️packages/🦀️rust" }
+semio-framework-repo-model = { path = "../../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-move = { path = "../../../../🚚️move/📦️packages/🦀️rust" }
+semio-framework-repo-providers = { path = "../../../../🧩️providers/📦️packages/🦀️rust" }
+semio-framework-repo-statutes = { path = "../../../../📜️statutes/📦️packages/🦀️rust" }
+semio-framework-repo-tickets = { path = "../../../../🎫️tickets/📦️packages/🦀️rust" }
+semio-framework-repo-todos = { path = "../../../../📝️todos/📦️packages/🦀️rust" }
+semio-framework-repo-workspace = { path = "../../../../🏠️workspace/📦️packages/🦀️rust" }
+
+[dev-dependencies]

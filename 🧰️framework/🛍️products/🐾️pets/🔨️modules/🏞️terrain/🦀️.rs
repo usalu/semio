@@ -28,7 +28,7 @@
 //! @see ../🏞️terrain/🟦️.ts — the TypeScript twin
 //! @see <https://doi.org/10.1145/357332.357333> — Liang and Barsky, "A New Concept and Method for Line Clipping" (1984)
 
-use crate::schema::{Facing, Perch, Point, Rect, Surface, Ticks, Wall, TICKS_PER_SECOND};
+use semio_framework_pets_contract::schema::{Facing, Perch, Point, Rect, Surface, Ticks, Wall, TICKS_PER_SECOND};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
@@ -88,14 +88,14 @@ pub struct Flight {
 }
 
 /// 🧗️ A stretch of a wall that is free to climb: the schema's `Pitch` (the stage keeps the pitches of its survey), answered here by [`walls_of`].
-pub use crate::schema::Pitch;
+pub use semio_framework_pets_contract::schema::Pitch;
 
 type Stretch = (f64, f64);
 //#endregion 🔖️Types
 
 //#region 🔖️Extremes
 /// 🔼️ The larger of two numbers as JavaScript's `Math.max` answers it: NaN when either is NaN, and +0 rather than −0.
-pub(crate) fn larger(left: f64, right: f64) -> f64 {
+pub fn larger(left: f64, right: f64) -> f64 {
     if left.is_nan() || right.is_nan() {
         f64::NAN
     } else if left > right || (left == right && left.is_sign_positive()) {
@@ -106,7 +106,7 @@ pub(crate) fn larger(left: f64, right: f64) -> f64 {
 }
 
 /// 🔽️ The smaller of two numbers as JavaScript's `Math.min` answers it: NaN when either is NaN, and −0 rather than +0.
-pub(crate) fn smaller(left: f64, right: f64) -> f64 {
+pub fn smaller(left: f64, right: f64) -> f64 {
     if left.is_nan() || right.is_nan() {
         f64::NAN
     } else if left < right || (left == right && left.is_sign_negative()) {

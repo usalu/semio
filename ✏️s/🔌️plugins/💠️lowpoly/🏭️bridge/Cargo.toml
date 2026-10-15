@@ -20,3 +20,6 @@ semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️produc
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-lowpoly-lowpoly-model = { path = "../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-lowpoly-lowpoly-mutations = { path = "../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+
+[profile.prototype]
+inherits = "dev"

@@ -1,0 +1,78 @@
+{
+ "p5": {
+  "crate": "semio_s_artifact_puzzle_5d",
+  "ct": "lib",
+  "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs",
+  "baseline": {
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs": "{MS}/🗑️generated/puzzle-editors/orig5d.rs.txt"
+  },
+  "fam": "✏️editor/(🦀️\\.rs|(🧩️entities|🧭️view|🗂️catalog|🕹️interaction|🖌️session|🧵️retained|👆️gestures|🧰️kit)/🦀️\\.rs)$"
+ },
+ "p2": {
+  "crate": "semio_s_artifact_puzzle_2d",
+  "ct": "lib",
+  "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+  "baseline": {
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs": "{MS}/🗑️generated/puzzle-editors/orig2d.rs.txt"
+  },
+  "fam": "✏️editor/(🦀️\\.rs|(🕹️interaction|🖌️session|🧵️retained|🧰️kit)/🦀️\\.rs)$"
+ },
+ "tm": {
+  "crate": "semio_framework_surface",
+  "ct": "lib",
+  "root": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🦀️.rs",
+  "baseline": {
+   "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs": "{TOOLS}/tm-base.rs",
+   "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🔬️vector-tiles-decode-geometry/🦀️.rs": "{TOOLS}/tm-geom-head.rs"
+  },
+  "fam": "🗺️tiled-map/(🦀️\\.rs|🧪️tests/🔬️vector-tiles-decode-geometry/🦀️\\.rs|(🧭️projection|🧩️tiles|🧱️vector-tiles|🪢️map-state|🏛️map-host|🖱️interaction-and-labels|🌐️wasm-session|🌍️gis-policy)/.*🦀️\\.rs)$"
+ },
+ "hub": {
+  "crate": "semio_hub",
+  "ct": "lib",
+  "root": "🌎️hub/📦️packages/🦀️rust/🦀️.rs",
+  "baseline": {
+   "🌎️hub/📇️directory/🦀️.rs": "{TOOLS}/hub-dir-base.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🦀️.rs": "{TOOLS}/hub-rt-base.rs",
+   "🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🦀️.rs": "{TOOLS}/hub-schema-base.rs"
+  },
+  "fam": [
+   "📇️directory/(🦀️\\.rs|(🧾️model|🎟️capabilities|🔤️wire|🕰️events|🧭️decider|🛠️service|🔌️port|🔀️dispatch)/🦀️\\.rs)$",
+   "💡️inference/🏃️runtime/(🦀️\\.rs|(🧾️approval-contract|🌍️gis-map-binding|🔐️committer|🧱️document-preparation|🔁️commit-turns|🔎️checkpoint-verify|📕️commit-and-close|🧭️job-types-and-port|🚧️checkpoint-test-gate|🏭️inference-runtime|🛣️routes)/🦀️\\.rs)$"
+  ]
+ },
+ "cli": {
+  "crate": "semio_framework_repo_cli",
+  "ct": "lib",
+  "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🦀️.rs",
+  "baseline": {
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🦀️.rs": "{MS}/🗑️generated/rcg-tools/cli-baseline-import-retargeted.rs.txt"
+  },
+  "fam": "⌨️cli/(🦀️\\.rs|🧭️repo-cli/.*🦀️\\.rs|📡️event-stream/🦀️\\.rs|🔌️mcp-verb/🦀️\\.rs)$"
+ },
+ "gql": {
+  "crate": "semio_framework_repo_graphql",
+  "ct": "lib",
+  "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/🦀️.rs",
+  "baseline": {
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/🦀️.rs": "{TOOLS}/gql-core-base.rs"
+  },
+  "fam": "🔗️graphql/📦️packages/🦀️rust/(🦀️\\.rs|(🔤️grammar|🏗️repo-schema|🎥️context-port|🖼️sources|⚡️execution|🩻️recording-context)/🦀️\\.rs)$"
+ },
+ "gqlfs": {
+  "crate": "semio_framework_repo_graphql_fs",
+  "ct": "lib",
+  "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🗄️fs-context/🦀️.rs",
+  "baseline": {},
+  "fam": "🗄️fs-context/(🦀️\\.rs)$"
+ },
+ "gqlfull": {
+  "crate": "semio_framework_repo_graphql",
+  "ct": "lib",
+  "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/🦀️.rs",
+  "baseline": {
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/🦀️.rs": "{MS}/🗑️generated/rcg-tools/graphql-original.rs.txt"
+  },
+  "fam": ""
+ }
+}

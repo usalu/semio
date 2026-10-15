@@ -21,6 +21,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack-source = { path = "../../../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }

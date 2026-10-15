@@ -1,0 +1,35 @@
+{
+  "name": "@semio-tech/ui-contract-text-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ],
+  "targets": {
+    "test-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-native",
+        "forwardAllArgs": false
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    }
+  }
+}

@@ -5,9 +5,9 @@
 use super::*;
 use crate::challenge::challenge_rules;
 use crate::lifecycle::tests::perfect;
-use crate::schema::{Challenge, MatchingAnswer, SheetDimension, SheetItem, SheetSortingTask, CHALLENGES};
 use crate::sheet::sheet_of;
 use crate::sheet::tests::{classification, matching, quantity, quiz, sorting, text};
+use quiz_schema::{Challenge, MatchingAnswer, SheetDimension, SheetItem, SheetSortingTask, CHALLENGES};
 
 const POWER: [f64; 5] = [1.0, 60.0, 2000.0, 1.0e6, 1.0e9];
 
@@ -459,7 +459,7 @@ fn a_timed_run_is_scored_with_what_is_missing_as_a_miss() {
 
 #[test]
 fn shared_scores_of_the_python_numpy_scipy_reference_hold() {
-    use crate::schema::tests::{assert_close, entries, fixture, json, typed};
+    use quiz_schema::testkit::{assert_close, entries, fixture, json, typed};
     for case in ["sorting-concordance", "matching-concordance", "profile-similarity"] {
         let vectors = fixture(case);
         let tasks: Vec<Task> = entries(&vectors["tasks"]).iter().map(typed).collect();

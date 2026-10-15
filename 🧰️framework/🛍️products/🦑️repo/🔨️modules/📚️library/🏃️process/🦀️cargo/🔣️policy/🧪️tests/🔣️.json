@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "valid": [
+    {
+      "directory": "capture",
+      "expected": "capture",
+      "retain": false
+    },
+    {
+      "directory": "  capture  ",
+      "expected": "capture",
+      "retain": false
+    },
+    {
+      "directory": "nested/../capture",
+      "expected": "capture",
+      "retain": false
+    }
+  ],
+  "invalid": [
+    "",
+    "   "
+  ],
+  "defaults": [
+    {
+      "mode": "prototype",
+      "directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/prototype/captures",
+      "retain": false
+    },
+    {
+      "mode": "release",
+      "directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/release/captures",
+      "retain": false
+    }
+  ],
+  "coverage": [
+    {
+      "value": null,
+      "enabled": false
+    },
+    {
+      "value": "0",
+      "enabled": false
+    },
+    {
+      "value": "1",
+      "enabled": true
+    }
+  ]
+}

@@ -14,9 +14,9 @@ async fn default_camera_is_centered_and_unzoomed() {
 #[semio_framework_async_macros::async_test]
 async fn writer_child_restore_projection_accepts_the_exact_owned_document() {
     let snapshot = WriterSnapshot::default();
-    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Writer document child");
+    let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Writer document child");
     assert_eq!(projection.len(), 1);
-    assert!(projection.admits_member("document", &snapshot.document.target));
+    assert!(projection.admits_member("document", snapshot.document.target.borrowed()));
     assert_eq!(snapshot.document.child_id, snapshot.document.target.artifact_id);
 }
 

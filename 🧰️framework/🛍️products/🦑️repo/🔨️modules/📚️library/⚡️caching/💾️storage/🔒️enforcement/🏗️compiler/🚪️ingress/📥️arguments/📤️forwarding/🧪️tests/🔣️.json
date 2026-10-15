@@ -1,0 +1,191 @@
+{
+  "context": {
+    "version": 1,
+    "compilerConfiguration": "/configuration.toml",
+    "buildDirectory": "/bounded/b",
+    "targetDirectory": "/bounded/t"
+  },
+  "cases": [
+    {
+      "name": "rustc-output",
+      "args": [
+        "rustc",
+        "--lib",
+        "--",
+        "-o",
+        "/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "rustc-joined-output",
+      "args": [
+        "rustc",
+        "--lib",
+        "--",
+        "-o/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "rustc-out-dir",
+      "args": [
+        "rustc",
+        "--lib",
+        "--",
+        "--out-dir=/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "rustc-emit-path",
+      "args": [
+        "rustc",
+        "--lib",
+        "--",
+        "--emit=metadata=/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "rustc-mir-writer",
+      "args": [
+        "rustc",
+        "--lib",
+        "--",
+        "-Zdump-mir-dir=/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "rustc-linker",
+      "args": [
+        "rustc",
+        "--lib",
+        "--",
+        "-Clinker=/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "rustdoc-output",
+      "args": [
+        "rustdoc",
+        "--lib",
+        "--",
+        "--output",
+        "/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "rustdoc-joined-output",
+      "args": [
+        "rustdoc",
+        "--lib",
+        "--",
+        "-o/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "rustdoc-theme-writer",
+      "args": [
+        "rustdoc",
+        "--lib",
+        "--",
+        "--resource-suffix=/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "rustc-safe-codegen",
+      "args": [
+        "rustc",
+        "--lib",
+        "--",
+        "-Copt-level=0",
+        "--cfg",
+        "original",
+        "--check-cfg=cfg(original)"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "rustdoc-private-items",
+      "args": [
+        "rustdoc",
+        "--lib",
+        "--",
+        "--document-private-items"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "run-opaque-program",
+      "args": [
+        "run",
+        "--bin",
+        "rustc",
+        "--",
+        "-o",
+        "/outside"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "test-opaque-program",
+      "args": [
+        "test",
+        "--",
+        "--output",
+        "/outside"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "bench-opaque-program",
+      "args": [
+        "bench",
+        "--",
+        "--out-dir=/outside"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "missing-compiler-value",
+      "args": [
+        "rustc",
+        "--lib",
+        "--",
+        "--cfg"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "global-flags-before-compiler",
+      "args": [
+        "--color",
+        "never",
+        "rustc",
+        "--lib",
+        "--",
+        "-o",
+        "/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "run-package-named-rustdoc",
+      "args": [
+        "run",
+        "-p",
+        "rustdoc",
+        "--",
+        "--output",
+        "/outside"
+      ],
+      "accepted": true
+    }
+  ]
+}

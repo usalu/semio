@@ -1,6 +1,6 @@
 //! 🤝️ Actual Host input and guest authorities conserve one total source across bounded loans.
 use semio_framework_actor::retained_turn::{ActorGuestPhase, OriginalActorInput, OriginalActorTurnWork, RetainedTurnInput, RetainedTurnReceipt};
-use semio_framework_actor::retained_turn::context as guest_context;
+use semio_framework_actor::retained_context as guest_context;
 use semio_framework_job::{StepBudget, StepContext};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 

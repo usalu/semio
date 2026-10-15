@@ -374,5 +374,13 @@
       "removedAfterOwner": false,
       "removedBySweep": false
     }
-  ]
+  ],
+  "diagnostics": {
+    "partition": "diagnostics",
+    "directory": ".cache/b/o/m/tests",
+    "sameFilesystem": true,
+    "allCacheTestBranches": true,
+    "specificHelpers": true,
+    "asyncChildren": true
+  }
 }

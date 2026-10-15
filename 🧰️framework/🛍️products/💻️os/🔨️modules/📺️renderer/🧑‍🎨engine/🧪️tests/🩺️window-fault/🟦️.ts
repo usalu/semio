@@ -11,8 +11,11 @@ import { isPluginInstanceRetiredV1, markPluginInstanceRetiredV1 } from "../../�
 import { createContributionsPublisher } from "../../🧱️elements/🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 import browserSchema from "../../../../🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json";
 import faultVectors from "../../../../🔌️plugin/🩺️runtime-fault-vectors.json";
-import shellSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
+import panelHostingSource from "../../🧱️elements/🏛️ShellHost/📋️panel-hosting/🟦️.tsx?raw";
+import contributionsRefreshSource from "../../🧱️elements/🏛️ShellHost/🔁️contributions-refresh/🟦️.ts?raw";
 import uiBundleSource from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts?raw";
+
+const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/*/🟦️.ts", "../../🧱️elements/🏛️ShellHost/*/🟦️.tsx"], { query: "?raw", import: "default", eager: true })).join("\n");
 
 type FaultVector = { readonly variant: string; readonly code: string; readonly class: string; readonly detail: string };
 type ClassificationCase = { readonly id: string; readonly code?: string; readonly supervisor?: string; readonly class: string };
@@ -79,7 +82,7 @@ describe("window fault discriminators", () => {
 
   it("keeps the DOM contract a catalog smoke reads wired into the live shell", () => {
     expect(WINDOW_FAULT_ATTRIBUTE).toBe("data-semio-window-fault");
-    const shell = shellSource;
+    const shell = shellTreeSource;
     expect(shell).toContain(`${WINDOW_FAULT_ATTRIBUTE}={fault.class}`);
     expect(shell).toContain('role="status"');
     expect(shell).toContain("refreshUi(current).catch((renderError) => reportRefreshFault(current.pluginId, renderError))");
@@ -140,9 +143,9 @@ describe("retired instance faults", () => {
 
 describe("pending window body", () => {
   it("a window whose UI has not arrived renders its pending node, never an empty body", () => {
-    expect(shellSource).not.toMatch(/Object\.keys\(windowUiByWindowId\)\.length === 0 && currentBrowserActorUi === undefined\) return \[\]/);
-    expect(shellSource).toMatch(/windowUiByWindowId\[kind\.id\] \?\? PENDING_WINDOW_UI_NODE/);
-    expect(shellSource).toMatch(/current\[instance\.id\] \?\? pendingWindowUiNode\(\)/);
+    expect(shellTreeSource).not.toMatch(/Object\.keys\(windowUiByWindowId\)\.length === 0 && currentBrowserActorUi === undefined\) return \[\]/);
+    expect(panelHostingSource).toMatch(/windowUiByWindowId\[kind\.id\] \?\? PENDING_WINDOW_UI_NODE/);
+    expect(contributionsRefreshSource).toMatch(/current\[instance\.id\] \?\? pendingWindowUiNode\(\)/);
   });
 });
 
@@ -178,13 +181,13 @@ describe("scopeContributionsJson", () => {
 
 describe("contributions pack crossing", () => {
   it("the live shell sends one pack-encoded setContributions scoped by consumes alone, never 4 KiB string pages", () => {
-    expect(shellSource).not.toContain("publicInvocationStringPages");
-    expect(shellSource).not.toContain("resolveDocumentOperatorKinds");
-    expect(shellSource).not.toContain("exampleArtifactSources");
-    expect(shellSource).not.toContain("readDocumentOperatorScope");
-    expect(shellSource).toContain("scopeContributionsJson(loadedForScope, receiver === undefined ? session.pluginId : programPluginIdV1(receiver), environment.consumedTopics)");
-    expect(shellSource).toContain('encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args)');
-    expect(shellSource).toContain("pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState)");
-    expect(shellSource).toContain("page: 0, pageCount: 1");
+    expect(shellTreeSource).not.toContain("publicInvocationStringPages");
+    expect(shellTreeSource).not.toContain("resolveDocumentOperatorKinds");
+    expect(shellTreeSource).not.toContain("exampleArtifactSources");
+    expect(shellTreeSource).not.toContain("readDocumentOperatorScope");
+    expect(contributionsRefreshSource).toContain("scopeContributionsJson(loadedForScope, receiver === undefined ? session.pluginId : programPluginIdV1(receiver), environment.consumedTopics)");
+    expect(contributionsRefreshSource).toContain('encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args)');
+    expect(contributionsRefreshSource).toContain("pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState)");
+    expect(contributionsRefreshSource).toContain("page: 0, pageCount: 1");
   });
 });

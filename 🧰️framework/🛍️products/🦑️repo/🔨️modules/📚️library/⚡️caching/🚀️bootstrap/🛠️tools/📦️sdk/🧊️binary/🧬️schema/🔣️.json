@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.nx/SdkBinaryV1",
+  "title": "SDK Binary V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "digest",
+    "objects"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "objects": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256",
+          "bytes"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 134217728
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "extensions": [
+          ".wasm",
+          ".node"
+        ],
+        "maximumObjects": 256,
+        "maximumObjectBytes": 134217728,
+        "chunkBytes": 65536,
+        "objectDirectory": "o",
+        "leaseShards": 64,
+        "owner": "nx-sdk-binary",
+        "maximumReceiptBytes": 65536
+      }
+    },
+    "ObjectOwnership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "sha256",
+        "bytes",
+        "phase"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "nx-sdk-binary"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "phase": {
+          "enum": [
+            "intent",
+            "sealed"
+          ]
+        }
+      }
+    }
+  }
+}

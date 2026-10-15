@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
+  "workspace": ".",
+  "dependencies": [
+    {
+      "alias": "semio-framework",
+      "package": "semio-framework",
+      "root": "🧰️framework/📦️packages/🦀️rust"
+    },
+    {
+      "alias": "semio-framework-async",
+      "package": "semio-framework-async",
+      "root": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust"
+    },
+    {
+      "alias": "semio-framework-diagnostic",
+      "package": "semio-framework-diagnostic",
+      "root": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"
+    },
+    {
+      "alias": "semio-framework-job",
+      "package": "semio-framework-job",
+      "root": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
+    },
+    {
+      "alias": "semio-framework-os-kernel",
+      "package": "semio-framework-os-kernel",
+      "root": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+    },
+    {
+      "alias": "semio-framework-value",
+      "package": "semio-framework-value",
+      "root": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+    }
+  ],
+  "canonicalOwner": {
+    "name": "semio-framework-plugin-ownership",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust",
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust/Cargo.toml",
+    "packages": []
+  },
+  "workspaceMember": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
+}

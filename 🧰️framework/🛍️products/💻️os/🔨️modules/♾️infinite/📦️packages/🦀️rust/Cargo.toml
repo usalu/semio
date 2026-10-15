@@ -45,7 +45,6 @@ ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling
 semio-framework-ui-viewport = { path = "../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
 semio-framework-ui-runtime = { path = "../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
 semio-framework-ui-contract = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
-semio_framework_3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 # 🔤️ First-party RFC 4648 codec — replaces the third-party `base64` crate for `icon_codec`'s
@@ -84,6 +83,9 @@ wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window", "Request", "RequestInit", "RequestMode", "Response", "console"] }
 
 [dev-dependencies]
+semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-job-worker-authority = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust", features = ["testkit"] }
+
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }

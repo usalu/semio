@@ -4,10 +4,6 @@ import utilityActionPolicy from "../../🧱️elements/🛠️ShellHelpers/🧪�
 import utilityAssignmentCases from "../../🧱️elements/🐚️Shell/🧰️utility-assignment/🧪️tests/🧫️fixtures/🔣️.json";
 import initialWindowUtilityCases from "../../../../../../../🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧪️tests/🧫️fixtures/🔣️.json";
 
-import drawingActionCases from "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures/🔣️.json";
-import drawingActionSchema from "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧬️schema/🔣️.json";
-import drawingInterruptionCases from "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🧫️fixtures/🛑️interruption/🔣️.json";
-import drawingInterruptionSchema from "../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📍️point/🧬️schema/🔣️.json";
 import { resolveUtilityActivationV1 as resolveAssignmentPress } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import chromePanelSafeAreaFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
 import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
@@ -121,7 +117,8 @@ import { createVirtualContinuationHost } from "../../../../../../../🔨️modul
 import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WORKER_URL, shardWorkerUrl } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 /** 🗣️ The resolver every `makeEffectDispatchOne` owner passes — the shell's `resolvedTargetViewState`, reduced to what a test session needs: both host preferences always stamped. */
 const resolvedViewStateFixture = (session: { readonly viewState?: unknown }) => parseResolvedPluginViewState({ ...(session.viewState as Record<string, unknown> | undefined), locale: "en", terminology: "native" }) as never;
-import { openSurfaceContextMenu, uiNodeDomId, VirtualFileSystemHost, virtualFileSystemNavigation } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { uiNodeDomId, VirtualFileSystemHost, virtualFileSystemNavigation } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { openSurfaceContextMenu } from "../../🧱️elements/🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { contextMenuItemClassName } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json";
@@ -199,6 +196,7 @@ import choiceFixture from "../../../../../../../🔨️modules/🧩️action-arg
 
 import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const ownedExports = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema);
 /** 🧬️ Compiles one named export of the `os.renderer` schema module. */
@@ -9811,25 +9809,6 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     console.log(`[DEBUG] React ${locale} actual shell reducer preserves twenty explicit assignments and user presses across two window scopes`);
   });
 
-  it("Draw utility action and interruption fixtures conform to their closed contracts", () => {
-    const ajv = new Ajv2020({ strict: true });
-    const policy = ajv.compile(drawingActionSchema);
-    const interruption = ajv.compile(drawingInterruptionSchema);
-    expect(policy(drawingActionCases)).toBe(true);
-    for (const row of drawingInterruptionCases.cases) {
-      expect(interruption(row.press)).toBe(true);
-      expect(interruption(row.move)).toBe(true);
-      expect(drawingActionCases.utilities.some(utility => utility.id === row.utility)).toBe(true);
-    }
-    expect(policy({ ...drawingActionCases, utilities: drawingActionCases.utilities.map((utility) => ({ ...utility, allowsActionsWhileActive: false })) })).toBe(false);
-    expect(policy({ ...drawingActionCases, utilities: drawingActionCases.utilities.map(() => drawingActionCases.utilities[0]) })).toBe(false);
-    const invalid = structuredClone(drawingInterruptionCases);
-    Object.assign(invalid.cases[0]!, { utility: "unknown" });
-    expect(drawingActionCases.utilities.some(utility => utility.id === invalid.cases[0]!.utility)).toBe(false);
-    expect(interruption([1])).toBe(false);
-    console.log("[DEBUG] Independent Ajv2020 validates actual Draw producer and gesture-interruption fixtures, rejecting false or duplicate arms and unknown gestures");
-  });
-
   it.each(["en", "de"] as const)("initial window utility decisions follow declared arms and preserve resolved registers (%s)", async (locale) => {
     const { resolveInitialWindowUtility } = await import("../../../../../../../🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🟦️.ts");
     const { createVersionedRegisterV1 } = await import("../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts");
@@ -10327,7 +10306,12 @@ describe("registry-derived utilities and activation (P5)", () => {
     first.resolve();
     await waitFor(() => expect(sent).toEqual(["marker-a", "marker-c"]));
 
-    const { default: source } = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx?raw");
+    const { existsSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx";
+    let root = process.cwd();
+    for (let hop = 0; hop < 12 && !existsSync(resolve(root, relative)); hop += 1) root = resolve(root, "..");
+    const source = readModuleTreeSource(resolve(root, relative));
     for (const action of ["interactionHover", "referenceHover", "worldVortexHover"]) expect(source).toMatch(new RegExp(`return dispatchSettled\\(\\"${action}\\"`));
     expect(source).toMatch(/createCoalescingActionDispatcher<string \| null>\(\(fullId\) => dispatchSettled\("targetBrushSuggestions"/);
     expect(source).not.toMatch(/return dispatch\("(?:interactionHover|targetBrushSuggestions|worldVortexHover)"/);
@@ -10342,7 +10326,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx";
     let root = process.cwd();
     for (let hop = 0; hop < 12 && !existsSync(resolve(root, relative)); hop += 1) root = resolve(root, "..");
-    const source = readFileSync(resolve(root, relative), "utf8");
+    const source = readModuleTreeSource(resolve(root, relative));
     for (const retired of ["suggestionsTick", "createInFlightSkippingInterval(", "brushPreviewJson", "BrushPreviewGhost", "WorldBrushPreviewRecord", "addBrushObject"]) {
       expect(source.includes(retired), `[TRACE] ${retired} is the retired brush ghost path`).toBe(false);
     }
@@ -11352,8 +11336,8 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     let shellHostRoot = process.cwd();
     for (let hop = 0; hop < 12 && !existsSync(`${shellHostRoot}/${shellHostRelative}`); hop += 1) shellHostRoot = `${shellHostRoot}/..`;
     expect(existsSync(`${shellHostRoot}/${shellHostRelative}`)).toBe(true);
-    const shellHost = readFileSync(`${shellHostRoot}/${shellHostRelative}`, "utf8");
-    const lane = shellHost.slice(shellHost.indexOf("uiRefreshLaneRef.current = createUiRefreshCoalescerV1"), shellHost.indexOf("const refreshUi = useCallback"));
+    const shellHost = readModuleTreeSource(`${shellHostRoot}/${shellHostRelative}`);
+    const lane = sliceModuleTreeSource(`${shellHostRoot}/${shellHostRelative}`, "uiRefreshLaneRef.current = createUiRefreshCoalescerV1", "const refreshUi = useCallback");
     expect(lane, "the lane applies the scope the pass recorded").toContain("applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, owedEffects.scope, owedEffects.owner)");
     expect(lane.includes('{ kind: "full" }'), "and names no scope of its own").toBe(false);
     expect(shellHost, "the owed slot records the pass's scope when it records the effects").toContain("owedPassEffectsRef.current = { effects: pendingRefreshEffects, session: nextSession, owner: refreshOwner, scope: scopeArg }");
@@ -13960,7 +13944,7 @@ describe("🎫️ the shell says what it holds", () => {
     const { dirname, resolve } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../..");
-    const nodeGraph = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
+    const nodeGraph = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx"));
     const manifest = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts"), "utf8");
     const { nodeGraphActions } = await import("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts");
 

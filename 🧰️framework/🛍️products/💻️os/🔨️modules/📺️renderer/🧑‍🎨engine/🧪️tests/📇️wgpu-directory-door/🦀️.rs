@@ -5,7 +5,7 @@
 use super::{decode_directory_door_response, encode_directory_door_binary_request, encode_directory_door_request, DIRECTORY_DOOR_OP, DIRECTORY_HTTP_TIMEOUT_MS};
 use semio_framework_os_kernel::os_directory::client::{HttpMethod, TransportError};
 
-const SHELL_SOURCE: &str = include_str!("../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
+const SHELL_SOURCE: &str = crate::shell::SHELL_SOURCE;
 
 //#region 🧪️Wire
 #[test]

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://process.native-storage/OriginalPhysicalImageLoanV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "issuance",
+    "rootCustody",
+    "retirement"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "issuance": {
+      "const": "actual-enforcing-platform-open"
+    },
+    "rootCustody": {
+      "const": "same-device-inode-through-live-callback"
+    },
+    "retirement": {
+      "const": "callback-settled-before-image-close"
+    }
+  }
+}

@@ -3,6 +3,7 @@ import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️re
 import { createAssetBuildPluginsV1, type AssetDeliveryModeV1, type AssetDeliveryDeclarationV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import { MODULE_ROUTES } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { COMPILER_FONTS_ROUTE } from "../../../../../../../../🔨️modules/📚️compiler/🌍️world/🟦️.ts";
 import { FONT_ASSET } from "../../../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
@@ -23,6 +24,7 @@ export type WgpuBrowserConfiguration = {
   readonly extensionRoot: string;
   readonly bootRoot: string;
   readonly libraryRoot: string;
+  readonly fontRoot: string;
   readonly workerRoot: string;
   readonly reloadFile: string;
   readonly assets: readonly AssetDeliveryDeclarationV1[];
@@ -55,6 +57,7 @@ function completedArtifactReload(path: string): OwnedBuildPlugin {
 export function wgpuBrowserMounts(options: WgpuBrowserConfiguration): readonly (readonly [string, string])[] {
   return [
     ["/renderer-modules/wgpu", options.compilerRoot],
+    [COMPILER_FONTS_ROUTE, options.fontRoot],
     ["/🚀️boot.js", options.bootRoot],
     ["/🎬️renderer-boot.js", options.libraryRoot],
     ["/🎞️frame-worker.js", options.workerRoot],

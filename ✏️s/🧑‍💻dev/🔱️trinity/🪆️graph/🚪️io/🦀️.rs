@@ -5,7 +5,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProg
 use store::io::io_mechanism::{IoEntry,IoEntryDirection,IoRunControl};
 use store::io_schema::{IoError,IoFidelity,IoOutcome,IoPayload,IoResult};
 pub const JSON:Dialect=Dialect{artifact_kind:"s.stdio.json",standard:StandardId("rfc8259"),subset:SubsetId::ANY};
-pub const TXT:Dialect=Dialect{artifact_kind:"s.stdio.txt",standard:StandardId("utf-8"),subset:SubsetId::ANY};
+pub const TXT:Dialect=store::io_schema::CARRIER_TEXT;
 const SCHEMA:&str="s.dev.trinity.jack.archive.v1";
 const JSON_PREFIX:&str="{\"schema\":\"s.dev.trinity.jack.archive.v1\",\"archive\":\"";
 const TXT_PREFIX:&str="s.dev.trinity.jack.archive.v1\n";

@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-contract-identity"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Canonical UI identity foundation"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-contract-text = { path = "../../../🔤️text/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

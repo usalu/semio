@@ -7,7 +7,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const root = resolve(resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🦀️rust"), "../..");
 
-/** 🧪️ Vitest for the styling projection's inline `import.meta.vitest` contract. */
+/** 🧪️ Vitest for the styling projection, theme and asset builder contracts. */
 export default {
   root: testRoot,
   resolve: {
@@ -19,9 +19,8 @@ export default {
     root: testRoot,
     name: "@semio-tech/ui-styling",
     environment: "jsdom",
-    include: [],
+    include: ["🧪️tests/🧪️levels-oklabmix/🟦️.ts", "🧪️tests/🧪️theme-resolve/🟦️.ts", "🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts"],
     coverage: { include: ["📽️projection/🟦️.ts", "🌓️theme/🟦️.ts", "🏗️builder/🌐️vite/🟦️.ts"] },
-    includeSource: ["📽️projection/🟦️.ts", "🌓️theme/🟦️.ts", "🏗️builder/🌐️vite/🟦️.ts"],
     passWithNoTests: false,
   },
 };

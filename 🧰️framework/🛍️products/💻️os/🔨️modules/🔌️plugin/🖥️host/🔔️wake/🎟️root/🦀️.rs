@@ -1,7 +1,7 @@
 //! 🎟️ One true embedding root retains the exact issued scope until its suspended guest receipt returns.
 use semio_framework_actor::{RetainedTurnInput,RetainedTurnReceipt,OriginalActorTurnWork,OriginalJobBudget,OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt};
 use semio_framework_job::{StepBudget,StepContext,OriginalTurnFailure};
-use semio_framework_actor::retained_turn::context::{OriginalActorContextSlot,OriginalActorContextError};
+use semio_framework_actor::retained_context::{OriginalActorContextSlot,OriginalActorContextError};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,semio_framework_value_derive::FromValue,semio_framework_value_derive::ToValue)]

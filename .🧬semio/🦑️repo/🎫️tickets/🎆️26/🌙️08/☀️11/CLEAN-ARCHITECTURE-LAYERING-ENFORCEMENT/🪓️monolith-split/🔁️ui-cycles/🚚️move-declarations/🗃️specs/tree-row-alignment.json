@@ -1,0 +1,6 @@
+{
+  "source": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx",
+  "target": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📏️row-alignment/🟦️.tsx",
+  "names": ["TreeContext","TreeRowAlignmentContext","TreeAlignedRow","PropertyValueColumnContext","detailPanelIndentPx","detailPanelIndentLen","detailPanelPropertyInlineGapPx","detailPanelPropertyStackedToInlineHysteresisPx","detailPanelPropertyRowClassName","detailPanelPropertyControlClassName","detailPanelHeaderLineCenterPx","treeItemLabelStyle","treeHeaderRowClassName","treeInspectorInnerRowClassName","treeHeaderMainClassName"],
+  "doc": "📏 Owns the tree row alignment contexts and detail-panel row metrics shared by Label and the tree."
+}

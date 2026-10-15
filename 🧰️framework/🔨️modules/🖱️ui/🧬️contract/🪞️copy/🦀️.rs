@@ -115,11 +115,8 @@ impl TypedCopy for UiText {
         Ok(0)
     }
     fn copy_one(&self, candidate: &mut Self, _: &mut [usize], _: &mut Vec<u8>, _: usize, work: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
-        let start = candidate.len();
-        let bytes = self.len().saturating_sub(start).min(work);
-        candidate.bytes[start..start + bytes].copy_from_slice(&self.bytes[start..start + bytes]);
-        candidate.len += bytes as u16;
-        Ok(UiComponentCopyProgress { complete: candidate.len == self.len, ..progress(bytes) })
+        let (complete,bytes)=candidate.copy_prefix_from(self,work).map_err(error)?;
+        Ok(UiComponentCopyProgress { complete, ..progress(bytes) })
     }
 }
 

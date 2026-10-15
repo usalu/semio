@@ -103,6 +103,7 @@
       "maxItems": 65536
     },
     "launches": {
+      "description": "Authorized repository requests. The selected build implementation derives its exact internal launches before the Original process envelope is created.",
       "type": "array",
       "items": {
         "type": "array",

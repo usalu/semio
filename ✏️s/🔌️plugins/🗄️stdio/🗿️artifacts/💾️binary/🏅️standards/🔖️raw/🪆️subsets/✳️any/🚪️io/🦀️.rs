@@ -176,7 +176,8 @@ pub fn register_artifact_inferences() {
 //#region 🔖️IoDeclaration
 /// 🚪️ New tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P pilot):
 /// `io() -> IoDeclaration` for `standard raw / subset any` — design.md §2/§3. **Carrier law**:
-/// `s.stdio.binary@raw/*` IS `CARRIER_BINARY` (`semio_framework::io_schema::CARRIER_BINARY`), so
+/// `s.stdio.binary@raw/*`'s own native `Binary` payload is byte-identical to the raw bytes of the framework-owned carrier
+/// `CARRIER_BINARY` (`semio_framework::io_schema::CARRIER_BINARY`), so
 /// its own native `Binary` `IoPayload` already equals what `io_identify`/`io_route` treat as "the
 /// raw file" — zero foreign `IoEntry` rows are needed on this side. Every OTHER artifact that
 /// wants to accept raw bytes registers its OWN `Deserializer<Snapshot>` with `FROM:

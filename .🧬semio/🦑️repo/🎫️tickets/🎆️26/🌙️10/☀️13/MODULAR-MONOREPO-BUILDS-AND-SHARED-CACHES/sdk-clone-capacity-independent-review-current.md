@@ -1,0 +1,29 @@
+# Independent SDK Clone Capacity Review
+
+Read-only review of Root's initial `tools/📦️sdk/🎟️capacity` implementation and existing snapshot/provision/retention consumers. Root is authoring corrections concurrently; the findings below describe the inspected version, not a claim that a later revision still contains each issue. No installer, clone or capacity test was launched by this review. Existing live Root gates remain their Original owner's evidence.
+
+## Findings
+
+1. **Single-use claim raced across the first await.** In the initial physical quote, `clone()` tested `copied`, awaited `recheck()`, then set `copied=true`. Two concurrent calls could both pass the false check and publish distinct destinations against one quoted allowance. Claiming before the first await makes the attempted operation single-use; retaining the failed claim is consistent with that authority. Root acknowledged the concrete race and is adding a real two-destination law. A corresponding callback-return lifetime must await any already-started clone before releasing snapshot or registry custody; Root independently identified and is fixing that case.
+
+2. **Cold admission still accepted a caller-lowered numeric request.** The generic retention Request allows `minimumAvailableBytes >= 1`. Initially `withManagedToolingProvisionV1` used that caller value directly whenever no clone quote was supplied. Both canonical Nx and Rustup callers pass the 1,610,612,736-byte constant, so this review does not claim an existing CLI path passes a lower number. The authority itself nevertheless depended on that call-site convention. Clamp unquoted admission to at least the canonical cold minimum, independently of standalone retirement preview/prune requests. The issued clone branch can then be the sole reason to admit a smaller amount.
+
+3. **Portable allocation arithmetic did not separate file rounding from metadata.** The formula rounded aggregate copied bytes once and added 65,536 bytes per namespace entry. The physical issuer accepts filesystem allocation units up to 65,536 bytes. At that largest unit, many one-byte copied files need almost one extra unit each just for their data extents, consuming nearly the entire entry allowance before inode or directory metadata is charged. The observed macOS filesystem has much smaller units and considerable slack; this is not a measured macOS ENOSPC counterexample. It is a gap in the stated portable derivation. Sum a bounded per-file extent ceiling before adding the separate namespace allowance, or conservatively add one extra allocation unit per copied file. Exercise the tiny-file shape with an independent arithmetic corpus rather than only aggregate byte examples.
+
+4. **Input buffers were copied before enforcing the input ceiling.** The issuer first materialized `new Map([...inputs].map(...Buffer.from(bytes)))` and only then summed the resulting buffers against the 16 MiB maximum. It also had no explicit input-entry ceiling at that allocation point. Validate count, names and cumulative byte lengths before copying any supplied buffer. The canonical caller currently supplies a small closed manifest/lock/patch map; this finding concerns the issued public authority's own preallocation contract.
+
+## Root's Concurrently Identified Admission Correction
+
+The first quote validated its live Source/store scope but did not itself require successful canonical capacity admission. Planned publisher call order was the only link. Root is replacing this with an actual held `nx-tooling-provision` ResourceLease EX plus an actual `statfs` threshold acknowledgement before any clone, and will recheck that genuine custody at consumption. An arbitrary boolean, number or copied quote must not acknowledge admission.
+
+## Write Ceiling Review
+
+The 128 MiB publication allowance is not itself an isolated filesystem quota. Existing code supplies useful concrete byte ceilings: admitted authorizer Source totals 16 MiB, each captured snapshot is at most 24,117,248 bytes, each compiled output is at most 8 MiB, and clone installation inputs are at most 16 MiB. The clone bounds its namespace to 200,000 entries, validates Source stamps and only shares authenticated binary groups. The corrected derivation should explicitly account for the simultaneous captured snapshot/compiler program/final authorizer, install input/receipt material, file extent rounding and namespace metadata. The whole tools8 image remains the hard physical envelope; neither the clone quote nor the older cold free-space check reserves all free blocks against unrelated producers by itself.
+
+The inspected publisher had not yet adopted the quote and its static Source test was intentionally RED. It still called ordinary `admitPublication()` and raw `cloneNxSdkSnapshotV1`; Root owns integration. This review does not treat planned call sites or the passing arithmetic law as an actual normal installation proof.
+
+## Checked and Dismissed
+
+A timestamp-field concern inherited from an earlier physical-reader investigation was checked directly without writes. Both current Bun and Node `lstatSync('Cargo.toml', {bigint:true})` report `mtimeNs`, `ctimeNs`, `mtimeMs` and `ctimeMs` as bigint. The new quote's use of `mtimeNs`/`ctimeNs` therefore does not silently compare absent fields on this host. This check does not claim timestamp guards detect arbitrary consumed-byte ABA.
+
+The private WeakMap identity, exact store binding, held snapshot SH, copied input values, explicit live/escaped checks, snapshot receipt/binary verification and no-follow canonical roots provide meaningful custody. They do not remove the concrete concurrency, preallocation and allocation-derivation issues above. A fresh normal bounded installation and unchanged ordinary Rust pair remain pending after Root's coherent integration checkpoint.

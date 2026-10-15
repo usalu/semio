@@ -1,3 +1,6 @@
+import {cp} from "node:fs/promises";
+import {withBuildTestInvocationV1} from "../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import {withNxGraphFixtureV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️store/🟦️.ts";
 /** 🔏️ Graph seal laws over `./🧫️fixtures/🔣️.json`: a seal written for a fixture workspace holds exactly while nothing Nx could read for
  * its graph changed (each scenario mutates one thing), every seal satisfies `../🧬️schema/🔣️.json` (Ajv), and the stamped directories are
  * exactly the directories fast-glob lists under the fixture's ignore rules (third-party oracle for the indexable walk). */
@@ -41,47 +44,46 @@ function workspace(): { root: string; data: string; pid: number; startedAt: numb
   return { root, data, pid, startedAt };
 }
 
-test("each fixture scenario holds exactly when nothing graph-relevant changed", async () => {
-  expect(fixture.schemaVersion).toBe(1);
-  for (const scenario of fixture.scenarios) {
-    const { root, data, pid, startedAt } = workspace();
-    try {
+/** 🧭️ Routes graph-cache mutations to their actual issued image while preserving authored source paths. */
+function mutationPath(root:string,data:string,path:string):string{const prefix=".nx/workspace-data/";return path.startsWith(prefix)?join(data,path.slice(prefix.length)):join(root,path.replace("{collection}",collectionPolicy.names[0]));}
+
+/** 🧪️ Keeps semantic fixtures inside an actual isolated graph namespace. */
+async function ownedWorkspace(body:(value:ReturnType<typeof workspace>&{environment:Record<string,string|undefined>})=>Promise<void>):Promise<void>{return withBuildTestInvocationV1(async original=>{const value=workspace();try{await withNxGraphFixtureV1(value.root,original,async(data,environment)=>{await cp(value.data,data,{recursive:true});await body({...value,data,environment});});}finally{rmSync(value.root,{recursive:true,force:true});}});}
+
+test("each fixture scenario holds exactly when nothing graph-relevant changed",async()=>{
+ expect(fixture.schemaVersion).toBe(1);for(const scenario of fixture.scenarios)await ownedWorkspace(async({root,data,pid,startedAt,environment})=>{
       const originalMembership=(await nxGraphSourceMembershipV2(root)).digest;
-      expect(await writeNxGraphSeal(root, data, pid, startedAt,originalMembership), scenario.id).toBe(true);
+      expect(await writeNxGraphSeal(root, data, pid, startedAt,originalMembership,environment), scenario.id).toBe(true);
       const seal = JSON.parse(readFileSync(join(data, "semio-graph-seal.json"), "utf8")) as { directories: [string][] };
       expect(validate(seal), JSON.stringify(validate.errors)).toBe(true);
       const sourceFiles=fg.sync("**/*",{cwd:root,onlyFiles:true,dot:true,ignore:["**/.git/**","**/node_modules/**","dist/**",".nx/workspace-data/**","tickets/**"]}),sourceDirectories=new Set([""]);for(const file of sourceFiles.filter(file=>/^(?:package\.json|project\.json|📋️project\.json|Cargo\.toml|nx\.json|\.nxignore|\.gitignore)$/u.test(file.split("/").at(-1)!))){const parts=file.split("/");for(let i=1;i<parts.length;i++)sourceDirectories.add(parts.slice(0,i).join("/"));}const oracle=[...sourceDirectories].sort();
       expect(seal.directories.map(([path]) => path).sort()).toEqual(oracle);
       expect(await nxGraphSealHolds(root, data), `${scenario.id} before mutation`).toBe(true);
-      if (scenario.mutation.kind === "write") { mkdirSync(dirname(join(root, scenario.mutation.path.replace("{collection}",collectionPolicy.names[0]))), { recursive: true }); writeFileSync(join(root, scenario.mutation.path.replace("{collection}",collectionPolicy.names[0])), scenario.mutation.content); }
-      if(scenario.mutation.kind==="directory")mkdirSync(join(root,scenario.mutation.path),{recursive:true});
-      if(scenario.mutation.kind==="delete")rmSync(join(root,scenario.mutation.path));
-      if(scenario.mutation.kind==="rename")renameSync(join(root,scenario.mutation.path),join(root,scenario.mutation.destination));
+      if (scenario.mutation.kind === "write") { mkdirSync(dirname(mutationPath(root,data,scenario.mutation.path)), { recursive: true }); writeFileSync(mutationPath(root,data,scenario.mutation.path), scenario.mutation.content); }
+      if(scenario.mutation.kind==="directory")mkdirSync(mutationPath(root,data,scenario.mutation.path),{recursive:true});
+      if(scenario.mutation.kind==="delete")rmSync(mutationPath(root,data,scenario.mutation.path));
+      if(scenario.mutation.kind==="rename")renameSync(mutationPath(root,data,scenario.mutation.path),mutationPath(root,data,scenario.mutation.destination));
       expect(await nxGraphSealHolds(root, data), scenario.id).toBe(scenario.holds);
-      if((await nxGraphSourceMembershipV2(root)).digest!==originalMembership)expect(await writeNxGraphSeal(root,data,pid,startedAt,originalMembership)).toBe(false);
-    } finally { rmSync(root, { recursive: true, force: true }); }
-  }
-},30_000);
+      if((await nxGraphSourceMembershipV2(root)).digest!==originalMembership)expect(await writeNxGraphSeal(root,data,pid,startedAt,originalMembership,environment)).toBe(false);
+ });
+},100000);
 
-test("a seal is refused for another process's receipts or a graph older than the invocation", async () => {
-  const { root, data, pid, startedAt } = workspace();
-  try {
-    expect(await writeNxGraphSeal(root, data, pid + 1, startedAt,(await nxGraphSourceMembershipV2(root)).digest)).toBe(false);
-    expect(await writeNxGraphSeal(root, data, pid, Date.now() + 60_000,(await nxGraphSourceMembershipV2(root)).digest)).toBe(false);
+test("a seal is refused for another process's receipts or a graph older than the invocation",async()=>ownedWorkspace(async({root,data,pid,startedAt,environment})=>{
+    expect(await writeNxGraphSeal(root, data, pid + 1, startedAt,(await nxGraphSourceMembershipV2(root)).digest,environment)).toBe(false);
+    expect(await writeNxGraphSeal(root, data, pid, Date.now() + 60_000,(await nxGraphSourceMembershipV2(root)).digest,environment)).toBe(false);
     expect(await nxGraphSealHolds(root, data)).toBe(false);
-    expect(await writeNxGraphSeal(root, data, pid, startedAt,(await nxGraphSourceMembershipV2(root)).digest)).toBe(true);
+    expect(await writeNxGraphSeal(root, data, pid, startedAt,(await nxGraphSourceMembershipV2(root)).digest,environment)).toBe(true);
     expect(await nxGraphSealHolds(root, data)).toBe(true);
-  } finally { rmSync(root, { recursive: true, force: true }); }
-});
+}),100000);
 
-test("verified immutable whole graph authorizers preserve the portable custody corpus",async()=>{
+test("verified immutable whole graph readers preserve the portable custody corpus and refuse a foreign owner",async()=>{
  const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity||!/^[a-f0-9]{64}$/u.test(identity))throw Error("Actual incoming immutable SDK identity required");
  const sdk=createRequire(join(process.cwd(),".cache/b/t/m/nx",identity,"package.json")),frozen=await sdk("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();expect(frozen.toolingIdentity).toBe(identity);
- for(const scenario of fixture.scenarios){const {root,data,pid,startedAt}=workspace();try{
+ for(const scenario of fixture.scenarios)await ownedWorkspace(async({root,data,pid,startedAt,environment})=>{
   const membership=await frozen.authorizers.nxGraphSourceMembershipV2(root);expect(membership).toEqual(await nxGraphSourceMembershipV2(root));
-  expect(await frozen.authorizers.writeNxGraphSeal(root,data,pid,startedAt,membership.digest),scenario.id).toBe(true);expect(validate(JSON.parse(readFileSync(join(data,"semio-graph-seal.json"),"utf8"))),JSON.stringify(validate.errors)).toBe(true);
-  const mutation=scenario.mutation;if(mutation.kind==="write"){const path=join(root,mutation.path.replace("{collection}",collectionPolicy.names[0]));mkdirSync(dirname(path),{recursive:true});writeFileSync(path,mutation.content);}else if(mutation.kind==="directory")mkdirSync(join(root,mutation.path),{recursive:true});else if(mutation.kind==="delete")rmSync(join(root,mutation.path));else if(mutation.kind==="rename")renameSync(join(root,mutation.path),join(root,mutation.destination));
+  await expect(frozen.authorizers.writeNxGraphSeal(root,data,pid,startedAt,membership.digest,environment)).rejects.toThrow("Original live native graph namespace");expect(await writeNxGraphSeal(root,data,pid,startedAt,membership.digest,environment),scenario.id).toBe(true);expect(validate(JSON.parse(readFileSync(join(data,"semio-graph-seal.json"),"utf8"))),JSON.stringify(validate.errors)).toBe(true);
+  const mutation=scenario.mutation;if(mutation.kind==="write"){const path=mutationPath(root,data,mutation.path);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,mutation.content);}else if(mutation.kind==="directory")mkdirSync(mutationPath(root,data,mutation.path),{recursive:true});else if(mutation.kind==="delete")rmSync(mutationPath(root,data,mutation.path));else if(mutation.kind==="rename")renameSync(mutationPath(root,data,mutation.path),mutationPath(root,data,mutation.destination));
   const actual=await frozen.authorizers.nxGraphSealHolds(root,data);expect(actual,scenario.id).toBe(scenario.holds);expect(actual).toBe(await nxGraphSealHolds(root,data));
- }finally{rmSync(root,{recursive:true,force:true});}}
- console.log("[DEBUG] Actual immutable SDK whole graph publisher agrees with Ajv, read-only Git and all portable source-custody scenarios");
-},30_000);
+ });
+ console.log("[DEBUG] Actual Source-owned seal and immutable SDK readers agree with Ajv, Git and the portable custody corpus; foreign frozen writer refuses");
+},100000);

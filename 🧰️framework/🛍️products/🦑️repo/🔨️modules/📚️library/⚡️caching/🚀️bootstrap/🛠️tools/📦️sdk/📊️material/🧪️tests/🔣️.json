@@ -1,0 +1,52 @@
+{
+  "rows": [
+    {
+      "path": "node_modules/parser/a.wasm",
+      "bytes": 7,
+      "allocated": 4096
+    },
+    {
+      "path": "node_modules/parser/src/parser.c",
+      "bytes": 13,
+      "allocated": 4096
+    },
+    {
+      "path": "node_modules/@nx/native/index.node",
+      "bytes": 17,
+      "allocated": 8192
+    },
+    {
+      "path": "node_modules/parser/.git/config",
+      "bytes": 5,
+      "allocated": 4096
+    }
+  ],
+  "packages": [
+    {
+      "name": "@nx/native",
+      "files": 1,
+      "logicalBytes": 17,
+      "allocatedBytes": 8192
+    },
+    {
+      "name": "parser",
+      "files": 3,
+      "logicalBytes": 25,
+      "allocatedBytes": 12288
+    }
+  ],
+  "parsers": [
+    {
+      "language": "rust",
+      "source": "pub fn original() -> u8 { 7 }",
+      "root": "source_file",
+      "first": "function_item"
+    },
+    {
+      "language": "json",
+      "source": "{\"original\":7}",
+      "root": "document",
+      "first": "object"
+    }
+  ]
+}

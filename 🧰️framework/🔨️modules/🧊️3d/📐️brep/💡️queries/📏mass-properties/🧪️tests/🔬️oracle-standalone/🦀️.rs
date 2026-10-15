@@ -1,7 +1,7 @@
 #[cfg(test)]
     #[test]
     fn watertightness_of_box_is_watertight() {
-        use semio_framework_3d_brep_operations::primitives::make_box;
+        use semio_framework_3d_brep_construction::primitives::make_box;
         use semio_framework_3d_brep_representation::topology::history::OpRecorder;
         let mut body = Body::new();
         let mut rec = OpRecorder::new();

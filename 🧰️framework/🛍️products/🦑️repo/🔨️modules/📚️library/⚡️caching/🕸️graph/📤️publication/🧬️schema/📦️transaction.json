@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/Journal",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "journalMaximumBytes": 16384,
+        "maximumFiles": 3,
+        "maximumFileBytes": 536870912
+      }
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "pattern": "^[0-9]+:[0-9]+$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 536870912
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Journal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "generation",
+        "phase",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16}$"
+        },
+        "phase": {
+          "enum": [
+            "preparing",
+            "publishing",
+            "committed"
+          ]
+        },
+        "files": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "prior",
+              "next"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "project-graph.json",
+                  "source-maps.json",
+                  "file-map.json"
+                ]
+              },
+              "prior": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/definitions/Identity"
+                  }
+                ]
+              },
+              "next": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "identity",
+                  "bytes",
+                  "sha256"
+                ],
+                "properties": {
+                  "identity": {
+                    "anyOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[0-9]+:[0-9]+$"
+                      }
+                    ]
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 536870912
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

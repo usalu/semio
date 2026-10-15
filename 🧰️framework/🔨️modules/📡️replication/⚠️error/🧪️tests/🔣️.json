@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "errorOwner": "semio-framework-replication-error",
+  "cryptoOwner": "semio-framework-replication-crypto",
+  "errorBoundary": {
+    "maxSourceBytes": 65536,
+    "maxSourceFiles": 12,
+    "maxActiveLines": 1000
+  },
+  "cryptoBoundary": {
+    "maxSourceBytes": 16384,
+    "maxSourceFiles": 4,
+    "maxActiveLines": 250
+  },
+  "cases": [
+    {
+      "kind": "chain",
+      "first": 7,
+      "second": 0,
+      "text": "",
+      "message": "chain mismatch at commit 7"
+    },
+    {
+      "kind": "tail",
+      "first": 9,
+      "second": 0,
+      "text": "",
+      "message": "torn tail at offset 9"
+    },
+    {
+      "kind": "critical",
+      "first": 254,
+      "second": 0,
+      "text": "",
+      "message": "unknown critical record kind 0xfe"
+    },
+    {
+      "kind": "dictionary",
+      "first": 11,
+      "second": 0,
+      "text": "",
+      "message": "dictionary index out of range: 11"
+    },
+    {
+      "kind": "order",
+      "first": 4,
+      "second": 2,
+      "text": "",
+      "message": "dictionary out of order: expected base_count 4, got 2"
+    },
+    {
+      "kind": "verifier",
+      "first": 0,
+      "second": 0,
+      "text": "",
+      "message": "signature verification required but no verifier supplied"
+    },
+    {
+      "kind": "signature",
+      "first": 13,
+      "second": 0,
+      "text": "",
+      "message": "signature invalid for commit 13"
+    },
+    {
+      "kind": "frame",
+      "first": 17,
+      "second": 0,
+      "text": "",
+      "message": "frame back_len mismatch at offset 17"
+    },
+    {
+      "kind": "limit",
+      "first": 0,
+      "second": 0,
+      "text": "frames",
+      "message": "limit exceeded: frames"
+    },
+    {
+      "kind": "malformed",
+      "first": 19,
+      "second": 0,
+      "text": "ä\u0000🦀",
+      "message": "malformed wire at offset 19: ä\u0000🦀"
+    },
+    {
+      "kind": "io",
+      "first": 0,
+      "second": 0,
+      "text": "ä\u0000🦀",
+      "message": "io error: ä\u0000🦀"
+    }
+  ],
+  "crypto": {
+    "scheme": "fixture/identity",
+    "key": "caller-owned-key",
+    "message": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "signature": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+  }
+}

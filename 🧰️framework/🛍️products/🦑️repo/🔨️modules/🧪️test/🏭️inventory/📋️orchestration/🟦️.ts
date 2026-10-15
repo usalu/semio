@@ -2,7 +2,9 @@ import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️proce
 import { discoverMutationInventoryProvidersV1, selectMutationInventoryProviderV1, type MutationInventoryProviderV1 } from "../🔌️providers/🟦️.ts";
 import { matchesTarget, readSelectors } from "../../🔍️discovery/🎛️selection/🟦️.ts";
 import { type MutationManifest, type RuntimeMutationInventory, compareInventories, loadOracleRegistry, surfaceCoordinate, writeRuntimeInventory } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import {captureOwnedCommandResultV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptInvocationEnvironment} from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync } from "node:fs";
 import { join, relative, sep } from "node:path";
@@ -39,7 +41,7 @@ export function mutationBridgeFor(repoRoot: string, owner: string, manifest: Mut
  * no trace anywhere.
  */
 export class InventoryScript extends Script {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const registry = loadOracleRegistry(this.repoRoot);
     const providers = discoverMutationInventoryProvidersV1(this.repoRoot);
     const selectors = readSelectors(segments);
@@ -48,6 +50,7 @@ export class InventoryScript extends Script {
       console.error("[inventory] no mutation manifest matches the selection — declare one in the owner's 🔮️oracles collection");
       {process.exitCode=1;return;}
     }
+    const control=scriptCompilerAdmissionControlV1(this.invocation,"mutation:inventory",testLevelBudgetMs("long"));
     let failed = 0;
     for (const { contribution, manifest } of manifests) {
       const coordinate = surfaceCoordinate(manifest);
@@ -57,11 +60,7 @@ export class InventoryScript extends Script {
         failed += 1;
         continue;
       }
-      const probe = runProbe(bridge.command, bridge.args, {
-        cwd: this.repoRoot,
-        budgetMs: testLevelBudgetMs("long"),
-        env: { ...process.env, SEMIO_MUTATION_ARTIFACT: manifest.artifact, SEMIO_MUTATION_STANDARD: manifest.standard, SEMIO_MUTATION_SUBSET: manifest.subset, SEMIO_MUTATION_SURFACE: manifest.surface ?? "" },
-      });
+      const probe=await captureOwnedCommandResultV1(bridge.command,bridge.args,this.repoRoot,{control,output:{maximumBytes:16777216,maximumLines:65536},env:scriptInvocationEnvironment(this.invocation,{...process.env,SEMIO_MUTATION_ARTIFACT:manifest.artifact,SEMIO_MUTATION_STANDARD:manifest.standard,SEMIO_MUTATION_SUBSET:manifest.subset,SEMIO_MUTATION_SURFACE:manifest.surface??""})});
       if ((probe.status ?? 1) !== 0) {
         console.error(`[inventory] ${coordinate}: bridge exited ${probe.status} — ${probe.stderr.trim().split("\n").slice(-3).join(" | ")}`);
         failed += 1;

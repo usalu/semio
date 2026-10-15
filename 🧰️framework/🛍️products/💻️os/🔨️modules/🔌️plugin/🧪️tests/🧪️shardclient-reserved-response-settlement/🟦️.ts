@@ -2743,9 +2743,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       // 🩺️ Every browser-side spawner must use THAT url. A private ASCII transliteration
       // (`/plugin-modules/_shard/…`) is answered by Vite's SPA fallback with `text/html`, which a
       // module Worker rejects as a message-less `error` event — the 2026-09-05 four-dead-shard boot.
-      const { readFileSync } = await import("node:fs");
+      const { readModuleTreeSource } = await import("../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts");
       for (const spawner of ["../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx", "../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts"]) {
-        const source = readFileSync(new URL(spawner, testSource.url), "utf8");
+        const source = readModuleTreeSource(new URL(spawner, testSource.url));
         expect(source, spawner).not.toContain("/plugin-modules/_shard/");
         if (source.includes("new Worker(")) expect(source, spawner).toContain("SHARD_WORKER_URL");
       }

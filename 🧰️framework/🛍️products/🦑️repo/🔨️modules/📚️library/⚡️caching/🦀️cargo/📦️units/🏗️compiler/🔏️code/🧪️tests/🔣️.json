@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": {
+    "version": 1,
+    "mode": "release",
+    "entry": "compiler.ts",
+    "sources": [
+      {
+        "path": "compiler.ts",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    ]
+  },
+  "compiler": {
+    "name": "Bun",
+    "version": "1.3.14",
+    "revision": "test",
+    "target": "bun",
+    "format": "esm",
+    "minify": true
+  },
+  "invalidations": [
+    "sourceDigest",
+    "sourceSha256",
+    "parent-entry",
+    "duplicate-source",
+    "unknown-property"
+  ]
+}

@@ -3,8 +3,15 @@ import {join,resolve,relative,dirname,isAbsolute} from "node:path";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
 import {createRequire} from "node:module";
-import {conformsOwnerContractV1 as conforms} from "./🏗️build/📤️arguments/🟨️.mjs";
-const publicationSchema=JSON.parse(readFileSync(new URL("./🏗️build/🧬️schema/📥️pin.json",import.meta.url),"utf8"));
+import {conformsOwnerContractV1 as conforms,ownerArgumentsSourceIdentityV1} from "./🏗️build/📤️arguments/🟨️.mjs";
+const publicationSchemaSource=readFileSync(new URL("./🏗️build/🧬️schema/📥️pin.json",import.meta.url)),publicationSchema=JSON.parse(publicationSchemaSource.toString("utf8"));
+const engineSchemaSource=readFileSync(new URL("./🏗️build/🧬️schema/📥️engine.json",import.meta.url)),engineSchema=JSON.parse(engineSchemaSource.toString("utf8")),engineNamedInput=engineSchema.definitions.NamedInput.const;
+const privateTaskSources=["./🔌️nx-plugin/📤️arguments/🟨️.mjs","./🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json","./🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json","./🔌️nx-plugin/📤️arguments/🧬️schema/📥️source.json","./🏗️build/📥️caller/📤️orchestration/🟨️.mjs","./🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json","./🏗️build/🧬️schema/📥️caller.json"],privateTaskBytes=privateTaskSources.map(path=>readFileSync(new URL(path,import.meta.url)));
+const dependencySourceIdentity=(captured=false)=>createHash("sha256").update(JSON.stringify([createHash("sha256").update(readFileSync(new URL(import.meta.url))).digest("hex"),createHash("sha256").update(captured?publicationSchemaSource:readFileSync(new URL("./🏗️build/🧬️schema/📥️pin.json",import.meta.url))).digest("hex"),createHash("sha256").update(captured?engineSchemaSource:readFileSync(new URL("./🏗️build/🧬️schema/📥️engine.json",import.meta.url))).digest("hex"),ownerArgumentsSourceIdentityV1(),...privateTaskSources.map((path,index)=>createHash("sha256").update(captured?privateTaskBytes[index]:readFileSync(new URL(path,import.meta.url))).digest("hex"))])).digest("hex"),loadedDependencySourceIdentity=dependencySourceIdentity(true);
+
+/** 🔏️ Attests the exact evaluated private projection and its still-current imported contract owner. */
+export function nxBuildDependencyImplementationV1(){if(dependencySourceIdentity()!==loadedDependencySourceIdentity)throw Error("Loaded private Nx dependency Source changed");return loadedDependencySourceIdentity;}
+
 
 /** 🔎️ Classifies exact literal module and URL references as portable source facts. */
 export function nxBuildEngineReferencesV1(source){
@@ -47,6 +54,7 @@ export function nxBuildEngineInputsV1(){
 
 /** 📌️ Reads the exact portable graph pinned by this owned build invocation. */
 function graphPublication(workspaceRoot){
+ nxBuildDependencyImplementationV1();
  const publication={path:process.env.SEMIO_BUILD_GRAPH_PATH,digest:process.env.SEMIO_BUILD_GRAPH_DIGEST};if(!conforms(publicationSchema,publication)||!isAbsolute(publication.path))throw Error("Original immutable build graph path and digest required");
  const source=readFileSync(publication.path,"utf8"),digest=createHash("sha256").update(source).digest("hex");
  if(digest!==publication.digest)throw Error("Pinned build graph source changed");
@@ -57,14 +65,15 @@ function graphPublication(workspaceRoot){
 /** 🔌️ Projects only portable process execution onto Nx's internal executor contract. */
 export function projectBuildTargetForNxV1(target){
  const {execution,configurations,...properties}=target,{kind,ownerArguments,...options}=execution;
- const result={...properties,executor:kind==="noop"?"nx:noop":ownerArguments?"@semio-tech/repo-lib:owner-command":"@semio-tech/repo-lib:command",...(kind==="noop"?{}:{options,inputs:[...properties.inputs??["default","^default"],...nxBuildEngineInputsV1()]})};
+ const result={...properties,executor:kind==="noop"?"nx:noop":ownerArguments?"@semio-tech/repo-lib:owner-command":"@semio-tech/repo-lib:command",...(kind==="noop"?{}:{options,inputs:[...properties.inputs??["default","^default"],engineNamedInput]})};
  if(configurations)result.configurations=Object.fromEntries(Object.entries(configurations).map(([name,configuration])=>{const {execution,...properties}=configuration;return[name,{...properties,...execution,...(options.env||execution?.env?{env:{...options.env,...execution?.env}}:{})}];}));
  return result;
 }
 
 /** 📽️ Projects one portable publication without discovering implementation-specific projects. */
 export function projectBuildGraphForNxV1(graph){
- const projects=Object.fromEntries(Object.entries(graph.projects).map(([name,project])=>[name,{...project,namedInputs:{...graph.namedInputs,...project.namedInputs},targets:Object.fromEntries(Object.entries(project.targets).map(([name,target])=>[name,projectBuildTargetForNxV1(target)]))}]));
+ if(Object.hasOwn(graph.namedInputs??{},engineNamedInput)||Object.values(graph.projects).some(project=>Object.hasOwn(project.namedInputs??{},engineNamedInput)))throw Error("Private engine named input is reserved");
+ const engine=nxBuildEngineInputsV1(),projects=Object.fromEntries(Object.entries(graph.projects).map(([name,project])=>[name,{...project,namedInputs:{...graph.namedInputs,...project.namedInputs,[engineNamedInput]:engine},targets:Object.fromEntries(Object.entries(project.targets).map(([name,target])=>[name,projectBuildTargetForNxV1(target)]))}]));
  return {projects,externalNodes:graph.externalNodes??{}};
 }
 
@@ -74,14 +83,26 @@ async function nodes(files,_options,context){
  return [[files.includes("📋️project.json")?"📋️project.json":files[0]??"📋️project.json",projectBuildGraphForNxV1(graph)]];
 }
 
+/** 🪢️ Retains file-bound edges only where Nx owns their actual file-map provenance. */
+export function projectBuildDependenciesForNxV1(graph,context){
+ const owners=new Map(),nonProject=new Set((context.fileMap?.nonProjectFiles??[]).map(row=>row.file));
+ for(const[name,files]of Object.entries(context.fileMap?.projectFileMap??{}))for(const{file}of files){let names=owners.get(file);if(!names)owners.set(file,names=new Set());names.add(name);}
+ return graph.dependencies.map(edge=>{
+  if(!Object.hasOwn(graph.projects,edge.source)&&!Object.hasOwn(graph.externalNodes??{},edge.source)||!Object.hasOwn(graph.projects,edge.target)&&!Object.hasOwn(graph.externalNodes??{},edge.target))throw Error("Unknown portable build dependency owner");
+  if(!Object.hasOwn(graph.projects,edge.source))return edge;
+  if(edge.sourceFile){const names=owners.get(edge.sourceFile);if(names&&[...names].some(name=>name!==edge.source))throw Error("Private Nx dependency source file belongs to another project");if(names?.has(edge.source)||nonProject.has(edge.sourceFile))return edge;}
+  const {sourceFile,...dependency}=edge;return {...dependency,type:"implicit"};
+ });
+}
+
 /** 🪢️ Projects portable dependencies without reconstructing a second graph. */
-export function createDependencies(_options,context){return graphPublication(context.workspaceRoot).graph.dependencies;}
+export function createDependencies(_options,context){const identity=nxBuildDependencyImplementationV1();if(process.env.SEMIO_NX_IMPLEMENTATION_IDENTITY!==identity)throw Error("Original private Nx dependency implementation differs");const result=projectBuildDependenciesForNxV1(graphPublication(context.workspaceRoot).graph,context);nxBuildDependencyImplementationV1();return result;}
 
 /** 🧬️ Binds dependency reuse to the exact published portable project and edge authority. */
 export function dependencyResolutionAuthority(workspaceRoot,projects){
  const {graph,digest}=graphPublication(workspaceRoot),owners=Object.entries(projects).map(([name,project])=>[name,project.root]).sort(([a],[b])=>a.localeCompare(b));
  for(const[name,root]of owners)if(graph.projects[name]&&graph.projects[name].root!==root)throw Error(`Build project authority differs: ${name}`);
- return createHash("sha256").update(JSON.stringify([resolve(workspaceRoot),digest,owners])).digest("hex");
+ return createHash("sha256").update(JSON.stringify([resolve(workspaceRoot),digest,owners,nxBuildDependencyImplementationV1()])).digest("hex");
 }
 
 export default {name:"@repo/emoji-project-json",createNodesV2:["📋️project.json",nodes],createDependencies};

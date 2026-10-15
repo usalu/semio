@@ -11,7 +11,6 @@ import { generation3dWidgetCreationSelfTests } from "../../🏅️standards/🔖
 import { resolve } from "node:path";
 import {configuredExactCargoLawPolicyV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { readCargoTestPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { testGeneration3dIoInputContracts } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts";
 import { testGeneration3dIoAuthorityFixture } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts";
 import { assertGeneration3dSemanticWire } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧬️semantic-wire/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
@@ -59,16 +58,8 @@ class OwnedVerifyScript extends BundleScript {
       return;
     }
 if (segments[0] === "generation3d-document-io") {
-      const testRoot = join(this.repoRoot, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io");
-      const { testGeneration3dDocumentIoSurface, verifyPreparedGltfExportOracle } = await import(`${testRoot}/🧪️tests/🗿️artifact-surface/🟦️.ts`);
-      testGeneration3dDocumentIoSurface();
-      const preparedOracle = process.env.SEMIO_TEST_ARTIFACT_DIR && join(process.env.SEMIO_TEST_ARTIFACT_DIR, "prepared-rich.gltf");
-      if (preparedOracle && existsSync(preparedOracle)) await verifyPreparedGltfExportOracle(preparedOracle);
-      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧪️tests/🗿️artifact-surface/🟦️.ts`], { cwd: this.repoRoot });
-      if (segments[1] === "native") {
-        await runArtifactRustTests("semio-s-artifact-procedural-generation3d", this.repoRoot, ["quick", "--offline", "--test", "io-round-trip", "artifact_surface"], this.invocation.control);
-        await runArtifactRustTests("semio-s-artifact-procedural-generation3d", this.repoRoot, ["quick", "--offline", "--test", "editor-routes", "document_io"], this.invocation.control);
-      }
+      await runArtifactRustTests("semio-s-artifact-procedural-generation3d", this.repoRoot, ["quick", "--offline", "--test", "io-round-trip", "artifact_surface"], this.invocation.control);
+      if (segments[1] === "native") await runArtifactRustTests("semio-s-artifact-procedural-generation3d", this.repoRoot, ["quick", "--offline", "--test", "editor-routes", "document_io"], this.invocation.control);
       return;
     }
 if (segments[0] === "generation3d-preview-window-transient") {
@@ -92,7 +83,6 @@ const familyPackages = (Bun.TOML.parse(readFileSync(join(familyRoot, "Cargo.toml
 
 if (process.argv[2] === "canonical-io") {
   console.log(`generation3d-io-authority checks=${testGeneration3dIoAuthorityFixture()}`);
-  console.log(`generation3d-io-input-contracts checks=${testGeneration3dIoInputContracts()}`);
   await runArtifactRustTests("semio-s-artifact-procedural-generation3d", resolve(import.meta.dir, "../../../../../../.."), ["quick", "--locked", "--test", "io-round-trip"], this.invocation.control);
 } else await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-procedural-generation3d", { packages: familyPackages, ...{ snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],
   snapshotSqliteTestBudgetMs: 120000,

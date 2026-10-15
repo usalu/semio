@@ -1,5 +1,6 @@
 //! 🔣️ Layout export JSON: the bounded JSON validation and typed JSON writing cursors of the layout export job.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 extern crate semio_framework_os_kernel as dsl;
@@ -11,8 +12,9 @@ use semio_s_artifact_layout_layout_model::{Frame, GridSettings, LayoutBounds, Pa
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, RevisionId};
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, Operation, RetainedJobPublication, StepContext};
+use semio_framework_job::{Generation, InteractiveStage, RevisionId};
+use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
 use semio_framework_value_derive::{FromValue, ToValue};

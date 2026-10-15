@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "split-utf8-no-final-newline",
+      "stdout": "ä😀\r\nlast",
+      "stderr": "Warnung\n",
+      "status": 0
+    },
+    {
+      "name": "nonzero-with-separate-json",
+      "stdout": "{\"ok\":false}\n",
+      "stderr": "authored refusal\n",
+      "status": 7
+    },
+    {
+      "name": "empty-success",
+      "stdout": "",
+      "stderr": "",
+      "status": 0
+    }
+  ],
+  "refusals": [
+    {
+      "name": "byte-limit",
+      "source": "process.stdout.write(\"é\")",
+      "bytes": 1,
+      "lines": 2
+    },
+    {
+      "name": "line-limit",
+      "source": "process.stdout.write(\"a\\nb\")",
+      "bytes": 9,
+      "lines": 1
+    },
+    {
+      "name": "invalid-utf8",
+      "source": "process.stdout.write(Buffer.from([255]))",
+      "bytes": 9,
+      "lines": 2
+    }
+  ],
+  "nativeStatuses": [
+    0,
+    255,
+    256,
+    2147483647,
+    -2147483648,
+    4294967295
+  ],
+  "invalidNativeStatuses": [
+    -2147483649,
+    4294967296,
+    0.5
+  ],
+  "delayedOriginal": {
+    "milliseconds": 20,
+    "receiveDelayMilliseconds": 40
+  }
+}

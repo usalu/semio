@@ -1,4 +1,5 @@
-import {captureOwnedCommandV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import preparationProgressPolicy from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🔣️policy.json" with {type:"json"};
+import {captureOwnedCommandResultV1,writeOwnedCommandOutputV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "./🛠️preparation/📦️storage/🟦️.ts";
 import {createHash} from "node:crypto";
@@ -384,5 +385,6 @@ export function cargoWorkspacePreparationInvocationV1(storage:CargoPreparationSt
 /** 🛠️ Awaits the selected native workspace child under unchanged original control. */
 export async function prepareCargoWorkspaceInvocation(storage:CargoPreparationStorageV1,root:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl):Promise<void>{
  const request=cargoWorkspacePreparationInvocationV1(storage,root,args,cwd,environment);if(!request)return;
- const output=await captureOwnedCommandV1(request.command,request.args,request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});if(output)process.stderr.write(output);
+ const result=await captureOwnedCommandResultV1(request.command,request.args,request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}}),tail=preparationProgressPolicy.diagnosticCharacters;if(result.stdout||result.stderr)await writeOwnedCommandOutputV1(process.stderr,"[DEBUG] Selected Cargo preparation terminal "+JSON.stringify({status:result.status,signal:result.signal,stderr:result.stderr.slice(-tail),stdout:result.stdout.slice(-tail)})+"\n",control);
+ if(result.status!==0||result.signal!==null)throw Error("Native Cargo owner preparation failed status="+result.status+" signal="+result.signal+": "+(result.stderr||result.stdout).slice(-2048));
 }

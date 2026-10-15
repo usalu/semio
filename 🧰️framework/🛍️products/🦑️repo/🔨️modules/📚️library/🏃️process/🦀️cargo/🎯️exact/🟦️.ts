@@ -1,3 +1,4 @@
+import{withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {buildModePolicy,readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import {join} from "node:path";
 import {runOwnedCommand,captureOwnedProcess,type OwnedCommandOptions,type OwnedProcessCaptureOptions,type OwnedProcessCaptureResult} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -71,7 +72,7 @@ export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLa
       if(command!=="cargo"||capture.invocation!==options.invocation)throw Error("Original exact Cargo dependency operation required");
       const selector=args.indexOf("--manifest-path"),manifest=args[selector+1];
       if(selector<0||!manifest||!Object.values(manifestPaths).includes(manifest))throw Error("Original exact Cargo dependency manifest required");
-      return withRepositoryCargoInputsV1({workspace:root,manifest,args,network,control:phaseControl,storage:store.storage,environment},body);
+      return withRepositoryCargoInputsV1({workspace:root,cwd:root,manifest,args,network,control:phaseControl,storage:store.storage,environment},()=>withCompilerWorkspaceWriteV1(store.storage,join(root,".cache/b/l/m/data"),phaseControl,body));
     },
     probe:(command,args,capture)=>host.capture(command,args,capture),
   };

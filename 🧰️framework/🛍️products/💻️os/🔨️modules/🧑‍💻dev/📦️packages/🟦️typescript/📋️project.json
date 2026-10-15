@@ -107,7 +107,7 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick --testNamePattern='ticket-owned browser host staging'"
+        "command": "bun ./📜️script.ts test quick \"--testNamePattern=ticket-owned browser host staging\""
       },
       "inputs": [
         "default",

@@ -216,8 +216,8 @@ pub fn cad_pane_model_slot(pane: CadPaneId) -> &'static str {
 pub const CAD_DRAWINGS_SLOT: &str = "drawings";
 /// 🧬️ The bounded projection of this snapshot's composed child handles, as both surfaces hand it to
 /// the framework (`ArtifactEditor::child_restore_projection` / `ArtifactViewer::child_restore_projection`).
-pub fn cad_child_restore_projection(snapshot: &CadSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
-    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("cad child projection failed: {error}")))
+pub fn cad_child_restore_projection(snapshot: &CadSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("cad child projection failed: {error}")))
 }
 /// 🧱️ One pane's objects in a working scene.
 pub fn cad_scene_pane_objects(scene: &CadWorkingScene, pane: CadPaneId) -> &[crate::geometry::CadObject] {

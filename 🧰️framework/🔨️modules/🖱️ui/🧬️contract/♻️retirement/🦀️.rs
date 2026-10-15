@@ -107,8 +107,7 @@ impl UiValueRetirement {
             return Ok(UiValueRetirementStep { complete: self.root.is_none(), ..UiValueRetirementStep::progress(usize::from(self.root.is_none()), 0) });
         }
         let bytes = if let UiValue::Text(text) = &mut *self.value {
-            let bytes = text.len().min(maximum_bytes);
-            text.len -= bytes as u16;
+            let bytes = text.retire_bytes(maximum_bytes);
             bytes
         } else {
             0
@@ -238,8 +237,7 @@ impl UiValueArena {
             UiPageValue::List(value) => value,
             UiPageValue::Map(key, value) => {
                 if !key.is_empty() {
-                    let bytes = key.len().min(maximum_bytes);
-                    key.len -= bytes as u16;
+                    let bytes = key.retire_bytes(maximum_bytes);
                     return Ok(UiValueRetirementStep::progress(0, bytes));
                 }
                 value
@@ -247,8 +245,7 @@ impl UiValueArena {
         };
         if let UiValue::Text(text) = value {
             if !text.is_empty() {
-                let bytes = text.len().min(maximum_bytes);
-                text.len -= bytes as u16;
+                let bytes = text.retire_bytes(maximum_bytes);
                 return Ok(UiValueRetirementStep::progress(0, bytes));
             }
         }

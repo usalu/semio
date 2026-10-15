@@ -4216,13 +4216,12 @@ export function runMicroCommit(root: string, segments: string[]): void {
 
   const level = loadLevel(root, contributor, levelSegments);
   clearStaleTemplatesBeforePrepare(root);
-  const staged = stageMicroCommitChanges(root);
-  if (!staged.ok) {
-    console.error(staged.out || "git add -A failed");
+  const stagedPaths = listCachedPaths(root);
+  if (stagedPaths.length === 0) {
+    console.error("micro-commit: nothing is staged; stage the intended changes before prepare");
     process.exit(1);
   }
 
-  const stagedPaths = listCachedPaths(root);
   const diffBullets = readDiffBulletsInput(root, bulletsFile);
   if (diffBullets.length === 0) {
     for (const p of stagedPaths) console.error(p);

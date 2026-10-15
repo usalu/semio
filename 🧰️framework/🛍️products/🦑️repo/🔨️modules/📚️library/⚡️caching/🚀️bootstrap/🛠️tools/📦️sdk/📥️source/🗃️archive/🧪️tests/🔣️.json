@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "package/package.json",
+      "text": "{\"name\":\"archive-oracle\",\"version\":\"1.0.0\"}\n"
+    },
+    {
+      "path": "package/lib/main.js",
+      "text": "export const value=7;\n"
+    },
+    {
+      "path": "package/unicode.txt",
+      "text": "Grüße\u0000世界"
+    },
+    {
+      "path": "package/empty",
+      "text": ""
+    }
+  ],
+  "invalid": [
+    "checksum",
+    "traversal",
+    "absolute",
+    "link",
+    "sparse",
+    "duplicate",
+    "padding",
+    "truncated",
+    "missing-footer",
+    "foreign-prefix",
+    "unaligned-footer",
+    "case-collision",
+    "normalized-collision",
+    "case-ancestor"
+  ],
+  "extended": [
+    {
+      "path": "package/long-directory/long-directory/long-directory/long-directory/long-directory/long-directory/long-directory/long-directory/long-directory/file.js",
+      "text": "export const extended=1;\n"
+    }
+  ],
+  "metadata": [
+    {
+      "encoding": "pax",
+      "path": "package/long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-file.js",
+      "text": "export const pax=1;\n"
+    },
+    {
+      "encoding": "gnu",
+      "path": "package/long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-long-name-file.js",
+      "text": "export const gnu=1;\n"
+    }
+  ],
+  "refusedMetadata": [
+    "linkpath",
+    "GNU.sparse.map",
+    "SCHILY.xattr.user.unsafe"
+  ],
+  "limits": [
+    "compressed",
+    "inflated",
+    "file",
+    "entries",
+    "metadata",
+    "path"
+  ]
+}

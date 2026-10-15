@@ -15,6 +15,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import laws from "../🧫️fixtures/🖼️wgpu-raster-witness/🔣️.json";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
@@ -41,7 +42,7 @@ const fixture = JSON.parse(readFileSync(resolve(suiteRoot, laws.fixture), "utf8"
   readonly production: Record<string, string | readonly string[]>;
 };
 
-const source = (key: "drawSource" | "gpuSource" | "rendererSource" | "engineCanvasSource" | "rustLaw") => readFileSync(resolve(engineRoot, laws[key]), "utf8");
+const source = (key: "drawSource" | "gpuSource" | "rendererSource" | "engineCanvasSource" | "rustLaw") => readModuleTreeSource(resolve(engineRoot, laws[key]));
 const text = (key: keyof typeof fixture.production) => fixture.production[key] as string;
 
 describe("wgpu raster operation witness lifecycle", () => {

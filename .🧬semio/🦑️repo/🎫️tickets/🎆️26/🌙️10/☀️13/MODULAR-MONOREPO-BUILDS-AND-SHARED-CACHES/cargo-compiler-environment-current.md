@@ -1,0 +1,21 @@
+# Compiler Environment Flag Admission
+
+## Contract and Genuine RED
+
+Cargo documents whitespace-separated RUSTFLAGS/RUSTDOCFLAGS and unit-separator encoded alternatives, with additional build/target configuration environment sources: [Cargo environment reference](https://doc.rust-lang.org/cargo/reference/environment-variables.html). The compiler ingress previously preserved every caller value while only argv writer selectors were checked. The actual pre-change runtime law in an issued compiler store failed with missing expected rejection (`cargo-environment-runtime-red2.log`, terminal1). No external filesystem write was attempted or observed. The initial missing-module neutral RED is retained separately; an initial long-argument Bun test invocation crashed before the law and is not semantic evidence.
+
+The new schema-owned environment leaf decodes Rust Unicode whitespace or exact0x1f tokens with64KiB/value,512tokens/source and64flag sources. Every recognized source is checked independently, including shadowed values that a later projection could expose. The closed safe configuration/lint/codegen/thread/checksum set preserves byte-identical admitted values; output/dump/incremental/linker/response-file/unknown options refuse. Whitespace strings follow Cargo splitting without shell quote interpretation. RUSTFLAGS, RUSTDOCFLAGS, both encoded variants, CARGO_BUILD_*FLAGS and all CARGO_TARGET_*_*FLAGS pass the same receiver. Unrelated program arguments remain opaque.
+
+Production validates after authentic compiler reservation recheck in repositoryCompilerLaunchEnvironmentV1 and again in repository Cargo-input admission before registry custody/fetch or body. This second boundary rejects a caller's later environment mutation. Existing explicit generic compiler/wrapper values and argv run/test/bench tail semantics remain unchanged; arbitrary custom programs/build scripts are not an OS sandbox.
+
+## Terminal Evidence
+
+The22-case language-neutral corpus is GREEN1test/110assertions. Independent SQLite tokenizes the actual Unicode/encoded strings by codepoint and classifies writer selectors; Ajv validates the cases. Strict ES2022/noUncheckedIndexedAccess production, test and actual-runtime closure exits0 (`cargo-environment-types1.log`).
+
+Actual registered verifier runtime prototype69811 completed GREEN32.2s and release16476 GREEN15.5s. Both retain diagnostics2GiB, tools8/private sealed Rustup and Rust16 through children. All corpus writers refuse through the authentic issued projector. An encoded writer introduced after projection refuses before the dependency callback. Actual private Cargo/rustc consumes encoded cfg and emits original_environment; actual Cargo/rustdoc consumes admitted encoded flags and completes bounded documentation. Prior physical Source pre-read, compiler argv forwarding, preparation lifecycle and default raw compiler guard laws still run. Logs: cargo-environment-runtime-prototype1.log and cargo-environment-runtime-release1.log.
+
+Existing editor cargo-ingress prototype/release pairs include the new neutral law through their permanent caching script; registered aggregate prototype62953 and release73172 are terminal GREEN7tests/253assertions,1.8s/1.6s. The first aggregate honestly failed the prior Source mutation law; new environment cases passed. No new executable command or launcher ordering change is necessary. This closes the supported environment-flag receiver, not raw Cargo registry ingress, unknown retained trees, arbitrary configuration/custom-program writers or the perpetual whole-checkout maximum.
+
+## Source Reader Regression Repaired
+
+The first registered aggregate exposed a same-size controlled mid-read Source replacement that passed metadata identity checks on the actual fixed diagnostics filesystem. The existing mutation assertion remained unchanged. A schema-owned64KiB descriptor replay buffer now compares the captured bytes before returning, retaining no-follow ancestry, exact descriptor checks, pre-allocation file/byte admission and Original cancellation. The original RED6pass/1fail becomes GREEN7/253 in both registered modes. Strict reader/test closure exits0. This is bounded read consistency; later actual compiler-consumed byte authentication remains the separate owned Nx protocol.

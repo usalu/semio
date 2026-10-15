@@ -5,8 +5,7 @@
 //! default for exactly this crate.
 
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
-// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS — NOT the os-kernel
-// crate, `protocol` (`semio-framework-replication`) is a leaf crate with no edge back to os-kernel.
+// the canonical first-party Value owner at this boundary.
 // `UiValue` and everything that embeds it (`UiList`, `UiMap`, `ActionBinding`, `MenuRef`,
 // `UiIntent`) are the deliberate exception — see `UiValue`'s own docstring below.
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -15,245 +14,16 @@ use std::fmt;
 use std::mem::size_of;
 use std::sync::{LazyLock, Mutex};
 
-pub const UI_TEXT_MAX_BYTES: usize = 512;
-/// ✂️ Suffix [`UiText::clipped`] appends when a value exceeds [`UI_TEXT_MAX_BYTES`].
-pub const UI_TEXT_CLIP_MARK: &str = "…";
-pub const UI_FIXED_LIST_ITEMS: usize = 32;
-pub const UI_FIXED_BYTES: usize = 32 * 1_024;
-pub const UI_VALUE_PAGE_ITEMS: usize = 1;
-pub const UI_VALUE_MAX_ITEMS: usize = 256;
-/// 🪆️ Nesting levels one authored [`UiValue`] may carry, and therefore frames the retained comparison
-/// walks it with. A value's depth is a property of what an author writes, not of how many collections
-/// the arena admits — keeping the two apart is what lets the arena grow while
-/// [`UiComponentComparisonCursor`] stays inside its fixed byte envelope.
-pub const UI_VALUE_NESTING_DEPTH: usize = 256;
-/// 🔑️ Entries the widest authored action argument carries: the four-key maps every interactive panel row
-/// binds — `domainId`/`merge`/`method`/`targets` for an interaction pick, `entity`/`flag`/`ids`/`value`
-/// for a selection-flag row action.
-pub const UI_VALUE_ARGUMENT_ENTRIES: usize = 4;
-/// 🔘️ Inline row actions one interactive row authors beside its own activation binding — a visibility
-/// toggle and a lock toggle, each carrying one argument map plus the single-id list nested inside it.
-pub const UI_VALUE_ROW_ACTIONS: usize = 2;
-/// 🎟️ Arena collections one interactive row owns: its activation binding's argument map, plus a map and
-/// one nested id list for each inline row action.
-pub const UI_VALUE_ROW_COLLECTIONS: usize = 1 + 2 * UI_VALUE_ROW_ACTIONS;
-/// 📄️ Arena pages one interactive row owns: every argument map's entries, plus the single id each row
-/// action's nested list carries.
-pub const UI_VALUE_ROW_ITEMS: usize = (1 + UI_VALUE_ROW_ACTIONS) * UI_VALUE_ARGUMENT_ENTRIES + UI_VALUE_ROW_ACTIONS;
-/// 🧾️ Interactive rows one virtualised panel page materialises: exactly [`crate::UI_BUILT_CHILDREN_MAX`],
-/// one full built-children page, so the arena prices one whole viewport window of canonical rows and a
-/// window a builder is willing to materialise is a window the arena is willing to bind. There is no
-/// continuation row to reserve a slot for — a list longer than the window is windowed with
-/// [`crate::TreeWindow`], not truncated. Every section of a panel body, and every row nested under a row,
-/// draws on this same page, so a four-section outliner shares one window between them.
-///
-/// Measured, not assumed: this arena's whole backing is charged against the resident authority's
-/// aggregate ceiling (see [`UI_VALUE_LIVE_PAGES`]), and at [`UI_VALUE_ROW_ITEMS`] pages of roughly a
-/// kilobyte each this page claims on the order of 1.9 MiB — affordable against an aggregate priced as
-/// `crate::UI_RESIDENT_SLOTS * crate::UI_RESIDENT_DOCUMENT_BYTES`, and bounded in practice because
-/// [`ui_value_headroom`] shortens a window rather than faulting it.
-pub const UI_VALUE_PAGE_ROWS: usize = crate::UI_BUILT_CHILDREN_MAX;
-/// 🪟️ Panel pages the arena admits at once — **one**, and deliberately so. This arena's whole backing is
-/// charged against the resident authority's aggregate ceiling (`crate::UI_RESIDENT_AGGREGATE_BYTES`,
-/// priced as `crate::UI_RESIDENT_SLOTS * crate::UI_RESIDENT_DOCUMENT_BYTES` — the real per-document cost
-/// across the whole slot ledger, not a multiple of the per-surface ceiling — and whose fixture declares
-/// `staticCountsAgainstAggregate`), so every page of headroom reserved here is payload the live surfaces
-/// cannot have. A second panel assembling beside the first therefore does not get a page
-/// of its own: it reads [`ui_value_headroom`] and pages against what is left, which is what makes a
-/// virtualised author total rather than fatal. A memoized page costs nothing on top —
-/// `credited_clone` aliases the very collections the build already admitted, so a retained tree and its
-/// live original share one page's credit.
-pub const UI_VALUE_LIVE_PAGES: usize = 1;
-pub const UI_VALUE_ADMISSION_SLOTS: usize = UI_VALUE_LIVE_PAGES * UI_VALUE_PAGE_ROWS * UI_VALUE_ROW_COLLECTIONS;
-pub const UI_VALUE_AGGREGATE_ITEMS: usize = UI_VALUE_LIVE_PAGES * UI_VALUE_PAGE_ROWS * UI_VALUE_ROW_ITEMS;
-/// 📮️ Ready-bit words the handback mailbox needs to cover [`UI_VALUE_ADMISSION_SLOTS`] one bit each.
-pub(crate) const UI_VALUE_HANDBACK_WORDS: usize = UI_VALUE_ADMISSION_SLOTS.div_ceil(64);
-const UI_VALUE_NONE: usize = usize::MAX;
-
-#[derive(Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct UiText {
-    bytes: [u8; UI_TEXT_MAX_BYTES],
-    len: u16,
-}
-
-impl Default for UiText {
-    fn default() -> Self {
-        Self { bytes: [0; UI_TEXT_MAX_BYTES], len: 0 }
-    }
-}
-
-impl fmt::Debug for UiText {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.as_str().fmt(formatter)
-    }
-}
-
-/// 🫴️ A fixed receiving cell copies the original UTF8 bytes before donating its whole typed header.
-pub struct UiTextOriginalCopy{target:Option<UiText>,source:(usize,usize),offset:usize}
-impl UiTextOriginalCopy{
- pub fn new(source:&UiText)->Self{Self{target:Some(UiText::default()),source:(source.bytes.as_ptr()as usize,source.len()),offset:0}}
- pub fn step(&mut self,source:&UiText,grant:semio_framework_value::RetainedCloneGrant)->Result<(Option<UiText>,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{
-  use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
-  if self.source!=(source.bytes.as_ptr()as usize,source.len()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original UI text copy source changed"))}
-  if self.target.is_none()||grant.maximum_items==0||grant.maximum_depth==0{return Ok((None,Default::default()))}
-  if self.offset<source.len(){
-   let copied=(source.len()-self.offset).min(grant.maximum_copy_bytes);if copied==0{return Ok((None,Default::default()))}
-   let start=self.offset;let end=start+copied;self.target.as_mut().unwrap().bytes[start..end].copy_from_slice(&source.bytes[start..end]);self.offset=end;
-   return Ok((None,RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))
-  }
-  self.target.as_mut().unwrap().len=source.len;Ok((self.target.take(),RetainedCloneProgress{copied_items:1,..Default::default()}))
- }
-}
-
-impl UiText {
-    pub fn try_from_string(value: String) -> Result<Self, String> {
-        if value.len() > UI_TEXT_MAX_BYTES {
-            return Err(value);
-        }
-        let mut text = Self::default();
-        text.bytes[..value.len()].copy_from_slice(value.as_bytes());
-        text.len = value.len() as u16;
-        Ok(text)
-    }
-
-    pub fn try_from_str(value: &str) -> Option<Self> {
-        if value.len() > UI_TEXT_MAX_BYTES {
-            return None;
-        }
-        let mut text = Self::default();
-        text.bytes[..value.len()].copy_from_slice(value.as_bytes());
-        text.len = value.len() as u16;
-        Some(text)
-    }
-
-    pub fn as_str(&self) -> &str {
-        std::str::from_utf8(&self.bytes[..usize::from(self.len)]).unwrap_or("")
-    }
-
-    pub fn len(&self) -> usize {
-        usize::from(self.len)
-    }
-
-    pub const fn capacity(&self) -> usize {
-        UI_TEXT_MAX_BYTES
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len == 0
-    }
-
-    pub fn try_format(arguments: fmt::Arguments<'_>) -> Option<Self> {
-        use fmt::Write;
-        let mut text = Self::default();
-        text.write_fmt(arguments).ok()?;
-        Some(text)
-    }
-
-    /// ✂️ Display copy that must never fail admission: the whole value when it fits, otherwise the
-    /// longest char-boundary prefix leaving room for [`UI_TEXT_CLIP_MARK`], which is appended so a
-    /// reader sees the text was clipped. Use it only for descriptions and summaries whose full text
-    /// stays reachable elsewhere (e.g. the history view), never for identifiers or values.
-    pub fn clipped(value: &str) -> Self {
-        if let Some(text) = Self::try_from_str(value) {
-            return text;
-        }
-        let budget = UI_TEXT_MAX_BYTES - UI_TEXT_CLIP_MARK.len();
-        let mut end = budget;
-        while !value.is_char_boundary(end) {
-            end -= 1;
-        }
-        let mut text = Self::default();
-        text.bytes[..end].copy_from_slice(&value.as_bytes()[..end]);
-        text.bytes[end..end + UI_TEXT_CLIP_MARK.len()].copy_from_slice(UI_TEXT_CLIP_MARK.as_bytes());
-        text.len = (end + UI_TEXT_CLIP_MARK.len()) as u16;
-        text
-    }
-}
-
-impl fmt::Write for UiText {
-    fn write_str(&mut self, value: &str) -> fmt::Result {
-        let start = self.len();
-        let end = start.checked_add(value.len()).filter(|end| *end <= UI_TEXT_MAX_BYTES).ok_or(fmt::Error)?;
-        self.bytes[start..end].copy_from_slice(value.as_bytes());
-        self.len = u16::try_from(end).map_err(|_| fmt::Error)?;
-        Ok(())
-    }
-}
-
-impl fmt::Display for UiText {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(self.as_str())
-    }
-}
-
-impl AsRef<str> for UiText {
-    fn as_ref(&self) -> &str {
-        self.as_str()
-    }
-}
-
-impl std::ops::Deref for UiText {
-    type Target = str;
-
-    fn deref(&self) -> &Self::Target {
-        self.as_str()
-    }
-}
-
-impl TryFrom<String> for UiText {
-    type Error = String;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::try_from_string(value)
-    }
-}
-
-impl<'a> TryFrom<&'a str> for UiText {
-    type Error = &'a str;
-
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
-        Self::try_from_str(value).ok_or(value)
-    }
-}
-
-impl Serialize for UiText {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-
-impl<'de> Deserialize<'de> for UiText {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = String::deserialize(deserializer)?;
-        Self::try_from_string(value).map_err(|value| serde::de::Error::custom(format!("UiText exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))
-    }
-}
-
-/// 🌱️ Hand-written, not derived — same reason as `Serialize`/`Deserialize` above: `bytes` is a
-/// fixed-size `[u8; UI_TEXT_MAX_BYTES]` with no field-level shape to annotate. Mirrors the two impls
-/// exactly (a bare wire string). Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-impl ::protocol::value::ToValue for UiText {
-    fn to_value(&self) -> ::protocol::value::DslValue {
-        ::protocol::value::DslValue::String(self.as_str().to_string())
-    }
-}
-
-impl ::protocol::value::FromValue for UiText {
-    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
-        let text = match value {
-            ::protocol::value::DslValue::String(s) => s,
-            other => return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("expected a string for UiText, found {other:?}"))),
-        };
-        Self::try_from_string(text).map_err(|value| ::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiText exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))
-    }
-}
+use semio_framework_ui_contract_budget::*;
+use semio_framework_ui_contract_text::UiText;
+const UI_VALUE_NONE:usize=usize::MAX;
 
 //#region 📋️FixedListOwnership
 #[cfg(test)]
 #[path = "../📋️list/🧪️tests/📋️list/🦀️.rs"]
 mod fixed_list_storage_tests;
 
-use protocol::value::list as fixed_list_storage;
+use semio_framework_value::list as fixed_list_storage;
 pub use fixed_list_storage::{PagedListAllocationError, PagedListError, PagedListProgress, PagedListRefusalKind};
 
 #[path = "../🔗️bindings/📋️copy/🦀️.rs"]
@@ -580,23 +350,23 @@ impl<'de, T: Deserialize<'de>, const N: usize> Deserialize<'de> for UiFixedList<
 /// 🌱️ Hand-written, not derived — generic over `T`, and `#[derive(ToValue, FromValue)]` does not
 /// reach through a hand-rolled container's iterator; mirrors the `Serialize`/`Deserialize` impls
 /// above exactly (a bare JSON array). Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-impl<T: ::protocol::value::ToValue, const N: usize> ::protocol::value::ToValue for UiFixedList<T, N> {
-    fn to_value(&self) -> ::protocol::value::DslValue {
-        ::protocol::value::DslValue::Array(self.iter().map(::protocol::value::ToValue::to_value).collect())
+impl<T: ::semio_framework_value::ToValue, const N: usize> ::semio_framework_value::ToValue for UiFixedList<T, N> {
+    fn to_value(&self) -> ::semio_framework_value::DslValue {
+        ::semio_framework_value::DslValue::Array(self.iter().map(::semio_framework_value::ToValue::to_value).collect())
     }
 }
 
-impl<T: ::protocol::value::FromValue, const N: usize> ::protocol::value::FromValue for UiFixedList<T, N> {
-    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
+impl<T: ::semio_framework_value::FromValue, const N: usize> ::semio_framework_value::FromValue for UiFixedList<T, N> {
+    fn from_value(value: ::semio_framework_value::DslValue) -> Result<Self, ::semio_framework_value::ValueError> {
         let items = match value {
-            ::protocol::value::DslValue::Array(items) => items,
-            other => return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("expected an array, found {other:?}"))),
+            ::semio_framework_value::DslValue::Array(items) => items,
+            other => return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an array, found {other:?}"))),
         };
         let mut values = UiFixedList::default();
         for item in items {
-            let item = <T as ::protocol::value::FromValue>::from_value(item)?;
+            let item = <T as ::semio_framework_value::FromValue>::from_value(item)?;
             if values.try_push(item).is_err() {
-                return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiFixedList exceeds {N} items")));
+                return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("UiFixedList exceeds {N} items")));
             }
         }
         Ok(values)
@@ -759,27 +529,27 @@ impl<'de, V: Deserialize<'de>> Deserialize<'de> for UiFixedMap<V> {
 /// 🌱️ Hand-written, not derived — generic over `V`, same reason as `UiFixedList` above. Mirrors the
 /// `Serialize`/`Deserialize` impls exactly (a bare `{key: value}` JSON object keyed by `UiText`'s own
 /// wire string). Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-impl<V: ::protocol::value::ToValue> ::protocol::value::ToValue for UiFixedMap<V> {
-    fn to_value(&self) -> ::protocol::value::DslValue {
-        ::protocol::value::DslValue::object(self.iter().map(|(key, value)| (key.as_str().to_string(), value.to_value())))
+impl<V: ::semio_framework_value::ToValue> ::semio_framework_value::ToValue for UiFixedMap<V> {
+    fn to_value(&self) -> ::semio_framework_value::DslValue {
+        ::semio_framework_value::DslValue::object(self.iter().map(|(key, value)| (key.as_str().to_string(), value.to_value())))
     }
 }
 
-impl<V: ::protocol::value::FromValue> ::protocol::value::FromValue for UiFixedMap<V> {
-    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
+impl<V: ::semio_framework_value::FromValue> ::semio_framework_value::FromValue for UiFixedMap<V> {
+    fn from_value(value: ::semio_framework_value::DslValue) -> Result<Self, ::semio_framework_value::ValueError> {
         let entries = match value {
-            ::protocol::value::DslValue::Object(entries) => entries,
-            other => return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("expected an object, found {other:?}"))),
+            ::semio_framework_value::DslValue::Object(entries) => entries,
+            other => return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object, found {other:?}"))),
         };
         let mut values = UiFixedMap::default();
         for (key, value) in entries {
-            let key = UiText::try_from_string(key).map_err(|value| ::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiFixedMap key exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))?;
-            let value = <V as ::protocol::value::FromValue>::from_value(value)?;
+            let key = UiText::try_from_string(key).map_err(|value| ::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("UiFixedMap key exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))?;
+            let value = <V as ::semio_framework_value::FromValue>::from_value(value)?;
             if values.contains(&key) {
-                return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiFixedMap keys must be unique; '{key}' arrived twice")));
+                return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("UiFixedMap keys must be unique; '{key}' arrived twice")));
             }
             if values.try_insert(key, value).is_err() {
-                return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, values.refusal()));
+                return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, values.refusal()));
             }
         }
         Ok(values)
@@ -873,27 +643,27 @@ impl<'de> Deserialize<'de> for UiFixedBytes {
 /// `Number` array — mirrored here byte for byte so `to_value`/`from_value` round-trip the SAME wire
 /// shape as `serde_json::to_value`/`from_value` do. Ticket
 /// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-impl ::protocol::value::ToValue for UiFixedBytes {
-    fn to_value(&self) -> ::protocol::value::DslValue {
-        ::protocol::value::DslValue::Array(self.as_slice().iter().map(|byte| ::protocol::value::DslValue::uint(*byte as u64)).collect())
+impl ::semio_framework_value::ToValue for UiFixedBytes {
+    fn to_value(&self) -> ::semio_framework_value::DslValue {
+        ::semio_framework_value::DslValue::Array(self.as_slice().iter().map(|byte| ::semio_framework_value::DslValue::uint(*byte as u64)).collect())
     }
 }
 
-impl ::protocol::value::FromValue for UiFixedBytes {
-    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
+impl ::semio_framework_value::FromValue for UiFixedBytes {
+    fn from_value(value: ::semio_framework_value::DslValue) -> Result<Self, ::semio_framework_value::ValueError> {
         let items = match value {
-            ::protocol::value::DslValue::Array(items) => items,
-            other => return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("expected an array for UiFixedBytes, found {other:?}"))),
+            ::semio_framework_value::DslValue::Array(items) => items,
+            other => return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an array for UiFixedBytes, found {other:?}"))),
         };
         let mut bytes = Vec::with_capacity(items.len().min(UI_FIXED_BYTES));
         for item in items {
-            let byte = <u8 as ::protocol::value::FromValue>::from_value(item)?;
+            let byte = <u8 as ::semio_framework_value::FromValue>::from_value(item)?;
             if bytes.len() == UI_FIXED_BYTES {
-                return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")));
+                return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")));
             }
             bytes.push(byte);
         }
-        UiFixedBytes::try_from_vec(bytes).map_err(|_| ::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")))
+        UiFixedBytes::try_from_vec(bytes).map_err(|_| ::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")))
     }
 }
 
@@ -1683,7 +1453,7 @@ impl<'de> Deserialize<'de> for UiMap {
 /// pair never carried.
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct ActionId {
     pub scope: UiText,
     pub name: UiText,
@@ -1717,7 +1487,7 @@ impl fmt::Display for ActionId {
 /// distinct moments (e.g. `Change` while typing, `Commit` on blur) without inventing parallel fields.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Trigger {
     #[default]
     Activate,
@@ -1851,16 +1621,16 @@ impl UiValue {
 }
 
 /// 🔢️ A `UiValue` serializes as the JSON text React's wire carries: a number goes through the value module's one rule
-/// ([`protocol::value::json_integer`]) — `7.0` is written `7`, a non-finite number `null` — so every JSON projection of a UI
+/// ([`semio_framework_value::json_integer`]) — `7.0` is written `7`, a non-finite number `null` — so every JSON projection of a UI
 /// value (reconciled action arguments, extension params, snapshots) reads back exactly as `JSON.parse(JSON.stringify(v))`.
 impl Serialize for UiValue {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
             UiValue::Null => serializer.serialize_unit(),
             UiValue::Bool(value) => serializer.serialize_bool(*value),
-            UiValue::Number(value) => match protocol::value::json_integer(*value) {
-                Some(protocol::value::JsonInteger::Unsigned(integer)) => serializer.serialize_u64(integer),
-                Some(protocol::value::JsonInteger::Signed(integer)) => serializer.serialize_i64(integer),
+            UiValue::Number(value) => match semio_framework_value::json_integer(*value) {
+                Some(semio_framework_value::JsonInteger::Unsigned(integer)) => serializer.serialize_u64(integer),
+                Some(semio_framework_value::JsonInteger::Signed(integer)) => serializer.serialize_i64(integer),
                 None if value.is_finite() => serializer.serialize_f64(*value),
                 None => serializer.serialize_unit(),
             },

@@ -1,6 +1,69 @@
 use super::*;
 use ui_wgpu::wgpu::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene, mesh3d_write_edge};
 
+const WORLD_SOURCE: &str = concat!(
+    include_str!("../../🦀️.rs"),
+    include_str!("../../🧹️lifecycle/🦀️.rs"),
+    include_str!("../../🧵️interaction/🦀️.rs"),
+    include_str!("../../🧵️interaction/📇️registry/🦀️.rs"),
+    include_str!("../../🧵️interaction/🔍️marquee/🦀️.rs"),
+    include_str!("../../🧵️interaction/🧲️picking/🦀️.rs"),
+    include_str!("../../🧵️interaction/🕹️gumball/🦀️.rs"),
+    include_str!("../../🧵️interaction/⚙️authority/🦀️.rs"),
+    include_str!("../../🧱️scene/🦀️.rs"),
+    include_str!("../../🖌️overlay/🦀️.rs"),
+    include_str!("../../🌉️bridge/🦀️.rs"),
+    include_str!("../../🎛️frame/🦀️.rs"),
+    include_str!("../../🖱️pointer/🦀️.rs"),
+    include_str!("../../📡️assets/🦀️.rs"),
+);
+
+/// 🧊️ The wgpu renderer glue as the one text the unsplit file held: its root and every mounted child.
+const RENDERER_SOURCE: &str = concat!(
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🗂️asset-authority/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔁️asset-decode-jobs/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📊️scale-bench/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🛎️frame-actions/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🎨️presentation-raster/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧠️app-runtime/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔬️native-socket-probe/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/📬️kernel-replay-client/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🗃️kernel-retained-state/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🦀️.rs"),
+);
+
+/// 🐚️ The wgpu Shell as the one text the unsplit file held: its root and every child split out of it.
+const SHELL_SOURCE: &str = concat!(
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔖️identity-and-types/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧵️shell-async-runners/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⚓️dock-model-and-measures/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧾️panel-records/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧩️session-and-topology/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎬️shell-actions/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📨️command-dispatch/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🖱️pointer-input/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎓️tutorial-runtime/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧭️navbar-footer-and-overlays/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/💬️chrome-dialog-and-tooltips/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+);
+
 impl Drop for World3dState {
     fn drop(&mut self) {
         for _ in 0..16_384 {
@@ -233,7 +296,7 @@ fn live_renderer_retains_generation_wake_and_rejects_recreation_erasure_loss_and
             && browser.contains("host.take_cursor_wake_directive().is_some()")
     }
 
-    let glue = include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+    let glue = RENDERER_SOURCE;
     let host = include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs");
     let native = include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
     let browser = include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs");
@@ -1903,8 +1966,8 @@ fn world_saturation_owner_blocks_new_ingress_until_exact_fifo_transfer() {
 
 #[test]
 fn renderer_world_consumers_use_only_fixed_intent_ingress() {
-    let glue = include_str!("../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
-    let shell = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
+    let glue = RENDERER_SOURCE;
+    let shell = SHELL_SOURCE;
     for source in [glue, shell] {
         assert!(source.contains("enqueue_world3d_event"));
         assert!(!source.contains("handle_world3d_pointer_button"));
@@ -1914,7 +1977,7 @@ fn renderer_world_consumers_use_only_fixed_intent_ingress() {
         assert!(!source.contains("handle_world3d_wheel"));
         assert!(!source.contains(concat!("let mut world_actions", " = Vec")));
     }
-    let world = include_str!("../../🦀️.rs");
+    let world = WORLD_SOURCE;
     assert!(!world.contains(concat!("pub fn ", "handle_world3d_pointer_button")));
     assert!(!world.contains(concat!("pub fn ", "handle_world3d_pointer_move")));
     assert!(!world.contains(concat!("pub fn ", "handle_world3d_paint_actions")));
@@ -3169,7 +3232,7 @@ fn retained_draw_rebuild_stale_and_interrupted_close_never_publish() {
 
 #[test]
 fn production_dynamic_owners_have_no_hash_map_vec_or_direct_pixel_mutation_bypass() {
-    let source = include_str!("../../🦀️.rs");
+    let source = WORLD_SOURCE;
     let production = source.split("#[cfg(test)]\nmod tests").next().expect("production source");
     for forbidden in [
         concat!("pub meshes: HashMap<String, Mesh", "3d>"),
@@ -5099,7 +5162,7 @@ fn a_world_draw_without_this_frames_upload_is_never_published() {
 /// ghost site cannot reintroduce the fatal submit fault.
 #[test]
 fn the_scene_pass_is_published_behind_the_residency_filter() {
-    let world = include_str!("../../🦀️.rs");
+    let world = WORLD_SOURCE;
     assert_eq!(world.matches("ctx.draw.push_scene_pass(ScenePass3d {").count(), 1, "the world publishes exactly one scene pass");
     assert!(
         world.contains("retain_ensured_world_draws(gpu, &mut shadow_draws);\n    retain_ensured_world_draws(gpu, &mut culled_draws);\n    retain_ensured_world_draws(gpu, &mut translucent_draws);\n    retain_ensured_world_material_draws(gpu, &mut material_draws);\n    ctx.draw.push_scene_pass(ScenePass3d {"),
@@ -5229,7 +5292,7 @@ fn gumball_draws_ensure_the_plane_mesh_they_reference() {
 /// `sync_mesh_pool` would otherwise see it as stale and evict the mesh the very next frame draws.
 #[test]
 fn the_gumball_plane_is_pinned_against_pool_eviction() {
-    let world = include_str!("../../🦀️.rs");
+    let world = WORLD_SOURCE;
     let pinned = world.split("const PINNED: &[&str] = &[").nth(1).expect("sync_mesh_pool declares a PINNED list").split("];").next().expect("PINNED list closes");
     assert!(pinned.contains("GUMBALL_PLANE_MESH"), "the gumball plane must be pinned: {pinned}");
     assert_eq!(GUMBALL_PLANE_MESH, "gumball-plane");

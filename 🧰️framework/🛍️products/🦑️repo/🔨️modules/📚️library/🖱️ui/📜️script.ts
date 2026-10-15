@@ -160,7 +160,7 @@ class CheckUiPrimitivesScript extends BundleScript {
 export const CHROME_I18N_ALLOWLIST: readonly string[] = [
   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/👥️presence-scope/🌐️browser/🟦️.tsx",
   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🪢️handle-scope/🟦️.ts",
 ];
 
 /** 🌳️ Every chrome-bearing surface: this bundle itself, the OS renderer engine (its React target AND its shell

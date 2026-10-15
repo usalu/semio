@@ -1,0 +1,308 @@
+{
+  "scope": "inspector-fixture",
+  "action": "setValue",
+  "gestures": [
+    "blur",
+    "enter"
+  ],
+  "counts": {
+    "untouched": 0,
+    "draft": 0,
+    "committed": 1,
+    "repeated": 1
+  },
+  "scalars": [
+    {
+      "id": "width",
+      "kind": "number",
+      "value": "1",
+      "draft": "4.5",
+      "input": 4.5,
+      "trigger": "commit",
+      "args": {
+        "target": "width"
+      },
+      "label": {
+        "en": "Width",
+        "de": "Breite"
+      }
+    },
+    {
+      "id": "segments",
+      "kind": "number",
+      "value": "8",
+      "draft": "12",
+      "input": 12,
+      "trigger": "commit",
+      "args": {
+        "target": "segments"
+      },
+      "label": {
+        "en": "Segments",
+        "de": "Segmente"
+      }
+    },
+    {
+      "id": "note",
+      "kind": "longText",
+      "value": "true",
+      "draft": "edited\nvalue",
+      "input": "edited\nvalue",
+      "trigger": "commit",
+      "args": {
+        "target": "note"
+      },
+      "label": {
+        "en": "Note",
+        "de": "Notiz"
+      }
+    },
+    {
+      "id": "title",
+      "kind": "text",
+      "value": "alpha",
+      "draft": "beta",
+      "input": "beta",
+      "trigger": "commit",
+      "args": {
+        "target": "title"
+      },
+      "label": {
+        "en": "Title",
+        "de": "Titel"
+      }
+    },
+    {
+      "id": "enabled",
+      "kind": "toggle",
+      "value": true,
+      "draft": false,
+      "input": false,
+      "trigger": "change",
+      "args": {
+        "target": "enabled"
+      },
+      "label": {
+        "en": "Enabled",
+        "de": "Aktiv"
+      }
+    },
+    {
+      "id": "radius",
+      "kind": "number",
+      "value": "0.1",
+      "draft": "0.2",
+      "input": 0.2,
+      "trigger": "commit",
+      "args": {
+        "target": "radius",
+        "component": "x"
+      },
+      "label": {
+        "en": "Radius X",
+        "de": "Radius X"
+      }
+    }
+  ],
+  "collection": [
+    {
+      "id": "rows-set-number",
+      "operation": "set",
+      "kind": "number",
+      "value": "7",
+      "draft": "9",
+      "input": 9,
+      "args": {
+        "target": "rows",
+        "operation": "set",
+        "index": 0
+      },
+      "label": {
+        "en": "Rows Item 1",
+        "de": "Zeilen Eintrag 1"
+      }
+    },
+    {
+      "id": "profiles-set-text",
+      "operation": "set",
+      "kind": "longText",
+      "value": "alpha",
+      "draft": "beta",
+      "input": "beta",
+      "args": {
+        "target": "profiles",
+        "operation": "set",
+        "index": 0
+      },
+      "label": {
+        "en": "Profiles Item 1",
+        "de": "Profile Eintrag 1"
+      }
+    },
+    {
+      "id": "flags-set-toggle",
+      "operation": "set",
+      "kind": "toggle",
+      "value": true,
+      "draft": false,
+      "input": false,
+      "args": {
+        "target": "flags",
+        "operation": "set",
+        "index": 1
+      },
+      "label": {
+        "en": "Flags Item 2",
+        "de": "Flags Eintrag 2"
+      }
+    },
+    {
+      "id": "rows-add",
+      "operation": "add",
+      "args": {
+        "target": "rows",
+        "operation": "add",
+        "index": 1
+      },
+      "label": {
+        "en": "Rows: Add item",
+        "de": "Zeilen: Eintrag hinzufügen"
+      }
+    },
+    {
+      "id": "rows-remove",
+      "operation": "remove",
+      "args": {
+        "target": "rows",
+        "operation": "remove",
+        "index": 0
+      },
+      "label": {
+        "en": "Rows Item 1: Remove",
+        "de": "Zeilen Eintrag 1: Entfernen"
+      }
+    },
+    {
+      "id": "rows-up",
+      "operation": "move",
+      "args": {
+        "target": "rows",
+        "operation": "move",
+        "index": 1,
+        "destination": 0
+      },
+      "label": {
+        "en": "Rows Item 2: Move up",
+        "de": "Zeilen Eintrag 2: Nach oben"
+      }
+    },
+    {
+      "id": "rows-down",
+      "operation": "move",
+      "args": {
+        "target": "rows",
+        "operation": "move",
+        "index": 0,
+        "destination": 1
+      },
+      "label": {
+        "en": "Rows Item 1: Move down",
+        "de": "Zeilen Eintrag 1: Nach unten"
+      }
+    }
+  ],
+  "metadata": {
+    "formats": [
+      {
+        "value": "stl",
+        "label": {
+          "en": "STL Mesh",
+          "de": "STL-Netz"
+        }
+      },
+      {
+        "value": "obj",
+        "label": {
+          "en": "OBJ Mesh",
+          "de": "OBJ-Netz"
+        }
+      },
+      {
+        "value": "gltf",
+        "label": {
+          "en": "glTF Mesh",
+          "de": "glTF-Netz"
+        }
+      }
+    ],
+    "facets": [
+      {
+        "id": "variable-name",
+        "widget": "text",
+        "value": "alpha",
+        "draft": "renamed",
+        "input": "renamed",
+        "args": {
+          "target": "name",
+          "facet": "variable"
+        },
+        "label": {
+          "en": "Variable name",
+          "de": "Variablenname"
+        }
+      },
+      {
+        "id": "export-format",
+        "widget": "select",
+        "value": "stl",
+        "draft": "obj",
+        "input": "obj",
+        "args": {
+          "target": "format",
+          "facet": "export"
+        },
+        "label": {
+          "en": "Export format",
+          "de": "Exportformat"
+        }
+      }
+    ],
+    "statuses": [
+      {
+        "state": "ok",
+        "label": {
+          "en": "Up to date",
+          "de": "Aktuell"
+        },
+        "description": {
+          "en": "The output matches its inputs.",
+          "de": "Die Ausgabe entspricht ihren Eingaben."
+        }
+      },
+      {
+        "state": "stale",
+        "label": {
+          "en": "Out of date",
+          "de": "Veraltet"
+        },
+        "description": {
+          "en": "An input changed after the last run.",
+          "de": "Eine Eingabe wurde nach dem letzten Lauf geändert."
+        }
+      },
+      {
+        "state": "error",
+        "label": {
+          "en": "Failed",
+          "de": "Fehlgeschlagen"
+        },
+        "description": {
+          "en": "The last run was refused.",
+          "de": "Der letzte Lauf wurde abgelehnt."
+        }
+      }
+    ],
+    "live": "polite",
+    "readOnlyActionCount": 0
+  }
+}

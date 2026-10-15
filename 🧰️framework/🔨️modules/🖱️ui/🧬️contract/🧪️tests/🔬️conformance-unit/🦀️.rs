@@ -50,7 +50,7 @@ mod tests {
     /// itself) so a TypeScript conformance test can load the exact same file.
     #[derive(Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
-    #[value(crate = "::protocol::value", rename_all = "camelCase")]
+    #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
     struct ExpectedNode {
         id: crate::UiNodeId,
         #[serde(rename = "type")]
@@ -61,7 +61,7 @@ mod tests {
 
     #[derive(Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
-    #[value(crate = "::protocol::value", rename_all = "camelCase")]
+    #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
     struct ExpectedTree {
         root: crate::UiNodeId,
         node_count: usize,
@@ -73,7 +73,7 @@ mod tests {
     /// `crate::AccessibilitySpec` itself: the role is implied by the node's component type.
     #[derive(Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
-    #[value(crate = "::protocol::value", rename_all = "camelCase")]
+    #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
     struct ExpectedAccessibility {
         id: crate::UiNodeId,
         label: Option<String>,
@@ -90,7 +90,7 @@ mod tests {
     /// name a violation shape the contract itself does not actually produce.
     #[derive(Deserialize, FromValue)]
     #[serde(rename_all = "camelCase")]
-    #[value(crate = "::protocol::value", rename_all = "camelCase")]
+    #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
     struct Expectation {
         #[allow(dead_code)]
         case: String,

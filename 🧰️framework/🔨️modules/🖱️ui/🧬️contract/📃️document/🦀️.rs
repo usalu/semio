@@ -18,83 +18,11 @@ use std::sync::Mutex;
 
 //#region 🔖️Document
 
-//#region 🆔️Ids
-/// 🪧️ A render surface address — today's dotted strings, e.g. `"note.play.navigator"`.
-#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(transparent)]
-#[value(crate = "::protocol::value", transparent)]
-pub struct SurfaceId(pub crate::UiText);
+use semio_framework_ui_contract_identity::{SurfaceId,UiNodeId,UiRevision};
+use semio_framework_ui_contract_budget::{UI_DOCUMENT_NODES,UI_NODE_BINDINGS,UI_DOCUMENT_PATCH_OPS};
 
-impl AsRef<str> for SurfaceId {
-    fn as_ref(&self) -> &str {
-        self.0.as_str()
-    }
-}
-
-impl TryFrom<String> for SurfaceId {
-    type Error = String;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        crate::UiText::try_from_string(value).map(Self)
-    }
-}
-
-impl<'a> TryFrom<&'a str> for SurfaceId {
-    type Error = &'a str;
-
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
-        crate::UiText::try_from_str(value).map(Self).ok_or(value)
-    }
-}
-
-/// 🔢️ A node's identity within one [`SurfaceId`] — monotonic per surface, never reused, so a stale
-/// reference to a removed node is always distinguishable from a fresh node at the same tree position.
-///
-/// The TypeScript type is pinned to `number`, not a Rust-centric `bigint` projection for `u64`: serde writes
-/// this as a plain JSON number, so `JSON.parse` hands JavaScript a `number` at runtime and a `bigint`
-/// declaration would be a type that never actually occurs. Ids are per-surface and monotonic, so the
-/// 2^53 exact-integer ceiling is unreachable in practice — a surface would have to mint nine
-/// quadrillion nodes to reach it.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(transparent)]
-#[value(crate = "::protocol::value", transparent)]
-pub struct UiNodeId(pub u64);
-
-/// 🔢️ A snapshot's wire revision — advances by one per accepted [`UiPatch`]; a patch whose
-/// `base_revision` does not match the receiver's current revision is rejected whole.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(transparent)]
-#[value(crate = "::protocol::value", transparent)]
-pub struct UiRevision(pub u64);
-
-impl UiRevision {
-    /// ⏭️ The next revision after this one.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn try_next(self) -> Option<Self> {
-        self.0.checked_add(1).map(Self)
-    }
-}
-
-/// 🏭️ Per-surface monotonic [`UiNodeId`] source — the only legitimate way to mint one. Never resets
-/// and never yields the same id twice, so an id is a stable identity for the lifetime of its surface.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct UiNodeIdAllocator(u64);
-
-impl UiNodeIdAllocator {
-    /// 🏭️ Mints the next unused [`UiNodeId`] for this surface.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn try_allocate(&mut self) -> Option<UiNodeId> {
-        let id = UiNodeId(self.0);
-        self.0 = self.0.checked_add(1)?;
-        Some(id)
-    }
-}
-//#endregion 🆔️Ids
 
 //#region 🌳️Snapshot
-pub const UI_DOCUMENT_NODES: usize = 128;
-pub const UI_NODE_BINDINGS: usize = 32;
-pub const UI_DOCUMENT_PATCH_OPS: usize = UI_DOCUMENT_NODES * 9 + 1;
 pub type UiNodeChildren = crate::UiFixedList<UiNodeId, UI_DOCUMENT_NODES>;
 pub type UiNodeBindings = crate::UiFixedList<crate::ActionBinding, UI_NODE_BINDINGS>;
 pub type UiSnapshotNodes = crate::UiFixedList<UiNodeRecord, UI_DOCUMENT_NODES>;
@@ -120,7 +48,7 @@ pub fn credited_bindings(source: &UiNodeBindings) -> Option<UiNodeBindings> {
 /// carrying neither is in its steady state; the renderer clears this once the transition has played.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum TransitionHint {
     Introducing,
     Celebrating,

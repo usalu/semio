@@ -1100,7 +1100,7 @@ impl ArtifactEditor for CadPlayApp {
     /// 🧩️ Every pane's model (and the forward-declared drawing) child is an `s.stdio.semio` member.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         semio_s_artifact_cad_cad_model::snapshot::cad_child_restore_projection(snapshot)
     }
 

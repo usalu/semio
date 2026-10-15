@@ -1,0 +1,85 @@
+import {createHash,randomBytes} from "node:crypto";
+import {mkdir,writeFile,rename,rm,lstat} from "node:fs/promises";
+import {dirname,join,relative,resolve,isAbsolute,sep} from "node:path";
+import {acquireQueuedResourceLease,checkResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {requireNativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {readPhysicalCargoSourceV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {repositoryRustToolchainIdentityV1} from "../../../../../⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts";
+import {cargoRegistryReadyPathV1,cargoRegistryReadyResolutionV1,type CargoRegistryReadyResolutionV1} from "../🟦️.ts";
+import type {RepositoryCargoInputsV1} from "../../🟦️.ts";
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+const protocol=schema.definitions.Protocol.const,hash=(bytes:string|Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
+interface ReadyInput {readonly path:string;readonly digest:string|null;readonly bytes:number}
+interface ReadyReceipt {readonly version:1;readonly request:string;readonly resolutions:readonly CargoRegistryReadyResolutionV1[];readonly inputs:readonly ReadyInput[]}
+interface ReadySelection {readonly manifest:string;readonly cwd:string;readonly args:readonly string[]}
+interface ReadyOptions extends RepositoryCargoInputsV1 {readonly requests:readonly ReadySelection[];readonly home:string}
+
+class UnsupportedReadySource extends Error{}
+function ownedSource(root:string,path:string):string{const local=relative(root,resolve(path)).split(sep).join("/");if(!cargoRegistryReadyPathV1(local))throw new UnsupportedReadySource("Repository-owned Cargo ready Source required");return local;}
+function firstPartyLock(value:Record<string,any>|undefined):boolean{return Boolean(value&&Array.isArray(value.package)&&value.package.every((row:any)=>row&&typeof row==="object"&&row.source===undefined));}
+async function sourceBytes(options:ReadyOptions,path:string,remainingFiles:number){return readPhysicalCargoSourceV1(join(options.workspace,path),{version:1,root:options.workspace,maximumBytes:protocol.maximumInputBytes,remainingFiles},options.control);}
+function requestIdentity(options:ReadyOptions):string|undefined{
+ if(typeof Bun==="undefined"||![{args:options.args},...(options.additionalManifests??[])].every(row=>row.args.some(value=>value==="--locked"||value==="--frozen"))||!options.environment.RUSTC||["RUSTC_WRAPPER","RUSTC_WORKSPACE_WRAPPER","CARGO_BUILD_RUSTC","CARGO_BUILD_RUSTC_WRAPPER","CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER"].some(name=>Boolean(options.environment[name])))return;
+ const program=Bun.which(options.environment.RUSTC,{PATH:options.environment.PATH,cwd:options.cwd});if(!program)return;let toolchain:string;try{toolchain=repositoryRustToolchainIdentityV1(program);}catch{return;}
+ let configurations:unknown;try{configurations=JSON.parse(options.environment.SEMIO_CARGO_CONFIGURATION_DIGESTS??"null");}catch{return;}if(!Array.isArray(configurations)||configurations.length!==options.requests.length||configurations.some(value=>typeof value!=="string"||!/^[a-f0-9]{64}$/u.test(value)))return;
+ try{return hash(JSON.stringify({version:protocol.version,toolchain,configurations,selections:options.requests.map(row=>{const cwd=relative(options.workspace,resolve(row.cwd)).split(sep).join("/");if(cwd&&!cargoRegistryReadyPathV1(cwd))throw new UnsupportedReadySource();return{manifest:ownedSource(options.workspace,row.manifest),cwd,offline:row.args.includes("--offline")};})}));}catch(error){if(error instanceof UnsupportedReadySource)return;throw error;}
+}
+async function readyInputs(options:ReadyOptions,row:ReadyReceipt):Promise<boolean>{
+ if(typeof Bun==="undefined"||row.resolutions.length!==options.requests.length||row.resolutions.some(value=>!cargoRegistryReadyResolutionV1(value)))return false;
+ const paths=new Set(row.inputs.map(value=>value.path));if(paths.size!==row.inputs.length||row.inputs.some(value=>!cargoRegistryReadyPathV1(value.path)||value.digest===null&&value.bytes!==0)||row.inputs.reduce((sum,row)=>sum+row.bytes,0)>protocol.maximumTotalInputBytes)return false;
+ for(const selection of options.requests)if(!paths.has(ownedSource(options.workspace,selection.manifest)))return false;
+ for(const resolution of row.resolutions)for(const path of[resolution.workspaceManifest,resolution.lock,...resolution.packages.map(value=>value.manifest)])if(!paths.has(path))return false;
+ const documents=new Map<string,Record<string,any>>();
+ for(let index=0;index<row.inputs.length;index++){const input=row.inputs[index]!,actual=await sourceBytes(options,input.path,row.inputs.length-index);if(input.digest===null?actual!==undefined:!actual||actual.byteLength!==input.bytes||hash(actual)!==input.digest)return false;if(actual){try{documents.set(input.path,Bun.TOML.parse(Buffer.from(actual).toString("utf8")) as Record<string,any>);}catch{return false;}}}
+ for(const resolution of row.resolutions)if(!firstPartyLock(documents.get(resolution.lock)))return false;
+ const owners=(manifest:string,document:Record<string,any>)=>{if(typeof document.package?.workspace==="string"){const path=ownedSource(options.workspace,resolve(options.workspace,dirname(manifest),document.package.workspace,"Cargo.toml")),owner=documents.get(path);return owner?{path,document:owner}:undefined;}let directory=dirname(manifest);for(let index=0;index<64;index++){const path=directory==="."?"Cargo.toml":directory+"/Cargo.toml",owner=documents.get(path);if(owner?.workspace)return{path,document:owner};if(directory===".")break;directory=dirname(directory);}return undefined;};
+ for(const[manifest,document]of documents){if(!manifest.endsWith("Cargo.toml"))continue;const groups=[document.dependencies,document["dev-dependencies"],document["build-dependencies"],document.workspace?.dependencies,...Object.values(document.target??{}).flatMap((value:any)=>[value.dependencies,value["dev-dependencies"],value["build-dependencies"]])];
+  if(document.patch!==undefined||document.replace!==undefined)return false;
+  for(const key of["members","exclude","default-members"]){const members=document.workspace?.[key]??[];if(!Array.isArray(members)||members.some(value=>typeof value!=="string"||/[?*\[\]{}()!\\]/u.test(value)))return false;if(key!=="exclude")for(const member of members)if(!documents.has(ownedSource(options.workspace,resolve(options.workspace,dirname(manifest),member,"Cargo.toml"))))return false;}
+  for(const group of groups){if(group===undefined)continue;if(!group||typeof group!=="object"||Array.isArray(group))return false;for(const[name,raw]of Object.entries(group)){let dependency=raw as any,owner=manifest;if(dependency?.workspace===true){const inherited=owners(manifest,document);if(!inherited)return false;owner=inherited.path;dependency=inherited.document.workspace?.dependencies?.[name];}if(!dependency||typeof dependency!=="object"||typeof dependency.path!=="string"||dependency.git!==undefined||dependency.registry!==undefined)return false;const source=ownedSource(options.workspace,resolve(options.workspace,dirname(owner),dependency.path,"Cargo.toml"));if(!documents.has(source))return false;}}
+ }
+ return true;
+}
+async function readReady(options:ReadyOptions,file:string,request:string):Promise<ReadyReceipt|undefined>{
+ const bytes=await readPhysicalCargoSourceV1(file,{version:1,root:options.storage.backing.root,maximumBytes:protocol.maximumReceiptBytes,remainingFiles:1},options.control);if(!bytes)return;let value:unknown;try{value=JSON.parse(Buffer.from(bytes).toString("utf8"));}catch{return;}
+ if(validateJsonSchemaSubset(schema.definitions.Receipt,value,schema).length)return;const row=value as ReadyReceipt;try{if(row.request===request&&await readyInputs(options,row))return row;}catch(error){if(!(error instanceof UnsupportedReadySource))throw error;}
+}
+async function captureReady(options:ReadyOptions,request:string):Promise<ReadyReceipt|undefined>{
+ if(typeof Bun==="undefined")return;const inputs=new Map<string,ReadyInput>(),documents=new Map<string,Record<string,any>>();let total=0;
+ const observe=async(absolute:string)=>{const path=ownedSource(options.workspace,absolute);if(inputs.has(path))return documents.get(path);if(inputs.size>=protocol.maximumFiles)throw new UnsupportedReadySource("Bounded Cargo ready Source file capacity exceeded");const bytes=await sourceBytes(options,path,protocol.maximumFiles-inputs.size);total+=bytes?.byteLength??0;if(total>protocol.maximumTotalInputBytes)throw new UnsupportedReadySource("Bounded Cargo ready Source byte capacity exceeded");inputs.set(path,{path,digest:bytes?hash(bytes):null,bytes:bytes?.byteLength??0});if(!bytes)return;let value:Record<string,any>;try{value=Bun.TOML.parse(Buffer.from(bytes).toString("utf8")) as Record<string,any>;}catch{throw new UnsupportedReadySource("Unsupported Cargo ready TOML syntax");}documents.set(path,value);return value;};
+ for(const selection of options.requests){let directory=dirname(selection.manifest),owner:string|undefined;for(let depth=0;depth<64;depth++){const document=await observe(join(directory,"Cargo.toml"));if(document?.workspace){owner=directory;break;}if(typeof document?.package?.workspace==="string"){const explicit=resolve(directory,document.package.workspace);if(!(await observe(join(explicit,"Cargo.toml")))?.workspace)return;owner=explicit;break;}if(resolve(directory)===resolve(options.workspace))break;directory=dirname(directory);}if(!owner||!firstPartyLock(await observe(join(owner,"Cargo.lock"))))return;}
+ const resolutions:CargoRegistryReadyResolutionV1[]=[];
+ for(const selection of options.requests){
+  let metadataText:string;try{metadataText=await captureOwnedCommandV1("cargo",["metadata","--locked","--offline","--format-version=1","--manifest-path",selection.manifest],selection.cwd,{control:options.control,env:{...options.environment,CARGO_NET_OFFLINE:"true"},output:{maximumBytes:protocol.maximumMetadataBytes,maximumLines:65536}});}catch{checkResourceLeaseControl(options.control);await options.storage.recheck();return;}const values=metadataText.split("\n").flatMap(line=>{try{const row=JSON.parse(line);return row&&Array.isArray(row.packages)?[row]:[];}catch{return [];}});
+  if(values.length!==1)return;const metadata=values[0];if(typeof metadata.workspace_root!=="string"||!Array.isArray(metadata.packages)||metadata.packages.length>protocol.maximumFiles||!Array.isArray(metadata.resolve?.nodes)||metadata.packages.some((row:any)=>row.source!==null||typeof row.id!=="string"||typeof row.manifest_path!=="string"))return;
+  const workspaceManifest=ownedSource(options.workspace,join(metadata.workspace_root,"Cargo.toml")),lock=ownedSource(options.workspace,join(metadata.workspace_root,"Cargo.lock")),members:string[]=[];
+  await observe(join(options.workspace,workspaceManifest));await observe(join(options.workspace,lock));
+  for(const item of metadata.packages){let directory=dirname(item.manifest_path);for(let depth=0;depth<64;depth++){
+   const document=await observe(join(directory,"Cargo.toml"));if(document?.workspace){for(const key of["members","exclude"]){const rows=document.workspace[key]??[];if(!Array.isArray(rows)||rows.some((row:unknown)=>typeof row!=="string"))return;members.push(...rows);}break;}
+   if(typeof document?.package?.workspace==="string"){const owner=await observe(resolve(directory,document.package.workspace,"Cargo.toml"));if(!owner?.workspace)return;for(const key of["members","exclude"])members.push(...(owner.workspace[key]??[]));break;}
+   if(resolve(directory)===resolve(metadata.workspace_root)||resolve(directory)===resolve(options.workspace))break;const parent=dirname(directory),distance=relative(options.workspace,parent);if(parent===directory||isAbsolute(distance)||distance===".."||distance.startsWith(".."+sep))return;directory=parent;
+  }}
+  const resolution:CargoRegistryReadyResolutionV1={version:1,workspaceManifest,lock,members,packages:metadata.packages.map((row:any)=>({id:row.id,manifest:ownedSource(options.workspace,row.manifest_path),source:row.source})),resolved:metadata.resolve.nodes.map((row:any)=>row.id)};
+  if(!cargoRegistryReadyResolutionV1(resolution))return;resolutions.push(resolution);
+ }
+ const receipt:ReadyReceipt={version:1,request,resolutions,inputs:[...inputs.values()].sort((a,b)=>a.path.localeCompare(b.path))};if(validateJsonSchemaSubset(schema.definitions.Receipt,receipt,schema).length||Buffer.byteLength(JSON.stringify(receipt))+1>protocol.maximumReceiptBytes||!await readyInputs(options,receipt))return;return receipt;
+}
+
+async function publishReady(options:ReadyOptions,namespace:string,file:string,encoded:string):Promise<void>{
+ await options.storage.recheck();requireNativeStoragePathV1(options.storage.backing.root,namespace);await mkdir(namespace,{recursive:true});const temporary=requireNativeStoragePathV1(options.storage.backing.root,file+protocol.stageSuffix);
+ let created=false;try{const previous=await lstat(temporary).catch(error=>{if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;});if(previous){if(!previous.isFile()||previous.isSymbolicLink()||previous.nlink!==1||previous.size>protocol.maximumReceiptBytes)throw Error("Original bounded Cargo ready stage required");await rm(temporary);}await writeFile(temporary,encoded,{flag:"wx"});created=true;await options.storage.recheck();await rename(temporary,file);}finally{if(created)await rm(temporary,{force:true});}
+}
+
+/** 🟢️ Reuses only EX-proved first-party dependency readiness under actual retained registry SH. */
+export async function withRepositoryCargoRegistryReadyV1<T>(options:ReadyOptions,fetch:()=>Promise<void>,body:()=>Promise<T>):Promise<T>{
+ const {control,storage}=options;requireNativeStorageReservationV1(storage,control);if(storage.allocation.kind!=="compiler-workspace"||options.home!==options.environment.CARGO_HOME||options.requests.length<1||options.requests.length>64)throw Error("Original bounded Cargo ready storage and selection required");await storage.recheck();const directory=join(options.workspace,".cache/b/l/m/data"),resource="cargo:registry:"+options.home,lease={directory,resource,signal:control.signal,control},identity=requestIdentity(options),namespace=requireNativeStoragePathV1(storage.backing.root,join(options.home,protocol.namespace)),file=identity?requireNativeStoragePathV1(storage.backing.root,join(namespace,String(Number.parseInt(identity.slice(0,8),16)%protocol.slots)+protocol.entrySuffix)):undefined;
+ const consume=async()=>{const reader=await acquireQueuedResourceLease({...lease,owner:randomBytes(8).toString("base64url"),mode:"shared",sharedCohort:true});try{await storage.recheck();const receipt=identity&&file?await readReady(options,file,identity):undefined;if(receipt){process.stderr.write("[DEBUG] Original Cargo registry ready SH "+JSON.stringify({identity,home:options.home})+"\n");const value=await body();if(!await readyInputs(options,receipt))throw Error("Original Cargo ready inputs changed during consumption");await storage.recheck();return{hit:true as const,value};}return{hit:false as const};}finally{reader.release();}};
+ if(identity){const ready=await consume();if(ready.hit)return ready.value;}
+ let claimed:ReadyReceipt|undefined;const writer=await acquireQueuedResourceLease({...lease,owner:randomBytes(8).toString("base64url"),mode:"exclusive"});try{
+  await storage.recheck();claimed=identity&&file?await readReady(options,file,identity):undefined;if(!claimed){await fetch();if(identity&&file){let receipt:ReadyReceipt|undefined;try{receipt=await captureReady(options,identity);}catch(error){if(!(error instanceof UnsupportedReadySource))throw error;}if(receipt){const encoded=JSON.stringify(receipt)+"\n";await publishReady(options,namespace,file,encoded);claimed=await readReady(options,file,identity);if(!claimed)throw Error("Original Cargo ready publication changed");process.stderr.write("[DEBUG] Original Cargo registry ready EX published "+JSON.stringify({identity,inputs:receipt.inputs.length,bytes:Buffer.byteLength(encoded)})+"\n");}}}
+ }finally{writer.release();}
+ const reader=await acquireQueuedResourceLease({...lease,owner:randomBytes(8).toString("base64url"),mode:"shared",sharedCohort:true});try{await storage.recheck();if(claimed&&!await readyInputs(options,claimed))throw Error("Original Cargo ready inputs changed before consumption");const value=await body();if(claimed&&!await readyInputs(options,claimed))throw Error("Original Cargo ready inputs changed during consumption");await storage.recheck();return value;}finally{reader.release();}
+}

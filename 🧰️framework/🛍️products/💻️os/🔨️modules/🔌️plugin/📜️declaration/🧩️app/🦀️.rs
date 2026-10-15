@@ -122,7 +122,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 🪪️ Exact author-owned coordinate stamped into every document envelope.
     const DIALECT: Dialect;
     /// 🧩️ Projects actual loaded child references; an undeclared owner grants no restore authority.
-    fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         Err(plugin_sdk_fault("app did not declare a loaded-parent child projection"))
     }
     /// 🌱️ Initial pack for one composed child the parent snapshot declares (`slot`/`child_id`) but no

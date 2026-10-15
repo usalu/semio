@@ -6,15 +6,15 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../🎥️projection/🟦️.ts — the TypeScript twin
 
-use crate::animation::{blend_pose, clip_ticks, lid_at, sample_clip, BLINK_TICKS};
 use crate::attention::{gaze_rests, leant, presence_of, squeeze_of, PERK_LINGER, POINTER_TICKS, TURN_REST};
 use crate::draft::{breath_of, clip_of, RATE};
-use crate::feeling::{settled, settles_at, spirits_of};
-use crate::rig::{pupil_reach, rest_pose, solve_rig, BonePose, Pose};
 use crate::schedule::{arrival_tick, pairing_tick};
-use crate::schema::{Activity, Actor, ActorFrame, EyeFrame, Facing, Frame, Menagerie, PetMode, Point, Rate, Rect, Species, Stage, Ticks};
-use crate::terrain::{larger, smaller};
-use crate::trigonometry::clamp;
+use semio_framework_pets_character::feeling::{settled, settles_at, spirits_of};
+use semio_framework_pets_contract::schema::{Activity, Actor, ActorFrame, EyeFrame, Facing, Frame, Menagerie, PetMode, Point, Rate, Rect, Species, Stage, Ticks};
+use semio_framework_pets_kinematics::animation::{blend_pose, clip_ticks, lid_at, sample_clip, BLINK_TICKS};
+use semio_framework_pets_kinematics::rig::{pupil_reach, rest_pose, solve_rig, BonePose, Pose};
+use semio_framework_pets_kinematics::terrain::{larger, smaller};
+use semio_framework_pets_kinematics::trigonometry::clamp;
 use std::borrow::Borrow;
 
 //#region 🔖️Constants

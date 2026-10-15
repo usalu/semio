@@ -181,7 +181,7 @@ pub fn encode_emit_event_json(event: &EmitEvent) -> String {
 //#region 🔖️Sink
 /// 🚰️ Where a sink's JSON-lines actually land — implementable over memory (`MemorySink`,
 /// tests/introspection), a file/pipe/`Vec<u8>` (`WriterSink`), or anything else ordered and
-/// append-only. Mirrors `pack::PackSink`'s spirit but returns `DbError` (the
+/// append-only. Mirrors `semio_framework_pack_source::PackSink`'s spirit but returns `DbError` (the
 /// family's error type) instead of `PackError`, and writes pre-delimited lines rather than raw
 /// byte ranges.
 pub trait EventSink: Send + Sync {

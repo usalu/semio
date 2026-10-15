@@ -25,8 +25,8 @@ export async function proveDaemonJournal(workspace: string, output: string, invo
   const ajv = new (require("ajv").default)().addSchema(neutral), oracle = ajv.compile(schema), witnessOracle = ajv.compile({ $ref: neutral.$id + "#/$defs/Witness" });
   assert.equal(oracle(fixture.request), true);
   for (const request of fixture.invalid) assert.equal(oracle(request), false);
-  const workerSchema = JSON.parse(await readFile(join(import.meta.dir, "../../../🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/🧬️schema/🔣️.json"), "utf8")), workerOracle = ajv.compile(workerSchema);
-  const workerOptions = { ...fixture.worker, root: workspace, directory: output };
+  const workerSchema = JSON.parse(await readFile(join(import.meta.dir, "../../../🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/🧬️schema/🔣️.json"), "utf8")), toolingWitnessSchema=JSON.parse(await readFile(join(import.meta.dir,"../../../🚀️bootstrap/🛠️tools/📥️use/🧬️schema/📥️witness.json"),"utf8")), workerOracle = ajv.addSchema(toolingWitnessSchema).compile(workerSchema);
+  const workerOptions = { ...fixture.worker, root: workspace, directory: output,repositoryRoot:workspace,readerToken:"d".repeat(32),serviceWitness:{version:1,identity:fixture.worker.toolingIdentity,toolkitRoot:join(workspace,".cache/b/t/m/nx",fixture.worker.toolingIdentity),processId:process.pid,nonce:"12345678-1234-4234-8234-123456789abc",startedAt:1,endpoint:{host:"127.0.0.1",port:1},original:{version:1,policy:{version:1,owner:"repository:nx-daemon-service",maximumElapsedMilliseconds:0},deadlineEpochMilliseconds:null,capabilities:{version:1,kind:"nx-daemon-service",repositoryRoot:workspace,workspaceRoot:workspace,toolingIdentity:fixture.worker.toolingIdentity,generation:"e".repeat(32),directory:output,watcherIdentity:null,graphIdentity:null,implementationIdentity:"d".repeat(64)}}} };
   assert.equal(workerOracle(workerOptions), true); assert.deepEqual(readFilesystemJournalWorkerOptionsV1(workerOptions), workerOptions);
   for (const invalid of [{ ...workerOptions, extra: true }, { ...workerOptions, generation: "stale" }, { ...workerOptions, toolingIdentity: "wrong" }]) { assert.equal(workerOracle(invalid), false); assert.throws(() => readFilesystemJournalWorkerOptionsV1(invalid), /deployment/); }
   await mkdir(output, { recursive: true });
@@ -223,7 +223,7 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
   await mkdir(dirname(cache.serverProcessJsonPath), { recursive: true });
   await writeFile(cache.serverProcessJsonPath, JSON.stringify({ processId: process.pid, socketPath, nxVersion: require("nx/package.json").version, semioToolingIdentity: identity }));
   const serviceDirectory = join(process.env.NX_WORKSPACE_DATA_DIRECTORY!, "semio-journal"); await mkdir(serviceDirectory, { recursive: true });
-  await writeFile(join(serviceDirectory, "service.json"), JSON.stringify({ version: 1, root: daemonRoot, processId: process.pid, generation: "a".repeat(32), socketPath, toolingIdentity: identity }));
+  await writeFile(join(serviceDirectory, "service.json"), JSON.stringify({ version: 1, root: daemonRoot, processId: process.pid, generation: "a".repeat(32), socketPath, toolingIdentity: identity, graphIdentity:null,implementationIdentity:"d".repeat(64) }));
   try {
     replaceGeneration = true;
     assert.equal(await client.getSemioFilesystemJournalV1(scope, control), null, "An old in-flight observer response cannot authorize a replacement generation");

@@ -2707,6 +2707,7 @@ pub mod icon_codec {
     //! 🖼️ Generic icon encoding resolver for board nodes (url, shortcode, math, emoji, raster, inline SVG, catalog, themed, text).
 
     pub use super::{IconName, MetabolismIconName};
+    pub use compiler::world::{FontRole, FontSet};
 
     use serde::{Deserialize, Serialize};
     use std::sync::Arc;
@@ -2970,40 +2971,106 @@ pub mod icon_codec {
         Some(RgbaImage { data: Arc::from([].as_slice()), w, h })
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    static COMPILER_FONTS: std::sync::OnceLock<compiler::CompilerFonts<'static>> = std::sync::OnceLock::new();
+
+    /// 🚫️ Why [`install_compiler_fonts`] refused the host's font set.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum CompilerFontsInstallError {
+        Unparseable { role: FontRole },
+        AlreadyInstalled,
+    }
+
+    impl std::fmt::Display for CompilerFontsInstallError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::Unparseable { role } => write!(f, "compiler font {role:?} ({}) does not parse", role.asset_file_name()),
+                Self::AlreadyInstalled => f.write_str("compiler fonts are already installed"),
+            }
+        }
+    }
+
+    impl std::error::Error for CompilerFontsInstallError {}
+
+    /// 🔌️ The host's font port: hands the compiler's font bytes (delivered through the host's own
+    /// asset channel, see [`FontRole::asset_file_name`]) to math, emoji and text icon resolution.
+    /// Install once per process, before the first icon resolves; until then those three icon kinds
+    /// resolve to [`ResolvedIcon::None`]. A `wasm32-wasip2` guest never paints glyphs and needs no fonts.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    pub fn install_compiler_fonts(set: FontSet<'static>) -> Result<(), CompilerFontsInstallError> {
+        let fonts = compiler::CompilerFonts::parse(&set).map_err(|failure| CompilerFontsInstallError::Unparseable { role: failure.role })?;
+        COMPILER_FONTS.set(fonts).map_err(|_| CompilerFontsInstallError::AlreadyInstalled)
+    }
+
+    /// 🔌️ `wasm32-wasip2` arm: nothing to install, the compiler estimates sizes without glyphs.
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    pub fn install_compiler_fonts(_set: FontSet<'static>) -> Result<(), CompilerFontsInstallError> {
+        Ok(())
+    }
+
+    /// 🔌️ [`install_compiler_fonts`] for a host that received the five files by value, in `FontRole::ALL`
+    /// order (a browser fetch handed across a wasm-bindgen door); the buffers live for the process.
+    pub fn install_compiler_font_bytes(math: Vec<u8>, serif: Vec<u8>, serif_italic: Vec<u8>, mono: Vec<u8>, emoji: Vec<u8>) -> Result<(), CompilerFontsInstallError> {
+        let leaked = |bytes: Vec<u8>| -> &'static [u8] { Box::leak(bytes.into_boxed_slice()) };
+        install_compiler_fonts(FontSet { math: leaked(math), serif: leaked(serif), serif_italic: leaked(serif_italic), mono: leaked(mono), emoji: leaked(emoji) })
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn compiler_fonts() -> Option<&'static compiler::CompilerFonts<'static>> {
+        COMPILER_FONTS.get()
+    }
+
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    fn compiler_fonts() -> Option<&'static compiler::CompilerFonts<'static>> {
+        static ESTIMATE_ONLY: compiler::CompilerFonts<'static> = compiler::CompilerFonts::estimate_only();
+        Some(&ESTIMATE_ONLY)
+    }
+
     /// 🧮️ Compiles a semio math notation snippet ([`compiler::syntax::parse_formula`]) to SVG
     /// via the `compiler` module — replaces the former Typst-markup icon path. `None` on invalid
-    /// notation syntax (graceful degradation, matching the old malformed-typst-markup behavior).
+    /// notation syntax (graceful degradation, matching the old malformed-typst-markup behavior)
+    /// and while the host has not installed the compiler fonts.
     fn resolve_math_src(src: &str) -> ResolvedIcon {
         let src = src.trim();
         if src.is_empty() {
             return ResolvedIcon::None;
         }
+        let Some(fonts) = compiler_fonts() else {
+            return ResolvedIcon::None;
+        };
         let options = compiler::SnippetOptions { font_size_pt: ui_styling::metrics::math::ICON_FONT_SIZE_PT as f32, margin_pt: ui_styling::metrics::math::ICON_MARGIN_PT as f32 };
-        match compiler::compile_snippet_to_svg(src, options) {
+        match compiler::compile_snippet_to_svg(fonts, src, options) {
             Ok(snippet) => ResolvedIcon::SvgPlain(snippet.svg),
             Err(_) => ResolvedIcon::None,
         }
     }
 
-    /// 😀️ Renders an arbitrary emoji string via `compiler::compile_emoji_to_svg` — infallible
-    /// (the compiler's fonts are always embedded, no host-fetch failure mode remains).
+    /// 😀️ Renders an arbitrary emoji string via `compiler::compile_emoji_to_svg` — `None` only
+    /// while the host has not installed the compiler fonts.
     fn resolve_emoji_body(em: &str) -> ResolvedIcon {
         let em = em.trim();
         if em.is_empty() {
             return ResolvedIcon::None;
         }
+        let Some(fonts) = compiler_fonts() else {
+            return ResolvedIcon::None;
+        };
         let options = compiler::SnippetOptions { font_size_pt: ui_styling::metrics::math::EMOJI_FONT_SIZE_PT as f32, margin_pt: ui_styling::metrics::math::EMOJI_MARGIN_PT as f32 };
-        ResolvedIcon::SvgPlain(compiler::compile_emoji_to_svg(em, options).svg)
+        ResolvedIcon::SvgPlain(compiler::compile_emoji_to_svg(fonts, em, options).svg)
     }
 
-    /// 📝️ Renders arbitrary text via `compiler::compile_text_to_svg` — infallible.
+    /// 📝️ Renders arbitrary text via `compiler::compile_text_to_svg` — `None` only while the host
+    /// has not installed the compiler fonts.
     fn resolve_text_body(text: &str) -> ResolvedIcon {
         let text = text.trim();
         if text.is_empty() {
             return ResolvedIcon::None;
         }
+        let Some(fonts) = compiler_fonts() else {
+            return ResolvedIcon::None;
+        };
         let options = compiler::SnippetOptions { font_size_pt: ui_styling::metrics::math::TEXT_FONT_SIZE_PT as f32, margin_pt: ui_styling::metrics::math::TEXT_MARGIN_PT as f32 };
-        ResolvedIcon::SvgPlain(compiler::compile_text_to_svg(text, options).svg)
+        ResolvedIcon::SvgPlain(compiler::compile_text_to_svg(fonts, text, options).svg)
     }
 
     fn resolve_icon_data(data: &str) -> ResolvedIcon {
@@ -3060,7 +3127,7 @@ pub mod icon_codec {
     include!("🧪️tests/🔬️icon-codec-unit/🦀️.rs");
     // #endregion icon_codec
 }
-pub use icon_codec::{resolve_icon_kind, decode_icon, encode_icon, ResolvedIcon, Icon, ThemedSvgLookup};
+pub use icon_codec::{resolve_icon_kind, decode_icon, encode_icon, install_compiler_fonts, install_compiler_font_bytes, CompilerFontsInstallError, FontRole, FontSet, ResolvedIcon, Icon, ThemedSvgLookup};
 // #endregion 🔖️IconCodec
 
 // #region 🔖️CanvasExtension

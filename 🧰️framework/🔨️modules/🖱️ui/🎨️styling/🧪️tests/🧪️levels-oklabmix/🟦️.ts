@@ -1,5 +1,9 @@
 /** 🎨️ The styling colour vocabulary this extracted suite measures against. */
 import type { Rgba8 } from "../../🌓️theme/🟦️.ts";
+import * as ModuleUnderTest from "../../📽️projection/🟦️.ts";
+import * as Mixing from "../../🌗️mixing/🟦️.ts";
+import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -107,3 +111,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { LEVELS_DEFAULT: ModuleUnderTest.LEVELS_DEFAULT, join, linearToOklab: Mixing.linearToOklab, loadTokens: ModuleUnderTest.loadTokens, oklabMix: Mixing.oklabMix, resolveAppearances: ModuleUnderTest.resolveAppearances, rgba8ToLinear: Mixing.rgba8ToLinear, toPascalCase: ModuleUnderTest.toPascalCase }, { directory: resolve(import.meta.dirname, "../../📽️projection"), url: pathToFileURL(resolve(import.meta.dirname, "../../📽️projection/🟦️.ts")).href });

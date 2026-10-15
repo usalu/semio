@@ -11,8 +11,9 @@
 //!
 //! Schema of record: `🧬️schema/🔣️.json`. Contract: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📋️tool-run-contract.md` §3.7, §5 W3-F.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPublication, StepContext, JOB_PAYLOAD_PAGE_BYTES};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, StepContext, JOB_PAYLOAD_PAGE_BYTES};
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter,

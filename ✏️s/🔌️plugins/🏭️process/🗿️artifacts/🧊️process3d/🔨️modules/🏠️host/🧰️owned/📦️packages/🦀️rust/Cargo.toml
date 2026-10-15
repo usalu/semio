@@ -20,6 +20,9 @@ name = "process3d_host_retained_laws"
 path = "../../🧪️tests/🔬️retained-laws/🦀️.rs"
 
 [dependencies]
+semio-framework-job-publication = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-job-registry = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
+
 framework_hash = { workspace = true }
 machine = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }

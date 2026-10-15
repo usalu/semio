@@ -272,8 +272,8 @@ impl From<serde_json::Error> for FrameworkSurfacePaintError {
     }
 }
 
-impl From<image::ImageError> for FrameworkSurfacePaintError {
-    fn from(error: image::ImageError) -> Self {
+impl From<semio_framework_pixels::RasterError> for FrameworkSurfacePaintError {
+    fn from(error: semio_framework_pixels::RasterError) -> Self {
         Self::Image(error.to_string())
     }
 }
@@ -583,13 +583,9 @@ impl RasterHost {
     }
 
     pub fn upload_layer_image(&mut self, layer_id: &str, bytes: &[u8]) -> Result<(), FrameworkSurfacePaintError> {
-        let img = image::load_from_memory(bytes)?;
-        let rgba = img.to_rgba8();
-        let width = rgba.width();
-        let height = rgba.height();
+        let decoded = semio_framework_pixels::decode_png(bytes)?;
         let key = Self::layer_pixel_buffer_key(layer_id);
-        let raw = rgba.into_raw();
-        self.buffers.paint.insert(key.clone(),Arc::new(semio_framework_pixels::RasterImage {width,height,pixels:raw}));
+        self.buffers.paint.insert(key.clone(),Arc::new(decoded));
         self.refresh_image_extents();
         self.invalidate_paint_gesture();
         self.composite.invalidate();
@@ -597,12 +593,8 @@ impl RasterHost {
     }
 
     pub fn upload_raster_image_key(&mut self, key: &str, bytes: &[u8]) -> Result<(), FrameworkSurfacePaintError> {
-        let img = image::load_from_memory(bytes)?;
-        let rgba = img.to_rgba8();
-        let width = rgba.width();
-        let height = rgba.height();
-        let raw = rgba.into_raw();
-        self.buffers.paint.insert(key.to_string(),Arc::new(semio_framework_pixels::RasterImage {width,height,pixels:raw}));
+        let decoded = semio_framework_pixels::decode_png(bytes)?;
+        self.buffers.paint.insert(key.to_string(),Arc::new(decoded));
         self.refresh_image_extents();
         self.invalidate_paint_gesture();
         self.composite.invalidate();

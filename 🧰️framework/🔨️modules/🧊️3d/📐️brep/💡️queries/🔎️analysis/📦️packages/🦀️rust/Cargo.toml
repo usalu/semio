@@ -28,6 +28,6 @@ semio-framework-3d-brep-validation.workspace = true
 semio-framework-value-derive.workspace = true
 
 [dev-dependencies]
-semio-framework-3d-brep-operations.workspace = true
+semio-framework-3d-brep-construction.workspace = true
 serde.workspace = true
 serde_json.workspace = true

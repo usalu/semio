@@ -327,3 +327,6 @@ mod channel_return_content_tests;
 mod vcs_branch_provenance_tests;
 
 pub use semio_framework_mutation_diff::{sparse_record_diff,sparse_whole_diff};
+
+/// 🧒️ Canonical projection owner for exported composition macros.
+pub use semio_framework_composition_admission;

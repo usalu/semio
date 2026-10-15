@@ -16,6 +16,7 @@
 //! body-key → node, `🔖️Io`/`🔌️Registration` regions below, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use crate::editor::animate::commands::{
     add_tile, canvas_pointer_down, clear_tiles, copy_prompt, delete_selection, delete_tile, engagement_input, engagement_submit, export_video_from_deck, no_operation, patch_tile_crops, rename_tiles, reset_grid, seed_grid, set_active_example,
     set_frame, set_source,
@@ -30,7 +31,7 @@ use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::build_tile_morph_prompt;
 use crate::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPublication, StepContext};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::app::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion};
 use semio_framework_plugin::ArtifactReservedJob;
@@ -891,8 +892,8 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// 🧬️ The loaded-parent child projection, read straight off the snapshot's own `#[child]` fields.
     /// Without it every live envelope load faults with `editor did not declare a loaded-parent child
     /// projection` before the decoded document can replace the store.
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("animate.child-projection"), error.to_string()))
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("animate.child-projection"), error.to_string()))
     }
 
     type Snapshot = PresentationSnapshot;

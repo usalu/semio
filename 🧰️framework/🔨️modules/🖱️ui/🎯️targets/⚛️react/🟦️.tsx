@@ -104,7 +104,6 @@ import {
   type WindowLayout,
   ephemeralBox,
   ephemeralMap,
-  ephemeralSet,
 } from "@semio-tech/framework";
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
@@ -158,8 +157,7 @@ import {
   useStoreApi,
   ViewportPortal,
 } from "@xyflow/react";
-import { ICONS, assertUniqueIconConceptAssignments, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/assets";
-import { isMetabolismIconName, METABOLISM_ICONS, resolveMetabolismIconSvgFromTheme, type MetabolismIconName } from "@semio-tech/assets";
+import { ICONS, assertUniqueIconConceptAssignments, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName, isMetabolismIconName, METABOLISM_ICONS, resolveMetabolismIconSvgFromTheme, type MetabolismIconName } from "@semio-tech/assets";
 export type { IconName, MetabolismIconName };
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -174,7 +172,7 @@ import { type MergeMode } from "../../../🕹️interaction/🟦️.ts";
 // #region 🔌️Ports
 // 🧱️core-extracted: ReactHostPort + reactHostPort moved to 🧱️elements/🔌️Ports/🟦️.tsx (a
 // module-top-level circular-import fix, see that file's header comment) — imported below, not redefined.
-import { reactHostPort, setReactHostPort, type ReactHostPort } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort, setReactHostPort, type ReactHostPort, sceneHostPort, setSceneHostPort, type SceneHostPort, flowHostPort, setFlowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider, HostThreeCanvas } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
 export { reactHostPort, type ReactHostPort };
 export {
   interactiveJobPort,
@@ -195,13 +193,11 @@ export interface ThreeHostPort {
 // 🧱️core-extracted: SceneHostPort + sceneHostPort moved to 🧱️elements/🔌️Ports/🟦️.tsx (same
 // module-top-level circular-import fix as reactHostPort above, triggered by Scene's top-level
 // `sceneHostPort.drei.Line` read) — imported below, not redefined.
-import { sceneHostPort, setSceneHostPort, type SceneHostPort } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
 export { sceneHostPort, type SceneHostPort };
 // #endregion 🔌️Ports
 
 // #region 🔌️PortWiring
-import { flowHostPort, setFlowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
-export { flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider };
+export { flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider, HostThreeCanvas };
 // 🧱️core-extracted: reactHostPort's `let` binding + default value now live in
 // 🧱️elements/🔌️Ports/🟦️.tsx (imported above, in the 🔌️Ports region) — reassignment below
 // goes through the imported setReactHostPort() setter, since an ES import binding can't be assigned to
@@ -252,11 +248,10 @@ export function configureHostPorts(overrides: HostPortOverrides): () => void {
 // #endregion 🔌️PortWiring
 
 // #region 🐚️ShellScope
-import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellFloatingSurfaceHost, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback } from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
+import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellFloatingSurfaceHost, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback, registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 export { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellFloatingSurfaceHost, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback };
 // #endregion 🐚️ShellScope
 
-import { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 export { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF };
 
 // #region 🔖️IconRenderPort
@@ -740,30 +735,15 @@ export let referenceMediaPort: ReferenceMediaPort = {
 // #endregion 🖼️ReferenceMedia
 
 // #region 🔌️PortWiringAliases
-export const HostThreeCanvas = threeHostPort.canvas;
 export const HostSceneCanvas = sceneHostPort.fiber.canvas;
 export type { ThreeEvent };
 
-/** @emoji 🌳️ Typography for measure tree leaf labels. */
-export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-element group-hover:text-emphasized transition-colors";
 
-/** @emoji 🌳️ Typography for measure tree group headers. */
-export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold uppercase tracking-wide text-element group-hover:text-emphasized";
 
-/** @emoji 📑️ Panel tab label beside the icon. */
-export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
-/** @emoji 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
-export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center overflow-visible leading-none [&_svg]:block";
 
-/** @emoji 🎯️ Label/icon emphasis paired with {@link dropZoneReadyFillClass} so text stays legible on the fill. */
-export const dropZoneReadyTextClass = "text-emphasized";
 
-/** @emoji 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
-export const dropZoneReadyFillClass = "bg-[var(--accent-secondary)]";
 
-/** @emoji Combined passive drop-zone treatment (fill + emphasized text/icons). */
-export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextClass);
 
 /** @emoji 🎨️ Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
 
@@ -956,24 +936,6 @@ export function selectionMergeIds(mode: MergeMode, current: readonly string[], i
   return [...currentSet];
 }
 
-/**
- * 🎯️ The ONE modifier→merge policy for `🕹️interaction`'s `nextSelection`/`nextHover` picks — every
- * surface (Tree rows, the Shell, canvas/world hosts) routes its raw pointer/keyboard modifiers through
- * this single mapping instead of hand-rolling shift/ctrl/alt checks per surface: shift → `"range"`,
- * mod/ctrl/cmd → `"invertive"`, alt → `"subtractive"`, no modifier → `"replace"`. Priority is shift, then
- * ctrl/meta, then alt — a chord that holds more than one of these picks the first that matches, so shift
- * always wins a range pick even with ctrl also held. Shares its `MergeMode` vocabulary with
- * `marqueeModeFromModifiers` above (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a
- * collapsed the old, differently-prioritized `SelectionMergeMode` duplicate into this one) — the two
- * functions differ only in priority/never-range, matching their different gestures (marquee drag vs.
- * click-select).
- */
-export function interactionMergeFromModifiers(modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean; readonly altKey?: boolean }): MergeMode {
-  if (modifiers.shiftKey === true) return "range";
-  if (modifiers.ctrlKey === true || modifiers.metaKey === true) return "invertive";
-  if (modifiers.altKey === true) return "subtractive";
-  return "replace";
-}
 
 export type ScreenRect = { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
 
@@ -1694,21 +1656,9 @@ export type { ElementsSurfaceDevice } from "../../📱️device/🟦️.ts";
 // #region 🎛️UiChromePrefs
 
 
-/** @emoji 🗣️ Id of the always-available default terminology (no term substitutions). */
-export const UI_TERMINOLOGY_NATIVE = "native";
 
-/** @emoji 🗣️ Storage key for the active app terminology id. */
-export const UI_CHROME_TERMINOLOGY_STORAGE_KEY = "ui.chrome.terminology";
 
-/** @emoji 🗣️ Reads the persisted terminology id from the given shell's storage, defaulting to native. */
-export function readStoredUiChromeTerminology(storage: StoragePort): string {
-  return storage.get(UI_CHROME_TERMINOLOGY_STORAGE_KEY) || UI_TERMINOLOGY_NATIVE;
-}
 
-/** @emoji 🗣️ Persists the active terminology id to the given shell's storage. */
-export function writeStoredUiChromeTerminology(storage: StoragePort, id: string): void {
-  storage.set(UI_CHROME_TERMINOLOGY_STORAGE_KEY, id);
-}
 
 /** @emoji 🎨️ Storage key for the active theme id (builtin or `custom.<slug>`). */
 export const UI_CHROME_THEME_ID_STORAGE_KEY = "ui.chrome.theme";
@@ -1985,33 +1935,7 @@ export function createTerminologyLabelResolver<Keys extends string>(sets: Readon
   return (terminologyId, locale) => (sets[terminologyId] ?? sets[UI_TERMINOLOGY_NATIVE])![locale];
 }
 
-const uiTerminologyChangeListeners = ephemeralSet<() => void>("framework.modules.ui.packages.typescript.targets.react.index.tsx.uiTerminologyChangeListeners");
 
-/** @emoji 🗣️ React hook giving TS-native products (no Rust `AppDefinition`) read/write access to the shared `ui.chrome.terminology` contract — the same localStorage key the shell's Settings terminology dropdown drives — without depending on `os-shell` state or any Rust type. */
-export function useUiTerminology(): { readonly terminology: string; readonly setTerminology: (id: string) => void } {
-  const storage = shellScopeStorageOrBrowserFallback(useShellScopeOptional());
-  const [terminology, setTerminologyState] = React.useState<string>(() => readStoredUiChromeTerminology(storage));
-  React.useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
-      if (event.key === UI_CHROME_TERMINOLOGY_STORAGE_KEY) setTerminologyState(readStoredUiChromeTerminology(storage));
-    };
-    const onLocalChange = () => setTerminologyState(readStoredUiChromeTerminology(storage));
-    uiTerminologyChangeListeners.add(onLocalChange);
-    if (typeof window !== "undefined") window.addEventListener("storage", onStorage);
-    return () => {
-      uiTerminologyChangeListeners.delete(onLocalChange);
-      if (typeof window !== "undefined") window.removeEventListener("storage", onStorage);
-    };
-  }, [storage]);
-  const setTerminology = React.useCallback(
-    (id: string) => {
-      writeStoredUiChromeTerminology(storage, id);
-      for (const listener of uiTerminologyChangeListeners) listener();
-    },
-    [storage],
-  );
-  return { terminology, setTerminology };
-}
 //#endregion 🗣️TsNativeTerminology
 
 // #endregion 🔌️I18n Port
@@ -2071,13 +1995,7 @@ export function usePanelChromeHotkeys(options: { readonly onToggle?: (anchor: An
 
 
 // #region 📱️UiMobile Context
-const UiMobileContext = reactHostPort.createContext<boolean | undefined>(undefined);
 
-/** @emoji 📱️ Broadcasts the shell's authoritative mobile flag to descendants (e.g. {@link Pane}, {@link Window}) that have no `mobile` prop of their own. */
-export const UiMobileProvider: React.FC<{
-  readonly mobile: boolean;
-  readonly children: React.ReactNode;
-}> = ({ mobile, children }) => <UiMobileContext.Provider value={mobile}>{children}</UiMobileContext.Provider>;
 
 const UiDeviceContext = reactHostPort.createContext<ElementsSurfaceDevice | undefined>(undefined);
 
@@ -2112,49 +2030,11 @@ export function useUiDevice(): ElementsSurfaceDevice {
   return elementsSurfaceDeviceForMatches({ mobile: mobileMedia, tablet: tabletMedia });
 }
 
-/** @emoji 📱️ Returns the nearest {@link UiMobileProvider} flag, falling back to {@link UI_MOBILE_MEDIA_QUERY} for standalone usage (Storybook, tests). */
-export function useUiMobile(): boolean {
-  const media = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
-  const ctx = reactHostPort.useContext(UiMobileContext);
-  return ctx ?? media;
-}
 // #endregion 📱️UiMobile Context
 
-/**
- * 3D point with x, y, z coordinates.
- **/
-export interface Point {
-  x: number;
-  y: number;
-  z: number;
-}
 
-/**
- * 3D direction vector with x, y, z components.
- **/
-export interface Vector {
-  x: number;
-  y: number;
-  z: number;
-}
 
-/**
- * 3D coordinate plane defined by an origin point and two axis vectors.
- **/
-export interface Plane {
-  origin: Point;
-  xAxis: Vector;
-  yAxis: Vector;
-}
 
-/**
- * 3D camera defined by position, forward direction, and up direction.
- **/
-export interface Camera {
-  position: Point;
-  forward: Vector;
-  up: Vector;
-}
 
 // #endregion 🎼️Utilities
 
@@ -2178,28 +2058,11 @@ export enum SectionSpecificity {
 // #endregion 🔊️Section Specificity
 
 // #region 🔤️Interaction Context
-// Global ghost mode hides open panel/pane chrome during interactions; navbar/footer panel toggles stay visible.
 
-const PANEL_GHOST_MOVE_THRESHOLD_PX = 4;
 
-/** @emoji 👻️ Global ghost session API (begin/end while dragging or editing). */
-export interface PanelGhostValue {
-  readonly active: boolean;
-  readonly begin: (target: EventTarget | null) => void;
-  readonly end: () => void;
-}
 
-const PanelGhostContext = reactHostPort.createContext<PanelGhostValue | undefined>(undefined);
 
-/** @emoji 👻️ Returns the global ghost controller when inside {@link GhostProvider}. */
-export const usePanelGhost = (): PanelGhostValue | undefined => reactHostPort.useContext(PanelGhostContext);
 
-interface InteractionCommands {
-  setActiveInteraction: (elementId?: string, interactionId?: string) => void;
-}
-
-const InteractionContext = reactHostPort.createContext<InteractionCommands | undefined>(undefined);
-const ActiveInteractionContext = reactHostPort.createContext<string | undefined>(undefined);
 
 /** @emoji 🔤️ External provider for interaction commands; prefer {@link GhostProvider} at layout root. */
 export const InteractionProvider: React.FC<{
@@ -2212,203 +2075,21 @@ export const InteractionProvider: React.FC<{
   </InteractionContext.Provider>
 );
 
-export const useInteractionCommands = () => reactHostPort.useContext(InteractionContext);
 const useActiveInteraction = () => reactHostPort.useContext(ActiveInteractionContext);
 
-type GhostController = PanelGhostValue & {
-  readonly commands: InteractionCommands;
-  readonly activeInteraction?: string;
-};
 
-function findGhostRegionAncestor(target: Element): Element | null {
-  let node: Element | null = target;
-  while (node) {
-    if (node.hasAttribute("data-ghost-region")) return node;
-    node = node.parentElement;
-  }
-  return null;
-}
 
-/** @emoji 📐️ Pane/panel/mode edge resize is layout chrome, not a canvas ghost interaction. */
-function isChromeResizeHandleTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) return false;
-  const slotted = target.closest("[data-slot]");
-  if (!slotted) return false;
-  const slot = slotted.getAttribute("data-slot") ?? "";
-  return slot === "pane-resize-handle" || slot === "panel-resize-handle" || slot === "resizable-handle" || slot === "resizable-corner" || slot.startsWith("window-measures-resize");
-}
 
-/** @emoji 👻️ Keeps automatic ghosting on interaction surfaces and direct tree rows, not nested UI controls. */
-export function shouldBeginAutomaticGhostInteraction(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) return false;
-  if (isChromeResizeHandleTarget(target)) return false;
-  const region = findGhostRegionAncestor(target);
-  const dimmed = target.closest("[data-dim]");
-  if (!dimmed || (region && !region.contains(dimmed))) return true;
-  if (!region) return false;
-  return resolveHoverRow(target as HTMLElement, region as HTMLElement) === dimmed;
-}
 
-function useGhostController(): GhostController {
-  const [active, setActive] = reactHostPort.useState(false);
-  const [activeInteraction, setActiveInteractionState] = reactHostPort.useState<string | undefined>(undefined);
-  const activeMarkedRefs = reactHostPort.useRef<HTMLElement[]>([]);
-  const sessionActiveRef = reactHostPort.useRef(false);
 
-  const clearActiveMarks = reactHostPort.useCallback(() => {
-    for (const el of activeMarkedRefs.current) {
-      el.removeAttribute("data-active-interaction");
-      el.removeAttribute("data-active-ancestor");
-    }
-    activeMarkedRefs.current = [];
-  }, []);
 
-  const begin = reactHostPort.useCallback(
-    (target: EventTarget | null) => {
-      clearActiveMarks();
-      sessionActiveRef.current = true;
-      setActive(true);
-      if (!target || !(target instanceof Element)) return;
-      const region = findGhostRegionAncestor(target);
-      if (!region) return;
-      activeMarkedRefs.current = markGhostTreeInteraction(target, region);
-    },
-    [clearActiveMarks],
-  );
 
-  const end = reactHostPort.useCallback(() => {
-    clearActiveMarks();
-    sessionActiveRef.current = false;
-    setActive(false);
-    setActiveInteractionState(undefined);
-  }, [clearActiveMarks]);
 
-  const setActiveInteraction = reactHostPort.useCallback(
-    (elementId?: string, interactionId?: string) => {
-      if (interactionId) {
-        setActiveInteractionState(interactionId);
-        const el = elementId ? document.getElementById(elementId) : null;
-        begin(el);
-        return;
-      }
-      end();
-    },
-    [begin, end],
-  );
 
-  const commands = reactHostPort.useMemo<InteractionCommands>(() => ({ setActiveInteraction }), [setActiveInteraction]);
-
-  const controllerRef = reactHostPort.useRef<GhostController | null>(null);
-  controllerRef.current = { active, begin, end, commands, activeInteraction };
-
-  reactHostPort.useEffect(() => {
-    const pendingRef: { current: { readonly x: number; readonly y: number; readonly target: EventTarget | null } | null } = { current: null };
-    const beganViaPointerDragRef = { current: false };
-    const bindings = createDOMEventBinding();
-    const capture = true;
-    const onDown = (event: Event) => {
-      const pointerEvent = event as PointerEvent;
-      if (pointerEvent.button !== 0) return;
-      pendingRef.current = { x: pointerEvent.clientX, y: pointerEvent.clientY, target: pointerEvent.target };
-    };
-    const onMove = (event: Event) => {
-      const pointerEvent = event as PointerEvent;
-      const pending = pendingRef.current;
-      if (!pending || sessionActiveRef.current) return;
-      const dx = pointerEvent.clientX - pending.x;
-      const dy = pointerEvent.clientY - pending.y;
-      if (dx * dx + dy * dy < PANEL_GHOST_MOVE_THRESHOLD_PX * PANEL_GHOST_MOVE_THRESHOLD_PX) return;
-      if (!shouldBeginAutomaticGhostInteraction(pending.target)) {
-        pendingRef.current = null;
-        return;
-      }
-      controllerRef.current?.begin(pending.target);
-      beganViaPointerDragRef.current = true;
-      pendingRef.current = null;
-    };
-    const onUp = () => {
-      pendingRef.current = null;
-      if (beganViaPointerDragRef.current) {
-        beganViaPointerDragRef.current = false;
-        controllerRef.current?.end();
-      }
-    };
-    bindings.listen(document, "pointerdown", onDown, capture);
-    bindings.listen(document, "pointermove", onMove, capture);
-    bindings.listen(document, "pointerup", onUp, capture);
-    bindings.listen(document, "pointercancel", onUp, capture);
-    return () => bindings.dispose();
-  }, []);
-
-  return reactHostPort.useMemo(() => ({ active, begin, end, commands, activeInteraction }), [active, activeInteraction, begin, commands, end]);
-}
-
-/** @emoji 👻️ Mounts global ghost detection and interaction context for layout + panels. */
-export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const ghost = useGhostController();
-  reactHostPort.useEffect(() => {
-    setPanelGhostSessionBridge({ begin: ghost.begin, end: ghost.end });
-    return () => setPanelGhostSessionBridge(null);
-  }, [ghost.begin, ghost.end]);
-  const panelGhostValue = reactHostPort.useMemo<PanelGhostValue>(() => ({ active: ghost.active, begin: ghost.begin, end: ghost.end }), [ghost.active, ghost.begin, ghost.end]);
-  return (
-    <PanelGhostContext.Provider value={panelGhostValue}>
-      <InteractionContext.Provider value={ghost.commands}>
-        <ActiveInteractionContext.Provider value={ghost.activeInteraction}>{children}</ActiveInteractionContext.Provider>
-      </InteractionContext.Provider>
-    </PanelGhostContext.Provider>
-  );
-};
-
-interface GhostRegionShellProps extends React.HTMLAttributes<HTMLDivElement> {
-  children?: React.ReactNode;
-  /** @emoji 🫳️ When true, the region root is click-through while ghosted (panels over canvas). */
-  clickThroughWhenGhost?: boolean;
-  /** @emoji 👻️ When false, this region stays undimmed during a global ghost session (navbar/footer panel toggles). Default true — open panels/panes hide. */
-  sessionGhost?: boolean;
-}
-
-/** @emoji 👻️ Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active and {@link sessionGhost} is true. */
-export const GhostRegionShell = reactHostPort.forwardRef<HTMLDivElement, GhostRegionShellProps>(function GhostRegionShell({ children, className, style, clickThroughWhenGhost = false, sessionGhost = true, ...props }, ref) {
-  const ghost = usePanelGhost();
-  const ghostActive = Boolean(sessionGhost && ghost?.active);
-  const mergedStyle = reactHostPort.useMemo(
-    () => ({
-      ...(style as React.CSSProperties | undefined),
-      pointerEvents: clickThroughWhenGhost && ghostActive ? ("none" as const) : undefined,
-    }),
-    [clickThroughWhenGhost, ghostActive, style],
-  );
-  return (
-    <div ref={ref} data-ghost-region data-ghost={ghostActive ? "true" : undefined} className={className} style={mergedStyle} {...props}>
-      {children}
-    </div>
-  );
-});
-
-interface PanelGhostRootProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
-}
-
-/** @emoji 👻️ Panel shell marked as a ghost region; dims when {@link GhostProvider} session is active. */
-export const PanelGhostRoot = reactHostPort.forwardRef<HTMLDivElement, PanelGhostRootProps>(function PanelGhostRoot({ children, className, style, ...props }, ref) {
-  const level = useLevel();
-  return (
-    <GhostRegionShell ref={ref} clickThroughWhenGhost data-level={level} data-elevation-root="" className={className} style={style} {...props}>
-      {children}
-    </GhostRegionShell>
-  );
-});
 
 // #endregion 🔤️Interaction Context
 
 // #region 🎓️Introduction
-/** 🪟️ The glass overlay box recipe shared by the introduction info box and modal dialogs (see
- * `UIDialog`) — the two mechanisms are styled identically by construction, not by convention.
- * Border color is CSS-owned (`[data-slot="introduction-info-box"|"dialog-box"]`): normal at rest,
- * emphasized on `:hover` only — never `:focus-within`, so clicking a button does not leave the
- * border stuck after the pointer leaves. */
-export const GLASS_OVERLAY_BOX_CLASS = cn("text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg p-double shadow-lg");
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
@@ -3411,17 +3092,6 @@ export type UIIntroductionProps = {
   readonly onDismiss: (completed: boolean) => void;
 };
 
-/** @emoji 🗺️ Resolves manifest-localized copy at the UI boundary while retaining support for already-resolved TS-native strings. */
-export function resolveUiLocalizedText(value: unknown, terminology: string, locale: UiLocale): string {
-  if (typeof value === "string") return value;
-  if (value === null || typeof value !== "object") return "";
-  const matrix = value as Readonly<Record<string, unknown>>;
-  const terminologyCells = matrix[terminology] ?? matrix[UI_TERMINOLOGY_NATIVE] ?? matrix.reuse;
-  if (terminologyCells === null || typeof terminologyCells !== "object") return "";
-  const localeCells = terminologyCells as Readonly<Record<string, unknown>>;
-  const resolved = localeCells[locale] ?? localeCells.en ?? Object.values(localeCells).find((cell) => typeof cell === "string");
-  return typeof resolved === "string" ? resolved : "";
-}
 
 /** @emoji 📐️ One row of an introduction step's {@link IntroductionLogo}s, all sharing one computed height
  * so the row fills its full width edge-to-edge with no logo dominating over another — the height isn't
@@ -4406,10 +4076,6 @@ export const borderEmphasizedTopClass = `border-t ${borderEmphasizedClass}`;
 /** @emoji 📏️ Normal chrome frame (`border` + {@link borderNormalClass}); panel/pane hosts prefer {@link shellChromeFrameLayerClass} + CSS parent-hover. */
 export const borderNormalFrameClass = `box-border border border-solid ${borderNormalClass}`;
 
-/** @emoji 📏️ Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
-
-/** @emoji 📏️ Normal top edge utility for in-chrome dividers (not shell footer — footer uses a CSS `::before` stroke). */
-export const borderNormalTopClass = `border-t ${borderNormalClass}`;
 
 /** @emoji 📏️ Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
@@ -4417,8 +4083,6 @@ export const activeLineClass = "border-active-base";
 /** @emoji 🪟️ Shell outline — normal gray frame; emphasized while the pointer is inside the parent `[data-slot="panel"]` / `[data-slot="pane"]`. */
 export const shellChromeBorderClass = borderNormalFrameClass;
 
-/** @emoji 🪟️ Parent stroke on top of fill and content (transparent center; ghost-dimmed with the open panel/pane). Border color is CSS-only so parent `:hover` can emphasize it like the window silhouette. */
-export const shellChromeFrameLayerClass = "pointer-events-none absolute inset-0 z-30 box-border bg-transparent";
 
 /** @emoji 🪟️ Frosted floating menu/popover surface for technology renderer overlays — menu tier; host element must also carry `data-level="menu"` (Radix-portal-style consumers stamp their own content root). */
 export const floatingMenuSurfaceClass = cn(glassClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
@@ -4427,8 +4091,6 @@ export const floatingMenuSurfaceClass = cn(glassClass, "overflow-hidden rounded-
 import { MenuItem, menuItemClassName, type MenuItemProps } from "../../🧱️elements/📋️MenuItem/🟦️.tsx";
 export { MenuItem, menuItemClassName, type MenuItemProps };
 
-/** @emoji 🪟️ Action row inside {@link floatingMenuSurfaceClass}. */
-export const floatingMenuItemClass = menuItemClassName;
 // #endregion 📋️MenuItem
 
 /** @emoji 🪟️ Frosted editor aside chrome for technology renderers — pane-level chrome; host element must also carry `data-level="pane"`. */
@@ -4455,43 +4117,12 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 /** @emoji 🪟️ Canvas viewport surface inside a host root. */
 export const canvasViewportClass = cn("relative h-full min-h-0 w-full min-w-0 outline-none", surfaceClass);
 
-/** @emoji 📑️ Panel tab strip scroll row — `ui-scrollbar-hidden` preserves fixed control height when overflowing tabs scroll horizontally. */
-const panelTabBarScrollClass = "ui-scrollbar-hidden relative z-40 flex min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
 
-/** @emoji 📑️ Panel tab strip base — `w-full` spans chrome/mobile dividers across the row; floating panel caps omit it so the U-gap opens after the last tab. */
-const panelTabBarBaseClass = cn(panelTabBarScrollClass, "w-full");
 
-/** @emoji 📑️ Panel tab strip with its divider on the content-facing side. */
-export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
 
-/** @emoji 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
 
-/** @emoji 📑️ Panel tab label beside the icon. */
 
-/** @emoji 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
-/** @emoji 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
-export const panelTabButtonDividerClass = "border-e border-solid !border-normal last:border-e-0";
 
-/** @emoji 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
-/** @emoji 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
-export const panelTabButtonClass = cn(
-  "inline-flex min-h-0 shrink-0 items-center gap-tiny bg-transparent p-0",
-  panelTabButtonDividerClass,
-  "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
-  "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
-  "[&[data-active=true]:not(:first-child)]:border-s [&[data-active=true]:not(:first-child)]:-ms-px",
-  hoverExcludingHandleBgFillClass,
-  hoverExcludingHandleTextEmphasizedClass,
-);
-
-/** @emoji 📑️ Floating panel tab strip inside {@link WindowChrome} — collapsed tabs defer every outer edge to the silhouette; expanded tabs restore the normal content-facing edge that separates their toggles from the panel body. */
-export function panelAnchorTabBarClass(direction: "up" | "down", expanded = false): string {
-  return cn(panelTabBarScrollClass, "h-[var(--panel-header-height)]", expanded && (direction === "up" ? borderNormalTopClass : borderNormalBottomClass));
-}
-
-/** @emoji 📑️ Panel tab button padding. */
-/** @emoji 📑️ Panel tab button padding. */
-export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
 // #region 🫳️DragAffordance
 import { DragHandle, HANDLE_HOVER_SCOPE_ATTR } from "../../🧱️elements/🧱️DragHandle/🟦️.tsx";
@@ -4549,91 +4180,17 @@ export {
 };
 // #endregion 📑️PanelTabBar
 
-export const ANCHORS = ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"] as const;
 
-/** @emoji 🧭️ One of the eight anchors a panel or pane can grow from. */
-export type Anchor = (typeof ANCHORS)[number];
 
-/** @emoji 🧭️ `"top"`/`"middle"`/`"bottom"` row of an {@link Anchor} — `left-middle`/`right-middle` sit in the middle row. */
-export function anchorVertical(anchor: Anchor): "top" | "middle" | "bottom" {
-  if (anchor.startsWith("top")) return "top";
-  if (anchor.startsWith("bottom")) return "bottom";
-  return "middle";
-}
 
-/** @emoji 🧭️ `"left"`/`"middle"`/`"right"` column of an {@link Anchor} — `top-middle`/`bottom-middle` sit in the middle column. */
-export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
-  switch (anchor) {
-    case "top-left":
-    case "bottom-left":
-    case "left-middle":
-      return "left";
-    case "top-right":
-    case "bottom-right":
-    case "right-middle":
-      return "right";
-    default:
-      return "middle";
-  }
-}
 
 // #region 🧭️Flow Context
 /** @emoji 🧭️ Horizontal reading direction — `"rtl"` mirrors icon/label order and rides on native CSS `dir`. */
 import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 export { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow };
 
-/** @emoji 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
-export function flowFromAnchor(anchor: Anchor): Flow {
-  return { inline: anchorHorizontal(anchor) === "right" ? "rtl" : "ltr", block: anchorVertical(anchor) === "bottom" ? "up" : "down" };
-}
 
-/** @emoji 🧭️ Edge insets for an {@link Anchor} plus responsive width/height clamps to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
-export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
-  const horizontal = anchorHorizontal(anchor);
-  const vertical = anchorVertical(anchor);
-  const style: React.CSSProperties = {
-    maxWidth: "calc(100% - (var(--panel-inset) * 2))",
-    maxHeight: "calc(100% - (var(--panel-inset) * 2))",
-  };
-  if (horizontal === "middle") {
-    style.left = "50%";
-    style.transform = "translateX(-50%)";
-  } else {
-    style[horizontal] = "var(--panel-inset)";
-  }
-  if (vertical === "middle") {
-    style.top = "50%";
-    style.transform = style.transform ? `${style.transform} translateY(-50%)` : "translateY(-50%)";
-  } else {
-    style[vertical] = "var(--panel-inset)";
-  }
-  return style;
-}
 
-/**
- * @emoji 🧭️ Open chrome-hosted {@link Panel} position — pulls the window-chrome cap into the navbar/footer
- * band where {@link PanelChromeTabBar} parked the folded toggles, so opening unfolds in place instead of
- * jumping the chips into the canvas. Navbar/footer are `h-large` with centered `h-medium` items; the offset
- * aligns the panel's `min-h-medium` cap to that centered row. Max height grows by the same overhang so the
- * body still fills the canvas region.
- * @see {@link anchorPositionStyle}
- */
-export function chromeHostedOpenPanelPositionStyle(anchor: Anchor): React.CSSProperties {
-  const style = anchorPositionStyle(anchor);
-  const vertical = anchorVertical(anchor);
-  // 📍️ From the middle-region edge back to the centered h-medium row inside h-large shell chrome.
-  const shellHeight = vertical === "bottom" ? "var(--footer-height)" : "var(--navbar-height)";
-  const intoShellChrome = `calc(-1 * (${shellHeight} + var(--panel-header-height)) / 2)`;
-  const maxHeightWithChrome = `calc(100% + (${shellHeight} + var(--panel-header-height)) / 2)`;
-  if (vertical === "top") {
-    style.top = intoShellChrome;
-    style.maxHeight = maxHeightWithChrome;
-  } else if (vertical === "bottom") {
-    style.bottom = intoShellChrome;
-    style.maxHeight = maxHeightWithChrome;
-  }
-  return style;
-}
 
 /** @emoji 🧭️ Chevron {@link IconName} that points toward where a fold's content is — the opposite state's chevron, mirrored for {@link FlowInline} `"rtl"`. `pointsOut` is `true` when the fold is collapsed (chevron points toward the hidden content) and `false` when expanded (chevron points back at the fold). */
 export function flowChevronIconName(inline: FlowInline, pointsOut: boolean): IconName {
@@ -4723,8 +4280,6 @@ function appendPanelTabAsChild(tabs: readonly PanelTabNode[], parentId: string, 
   });
 }
 
-/** @emoji 🎯️ Where a dragged tab lands: `"insert"` places it among `parentPath`'s children at `index` (root when `parentPath` is empty); `"child"` appends it as the last child of the branch tab `parentId` (leaf targets never promote to branches in v1). */
-export type PanelTabDockTarget = { readonly kind: "insert"; readonly anchor: Anchor; readonly parentPath: readonly string[]; readonly index: number } | { readonly kind: "child"; readonly anchor: Anchor; readonly parentId: string };
 
 /** @emoji 🎯️ A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromAnchor` alone) to `target`. */
 export interface PanelTabDockMove {
@@ -4771,19 +4326,7 @@ function replacePanelTabInDock(dock: PanelDock, id: string, nextNode: PanelTabNo
   return { anchors };
 }
 
-/** @emoji 🎯️ Where a dragged tree unit lands: `tabId`'s (a leaf's) unit list, at `index`. */
-export interface PanelTreeUnitDockTarget {
-  readonly anchor: Anchor;
-  readonly tabId: string;
-  readonly index: number;
-}
 
-/** @emoji 🎯️ A completed tree-unit drag from leaf `fromTabId` to `target`. */
-export interface PanelTreeUnitDockMove {
-  readonly unitId: string;
-  readonly fromTabId: string;
-  readonly target: PanelTreeUnitDockTarget;
-}
 
 /** @emoji 🎯️ Pure move transform for tree units — reorders within a leaf's own unit list, or moves a unit from one leaf tab's list into another's. */
 export function moveTreeUnitInDock(dock: PanelDock, move: PanelTreeUnitDockMove): PanelDock {
@@ -4876,55 +4419,6 @@ const DockDragChip: React.FC<{ readonly label: string; readonly x: number; reado
 
 //#endregion 🪟️DragPreview
 
-//#region 🌱️TreeUnitDrag
-
-/** @emoji 🌱️ `dataTransfer` MIME identifying a tree-unit drag between leaf tabs. */
-export const PANEL_TREE_UNIT_MIME = "application/x-semio-panel-tree-unit";
-
-/** @emoji ↕️ `dataTransfer` MIME identifying a tree-section reorder drag within one {@link Tree}. */
-export const TREE_SECTION_REORDER_MIME = "application/x-semio-tree-section-reorder";
-
-export interface PanelTreeUnitDragSession {
-  readonly tabId: string;
-  readonly unitId: string;
-  readonly label: string;
-}
-
-const activePanelTreeUnitDragSession = ephemeralBox<PanelTreeUnitDragSession | null>("framework.modules.ui.packages.typescript.targets.react.index.tsx.activePanelTreeUnitDragSession", null);
-const panelTreeUnitDragListeners = ephemeralSet<() => void>("framework.modules.ui.packages.typescript.targets.react.index.tsx.panelTreeUnitDragListeners");
-
-/** @emoji 🌱️ Records the active tree-unit drag until drop or dragend. */
-export function beginPanelTreeUnitDrag(session: PanelTreeUnitDragSession): void {
-  activePanelTreeUnitDragSession.current = session;
-  panelGhostSessionBridge?.begin(null);
-  panelTreeUnitDragListeners.forEach((listener) => listener());
-}
-
-/** @emoji 🌱️ Clears the active tree-unit drag session. */
-export function endPanelTreeUnitDrag(): void {
-  activePanelTreeUnitDragSession.current = null;
-  panelGhostSessionBridge?.end();
-  panelTreeUnitDragListeners.forEach((listener) => listener());
-}
-
-/** @emoji 🌱️ Returns the in-flight tree-unit drag, if any. */
-export function readActivePanelTreeUnitDrag(): PanelTreeUnitDragSession | null {
-  return activePanelTreeUnitDragSession.current;
-}
-
-/** @emoji 🌱️ True while a tree-unit drag is in flight — re-renders drop-zone consumers. */
-export function usePanelTreeUnitDragActive(): boolean {
-  return reactHostPort.useSyncExternalStore(
-    (listener) => {
-      panelTreeUnitDragListeners.add(listener);
-      return () => panelTreeUnitDragListeners.delete(listener);
-    },
-    () => activePanelTreeUnitDragSession.current !== null,
-    () => false,
-  );
-}
-
-//#endregion 🌱️TreeUnitDrag
 
 //#region 🎛️Provider
 
@@ -4946,22 +4440,8 @@ interface PanelDockPendingDrag {
   readonly startY: number;
 }
 
-/** @emoji 🎛️ Business-free ui↔shell contract shared by every {@link Panel} under one {@link PanelDockProvider}. */
-export interface PanelDockContextValue {
-  readonly dragTabId: string | null;
-  readonly draggedSubtreeIds: ReadonlySet<string> | null;
-  readonly dropTarget: PanelTabDockTarget | null;
-  readonly startTabDrag: (anchor: Anchor, tabId: string, label: string, event: React.PointerEvent<HTMLElement>) => void;
-  readonly registerTabRowDropTarget: (anchor: Anchor, parentPath: readonly string[], element: HTMLElement | null) => void;
-  readonly onTreeUnitDockDrop: (move: PanelTreeUnitDockMove) => void;
-}
 
-export const PanelDockContext = reactHostPort.createContext<PanelDockContextValue | null>(null);
 
-/** @emoji 🎛️ The enclosing {@link PanelDockProvider} contract, or `null` outside one, including Layout's private mobile panel. */
-export function usePanelDockContext(): PanelDockContextValue | null {
-  return reactHostPort.useContext(PanelDockContext);
-}
 
 /** @emoji 🎛️ Props for {@link PanelDockProvider}. */
 export interface PanelDockProviderProps {
@@ -5158,25 +4638,9 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
 
 //#endregion 🎛️PanelChromeTabBar
 
-/** @emoji 📑️ Mobile panel tab strip height. */
-export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
 
-/** @emoji 📑️ Mobile panel tab button padding. */
-export const mobilePanelTabButtonClass = cn(panelTabButtonClass, "px-single");
 
-/** @emoji ↔ Accent stroke on the panel resize edge while hovered or dragging. */
-export function panelResizeEdgeAccentClass(resizeSide: "left" | "right", active: boolean): string | undefined {
-  if (!active) return undefined;
-  switch (resizeSide) {
-    case "left":
-      return "border-l-accent";
-    case "right":
-      return "border-r-accent";
-  }
-}
 
-/** @emoji 📏️ Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
-export const windowBodyFrameClass = cn("relative border-0", surfaceClass);
 
 /** @emoji 📐️ Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
 export interface ModeDockChromeGrid {
@@ -5210,18 +4674,9 @@ export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: 
   };
 }
 
-/** @emoji 📏️ Inactive sibling tab — normal pill resting on the U-frame baseline; transparent so it
- * shows the chip-cell glass beneath it rather than a second opaque fill (matches {@link panelWindowInactiveTabClass}'s rule for the panel variant). */
-export const modeDockInactiveTabClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
 
-/** @emoji 📏️ Inactive tab before gap — inner divider only; outer stroke owned by the silhouette SVG. */
-export const modeDockInactiveTabBeforeGapClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
 
-/** @emoji 📑️ Inactive panel tab inside {@link WindowChrome} — no opaque fill; the chip-cap glass is the panel boundary and must meet the body without a seam. */
-export const panelWindowInactiveTabClass = "relative z-30 box-border min-h-medium h-full shrink-0 bg-transparent";
 
-/** @emoji 🪟️ Icon + title cluster inside a mode-dock tab — standard gap between glyph and label. */
-export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-single overflow-visible";
 
 /** @emoji 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
 
@@ -5230,11 +4685,7 @@ export { ResponsiveLabel, shellChromeTitleClassName } from "./🪟️chrome/resp
 /** @emoji 🪧️ Uppercase shell section title — element gray at rest. */
 export const shellChromeSectionTitleClassName = "text-2xs font-semibold uppercase tracking-wide text-element";
 
-/** @emoji 📏️ Globally active dock tab — primary fill + emphasized label. */
-export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 
-/** @emoji 📏️ Stack-active tab fill — outline owned by the stack silhouette SVG; `border-0` must win over {@link interactiveActiveFillClass}'s border color utility. */
-export const modeDockActiveTabClass = cn("relative z-20 box-border min-h-medium shrink-0 border-0", modeDockActiveTabFillClass);
 
 
 /** @emoji 📏️ Multi-tab controls cap — chip glass only; U-gap stays a clear punch-through. */
@@ -5245,30 +4696,6 @@ import { WINDOW_CHROME_BODY_PLANE_STYLE, WINDOW_CHROME_CHIP_ROW_STYLE, WINDOW_SI
 export { WINDOW_CHROME_BODY_PLANE_STYLE, WINDOW_CHROME_CHIP_ROW_STYLE, WINDOW_SILHOUETTE_BORDER_KINDS, WindowChrome, WindowChromeSilhouetteBorder, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, resolveWindowSilhouetteBorderKind, useWindowSilhouetteGeometry, windowCapFrameClass, windowChromeTitleChipClass, windowControlsCapClass, windowGapFrameClass, windowSilhouetteBorderPaint, type WindowChromeControlAction, type WindowChromeProps, type WindowSilhouetteBorderKind };
 
 
-/** @emoji 🪟️ Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. Forwards its ref to the outer window-chrome stack so callers (e.g. {@link ContextMenuController}'s on-screen clamp) can measure/adjust the rendered surface. */
-export const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { readonly title: string; readonly icon: IconSource; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }>(
-  ({ title, icon, children, className, style }, ref) => {
-    return (
-      <WindowChrome
-        ref={ref}
-        active={true}
-        capFitContent={true}
-        level="menu"
-        stackSlot="context-menu-content"
-        className={cn("z-menu w-fit min-w-[10rem] max-h-layout-command overflow-y-auto", className)}
-        style={style}
-        titleChips={
-          <div data-slot="context-menu-title-chip" className={cn(windowChromeTitleChipClass, "flex min-w-0 items-center gap-single")}>
-            <Icon icon={icon} size="small" className="shrink-0" />
-            <span className="truncate">{title}</span>
-          </div>
-        }
-        body={children}
-        bodyClassName="pointer-events-auto w-fit overflow-visible p-single"
-      />
-    );
-  },
-);
 ContextMenuChrome.displayName = "ContextMenuChrome";
 
 //#endregion 🪟️WindowChrome
@@ -5329,23 +4756,13 @@ export {
 /** @emoji 🪟️ Window chrome icon button — element gray by default, emphasize on hover. */
 export const windowChromeControlButtonClass = cn("flex size-medium items-center justify-center border-0 bg-transparent transition-colors", interactiveHoverClass);
 
-/** @emoji 📐️ Default unfolded width of window panes and the options rail (token-derived; matches panel default 300px). */
-export const windowMeasuresDefaultWidthPx = domSizePx("layoutPanelRailUiSpacing");
 
-/** @emoji 📐️ Minimum unfolded width of the window options rail (token-derived). */
-export const windowMeasuresMinWidthPx = domSizePx("layoutPanelMinUiSpacing");
 
-/** @emoji 📐️ Maximum unfolded width of the window options rail (token-derived). */
-export const windowMeasuresMaxWidthPx = domSizePx("layoutPanelMaxUiSpacing");
 
 /** @emoji 📐️ Max width cap for window engagement (token-derived). */
 export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacing");
 
-/** @emoji 📐️ Merged top-left Actions body beside the engagement chrome toggle: the active engagement's status/control (when present) stacked above the categorized ad-hoc actions tree; scrolls once content exceeds the window body. */
-export const windowEngagementBodyClass = "flex min-h-medium min-w-0 max-h-full flex-auto flex-col gap-half overflow-y-auto px-single";
 
-/** @emoji 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
-export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
 
 import {
   windowChromeScrollClearanceVar,
@@ -5370,12 +4787,6 @@ export {
   useWindowContentDeadLineInset,
 };
 
-/** @emoji 🚧️ Block offset that clears a window's floating chrome control row — the single rule for
- * anything a window's CONTENT anchors to a top corner (a scene overlay button, a status chip, the folded
- * engagement's quick-action rail). Reads the live clearance the enclosing {@link Window} publishes
- * ({@link windowChromeScrollClearanceVar}, measured off the mounted engagement/search/measures overlays)
- * and falls back to the chrome row's own token height, so content can never paint over a pane toggle. */
-export const windowChromeClearedTopOffset = `calc(var(${windowChromeScrollClearanceVar}, calc(var(--size-medium) + var(--spacing-single))) + var(--spacing-single))`;
 
 /** 🚧️ Scroll surface that keeps window content below floating chrome and preserves explicit edgeless layouts. */
 export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(({ className, children, ...props }, ref) => {
@@ -5400,16 +4811,7 @@ ChromeAwareWindowScrollSurface.displayName = "ChromeAwareWindowScrollSurface";
 /** @emoji 📐️ Labelled icon action in window rail chrome bars (options + action). */
 export const windowRailChromeLabelActionClass = cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single", interactiveHoverClass);
 
-/** @emoji 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
 
-/** @emoji 🪟️ Built-in window pane icons — fixed semantic affordances (never fold-direction chevrons). */
-export const WINDOW_PANE_MEASURES_ICON = "settings-2" as const satisfies IconName;
-export const WINDOW_PANE_ACTIONS_ICON = "play" as const satisfies IconName;
-export const WINDOW_PANE_SEARCH_ICON = "search" as const satisfies IconName;
-export const WINDOW_PANE_UTILITIES_ICON = "hammer" as const satisfies IconName;
-
-/** @emoji 📐️ Measure tree body: grows with content, scrolls once the stack hits the window bottom. */
-export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col overflow-y-auto overscroll-contain p-tiny";
 
 /** @emoji 📐️ Vertical rhythm between top-level measure groups in the rail. */
 export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
@@ -6287,10 +5689,6 @@ export function useDocumentFullscreen(root?: Element): { isFullscreen: boolean; 
   return { isFullscreen, toggle };
 }
 
-// 🐚️ Keyed by shell root (falling back to `document.documentElement` outside any shell) so two navbars
-// of different widths — one per shell — never overwrite each other's measured reserve.
-export const shellNavbarTrailingEndWidthByRoot = ephemeralMap<HTMLElement, number>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellNavbarTrailingEndWidthByRoot");
-const shellNavbarTrailingEndWidthListenersByRoot = ephemeralMap<HTMLElement, Set<() => void>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellNavbarTrailingEndWidthListenersByRoot");
 
 export function publishShellNavbarTrailingEndWidthPx(root: HTMLElement | undefined, width: number): void {
   const key = resolveElementsSurfaceChromeRoot(root);
@@ -6299,261 +5697,9 @@ export function publishShellNavbarTrailingEndWidthPx(root: HTMLElement | undefin
   for (const listener of shellNavbarTrailingEndWidthListenersByRoot.get(key) ?? []) listener();
 }
 
-/** @emoji ↔ Measured trailing navbar chrome width (fullscreen toggle footprint) for this shell. */
-export function useShellNavbarTrailingEndWidthPx(root?: HTMLElement): number {
-  const key = resolveElementsSurfaceChromeRoot(root);
-  return reactHostPort.useSyncExternalStore(
-    (onStoreChange) => {
-      if (!key) return () => {};
-      let listeners = shellNavbarTrailingEndWidthListenersByRoot.get(key);
-      if (!listeners) {
-        listeners = new Set();
-        shellNavbarTrailingEndWidthListenersByRoot.set(key, listeners);
-      }
-      listeners.add(onStoreChange);
-      return () => listeners.delete(onStoreChange);
-    },
-    () => (key ? (shellNavbarTrailingEndWidthByRoot.get(key) ?? 0) : 0),
-    () => 0,
-  );
-}
 
-/** @emoji ↔ Inline cap-row reserve that clears trailing navbar controls for chrome-hosted right panels. */
-export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSProperties | undefined {
-  if (widthPx <= 0) return undefined;
-  return { paddingInlineStart: `${widthPx + uiSpacingPx(1)}px` };
-}
 
-/** @emoji 🧢 One OPEN chrome-hosted dock's cap row: it sizes to its CONTENT and never below the body it
- * caps, so the fold control is laid out BESIDE the tab strip instead of underneath it.
- *
- * The cap row is a flex row of `[tab strip | gap | controls]` inside a panel root pinned to the body
- * width, and the strip is `flex: 0 1 auto` over a container with visible overflow. Pinned to the body,
- * a strip whose tabs need more room than is left after the fold control and the navbar reserve keeps
- * its own content width and simply PAINTS outside the box flex gave it — over the controls, which carry
- * `z-[2]` and therefore win the hit test. Measured on generation3d 6018 at 1600×1000
- * (`🐍️panel-tab-occlusion-recon.mjs`, `🗑️generated/react-reds/recon/recon.json`): cap `[1297,3,300,22]`,
- * chip box 144 px wide for a 238 px strip, fold `[1297,3,64,22]` — so the Inspection tab
- * `[1267,2,92,22]` had the fold button at its own centre and a user clicking the middle of that tab
- * COLLAPSED the dock instead of opening Inspection. A chrome-hosted cap lives in the shell chrome band
- * with free space beside it, so growing along the inline axis is what the band is for; `minWidth: 100%`
- * keeps the row flush with its body whenever the strip does fit. */
-export function chromeHostedPanelCapRowStyle(anchor: Anchor, trailingEndWidthPx: number): React.CSSProperties {
-  const reserve = anchor === "top-right" ? shellNavbarTrailingEndReserveStyle(trailingEndWidthPx) : undefined;
-  return { ...reserve, width: "max-content", minWidth: "100%" };
-}
 
-// #region 🛟️ChromePanelSafeArea
-/** @emoji 🛟️ An axis-aligned viewport box in CSS pixels — the one geometry currency of the safe area,
- * so a caller can state a box it has not laid out yet ({@link Window}'s right-edge chrome column) as
- * readily as one it measured ({@link safeAreaBoxFromRect}). */
-export interface SafeAreaBox {
-  readonly left: number;
-  readonly top: number;
-  readonly right: number;
-  readonly bottom: number;
-}
-
-/** @emoji 🛟️ One open anchored chrome {@link Panel}'s occupied viewport box, with the anchor it grew from. */
-export interface ChromePanelOccupancy {
-  readonly key: string;
-  readonly anchor: Anchor;
-  readonly box: SafeAreaBox;
-}
-
-/** @emoji 🛟️ Which axis an in-window affordance is free to yield on. Floating panes and content overlays take
- * `"either"`, i.e. whichever single axis clears the chrome panel with the smaller displacement. */
-export type SafeAreaYield = "inline" | "block" | "either";
-
-/** @emoji 🛟️ How far an affordance must move off its anchor's own two edges to clear the chrome panels
- * over it — at most one axis is ever non-zero. */
-export interface ChromePanelSafeArea {
-  readonly inlinePx: number;
-  readonly blockPx: number;
-}
-
-const CHROME_PANEL_SAFE_AREA_CLEAR: ChromePanelSafeArea = Object.freeze({ inlinePx: 0, blockPx: 0 });
-const NO_CHROME_PANEL_OCCUPANCIES: readonly ChromePanelOccupancy[] = Object.freeze([]);
-
-/** @emoji 🛟️ A measured DOM rect as a {@link SafeAreaBox}, rounded to whole pixels so a sub-pixel
- * reflow of an unchanged panel never re-publishes and never re-renders its readers. */
-export function safeAreaBoxFromRect(rect: DOMRect): SafeAreaBox {
-  return { left: Math.round(rect.left), top: Math.round(rect.top), right: Math.round(rect.right), bottom: Math.round(rect.bottom) };
-}
-
-function safeAreaBoxesEqual(a: SafeAreaBox, b: SafeAreaBox): boolean {
-  return a.left === b.left && a.top === b.top && a.right === b.right && a.bottom === b.bottom;
-}
-
-function safeAreaBoxesOverlap(a: SafeAreaBox, b: SafeAreaBox): boolean {
-  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
-}
-
-// 🐚️ Keyed by shell root (falling back to `document.documentElement` outside any shell), one entry per
-// open anchored chrome panel — all eight anchors can be open at once, and two shells on one page must
-// never overwrite each other's measured boxes.
-const shellChromePanelBoxesByRoot = ephemeralMap<HTMLElement, Map<string, ChromePanelOccupancy>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelBoxesByRoot");
-const shellChromePanelSnapshotByRoot = ephemeralMap<HTMLElement, readonly ChromePanelOccupancy[]>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelSnapshotByRoot");
-const shellChromePanelListenersByRoot = ephemeralMap<HTMLElement, Set<() => void>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelListenersByRoot");
-
-/** @emoji 🛟️ Publishes (or, with `box: null`, retracts) one open anchored chrome panel's occupied
- * viewport box. An anchored panel floats OVER the canvas region in the app root's stacking context (see
- * {@link anchorPositionStyle} and `📐️Layout`), so it is the only party that knows the box it occupies —
- * window content painted under it cannot derive that from its own layout, and cannot win the corner back
- * on z-index either, since the two live in different stacking contexts. This registry is the single
- * publication of that geometry; {@link chromePanelSafeArea} is the single rule read off it. */
-export function publishShellChromePanelBox(root: HTMLElement | undefined, key: string, anchor: Anchor, box: SafeAreaBox | null): void {
-  const rootKey = resolveElementsSurfaceChromeRoot(root);
-  if (!rootKey) return;
-  let entries = shellChromePanelBoxesByRoot.get(rootKey);
-  if (!entries) {
-    if (box === null) return;
-    entries = new Map();
-    shellChromePanelBoxesByRoot.set(rootKey, entries);
-  }
-  if (box === null) {
-    if (!entries.delete(key)) return;
-  } else {
-    const published = entries.get(key);
-    if (published && published.anchor === anchor && safeAreaBoxesEqual(published.box, box)) return;
-    entries.set(key, { key, anchor, box });
-  }
-  shellChromePanelSnapshotByRoot.set(rootKey, entries.size === 0 ? NO_CHROME_PANEL_OCCUPANCIES : Object.freeze([...entries.values()]));
-  for (const listener of shellChromePanelListenersByRoot.get(rootKey) ?? []) listener();
-}
-
-/** @emoji 🛟️ Every open anchored chrome panel of this shell, as the boxes they occupy — the single
- * observable any in-window affordance reserves itself against. */
-export function useShellChromePanelBoxes(root?: HTMLElement): readonly ChromePanelOccupancy[] {
-  const rootKey = resolveElementsSurfaceChromeRoot(root);
-  return reactHostPort.useSyncExternalStore(
-    (onStoreChange) => {
-      if (!rootKey) return () => {};
-      let listeners = shellChromePanelListenersByRoot.get(rootKey);
-      if (!listeners) {
-        listeners = new Set();
-        shellChromePanelListenersByRoot.set(rootKey, listeners);
-      }
-      listeners.add(onStoreChange);
-      return () => listeners.delete(onStoreChange);
-    },
-    () => (rootKey ? (shellChromePanelSnapshotByRoot.get(rootKey) ?? NO_CHROME_PANEL_OCCUPANCIES) : NO_CHROME_PANEL_OCCUPANCIES),
-    () => NO_CHROME_PANEL_OCCUPANCIES,
-  );
-}
-
-/** 🧭️ Sweep sorted forbidden displacement intervals, preserving the requested axis gap and host bounds. */
-function chromePanelAxisReserve(affordance: SafeAreaBox, host: SafeAreaBox, panels: readonly SafeAreaBox[], inline: boolean, direction: number, gap: number): number {
-  if (!direction) return 0;
-  const a = inline ? [affordance.left, affordance.right, affordance.top, affordance.bottom] : [affordance.top, affordance.bottom, affordance.left, affordance.right];
-  const h = inline ? [host.left, host.right, host.top, host.bottom] : [host.top, host.bottom, host.left, host.right];
-  if (a[2]! < h[2]! || a[3]! > h[3]!) return 0;
-  const intervals = panels.flatMap((panel) => {
-    const p = inline ? [panel.left, panel.right, panel.top, panel.bottom] : [panel.top, panel.bottom, panel.left, panel.right];
-    if (a[2]! >= p[3]! || a[3]! <= p[2]!) return [];
-    return [direction > 0 ? [p[0]! - a[1]! - gap, p[1]! - a[0]! + gap] : [a[0]! - p[1]! - gap, a[1]! - p[0]! + gap]];
-  }).sort((a,b) => a[0]! - b[0]!);
-  let offset = 0;
-  for (const interval of intervals) {
-    if (interval[0]! >= offset) break;
-    if (interval[1]! > offset) offset = Math.ceil(interval[1]!);
-  }
-  const start = a[0]! + direction * offset;
-  const end = a[1]! + direction * offset;
-  return offset > 0 && start >= h[0]! && end <= h[1]! ? offset : 0;
-}
-
-/** 🛟️ Clear every overlapping shell panel along one authored anchor axis, including panels reached after
- * moving. Preserve the axis gap, round outward, and stay entirely inside the actual host. The smallest
- * viable displacement wins; block wins ties. No overlap or no fit leaves placement unchanged.
- * {@link chromePanelSafeAreaStyle} applies this reserve; the native twin consumes the same Shell corpus. */
-export function chromePanelSafeArea(affordance: SafeAreaBox, host: SafeAreaBox, anchor: Anchor, panels: readonly SafeAreaBox[], yieldAxis: SafeAreaYield, gapPx: number): ChromePanelSafeArea {
-  if (!panels.some((panel) => safeAreaBoxesOverlap(panel, affordance))) return CHROME_PANEL_SAFE_AREA_CLEAR;
-  const vertical = anchorVertical(anchor);
-  const horizontal = anchorHorizontal(anchor);
-  const block = yieldAxis === "inline" ? 0 : chromePanelAxisReserve(affordance, host, panels, false, vertical === "top" ? 1 : vertical === "bottom" ? -1 : 0, gapPx);
-  const inline = yieldAxis === "block" ? 0 : chromePanelAxisReserve(affordance, host, panels, true, horizontal === "left" ? 1 : horizontal === "right" ? -1 : 0, gapPx);
-  if (block > 0 && (inline === 0 || block <= inline)) return { inlinePx: 0, blockPx: block };
-  if (inline > 0) return { inlinePx: inline, blockPx: 0 };
-  return CHROME_PANEL_SAFE_AREA_CLEAR;
-}
-
-/** @emoji 🛟️ {@link anchorPositionStyle}'s two edge insets, moved inward by a {@link chromePanelSafeArea}
- * — the flush `var(--spacing-single)` inset (or the caller's own `base`, e.g. a window content rail's
- * {@link windowChromeClearedTopOffset}) when the safe area is clear, so a shell with no open panel lays
- * out byte-for-byte as authored. A middle anchor has no edge to reserve on that axis. */
-export function chromePanelSafeAreaStyle(anchor: Anchor, safeArea: ChromePanelSafeArea, base?: { readonly block?: string; readonly inline?: string }): React.CSSProperties {
-  const vertical = anchorVertical(anchor);
-  const horizontal = anchorHorizontal(anchor);
-  const blockBase = base?.block ?? "var(--spacing-single)";
-  const inlineBase = base?.inline ?? "var(--spacing-single)";
-  const style: React.CSSProperties = {};
-  if (vertical !== "middle") style[vertical] = safeArea.blockPx > 0 ? `calc(${blockBase} + ${safeArea.blockPx}px)` : blockBase;
-  if (horizontal !== "middle") style[horizontal] = safeArea.inlinePx > 0 ? `calc(${inlineBase} + ${safeArea.inlinePx}px)` : inlineBase;
-  return style;
-}
-
-/** @emoji 🛟️ Live {@link chromePanelSafeArea} for one mounted affordance, measured against every open
- * anchored chrome panel of the enclosing shell.
- *
- * The affordance is graded on its UNRESERVED box — its measured rect with the offset this hook currently
- * applies taken back off — so a rail that has already stepped clear of a panel does not read as clear,
- * drop its offset and step back under it. */
-export function useChromePanelSafeArea({
-  hostRef,
-  affordanceRef,
-  anchor,
-  yieldAxis,
-  gapPx = 0,
-  enabled = true,
-}: {
-  readonly hostRef: React.RefObject<HTMLElement | null>;
-  readonly affordanceRef: React.RefObject<HTMLElement | null>;
-  readonly anchor: Anchor;
-  readonly yieldAxis: SafeAreaYield;
-  readonly gapPx?: number;
-  readonly enabled?: boolean;
-}): ChromePanelSafeArea {
-  const shellScope = useShellScopeOptional();
-  const panels = useShellChromePanelBoxes(shellScope?.rootRef.current ?? undefined);
-  const [safeArea, setSafeArea] = reactHostPort.useState<ChromePanelSafeArea>(CHROME_PANEL_SAFE_AREA_CLEAR);
-  const appliedRef = reactHostPort.useRef<ChromePanelSafeArea>(CHROME_PANEL_SAFE_AREA_CLEAR);
-  reactHostPort.useLayoutEffect(() => {
-    const host = hostRef.current;
-    const affordance = affordanceRef.current;
-    const commit = (next: ChromePanelSafeArea) => {
-      if (next.inlinePx === appliedRef.current.inlinePx && next.blockPx === appliedRef.current.blockPx) return;
-      appliedRef.current = next;
-      setSafeArea(next);
-    };
-    if (!enabled || !host || !affordance || panels.length === 0) {
-      commit(CHROME_PANEL_SAFE_AREA_CLEAR);
-      return;
-    }
-    const boxes = panels.map((panel) => panel.box);
-    const vertical = anchorVertical(anchor);
-    const horizontal = anchorHorizontal(anchor);
-    const sync = () => {
-      const applied = appliedRef.current;
-      const rect = affordance.getBoundingClientRect();
-      const blockShift = vertical === "top" ? -applied.blockPx : vertical === "bottom" ? applied.blockPx : 0;
-      const inlineShift = horizontal === "right" ? applied.inlinePx : horizontal === "left" ? -applied.inlinePx : 0;
-      const unreserved: SafeAreaBox = { left: rect.left + inlineShift, top: rect.top + blockShift, right: rect.right + inlineShift, bottom: rect.bottom + blockShift };
-      commit(chromePanelSafeArea(unreserved, safeAreaBoxFromRect(host.getBoundingClientRect()), anchor, boxes, yieldAxis, gapPx));
-    };
-    sync();
-    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
-    resizeObserver?.observe(host);
-    resizeObserver?.observe(affordance);
-    window.addEventListener("resize", sync);
-    return () => {
-      resizeObserver?.disconnect();
-      window.removeEventListener("resize", sync);
-    };
-  }, [affordanceRef, anchor, enabled, gapPx, hostRef, panels, yieldAxis]);
-  return safeArea;
-}
-// #endregion 🛟️ChromePanelSafeArea
 
 function NavbarFullscreenToggle({ onToggle }: { readonly onToggle?: () => void }) {
   const shellScope = useShellScopeOptional();
@@ -6692,121 +5838,9 @@ export { IconSelector, type IconSelectorProps };
 // #endregion 🖼️IconSelector
 
 // #region 📜️Tree
-import {
-  CATALOGUE_DRAG_MIME,
-  Catalogue,
-  ControlTree,
-  FileTree,
-  HelperRow,
-  PropertyValueColumnContext,
-  SortableTreeItems,
-  Tree,
-  TreeAlignedRow,
-  TreeCheckbox,
-  TreeContent,
-  TreeContext,
-  TreeItem,
-  TreeItemCollapsibleState,
-  TreeItems,
-  TreeRow,
-  TreeRowAlignmentContext,
-  TreeSection,
-  TreeStateProvider,
-  WindowMeasureTreeGroup,
-  WindowMeasureTreeLeaf,
-  WindowMeasuresTree,
-  WindowPaneChromeToggle,
-  buildControlTree,
-  capTreeWindowRequests,
-  catalogueTreeDragController,
-  createTreeHighlightStore,
-  createTreeSelectionStore,
-  defaultControlRenderer,
-  deriveTreeDragRoles,
-  detailPanelHeaderLineCenterPx,
-  detailPanelIndentLen,
-  detailPanelIndentPx,
-  detailPanelPropertyControlClassName,
-  detailPanelPropertyInlineGapPx,
-  detailPanelPropertyRowClassName,
-  detailPanelPropertyStackedToInlineHysteresisPx,
-  getActiveCatalogueDragPayload,
-  getActiveCataloguePointerDragData,
-  getTreeItemOrderedIds,
-  getTreeNextSelectionState,
-  getTreeSiblingGapPx,
-  isTreeReorderDragEvent,
-  markGhostTreeInteraction,
-  mergeTreeRowContextMenu,
-  mergeTreeSectionOrder,
-  normalizeTreeSelectedIds,
-  resolveHoverRow,
-  resolveTreeDropPosition,
-  shouldDispatchTreeRowPointerLeave,
-  syncTreeSelectionPath,
-  treeCompactSiblingGapPx,
-  treeDataActivation,
-  treeFoldChevronIcon,
-  treeHeaderMainClassName,
-  treeHeaderRowClassName,
-  treeInspectorInnerRowClassName,
-  treeItemLabelStyle,
-  treeItemSecondaryTextClassName,
-  treeReorderDragController,
-  treeRowChromeClasses,
-  treeRowChromeContentFillClasses,
-  treeRowChromeShellClasses,
-  treeRowDragPayloadAttributes,
-  treeRowHeightPx,
-  treeWindowDomAttributes,
-  treeWindowPathOf,
-  treeWindowRequestsForViewport,
-  treeWindowRowIndexOf,
-  treeWindowSpacerRows,
-  treeWindowVisibleRowsForViewport,
-  uiSpacingLen,
-  useTreeReorder,
-  useTreeState,
-  TREE_WINDOW_BODY_NODE_BUDGET,
-  TREE_WINDOW_OVERSCAN_ROWS,
-  TREE_WINDOW_PATH_SEPARATOR,
-  TREE_WINDOW_ROWS_MAX,
-  TREE_WINDOW_ROW_EXTENTS,
-  type CatalogueItem,
-  type CatalogueProps,
-  type ControlDef,
-  type ControlTreeClassNames,
-  type ControlTreeFolderSettings,
-  type ControlTreeProps,
-  type FileTreeNode,
-  type TreeActionPlacement,
-  type TreeCheckboxAction,
-  type TreeCheckboxProps,
-  type TreeDataActivationContext,
-  type TreeDataItem,
-  type TreeDataSection,
-  type TreeDirection,
-  type TreeDragAndDropController,
-  type TreeDragRole,
-  type TreeDropPosition,
-  type TreeHeaderAction,
-  type TreePointerPaletteDragController,
-  type TreeReorderControllerOptions,
-  type TreeReorderMove,
-  type TreeSectionAction,
-  type TreeSelectionMode,
-  type TreeDataWindow,
-  type TreeWindowContainerMeasure,
-  type TreeWindowRowExtent,
-  type TreeWindowRowMeasure,
-  type TreeWindowDomAttributes,
-  type TreeWindowRequest,
-  type TreeWindowVisibleRows,
-  type UseTreeReorderResult,
-  type WindowMeasureTreeGroupProps,
-  type WindowMeasureTreeLeafProps,
-  type WindowPaneChromeToggleProps,
-} from "../../🧱️elements/🌳️Tree/🟦️.tsx";
+import { CATALOGUE_DRAG_MIME, Catalogue, ControlTree, FileTree, HelperRow, SortableTreeItems, Tree, TreeCheckbox, TreeContent, TreeItem, TreeItemCollapsibleState, TreeItems, TreeRow, TreeSection, TreeStateProvider, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, WindowPaneChromeToggle, buildControlTree, capTreeWindowRequests, catalogueTreeDragController, createTreeHighlightStore, createTreeSelectionStore, defaultControlRenderer, deriveTreeDragRoles, getActiveCatalogueDragPayload, getActiveCataloguePointerDragData, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, isTreeReorderDragEvent, mergeTreeRowContextMenu, mergeTreeSectionOrder, normalizeTreeSelectedIds, resolveTreeDropPosition, shouldDispatchTreeRowPointerLeave, syncTreeSelectionPath, treeCompactSiblingGapPx, treeDataActivation, treeFoldChevronIcon, treeItemSecondaryTextClassName, treeReorderDragController, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, treeRowDragPayloadAttributes, treeWindowDomAttributes, treeWindowPathOf, treeWindowRequestsForViewport, treeWindowRowIndexOf, treeWindowSpacerRows, treeWindowVisibleRowsForViewport, uiSpacingLen, useTreeReorder, useTreeState, TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_PATH_SEPARATOR, TREE_WINDOW_ROWS_MAX, TREE_WINDOW_ROW_EXTENTS, type CatalogueItem, type CatalogueProps, type ControlDef, type ControlTreeClassNames, type ControlTreeFolderSettings, type ControlTreeProps, type FileTreeNode, type TreeActionPlacement, type TreeCheckboxAction, type TreeCheckboxProps, type TreeDataActivationContext, type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeDragRole, type TreeDropPosition, type TreeHeaderAction, type TreePointerPaletteDragController, type TreeReorderControllerOptions, type TreeReorderMove, type TreeSectionAction, type TreeSelectionMode, type TreeDataWindow, type TreeWindowContainerMeasure, type TreeWindowRowExtent, type TreeWindowRowMeasure, type TreeWindowDomAttributes, type TreeWindowRequest, type TreeWindowVisibleRows, type UseTreeReorderResult, type WindowMeasureTreeGroupProps, type WindowMeasureTreeLeafProps, type WindowPaneChromeToggleProps } from "../../🧱️elements/🌳️Tree/🟦️.tsx";
+import { markGhostTreeInteraction, resolveHoverRow } from "../../🧱️elements/🌳️Tree/🧭️hover-path/🟦️.ts";
+import { PropertyValueColumnContext, TreeAlignedRow, TreeContext, TreeRowAlignmentContext, detailPanelHeaderLineCenterPx, detailPanelIndentLen, detailPanelIndentPx, detailPanelPropertyControlClassName, detailPanelPropertyInlineGapPx, detailPanelPropertyRowClassName, detailPanelPropertyStackedToInlineHysteresisPx, treeHeaderMainClassName, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeItemLabelStyle, treeRowHeightPx, type TreeDirection } from "../../🧱️elements/🌳️Tree/📏️row-alignment/🟦️.tsx";
 export {
   CATALOGUE_DRAG_MIME,
   Catalogue,
@@ -6931,98 +5965,19 @@ export type {
 // #region 📷️Panel Components
 
 // #region 🧭️Panel
-import {
-  Panel,
-  type PanelProps,
-  type TreePanelConfig,
-  type TreePanelDefinition,
-  type TreePanelSource,
-  staticTreePanelDefinition,
-  usePointerDrag,
-  useNativeDragAndDrop,
-  PanelTreeUnitsPane,
-  PanelEmptyDockZone,
-} from "../../🧱️elements/🖼️Panel/🟦️.tsx";
+import { Panel, type PanelProps, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone } from "../../🧱️elements/🖼️Panel/🟦️.tsx";
+import { type TreePanelConfig, type TreePanelDefinition, type TreePanelSource } from "../../🧱️elements/🖼️Panel/🌲️tree-source/🟦️.ts";
 export { liveTreePanelDefinition } from "../../🧱️elements/🖼️Panel/🟦️.tsx";
 export { Panel, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone };
 export type { PanelProps, TreePanelConfig, TreePanelDefinition, TreePanelSource };
 // #endregion 🧭️Panel
 
 // #region 🪟️Pane
-// Window-level floating chrome (measures, engagement, search, utility bar, and any app-contributed floating
-// control) — anchored and draggable across the same eight anchors a Panel docks to (see 🧭️Panel above), so panels
-// and panes share one positioning mechanism end to end. Naming follows the repo convention (see ticket
-// `26/07/15/RENAME-WINDOW-PANELS-TO-PANES-AND-CORNER-PANELS-TO-PANELS`): "panel" is the shell-edge dock, "pane" is
-// chrome floating inside one window.
 
-/** @emoji 🧭️ Nearest anchor to a pointer position within a host's bounding rect — a 3×3 zone grid over the box.
- * There is no center anchor, so the dead-center zone resolves to whichever edge-middle the pointer has drifted
- * closer to (compares distance from the vertical vs. horizontal midline). */
-export function nearestAnchor(pointerX: number, pointerY: number, hostRect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): Anchor {
-  const x = hostRect.width > 0 ? (pointerX - hostRect.left) / hostRect.width : 0.5;
-  const y = hostRect.height > 0 ? (pointerY - hostRect.top) / hostRect.height : 0.5;
-  const col: "left" | "middle" | "right" = x < 1 / 3 ? "left" : x > 2 / 3 ? "right" : "middle";
-  const row: "top" | "middle" | "bottom" = y < 1 / 3 ? "top" : y > 2 / 3 ? "bottom" : "middle";
-  if (row !== "middle" && col !== "middle") return `${row}-${col}` as Anchor;
-  if (row !== "middle") return `${row}-middle` as Anchor;
-  if (col !== "middle") return `${col}-middle` as Anchor;
-  const distanceFromVerticalMidline = Math.abs(x - 0.5);
-  const distanceFromHorizontalMidline = Math.abs(y - 0.5);
-  if (distanceFromVerticalMidline >= distanceFromHorizontalMidline) return x < 0.5 ? "left-middle" : "right-middle";
-  return y < 0.5 ? "top-middle" : "bottom-middle";
-}
 
-interface PaneHostContextValue {
-  /** @emoji 🎯️ Imperative bounds source for drag math (read on demand, well after mount — never during another component's render). */
-  readonly containerRef: React.RefObject<HTMLDivElement | null>;
-  /** @emoji 🌱️ Reactive mirror of the same node, `null` until mount — {@link usePaneSlot} portals need a render-time value, and a ref's `.current` isn't populated yet during the same pass a child first renders alongside its ref owner. */
-  readonly container: HTMLDivElement | null;
-}
 
-const PaneHostContext = reactHostPort.createContext<PaneHostContextValue | undefined>(undefined);
 
-/** @emoji 🪟️ The nearest {@link PaneHost}, or `undefined` outside one — {@link Pane} drag-to-reanchor and {@link usePaneSlot} both need it. */
-function usePaneHostContext(): PaneHostContextValue | undefined {
-  return reactHostPort.useContext(PaneHostContext);
-}
 
-/**
- * PaneHostProps holds the data fields for a PaneHostProps record.
- **/
-export interface PaneHostProps {
-  readonly className?: string;
-  readonly children?: React.ReactNode;
-}
-
-/** @emoji 🪟️ Bounds box for floating panes: mount one inside a window body (or any floating-chrome host) so every
- * {@link Pane} inside — direct JSX children or portaled in via {@link usePaneSlot} — shares one anchor coordinate
- * space to drag between and one DOM parent to measure drag drops against.
- *
- * Children live as siblings of the portal mount (not inside the `pointer-events-none` overlay) so window canvas
- * content keeps normal hit-testing while still receiving {@link PaneHostContext}.
- *
- * The root is its own stacking context (`isolate`): body content's layer numbers stay inside it and can never
- * out-stack the window chrome panes (`Actions`, `Utilities`, `Window Options`, search) that sit beside it at
- * `--z-pane`. A canvas host's full-bleed pointer overlay at `z-30` (raster's `Paint2dHost`) otherwise hit-tested
- * above both `Actions` chips of every raster window inside `s`, so the rail could not be opened by a pointer
- * (ticket 26/09/23 S15; same law as `NODE_GRAPH_HOST_CLASS`). */
-export const PaneHost: React.FC<PaneHostProps> = ({ className, children }) => {
-  const containerRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const [container, setContainer] = reactHostPort.useState<HTMLDivElement | null>(null);
-  const setRef = reactHostPort.useCallback((element: HTMLDivElement | null) => {
-    containerRef.current = element;
-    setContainer(element);
-  }, []);
-  const contextValue = reactHostPort.useMemo((): PaneHostContextValue => ({ containerRef, container }), [container]);
-  return (
-    <PaneHostContext.Provider value={contextValue}>
-      <div data-slot="pane-host-root" className={cn("relative isolate h-full min-h-0 min-w-0 w-full", className)}>
-        {children}
-        <div ref={setRef} data-slot="pane-host" className="pointer-events-none absolute inset-0" />
-      </div>
-    </PaneHostContext.Provider>
-  );
-};
 
 /** @emoji 🪟️ Portals `pane` into the nearest {@link PaneHost} — lets a component deep inside a window's canvas
  * (e.g. a per-tool floating control) contribute a draggable pane without threading it through the window's props.
@@ -7032,263 +5987,9 @@ export function usePaneSlot(pane: React.ReactElement): React.ReactPortal | null 
   return host?.container ? (createPortal(pane, host.container) as React.ReactPortal) : null;
 }
 
-/** @emoji ↔ Pane resize handle — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. Middle anchors pass `deltaFactor={2}` so each edge contributes half the visual grow. */
-function PaneResizeHandle({
-  side,
-  size,
-  minSize,
-  maxSize,
-  onSizeChange,
-  onActiveChange,
-  deltaFactor = 1,
-}: {
-  readonly side: "left" | "right";
-  readonly size: number;
-  readonly minSize: number;
-  readonly maxSize: number;
-  readonly onSizeChange: (size: number) => void;
-  readonly onActiveChange?: (active: boolean) => void;
-  readonly deltaFactor?: number;
-}) {
-  const startRef = reactHostPort.useRef<{ pointerX: number; size: number } | null>(null);
-  const pointerProps = usePointerDrag<HTMLDivElement>({
-    onStart: (event) => {
-      event.preventDefault();
-      startRef.current = { pointerX: event.clientX, size };
-      onActiveChange?.(true);
-    },
-    onMove: (event) => {
-      const start = startRef.current;
-      if (!start) return;
-      const next = start.size + (side === "right" ? 1 : -1) * deltaFactor * (event.clientX - start.pointerX);
-      if (next >= minSize && next <= maxSize) onSizeChange(next);
-    },
-    onEnd: () => {
-      startRef.current = null;
-      onActiveChange?.(false);
-    },
-    onCancel: () => {
-      startRef.current = null;
-      onActiveChange?.(false);
-    },
-  });
-  return <div data-slot="pane-resize-handle" className={`absolute top-0 bottom-0 z-20 ${side === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`} {...pointerProps} />;
-}
 
-/**
- * Props interface for the Pane component.
- **/
-export interface PaneProps {
-  /** @emoji 🆔️ The pane container's own DOM id — rendered on the overlay root, and the stem every derived chrome id (`<id>.pane.fold`) falls back to. */
-  readonly id: string;
-  readonly anchor: Anchor;
-  /** @emoji 🧭️ Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (drag handle still renders as a pure affordance, matching panel toggles). */
-  readonly onAnchorChange?: (anchor: Anchor) => void;
-  readonly folded?: boolean;
-  readonly onFoldToggle?: () => void;
-  /** @emoji 🖼️ Fixed semantic icon for the pane chrome toggle — never a fold-direction chevron. */
-  readonly icon: IconName;
-  readonly label?: UiLabel;
-  readonly size?: number;
-  readonly onSizeChange?: (size: number) => void;
-  readonly minSize?: number;
-  readonly maxSize?: number;
-  readonly resizable?: boolean;
-  /** @emoji ⛶️ Fill the {@link PaneHost} (programmatic span across the host). */
-  readonly expanded?: boolean;
-  readonly overlaySlot?: string;
-  readonly overlayRef?: React.Ref<HTMLDivElement>;
-  readonly stackSlot?: string;
-  readonly bodySlot?: string;
-  readonly bodyClassName?: string;
-  readonly bodyStyle?: React.CSSProperties;
-  readonly stackClassName?: string;
-  readonly stackDataAttrs?: Record<string, string | undefined>;
-  readonly toggleId?: string;
-  readonly toggleDisabled?: boolean;
-  readonly dimWhenOpen?: boolean;
-  readonly onResizeActiveChange?: (active: boolean) => void;
-  /** @emoji 🗂️ Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
-  readonly order?: number;
-  /** @emoji 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
-  readonly inlineEdgeReservePx?: number;
-  /** 🪟️ Explicit bounds for panes mounted beside, rather than inside, their host context. */
-  readonly hostRef?: React.RefObject<HTMLElement | null>;
-  /** 🛟️ Minimum displacement-axis clearance from shell panels in CSS pixels. */
-  readonly chromePanelGapPx?: number;
-  readonly zIndex?: 10 | 20 | 30 | 40;
-  readonly className?: string;
-  readonly children?: React.ReactNode;
-}
 
-const PANE_DEFAULT_SIZE = 300;
-const PANE_DEFAULT_MIN_SIZE = 200;
-const PANE_DEFAULT_MAX_SIZE = 600;
 
-/** @emoji 🪟️ One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
- * {@link flowFromAnchor} math as {@link Panel}, foldable to a chip, optionally width-resizable (inner edge for
- * corners / side-middle; both edges for top/bottom-middle, matching panel grow), and (given `onAnchorChange`)
- * draggable by its handle to any of the eight anchors via {@link nearestAnchor} — dropped anywhere inside the
- * enclosing {@link PaneHost}, not just on the target slot, since the box is the only drop target there is.
- * Chrome matches panel toggles: semantic {@link icon} + label + trailing {@link DragHandle}; fold/unfold is the title chip only. */
-export const Pane: React.FC<PaneProps> = ({
-  id,
-  anchor,
-  onAnchorChange,
-  folded = true,
-  onFoldToggle,
-  icon,
-  label,
-  size = PANE_DEFAULT_SIZE,
-  onSizeChange,
-  minSize = PANE_DEFAULT_MIN_SIZE,
-  maxSize = PANE_DEFAULT_MAX_SIZE,
-  resizable: resizableProp,
-  expanded = false,
-  overlaySlot,
-  overlayRef,
-  stackSlot = "window-chrome-stack",
-  bodySlot = "pane-body",
-  bodyClassName = "overflow-y-auto p-single",
-  bodyStyle,
-  stackClassName,
-  stackDataAttrs,
-  toggleId,
-  toggleDisabled,
-  dimWhenOpen = false,
-  onResizeActiveChange,
-  order = 0,
-  inlineEdgeReservePx = 0,
-  hostRef,
-  chromePanelGapPx = uiSpacingPx(1),
-  zIndex,
-  className = "",
-  children,
-}) => {
-  const host = usePaneHostContext();
-  const mobile = useUiMobile();
-  const paneRootRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const fallbackHostRef = reactHostPort.useRef<HTMLElement | null>(null);
-  const paneHostRef = hostRef ?? host?.containerRef ?? fallbackHostRef;
-  const safeArea = useChromePanelSafeArea({ hostRef: paneHostRef, affordanceRef: paneRootRef, anchor, yieldAxis: "either", gapPx: chromePanelGapPx, enabled: !expanded && !mobile });
-  const setPaneRootRef = reactHostPort.useCallback(
-    (element: HTMLDivElement | null) => {
-      paneRootRef.current = element;
-      if (typeof overlayRef === "function") overlayRef(element);
-      else if (overlayRef) (overlayRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
-    },
-    [overlayRef],
-  );
-  const [surfaceActive, surfaceActiveProps] = useSurfaceActive(paneRootRef);
-  const effectiveFolded = folded;
-  const flow = flowFromAnchor(anchor);
-  const horizontal = anchorHorizontal(anchor);
-  const [dragging, setDragging] = reactHostPort.useState(false);
-  const lastAnchorRef = reactHostPort.useRef(anchor);
-  lastAnchorRef.current = anchor;
-  const resizable = resizableProp ?? Boolean(onSizeChange);
-  const stopPointerPropagation = reactHostPort.useCallback((event: React.PointerEvent<HTMLDivElement>) => event.stopPropagation(), []);
-
-  const dragPointerProps = usePointerDrag<HTMLSpanElement>({
-    onStart: () => {
-      if (!onAnchorChange) return;
-      setDragging(true);
-    },
-    onMove: (event) => {
-      if (!onAnchorChange) return;
-      const hostRect = paneHostRef.current?.getBoundingClientRect();
-      if (!hostRect) return;
-      const next = nearestAnchor(event.clientX, event.clientY, hostRect);
-      if (next !== lastAnchorRef.current) {
-        lastAnchorRef.current = next;
-        onAnchorChange(next);
-      }
-    },
-    onEnd: () => setDragging(false),
-    onCancel: () => setDragging(false),
-  });
-
-  const positionStyle: React.CSSProperties = expanded
-    ? { position: "absolute", inset: 0, zIndex: zIndex, width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%" }
-    : {
-        ...anchorPositionStyle(anchor),
-        order,
-        ...(zIndex !== undefined ? { zIndex } : {}),
-        width: !mobile && !effectiveFolded ? `${size}px` : undefined,
-        maxWidth: !mobile && !effectiveFolded ? `min(100% - (var(--spacing-single) * 2)${inlineEdgeReservePx > 0 ? ` - ${inlineEdgeReservePx}px` : ""}, ${size}px)` : undefined,
-        ...chromePanelSafeAreaStyle(anchor, { inlinePx: inlineEdgeReservePx + safeArea.inlinePx, blockPx: safeArea.blockPx }),
-      };
-  const resizeSides: readonly ("left" | "right")[] = horizontal === "middle" ? ["left", "right"] : [horizontal === "left" ? "right" : "left"];
-  const resizeDeltaFactor = horizontal === "middle" ? 2 : 1;
-  const chromeToggleId = toggleId ?? childElementId(id, "pane", "fold");
-
-  return (
-    <LevelProvider level="pane">
-      <div
-        ref={setPaneRootRef}
-        id={id}
-        {...surfaceActiveProps}
-        data-slot={overlaySlot ?? "pane"}
-        data-level="pane"
-        data-anchor={anchor}
-        data-safe-area-inline={safeArea.inlinePx || undefined}
-        data-safe-area-block={safeArea.blockPx || undefined}
-        data-folded={effectiveFolded ? "true" : undefined}
-        data-expanded={expanded ? "true" : undefined}
-        data-dragging={dragging ? "true" : undefined}
-        {...(dimWhenOpen ? { "data-dim": true } : {})}
-        dir={flow.inline === "rtl" ? "rtl" : undefined}
-        onPointerDown={stopPointerPropagation}
-        onPointerMove={stopPointerPropagation}
-        onPointerUp={stopPointerPropagation}
-        onPointerCancel={stopPointerPropagation}
-        className={cn(
-          "pointer-events-auto absolute flex min-h-0 min-w-0 box-border overflow-visible",
-          getLevelZClass("pane"),
-          expanded && "z-panel",
-          flow.block === "up" ? "flex-col-reverse" : "flex-col",
-          horizontal === "middle" ? "items-center" : "items-start",
-          effectiveFolded && "w-fit",
-          !effectiveFolded && !expanded && "w-full max-w-full",
-          expanded && "h-full max-h-full",
-          className,
-        )}
-        style={positionStyle}
-      >
-        <FlowProvider inline={flow.inline} block={flow.block}>
-          <WindowChrome
-            stackSlot={stackSlot}
-            chipOnly={effectiveFolded}
-            active={!effectiveFolded && surfaceActive}
-            level="pane"
-            capDock={flow.block === "up" ? "bottom" : "top"}
-            stackClassName={cn("bg-transparent", !effectiveFolded && "w-full min-h-0 flex-1", expanded && "h-full max-h-full min-h-0", stackClassName)}
-            bodyClassName={bodyClassName}
-            bodySlot={bodySlot}
-            bodyStyle={bodyStyle}
-            stackDataAttrs={stackDataAttrs}
-            titleChips={
-              <WindowPaneChromeToggle
-                id={chromeToggleId}
-                icon={icon}
-                label={label ?? id}
-                disabled={toggleDisabled}
-                onClick={onFoldToggle}
-                dragPointerProps={mobile || !onAnchorChange ? undefined : dragPointerProps}
-                showDragHandle={!mobile}
-                emphasized={dragging}
-              />
-            }
-            body={!effectiveFolded ? children : undefined}
-          />
-          {resizable && !mobile && !effectiveFolded && !expanded && onSizeChange
-            ? resizeSides.map((side) => <PaneResizeHandle key={side} side={side} size={size} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} onActiveChange={onResizeActiveChange} deltaFactor={resizeDeltaFactor} />)
-            : null}
-        </FlowProvider>
-      </div>
-    </LevelProvider>
-  );
-};
 
 // #endregion 🪟️Pane
 
@@ -7296,11 +5997,10 @@ export const Pane: React.FC<PaneProps> = ({
 
 // #region 🩻️Ribbon Components
 
-import { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem } from "../../🧱️elements/🎀️Ribbon/🟦️.tsx";
+import { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem, Ribbon, type RibbonDirection, type RibbonRow, type RibbonProps } from "../../🧱️elements/🎀️Ribbon/🟦️.tsx";
 export { RibbonZone, RibbonDivider, RibbonGroup, RibbonItem };
 
 // #region 🎀️Ribbon
-import { Ribbon, type RibbonDirection, type RibbonRow, type RibbonProps } from "../../🧱️elements/🎀️Ribbon/🟦️.tsx";
 export { Ribbon };
 export type { RibbonDirection, RibbonRow, RibbonProps };
 // #endregion 🎀️Ribbon
@@ -7309,129 +6009,19 @@ export type { RibbonDirection, RibbonRow, RibbonProps };
 
 // #region 🧭️Shell
 
-export interface EngagementOption {
-  id: string;
-  label?: UiLabel;
-  icon: ControlIcon;
-  pressed?: boolean;
-  disabled?: boolean;
-  onPress?: () => void;
-}
 
-export interface EngagementStatus {
-  id: string;
-  content: React.ReactNode;
-}
 
-/** @emoji 🔘️ One discrete option on an engagement {@link EngagementRingControl}. */
-export interface EngagementRingOption {
-  id: string;
-  label: string;
-  disabled?: boolean;
-}
 
-/** @emoji 🎚️ Engagement range slider for numeric values (height, distance, …). */
-export interface EngagementSliderControl {
-  kind: "slider";
-  id?: string;
-  label?: UiLabel;
-  value: number;
-  min: number;
-  max: number;
-  /** @emoji 🎚️ Absolute preloaded/ready extent on the fixed `[min, max]` range. */
-  ready?: number;
-  step?: number;
-  unit?: string;
-  disabled?: boolean;
-  onChange?: (value: number) => void;
-  onCommit?: (value: number) => void;
-}
 
-/** @emoji 🔢️ Engagement stepper for numeric values without fixed upper bound. */
-export interface EngagementStepperControl {
-  kind: "stepper";
-  id?: string;
-  label?: UiLabel;
-  value: number;
-  min?: number;
-  max?: number;
-  step?: number;
-  unit?: string;
-  disabled?: boolean;
-  onChange?: (value: number) => void;
-  onCommit?: (value: number) => void;
-}
 
-/** @emoji 🧫️ Engagement ring (radial dial) for angles or discrete option selection. */
-export interface EngagementRingControl {
-  kind: "ring";
-  id?: string;
-  label?: UiLabel;
-  value?: string;
-  options: readonly EngagementRingOption[];
-  disabled?: boolean;
-  onSelect?: (id: string) => void;
-}
 
-/** @emoji 🔘️ One discrete option on an engagement {@link EngagementToggleGroupControl}. */
-export interface EngagementToggleGroupOption {
-  id: string;
-  label: string;
-  icon?: IconName;
-  disabled?: boolean;
-}
 
-/** @emoji 🔘️ Engagement toggle button group for small unordered enums. */
-export interface EngagementToggleGroupControl {
-  kind: "toggleGroup";
-  id?: string;
-  label?: UiLabel;
-  value?: string;
-  options: readonly EngagementToggleGroupOption[];
-  disabled?: boolean;
-  onSelect?: (id: string) => void;
-}
 
-/** @emoji 🔽️ One item on an engagement {@link EngagementSelectControl}. */
-export interface EngagementSelectItem {
-  id: string;
-  value: string;
-  label: string;
-}
 
-/** @emoji 🔽️ Engagement select dropdown for large enums. */
-export interface EngagementSelectControl {
-  kind: "select";
-  id?: string;
-  label?: UiLabel;
-  value?: string;
-  placeholder?: UiLabel;
-  items: readonly EngagementSelectItem[];
-  disabled?: boolean;
-  onChange?: (value: string) => void;
-}
 
-/** @emoji 🎛️ Optional engagement UI control for the active action step. */
-export type EngagementControl = EngagementSliderControl | EngagementStepperControl | EngagementRingControl | EngagementToggleGroupControl | EngagementSelectControl;
 
-/** @emoji 🏷️ i18n keys for window engagement chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
-export const UI_ENGAGEMENT = {
-  actions: "ui.engagement.actions",
-} as const satisfies Record<string, UiTranslationKey>;
 
-/** @emoji 🏷️ Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
-export const ENGAGEMENT_USER = {
-  actionsAria: "Actions",
-} as const;
 
-/** @emoji 🏷️ i18n keys for the window search pane (`ui.windowSearch.*` in {@link uiChromeTranslationBundles}; distinct from the `ui.search.*` command palette). */
-export const UI_WINDOW_SEARCH = {
-  title: "ui.windowSearch.title",
-  action: "ui.windowSearch.action",
-  actionActive: "ui.windowSearch.actionActive",
-  suggestions: "ui.windowSearch.suggestions",
-  noMatches: "ui.windowSearch.noMatches",
-} as const satisfies Record<string, UiTranslationKey>;
 
 /** @emoji 🏷️ Default English copy for the window search pane (matches `ui.windowSearch.*` en bundle) — for standalone REPL surfaces that build a {@link SearchSpec} outside {@link Search}'s own `useLabel` resolution. */
 export const WINDOW_SEARCH_USER = {
@@ -7441,20 +6031,6 @@ export const WINDOW_SEARCH_USER = {
   noMatches: "No matches",
 } as const;
 
-/** @emoji ⌨️ Normalizes an action NAME for display and matching: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). Names only — the typed engagement line reaches the program verbatim (a grammar like `move <dx> <dy>` needs its spaces), so this never touches {@link SearchInput.onChange}/`onSubmit` payloads. */
-export function normalizeEngagementActionText(text: string): string {
-  const decimalMarker = "\u0001";
-  const withProtectedDecimals = text.replace(/(\d)\.(\d)/g, `$1${decimalMarker}$2`);
-  const words = withProtectedDecimals
-    .replace(new RegExp(`[^a-zA-Z0-9${decimalMarker}]+`, "g"), " ")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .flatMap((word) => word.split(/(?=[A-Z])/))
-    .filter(Boolean)
-    .map((word) => word.split(decimalMarker).join("."));
-  return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("");
-}
 
 /** @emoji ⚖️ True when two engagement action tokens match after {@link normalizeEngagementActionText} (case-insensitive). */
 export function engagementActionTokenEquals(a: string, b: string): boolean {
@@ -7463,41 +6039,8 @@ export function engagementActionTokenEquals(a: string, b: string): boolean {
 
 // #region 🔎️WindowSearch
 
-/** @emoji ⌨️ One typed action line for a window's {@link SearchSpec}. */
-export interface SearchInput {
-  id?: string;
-  value?: string;
-  placeholder?: UiLabel;
-  onChange?: (value: string) => void;
-  onSubmit?: (value: string) => void;
-  /** @emoji 🔁️ Restarts the last finalized engagement when Space is pressed with an empty action. */
-  onRepeatLast?: () => void;
-  /** @emoji ⎋️ Cancels the active engagement session (Escape), e.g. abort interaction or clear action. */
-  onAbort?: () => void;
-  disabled?: boolean;
-}
 
-/** @emoji 🔎️ One autocomplete row for {@link SearchSpec.possibles} (interaction, transition, …). */
-export interface SearchPossible {
-  id: string;
-  label: string;
-  detail?: string;
-  onSelect?: () => void;
-}
 
-function searchPossibleRankScore(query: string, item: SearchPossible): number {
-  const ql = normalizeEngagementActionText(query).toLowerCase();
-  if (!ql) return -1;
-  const label = normalizeEngagementActionText(item.label).toLowerCase();
-  const detail = (item.detail ?? "").toLowerCase();
-  const id = item.id.toLowerCase();
-  if (label.startsWith(ql)) return 3000 - label.length;
-  if (detail.startsWith(ql)) return 2000 - detail.length;
-  if (id.startsWith(ql)) return 1000 - id.length;
-  const haystack = `${label} ${detail} ${id}`;
-  if (haystack.includes(ql)) return 500;
-  return -1;
-}
 
 /** @emoji 🎯️ Resolves a pointer event target to an element for search suggestion hit-testing. */
 function searchSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Element | null {
@@ -7512,726 +6055,53 @@ export function isSearchSuggestionActionTarget(event: Pick<PointerEvent, "target
   return Boolean(searchSuggestionPointerTarget(event)?.closest('[data-slot="command-item"]'));
 }
 
-/** @emoji 🔎️ Filters {@link SearchPossible} rows by label, detail, and id for the window search action line. */
-export function filterSearchPossibles(query: string, items: readonly SearchPossible[]): SearchPossible[] {
-  const trimmed = normalizeEngagementActionText(query).toLowerCase();
-  if (!trimmed) return [...items];
-  return items
-    .map((item) => ({ item, score: searchPossibleRankScore(query, item) }))
-    .filter((row) => row.score >= 0)
-    .sort((a, b) => b.score - a.score)
-    .map((row) => row.item);
-}
 
-/** @emoji ⌨️ Inline completion segments for one {@link SearchPossible} using label casing for the matched name prefix. */
-export interface SearchInlineCompletion {
-  readonly prefix: string;
-  readonly suffix: string;
-}
 
-/** @emoji ⌨️ Returns PascalCase inline completion when query prefix-matches the possible's name, detail, or id. */
-export function searchInlineCompletion(query: string, item: SearchPossible | undefined): SearchInlineCompletion | null {
-  if (!query.trim() || !item) return null;
-  const q = query;
-  const ql = q.toLowerCase();
-  const label = normalizeEngagementActionText(item.label);
-  let best: SearchInlineCompletion | null = null;
-  const consider = (matched: boolean) => {
-    if (!matched || !label.toLowerCase().startsWith(ql)) return;
-    const prefix = label.slice(0, q.length);
-    const suffix = label.slice(q.length);
-    if (!suffix.length) return;
-    if (!best || suffix.length > best.suffix.length) best = { prefix, suffix };
-  };
-  consider(label.toLowerCase().startsWith(ql));
-  consider(Boolean(item.detail?.toLowerCase().startsWith(ql)));
-  consider(item.id.toLowerCase().startsWith(ql));
-  return best;
-}
 
 /** @emoji ⌨️ Inline completion suffix for one {@link SearchPossible} (longest prefix match on label, detail, or id). */
 export function searchCompletionSuffix(query: string, item: SearchPossible | undefined): string {
   return searchInlineCompletion(query, item)?.suffix ?? "";
 }
 
-/** @emoji ⌨️ First non-empty inline completion across ranked {@link SearchPossible} matches. */
-export function searchActiveInlineCompletion(query: string, matches: readonly SearchPossible[], index: number): SearchInlineCompletion | null {
-  if (!query.trim() || !matches.length) return null;
-  const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
-  const seen = new Set<SearchPossible>();
-  for (const item of order) {
-    if (seen.has(item)) continue;
-    seen.add(item);
-    const completion = searchInlineCompletion(query, item);
-    if (completion) return completion;
-  }
-  return null;
-}
 
 /** @emoji ⌨️ First non-empty inline completion suffix across ranked {@link SearchPossible} matches. */
 export function searchActiveCompletionSuffix(query: string, matches: readonly SearchPossible[], index: number): string {
   return searchActiveInlineCompletion(query, matches, index)?.suffix ?? "";
 }
 
-/** @emoji 🔎️ Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
-export function searchHighlightedLabel(label: string, query: string, detail?: string): React.ReactNode {
-  const displayLabel = normalizeEngagementActionText(label);
-  const trimmed = normalizeEngagementActionText(query);
-  if (!trimmed) return displayLabel;
-  const ql = trimmed.toLowerCase();
-  const ll = displayLabel.toLowerCase();
-  let start = ll.startsWith(ql) ? 0 : -1;
-  if (start < 0 && detail?.toLowerCase().startsWith(ql)) start = ll.indexOf(ql) >= 0 ? ll.indexOf(ql) : ll.indexOf(ql[0] ?? "");
-  if (start < 0) return displayLabel;
-  const end = start + trimmed.length;
-  return (
-    <>
-      {start > 0 ? <span>{displayLabel.slice(0, start)}</span> : null}
-      <span className="font-semibold text-foreground">{displayLabel.slice(start, end)}</span>
-      <span>{displayLabel.slice(end)}</span>
-    </>
-  );
-}
-
-/** @emoji 🚫️ React props that disable native browser affordances on editable UI controls. */
 
 
-/** @emoji ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
-export function isUiTypingTarget(t: EventTarget | null): boolean {
-  if (!(t instanceof HTMLElement)) return false;
-  if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return true;
-  if (t.isContentEditable) return true;
-  if (t.closest('[role="textbox"]')) return true;
-  if (t instanceof HTMLInputElement) {
-    const kind = (t.type || "text").toLowerCase();
-    return kind !== "button" && kind !== "checkbox" && kind !== "radio" && kind !== "file" && kind !== "range" && kind !== "color";
-  }
-  if (t.closest('[data-slot="input-root"], [data-slot="textarea-root"], [data-collapsed="true"], [data-slot="command-input"], [data-slot="select-trigger"], [data-slot="select-content"]')) {
-    return true;
-  }
-  return Boolean(t.closest('[data-slot="search"] input, [data-slot="search"] textarea'));
-}
 
 
-/** @emoji ⌨️ True when the event target is already the active window search action field. */
-export function isWindowSearchTypingTarget(t: EventTarget | null): boolean {
-  if (!(t instanceof HTMLElement)) return false;
-  return Boolean(t.closest('[data-slot="window"][data-active="true"] [data-slot="search"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="search"][data-active="true"] textarea'));
-}
 
-/** @emoji ⌨️ True when printable keys should route to the active window search action (skip other text fields). */
-export function shouldRouteKeysToWindowSearch(t: EventTarget | null): boolean {
-  if (isWindowSearchTypingTarget(t)) return false;
-  const searchField = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
-  const active = document.activeElement;
-  if (searchField && (active === searchField || searchField.contains(active))) return false;
-  if (active instanceof HTMLElement && isUiTypingTarget(active) && !active.closest('[data-slot="search"]')) return false;
-  if (isUiTypingTarget(t)) return false;
-  return true;
-}
 
-/** @emoji ⌨️ Returns the window search action input, optionally requiring {@link SearchProps.active}. */
-export function queryWindowSearchInput(activeOnly = false): HTMLInputElement | null {
-  const searchActive = activeOnly ? '[data-active="true"]' : "";
-  return document.querySelector<HTMLInputElement>(`[data-slot="window"][data-active="true"] [data-slot="search"]${searchActive} [data-slot="input"]`);
-}
 
-/** @emoji ⌨️ Focuses the action input in the active window search overlay, if present. */
-export function focusActiveSearchInput(): boolean {
-  const active = document.activeElement;
-  if (active instanceof HTMLElement && active.closest('[data-slot="engagement-control"]')) return false;
-  const field = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
-  if (!field || field.disabled) return false;
-  field.focus({ preventScroll: true });
-  return true;
-}
 
-/** @emoji ✍️ One local edit of a controlled search line: the text the user typed, the published value
- * that stood when the edit began, and every line this edit already dispatched through `onChange` (a
- * program that echoes the line back republishes exactly those). */
-export interface SearchLineEdit {
-  readonly text: string;
-  readonly base: string;
-  readonly sent?: readonly string[];
-}
 
-/** @emoji 🧾️ How many dispatched lines one edit remembers for echo detection — a slow program may still be
- * echoing the first keystrokes of a long verb when the last ones are typed. */
-export const SEARCH_LINE_EDIT_SENT_LIMIT = 64;
 
-/**
- * @emoji ✍️ Which line a controlled window search field shows. The published value is a program's
- * property, and a program that stores the line without republishing it (or that answers a full round trip
- * later) used to make the field unwritable: every keystroke dispatched `onChange` and the field snapped
- * straight back to the stale `value`, so every submit carried an empty line. The local edit therefore
- * LEADS, and the published value only wins once it moved away from what stood when the edit began — which
- * is exactly the case where the program authored the line itself (a completed submit, an abort, a
- * program-side rewrite) and the user's draft is stale instead. A program that ECHOES each keystroke
- * (the cad engagement input republishes `engagement-input` per `onChange`, one guest round trip behind)
- * publishes lines this edit itself sent; those are not authorship, so a published value the edit
- * already dispatched keeps the typed text — otherwise "PlaceColumn" typed at 40 ms/key collapsed to "Pn".
- */
-export function searchControlledLineV1(published: string, edit: SearchLineEdit | null): string {
-  if (!edit) return published;
-  if (published === edit.base) return edit.text;
-  return edit.sent?.includes(published) ? edit.text : published;
-}
 
-/** @emoji ✅️ True when Space/Enter should pick the active filtered {@link SearchPossible} instead of submitting the raw draft. */
-export function shouldActivateSearchPossibleOnConfirm(draft: string, showPossiblesList: boolean, filteredCount: number): boolean {
-  if (!filteredCount) return false;
-  return showPossiblesList || Boolean(draft.trim());
-}
 
-/**
- * @emoji ␣️ Whether Space CONFIRMS the line inside the action field instead of typing a separator.
- * An empty line confirms (repeat-last when idle, step submit during a session) and a live engagement
- * session keeps the step-value grammar where each Space commits the typed number. A typed line with no
- * session is prose the program tokenizes itself (`move 50 25`), so Space belongs in the text.
- */
-export function searchSpaceConfirmsLine(draft: string, sessionActive: boolean): boolean {
-  return !draft.trim() || sessionActive;
-}
 
-/** @emoji ␣️ Applies Space on a window search action line (step submit vs repeat-last when idle). */
-export function applySearchSpaceAction(input: SearchInput, draft: string, sessionActive: boolean): boolean {
-  if (input.disabled) return false;
-  if (!draft.trim()) {
-    if (sessionActive) {
-      if (!input.onSubmit) return false;
-      input.onSubmit(draft.trim());
-      return true;
-    }
-    if (!input.onRepeatLast) return false;
-    input.onRepeatLast();
-    return true;
-  }
-  if (!input.onSubmit) return false;
-  input.onSubmit(draft.trim());
-  return true;
-}
 
-/** @emoji 🔁️ Routes Space outside the search field: idle empty → {@link SearchInput.onRepeatLast}; session or typed draft → {@link SearchInput.onSubmit}. */
-export function routeWindowSearchSpace(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
-  const input = search?.input;
-  if (!input || event.defaultPrevented || event.isComposing) return false;
-  if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
-  if (!shouldRouteKeysToWindowSearch(event.target)) return false;
-  const field = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
-  const draft = input.value ?? field?.value ?? "";
-  return applySearchSpaceAction(input, draft, Boolean(search?.sessionActive));
-}
 
-/** @emoji ⌨️ Routes a printable key to the active window search action when focus is elsewhere in the window. */
-export function routeWindowSearchKeydown(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
-  const input = search?.input;
-  if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
-  if (!shouldRouteKeysToWindowSearch(event.target)) return false;
-  if (event.key === " ") return false;
-  const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
-  if (!printable) return false;
-  const field = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
-  const next = `${input.value ?? field?.value ?? ""}${event.key}`;
-  input.onChange?.(next);
-  return true;
-}
 
-/** @emoji ⎋️ Routes Escape to {@link SearchInput.onAbort} when window search chrome is active (skips other typing targets). */
-export function routeWindowSearchEscape(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">, zone: { readonly chromeVisible: boolean; readonly actionActive: boolean }): boolean {
-  if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
-  const onAbort = search?.input?.onAbort;
-  if (!onAbort) return false;
-  if (!search?.sessionActive && !zone.chromeVisible && !zone.actionActive) return false;
-  if (isUiTypingTarget(event.target) && !isWindowSearchTypingTarget(event.target)) return false;
-  const focused = document.activeElement;
-  if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="search"]')) return false;
-  onAbort();
-  return true;
-}
 
-/** @emoji 🔎️ Floating top-middle window search payload: typed action input and autocomplete possibles. */
-export interface SearchSpec {
-  /** @emoji 🎯️ Ongoing engagement: chrome stays visible; action input accepts step values. */
-  sessionActive?: boolean;
-  input?: SearchInput;
-  possibles?: SearchPossible[];
-}
-
-export interface SearchProps extends SearchSpec {
-  className?: string;
-  /** @emoji 🎯️ When true, focuses the action input whenever this search pane belongs to the globally active window. */
-  active?: boolean;
-}
 
 // #endregion 🔎️WindowSearch
 
-/** @emoji 💬️ Floating window engagement payload with options, status, and controls. */
-export interface EngagementSpec {
-  /** @emoji 🎯️ Ongoing engagement: chrome stays visible; {@link options} are step transitions. */
-  sessionActive?: boolean;
-  options?: EngagementOption[];
-  /** @emoji 🎛️ Optional slider, stepper, or ring control for the active step. */
-  control?: EngagementControl;
-  /** @emoji 🎛️ Optional additional controls rendered below the primary control. */
-  controls?: readonly EngagementControl[];
-  status?: EngagementStatus[];
-}
 
-export type WindowStackCorner = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
 
-export interface WindowLayoutWindowNode {
-  kind: "window";
-  id: string;
-  title?: UiLabel;
-  size?: number;
-  corner?: WindowStackCorner;
-}
 
-export interface WindowLayoutStackNode {
-  kind: "stack";
-  size?: number;
-  activeId?: string;
-  children: readonly WindowLayoutWindowNode[];
-}
 
-export interface WindowLayoutAxisNode {
-  kind: "row" | "column";
-  size?: number;
-  children: readonly (WindowLayoutAxisNode | WindowLayoutStackNode)[];
-}
 
-/** @emoji 🪟️ Recursive resizable window layout tree for {@link Mode}. */
-export type WindowLayoutNode = WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode;
 
-/** @emoji 🪟️ Builds an even horizontal split layout for the given window ids. */
-export function createEvenWindowLayout(windowIds: readonly string[]): WindowLayoutNode {
-  if (windowIds.length === 0) return { kind: "stack", children: [] };
-  if (windowIds.length === 1) return { kind: "stack", children: [{ kind: "window", id: windowIds[0]! }] };
-  return {
-    kind: "row",
-    children: windowIds.map((id) => ({
-      kind: "stack" as const,
-      children: [{ kind: "window" as const, id }],
-    })),
-  };
-}
 
-export interface EngagementProps extends EngagementSpec {
-  className?: string;
-}
 
-function engagementControlLabel(control: EngagementControl): string | undefined {
-  if (!control.label) return undefined;
-  if (control.kind === "ring" || control.kind === "toggleGroup" || control.kind === "select" || !control.unit) return control.label;
-  return `${control.label} (${control.unit})`;
-}
 
-function engagementControlIsNumeric(control: EngagementControl): control is EngagementSliderControl | EngagementStepperControl {
-  return control.kind === "slider" || control.kind === "stepper";
-}
 
-/** @emoji 🎛️ Renders one engagement {@link EngagementControl} using Slider, Stepper, Ring, toggle group, or Select. */
-function EngagementControlView({ control }: { readonly control: EngagementControl }): React.ReactElement | null {
-  const label = engagementControlLabel(control);
-  const selectLabel = useLabel("ui.common.select");
-  const lastNumericRef = reactHostPort.useRef(engagementControlIsNumeric(control) ? control.value : 0);
-  reactHostPort.useEffect(() => {
-    if (engagementControlIsNumeric(control)) lastNumericRef.current = control.value;
-  }, [control]);
-  if (control.kind === "slider") {
-    return (
-      <div data-slot="engagement-control" data-control-kind="slider" className="flex min-w-0 flex-col gap-half px-half">
-        {label ? <span className="text-element text-xs">{label}</span> : null}
-        <Slider
-          id={control.id ?? "engagement-control.slider"}
-          value={[control.value]}
-          min={control.min}
-          max={control.max}
-          ready={control.ready}
-          step={control.step}
-          disabled={control.disabled}
-          onValueChange={(values) => {
-            const next = values[0];
-            if (next === undefined) return;
-            lastNumericRef.current = next;
-            control.onChange?.(next);
-          }}
-          onPointerUp={() => control.onCommit?.(lastNumericRef.current)}
-        />
-      </div>
-    );
-  }
-  if (control.kind === "stepper") {
-    return (
-      <div data-slot="engagement-control" data-control-kind="stepper" className="flex min-w-0 flex-col gap-half px-half">
-        {label ? <span className="text-element text-xs">{label}</span> : null}
-        <Stepper
-          id={control.id ?? "engagement-control.stepper"}
-          value={control.value}
-          min={control.min}
-          max={control.max}
-          step={control.step}
-          onChange={(value) => {
-            lastNumericRef.current = value;
-            control.onChange?.(value);
-          }}
-          onPointerUp={() => control.onCommit?.(lastNumericRef.current)}
-        />
-      </div>
-    );
-  }
-  if (control.kind === "toggleGroup") {
-    if (!control.options.length) return null;
-    return (
-      <div data-slot="engagement-control" data-control-kind="toggleGroup" className="flex min-w-0 flex-col gap-half px-half">
-        {label ? <span className="text-element text-xs">{label}</span> : null}
-        <ButtonGroup id={control.id} detailPanelWidthMode="fill">
-          {control.options.map((option) => (
-            <ButtonGroupItem
-              key={option.id}
-              id={option.id}
-              text={option.label}
-              icon={option.icon ?? "circle-dot"}
-              className={cn(control.value === option.id && interactiveActiveFillClass)}
-              disabled={option.disabled || control.disabled}
-              onClick={() => control.onSelect?.(option.id)}
-            />
-          ))}
-        </ButtonGroup>
-      </div>
-    );
-  }
-  if (control.kind === "select") {
-    if (!control.items.length) return null;
-    return (
-      <div data-slot="engagement-control" data-control-kind="select" className="flex min-w-0 flex-col gap-half px-half">
-        {label ? <span className="text-element text-xs">{label}</span> : null}
-        <Select id={control.id ?? "engagement-control.select"} value={control.value} onValueChange={(value) => control.onChange?.(value)} disabled={control.disabled}>
-          <SelectTrigger id={control.id} className="h-medium w-full min-w-0" size="sm">
-            <SelectValue placeholder={control.placeholder ?? selectLabel} />
-          </SelectTrigger>
-          <SelectContent>
-            {control.items.map((item) => (
-              <SelectItem key={item.id} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
-  }
-  if (!control.options.length) return null;
-  const orbs = control.options.map((option, index) => ({
-    id: option.id,
-    t: control.options.length > 1 ? index / control.options.length : 0,
-    disabled: option.disabled || control.disabled,
-    selected: control.value === option.id,
-  }));
-  return (
-    <div data-slot="engagement-control" data-control-kind="ring" className="flex min-w-0 flex-col items-center gap-half px-half">
-      {label ? <span className="text-element text-xs">{label}</span> : null}
-      <Ring id={control.id ?? "engagement-control.ring"} orbs={orbs} onOrbSelect={(orbId) => control.onSelect?.(orbId)} />
-    </div>
-  );
-}
 
-// #region 🔎️WindowSearch
 
-/** @emoji 🔎️ Floating top-middle window search pane: action input with optional right chevron for possibles. */
-const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles, className = "", active = false }) => {
-  const { inline } = useFlow();
-  const actionPlaceholderLabel = useLabel(UI_WINDOW_SEARCH.action);
-  const actionActivePlaceholderLabel = useLabel(UI_WINDOW_SEARCH.actionActive);
-  const suggestionsAriaLabel = useLabel(UI_WINDOW_SEARCH.suggestions);
-  const noMatchesLabel = useLabel(UI_WINDOW_SEARCH.noMatches);
-  const [uncontrolledDraft, setUncontrolledDraft] = reactHostPort.useState("");
-  const [controlledEdit, setControlledEdit] = reactHostPort.useState<SearchLineEdit | null>(null);
-  const isControlledInput = !!input?.onChange;
-  const publishedLine = input?.value ?? "";
-  const draft = isControlledInput ? searchControlledLineV1(publishedLine, controlledEdit) : uncontrolledDraft;
-  const actionPlaceholder = input?.placeholder ?? (sessionActive ? actionActivePlaceholderLabel : actionPlaceholderLabel);
-  const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
-  const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
-  const searchRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const filteredPossibles = reactHostPort.useMemo(() => filterSearchPossibles(draft, possibles ?? []), [draft, possibles]);
 
-  reactHostPort.useEffect(() => {
-    setActivePossibleIndex((index) => (filteredPossibles.length ? Math.min(index, filteredPossibles.length - 1) : 0));
-  }, [filteredPossibles.length, draft]);
-
-  reactHostPort.useEffect(() => {
-    setPossiblesExpanded(false);
-  }, [possibles]);
-
-  const hasInput = !!input;
-  const hasPossibles = !!possibles?.length;
-  const showPossiblesList = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
-  const inlineCompletion = reactHostPort.useMemo(() => (showPossiblesList ? null : searchActiveInlineCompletion(draft, filteredPossibles, activePossibleIndex)), [activePossibleIndex, draft, filteredPossibles, showPossiblesList]);
-
-  /** ⌨️ The typed line reaches the program VERBATIM: an app whose grammar carries arguments
-   * (`move 50 25`, `fill 12`) owns its own tokenization, and a name-token grammar normalizes in its
-   * own `onChange` (the cad repl PascalCases there). Squashing separators here made every argument
-   * collapse into the verb (`move 50 25` → `Move5025`). */
-  const applyDraft = reactHostPort.useCallback(
-    (value: string) => {
-      if (!isControlledInput) {
-        setUncontrolledDraft(value);
-        return;
-      }
-      setControlledEdit((previous) => ({ text: value, base: previous?.base ?? publishedLine, sent: [...(previous?.sent ?? []).slice(-(SEARCH_LINE_EDIT_SENT_LIMIT - 1)), value] }));
-      input?.onChange?.(value);
-    },
-    [input, isControlledInput, publishedLine],
-  );
-  /** 🧹️ Hands the line back to the program on confirm or abort: the published value leads again from
-   * here, so a command line the program empties (`engagement_submit` clears `engagement_input`) clears,
-   * and a field the program keeps a standing value in keeps it. Never writes a value of its own — that
-   * would leave the field empty forever against a program that publishes one. */
-  const releaseDraft = reactHostPort.useCallback(() => {
-    setControlledEdit(null);
-    setUncontrolledDraft("");
-  }, []);
-
-  const pickingPossibleIdRef = reactHostPort.useRef<string | null>(null);
-  const selectPossible = reactHostPort.useCallback(
-    (item: SearchPossible) => {
-      if (pickingPossibleIdRef.current === item.id) return;
-      pickingPossibleIdRef.current = item.id;
-      item.onSelect?.();
-      applyDraft("");
-      setPossiblesExpanded(false);
-      setActivePossibleIndex(0);
-      queueMicrotask(() => {
-        if (pickingPossibleIdRef.current === item.id) pickingPossibleIdRef.current = null;
-      });
-    },
-    [applyDraft],
-  );
-
-  const activatePossible = reactHostPort.useCallback((): boolean => {
-    if (!filteredPossibles.length) return false;
-    selectPossible(filteredPossibles[activePossibleIndex] ?? filteredPossibles[0]!);
-    return true;
-  }, [activePossibleIndex, filteredPossibles, selectPossible]);
-
-  const wasActiveRef = reactHostPort.useRef(false);
-  reactHostPort.useEffect(() => {
-    const becameActive = active && !wasActiveRef.current;
-    wasActiveRef.current = active;
-    if (!becameActive || !hasInput || input?.disabled) return;
-    const focused = document.activeElement;
-    if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="search"]')) return;
-    const field = searchRef.current?.querySelector<HTMLInputElement>('[data-slot="input"]');
-    field?.focus({ preventScroll: true });
-  }, [active, hasInput, input?.disabled, input?.id]);
-
-  if (!hasInput) return null;
-
-  return (
-    <LevelProvider level="pane">
-      <div
-        ref={searchRef}
-        data-slot="search"
-        data-active={active ? "true" : undefined}
-        data-session-active={sessionActive ? "true" : undefined}
-        data-possibles-open={showPossiblesList ? "true" : undefined}
-        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "bg-active-base ring-accent/35 rounded-sm ring-1 shadow-sm", className)}
-      >
-        <Popover
-          open={showPossiblesList}
-          onOpenChange={(open) => {
-            if (!open) setPossiblesExpanded(false);
-          }}
-        >
-          <PopoverAnchor asChild>
-            <div data-slot="search-row" className="flex w-full min-w-0 items-stretch gap-half">
-              <div data-slot="search-input" className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0">
-                <Input
-                  id={!input!.id || input!.id === "search-input" || isInternalChromeControlId(input!.id) ? UI_WINDOW_SEARCH.action : input!.id}
-                  className="relative z-[1] min-w-0 flex-1 bg-transparent"
-                  value={draft}
-                  tabIndex={active ? 0 : -1}
-                  onChange={(event) => applyDraft(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      if (showPossiblesList) {
-                        event.preventDefault();
-                        setPossiblesExpanded(false);
-                        return;
-                      }
-                      if (input!.onAbort) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        input!.onAbort();
-                        releaseDraft();
-                      }
-                      return;
-                    }
-                    if (event.key === "Tab" && !showPossiblesList && inlineCompletion) {
-                      event.preventDefault();
-                      applyDraft(inlineCompletion.prefix + inlineCompletion.suffix);
-                      return;
-                    }
-                    if (event.key === "ArrowDown" && filteredPossibles.length) {
-                      event.preventDefault();
-                      setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
-                      return;
-                    }
-                    if (event.key === "ArrowUp" && filteredPossibles.length) {
-                      event.preventDefault();
-                      setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
-                      return;
-                    }
-                    if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
-                      if (shouldActivateSearchPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) {
-                        event.preventDefault();
-                        return;
-                      }
-                      if (!searchSpaceConfirmsLine(draft, sessionActive)) return;
-                      event.preventDefault();
-                      if (applySearchSpaceAction(input!, draft, sessionActive)) releaseDraft();
-                      return;
-                    }
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      if (shouldActivateSearchPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
-                      input!.onSubmit?.(draft.trim());
-                      releaseDraft();
-                    }
-                  }}
-                  placeholder={actionPlaceholder}
-                  disabled={input!.disabled}
-                  aria-label={actionPlaceholder}
-                />
-                {inlineCompletion ? (
-                  <div aria-hidden data-slot="search-inline-completion" className="text-foreground pointer-events-none col-start-1 row-start-1 flex h-medium min-w-0 items-center overflow-hidden p-single text-sm md:text-sm">
-                    <span className="relative inline-flex min-w-0 truncate">
-                      <span className="truncate text-transparent">{draft}</span>
-                      <span className="absolute inset-0 truncate font-semibold text-foreground">{inlineCompletion.prefix}</span>
-                    </span>
-                    <span data-slot="search-inline-suffix" className="truncate text-muted-foreground">
-                      {inlineCompletion.suffix}
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-              {hasPossibles ? (
-                <Action
-                  id={UI_WINDOW_SEARCH.suggestions}
-                  aria-expanded={possiblesExpanded}
-                  aria-label={suggestionsAriaLabel}
-                  data-slot="search-possibles-toggle"
-                  icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : inline === "rtl" ? <ChevronLeftIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
-                  onClick={() => setPossiblesExpanded((open) => !open)}
-                />
-              ) : null}
-            </div>
-          </PopoverAnchor>
-          {hasPossibles ? (
-            <PopoverContent data-slot="search-autocomplete" className="w-[min(100vw-1rem,28rem)] p-0" align="end" onOpenAutoFocus={(event) => event.preventDefault()}>
-              <Command shouldFilter={false}>
-                <CommandList>
-                  {filteredPossibles.length ? (
-                    <CommandGroup>
-                      {filteredPossibles.map((item, index) => (
-                        <CommandItem
-                          key={item.id}
-                          value={item.id}
-                          data-active={index === activePossibleIndex ? "true" : undefined}
-                          className={cn(index === activePossibleIndex && interactiveActiveFillClass)}
-                          onPointerDown={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            selectPossible(item);
-                          }}
-                          onMouseEnter={() => setActivePossibleIndex(index)}
-                          onSelect={() => selectPossible(item)}
-                        >
-                          <span className="truncate">{searchHighlightedLabel(item.label, draft, item.detail)}</span>
-                          {item.detail ? <span className="ms-auto truncate text-xs text-muted-foreground">{item.detail}</span> : null}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  ) : (
-                    <CommandEmpty>{noMatchesLabel}</CommandEmpty>
-                  )}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          ) : null}
-        </Popover>
-      </div>
-    </LevelProvider>
-  );
-};
-
-export { Search };
-
-// #endregion 🔎️WindowSearch
-
-/** @emoji 💬️ Top-aligned engagement: status heading, optional control, and option buttons. */
-const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, control, controls, status, className = "" }) => {
-  const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.actions);
-  const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;
-  const secondaryStatus = sessionActive ? status?.filter((row) => row.id !== "engagement-step") : status;
-
-  const hasOptions = !!options?.length;
-  const hasControl = !!control || !!controls?.length;
-  const hasStatus = !!status?.length;
-
-  if (!hasOptions && !hasControl && !hasStatus) return null;
-
-  return (
-    <LevelProvider level="pane">
-      <div
-        data-slot="engagement"
-        data-session-active={sessionActive ? "true" : undefined}
-        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "bg-active-base ring-accent/35 rounded-sm ring-1 shadow-sm", className)}
-      >
-        {primaryStepStatus ? (
-          <div data-slot="engagement-step-heading" className="text-foreground px-half text-sm font-medium leading-tight">
-            {primaryStepStatus.content}
-          </div>
-        ) : null}
-        {control ? <EngagementControlView control={control} /> : null}
-        {controls?.map((row) => (
-          <EngagementControlView key={row.id ?? row.label ?? row.kind} control={row} />
-        ))}
-        {secondaryStatus?.length ? (
-          <div data-slot="engagement-status" role="status" aria-live="polite" aria-atomic="true" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
-            {secondaryStatus.map((item) => (
-              <span key={item.id} data-slot="engagement-status-item">
-                {item.content}
-              </span>
-            ))}
-          </div>
-        ) : null}
-        {hasOptions ? (
-          <div
-            data-slot="engagement-options"
-            data-step-options={sessionActive ? "true" : undefined}
-            className="flex flex-wrap items-center justify-center gap-half"
-            role="group"
-            aria-label={sessionActive ? stepOptionsAriaLabel || ENGAGEMENT_USER.actionsAria : ENGAGEMENT_USER.actionsAria}
-          >
-            <ButtonGroup id={UI_ENGAGEMENT.actions}>
-              {options!.map((option) => {
-                const actionLabel = normalizeEngagementActionText(option.label ?? "");
-                const optionControlId = isInternalChromeControlId(option.id) ? undefined : option.id;
-                return (
-                  <ButtonGroupItem key={option.id} id={optionControlId} aria-label={actionLabel} icon={option.icon} text={actionLabel} className={cn(option.pressed && interactiveActiveFillClass)} onClick={option.onPress} disabled={option.disabled} />
-                );
-              })}
-            </ButtonGroup>
-          </div>
-        ) : null}
-      </div>
-    </LevelProvider>
-  );
-};
-
-export { Engagement };
 
 // #endregion 🧭️Shell
 
@@ -8489,72 +6359,34 @@ export {
 // #endregion 📁️VirtualFileSystem
 
 // #region ⚙️Canvas
-import {
-  Canvas,
-  panelGhostSessionBridge,
-  setPanelGhostSessionBridge,
-  MODE_CANVAS_INSET_CLASS,
-  modeCollectWindowIds,
-  HorizontalWindows,
-  VerticalWindows,
-  COMPOSE_WINDOW_TEMPLATE_MIME,
-  MODE_TEMPLATE_PREVIEW_WINDOW_ID,
-  beginWindowTemplateDrag,
-  endWindowTemplateDrag,
-  readActiveWindowTemplateDragSession,
-  windowTemplatePointerDragRef,
-  beginWindowTemplatePointerDrag,
-  cancelWindowTemplatePointerDrag,
-  windowTemplatePaletteTreeDragController,
-  modeAxisIsPerpendicularChild,
-  modePerpendicularJoinSeparators,
-  modeJoinCornerSpecsForSeparator,
-  modeJoinCornerSpecsForCrossSeparator,
-  MODE_JOIN_CORNER_TOUCH_EPS,
-  resolveJoinCornerPeerCrossAxes,
-  applyAxisResizeDelta,
-  resolveJoinCornerResizeDeltas,
-  applyAxisGroupLayoutDelta,
-  modeAxisGroupLayout,
-  applyModeJoinCornerResize,
-  insertWindowAtDropZone,
-  Mode,
-  removeWindowFromLayout,
-  resolveStackPathForWindowId,
-  splitWithWindow,
-  splitWithStack,
-  extractStackFromLayout,
-  applyModeDrop,
-  reconcileWindows,
-  normalizeLayoutToStacks,
-  collapseLayout,
-  computeModeDropZone,
-  computeModeSplitPreviewInBody,
-  resolveModeSplitSideInBody,
-  computeTabInsertPreview,
-  modeDockOutLayout,
-  modeDockTabsWithInsertPreview,
-  modeDockDragInsertTabs,
-  mergeStackTabsIntoStack,
-  resolveModeTabInsertPreview,
-  WINDOW_STACK_CORNERS,
-  resolveWindowCorner,
-  modeStackTabsByCorner,
-  insertWindowAsTabAtCorner,
-  setWindowCornerInLayout,
-  App,
-  Ui,
-  type ModeWindowDescriptor,
-  type WindowTemplateDragSession,
-  type ModeCanvasDropTarget,
-  type WindowTemplateDropPayload,
-  type ModeProps,
-  type ModeJoinCornerCrossAxis,
-  type AppModeDescriptor,
-  type AppProps,
-  type UiAppDescriptor,
-  type UiProps,
-} from "../../🧱️elements/🎨️Canvas/🟦️.tsx";
+import { Canvas, MODE_CANVAS_INSET_CLASS, modeCollectWindowIds, HorizontalWindows, VerticalWindows, COMPOSE_WINDOW_TEMPLATE_MIME, MODE_TEMPLATE_PREVIEW_WINDOW_ID, beginWindowTemplateDrag, endWindowTemplateDrag, readActiveWindowTemplateDragSession, windowTemplatePointerDragRef, beginWindowTemplatePointerDrag, cancelWindowTemplatePointerDrag, windowTemplatePaletteTreeDragController, modeAxisIsPerpendicularChild, modePerpendicularJoinSeparators, modeJoinCornerSpecsForSeparator, modeJoinCornerSpecsForCrossSeparator, MODE_JOIN_CORNER_TOUCH_EPS, resolveJoinCornerPeerCrossAxes, applyAxisResizeDelta, resolveJoinCornerResizeDeltas, applyAxisGroupLayoutDelta, modeAxisGroupLayout, applyModeJoinCornerResize, insertWindowAtDropZone, Mode, removeWindowFromLayout, resolveStackPathForWindowId, splitWithWindow, splitWithStack, extractStackFromLayout, applyModeDrop, reconcileWindows, normalizeLayoutToStacks, collapseLayout, computeModeDropZone, computeModeSplitPreviewInBody, resolveModeSplitSideInBody, computeTabInsertPreview, modeDockOutLayout, modeDockTabsWithInsertPreview, modeDockDragInsertTabs, mergeStackTabsIntoStack, resolveModeTabInsertPreview, WINDOW_STACK_CORNERS, resolveWindowCorner, modeStackTabsByCorner, insertWindowAsTabAtCorner, setWindowCornerInLayout, App, Ui, type ModeWindowDescriptor, type WindowTemplateDragSession, type ModeCanvasDropTarget, type WindowTemplateDropPayload, type ModeProps, type ModeJoinCornerCrossAxis, type AppModeDescriptor, type AppProps, type UiAppDescriptor, type UiProps } from "../../🧱️elements/🎨️Canvas/🟦️.tsx";
+import { panelGhostSessionBridge, setPanelGhostSessionBridge, ActiveInteractionContext, GhostProvider, GhostRegionShell, type InteractionCommands, InteractionContext, interactionMergeFromModifiers, shouldBeginAutomaticGhostInteraction, usePanelGhost } from "../../🧱️elements/👻️PanelGhost/🟦️.tsx";
+import { UI_TERMINOLOGY_NATIVE, useUiTerminology, resolveUiLocalizedText } from "../../🔨️modules/🗣️ui-terminology/🟦️.tsx";
+import { UiMobileContext, UiMobileProvider } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
+import { GLASS_OVERLAY_BOX_CLASS, borderNormalTopClass, floatingMenuItemClass, modeDockTabLabelClassName, panelTabButtonDividerClass, shellChromeFrameLayerClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { ANCHORS, type Anchor, chromeHostedOpenPanelPositionStyle, flowFromAnchor, nearestAnchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
+import { PanelDockContext, type PanelDockContextValue, type PanelTabDockTarget, type PanelTreeUnitDockMove, TREE_SECTION_REORDER_MIME, usePanelDockContext } from "../../🔨️modules/🧲️panel-dock/🟦️.tsx";
+import { chromePanelSafeArea, chromePanelSafeAreaStyle, publishShellChromePanelBox, safeAreaBoxFromRect, shellNavbarTrailingEndWidthByRoot, shellNavbarTrailingEndWidthListenersByRoot, useChromePanelSafeArea } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+import { WINDOW_PANE_MEASURES_ICON, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx } from "../../🔨️modules/📐️window-measures/🟦️.ts";
+import { ContextMenuChrome } from "../../🧱️elements/🖱️ContextMenu/🥣️chrome/🟦️.tsx";
+import { Search, type SearchPossible, applySearchSpaceAction, filterSearchPossibles, isUiTypingTarget, normalizeEngagementActionText, routeWindowSearchEscape, routeWindowSearchSpace, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, searchSpaceConfirmsLine, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch } from "../../🧱️elements/🔍️WindowSearch/🟦️.tsx";
+import { createEvenWindowLayout } from "../../🔨️modules/🗺️window-layout/🟦️.ts";
+import { Engagement } from "../../🧱️elements/🎮️Engagement/🟦️.tsx";
+import { Pane, PaneHost, usePaneHostContext } from "../../🧱️elements/📌️WindowPane/🟦️.tsx";
+export { type PaneHostProps, PaneHost, type PaneProps, Pane } from "../../🧱️elements/📌️WindowPane/🟦️.tsx";
+export { type EngagementOption, type EngagementStatus, type EngagementRingOption, type EngagementSliderControl, type EngagementStepperControl, type EngagementRingControl, type EngagementToggleGroupOption, type EngagementToggleGroupControl, type EngagementSelectItem, type EngagementSelectControl, type EngagementControl, UI_ENGAGEMENT, ENGAGEMENT_USER, type EngagementSpec, type EngagementProps, Engagement } from "../../🧱️elements/🎮️Engagement/🟦️.tsx";
+export { type WindowStackCorner, type WindowLayoutWindowNode, type WindowLayoutStackNode, type WindowLayoutAxisNode, type WindowLayoutNode, createEvenWindowLayout } from "../../🔨️modules/🗺️window-layout/🟦️.ts";
+export { UI_WINDOW_SEARCH, type SearchInput, type SearchPossible, filterSearchPossibles, type SearchInlineCompletion, searchInlineCompletion, searchActiveInlineCompletion, searchHighlightedLabel, isUiTypingTarget, isWindowSearchTypingTarget, shouldRouteKeysToWindowSearch, queryWindowSearchInput, focusActiveSearchInput, type SearchLineEdit, SEARCH_LINE_EDIT_SENT_LIMIT, searchControlledLineV1, shouldActivateSearchPossibleOnConfirm, searchSpaceConfirmsLine, applySearchSpaceAction, routeWindowSearchSpace, routeWindowSearchKeydown, routeWindowSearchEscape, type SearchSpec, type SearchProps, normalizeEngagementActionText, Search } from "../../🧱️elements/🔍️WindowSearch/🟦️.tsx";
+export { ContextMenuChrome } from "../../🧱️elements/🖱️ContextMenu/🥣️chrome/🟦️.tsx";
+export { windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, windowChromeClearedTopOffset, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON } from "../../🔨️modules/📐️window-measures/🟦️.ts";
+export { shellNavbarTrailingEndWidthByRoot, useShellNavbarTrailingEndWidthPx, shellNavbarTrailingEndReserveStyle, chromeHostedPanelCapRowStyle, type SafeAreaBox, type ChromePanelOccupancy, type SafeAreaYield, type ChromePanelSafeArea, safeAreaBoxFromRect, publishShellChromePanelBox, useShellChromePanelBoxes, chromePanelSafeArea, chromePanelSafeAreaStyle, useChromePanelSafeArea } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+export { type PanelTabDockTarget, type PanelTreeUnitDockTarget, type PanelTreeUnitDockMove, PANEL_TREE_UNIT_MIME, TREE_SECTION_REORDER_MIME, type PanelTreeUnitDragSession, beginPanelTreeUnitDrag, endPanelTreeUnitDrag, readActivePanelTreeUnitDrag, usePanelTreeUnitDragActive, type PanelDockContextValue, PanelDockContext, usePanelDockContext } from "../../🔨️modules/🧲️panel-dock/🟦️.tsx";
+export { ANCHORS, type Anchor, anchorVertical, anchorHorizontal, flowFromAnchor, anchorPositionStyle, chromeHostedOpenPanelPositionStyle, nearestAnchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
+export { windowMeasureTreeLeafLabelClass, windowMeasureTreeGroupLabelClass, panelTabLabelClass, panelTabIconSlotClass, dropZoneReadyTextClass, dropZoneReadyFillClass, dropZoneReadyClass, GLASS_OVERLAY_BOX_CLASS, borderNormalTopClass, shellChromeFrameLayerClass, floatingMenuItemClass, panelTabBarClass, panelTabButtonDividerClass, panelTabButtonClass, panelAnchorTabBarClass, panelAnchorTabButtonClass, mobilePanelTabBarClass, mobilePanelTabButtonClass, panelResizeEdgeAccentClass, windowBodyFrameClass, modeDockInactiveTabClass, modeDockInactiveTabBeforeGapClass, panelWindowInactiveTabClass, modeDockTabLabelClassName, modeDockActiveTabFillClass, modeDockActiveTabClass, windowEngagementBodyClass, utilityBarBodyClass, windowMeasuresBodyClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+export { type Point, type Vector, type Plane, type Camera } from "../../🧱️elements/🎬️Scene/📐️geometry/🟦️.ts";
+export { UiMobileProvider, useUiMobile } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
+export { UI_TERMINOLOGY_NATIVE, UI_CHROME_TERMINOLOGY_STORAGE_KEY, readStoredUiChromeTerminology, writeStoredUiChromeTerminology, resolveUiLocalizedText, useUiTerminology } from "../../🔨️modules/🗣️ui-terminology/🟦️.tsx";
+export { interactionMergeFromModifiers, type PanelGhostValue, usePanelGhost, useInteractionCommands, shouldBeginAutomaticGhostInteraction, GhostProvider, GhostRegionShell, PanelGhostRoot } from "../../🧱️elements/👻️PanelGhost/🟦️.tsx";
 export {
   Canvas,
   panelGhostSessionBridge,
@@ -8623,12 +6455,6 @@ export {
 };
 // #endregion ⚙️Canvas
 
-if (import.meta.vitest) {
-  const { registerIconRenderCameraTests } = await import("../../🧪️tests/🖼️icon-render-camera/🟦️.tsx");
-  await registerIconRenderCameraTests(import.meta.vitest, { buildIconCamera, finalizeIconSvgMarkup, iconRenderCameraPose });
-  const { registerTests1 } = await import("../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx");
-  await registerTests1(import.meta.vitest, { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, searchSpaceConfirmsLine, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellChromePanelBox, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, useChromePanelSafeArea, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef }, { directory: import.meta.dir, url: import.meta.url });
-}
 
 // #endregion 🔍️Window Components
 
@@ -8727,8 +6553,6 @@ export { useTranslation };
 export { useHotkeys };
 // #endregion 🌙️Hotkeys
 
-// #region ⛅️Date
-// #endregion ⛅️Date
 
 // #region 🔔️Search
 export { rankFuzzyItems };
@@ -8742,7 +6566,3 @@ export type { StyleCompoundVariant, StyleVariantCompiler, StyleVariantConfigurat
 
 // #region 📮️Resizable Panels
 export * as ResizablePrimitive from "react-resizable-panels";
-if (import.meta.vitest) {
-  const { registerTests2 } = await import("../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx");
-  await registerTests2(import.meta.vitest, { applyChromeRevealAtPoint, applyDockSkeleton, applyElementsSurfaceChrome, bootstrapElementsSurfaceChromeDocument, borderNormalBottomClass, borderNormalClass, borderNormalTopClass, buildVirtualFileSystemDescriptorColumns, buildVirtualFileSystemVisibleRows, Button, ButtonGroup, ButtonGroupItem, catalogueTreeDragController, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, cn, COLLAPSED_FIELD_ELLIPSIS, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, composeControlKeybindings, composeTutorialUi, computeTabDockDropZone, ControlTree, createBrowserStoragePort, createTreeHighlightStore, createTreeSelectionStore, createTutorialClock, DEFAULT_UI_DRIVER, defaultControlRenderer, deriveTreeDragRoles, dockSkeletonOf, dockSkeletonsEqual, DragHandle, FindInViewIcon, fitCollapsedFieldText, flowChevronIconName, FlowProvider, Footer, formatControlTooltipText, formatKeybindingShortcut, formatTutorialTime, formatVirtualFileSystemTime, getElementById, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, getVirtualFileSystemNextSelectionState, GhostProvider, GhostRegionShell, HistoryTable, humanizeControlId, humanizeControlSegment, Icon, Input, interactionMergeFromModifiers, interpolateTutorialCamera, isInternalChromeControlId, isPanelTabInSubtree, isTreeReorderDragEvent, Label, LevelProvider, loadingBorderActiveClass, loadingBorderClass, loadingBorderStateClass, markGhostTreeInteraction, measureWindowSilhouetteMetrics, Mode, modeDockTabClassName, moveTabInDock, moveTreeUnitInDock, Navbar, NavbarExampleSelect, navbarFillItem, normalizeTreeSelectedIds, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockContext, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, parseUiDriver, PresenceBar, presenceColor, presenceCssVar, pruneEmptyPanelBranches, React, readStoredUiChromeLayout, reconcileActivePath, renderToStaticMarkup, resetElementsSurfaceChromeForTests, resolveCollapsedFieldDisplayState, resolveControlLabelId, resolveSceneGizmoSnapTarget, resolveSceneGizmoViewportPlacement, resolveTranslationLabel, resolveTreeDropPosition, resolveUiDriver, resolveVirtualFileSystemSchemaIcon, resolveWindowSilhouetteBorderKind, Ribbon, RibbonItem, RibbonZone, Ring, SCENE_GIZMO_LABELS, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, serializeUiDriver, shellChromeBorderClass, shellChromeFrameLayerClass, shouldBeginAutomaticGhostInteraction, shouldDispatchTreeRowPointerLeave, singleTreeLeaf, Slider, Stepper, syncTreeSelectionPath, Table, Textarea, THREE, Toggle, ToggleGroup, Tree, TreeAlignedRow, TreeCheckbox, treeCompactSiblingGapPx, TreeContent, TreeContext, treeFoldChevronIcon, TreeItem, treeItemSecondaryTextClassName, TreeRow, TreeRowAlignmentContext, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, treeRowDragPayloadAttributes, TreeSection, TreeStateProvider, TutorialBar, tutorialCameraAt, tutorialCuesBetween, tutorialSlice, UI_CHROME_LAYOUT_STORAGE_KEY, uiDataLabel, UiDriverProvider, uiI18n, UIIntroduction, UiKeybindingsProvider, useCanvasAppearanceSync, validateTutorial, VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS, VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, VirtualFileSystem, waitingBorderActiveClass, waitingBorderClass, waitingBorderStateClass, Window, WindowChrome, WINDOW_PANE_MEASURES_ICON, WindowMeasuresTree, windowMeasureToggleClass, windowMeasureToggleCompactClass, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowPaneChromeToggle, windowSilhouettePath, writeStoredUiChromeLayout }, { directory: import.meta.dir, url: import.meta.url });
-}

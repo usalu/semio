@@ -1,0 +1,15 @@
+# ALL12 Terminal Evidence
+
+Root owned session 91243, parent 22359 and child 22364. The actual child command contained Bun CPU profiling flags before the qualifier script. Its original 1,200,000 ms deadline and two outer invalidation guards were unchanged.
+
+The full first pass completed 1,950 projects at 1,053.262 seconds, with 3,659,301 observed rows. Round zero detected a root Cargo Source conflict with no failure field. The retained log contains 157 actual recheck completion rows. The last sample was 1,199.928 seconds, 1,950 project images and 2,115 cumulative assembly events.
+
+Root observed terminal exit 1 at the original deadline, confirmed both original PIDs absent, and found no qualified-graph-current.json. The expected generated/cpu-all/all-22359.cpuprofile was ENOENT and the owned cpu-all directory was empty. No profile, CPU attribution, accepted pin or complete-workspace qualification resulted. The cause of the missing profile is unproven.
+
+The next diagnostic is a distinct actual-producer prefix, reviewed by Core and Low. Its original outer envelope remains 1,200,000 ms; only the producer signal is narrowed by a private 180,000 ms timer. It always returns before qualification and recognizes only its exact cancellation reason while the original signal remains active. Other errors propagate. A normal exit follows awaited scope cleanup. This is a diagnostic, not a replacement qualification run.
+
+Root launched prefix session 95312, parent 49343 and child 49344, at epoch 1792038482553. The actual launch receipt records nine-file implementation f9f2a0d5dae17163eb7908c11286c735ac63bdcb8b7cae8a1259e4a0612ad32d, publication a4e8db13331728264e4ad98f5838437b86381a358215ac35c33007741a75479b, registry 182ada3778c014ae48182a7fa861b1c2111d8201f597d25b567f5e051cb7e692 and capacity fe2119d86f93d4cafe346cdec1bf7b252544e6ba16550f045f871902f108de82. The expected unique profile is generated/cpu-all/all-49343.cpuprofile. Actual termination and profile validity remain pending.
+
+Prefix session 95312 subsequently ended with exit 0. Root confirmed original PIDs 49343 and 49344 absent. The awaited child recorded exact-diagnostic-cancellation after 180,479.630833 ms; its original signal remained active with 1,019,461 ms left. The recorded same-policy, capabilities, remaining-port, publish and yield identities were all true. It explicitly recorded acceptedPin:false and qualificationAttempted:false. The last progress snapshot had 222 project images and 477,228 project observation rows; these prefix counters do not establish full completion or image reuse.
+
+Root physically checked the resulting profile: 7,356,185 bytes, original regular file, single link, inode 338260259, and unchanged metadata over 250 ms. The physical witness is generated/cpu-all/all-49343-physical.json. This check does not validate profile structure. Root released High to perform one bounded whole-child aggregation with independent SQLite checks. Concurrent codec-wrapper and OS-MCP interface repairs are disclosed; the profile cannot establish exact Source stability or current full-workspace qualification.

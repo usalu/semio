@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "maximumUnits": 1000000,
+  "maximumOwnedBytes": 1048576,
+  "maximumMilliseconds": 120000
+}

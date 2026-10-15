@@ -1,6 +1,6 @@
 //! 📤️ Canonical faults stream from their original typed owner into separately funded publication pages.
 use semio_framework_diagnostic::{Fault,FaultWireCursor};
-use crate::{Generation,OperationId,StepContext,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,JobPayloadStream,RetainedJobPayload,RetainedPayloadBuilder};
+use semio_framework_job::{Generation,OperationId,StepContext,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,JobPayloadStream,RetainedJobPayload,RetainedPayloadBuilder};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use std::mem::MaybeUninit;
@@ -69,3 +69,7 @@ impl Drop for RetainedFaultPublication{fn drop(&mut self){assert!(std::thread::p
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

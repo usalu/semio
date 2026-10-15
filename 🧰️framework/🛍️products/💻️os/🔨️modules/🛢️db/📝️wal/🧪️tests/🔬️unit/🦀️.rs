@@ -1036,7 +1036,7 @@ async fn wal_recovery_preserves_neutral_committed_prefixes() {
     let mut cursor = 0;
     for chunk in [1_000usize, 15_384, 32_768] {
         source.admit(chunk as u64).unwrap();
-        pack::PackSink::write_all(&mut sink, &input[cursor..cursor + chunk]).await.unwrap();
+        semio_framework_pack_source::PackSink::write_all(&mut sink, &input[cursor..cursor + chunk]).await.unwrap();
         cursor += chunk;
     }
     assert_eq!(cursor, input.len());
@@ -1056,7 +1056,7 @@ async fn wal_recovery_preserves_neutral_committed_prefixes() {
     while source.release_step().unwrap() {
         semio_framework_async::yield_once().await;
     }
-    assert_eq!(pack::PackSink::position(&source).await, input.len() as u64, "a released window keeps its position");
+    assert_eq!(semio_framework_pack_source::PackSink::position(&source).await, input.len() as u64, "a released window keeps its position");
     let mut byte = [0u8; 1];
     assert!(source.read_exact(0, &mut byte).await.is_err(), "flushed bytes leave the window");
     let document = doc(fixture["document"].as_str().unwrap()).await;

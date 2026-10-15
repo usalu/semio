@@ -236,9 +236,8 @@
       "dependencies": {
         "@semio-tech/framework": "workspace:*",
         "@semio-tech/presentation": "workspace:*",
-        "@semio-tech/ui-react": "workspace:*",
-        "pdfjs-dist": "^5.4.296",
-        "reveal.js": "^5.2.1"
+        "@semio-tech/presentation-react": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*"
       },
       "devDependencies": {
         "@types/react": "^19.2.8",

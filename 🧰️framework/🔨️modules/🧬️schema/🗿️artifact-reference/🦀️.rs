@@ -71,32 +71,20 @@ impl std::fmt::Display for ArtifactKindId {
     }
 }
 
-/// ✅️ Standalone canonical-grammar predicate behind `ArtifactKindId::parse`.
-pub fn is_canonical_artifact_kind(kind: &str) -> bool {
-    let mut segments = kind.split('.');
-    let Some(first) = segments.next() else { return false };
-    let Some(plugin) = segments.next() else { return false };
-    let Some(artifact) = segments.next() else { return false };
-    if segments.next().is_some() {
-        return false;
-    }
-    is_kebab_segment(first) && is_kebab_segment(plugin) && is_kebab_segment(artifact)
-}
-
-/// 🔡️ One canonical-grammar segment: non-empty lowercase-ASCII `[a-z0-9-]`, no leading/trailing
-/// hyphen, no doubled hyphen.
-fn is_kebab_segment(segment: &str) -> bool {
-    if segment.is_empty() || segment.starts_with('-') || segment.ends_with('-') || segment.contains("--") {
-        return false;
-    }
-    segment.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
-}
-
+pub use semio_framework_artifact_reference_borrow::{BorrowedArtifactRef, is_canonical_artifact_kind};
 
 /// 🔗️ One artifact identity and its owned dialect.
 #[derive(Clone,Debug,PartialEq,Eq,Hash,ToValue,FromValue,semio_framework_value::RetainedClone)]
 #[value(rename_all="camelCase",deny_unknown_fields)]
 pub struct ArtifactRef{pub artifact_id:String,pub dialect:ArtifactDialect}
+
+impl ArtifactRef {
+    /// 🔗️ Borrows the canonical target fields without cloning identity strings.
+    pub fn borrowed(&self) -> BorrowedArtifactRef<'_> {
+        BorrowedArtifactRef { artifact_id: &self.artifact_id, artifact_kind: &self.dialect.artifact_kind, standard: &self.dialect.standard, subset: &self.dialect.subset }
+    }
+}
+
 
 /// 🌲️ Canonical wire of an artifact reference and its dialect, in `ToValue` field order.
 fn tree_refusal(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}

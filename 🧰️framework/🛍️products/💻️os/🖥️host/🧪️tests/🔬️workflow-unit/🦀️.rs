@@ -76,7 +76,7 @@ mod tests {
 
         let source_document = serde_json::json!({ "value": "RAW-FILE-CONTENT-not-a-pack" });
         let outcome =
-            registry_export_media(TEST_KIND, "stdio.__w1b_export_bug_proof_fmt", &source_document, &semio_framework_async::CancelToken::root_now()).expect("io-mechanism export path must find the registered route, not fall through to the legacy/handler-map paths").expect("export must succeed");
+            registry_export_media(TEST_KIND, "stdio.__w1b_export_bug_proof_fmt", &source_document, &semio_framework_async::CancelToken::root_now()).expect("io-mechanism export path must find the registered route, not fall through to the composer-registry/handler-map paths").expect("export must succeed");
 
         let bytes = base64_codec::base64_standard_decode(&outcome.data).expect("OsMediaExportResult base64-encodes binary payloads");
         assert_eq!(bytes, b"RAW-FILE-CONTENT-not-a-pack".to_vec(), "exported bytes must be exactly the raw content the io-mechanism route produced, byte for byte");

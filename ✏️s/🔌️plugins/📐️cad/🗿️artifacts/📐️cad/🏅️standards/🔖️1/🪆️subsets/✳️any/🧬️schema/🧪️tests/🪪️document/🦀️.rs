@@ -16,7 +16,7 @@ fn cad_document_contract_round_trips_exact_child_identities() {
     let snapshot: CadSnapshot = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(artifact.to_snapshot(), snapshot);
     assert_eq!(CadArtifact::from_snapshot(snapshot.clone()), artifact);
-    assert_eq!(store::ChildRestoreProjection::from_snapshot(&snapshot).unwrap().len(), 2);
+    assert_eq!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).unwrap().len(), 2);
     assert_eq!(CadSnapshot::parse_dsl(&snapshot.print_dsl()).unwrap(), snapshot);
     assert_eq!(CadSnapshot::decode_pack(&snapshot.encode_pack()).unwrap(), snapshot);
     let references = &snapshot.references_by_model_definition_id;

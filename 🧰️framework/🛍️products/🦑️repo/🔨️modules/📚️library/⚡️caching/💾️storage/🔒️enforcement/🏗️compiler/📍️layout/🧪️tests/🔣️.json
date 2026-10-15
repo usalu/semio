@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "buildNamespace": "b",
+  "modes": {
+    "prototype": "p",
+    "release": "r"
+  },
+  "maximumPublishedPathCodeUnits": 256,
+  "cases": [
+    {
+      "platform": "posix",
+      "root": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m",
+      "mode": "prototype",
+      "build": "b/p",
+      "target": "t/p"
+    },
+    {
+      "platform": "posix",
+      "root": "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m",
+      "mode": "release",
+      "build": "b/r",
+      "target": "t/r"
+    },
+    {
+      "platform": "win32",
+      "root": "C:\\work\\semio\\.🧬semio\\🦑️repo\\⚡️cache\\rust\\fixed\\m",
+      "mode": "prototype",
+      "build": "b\\p",
+      "target": "t\\p"
+    }
+  ],
+  "rejected": [
+    "dev",
+    "test",
+    "debug",
+    "custom"
+  ],
+  "targetNamespace": "t"
+}

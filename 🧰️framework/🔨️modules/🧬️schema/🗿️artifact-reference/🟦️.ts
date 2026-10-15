@@ -25,6 +25,13 @@ export function parseArtifactDialect(value: unknown): ArtifactDialect {
   return { artifactKind: row.artifactKind, standard: row.standard, subset: row.subset };
 }
 
+/** 🎯️ Admits only a dialect equal to one declared expectation, so a consumer names the kind it accepts without importing its owner. */
+export function requireArtifactDialect(actual: ArtifactDialect, expected: ArtifactDialect | readonly ArtifactDialect[], at = "$"): ArtifactDialect {
+  const accepted = Array.isArray(expected) ? expected as readonly ArtifactDialect[] : [expected as ArtifactDialect];
+  if (!accepted.some((row) => row.artifactKind === actual.artifactKind && row.standard === actual.standard && row.subset === actual.subset)) throw new Error(`${at}: artifact dialect mismatch`);
+  return actual;
+}
+
 /** 🔗️ Decodes an exact artifact identifier and its dialect. */
 export function parseArtifactRef(value: unknown): ArtifactRef {
   const row = record(value, ["artifactId", "dialect"]);

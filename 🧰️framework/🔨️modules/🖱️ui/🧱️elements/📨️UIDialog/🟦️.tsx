@@ -13,7 +13,10 @@ import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useUiKeybindingsByControlId } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "../💬️Dialog/🟦️.tsx";
-import { detectShellLocale, GLASS_OVERLAY_BOX_CLASS, resolveUiLocalizedText, uiI18n, useShellScopeOptional, useUiTerminology } from "../../🎯️targets/⚛️react/🟦️";
+import { detectShellLocale, uiI18n } from "../../🎯️targets/⚛️react/🌐️i18n/🟦️.ts";
+import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
+import { resolveUiLocalizedText, useUiTerminology } from "../../🔨️modules/🗣️ui-terminology/🟦️.tsx";
+import { GLASS_OVERLAY_BOX_CLASS } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { Button } from "../🔘️Button/🟦️.tsx";
 // #endregion 🔌️Adapters
 

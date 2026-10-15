@@ -13,14 +13,14 @@ use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,Subs
 mod payload;
 pub use payload::IoPayload;
 
-/// 🗄️ Carrier dialect for raw untyped bytes — the payload law's binary exception.
-pub const CARRIER_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
+/// 🗄️ Framework-owned carrier dialect `framework.io.binary@raw/*` for raw untyped bytes — the payload law's binary exception. Plugins reference this constant; none names it by literal.
+pub const CARRIER_BINARY: Dialect = Dialect { artifact_kind: "framework.io.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
-/// 🗄️ Carrier dialect for raw untyped UTF-8 text — the payload law's text exception.
-pub const CARRIER_TEXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
+/// 🗄️ Framework-owned carrier dialect `framework.io.text@utf-8/*` for raw untyped UTF-8 text — the payload law's text exception. Plugins reference this constant; none names it by literal.
+pub const CARRIER_TEXT: Dialect = Dialect { artifact_kind: "framework.io.text", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
-/// 🪶️ Standalone SQLite container preserving one artifact's native snapshot and exact dialect.
-pub const SQLITE_SNAPSHOT: Dialect = Dialect { artifact_kind: "s.framework.sqlite-snapshot", standard: StandardId("1"), subset: SubsetId("*") };
+/// 🪶️ Framework-owned dialect `framework.io.sqlite-snapshot@1/*` of the standalone SQLite container preserving one artifact's native snapshot and exact dialect.
+pub const SQLITE_SNAPSHOT: Dialect = Dialect { artifact_kind: "framework.io.sqlite-snapshot", standard: StandardId("1"), subset: SubsetId("*") };
 //#endregion 🔖️Payload
 
 //#region 🔖️Confidence

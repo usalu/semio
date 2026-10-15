@@ -1,6 +1,6 @@
 /** 🧭️ Complete retained-surface intents for the exact authenticated document actor. */
 import type { UiIntent } from "@semio-tech/framework";
-import { encodePackValue, packUInt, type PackValue } from "../../../../../🟦️.ts";
+import { encodePackValue, packUInt, type PackValue } from "../../../../🎁️packs/🟦️.ts";
 import { parseBrowserActorActionRequestV1, type BrowserActorActionOwnerV1, type BrowserActorActionRequestV1 } from "../🟦️.ts";
 
 function unsigned(value: number, path: string, maximum = Number.MAX_SAFE_INTEGER): PackValue {

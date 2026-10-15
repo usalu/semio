@@ -6,9 +6,9 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../🗓️schedule/🟦️.ts — the TypeScript twin
 
-use crate::behavior::MODE_LIMITS;
 use crate::draft::index_of;
-use crate::schema::{Activity, Actor, Menagerie, PetMode, Stage, Ticks, TICKS_PER_SECOND};
+use semio_framework_pets_character::behavior::MODE_LIMITS;
+use semio_framework_pets_contract::schema::{Activity, Actor, Menagerie, PetMode, Stage, Ticks, TICKS_PER_SECOND};
 use std::borrow::Borrow;
 
 //#region 🔖️Constants

@@ -22,5 +22,10 @@
         "minLength": 1
       }
     }
+  },
+  "definitions": {
+    "NamedInput": {
+      "const": "__semioPrivateEngine"
+    }
   }
 }

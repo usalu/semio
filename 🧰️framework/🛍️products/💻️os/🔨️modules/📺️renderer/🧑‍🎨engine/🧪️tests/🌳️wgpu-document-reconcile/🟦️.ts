@@ -16,6 +16,7 @@ import { describe, expect, it } from "vitest";
 import { uiIntentToActionDescriptor } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import type { UiValue } from "@semio-tech/framework";
 import laws from "../🧫️fixtures/🌳️wgpu-document-reconcile/🔣️.json";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
@@ -67,7 +68,7 @@ const ingressGeneration = (minted: readonly [number, number] | null, revision: n
   return publishedRevision === revision ? generation : generation + 1;
 };
 
-const source = (key: "reconcileSource" | "treeSource" | "engineSource" | "paintSource" | "interpreterSource" | "shellSource" | "reactInterpreterSource" | "reactShellHelpersSource" | "programBridgeSource") => readFileSync(resolve(engineRoot, laws[key]), "utf8");
+const source = (key: "reconcileSource" | "treeSource" | "engineSource" | "paintSource" | "interpreterSource" | "shellSource" | "reactInterpreterSource" | "reactShellHelpersSource" | "programBridgeSource") => key === "reactInterpreterSource" ? readFileSync(resolve(engineRoot, laws[key]), "utf8") : readModuleTreeSource(resolve(engineRoot, laws[key]));
 const record = (id: number) => fixture.document.nodes.find((node) => node.id === id);
 
 describe("wgpu retained document reconcile", () => {

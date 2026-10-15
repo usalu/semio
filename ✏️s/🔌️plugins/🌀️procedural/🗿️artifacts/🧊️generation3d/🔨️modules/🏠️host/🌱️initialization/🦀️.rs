@@ -1,4 +1,5 @@
 //! 🌱️ Generation3d retained store initialization: the snapshot copy cursor and the store initialization authority that replays a document envelope into its store.
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -336,7 +337,7 @@ struct Generation3dStoreInitializationAuthority {
     closer: std::mem::ManuallyDrop<Option<semio_framework_plugin::ArtifactStoreInitializationJob<Generation3dSnapshot, Generation3dMutation>>>,
     snapshot_factory: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Generation3dSnapshot>>>>,
     factory_close: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
-    publication: semio_framework_job::RetainedJobPublication,
+    publication: semio_framework_job_publication::RetainedJobPublication,
     edit_index: store::ArtifactStoreInitializationEditIndex,
     phase: Generation3dStoreInitializationPhase,
     resume_phase: Option<Generation3dStoreInitializationPhase>,
@@ -370,7 +371,7 @@ impl Generation3dStoreInitializationAuthority {
             closer: std::mem::ManuallyDrop::new(None),
             snapshot_factory: std::mem::ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()))),
             factory_close: std::mem::ManuallyDrop::new(None),
-            publication: semio_framework_job::RetainedJobPublication::new(),
+            publication: semio_framework_job_publication::RetainedJobPublication::new(),
             edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             resume_phase: None,
             phase: Generation3dStoreInitializationPhase::ValidateEnvelope,
@@ -910,13 +911,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                         return JobOutcomeBorrow::admit_cancelled(cx);
                     }
                     self.phase = Generation3dStoreInitializationPhase::Fault;
-                    return self.publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(GENERATION3D_INITIALIZER_DEFAULT_FAULT), cx);
+                    return self.publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(GENERATION3D_INITIALIZER_DEFAULT_FAULT), cx);
                 }
                 Err(_) => self.fail(b"generation3d-store.initializer-close"),
             },
             Generation3dStoreInitializationPhase::Complete => return JobOutcomeBorrow::admit_complete(cx, None, None),
             Generation3dStoreInitializationPhase::Cancelled => return JobOutcomeBorrow::admit_cancelled(cx),
-            Generation3dStoreInitializationPhase::Fault => return self.publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(GENERATION3D_INITIALIZER_DEFAULT_FAULT), cx),
+            Generation3dStoreInitializationPhase::Fault => return self.publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(GENERATION3D_INITIALIZER_DEFAULT_FAULT), cx),
         }
         cx.consume_fuel(1);
         Ok(None)

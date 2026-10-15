@@ -1083,8 +1083,8 @@ impl ArtifactEditor for ArchitectPlayApp {
     /// 🧬️ The loaded-parent child projection, read straight off the snapshot's own `#[child]` fields.
     /// Without it every live envelope load faults with `editor did not declare a loaded-parent child
     /// projection` before the decoded document can replace the store.
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("architect.child-projection"), error.to_string()))
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("architect.child-projection"), error.to_string()))
     }
 
     type Snapshot = ProgramSnapshot;

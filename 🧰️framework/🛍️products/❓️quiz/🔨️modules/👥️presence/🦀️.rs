@@ -9,8 +9,8 @@
 //! @see ../../🧬️schema/🔣️.json — `Place`, `Anchor`, `Cursor`, `PresenceState`, `CursorState`
 //! @see ../👥️presence/🟦️.ts — the TypeScript twin
 
-use crate::schema::{ClassificationAnswer, Cursor, CursorState, Identity, Place, PresenceState, Screen, SortingAnswer, ThinkingAnswer, ThinkingMatchingAnswer, ThinkingState};
 use crate::validation::{is_slug, normalize_handle, pointer, IssueCode, ValidationIssue};
+use quiz_schema::{ClassificationAnswer, Cursor, CursorState, Identity, Place, PresenceState, Screen, SortingAnswer, ThinkingAnswer, ThinkingMatchingAnswer, ThinkingState};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🏠️ The catalog-wide presence room: who is online and where.

@@ -20,6 +20,7 @@ import { composeControlKeybindings, Footer, Layout, Navbar, UiKeybindingsProvide
 import type { HistoryPatch, HistoryTimeTravel } from "@semio-tech/framework";
 import { syncShellLabelLocale } from "../../../🟦️.tsx";
 import { HistoryReprojectionStatus, TimeTravelBand } from "../../🟦️.tsx";
+import { readModuleTreeSource } from "../../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const shellHelpers = join(here, "..", "..", "..");
@@ -30,7 +31,7 @@ const corpus = JSON.parse(readFileSync(join(shellHelpers, "🧪️tests/🧫️f
   readonly axes: { readonly terminology: string };
   readonly cases: readonly { readonly name: string; readonly session: HistoryTimeTravel; readonly controls: readonly unknown[] }[];
 };
-const bandsClass = /<div data-semio-bottom-bands="" className="([^"]+)">/u.exec(readFileSync(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"), "utf8"))![1]!;
+const bandsClass = /<div data-semio-bottom-bands="" className="([^"]+)">/u.exec(readModuleTreeSource(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx")))![1]!;
 const LOCALES = ["en", "de"] as const;
 const VIEWPORTS = [
   { name: "phone", width: 375, height: 812, mobile: true, touch: true },

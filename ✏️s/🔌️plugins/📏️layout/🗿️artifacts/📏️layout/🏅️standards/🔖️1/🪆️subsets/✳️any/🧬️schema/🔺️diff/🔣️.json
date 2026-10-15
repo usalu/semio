@@ -2202,7 +2202,7 @@
           "minimum": 0
         },
         "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json#/properties/entries/items"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/question-dictionary.json#/properties/entries/items"
         }
       }
     },

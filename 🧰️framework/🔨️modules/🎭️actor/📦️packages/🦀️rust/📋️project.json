@@ -133,6 +133,27 @@
           }
         }
       }
+    },
+    "test-ownership": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-ownership",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {}
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
     }
   }
 }

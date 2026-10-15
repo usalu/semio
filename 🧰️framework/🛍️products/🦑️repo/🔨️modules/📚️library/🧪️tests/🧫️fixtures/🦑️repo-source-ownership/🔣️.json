@@ -6,7 +6,7 @@
       "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🦀️.rs",
       "kind": "rust",
       "boundary": "cargo-lib",
-      "anchor": "pub fn run(argv",
+      "anchor": "pub mod repo_cli;",
       "glue": "../../🦀️.rs"
     },
     {

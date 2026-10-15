@@ -92,7 +92,7 @@ class TestScript extends BundleScript {
 class ToolRunActionsTestScript extends BundleScript {
   async run(): Promise<void> {
     await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🔬️tool-run-actions/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::tool_run_actions_tests"]);
+    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::product_vocabulary::tool_run_actions_tests"]);
   }
 }
 
@@ -100,7 +100,7 @@ class ToolRunActionsTestScript extends BundleScript {
 class HistoryEditActionsTestScript extends BundleScript {
   async run(): Promise<void> {
     await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🧪️history-edit-actions/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::history_edit_actions_tests"]);
+    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::product_vocabulary::history_edit_actions_tests"]);
   }
 }
 
@@ -118,7 +118,7 @@ class MutationInputsTestScript extends BundleScript {
     const testCase = join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs");
     await runBudgetedTestCommand(process.execPath, ["test", join(testCase, "🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
     await runBudgetedTestCommand(process.env.SEMIO_PYTHON!, [join(testCase, "🐍️.py")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::mutation_inputs_tests"]);
+    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::arg_schema::mutation_inputs_tests"]);
   }
 }
 
@@ -182,7 +182,7 @@ class SnapshotReceivingSourceScript extends BundleScript{
 
 class PackageDescriptorValueCodecTestScript extends BundleScript {
   async run(): Promise<void> {
-    const status = await captureCargo(this.invocation,this.repoRoot,this.repoRoot,["test","-p","semio-framework","--lib","manifest::package_descriptor_value_codec_tests::package_descriptor_first_party_codec_preserves_serde_wire_and_required_fields","--","--exact"]);
+    const status = await captureCargo(this.invocation,this.repoRoot,this.repoRoot,["test","-p","semio-framework","--lib","manifest::view_model::package_descriptor_value_codec_tests::package_descriptor_first_party_codec_preserves_serde_wire_and_required_fields","--","--exact"]);
     if (status !== 0) process.exit(status);
   }
 }

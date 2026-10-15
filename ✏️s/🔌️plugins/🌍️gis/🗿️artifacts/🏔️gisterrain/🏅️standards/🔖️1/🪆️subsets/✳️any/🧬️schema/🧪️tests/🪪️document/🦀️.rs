@@ -17,7 +17,7 @@ fn terrain_document_contract_preserves_mesh_identity_through_conversion_and_code
     assert_eq!(artifact.to_snapshot(), snapshot);
     assert_eq!(GisTerrainArtifact::from_snapshot(snapshot.clone()), artifact);
     assert_eq!(protocol::apply_diff(&GisTerrainDiff::default(), &snapshot).unwrap(), snapshot);
-    assert_eq!(store::ChildRestoreProjection::from_snapshot(&snapshot).unwrap().len(), 1);
+    assert_eq!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).unwrap().len(), 1);
     assert_eq!(GisTerrainSnapshot::parse_dsl(&snapshot.print_dsl()).unwrap(), snapshot);
     assert_eq!(GisTerrainSnapshot::decode_pack(&snapshot.encode_pack()).unwrap(), snapshot);
     let generated = crate::gis_terrain_mesh_child_handle("2.5|{}");

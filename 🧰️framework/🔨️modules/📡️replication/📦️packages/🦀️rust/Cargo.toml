@@ -26,6 +26,9 @@ path = "../../🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/�
 deflate = ["dep:semio-framework-deflate"]
 
 [dependencies]
+semio-framework-replication-error = { path = "../../⚠️error/📦️packages/🦀️rust" }
+semio-framework-replication-crypto = { path = "../../🔐️crypto/📦️packages/🦀️rust" }
+semio-framework-pack-source = { path = "../../../🎒️pack/🚰️source/📦️packages/🦀️rust" }
 semio-framework-mutation-diff={path="../../🎮️mutation/🔺️diff/📦️packages/🦀️rust"}
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-pack-error = { path = "../../../🎒️pack/⚠️error/📦️packages/🦀️rust" }

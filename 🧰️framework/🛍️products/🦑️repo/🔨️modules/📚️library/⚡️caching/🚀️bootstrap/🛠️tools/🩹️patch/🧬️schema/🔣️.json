@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumFiles": 64,
+        "maximumBytes": 16777216,
+        "maximumPathBytes": 256
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "before",
+        "patch",
+        "after",
+        "accept"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "before": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        },
+        "accept": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

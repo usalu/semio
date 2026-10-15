@@ -1,11 +1,7 @@
-//! 🔐 Crypto trait seam for signed protocol frames.
+//! 🔐️ Crypto ports for signed protocol frames below wire encoding.
+#![allow(async_fn_in_trait)]
 
-use crate::wire::ProtocolError;
-//#region 🔖️Crypto
-// Trait-only — no algorithm ships in protocol_core (repo rule: external libs behind an
-// interface). protocol_format provides a Blake3Hasher impl of RecordHasher (it already owns the
-// blake3 dep); Signer/SignatureVerifier have zero impls in this family — supplied by the
-// integration layer or protocol_cli's optional feature-gated tooling.
+use semio_framework_replication_error::ProtocolError;
 
 /// 🔗️ Content-hashes raw bytes into a 32-byte digest (the commit chain's hash primitive).
 pub trait RecordHasher {
@@ -23,4 +19,7 @@ pub trait Signer {
 pub trait SignatureVerifier {
     async fn verify(&self, scheme: &str, key_id: &str, message: &[u8; 32], signature: &[u8]) -> Result<bool, ProtocolError>;
 }
-//#endregion 🔖️Crypto
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

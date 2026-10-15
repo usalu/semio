@@ -12,6 +12,7 @@ import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️pr
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {advanceScriptInvocation,scriptInvocationBudget} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts";
+import { readModuleTreeSource } from "../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 /** 🧱️ Replays pure service admission and explicit wire ownership with strict source and independent runtime witnesses. */
 class InstalledServiceSourceScript extends BundleScript {
@@ -153,9 +154,9 @@ async function proveDocumentOpeningAttempt(repoRoot: string): Promise<number> {
   const rebootstrapExpected = fixture.rebootstrapCases.map((row: Record<string, unknown>) => ({ messageAccepted: row.messageAccepted, ownerRemoved: row.ownerRemoved, ownerAfter: row.ownerAfter, freshBaseZeroAccepted: row.freshBaseZeroAccepted }));
   if (!deepEqual(rebootstrapObserved, rebootstrapExpected)) throw new Error("document rebootstrap owner retirement differs from the corpus");
 
-  const protocol = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"), "utf8");
+  const protocol = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"));
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
-  const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
+  const shell = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"));
   const storeWire = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
   const storeWorker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🦀️.rs"), "utf8");
   const patchHandoff = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"), "utf8");

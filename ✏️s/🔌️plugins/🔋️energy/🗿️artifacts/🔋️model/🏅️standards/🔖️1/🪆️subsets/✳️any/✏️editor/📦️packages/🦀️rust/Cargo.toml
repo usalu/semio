@@ -20,6 +20,7 @@ name = "authoring_law"
 path = "../../🧪️tests/⚖️authoring-law/🦀️.rs"
 
 [dependencies]
+semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-2d = { workspace = true }

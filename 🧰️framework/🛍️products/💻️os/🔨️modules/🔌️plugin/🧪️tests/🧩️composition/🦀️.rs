@@ -501,7 +501,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Com
 
 /// 🚫️ A parent revision whose composition only the APP knows to be unrestorable: the structural
 /// projection accepts the very same snapshot, so a framework seam that still calls
-/// `store::ChildRestoreProjection::from_snapshot` directly answers no fault at all here.
+/// `semio_framework_composition_admission::ChildRestoreProjection::from_snapshot` directly answers no fault at all here.
 const COMPOSED_PARENT_PROJECTION_REFUSAL_REVISION: i32 = -7;
 
 /// 🗣️ The exact diagnostic the app owns; the structural error type has no way to spell it.
@@ -514,11 +514,11 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
     const APP_ID: &'static str = "s.test.composed@1/*#editor";
     const DOCUMENT_SCHEMA: &'static str = "semio.composed-test/v1";
     const DIALECT: Dialect = Dialect { artifact_kind: "s.test.composed", standard: StandardId("1"), subset: SubsetId::ANY };
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         if snapshot.revision == COMPOSED_PARENT_PROJECTION_REFUSAL_REVISION {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("test.parent-projection"), COMPOSED_PARENT_PROJECTION_REFUSAL_MESSAGE));
         }
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("test.parent-projection"), error.to_string()))
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("test.parent-projection"), error.to_string()))
     }
     type Snapshot = ComposedParentSnapshot;
     type Mutation = RecursiveFixtureMutation;
@@ -1949,7 +1949,7 @@ async fn retained_composed_replacement_terminal_store_box_requires_whole_physica
 
 /// 🧩️ A candidate parent's child projection is the APP's answer, never the structural one.
 ///
-/// The replacement pump used to call `store::ChildRestoreProjection::from_snapshot` on the candidate
+/// The replacement pump used to call `semio_framework_composition_admission::ChildRestoreProjection::from_snapshot` on the candidate
 /// and `map_err` the `ChildRestoreProjectionError` into one flat `candidate parent child projection is
 /// invalid`, so a live-load refusal was unattributable from the plugin side: gismap's
 /// `gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed` failed with that
@@ -2412,7 +2412,7 @@ fn pump_envelope_decode_worker_close(app: &mut VcsArtifactApp<ComposedParentApp,
             return;
         }
         app.advance_ready_envelope_decode_worker_owners(handle,app.mounted_policy.maintenance, cx).expect("envelope decode worker-owner drain");
-        if let Err(source)=semio_framework_job::pump_worker_job_retirements(8,cx){close_composition_refusal(source.into(),cx)}
+        if let Err(source)=semio_framework_job_worker::pump_worker_job_retirements(8,cx){close_composition_refusal(source.into(),cx)}
     }
     assert!(app.artifact_envelope_decode_worker_owners_are_terminal(handle), "envelope decode worker owners still active after bounded drain");
 }
@@ -2435,7 +2435,7 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
         assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
         let step = app.maintenance_step(cx,grant).expect("envelope decode maintenance");
         if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
-        if let Err(source)=semio_framework_job::pump_worker_job_retirements(8,cx){close_composition_refusal(source.into(),cx)}
+        if let Err(source)=semio_framework_job_worker::pump_worker_job_retirements(8,cx){close_composition_refusal(source.into(),cx)}
         poll = app.poll_artifact_envelope_decode(handle);
         if matches!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault | crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
             return poll;
@@ -2501,7 +2501,7 @@ async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll(
         assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
         let step = app.maintenance_step(&mut cx,grant).expect("envelope law decode cancellation maintenance");
         if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
-        if let Err(source)=semio_framework_job::pump_worker_job_retirements(8,&mut cx){close_composition_refusal(source.into(),&mut cx)}
+        if let Err(source)=semio_framework_job_worker::pump_worker_job_retirements(8,&mut cx){close_composition_refusal(source.into(),&mut cx)}
     }
     close_member_admission_app(&mut app, &mut cx);
 
@@ -2514,7 +2514,7 @@ fn declared_child_projection_override_preserves_authored_refusal() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧩️composition/🔎️projection/🧪️tests/🧫️fixtures/🔣️.json"))).expect("closed projection fixture");
     let refusal = &fixture["overrideRefusal"];
     let snapshot = ComposedParentSnapshot { slot: None, revision: refusal["revision"].as_i64().expect("revision") as i32 };
-    assert!(store::ChildRestoreProjection::from_snapshot(&snapshot).expect("structural leaf").is_empty());
+    assert!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("structural leaf").is_empty());
     let actual = <ComposedParentApp<false> as ArtifactApp>::child_restore_projection(&snapshot).expect_err("authored nested override must be selected");
     assert_eq!(actual.code.0, refusal["code"].as_str().expect("original code"));
     assert_eq!(actual.message, refusal["message"].as_str().expect("original message"));

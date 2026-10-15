@@ -1,0 +1,5 @@
+syntax = "proto3";
+package semio.framework.value.dictionary;
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
+message QuestionDictionaryEntry { string question_id = 1; semio.framework.value.DslValue value = 2; }
+message QuestionDictionary { repeated QuestionDictionaryEntry entries = 1; }

@@ -1,4 +1,7 @@
-use super::*;
+use semio_framework_job::*;
+#[global_allocator]
+static ORIGINAL_CONTEXT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+const TEST_RETAINED_POLICY:RetainedCloneGrant=RetainedCloneGrant{maximum_items:16,maximum_copy_bytes:32768,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 
 #[test]
@@ -21,7 +24,7 @@ fn retained_step_context_owner_turns_use_original_ledger_without_heap_birth() {
         let mut sequence = 0;
         for _ in 0..row["turns"].as_u64().unwrap() {
             let (_, heap) = observe(|| {
-                let mut actual_retained_progress=RetainedCloneProgress::default();let mut context = owner.context(StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), cancel.clone(), default_now_us, &mut sequence,&mut actual_retained_progress).unwrap();
+                let mut actual_retained_progress=RetainedCloneProgress::default();let mut context = owner.context(StepBudget::new(1, u64::MAX,TEST_RETAINED_POLICY), cancel.clone(), default_now_us, &mut sequence,&mut actual_retained_progress).unwrap();
                 assert_eq!(context.operation(), operation);
                 assert_eq!(context.generation(), generation);
                 assert_eq!(context.fuel_remaining(), 1);
@@ -55,8 +58,8 @@ fn retained_step_context_owner_preserves_original_ledger_until_context_and_write
     for kind in [0, 1, 2] {
         let mut owner = StepContextOwner::new(OperationId(91004+kind),Generation(6),RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:extent,maximum_depth:1,..Default::default()}).unwrap().0;
         let mut sequence = 0;
-        let mut actual_retained_progress=RetainedCloneProgress::default();let context = owner.context(StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, &mut sequence,&mut actual_retained_progress).unwrap();
-        let identity = Arc::as_ptr(&context.payload_ledger);
+        let mut actual_retained_progress=RetainedCloneProgress::default();let context = owner.context(StepBudget::new(1, u64::MAX,TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, &mut sequence,&mut actual_retained_progress).unwrap();
+        let identity=context.payload_authority_identity();
         let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::Preview);
         let mut context = Some(context);
         if kind != 0 {
@@ -66,8 +69,8 @@ fn retained_step_context_owner_preserves_original_ledger_until_context_and_write
         }
         let mut payload = if kind == 2 { Some(std::mem::replace(&mut writer, RetainedJobPayloadWriter::new(JobPayloadStream::Preview)).finish().unwrap()) } else { None };
         if kind != 0 {
-            let held = payload.as_ref().or_else(|| writer.payload.as_ref());
-            assert_eq!(held.and_then(|payload| payload.ledger.as_ref()).map(Arc::as_ptr), Some(identity));
+            let held=payload.as_ref().and_then(RetainedJobPayload::payload_authority_identity).or_else(||writer.payload_authority_identity());
+            assert_eq!(held,Some(identity));
             drop(context.take());
         }
         let (step, heap) = observe(|| owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:extent,maximum_depth:64,..RetainedCloneGrant::default()}));
@@ -75,7 +78,7 @@ fn retained_step_context_owner_preserves_original_ledger_until_context_and_write
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(owner.next_close_release_byte_demand().unwrap(), extent);
         let mut refused_sequence = 0;
-        let mut actual_retained_progress=RetainedCloneProgress::default();assert!(owner.context(StepBudget::new(1, u64::MAX,crate::component::TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, &mut refused_sequence,&mut actual_retained_progress).is_none());
+        let mut actual_retained_progress=RetainedCloneProgress::default();assert!(owner.context(StepBudget::new(1, u64::MAX,TEST_RETAINED_POLICY), root_cancel_token(), default_now_us, &mut refused_sequence,&mut actual_retained_progress).is_none());
         if kind == 0 { drop(context.take()); }
         else if let Some(payload) = payload.as_mut() {
             assert_eq!(payload.page(0).unwrap(), "original 雪\0".as_bytes());

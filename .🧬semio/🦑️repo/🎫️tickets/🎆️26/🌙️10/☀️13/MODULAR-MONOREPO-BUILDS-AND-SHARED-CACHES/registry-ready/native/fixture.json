@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "filesystemBytes": 33554432,
+  "maximumPhysicalBytes": 41943040,
+  "workspaceBytes": 16777216,
+  "parallelBudgetMs": 15000,
+  "manifest": "[workspace]\nmembers=[\"leaf\"]\n[package]\nname=\"registry-ready-original\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[[bin]]\nname=\"ready\"\npath=\"main.rs\"\n[dependencies]\nregistry-ready-leaf={path=\"leaf\"}\n[profile.prototype]\ninherits=\"dev\"\ndebug=0\n[profile.release]\ndebug=0\n",
+  "lock": "version = 4\n[[package]]\nname = \"registry-ready-original\"\nversion = \"0.1.0\"\ndependencies = [\"registry-ready-leaf\"]\n[[package]]\nname = \"registry-ready-leaf\"\nversion = \"0.1.0\"\n",
+  "source": "fn main(){println!(\"{}\",registry_ready_leaf::value());}\n",
+  "mutations": [
+    {
+      "name": "manifest",
+      "writer": true
+    },
+    {
+      "name": "lock",
+      "writer": true
+    },
+    {
+      "name": "missing",
+      "writer": true
+    },
+    {
+      "name": "stale",
+      "writer": true
+    },
+    {
+      "name": "path-spoof",
+      "writer": true
+    },
+    {
+      "name": "member-omission",
+      "writer": true
+    },
+    {
+      "name": "interrupted-stage",
+      "writer": true
+    },
+    {
+      "name": "source",
+      "writer": false
+    }
+  ],
+  "dependencyManifest": "[package]\nname=\"registry-ready-leaf\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n",
+  "dependencySource": "pub fn value()->u32{32}\n",
+  "changedDependencySource": "pub fn value()->u32{64}\n"
+}

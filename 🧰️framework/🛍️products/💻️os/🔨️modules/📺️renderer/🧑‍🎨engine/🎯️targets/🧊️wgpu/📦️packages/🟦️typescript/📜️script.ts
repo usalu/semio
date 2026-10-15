@@ -7,7 +7,7 @@ import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { getWorkspaceRoot, packageTestBudgetMs, runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, runRepositoryTestCommand, runVitest, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -15,6 +15,7 @@ import { checkBrowserBoot, renderBrowserEntry } from "../../⚙️browser-build/
 import { checkFrameWorker, generateFrameWorker, renderFrameWorker } from "../../🎞️frame-worker/🏗️builder/🟦️.ts";
 
 import { runNativeBinary } from "../../⌨️native-entrypoint/📜️script.ts";
+import { listModuleTree, readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 /** 📇️ Verifies actual native publication and launch against the independent catalog selection oracle. */
 class NativeEntrypointCatalogTestScript extends BundleScript {
@@ -253,7 +254,7 @@ function directoryRetainedHomeBootstrapOracle(): number {
   check(fixture.retainedHome.instanceId !== fixture.retainedHome.switchedVisibleInstanceId && fixture.retainedHome.expectedDestroyCount === 1, "retained Home fixture does not distinguish visible-session ownership");
 
   const shellPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
-  const shell = readFileSync(shellPath, "utf8");
+  const shell = readModuleTreeSource(shellPath);
   const laws = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-command-registry/🦀️.rs"), "utf8");
   check(shell.includes('#[path = "../../🧪️tests/🔬️wgpu-command-registry/🦀️.rs"]\nmod command_registry_tests;'), "native retained-Home laws have no physical mount");
   for (const marker of [
@@ -313,7 +314,7 @@ class DirectoryRetainedHomeBootstrapNativeCheckScript extends BundleScript {
 }
 
 function normalizedPresenceRowsOracle(): number {
-  const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
+  const shell = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs"));
   const markers = [
     '.filter(|peer| peer.surface.as_deref() == Some(target_surface))',
     "color: peer.color",
@@ -392,7 +393,7 @@ class WorkerReceivingSourceScript extends BundleScript {
 /** 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/🔢️frame-generation-hold/🟦️.ts", "🧪️tests/🎯️presented-input-authority/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", "🧪️tests/🗄️wgpu-host-storage-door/🟦️.ts", "🧪️tests/🕰️wgpu-host-temporal-door/🟦️.ts", "🧪️tests/🔌️wgpu-socket-door/🟦️.ts", "🧪️tests/🔖️wgpu-readiness-beacon/🟦️.ts", "🧪️tests/🖱️wheel-application-point/🟦️.ts", ...segments], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/🔢️frame-generation-hold/🟦️.ts", "🧪️tests/🎯️presented-input-authority/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", "🧪️tests/🗄️wgpu-host-storage-door/🟦️.ts", "🧪️tests/🕰️wgpu-host-temporal-door/🟦️.ts", "🧪️tests/🔌️wgpu-socket-door/🟦️.ts", "🧪️tests/🔖️wgpu-readiness-beacon/🟦️.ts", "🧪️tests/🖱️wheel-application-point/🟦️.ts", "🧪️tests/🔤️wgpu-compiler-fonts/🟦️.ts", ...segments], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -446,13 +447,14 @@ class CheckFrameWorkerScript extends BundleScript {
 function collectWgpuColorLiteralViolations(bundleRoot: string): string[] {
   const libPath = join(bundleRoot, "../../🧊️renderer/🦀️.rs");
   if (!existsSync(libPath)) return [];
-  const text = readFileSync(libPath, "utf8");
   const violations: string[] = [];
-  const lines = text.split("\n");
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]!;
-    if (/\bRgba::new\(|\bfrom_srgb8\(/.test(line)) {
-      violations.push(`🦀️.rs:${i + 1}: ${line.trim()}`);
+  for (const file of listModuleTree(libPath)) {
+    const lines = readFileSync(file, "utf8").split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]!;
+      if (/\bRgba::new\(|\bfrom_srgb8\(/.test(line)) {
+        violations.push(`${relative(dirname(libPath), file)}:${i + 1}: ${line.trim()}`);
+      }
     }
   }
   return violations;

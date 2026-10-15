@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import Ajv from "ajv";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SemioFaultError, type AppDefinition, type Fault } from "@semio-tech/framework";
-import type { ViewModel } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import type { ViewModel } from "../../🧱️elements/🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import type { BackboneWorkerRequest, BackboneWorkerResponse } from "@semio-tech/framework-os";
 import type { PluginOperationCompletion, PluginWasmHandle } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import {

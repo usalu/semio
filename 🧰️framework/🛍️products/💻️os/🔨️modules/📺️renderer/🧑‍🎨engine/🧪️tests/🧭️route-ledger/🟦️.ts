@@ -9,7 +9,10 @@ import { describe, expect, it } from "vitest";
 import { assign, createActor, setup } from "xstate";
 import { createShellRouteLedgerV1 } from "../../🧱️elements/🏛️ShellHost/🧭️route-ledger/🟦️.ts";
 import corpus from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🧭️route-ledger/🔣️.json";
-import shellSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
+import shellUriDocumentsSource from "../../🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🟦️.ts?raw";
+import shellCoreStateSource from "../../🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts?raw";
+
+const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/*/🟦️.ts", "../../🧱️elements/🏛️ShellHost/*/🟦️.tsx"], { query: "?raw", import: "default", eager: true })).join("\n");
 // #endregion 🔌️Adapters
 
 //#region 🧪️Laws
@@ -64,12 +67,12 @@ describe("shell route ledger", () => {
   });
 
   it("routes every shell route application through the ledger", () => {
-    expect(shellSource).toContain("if (route === null || !shellRouteLedgerRef.current.shouldApply(route)) return;");
-    expect(shellSource).toContain("shellRouteLedgerRef.current.settle(generation, request.uri, await applyShellUriRef.current(request.uri, request.preservedViewState));");
-    expect(shellSource.match(/shellRouteLedgerRef\.current\.invalidate\(\)/gu)?.length).toBe(2);
-    expect(shellSource).toMatch(/rememberOpenSpaceId\(null\);\n\s+openInstanceIdRef\.current = null;\n\s+shellRouteLedgerRef\.current\.invalidate\(\);/u);
-    expect(shellSource).not.toMatch(/navigateHistory\(`\/spaces\//u);
-    expect(shellSource).not.toContain("navigateHistory(effect.navigate.uri)");
+    expect(shellUriDocumentsSource).toContain("if (route === null || !shellRouteLedgerRef.current.shouldApply(route)) return;");
+    expect(shellCoreStateSource).toContain("shellRouteLedgerRef.current.settle(generation, request.uri, await applyShellUriRef.current(request.uri, request.preservedViewState));");
+    expect(shellTreeSource.match(/shellRouteLedgerRef\.current\.invalidate\(\)/gu)?.length).toBe(2);
+    expect(shellTreeSource).toMatch(/rememberOpenSpaceId\(null\);\n\s+openInstanceIdRef\.current = null;\n\s+shellRouteLedgerRef\.current\.invalidate\(\);/u);
+    expect(shellTreeSource).not.toMatch(/navigateHistory\(`\/spaces\//u);
+    expect(shellTreeSource).not.toContain("navigateHistory(effect.navigate.uri)");
   });
 });
 //#endregion 🧪️Laws

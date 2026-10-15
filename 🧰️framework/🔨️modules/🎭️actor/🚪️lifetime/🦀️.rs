@@ -10,7 +10,7 @@ pub(crate) const REQUEST_SEQUENCE_MAXIMUM: u64 = 9_007_199_254_740_991;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
-#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceLifetime {
     #[cfg_attr(test, serde(with = "decimal_generation"))]
     #[value(with = "decimal_generation")]
@@ -23,7 +23,7 @@ pub struct ActorInstanceLifetime {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
-#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceOpenRequest {
     #[cfg_attr(test, serde(with = "decimal_generation"))]
     #[value(with = "decimal_generation")]
@@ -36,7 +36,7 @@ pub struct ActorInstanceOpenRequest {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
-#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceCloseRequest {
     pub lifetime: ActorInstanceLifetime,
     #[cfg_attr(test, serde(with = "request_sequence"))]
@@ -71,15 +71,15 @@ pub enum ActorInstanceLifecycleReceipt {
     },
 }
 
-impl ::protocol::value::ToValue for ActorInstanceLifecycleReceipt {
-    fn to_value(&self) -> ::protocol::value::DslValue {
-        use ::protocol::value::DslValue;
+impl ::semio_framework_value::ToValue for ActorInstanceLifecycleReceipt {
+    fn to_value(&self) -> ::semio_framework_value::DslValue {
+        use ::semio_framework_value::DslValue;
         let (kind, lifetime, request_sequence, close_generation) = match self {
             Self::Captured { lifetime, request_sequence } => ("captured", lifetime, request_sequence, None),
             Self::Accepted { lifetime, request_sequence, close_generation } => ("accepted", lifetime, request_sequence, Some(close_generation)),
             Self::Retired { lifetime, request_sequence, close_generation } => ("retired", lifetime, request_sequence, Some(close_generation)),
         };
-        let mut entries = vec![("kind".to_string(), DslValue::String(kind.to_string())), ("lifetime".to_string(), ::protocol::value::ToValue::to_value(lifetime)), ("requestSequence".to_string(), request_sequence::to_value(request_sequence))];
+        let mut entries = vec![("kind".to_string(), DslValue::String(kind.to_string())), ("lifetime".to_string(), ::semio_framework_value::ToValue::to_value(lifetime)), ("requestSequence".to_string(), request_sequence::to_value(request_sequence))];
         if let Some(close_generation) = close_generation {
             entries.push(("closeGeneration".to_string(), decimal_generation::to_value(close_generation)));
         }
@@ -87,9 +87,9 @@ impl ::protocol::value::ToValue for ActorInstanceLifecycleReceipt {
     }
 }
 
-impl ::protocol::value::FromValue for ActorInstanceLifecycleReceipt {
-    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
-        use ::protocol::value::{DslValue, ValueError};
+impl ::semio_framework_value::FromValue for ActorInstanceLifecycleReceipt {
+    fn from_value(value: ::semio_framework_value::DslValue) -> Result<Self, ::semio_framework_value::ValueError> {
+        use ::semio_framework_value::{DslValue, ValueError};
         let DslValue::Object(entries) = value else {
             return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected object"));
         };
@@ -103,7 +103,7 @@ impl ::protocol::value::FromValue for ActorInstanceLifecycleReceipt {
         if let Some((unknown, _)) = entries.iter().find(|(k, _)| !known.contains(&k.as_str())) {
             return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown field `{unknown}`")));
         }
-        let lifetime: ActorInstanceLifetime = ::protocol::value::FromValue::from_value(get("lifetime").ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `lifetime`"))?).map_err(|error: ValueError| error.under("lifetime"))?;
+        let lifetime: ActorInstanceLifetime = ::semio_framework_value::FromValue::from_value(get("lifetime").ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `lifetime`"))?).map_err(|error: ValueError| error.under("lifetime"))?;
         let request_sequence = request_sequence::from_value(get("requestSequence").ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field `requestSequence`"))?).map_err(|error| error.under("requestSequence"))?;
         match kind.as_str() {
             "captured" => Ok(Self::Captured { lifetime, request_sequence }),
@@ -121,7 +121,7 @@ impl ::protocol::value::FromValue for ActorInstanceLifecycleReceipt {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
-#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceLifecycleAck {
     pub receipt: ActorInstanceLifecycleReceipt,
 }
@@ -363,18 +363,18 @@ pub(crate) mod decimal_generation {
     /// 🔁️ `ToValue`/`FromValue` analogs of [`serialize`]/[`deserialize`] above — same decimal-string
     /// wire shape, `ToValue::to_value` stays infallible (the zero-generation guard only lives in
     /// [`from_value`]'s canonical-string check, mirroring [`deserialize`]'s own validation).
-    pub fn to_value(value: &u64) -> ::protocol::value::DslValue {
-        ::protocol::value::DslValue::String(value.to_string())
+    pub fn to_value(value: &u64) -> ::semio_framework_value::DslValue {
+        ::semio_framework_value::DslValue::String(value.to_string())
     }
 
-    pub fn from_value(value: ::protocol::value::DslValue) -> Result<u64, ::protocol::value::ValueError> {
-        let ::protocol::value::DslValue::String(text) = value else {
-            return Err(::protocol::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a canonical nonzero unsigned 64-bit decimal string"));
+    pub fn from_value(value: ::semio_framework_value::DslValue) -> Result<u64, ::semio_framework_value::ValueError> {
+        let ::semio_framework_value::DslValue::String(text) = value else {
+            return Err(::semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a canonical nonzero unsigned 64-bit decimal string"));
         };
         if text.is_empty() || text.len() > 20 || text.as_bytes()[0] == b'0' || !text.bytes().all(|byte| byte.is_ascii_digit()) {
-            return Err(::protocol::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "noncanonical lifecycle generation"));
+            return Err(::semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "noncanonical lifecycle generation"));
         }
-        text.parse().map_err(|_| ::protocol::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "noncanonical lifecycle generation"))
+        text.parse().map_err(|_| ::semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "noncanonical lifecycle generation"))
     }
 }
 
@@ -401,14 +401,14 @@ pub(crate) mod request_sequence {
 
     /// 🔁️ `ToValue`/`FromValue` analogs of [`serialize`]/[`deserialize`] above — bare-integer wire
     /// shape (matches [`serde_json`]'s own JSON number, not a decimal string).
-    pub fn to_value(value: &u64) -> ::protocol::value::DslValue {
-        ::protocol::value::DslValue::uint(*value)
+    pub fn to_value(value: &u64) -> ::semio_framework_value::DslValue {
+        ::semio_framework_value::DslValue::uint(*value)
     }
 
-    pub fn from_value(value: ::protocol::value::DslValue) -> Result<u64, ::protocol::value::ValueError> {
-        let value = <u64 as ::protocol::value::FromValue>::from_value(value).map_err(|_| ::protocol::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an unsigned 64-bit integer"))?;
+    pub fn from_value(value: ::semio_framework_value::DslValue) -> Result<u64, ::semio_framework_value::ValueError> {
+        let value = <u64 as ::semio_framework_value::FromValue>::from_value(value).map_err(|_| ::semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an unsigned 64-bit integer"))?;
         if !super::valid_request(value) {
-            return Err(::protocol::value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid lifecycle request"));
+            return Err(::semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid lifecycle request"));
         }
         Ok(value)
     }

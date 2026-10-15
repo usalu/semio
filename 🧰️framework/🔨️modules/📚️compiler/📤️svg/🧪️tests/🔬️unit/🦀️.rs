@@ -4,11 +4,11 @@ use crate::math::FontContext;
 use crate::syntax::parse_formula;
 
 fn with_fonts<R>(f: impl FnOnce(&FontContext<'_>, &FontSet<'_>) -> R) -> R {
-    let embedded = crate::world::embedded_fonts();
-    let math = Font::from_bytes(embedded.math, 0).expect("parse math font");
-    let serif = Font::from_bytes(embedded.serif, 0).expect("parse serif font");
-    let mono = Font::from_bytes(embedded.mono, 0).expect("parse mono font");
-    let emoji = Font::from_bytes(embedded.emoji, 0).expect("parse emoji font");
+    let set = crate::world::tests::test_fonts();
+    let math = Font::from_bytes(set.math, 0).expect("parse math font");
+    let serif = Font::from_bytes(set.serif, 0).expect("parse serif font");
+    let mono = Font::from_bytes(set.mono, 0).expect("parse mono font");
+    let emoji = Font::from_bytes(set.emoji, 0).expect("parse emoji font");
     let layout_ctx = FontContext { math: &math, serif: &serif, mono: &mono, emoji: &emoji };
     let svg_ctx = FontSet { math: &math, serif: &serif, mono: &mono };
     f(&layout_ctx, &svg_ctx)

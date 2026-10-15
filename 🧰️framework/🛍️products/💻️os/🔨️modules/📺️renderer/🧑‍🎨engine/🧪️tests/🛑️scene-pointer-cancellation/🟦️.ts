@@ -1,18 +1,22 @@
 
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import boardSource from "../../🧱️elements/🖥️Board2dHost/🟦️.tsx?raw";
 import inkSource from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx?raw";
-import nodeGraphSource from "../../🧱️elements/🕸️NodeGraph/🟦️.tsx?raw";
+import nodeGraphSource from "../../🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx?raw";
 import paintSource from "../../🧱️elements/🖌️Paint2dHost/🟦️.tsx?raw";
 import textEditorSource from "../../🧱️elements/✏️TextEditor/🟦️.tsx?raw";
 import tiledMapSource from "../../🧱️elements/🧭️TiledMapHost/🟦️.tsx?raw";
-import engineCanvasSource from "../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs?raw";
-import scenesSource from "../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs?raw";
-import interpreterSource from "../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs?raw";
-import shellSource from "../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs?raw";
-import rendererSource from "../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs?raw";
 import winitSource from "../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs?raw";
 import fixture from "../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+
+const engineSource = (path: string): string => readModuleTreeSource(fileURLToPath(new URL(path, import.meta.url)));
+const engineCanvasSource = engineSource("../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
+const interpreterSource = engineSource("../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
+const scenesSource = engineSource("../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
+const shellSource = engineSource("../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
+const rendererSource = engineSource("../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
 
 type Owner = Readonly<{ surfaceId: string; generation: number; pointerId: number }>;
 

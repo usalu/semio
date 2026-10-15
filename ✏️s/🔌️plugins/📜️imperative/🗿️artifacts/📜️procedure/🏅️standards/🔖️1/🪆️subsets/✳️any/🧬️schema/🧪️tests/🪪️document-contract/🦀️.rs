@@ -13,7 +13,7 @@ fn procedure_document_contract_round_trips_children_and_rejects_foreign_owners()
     let observed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&artifact)).unwrap();
     assert_eq!(observed, fixture["document"]);
     assert_eq!(artifact.to_snapshot(), snapshot);
-    assert_eq!(store::ChildRestoreProjection::from_snapshot(&snapshot).unwrap().len(), 2);
+    assert_eq!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).unwrap().len(), 2);
     assert_eq!(ProcedureSnapshot::parse_dsl(&snapshot.print_dsl()).unwrap(), snapshot);
     assert_eq!(ProcedureSnapshot::decode_pack(&snapshot.encode_pack()).unwrap(), snapshot);
     let delta: ProcedureDiff = semio_framework_pack_json::from_json_str(&fixture["diff"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

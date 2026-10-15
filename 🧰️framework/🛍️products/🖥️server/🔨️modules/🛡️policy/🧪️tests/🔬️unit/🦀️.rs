@@ -1,5 +1,6 @@
 
-use super::*;
+use crate::contract::{DeviceId, PolicyDecision, PolicyGrant, PolicyPoint, PolicyTemplate, Principal, Scope, SessionId};
+use crate::policy::*;
 use crate::test_instance::BearerTokenResolver;
 
 fn template(name: &str, grants: &[(PolicyPoint, &str, &str)]) -> PolicyTemplate {

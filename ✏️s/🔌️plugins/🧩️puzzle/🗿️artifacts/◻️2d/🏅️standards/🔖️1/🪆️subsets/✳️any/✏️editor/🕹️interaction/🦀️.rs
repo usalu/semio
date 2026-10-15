@@ -1,0 +1,264 @@
+//! 🕹️ Interaction of the puzzle 2d editor: the action context every command arm reads and writes and the context menu. See [`super`].
+
+use super::*;
+
+//#region 🔖️ActionContext
+/// 🎬️ Everything one `🎮️commands/*` arm may read or write. The prologue/epilogue around the dispatch
+/// match (host sync, host-event replay, delta computation, config snapshotting) stays in
+/// [`ArtifactApp::handle`]; an arm only mutates this bundle.
+pub struct Puzzle2dActionCtx<'a> {
+    /// 🎲️ The app's long-lived board engine — every arm reaching it goes through `borrow_mut()`.
+    pub host: &'a RefCell<BoardHost>,
+    pub scene: &'a mut Puzzle2dScene,
+    /// 🪟️ The window instance this action was dispatched from, when the caller named one.
+    pub window_id: Option<&'a str>,
+    /// 🧭️ The registered kind of that exact window instance.
+    pub window_kind: &'a str,
+    /// 🧰️ The active utility resolved for `window_id` BEFORE this action ran.
+    pub active_utility: String,
+    /// 🕹️ Read-only view of the framework-owned `vortex` interaction domain (ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — retained selection-acting verbs read
+    /// `.selected_ids()` here instead of the deleted `Puzzle2dConfig::selected_ids` field.
+    pub selection: &'a protocol::DomainSelection,
+    pub effects: &'a mut Vec<Effect>,
+    /// 📼️ The kinds this action's board edits record, one entity at a time, over the document it reads.
+    pub recorder: &'a mut Puzzle2dRecorder,
+    pub artifact_mutations: &'a mut Vec<Puzzle2dMutation>,
+    /// 🕹️ App-initiated selection writes riding alongside this action (`Emit::interaction_writes`).
+    pub interaction_writes: &'a mut Vec<semio_framework_plugin::InteractionWrite>,
+    pub ui_scope: &'a mut UiDirtyScope,
+    /// 🗣️ The resolved locale×terminology label set an arm raises user-facing prose from — a refusal
+    /// notice is a real sentence, never a fault code.
+    pub labels: &'static crate::editor::puzzle2d::terminology::Puzzle2dLabels,
+    /// 🪪️ Exact public command authority retained by framework continuations.
+    pub operation: Option<semio_framework_plugin::AppOperationContext>,
+    /// 🧬️ The typed document this action reads as its base — what the select tool yields against.
+    pub base: &'a Puzzle2dPlaySnapshot,
+    /// 🌱️ The admission's authoring seed every tool transaction this action commits is minted from; empty for
+    /// a render/test view without command authority, which then publishes the yielded mutations plainly.
+    pub authoring_seed: &'a str,
+    /// 📐️ The document revision this action reads (hex) — a persisted select-tool gesture opened on another one
+    /// is aborted, `baseMoved`.
+    pub base_revision: &'a str,
+    /// 🛠️ The tool transaction this action committed — stamped on every op it publishes.
+    pub transaction: &'a mut Option<protocol::TransactionRef>,
+    /// 🖐️ The dispatching window's gesture slot: every tool of this action drives the window's ONE gesture through it.
+    pub gesture: &'a semio_framework_plugin::app::GestureSlot<Puzzle2dMutation>,
+}
+
+impl<'a> Puzzle2dActionCtx<'a> {
+    pub fn selected_ids(&self) -> Vec<String> {
+        self.selection.ids.clone()
+    }
+
+    /// 🛠️ Commits `records` through the select tool machine as ONE tool transaction of this action — the
+    /// parametric selection leaves plus the connections their drops land, yielded as `verb`. A request whose
+    /// every target is locked is refused at the tool with the one lock sentence and leaves zero trace; a request
+    /// with a movable target is yielded whole, and its leaf reports the locked rest as `mutation.partial`.
+    pub fn commit_selection(&mut self, verb: &str, records: Vec<Puzzle2dSelectionRecord>) {
+        self.transform_selection(verb, GesturePhase::Once, records);
+    }
+
+    /// 🌊️ Drives this window's select tool through ONE dispatch of a selection transform on the window's gesture slot.
+    /// `Once` commits the records as one transaction; `Stream` upserts them into the window's open transaction —
+    /// opening it on the first tick — which the runtime keeps and overlays on the document every render reads; `Commit`
+    /// folds the final records in and commits the whole gesture as ONE edit; `Abort` drops the open gesture with zero
+    /// trace. Another verb, a one-shot, a moved base and every host fact (a blur, a lost capture, a utility switch, a
+    /// frozen document) end an open gesture in the slot — this action maps none of them.
+    pub fn transform_selection(&mut self, verb: &str, phase: GesturePhase, records: Vec<Puzzle2dSelectionRecord>) {
+        if matches!(phase, GesturePhase::Abort(_)) && self.gesture.open().is_none() {
+            *self.ui_scope = UiDirtyScope::None;
+            return;
+        }
+        let base = self.base.typed();
+        let refused = records.iter().any(|record| record.refused_as_locked(base));
+        let request = (!matches!(phase, GesturePhase::Abort(_))).then(|| SelectToolRequest { base: self.base.shared_typed(), proximity_radius: self.scene.runtime.proximity_radius, records });
+        let committed = self.gesture.drive::<ChartGesture<select_utility::select_tool::SelectTool>>(None, verb, phase, request, self.authoring_seed).ok().flatten();
+        match committed {
+            Some((transaction, mutations)) => self.publish_transaction(transaction, mutations),
+            None if refused && self.gesture.open().is_none() => {
+                self.notice(|labels| labels.selection_locked.as_str());
+                *self.ui_scope = UiDirtyScope::None;
+            }
+            None => {}
+        }
+    }
+
+    /// 🧾️ Publishes one committed tool transaction of this action: its leaves join the action's ONE edit, which the
+    /// first transaction the action commits stamps.
+    fn publish_transaction(&mut self, transaction: protocol::TransactionRef, mutations: Vec<Puzzle2dMutation>) {
+        if self.transaction.is_none() && !self.authoring_seed.is_empty() {
+            *self.transaction = Some(transaction);
+        }
+        self.artifact_mutations.extend(mutations);
+    }
+
+    /// 🧱️ Commits the board-tool rows of ONE flush (`rows`: kind and payload, in board order): every run of one kind is
+    /// one release of that tool — ONE `ToolTransaction` of `<appId>#<kind>` on the window's gesture slot, folded on the
+    /// document the runs before it left. Answers the document after every release, `None` when no row changed it.
+    pub fn release_board(&mut self, rows: &[(&'static str, Value)]) -> Option<std::sync::Arc<crate::Puzzle2dSnapshot>> {
+        let mut after: Option<std::sync::Arc<crate::Puzzle2dSnapshot>> = None;
+        for run in rows.chunk_by(|left, right| left.0 == right.0) {
+            let base = after.clone().unwrap_or_else(|| self.base.shared_typed());
+            let release = apply_board_events::BoardToolRelease::new(base, run[0].0, run.iter().map(|row| row.1.clone()).collect());
+            let committed = self.gesture.drive::<ChartGesture<apply_board_events::board_tool::BoardTool>>(None, run[0].0, GesturePhase::Once, Some(release.clone()), self.authoring_seed).ok().flatten();
+            if let Some((transaction, mutations)) = committed {
+                self.publish_transaction(transaction, mutations);
+                after = Some(std::sync::Arc::clone(&release.outcome().after));
+            }
+        }
+        after
+    }
+
+    /// 🎯️ The selected ids a selection transform may move: nodes and target regions of the base, in first-seen
+    /// selection order without repeats — handles and edges are selection, never transform targets.
+    pub fn selected_transform_targets(&self) -> Vec<String> {
+        let typed = self.base.typed();
+        select_utility::puzzle2d_unique_targets(self.selection.ids.iter().filter(|id| typed.nodes.iter().any(|node| &node.id == *id) || typed.target_regions.iter().any(|region| &region.id == *id)).cloned())
+    }
+
+    /// 🧯️ Raises exactly ONE localized sentence on the shell's transient-notice channel
+    /// (`Effect::Notify` → `ShellHost`'s `showTransientNotice`). A second call inside the same action
+    /// adds nothing, so the effect list of a refusal stays fixed-width — the twin of puzzle3d's
+    /// `Puzzle3dActionCtx::notice`.
+    pub fn notice(&mut self, message: impl Fn(&crate::editor::puzzle2d::terminology::Puzzle2dLabels) -> &'static str) {
+        if self.effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })) {
+            return;
+        }
+        let text = message(self.labels).to_string();
+        self.effects.push(Effect::Notify { message: text });
+    }
+
+    /// 🔒️ The single lock gate every destructive or moving 2d verb asks first: a locked node, handle,
+    /// edge or target region among `ids` refuses the whole gesture with one visible sentence, makes no
+    /// document edit and raises no fault. Answers whether it refused, so an arm reads
+    /// `if ctx.refuse_when_locked(&ids) { return }`. A silent no-op is what this replaces — the
+    /// 2026-09-17 battery measured `deleteSelection` erasing 12 locked entities while the same node's
+    /// drag was (silently) refused.
+    pub fn refuse_when_locked(&mut self, ids: &[String]) -> bool {
+        if !puzzle2d_addresses_locked_entity(&self.scene.board_snapshot, ids) {
+            return false;
+        }
+        self.notice(|labels| labels.selection_locked.as_str());
+        *self.ui_scope = UiDirtyScope::None;
+        true
+    }
+}
+
+/// 🏷️ Admits dynamic puzzle labels into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d label admission failed"))
+}
+//#endregion 🔖️ActionContext
+
+//#region 🔖️ContextMenu
+/// 🖱️ On-demand puzzle 2d board context menu from selection snapshot. Grouped disclosure:
+/// toggleHidden/toggleLocked/duplicate/focusSelection stay top-level (the four most frequent
+/// verbs); selectSameKind folds into the "selection" taxonomy group; deleteSelection stays the
+/// destructive tail. `organize_context_menu` (applied automatically at the
+/// `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
+/// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed here.
+pub(super) async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, snapshot: &Value, selected: &[String], view_state: &semio_framework_plugin::ViewModel) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu, SelectionKind};
+    let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
+    // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
+    // declared-action lookup) — appended via `Menu::item(...)`, the documented escape hatch.
+    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<semio_framework::DslValue>, destructive: bool, disabled: bool| ContextMenuItemSpec {
+        id: id.into(),
+        label: Some(label.into()),
+        icon: Some(icon.into()),
+        action: Some(action.into()),
+        args,
+        destructive: destructive.then_some(true),
+        disabled: disabled.then_some(true),
+        ..Default::default()
+    };
+    if selected.is_empty() {
+        // 🗨️ The empty-board branch is the second declared entry point of the Add Node dialog (the
+        // shell palette is the first) — the same pair puzzle3d binds `openAddObjectDialog` to.
+        return Menu::of(registry, view_state)
+            .item(item("openAddNodeDialog", if is_de { "Knoten hinzufügen…" } else { "Add Node…" }, "plus", "openAddNodeDialog", None, false, false))
+            .item(item("selectAll", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", None, false, false))
+            .item(item("paste", if is_de { "Einfügen" } else { "Paste" }, "clipboard", "paste", None, false, false))
+            .build();
+    }
+    let selected_set: HashSet<&str> = selected.iter().map(String::as_str).collect();
+    let mut entities: Vec<&Value> = Vec::new();
+    let mut has_selected_node = false;
+    let mut selected_handle_ids: Vec<&str> = Vec::new();
+    if let Some(nodes) = snapshot.get("nodes").and_then(|v| v.as_array()) {
+        for node in nodes {
+            if node.get("id").and_then(|v| v.as_str()).is_some_and(|id| selected_set.contains(id)) {
+                entities.push(node);
+                has_selected_node = true;
+            }
+            if let Some(handles) = node.get("handles").and_then(|v| v.as_array()) {
+                for handle in handles {
+                    if let Some(id) = handle.get("id").and_then(|v| v.as_str()).filter(|id| selected_set.contains(id)) {
+                        entities.push(handle);
+                        selected_handle_ids.push(id);
+                    }
+                }
+            }
+        }
+    }
+    if let Some(edges) = snapshot.get("edges").and_then(|v| v.as_array()) {
+        for edge in edges {
+            if edge.get("id").and_then(|v| v.as_str()).is_some_and(|id| selected_set.contains(id)) {
+                entities.push(edge);
+            }
+        }
+    }
+    let any_visible = entities.iter().any(|entity| !puzzle2d_entity_hidden(entity));
+    let any_unlocked = entities.iter().any(|entity| entity.get("locked").and_then(|v| v.as_bool()) != Some(true));
+    let phrase = selection_count_phrase(view_state.locale, &[(selected.len(), SelectionKind::Item)]).unwrap_or_default();
+    let hide_label = match (any_visible, is_de) {
+        (true, true) => "Ausblenden",
+        (true, false) => "Hide",
+        (false, true) => "Einblenden",
+        (false, false) => "Show",
+    };
+    let lock_label = match (any_unlocked, is_de) {
+        (true, true) => "Sperren",
+        (true, false) => "Lock",
+        (false, true) => "Entsperren",
+        (false, false) => "Unlock",
+    };
+    // 💡️ One selected handle is the one-shot placement picker's entry point — the row the brush
+    // utility never had: it opens the suggestions popup on that handle WITHOUT arming the brush.
+    let mut menu = Menu::of(registry, view_state);
+    if let [only] = selected_handle_ids.as_slice() {
+        menu = menu.item(item("suggestNodes", if is_de { "Knoten vorschlagen" } else { "Suggest nodes" }, "sparkles", "openHandleSuggestions", Some(semio_framework::dsl_value!({ "handleId": only })), false, false));
+    }
+    // 🔗️ Two selected handles are the `createEdge` gesture: the row stays visible but refuses itself
+    // when either end is already connected or no compatibility rule admits the pair, so the menu says
+    // what the document allows instead of offering a verb that would only raise a notice.
+    if let [source, target] = selected_handle_ids.as_slice() {
+        let occupied = puzzle2d_occupied_handles(snapshot);
+        let kinds = puzzle2d_handle_kind(snapshot, source).zip(puzzle2d_handle_kind(snapshot, target));
+        let connectable = !occupied.contains(*source) && !occupied.contains(*target) && kinds.is_some_and(|(source_kind, target_kind)| puzzle2d_kinds_compatible(snapshot, &source_kind, &target_kind));
+        menu = menu.item(item("connectHandles", if is_de { "Verbinden" } else { "Connect" }, "link", "createEdge", Some(semio_framework::dsl_value!({ "source": source, "target": target })), false, !connectable));
+    }
+    menu.item(item("toggleHidden", hide_label, if any_visible { "eye-off" } else { "eye" }, "setSelectionFlag", Some(semio_framework::dsl_value!({ "flag": "hidden", "value": any_visible })), false, false))
+        .item(item("toggleLocked", lock_label, if any_unlocked { "lock" } else { "lock-open" }, "setSelectionFlag", Some(semio_framework::dsl_value!({ "flag": "locked", "value": any_unlocked })), false, false))
+        .item(item("duplicate", if is_de { "Duplizieren" } else { "Duplicate" }, "copy", "duplicateSelection", None, false, !has_selected_node))
+        .item(item("focusSelection", if is_de { "Auf Auswahl zoomen" } else { "Zoom to selection" }, "crosshair", "focusSelection", None, false, false))
+        // 📋️ The framework declares copy/cut/paste (and their mod+c/x/v keys); these rows are the
+        // pointer route to the same three reserved verbs [`Puzzle2dClipboardJob`] answers.
+        //
+        // 🗂️ ONE disclosure group, not three top-level leaves. `organize_context_menu` counts
+        // INTERACTIVE rows against `CONTEXT_MENU_ROW_BUDGET = 9` and only then appends the
+        // `separator-organized-*` row ahead of the destructive one — so nine interactive rows take the
+        // within-budget path and still render TEN rows. Three clipboard verbs that every shell already
+        // binds to mod+c/x/v are the right three to fold: the menu is shorter, the budget is respected
+        // as the shell measures it, and no verb is lost.
+        .group("clipboard", |m| {
+            m.item(item("copy", if is_de { "Kopieren" } else { "Copy" }, "copy", "copy", None, false, !has_selected_node))
+                .item(item("cut", if is_de { "Ausschneiden" } else { "Cut" }, "scissors", "cut", None, false, !has_selected_node || !any_unlocked))
+                .item(item("paste", if is_de { "Einfügen" } else { "Paste" }, "clipboard", "paste", None, false, false))
+        })
+        .group("selection", |m| m.item(item("selectSameKind", if is_de { "Gleiche Art auswählen" } else { "Select same kind" }, "layers", "selectSameKind", None, false, false)))
+        .item(item("deleteSelection", &format!("{} ({phrase})", if is_de { "Löschen" } else { "Delete" }), "trash", "deleteSelection", None, true, false))
+        .build()
+}
+//#endregion 🔖️ContextMenu

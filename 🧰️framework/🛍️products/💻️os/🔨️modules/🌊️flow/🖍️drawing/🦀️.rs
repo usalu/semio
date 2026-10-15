@@ -356,11 +356,11 @@ pub trait DrawingKernel {
 // #region 🔖️Engine
 use semio_framework_2d::compute::Engine as _;
 
-/// ⚙️ Content-addressed drawing node engine (`ENGINE_ID = "s.2d.drawing"`).
+/// ⚙️ Content-addressed drawing node engine (`ENGINE_ID = "framework.2d.drawing"`).
 pub struct DrawingEngine;
 
 impl semio_framework_2d::compute::Engine for DrawingEngine {
-    const ENGINE_ID: &'static str = "s.2d.drawing";
+    const ENGINE_ID: &'static str = "framework.2d.drawing";
 
     fn compute(&self, input: &[u8]) -> Result<Vec<u8>, semio_framework_2d::compute::EngineFault> {
         let node = StoredNode::decode_pack(input).map_err(semio_framework_2d::compute::EngineFault::InvalidInput)?;

@@ -175,8 +175,8 @@ fn retained_document(surface_id: &str, generation: u64, root: u64, records: Vec<
     ui_contract::UiDocumentLease::try_publish(ui_contract::SurfaceId::try_from(surface_id).expect("bounded Map surface id"), identity, records).expect("Map lifecycle document publishes")
 }
 
-fn map_fixture_owner(window_id: &str, surface_id: &str) -> crate::interpreter::ScenePointerTarget {
-    crate::interpreter::fixture_scene_pointer_target(window_id, surface_id, "map.fixture")
+fn map_fixture_owner(window_id: &str, surface_id: &str) -> crate::element_contracts::ScenePointerTarget {
+    crate::element_contracts::fixture_scene_pointer_target(window_id, surface_id, "map.fixture")
 }
 
 fn paint_retained_map_document(document: &ui_contract::UiDocumentLease, surface_id: &str, bounds: Rect) -> InputState<ActionDescriptor> {
@@ -325,7 +325,7 @@ struct PaintedFrame {
 
 pub(super) struct RetainedSurfacePaint {
     pub(super) draw: DrawList,
-    pub(super) owner: crate::interpreter::ScenePointerTarget,
+    pub(super) owner: crate::element_contracts::ScenePointerTarget,
 }
 
 /// 🪟️ Drives an EngineCanvas scene through the retained document and Interpreter admission seam.

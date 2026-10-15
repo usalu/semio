@@ -5,7 +5,7 @@
 //! `type` for commands, events and queries) with kebab-case variant names, id-keyed maps are
 //! `BTreeMap`s, optional fields are omitted when absent and unknown fields are refused like the
 //! schema's `additionalProperties: false`. Constraints serde cannot express (slug patterns, lengths,
-//! cardinalities, references) are checked by [`crate::validation`].
+//! cardinalities, references) are checked by the `validation` module of `semio-framework-quiz`.
 //!
 //! @see ../🧬️schema/🔣️.json — the normative contract
 //! @see ../🧬️schema/🟦️.ts — the TypeScript twin
@@ -1368,6 +1368,18 @@ pub struct ThinkingMatchingAnswer {
 }
 //#endregion 🔖️Presence
 
+//#region 🧰️Testkit
+
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧪️tests/🧰️testkit/🦀️.rs"]
+pub mod testkit;
+
+//#endregion 🧰️Testkit
+
+//#region 🧪️Tests
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+mod tests;
+
+//#endregion 🧪️Tests

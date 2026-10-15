@@ -20,30 +20,11 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { spawnSync } from "node:child_process";
+import {runRepositoryMutationBridgeScriptV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏭️inventory/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🚪️Entry
-const BRIDGE_VERSION = 1;
-
-function main(argv: readonly string[]): number {
-  const [command = "", artifact = "", standard = "", subset = "", ...surface] = argv;
-  if (command !== "list-mutations") {
-    console.error(`[bridge] unknown command ${JSON.stringify(command)} — expected list-mutations <artifact> <standard> <subset> [<surface>]`);
-    return 2;
-  }
-  const built = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", "semio-animate-mutation-bridge", "--", command, artifact, standard, subset, ...surface], {
-    cwd: import.meta.dir,
-    encoding: "utf8",
-  });
-  if (built.status !== 0) {
-    console.error(`[bridge] cargo exited ${built.status}: ${(built.stderr ?? "").trim().split("\n").slice(-6).join("\n")}`);
-    return 1;
-  }
-  process.stdout.write(built.stdout);
-  return 0;
-}
-
-if (import.meta.main) process.exit(main(process.argv.slice(2)));
-export { BRIDGE_VERSION };
+const BRIDGE_VERSION=1;
+if(import.meta.main)await runRepositoryMutationBridgeScriptV1(import.meta.dir,"semio-animate-mutation-bridge");
+export {BRIDGE_VERSION};
 //#endregion 🚪️Entry

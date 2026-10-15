@@ -29,7 +29,7 @@ impl Drop for InputClaim{fn drop(&mut self){let event={let mut state=self.ledger
 /// 📦️ The exact Vec backing stays paid until its actual retained owner drops.
 pub struct CommandBytes{bytes:Vec<u8>,claim:InputClaim}
 impl std::ops::Deref for CommandBytes{type Target=[u8];fn deref(&self)->&[u8]{&self.bytes}}
-impl crate::os_pack::PackSource for CommandBytes{type Error=PackRefusal;async fn len(&self)->u64{self.bytes.len()as u64}async fn read_at(&self,offset:u64,buf:&mut[u8])->Result<usize,PackRefusal>{crate::os_pack::PackSource::read_at(&self.bytes,offset,buf).await}}
+impl semio_framework_pack_source::PackSource for CommandBytes{type Error=PackRefusal;async fn len(&self)->u64{self.bytes.len()as u64}async fn read_at(&self,offset:u64,buf:&mut[u8])->Result<usize,PackRefusal>{semio_framework_pack_source::PackSource::read_at(&self.bytes,offset,buf).await}}
 impl std::fmt::Debug for CommandBytes{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("CommandBytes").field("length",&self.bytes.len()).finish()}}
 /// 🔍️ Immutable spans validate every scalar before unchecked transfer of the already verified backing.
 impl CommandBytes{pub fn into_text(self)->Result<CommandText,PackError>{
@@ -51,12 +51,12 @@ pub fn admit_command_transport<F:Fn(PackTransportProgress)+Send+Sync+'static>(ma
 }
 /// 📥️ Reads through the retained caller context in bounded physical pages.
 pub async fn read_command_file(path:&std::path::Path,maximum_bytes:u64,context:&CommandContext)->Result<CommandBytes,PackError>{
- use crate::os_pack::PackSource;
+ use semio_framework_pack_source::PackSource;
  let source=crate::os_pack::io::FilePackSource::open(path,context.transport.clone())?;let length=source.len().await;
  read_command_source(&source,length,maximum_bytes,context).await
 }
 /// 📚️ A retained source's trusted prefix uses the same finite input credit and physical pages.
-pub async fn read_command_source<S:crate::os_pack::PackSource<Error=PackError>>(source:&S,length:u64,maximum_bytes:u64,context:&CommandContext)->Result<CommandBytes,PackError>{
+pub async fn read_command_source<S:semio_framework_pack_source::PackSource<Error=PackError>>(source:&S,length:u64,maximum_bytes:u64,context:&CommandContext)->Result<CommandBytes,PackError>{
  if length>maximum_bytes{return Err(PackError::Refusal(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::WorkLimit,"command input exceeds max_file_len"))))}
  let length=usize::try_from(length).map_err(|_|PackError::Refusal(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::OwnershipLimit,"command input exceeds address space"))))?;
  let claim=context.claim(length)?;let mut bytes=Vec::new();bytes.try_reserve_exact(length).map_err(|_|input_refusal(ValueRefusalKind::AllocationFailed,"command input allocation failed"))?;context.checkpoint()?;

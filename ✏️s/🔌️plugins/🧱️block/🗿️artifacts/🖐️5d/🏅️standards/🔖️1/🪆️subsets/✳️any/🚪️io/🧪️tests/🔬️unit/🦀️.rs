@@ -72,5 +72,5 @@ async fn io_declaration_registers_both_directions_of_all_three_formats() {
     }
     foreign.sort_unstable();
     foreign.dedup();
-    assert_eq!(foreign, vec!["s.stdio.json", "s.stdio.txt", "s.stdio.zip"]);
+    assert_eq!(foreign, vec!["framework.io.text", "s.stdio.json", "s.stdio.zip"]);
 }

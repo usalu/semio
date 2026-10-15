@@ -14,10 +14,12 @@ mod native {
     use std::collections::HashMap;
     use std::path::{Path, PathBuf};
 
-    use crate::os_pack::{CodecId, PackSource};
+    use crate::os_pack::{CodecId};
+use semio_framework_pack_source::{PackSource};
     use crate::os_spr::format::{parse_commit_payload, read_header, recover as recover_records, Blake3Hasher, FrameCursor, RecoveryMode, SprWriter, VerificationLevel, WriteOptions, COMMIT_FRAME_LEN, HEADER_SIZE};
     use crate::os_spr::history::{decode_history, encode_composition, encode_conflicts, encode_doc, encode_edit, encode_transition, DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader};
-    use crate::os_spr::wire::{DictBuilder, ProtocolError, ProtocolLimits, RecordHasher};
+    use protocol::ProtocolError;
+use crate::os_spr::wire::{DictBuilder, ProtocolLimits, RecordHasher};
 
     //#region 🔖️File
     /// 📍️ Where a `.spr` file's trusted content currently ends, and the commit-chain state

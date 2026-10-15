@@ -29,7 +29,7 @@ class TestScript extends BundleScript {
       return;
     }
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-job"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-job"], cwd: this.root, extraArgs: ["--features","testkit",...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -37,7 +37,7 @@ class CanonicalArchitectureScript extends BundleScript {
   async run(): Promise<void> {
     const { proveJobReconcileContract } = await import("../../🔎️reconcile/🧪️tests/🔬️contract/🟦️.ts");
     proveJobReconcileContract();
-    await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },manifestPaths: { "semio-framework-job": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-job", target: { kind: "lib" }, laws: ["neutral_reconcile_envelopes_match_language_agnostic_vectors"] }]});
+    await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },manifestPaths: { "semio-framework-job": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-job", target: { kind: "test", name: "original-reconcile" }, laws: ["neutral_reconcile_envelopes_match_language_agnostic_vectors"] }]});
   }
 }
 
@@ -96,7 +96,7 @@ class OriginalRetainedLoanNativeScript extends BundleScript {
   if(args.length)throw Error("Original retained loan native takes no filters");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original retained loan requires finite original caller authority");
   await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🎟️context/🧪️tests/🟦️.ts"),resolve(this.root,"../../⏱️context/📦️return/🪶️weak/🧪️tests/🟦️.ts")],this.repoRoot,"job:original-retained-loan-source",remaining,{env:process.env,signal:this.invocation.control.signal});
   const left=this.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw Error("Original retained loan caller exhausted before native admission");
-  await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-framework-job":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-job",target:{kind:"lib"},laws:["component::original_retained_loan_tests::original_retained_loan_matches_neutral_inputs_and_nested_ceiling","component::original_retained_loan_tests::original_retained_loan_physical_failure_preserves_owned_cause_and_paid_close","component::original_retained_loan_tests::original_retained_loan_unwind_restores_parent_without_new_context","component::original_retained_loan_tests::original_retained_loan_swap_and_replace_preserve_both_original_causes","component::original_retained_loan_tests::original_retained_loan_swap_unwind_never_promotes_replacement"]}]});
+  await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-framework-job":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-job",target:{kind:"test",name:"original-retained-loan"},laws:["original_retained_loan_matches_neutral_inputs_and_nested_ceiling","original_retained_loan_physical_failure_preserves_owned_cause_and_paid_close","original_retained_loan_unwind_restores_parent_without_new_context","original_retained_loan_swap_and_replace_preserve_both_original_causes","original_retained_loan_swap_unwind_never_promotes_replacement"]}]});
  }
 }
 

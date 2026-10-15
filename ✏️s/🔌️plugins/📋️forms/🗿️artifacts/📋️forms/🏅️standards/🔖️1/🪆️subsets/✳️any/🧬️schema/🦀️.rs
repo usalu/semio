@@ -15,8 +15,7 @@ pub mod definition;
 pub mod response;
 #[path = "✅️validation/🦀️.rs"]
 pub mod validation;
-#[path = "🧾️dictionary/🦀️.rs"]
-pub mod dictionary;
+use semio_framework_value_dictionary::{QuestionDictionary, QuestionDictionaryEntry};
 pub use validation::{can_advance, step_errors};
 
 //#region 🔖️Artifact
@@ -98,7 +97,7 @@ pub use crate::playbook::{
 
 
 /// 🧾️ Configured defaults retain the actual value owners and declared question order.
-pub fn configured_dictionary(spec:&FormsSnapshot)->Result<dictionary::FormDictionary,semio_framework_value::ValueError>{let spec=crate::mutations::as_playbook_spec(spec);let mut entries=Vec::new();for step in &spec.steps{for block in &step.blocks{entries.push(dictionary::FormDictionaryEntry{question_id:block.id.clone(),value:crate::playbook::default_value_for_block(block)});}}let owner=semio_framework_value::DecodedValue::new(dictionary::FormDictionary{entries},<dictionary::FormDictionary as semio_framework_value::FromValue>::retire_decoded);owner.get().validate()?;Ok(owner.take())}
+pub fn configured_dictionary(spec:&FormsSnapshot)->Result<QuestionDictionary,semio_framework_value::ValueError>{let spec=crate::mutations::as_playbook_spec(spec);let mut entries=Vec::new();for step in &spec.steps{for block in &step.blocks{entries.push(QuestionDictionaryEntry{question_id:block.id.clone(),value:crate::playbook::default_value_for_block(block)});}}let owner=semio_framework_value::DecodedValue::new(QuestionDictionary{entries},<QuestionDictionary as semio_framework_value::FromValue>::retire_decoded);owner.get().validate()?;Ok(owner.take())}
 //#endregion 🔖️PlaybookVocabulary
 
 //#region 🔖️DocumentHelpers

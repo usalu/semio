@@ -1,3 +1,4 @@
+import {boundedNxNamespaceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 /** 📦️ Portable locked-install and owner-requested lock refresh command laws. */
 import { expect, test } from "bun:test";
 import { openSync, readFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
@@ -16,21 +17,27 @@ import { EventEmitter } from "node:events";
 import { ChildProcess } from "node:child_process";
 
 const owner = resolve(import.meta.dir, "..");
-const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as { operations: { mode: "sync" | "lock"; arguments: string[] }[]; platforms: string[]; rejections: string[][] };
+const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { operations: { mode: "sync" | "lock"; arguments: string[] }[]; platforms: string[]; rejections: string[][] };
 
 test("source watchers have stable independent graph stores and sockets for each activation binding", () => {
-  const workspace = resolve(owner), environment = { S_OS_PORT: "6064", PLAYGROUND_LOCKED_EXAMPLE_ID: "🎬️demo", NX_WORKSPACE_DATA_DIRECTORY: "shared" }, target = "a:activate-react";
+  const workspace = resolve(owner), environment:Record<string,string|undefined> = { S_OS_PORT: "6064", PLAYGROUND_LOCKED_EXAMPLE_ID: "🎬️demo",...boundedNxNamespaceV1(workspace,workspace,"a".repeat(64),workspace,null,"d".repeat(64)).environment,SEMIO_NX_TOOLING_IDENTITY:"a".repeat(64),SEMIO_NX_SOCKET_STORAGE:"/c/l/m" }, target = "a:activate-react";
   const a = nxWatcherEnvironment(workspace, environment, target);
   expect(nxWatcherEnvironment(workspace, environment, target)).toEqual(a);
   expect(a.S_OS_PORT).toBe("6064");
   expect(a.NX_WORKSPACE_DATA_DIRECTORY).not.toBe(environment.NX_WORKSPACE_DATA_DIRECTORY);
-  const identity = JSON.stringify([workspace.replaceAll("\\", "/"), target, Object.entries(environment).filter(([key]) => /^(?:S_|VITE_|PLAYGROUND_|SEMIO_(?:PLUGIN|RENDERER|BUILD_MODE|LOCALE)$)/.test(key)).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)]);
+  const identity = JSON.stringify([workspace.replaceAll("\\", "/"), target, Object.entries(environment).filter(([key]) => /^(?:S_|VITE_|PLAYGROUND_|SEMIO_(?:PLUGIN|RENDERER|BUILD_MODE|NX_TOOLING_IDENTITY|LOCALE|LOCKED_LOCALE|LOCKED_TERMINOLOGY)$)/.test(key)).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)]);
   const hash = new Bun.CryptoHasher("sha256").update(identity).digest("hex").slice(0, 24);
   expect(a.NX_WORKSPACE_DATA_DIRECTORY.endsWith(hash)).toBe(true);
   for (const b of [nxWatcherEnvironment(workspace, environment, "a:activate-wgpu"), nxWatcherEnvironment(workspace, { ...environment, PLAYGROUND_LOCKED_EXAMPLE_ID: "🎬️demo-session" }, target)]) {
     expect(b.NX_WORKSPACE_DATA_DIRECTORY).not.toBe(a.NX_WORKSPACE_DATA_DIRECTORY);
     expect(b.NX_SOCKET_DIR).not.toBe(a.NX_SOCKET_DIR);
   }
+});
+
+test("source watcher namespace retains the exact pinned graph dimension",()=>{
+ const workspace=resolve(owner),tooling="a".repeat(64),rows=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).graphBindings,seen=new Set<string>(),sockets=new Set<string>();
+ for(const graphIdentity of rows){const environment={...boundedNxNamespaceV1(workspace,workspace,tooling,workspace,graphIdentity,"d".repeat(64)).environment,SEMIO_NX_TOOLING_IDENTITY:tooling,SEMIO_NX_SOCKET_STORAGE:"/c/l/m"},watcher=nxWatcherEnvironment(workspace,environment,"a:activate-react");expect(watcher.SEMIO_BUILD_GRAPH_DIGEST).toBe(graphIdentity??undefined);expect(nxWatcherEnvironment(workspace,environment,"a:activate-react")).toEqual(watcher);seen.add(watcher.NX_WORKSPACE_DATA_DIRECTORY);sockets.add(watcher.NX_SOCKET_DIR);expect(()=>nxWatcherEnvironment(workspace,{...environment,SEMIO_BUILD_GRAPH_DIGEST:graphIdentity===null?"b".repeat(64):undefined},"a:activate-react")).toThrow("base namespace");}
+ expect(seen.size).toBe(rows.length);expect(sockets.size).toBe(rows.length);
 });
 
 test("initial work starts before watcher readiness and Node observes the same activation ordering", async () => {
@@ -179,11 +186,11 @@ test("Nx producers and watchers inherit the pinned Bun runtime on every host", a
 
 
 test("explicit languages and terminology isolate watcher graphs and sockets", () => {
-  const selections=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).watcherSelections as Record<string,string>[];
+  const selections=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).watcherSelections as Record<string,string>[];
   const graphs=new Set<string>(),sockets=new Set<string>(),workspace=resolve(owner),target="a:activate-react";
   for(const selection of selections){
-    const environment={S_OS_PORT:"6064",PLAYGROUND_LOCKED_EXAMPLE_ID:"🎬️demo",...selection},actual=nxWatcherEnvironment(workspace,environment,target);
-    const entries=Object.entries(environment).sort(([a],[b])=>a<b?-1:a>b?1:0),identity=JSON.stringify([workspace.replaceAll("\\","/"),target,entries]),hash=new Bun.CryptoHasher("sha256").update(identity).digest("hex").slice(0,24);
+    const environment={S_OS_PORT:"6064",PLAYGROUND_LOCKED_EXAMPLE_ID:"🎬️demo",...selection,...boundedNxNamespaceV1(workspace,workspace,"a".repeat(64),workspace,null,"d".repeat(64)).environment,SEMIO_NX_TOOLING_IDENTITY:"a".repeat(64),SEMIO_NX_SOCKET_STORAGE:"/c/l/m"},actual=nxWatcherEnvironment(workspace,environment,target);
+    const entries=Object.entries({S_OS_PORT:"6064",PLAYGROUND_LOCKED_EXAMPLE_ID:"🎬️demo",SEMIO_NX_TOOLING_IDENTITY:"a".repeat(64),...selection}).sort(([a],[b])=>a<b?-1:a>b?1:0),identity=JSON.stringify([workspace.replaceAll("\\","/"),target,entries]),hash=new Bun.CryptoHasher("sha256").update(identity).digest("hex").slice(0,24);
     expect(actual.NX_WORKSPACE_DATA_DIRECTORY.endsWith(hash)).toBe(true);
     graphs.add(actual.NX_WORKSPACE_DATA_DIRECTORY);sockets.add(actual.NX_SOCKET_DIR);
   }
@@ -191,7 +198,7 @@ test("explicit languages and terminology isolate watcher graphs and sockets", ()
 });
 
 test("a nested Nx run spools every line to its log and forwards only a bounded summary", () => {
-  const rows = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")).spool as { forwarded: string[]; suppressed: string[]; forwardBytes: number; heartbeatMs: number };
+  const rows = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")).spool as { forwarded: string[]; suppressed: string[]; forwardBytes: number; heartbeatMs: number };
   const directory = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "nx-spool-")), path = join(directory, "o.log");
   const forwarded: string[] = [], clock = { now: 0 };
   const spool = new NxOutputSpoolV1(openSync(path, "a"), path, (line) => forwarded.push(line), () => clock.now, rows.forwardBytes, rows.heartbeatMs);
@@ -214,4 +221,13 @@ test("a nested Nx run spools every line to its log and forwards only a bounded s
     const oracle = Bun.spawnSync(["grep", "-E", "-c", "^(> nx run |[[:space:]]*NX[[:space:]]|[[:space:]]*Successfully ran|[[:space:]]*Failed tasks|[[:space:]]*Tasks not run|[[:space:]]*Tasks stopped|[[:space:]]*Run duration|\\[budget\\])"], { stdin: new TextEncoder().encode(rows.forwarded.map((line) => line.replace(/\u001b\[[0-9;]*m/gu, "")).concat(rows.suppressed).join("\n") + "\n") });
     expect(Number(new TextDecoder().decode(oracle.stdout).trim())).toBe(rows.forwarded.length);
   }
+});
+
+
+test("loaded Nx toolkit root comes from the exact live bootstrap module",async()=>{
+ const ts=await import("typescript"),rows=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).loadedToolkit,source=ts.createSourceFile("bootstrap.ts",readFileSync(resolve(owner,"../📜️script.ts"),"utf8"),ts.ScriptTarget.Latest,true),objects:any[]=[];
+ const visit=(node:any)=>{if(ts.isObjectLiteralExpression(node)&&node.properties.some((entry:any)=>ts.isPropertyAssignment(entry)&&entry.name.getText(source)==="NODE_PATH"&&entry.initializer.getText(source)==="tooling.modulePath"))objects.push(node);ts.forEachChild(node,visit);};visit(source);expect(objects).toHaveLength(1);
+ const fields=objects[0].properties.filter((entry:any)=>ts.isPropertyAssignment(entry)&&entry.name.getText(source)===rows.field);expect(fields).toHaveLength(1);expect(fields[0].initializer.getText(source)).toBe(rows.expression);
+ const child=Bun.spawn(["node","--input-type=module","-e",'import{posix}from"node:path";console.log(JSON.stringify('+JSON.stringify(rows.cases)+'.map(row=>posix.dirname(row.modulePath))));'],{stdout:"pipe",stderr:"pipe"}),[stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);expect(status,stderr).toBe(0);expect(JSON.parse(stdout)).toEqual(rows.cases.map((row:any)=>row.root));
+ const validate=new Ajv({strict:true}).compile({type:"object",required:["modulePath","root"],additionalProperties:false,properties:{modulePath:{type:"string",pattern:"/node_modules$"},root:{type:"string",pattern:"/[a-f0-9]{64}$"}}});for(const row of rows.cases){expect(validate(row)).toBe(true);expect(row.root).not.toBe(row.modulePath);}
 });

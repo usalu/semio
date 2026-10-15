@@ -6,8 +6,6 @@ use std::mem::ManuallyDrop;
 artifact_retire_struct!(super::CursorRevisionRecord { ledger_key, id_digest, edit_digest, prefix_digest });
 artifact_retire_struct!(super::EditDigestChains { forwards, inverse, meta, forwards_digest, inverse_digest, meta_digest });
 artifact_retire_struct!(super::CursorRevisionAccumulator { identity_digest, applied, redo, applied_tail_chains, mutation_positions, indexed_edits, unit_flags });
-artifact_retire_struct!(super::BlobRef { hash, size, media_type });
-artifact_retire_struct!(super::ArtifactLink { target, pin, role });
 impl<S: Send + 'static> RetireOwned for super::ArtifactChild<S> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         sequence(vec![semio_framework_value::retirement::deferred(self.child_id), semio_framework_value::retirement::deferred(self.target)])

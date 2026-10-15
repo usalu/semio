@@ -1,0 +1,641 @@
+{
+  "version": 1,
+  "owner": "semio-framework-job-worker-authority",
+  "types": [
+    "BatchDriveConfig",
+    "BatchJobParams",
+    "WorkerJobAdmissionControl",
+    "WorkerJobAdmissionContext",
+    "WorkerJobSource",
+    "WorkerJobInitializer",
+    "WorkerJobInitializationStep",
+    "WorkerJobCloseStep"
+  ],
+  "files": [
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📋️clipboard-ingress/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/⏱️budget/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/♻️retirement/👷️authority/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobSource",
+        "WorkerJobInitializer",
+        "WorkerJobInitializationStep",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🔔️wake/🦀️.rs",
+      "names": [
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🔔️wake/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/📬️payload/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🔀️erasure/🦀️.rs",
+      "names": [
+        "WorkerJobAdmissionControl",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🔀️erasure/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionControl",
+        "WorkerJobInitializer",
+        "WorkerJobInitializationStep"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionControl",
+        "WorkerJobAdmissionContext",
+        "WorkerJobSource",
+        "WorkerJobInitializer",
+        "WorkerJobInitializationStep",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🦀️.rs",
+      "names": [
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🧪️tests/🔬️retained-ownership/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🧪️tests/🪜️clock/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobInitializer",
+        "WorkerJobInitializationStep"
+      ],
+      "manifest": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🧪️tests/📏️close-demand/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🧪️testing/🦀️.rs",
+      "names": [
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🎟️metadata/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobSource",
+        "WorkerJobInitializer",
+        "WorkerJobInitializationStep"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/🎟️metadata/🧪️tests/🌍️public/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobSource",
+        "WorkerJobInitializer",
+        "WorkerJobInitializationStep"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🦀️.rs",
+      "names": [
+        "BatchJobParams",
+        "WorkerJobAdmissionControl",
+        "WorkerJobAdmissionContext",
+        "WorkerJobSource",
+        "WorkerJobInitializer",
+        "WorkerJobInitializationStep"
+      ],
+      "manifest": null,
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🦀️.rs",
+      "names": [
+        "BatchJobParams",
+        "WorkerJobAdmissionControl",
+        "WorkerJobInitializer",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobInitializer",
+        "WorkerJobInitializationStep",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/⚠️failure/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️turn/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": null,
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🏃️host/🦀️.rs",
+      "names": [
+        "WorkerJobInitializer",
+        "WorkerJobInitializationStep"
+      ],
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🧪️tests/🔬️window-unit/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobInitializer",
+        "WorkerJobInitializationStep",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🦀️.rs",
+      "names": [
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔁️asset-decode-jobs/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️.rs",
+      "names": [
+        "BatchJobParams",
+        "WorkerJobAdmissionControl",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️component-unit/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️native-io-unit/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧮️compute/🎟️invocation/📋️parameters/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧮️compute/🎟️invocation/📋️parameters/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🧩️retained-ui-engine/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobInitializer"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🚪️ingress/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧷️command-routes/🦀️.rs",
+      "names": [
+        "BatchDriveConfig"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/🦀️.rs",
+      "names": [
+        "BatchDriveConfig"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🚪️session/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🚪️session/🫴️refusal/🧪️tests/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs",
+      "names": [
+        "BatchDriveConfig"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🤖️agent-lane-preview/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎭️guest-runtime/🦀️.rs",
+      "names": [
+        "BatchDriveConfig"
+      ],
+      "manifest": null,
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️guest-cold-relay/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️.rs",
+      "names": [
+        "BatchJobParams",
+        "WorkerJobAdmissionContext"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/🏃️headless/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs",
+      "names": [
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖌️brush/🧪️tests/🔬️unit/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ],
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🔬️unit/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📦️packages/🦀️rust/Cargo.toml",
+      "test": true
+    },
+    {
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    },
+    {
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "names": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ],
+      "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "test": false
+    }
+  ]
+}

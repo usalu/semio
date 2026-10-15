@@ -2,7 +2,7 @@
   "name": "@semio-tech/infinite-world-r3f",
   "$schema": "../../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🧪️tests/🎚️config/🟦️.ts"]
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "test": {

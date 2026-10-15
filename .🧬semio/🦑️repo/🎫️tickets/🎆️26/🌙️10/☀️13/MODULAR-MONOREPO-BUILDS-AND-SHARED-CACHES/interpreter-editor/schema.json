@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "project",
+    "targets",
+    "forbiddenEnvironment",
+    "artifactDirectory",
+    "workspaceRoot"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "project": {
+      "const": "@semio-tech/framework-plugin-interpreter"
+    },
+    "targets": {
+      "const": [
+        "test-completed-source",
+        "test-completed-native",
+        "test-poll-input-source",
+        "test-poll-input-native"
+      ]
+    },
+    "forbiddenEnvironment": {
+      "const": [
+        "CARGO_TARGET_DIR",
+        "CARGO_BUILD_BUILD_DIR",
+        "CARGO_BUILD_JOBS",
+        "CARGO_INCREMENTAL",
+        "CARGO_PROFILE_DEV_DEBUG"
+      ]
+    },
+    "artifactDirectory": {
+      "const": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target"
+    },
+    "workspaceRoot": {
+      "const": "."
+    }
+  }
+}

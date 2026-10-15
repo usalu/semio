@@ -18,7 +18,7 @@ const SURFACE_CONTROLS_FIXTURE: &str = include_str!("../🧫️fixtures/🛑️s
 const CHROME_PANEL_SAFE_AREA_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json");
 const BOOT_EXAMPLE_FIXTURE: &str = include_str!("../🧫️fixtures/📚️boot-example/🔣️.json");
 const WINDOW_ICON_OVERRIDE_FIXTURE: &str = include_str!("../🧫️fixtures/🪟️window-icon-overrides/🔣️.json");
-const WGPU_SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
+const WGPU_SHELL_SOURCE: &str = crate::shell::SHELL_SOURCE;
 
 /// 🪪️ A dialect with no coordinate at all — how this target spells the fixture's `"dialect": null`
 /// rows (`AppDefinition.dialect` is not optional in Rust, and an empty coordinate matches nothing,
@@ -226,7 +226,7 @@ fn the_boot_example_is_resolved_the_way_the_shared_fixture_declares() {
 #[test]
 fn the_boot_example_query_reaches_the_picker_through_the_shared_resolver() {
     let chrome = WGPU_SHELL_SOURCE.split("fn sync_session_chrome").nth(1).expect("the shell declares sync_session_chrome");
-    let body = chrome.split("\n    fn ").next().expect("the body of sync_session_chrome");
+    let body = &chrome[..["\n    fn ", "\n    pub(crate) fn "].iter().filter_map(|marker| chrome.find(marker)).min().unwrap_or(chrome.len())];
     assert!(body.contains("shell_offered_examples("), "boot and role sync use the declared example offer authority");
     assert!(body.contains("resolve_boot_example_id("), "sync_session_chrome resolves through the shared predicate, never its own inline rule");
     assert!(body.contains("crate::boot_app_example()"), "`?example=` is the declared default the resolver is handed");

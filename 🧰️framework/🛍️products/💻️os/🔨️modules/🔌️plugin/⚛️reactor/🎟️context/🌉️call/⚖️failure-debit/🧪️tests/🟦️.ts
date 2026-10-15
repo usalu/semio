@@ -17,11 +17,12 @@ import renderInput from "./🧫️fixtures/🎬️render.json";
 import renderSchema from "../🧬️schema/🎬️render.json";
 import serviceInput from "./🧫️fixtures/💡️service.json";
 import serviceSchema from "../🧬️schema/💡️service.json";
+import { readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 const original=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
 /** 🎬️ Pending native mesh preparation keeps its original surface and publishes only a completed tree. */
 test("original render context reaches the actual instance before tree publication",()=>{
  expect(new Ajv({strict:true}).compile(renderSchema)(renderInput)).toBe(true);
- const surface=readFileSync(new URL("../../../../../📜️declaration/🪟️surface/🦀️.rs",import.meta.url),"utf8"),instance=readFileSync(new URL("../../../../../🧵️instance/🦀️.rs",import.meta.url),"utf8"),runtime=readFileSync(new URL("../../../../🏃️runtime/🦀️.rs",import.meta.url),"utf8"),turn=readFileSync(new URL("../../../../🔄️turn/🦀️.rs",import.meta.url),"utf8"),failure=readFileSync(new URL("../../../../../📤️fault/🦀️.rs",import.meta.url),"utf8");
+ const surface=readFileSync(new URL("../../../../../📜️declaration/🪟️surface/🦀️.rs",import.meta.url),"utf8"),instance=readModuleTreeSource(new URL("../../../../../🧵️instance/🦀️.rs",import.meta.url)),runtime=readFileSync(new URL("../../../../🏃️runtime/🦀️.rs",import.meta.url),"utf8"),turn=readFileSync(new URL("../../../../🔄️turn/🦀️.rs",import.meta.url),"utf8"),failure=readFileSync(new URL("../../../../../📤️fault/🦀️.rs",import.meta.url),"utf8");
  expect(surface).toContain("cx:&mut semio_framework_job::StepContext<'_>");expect(surface).toContain("OriginalRenderResult<ComponentTree>");expect(instance).toContain("pending_render_failure");expect(instance).toContain("render_with_request_context");expect(instance).toContain("&interaction,cx)");expect(runtime).toContain("plugin_render_surface");expect(runtime).toContain("original_render_result");expect(turn).toContain("plugin_render_surface(runtime, instance, &surface_key,&mut |source,cx|grant.commit_source(source,cx),cx)");expect(runtime).toContain("receive(instance.app.original_render_tree_source(cx)?,cx)?");expect(instance).toContain("pending_render_tree_identity");expect(turn).toContain("Ok(None)");expect(failure).toContain("project_original_turn_failure(source,rest)");
  const db=new Database(":memory:");try{for(const phase of renderInput.phases){const result=db.query("SELECT CASE WHEN ? = 'complete' THEN 1 ELSE 0 END AS published,CASE WHEN ? = 'pending' THEN 1 ELSE 0 END AS retained").get(phase.outcome,phase.outcome)as{published:number;retained:number};expect(result).toEqual({published:Number(phase.published),retained:Number(phase.retained)});}expect((db.query("SELECT ? AS message").get(renderInput.assembly.message)as{message:string}).message).toBe(renderInput.assembly.message);}finally{db.close()}
  const patches=readFileSync(new URL("../../../../🩹️patches/🦀️.rs",import.meta.url),"utf8"),native=readFileSync(new URL("../../../../🩹️patches/🧪️tests/🔬️unit/🦀️.rs",import.meta.url),"utf8");
@@ -117,7 +118,7 @@ test("original receiving cancellation closes captured inputs without minting ano
 
 /** 🎯️ Actual addressed actions and deferred fixture callers borrow the received original slots. */
 test("addressed action dispatch forwards original arguments and whole fault through one context",()=>{
- const trait=readFileSync(new URL("../../../../🔌️app/🦀️.rs",import.meta.url),"utf8"),instance=readFileSync(new URL("../../../../../🧵️instance/🦀️.rs",import.meta.url),"utf8"),fixture=readFileSync(new URL("../../../../../🧪️testing/🦀️.rs",import.meta.url),"utf8");
+ const trait=readFileSync(new URL("../../../../🔌️app/🦀️.rs",import.meta.url),"utf8"),instance=readModuleTreeSource(new URL("../../../../../🧵️instance/🦀️.rs",import.meta.url)),fixture=readFileSync(new URL("../../../../../🧪️testing/🦀️.rs",import.meta.url),"utf8");
  const start=instance.indexOf("async fn handle_action_invocation("),end=instance.indexOf("async fn handle_response_action(",start),body=instance.slice(start,end);
  expect(start).toBeGreaterThanOrEqual(0);expect(trait).toContain("address: &semio_framework::manifest::ActionAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>");
  expect(body).toContain("dispatch_action(&address.action_id, source_args, original_fault, meta, identity, cx)");expect(body).not.toContain("invocation.arguments");expect(body).not.toContain("into_message");expect(body).not.toContain("StepContext::new");

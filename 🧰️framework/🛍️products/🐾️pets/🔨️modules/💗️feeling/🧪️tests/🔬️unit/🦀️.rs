@@ -6,9 +6,9 @@
 //! @see ../../../../🧫️fixtures/⚗️chemistry-rules/🔣️.json — the committed vectors of states, tricks and chemistry
 
 use super::*;
-use crate::randomness::{random_words, unit_of};
-use crate::schema::tests::{entries, fixture, json, number, typed};
-use crate::schema::{Text, CUES};
+use semio_framework_pets_contract::schema::{Text, CUES};
+use semio_framework_pets_contract::testkit::{entries, fixture, json, number, typed};
+use semio_framework_pets_kinematics::randomness::{random_words, unit_of};
 use serde_json::{json, Map, Value};
 
 const CALM: Feeling = Feeling { mood: Mood::Content, intensity: MOOD_REST, since: 0 };

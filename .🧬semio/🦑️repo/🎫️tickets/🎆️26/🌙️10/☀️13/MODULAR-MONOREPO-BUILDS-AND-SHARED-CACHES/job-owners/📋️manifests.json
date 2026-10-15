@@ -1,0 +1,1250 @@
+[
+  {
+    "file": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/🏃️headless/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "BatchJobSession",
+        "WorkerJobPoll"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-plugin-wfc-engine"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "pump_worker_job_retirements"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-gis-gismap"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🦀️.rs",
+    "test": false,
+    "used": {
+      "registry": [
+        "FixedOperationOwner"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-draw-drawing-editor-interaction"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "registry": [
+        "FixedOperationKey",
+        "FixedOperationOwner",
+        "FixedOperationRegistry"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-draw-drawing-editor"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️gesture-operation-owner/🦀️.rs",
+    "test": true,
+    "used": {
+      "registry": [
+        "FixedOperationKey",
+        "FixedOperationRegistry"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-draw-drawing-editor"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛂️manifest/🦀️.rs",
+    "test": false,
+    "used": {
+      "registry": [
+        "FixedOperationOwner"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-draw-drawing-editor"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🔨️modules/🏠️host/🦀️.rs",
+    "test": false,
+    "used": {
+      "registry": [
+        "FixedOperationKey",
+        "FixedOperationOwner",
+        "FixedOperationRegistry"
+      ],
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🔨️modules/🏠️host/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-2d-host"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🦀️.rs",
+    "test": false,
+    "used": {
+      "registry": [
+        "FixedOperationKey",
+        "FixedOperationOwner",
+        "FixedOperationRegistry"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-3d-host"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-frame-job-unit/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "WorkerJobPoll"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-kernel"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "WORKER_JOB_SESSION_SLOTS",
+        "WorkerJobSession"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-kernel"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "BatchJobSession",
+        "WorkerJobDemandError",
+        "WorkerJobOutcome",
+        "WorkerJobPoll",
+        "WorkerJobSession",
+        "WorkerJobSessionAdmissionRejected",
+        "WorkerJobSubmitFault",
+        "WorkerJobTicket"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-renderer-wgpu"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "MountedWorkerJobSession",
+        "WorkerJobSessionAdmissionRejected"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-renderer-wgpu"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker-authority": [
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-renderer-wgpu"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "BatchJobSession",
+        "WorkerJobDemandError",
+        "WorkerJobPoll",
+        "pump_worker_job_retirements"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-renderer-wgpu"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔁️asset-decode-jobs/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "WORKER_JOB_SESSION_SLOTS",
+        "WorkerJobContention",
+        "WorkerJobDemandError",
+        "WorkerJobPoll",
+        "WorkerJobSession",
+        "WorkerJobSessionAdmissionRejected",
+        "WorkerJobSubmitFault",
+        "WorkerJobTicket"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-renderer-wgpu"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔗️hub-projection-workspace/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "pump_worker_job_retirements"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-kernel"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖌️brush/🧪️tests/🔬️unit/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "MountedWorkerJobPumpFault",
+        "MountedWorkerJobSession",
+        "WorkerJobPoll",
+        "WorkerJobSubmitFault"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-puzzle-2d"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🧩️retained-ui-engine/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "WorkerJobDemandError",
+        "WorkerJobOutcome",
+        "WorkerJobPoll",
+        "WorkerJobSession",
+        "WorkerJobSessionPreparation"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobInitializer"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-kernel"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧪️tests/🔬️board-host-standalone/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "MountedWorkerJobSession",
+        "WorkerJobOutcome",
+        "WorkerJobSessionAdmissionRejected"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-infinite"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎞️media/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "MountedWorkerJobSession",
+        "WorkerJobDemandError"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "MountedWorkerJobPumpFault",
+        "MountedWorkerJobSession",
+        "WorkerJobDemandError",
+        "WorkerJobPoll",
+        "WorkerJobSession",
+        "WorkerJobSubmitFault"
+      ],
+      "worker-authority": [
+        "BatchJobParams",
+        "WorkerJobAdmissionControl",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-services"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️component-unit/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "WorkerJobSession"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-services"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️native-io-unit/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "BatchJobSession"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-services"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧮️compute/🎟️invocation/📋️parameters/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-services"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧮️compute/🎟️invocation/📋️parameters/🧪️tests/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker-authority": [
+        "BatchDriveConfig"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-services"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "MountedWorkerJobSession",
+        "WorkerJobDemandError",
+        "WorkerJobPoll"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🚪️ingress/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "WorkerJobDemandError",
+        "WorkerJobPoll"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧷️command-routes/🦀️.rs",
+    "test": false,
+    "used": {
+      "fault-publication": [
+        "RetainedFaultPublication"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "MountedWorkerJobSession",
+        "WorkerJobPoll"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "MountedWorkerJobSession"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-kernel"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️guest-cold-relay/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "WorkerJobPoll",
+        "WorkerJobSession",
+        "pump_worker_job_retirements"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin-host"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "BatchJobSession",
+        "WorkerJobDemandError",
+        "WorkerJobPoll"
+      ],
+      "fault-publication": [
+        "RetainedFaultPublication"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🚪️session/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "BatchJobSession",
+        "MountedWorkerJobSession",
+        "WorkerJobSession"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🚪️session/🫴️refusal/🧪️tests/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker-authority": [
+        "BatchDriveConfig"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "MountedWorkerJobPumpFault",
+        "WorkerJobSubmitFault",
+        "WorkerJobTakeFault"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker-authority": [
+        "BatchJobParams",
+        "WorkerJobAdmissionContext"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin-host"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "WorkerJobSession"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-ui"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📋️clipboard-ingress/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "WorkerJobOutcome",
+        "WorkerJobPoll",
+        "WorkerJobSession",
+        "WorkerJobSessionPreparation"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-ui"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "OriginalWorkerWakeIssuer",
+        "RetainedWorkerWake",
+        "WorkerJobOutcome",
+        "WorkerJobPoll",
+        "WorkerJobSession",
+        "admit_original_thread_worker_wake"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobAdmissionContext",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin-host"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🪗️retained-section-collapse/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "WorkerJobPoll"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-ui"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "MountedWorkerJobSession",
+        "WorkerJobPoll"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-ui"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "BatchJobSession"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-ui"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "BatchJobSession",
+        "WorkerJobDemandError",
+        "WorkerJobPoll"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️surface-view-state-routing/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "worker_job_retirements_are_parked"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "MountedWorkerJobSession"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/♻️wake/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "RetainedWorkerWake",
+        "admit_original_worker_wake",
+        "original_worker_wake_admission_demands"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "MountedWorkerJobSession",
+        "WorkerJobDemandError",
+        "WorkerJobPoll"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-ui"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🏃️host/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker-authority": [
+        "WorkerJobInitializationStep",
+        "WorkerJobInitializer"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-ui"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "pump_worker_job_retirements",
+        "worker_job_retirements_are_parked"
+      ],
+      "worker-authority": [
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "MountedWorkerJobSession",
+        "WorkerJobDemandError",
+        "WorkerJobPoll",
+        "worker_job_retirements_are_parked"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "WorkerJobCloseStep"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🤖️agent-lane-preview/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🧪️tests/🔬️window-unit/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "WorkerJobSession",
+        "WorkerJobSessionPreparation"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams",
+        "WorkerJobCloseStep",
+        "WorkerJobInitializationStep",
+        "WorkerJobInitializer"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-ui"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "pump_worker_job_retirements"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "admit_original_thread_worker_wake"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-run"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️context/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "WORKER_JOB_SESSION_SLOTS"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-puzzle-3d-editor"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️panels/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "WORKER_JOB_SESSION_SLOTS",
+        "worker_job_retirements_are_parked"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-puzzle-3d-editor"
+  },
+  {
+    "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+    "test": false,
+    "used": {
+      "worker": [
+        "BatchJobSession"
+      ],
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-layout-layout-engine-export"
+  },
+  {
+    "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🔬️unit/🦀️.rs",
+    "test": true,
+    "used": {
+      "worker": [
+        "BatchJobSession"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-layout-layout-engine-export"
+  },
+  {
+    "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-layout-layout-engine-json"
+  },
+  {
+    "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ],
+      "worker-authority": [
+        "BatchDriveConfig",
+        "BatchJobParams"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-layout-layout-editor"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+    "test": false,
+    "used": {
+      "registry": [
+        "FixedOperationKey",
+        "FixedOperationOwner",
+        "FixedOperationRegistry"
+      ],
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-process-process3d-host"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🎬️media-export/🦀️.rs",
+    "test": false,
+    "used": {
+      "fault-publication": [
+        "RetainedFaultPublication"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-stdio-contract"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏠️host/🦀️.rs",
+    "test": false,
+    "used": {
+      "fault-publication": [
+        "RetainedFaultPublication"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-trinity-jack"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🦀️.rs",
+    "test": false,
+    "used": {
+      "fault-publication": [
+        "RetainedFaultPublication"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+    "test": false,
+    "used": {
+      "fault-publication": [
+        "RetainedFaultPublication"
+      ],
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-energy-model-session"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🧪️tests/🦀️.rs",
+    "test": true,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-job-preview"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-2d-editor"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/⏯️tool-run/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-2d-preview-eval"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/⏯️tool-run/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-3d-preview-eval"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-animate-presentation"
+  },
+  {
+    "file": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-graph-layout-run"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-sequence-sequence"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🌱️initialization/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🌱️initialization/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-procedural-3d-initialization"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-os-kernel"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-raster-raster"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-raster-raster"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📤️outcomes/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/📬️outcome/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-draw-drawing-host"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-draw-drawing-host"
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/📬️outcome/🦀️.rs",
+    "test": true,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-framework-plugin"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-raster-raster"
+  },
+  {
+    "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-remodel-remodeling-session"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/📤️publication/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-stdio-deflate"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/📤️jobs/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/📤️jobs/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-plugin-puzzle-jobs"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/📤️publication/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-plugin-wfc-engine"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+    "test": false,
+    "used": {
+      "publication": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-gis-gismap"
+  }
+]

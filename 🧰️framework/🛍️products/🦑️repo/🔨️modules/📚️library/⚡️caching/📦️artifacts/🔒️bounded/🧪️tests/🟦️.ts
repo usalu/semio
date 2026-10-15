@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
@@ -29,7 +30,7 @@ test("authored storage resolves one fixed16GiB backing with independent envelope
 });
 
 test("Nx cache database loader and temporary paths share one declared backing namespace",()=>{
- const {root,parent}=owned();try{const namespace=boundedNxNamespaceV1(root,"a".repeat(64));expect(Object.isFrozen(namespace.environment)).toBe(true);expect(namespace.environment.NX_CACHE_DIRECTORY).toBe(join(root,"nx/artifacts"));expect(namespace.environment.NX_WORKSPACE_DATA_DIRECTORY).toBe(join(root,"nx/graphs", "a".repeat(20)));expect(namespace.environment.NX_PROJECT_GRAPH_CACHE_DIRECTORY).toBe(namespace.environment.NX_WORKSPACE_DATA_DIRECTORY);expect(namespace.environment.TMPDIR).toBe(namespace.environment.TMP);expect(namespace.environment.TMPDIR).toBe(namespace.environment.TEMP);for(const path of Object.values(namespace.environment))expect(validateBoundedNxPathsV1(root,[path!])).toEqual([path!]);expect(()=>boundedNxNamespaceV1(root,"forged")).toThrow("identity");}finally{rmSync(parent,{recursive:true});}
+ const {root,parent}=owned();try{const namespace=boundedNxNamespaceV1(root,root,"a".repeat(64),parent,null,"d".repeat(64));expect(Object.isFrozen(namespace.environment)).toBe(true);expect(namespace.environment.NX_CACHE_DIRECTORY).toBe(join(root,"nx/artifacts"));expect(namespace.environment.NX_WORKSPACE_DATA_DIRECTORY).toBe(join(root,"nx/graphs", "a".repeat(20),createHash("sha256").update(JSON.stringify([parent.replaceAll("\\","/"),null,"d".repeat(64)])).digest("hex").slice(0,20)));expect(namespace.environment.NX_PROJECT_GRAPH_CACHE_DIRECTORY).toBe(namespace.environment.NX_WORKSPACE_DATA_DIRECTORY);expect(namespace.environment.TMPDIR).toBe(namespace.environment.TMP);expect(namespace.environment.TMPDIR).toBe(namespace.environment.TEMP);for(const path of Object.entries(namespace.environment).filter(([name,path])=>path!==undefined&&!name.startsWith("SEMIO_")).map(([,path])=>path))expect(validateBoundedNxPathsV1(root,[path!])).toEqual([path!]);expect(()=>boundedNxNamespaceV1(root,root,"forged",parent,null,"d".repeat(64))).toThrow("identity");}finally{rmSync(parent,{recursive:true});}
 });
 
 test("neutral Nx output confinement agrees with independent SQLite path segments",()=>{

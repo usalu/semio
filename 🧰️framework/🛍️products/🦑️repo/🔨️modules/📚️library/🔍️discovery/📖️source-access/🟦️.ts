@@ -1,5 +1,6 @@
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { listModuleTree, readModuleTreeSource, type ModuleTreeOptions } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 export type PolicySourceEntry = Readonly<{ name: string; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }>;
 
@@ -100,4 +101,41 @@ export function policyReadFileSafe(repoRoot: string, ...parts: string[]): string
   if (source.state === "missing") return "";
   if (source.state !== "file") throw new Error(`Policy source file ${join(repoRoot, relPath)} is ${source.state}.`);
   return source.text;
+}
+
+const OS_ENGINE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine";
+const OS_INFINITE_DIRECTED = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed";
+
+/** 🪓️ Sources that were split into mounted child modules (`#[path]` in Rust, relative imports in TSX): policy evidence reads each of them as the one text the unsplit file held. Every other source keeps its own file as its evidence, because its mounted modules are audited in their own right. */
+export const POLICY_SPLIT_SOURCE_ROOTS: readonly string[] = [
+  `${OS_ENGINE}/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`,
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
+  `${OS_INFINITE_DIRECTED}/➕️normal/🦀️.rs`,
+  `${OS_INFINITE_DIRECTED}/🕸️dag/🦀️.rs`,
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+  "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs",
+  "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs",
+  "🌎️hub/🏗️bootstrap/🦀️.rs",
+  `${OS_ENGINE}/🧱️elements/🛠️ShellHelpers/🟦️.tsx`,
+  `${OS_ENGINE}/🧱️elements/🌐️World3dHost/🟦️.tsx`,
+  `${OS_ENGINE}/🧱️elements/🏛️ShellHost/🟦️.tsx`,
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+];
+
+/** 🌳️ Lists the repo-relative files of a split source's module tree (the root first, then its mounted children) through the symlink-refusing policy read. */
+export function policyModuleTreeFiles(repoRoot: string, relPath: string, options: Omit<ModuleTreeOptions, "read"> = {}): string[] {
+  return listModuleTree(join(repoRoot, relPath), { ...options, read: (path) => policyReadFileSafe(repoRoot, relative(repoRoot, path)) }).map((path) => relative(repoRoot, path).split(sep).join("/"));
+}
+
+/** 📖️ Reads a split source as the one text the unsplit file held: the root and every mounted child, through the symlink-refusing policy read. */
+export function policyReadModuleTreeSource(repoRoot: string, relPath: string, options: Omit<ModuleTreeOptions, "read"> = {}): string {
+  return readModuleTreeSource(join(repoRoot, relPath), { ...options, read: (path) => policyReadFileSafe(repoRoot, relative(repoRoot, path)) });
 }

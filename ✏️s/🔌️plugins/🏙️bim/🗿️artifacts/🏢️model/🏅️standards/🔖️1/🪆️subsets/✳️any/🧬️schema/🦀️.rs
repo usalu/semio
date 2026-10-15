@@ -65,3 +65,36 @@ pub fn bim_model_artifact_schema_descriptor() -> semio_framework_schema_registry
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod snapshot {
+    #[path = "📸️snapshot/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod authored {
+    #[path = "📏️authored/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod diff {
+    #[path = "🔺️diff/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod inferences {
+    #[path = "💡️inferences/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod mutations {
+    #[path = "🧬️mutations/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+//#endregion 🧩️Modules

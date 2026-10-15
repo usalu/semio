@@ -4,6 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { acquireResourceLease, acquireQueuedResourceLease, checkResourceLeaseControl, resourceLeasePathV1, resourceQueueTicketV1, type ResourceLeaseControl, type ResourceLease, type LeaseWait } from "../../🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { checkScriptInvocation, type ScriptInvocation } from "../../🧭️routing/📥️invocation/🟦️.ts";
+import{createIssuedResourceControlV1,createRequestedIssuedResourceControlV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🎛️ Requires the original compiler caller's cancellation, deadline, progress and continuation ports. */
@@ -11,28 +12,12 @@ export type CompilerAdmissionControl = ResourceLeaseControl;
 
 /** 🔄️ Binds admission to the same incoming invocation and one nonrenewable requested child budget. */
 export function scriptCompilerAdmissionControlV1(invocation: ScriptInvocation, command: string, requestedMilliseconds: number, additionalSignal?: AbortSignal): CompilerAdmissionControl {
- checkScriptInvocation(invocation);
- if (!Number.isSafeInteger(requestedMilliseconds) || requestedMilliseconds < 0) throw Error("Compiler requested deadline refused");
- const started = performance.now(), check = () => { checkScriptInvocation(invocation); additionalSignal?.throwIfAborted(); };
- return {
-  signal: additionalSignal ? AbortSignal.any([invocation.control.signal, additionalSignal]) : invocation.control.signal,
-  remainingMilliseconds: () => { check(); const original = invocation.control.remainingMilliseconds(), requested = requestedMilliseconds === 0 ? null : requestedMilliseconds - (performance.now() - started); return original === null ? requested : requested === null ? original : Math.min(original, requested); },
-  publish: async () => { check(); await invocation.control.publish({ owner: invocation.policy.owner, command, stage: "running" }); check(); },
-  yieldContinuation: async () => { check(); await invocation.control.yieldContinuation(); check(); },
- };
+ return createIssuedResourceControlV1(invocation,command,requestedMilliseconds,additionalSignal);
 }
 
 /** 🧷️ Intersects one existing caller with a single authored phase without replacing any cancellation authority. */
 export function requestedCompilerAdmissionControlV1(original: CompilerAdmissionControl, requestedMilliseconds: number): CompilerAdmissionControl {
- checkResourceLeaseControl(original);
- if (!Number.isSafeInteger(requestedMilliseconds) || requestedMilliseconds < 0) throw Error("Compiler requested deadline refused");
- const started = performance.now();
- return {
-  signal: original.signal,
-  remainingMilliseconds: () => { const remaining = checkResourceLeaseControl(original), requested = requestedMilliseconds === 0 ? null : requestedMilliseconds - (performance.now() - started); return remaining === null ? requested : requested === null ? remaining : Math.min(remaining, requested); },
-  publish: progress => original.publish(progress),
-  yieldContinuation: () => original.yieldContinuation(),
- };
+ return createRequestedIssuedResourceControlV1(original,requestedMilliseconds);
 }
 
 /** 🏗️ Exposes one explicitly authored native phase's existing signal and nonrenewable budget. */

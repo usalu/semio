@@ -1,0 +1,150 @@
+1	3	3		use		
+4	4	4		use		
+5	5	8		use		
+9	9	9		use		
+11	11	11		use		
+12	12	12		use		
+14	14	14		use		
+16	16	16		use		
+17	17	17		use		
+18	18	21		use		
+22	22	22		use		
+23	23	23		use		
+24	24	24		use		
+25	25	25		use		
+27	28	28	pub	const	OPERATION_CAPACITY	
+29	29	29	pub	const	DOCUMENT_GATE_CAPACITY	
+30	30	30	pub	const	WORK_UNIT_LIMIT	
+31	31	31	pub	const	ALLOCATION_BYTES	
+32	32	32	pub	const	RECURSION_DEPTH	
+33	33	33	pub	const	APPROVAL_MAX_RECORDS	
+34	34	34	pub	const	GIS_MAP_COMMITTER_CAPACITY	
+36	38	50	pub	enum	InferenceRouteErrorV1	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+52	52	83		impl	InferenceRouteErrorV1	
+85	85	98		impl	From<InferenceErrorV1>forInferenceRouteErrorV1	
+100	101	122	pub	struct	GisMapApprovalCommitRequestV1	
+124	125	141	pub	struct	GisMapApprovalUndoCommitRequestV1	
+143	144	149	pub	trait	GisMapApprovalIngressAuthorityV1	
+151	152	156	pub	struct	GisMapDocumentWriteAuthorityV1	
+158	158	158		struct	GisMapApprovalRequestTokenV1	
+160	160	165		impl	GisMapDocumentWriteAuthorityV1	
+167	167	167		type	GisMapDocumentWriteLeaseV1	
+169	171	177	pub	enum	GisMapApprovalCommitErrorV1	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+179	184	209	pub	enum	GisMapCommitConflictArmV1	#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+211	212	212		static	LAST_GIS_MAP_COMMIT_CONFLICT_ARM	#[cfg(test)]
+214	215	222	pub	fn	gis_map_commit_conflict	
+224	226	228	pub	fn	last_gis_map_commit_conflict_arm	#[cfg(test)]
+230	230	230		static	LAST_ABANDONED_ASSEMBLY_TURN	
+232	235	241		fn	record_abandoned_assembly_turn	
+243	243	243		static	LAST_GIS_MAP_PREPARE_CONFLICT	
+245	249	255		fn	record_prepare_conflict	
+257	259	261	pub	fn	last_gis_map_prepare_conflict	#[cfg(test)]
+263	263	263		static	LAST_GIS_MAP_IDENTITY_MISMATCH	
+265	267	273		fn	record_identity_mismatch	
+275	277	279	pub	fn	last_gis_map_identity_mismatch	#[cfg(test)]
+281	283	285	pub	fn	last_abandoned_assembly_turn	#[cfg(test)]
+287	288	288		static	LAST_GIS_MAP_STORAGE_REFUSAL	#[cfg(test)]
+290	294	301		fn	gis_map_storage_refusal	#[track_caller]
+303	305	307	pub	fn	last_gis_map_storage_refusal	#[cfg(test)]
+309	309	309		static	LAST_CLOSE_STORE_STEP	
+311	317	323		fn	record_close_store_step	
+325	327	329	pub	fn	last_close_store_step	#[cfg(test)]
+331	334	341		fn	recorded_abandoned_assembly_turn	
+343	344	350	pub	struct	GisMapApprovalReceiptV1	
+352	353	356	pub	struct	GisMapApprovalOutcomeV1	
+358	358	364		struct	GisMapPreparedUndoCommandV1	
+366	367	372	pub	struct	GisMapApprovalUndoCommitReceiptV1	
+374	375	383	pub	struct	GisMapApprovalCheckpointRequestV1	
+385	386	397	pub	trait	GisMapApprovalCheckpointPublisherV1	
+399	407	418	pub	trait	GisMapApprovalCommitterV1	
+420	430	430	pub	struct	UnavailableGisMapApprovalCommitterV1	
+432	432	448		impl	GisMapApprovalCommitterV1forUnavailableGisMapApprovalCommitterV1	
+450	450	450		type	GisMapParentSnapshotV1	
+451	451	451		type	GisMapParentMutationV1	
+452	452	452		type	GisMapDrawingSnapshotV1	
+453	453	453		type	GisMapDrawingMutationV1	
+454	454	454		type	GisMapValueSnapshotV1	
+455	455	455		type	GisMapValueMutationV1	
+456	456	456		type	GisMapParentStoreV1	
+457	457	457		type	GisMapDrawingStoreV1	
+458	458	458		type	GisMapValueStoreV1	
+459	459	459		type	GisMapAssemblyV1	
+460	460	460		type	GisMapCommitHostV1	
+461	461	461		type	GisMapRecoveryOwnerV1	
+462	462	462		type	GisMapJournalReceiptV1	
+464	464	473		struct	GisMapDocumentStoresV1	
+475	476	491		struct	GisMapCommitIdentityV1	#[derive(Clone)]
+493	494	497		enum	GisMapCommitOperationV1	#[derive(Clone)]
+499	499	503		struct	GisMapClosingStoresV1	
+505	505	562	pub	enum	RetainedGisMapDocumentStateV1	
+564	567	573		enum	GisMapCommitTurnV1	
+575	575	584		enum	GisMapAbandonedTurnV1	
+586	587	594		struct	GisMapPreparedApprovalV1	#[derive(Clone)]
+596	597	601		struct	GisMapAbandonedRequestV1	#[derive(Clone)]
+603	603	609		struct	GisMapApprovalRequestOwnerV1	
+611	611	625		impl	GisMapApprovalRequestOwnerV1	
+627	627	637		impl	DropforGisMapApprovalRequestOwnerV1	
+639	641	654	pub	struct	RetainedGisMapApprovalCommitterV1	#[derive(Clone)]
+656	663	667		struct	GisMapClosingCursorV1	
+669	669	673		impl	GisMapClosingCursorV1	
+675	675	683		impl	DropforGisMapClosingCursorV1	
+685	685	689		struct	GisMapAbandonedRequestTaskV1	
+691	691	697		struct	GisMapMaintenanceCompletionV1	
+699	699	714		impl	GisMapMaintenanceCompletionV1	
+716	716	729		impl	GisMapAbandonedRequestTaskV1	
+731	731	737		impl	DropforGisMapAbandonedRequestTaskV1	
+739	739	743		struct	GisMapPreparedApprovalTaskV1	
+745	745	758		impl	GisMapPreparedApprovalTaskV1	
+760	760	766		impl	DropforGisMapPreparedApprovalTaskV1	
+768	768	2720		impl	RetainedGisMapApprovalCommitterV1	
+2722	2722	2778		impl	GisMapApprovalCommitterV1forRetainedGisMapApprovalCommitterV1	
+2780	2781	2785	pub	struct	InferenceMapBaseV1	
+2787	2787	2808		impl	InferenceMapBaseV1	
+2810	2811	2815	pub	struct	InferenceProposalV1	
+2817	2819	2823		struct	InferenceRunKeyV1	#[derive(Clone,Debug,PartialEq,Eq)]
+2825	2825	2829		impl	InferenceRunKeyV1	
+2831	2832	2836		struct	RetainedInferenceRunV1	
+2838	2839	2843		struct	RetainedInferenceRunSupervisorV1	
+2845	2845	2887		impl	RetainedInferenceRunSupervisorV1	
+2889	2889	2893		enum	InferenceOperationAdmissionV1	
+2895	2896	2909		struct	RetainedInferenceRunOwnerV1	
+2911	2913	2919	pub	struct	InferenceCheckpointTestGateV1	#[cfg(feature="integration-fixtures")]
+2921	2922	2978		impl	InferenceCheckpointTestGateV1	#[cfg(feature="integration-fixtures")]
+2980	2981	2981		const	INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES	#[cfg(feature="integration-fixtures")]
+2982	2983	2983		const	INHERITED_INFERENCE_CHECKPOINT_DESCRIPTOR	#[cfg(feature="integration-fixtures")]
+2985	2986	2986		use		#[cfg(feature="integration-fixtures")]
+2988	2989	2997		impl	GisInferenceCheckpointControlFrameV1	#[cfg(feature="integration-fixtures")]
+2999	3000	3008		fn	write_inference_checkpoint_control_frame	#[cfg(feature="integration-fixtures")]
+3010	3011	3029		fn	read_inference_checkpoint_control_frame	#[cfg(feature="integration-fixtures")]
+3031	3032	3041		fn	inherited_inference_checkpoint_file	#[cfg(all(feature="integration-fixtures",unix))]
+3043	3044	3064		fn	inherited_inference_checkpoint_file	#[cfg(all(feature="integration-fixtures",windows))]
+3066	3067	3075	pub	struct	HubInferenceRuntimeV1	
+3077	3077	3362		impl	HubInferenceRuntimeV1	
+3364	3365	3385		fn	deterministic_map_inference	
+3387	3388	3404	pub	fn	compare_frozen_identity	
+3406	3408	3454	pub	fn	commit_prepared_approval	#[allow(clippy::too_many_arguments)]
+3456	3458	3466	pub	struct	InferenceRouteContextV1	
+3468	3469	3472	pub	struct	InferenceApprovalRouteContextV1	
+3474	3474	3516		fn	gis_map_inference_preview	
+3518	3518	3523		fn	authenticated_session	
+3525	3530	3539	pub	fn	map_base	
+3541	3542	3546	pub	struct	InferenceMapBaseControlV1	
+3548	3548	3558		impl	crate::lag_rebootstrap::RebootstrapTransferControlforInferenceMapBaseControlV1	
+3560	3560	3588		fn	finish_retained_gis_map_job	
+3590	3590	3635		fn	drive_retained_gis_map_job	
+3637	3638	3707	pub	fn	submit_gis_map_job	
+3709	3710	3721	pub	fn	reconcile_gis_map_job	
+3723	3723	3726		fn	owner_page_receipt	
+3728	3729	3762	pub	fn	read_gis_map_job_events	
+3764	3765	3790	pub	fn	cancel_gis_map_job	
+3792	3795	3834	pub	fn	approve_gis_map_job	
+3836	3837	3892	pub	fn	undo_gis_map_approval	
+3894	3894	3896		fn	session_reader	
+3897	3909	3915		fn	approval_stamp_v1	
+3917	3917	3919	pub	fn	document_key	
+3921	3922	3925		fn	fresh_now_ms	
+3927	3928	3937		fn	parse_frontier_chain_hash	
+3939	3940	3942	pub	fn	approval_actor	
+3944	3945	3947	pub	fn	approval_mutation_id	
+3949	3950	3952	pub	fn	reader	
+3954	3956	3956		mod	tests	#[cfg(test)] #[path="🧪️tests/🔬️unit/🦀️.rs"]

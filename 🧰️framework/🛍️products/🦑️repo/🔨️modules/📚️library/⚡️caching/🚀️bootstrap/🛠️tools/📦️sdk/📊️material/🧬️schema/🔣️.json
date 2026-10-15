@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.nx/SdkMaterialV1",
+  "title": "SDK Material V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "entries",
+    "logicalBytes",
+    "allocatedBytes",
+    "packages",
+    "wasm",
+    "sharedBinaryBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "entries": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 200000
+    },
+    "logicalBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8589934592
+    },
+    "allocatedBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8589934592
+    },
+    "packages": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "type": "object"
+      }
+    },
+    "wasm": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object"
+      }
+    },
+    "sharedBinaryBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8589934592
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumEntries": 200000,
+        "maximumPackages": 1024,
+        "maximumWasm": 256,
+        "maximumBytes": 8589934592,
+        "chunkBytes": 65536,
+        "continuationEntries": 128,
+        "maximumMaterialPath": 256,
+        "maximumIdentityInputs": 64,
+        "maximumIdentityBytes": 16777216
+      }
+    },
+    "MaterialReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "snapshot",
+        "sourceIndex",
+        "ownedPackages"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "shared-pristine"
+        },
+        "snapshot": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sourceIndex": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "ownedPackages": {
+          "const": [
+            "nx"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -45,7 +45,7 @@ type PageOverrideInsertion { index: Int! row: PageOverride! }
 type PageOverrideRelocation { id: String! from: Int! to: Int! }
 type PageOverridesDelta { removed: [PageOverrideRemoval!]! inserted: [PageOverrideInsertion!]! moved: [PageOverrideRelocation!]! }
 type LayoutDataEntryRemoval { id: String! index: Int! }
-type LayoutDataEntryInsertion { index: Int! row: FormDictionaryEntry! }
+type LayoutDataEntryInsertion { index: Int! row: QuestionDictionaryEntry! }
 type LayoutDataEntryRelocation { id: String! from: Int! to: Int! }
 type LayoutDataEntriesDelta { removed: [LayoutDataEntryRemoval!]! inserted: [LayoutDataEntryInsertion!]! moved: [LayoutDataEntryRelocation!]! }
 type PageFrameRemoval { id: String! index: Int! }
@@ -132,7 +132,7 @@ type LayoutArtifact {
   spreads: [Spread!]! @state(class: ARTIFACT)
   pages: [Page!]! @state(class: ARTIFACT)
   printTarget: String @state(class: ARTIFACT)
-  dataFields: FormDictionary @state(class: ARTIFACT)
+  dataFields: QuestionDictionary @state(class: ARTIFACT)
   backgroundDrawing: LayoutDrawingChild @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
   referencedModel: ArtifactLink @state(class: ARTIFACT) @link(roles: ["model"])
 }

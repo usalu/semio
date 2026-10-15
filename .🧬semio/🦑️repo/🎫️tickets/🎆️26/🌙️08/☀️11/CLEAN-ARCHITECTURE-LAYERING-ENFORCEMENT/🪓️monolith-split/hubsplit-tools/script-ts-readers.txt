@@ -1,0 +1,16 @@
+3012 {'admin': ['ADMIN_EFFECT_ADMITTED', 'ADMIN_EFFECT_CANCELLED', 'ADMIN_EFFECT_PRE_EFFECT', 'ADMIN_TERMINAL_RETRY_DEADLINE']}
+3280 {'directory_events': ['directory_message_bindings', 'directory_space_message_bindings', 'directory_stream_message_space', 'send_directory_message']}
+3425 {'access_grants': ['DOCUMENT_EXECUTION_TARGET_DEADLINE_MS', 'document_execution_target_selection', 'issue_document_execution_target']}
+3470 {'access_grants': ['DOCUMENT_EXECUTION_TARGET_DEADLINE_MS', 'document_execution_target_selection', 'issue_document_execution_target']}
+4144 {'access_grants': ['issue_document_open_plan', 'issue_document_plan_socket_grant'], 'startup': ['DocumentOpenCatalogAuthorityV1'], 'document_socket': ['document_plan_socket_validity']}
+5468 {}
+8537 {'startup': ['configured_artifact_authority']}
+13405 {}
+13894 {'directory_events': ['DIRECTORY_EVENT_PAGE_DEADLINE_MS', 'DirectoryEventPageHttpRequest', 'directory_event_page_event_visible', 'directory_event_page_request_admission'], 'support': ['directory_error_status']}
+15413 {}
+15978 {'directory_commands': ['revalidate_space_administration_caller', 'space_administration_request_admission']}
+16165 {'presence': ['PRESENCE_LEASE_TTL_MS']}
+16327 {}
+16393 {}
+16674 {'directory_commands': ['invalidate_directory_event_authority', 'post_redeem_invite', 'revalidate_directory_caller'], 'support': ['DirectoryJson'], 'socket_grants': ['SocketBindingKeyV1']}
+17022 {'socket_grants': ['SOCKET_PROTOCOL_V1']}

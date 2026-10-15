@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import {createHash} from "node:crypto";
 import { dirname, isAbsolute, join } from "node:path";
@@ -8,56 +7,13 @@ import { cargoWorkspaceForManifest } from "../../../../../🧰️framework/🛍�
 import { readBuildGraphV1,resolveBuildInputsV1, type BuildGraphV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import pinSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️pin.json";
+import {checkScriptInvocation,withScriptInvocationSignalV1,createIssuedResourceControlV1,type ScriptInvocation} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {nativeCallerPhaseV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {captureOwnedCommandResultV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {withRepositoryToolingStoreV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import {withRepositoryRustToolchainV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts";
 
 import { CARGO_COMPOSITION_NAME, COMPOSITION_RUST_NAME, COMPOSITION_TYPESCRIPT_NAME } from "../🪪️identity/🟦️.ts";
-
-async function runCaptured(command: string, args: string[], cwd: string, timeoutMs: number): Promise<string> {
-  console.log(`[stdio-package-contract] running ${command} ${args.join(" ")}`);
-  const child = spawn(command, args, { cwd, env: process.env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
-  let stdout = "";
-  let stderr = "";
-  let cancelled = "";
-  const maximum = 64 * 1024 * 1024;
-  const append = (current: string, chunk: Buffer): string => {
-    const next = current + chunk.toString("utf8");
-    if (Buffer.byteLength(next) > maximum) {
-      cancelled = "output limit";
-      child.kill("SIGTERM");
-    }
-    return next;
-  };
-  child.stdout?.on("data", (chunk: Buffer) => stdout = append(stdout, chunk));
-  child.stderr?.on("data", (chunk: Buffer) => stderr = append(stderr, chunk));
-  const cancel = (signal: NodeJS.Signals): void => {
-    cancelled = signal;
-    child.kill("SIGTERM");
-  };
-  const interrupt = (): void => cancel("SIGINT");
-  const terminate = (): void => cancel("SIGTERM");
-  process.once("SIGINT", interrupt);
-  process.once("SIGTERM", terminate);
-  const started = Date.now();
-  const progress = setInterval(() => console.log(`[stdio-package-contract] ${command} running elapsedMs=${Date.now() - started}`), 10_000);
-  const timeout = setTimeout(() => {
-    cancelled = `timeout ${timeoutMs}ms`;
-    child.kill("SIGTERM");
-  }, timeoutMs);
-  try {
-    const result = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolveExit, rejectExit) => {
-      child.once("error", rejectExit);
-      child.once("exit", (code, signal) => resolveExit({ code, signal }));
-    });
-    assert(!cancelled, `${command} ${cancelled}\n${stderr}`);
-    assert.equal(result.code, 0, stderr || `${command} exited with ${result.signal ?? result.code}`);
-    console.log(`[stdio-package-contract] completed ${command} elapsedMs=${Date.now() - started}`);
-    return stdout;
-  } finally {
-    clearInterval(progress);
-    clearTimeout(timeout);
-    process.off("SIGINT", interrupt);
-    process.off("SIGTERM", terminate);
-  }
-}
 
 function assertActualCargoDag(metadata: JsonMap, artifactCargoNames: ReadonlySet<string>): void {
   const packages = new Map((metadata.packages as JsonMap[]).map((entry) => [String(entry.name), entry]));
@@ -90,11 +46,23 @@ function assertActualCargoDag(metadata: JsonMap, artifactCargoNames: ReadonlySet
 }
 
 /** 🦀️ Reads Cargo's own package graph without compiling Stdio. */
-export async function stdioCargoMetadata(repoRoot: string): Promise<JsonMap> {
-  const manifests=[...new Set(stdioArtifactPackageContract(repoRoot).packages.map(entry=>cargoWorkspaceForManifest(repoRoot,entry.rust.manifest).manifest))];
-  const packages:JsonMap[]=[];
-  for(const manifest of manifests){const metadata=JSON.parse(await runCaptured("cargo",["metadata","--locked","--no-deps","--format-version","1","--manifest-path",join(repoRoot,manifest)],repoRoot,120000)) as JsonMap;packages.push(...metadata.packages);}
-  return {packages:[...new Map(packages.map(entry=>[entry.id,entry])).values()]};
+export async function stdioCargoMetadata(repoRoot:string,invocation:ScriptInvocation):Promise<JsonMap>{
+ checkScriptInvocation(invocation);const phase=nativeCallerPhaseV1(invocation,repoRoot);await phase.advance("stdio:cargo-metadata");
+ const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(Error("Original native child deadline exhausted")),phase.budget());
+ try{return await withScriptInvocationSignalV1(invocation,timeout.signal,bounded=>{
+ const control=createIssuedResourceControlV1(bounded,"stdio:cargo-metadata",Math.floor(phase.budget()));
+ return withRepositoryToolingStoreV1(repoRoot,bounded,store=>withRepositoryRustToolchainV1(repoRoot,store,async generation=>{
+  const manifests=[...new Set(stdioArtifactPackageContract(repoRoot).packages.map(entry=>cargoWorkspaceForManifest(repoRoot,entry.rust.manifest).manifest))],packages:JsonMap[]=[];
+  for(const manifest of manifests){
+   await phase.advance("stdio:cargo-metadata");await generation.recheck();
+   const result=await captureOwnedCommandResultV1(generation.cargo,["metadata","--locked","--no-deps","--format-version","1","--manifest-path",join(repoRoot,manifest)],repoRoot,{control,env:phase.options({...process.env,...generation.environment}).env,output:{maximumBytes:Math.min(16777216,phase.authority.transport.maximumBytes),maximumLines:Math.min(65536,phase.authority.transport.maximumLines)}});
+   assert.equal(result.status,0,result.stderr||"Original Cargo metadata failed");assert.equal(result.signal,null,"Original Cargo metadata interrupted");
+   const metadata=JSON.parse(result.stdout) as JsonMap;assert(Array.isArray(metadata.packages),"Original Cargo metadata packages required");packages.push(...metadata.packages);await generation.recheck();phase.budget();checkScriptInvocation(invocation);
+   console.log("[DEBUG] Stdio sealed Cargo metadata "+JSON.stringify({manifest,stdoutBytes:Buffer.byteLength(result.stdout),stderrBytes:Buffer.byteLength(result.stderr),packages:metadata.packages.length,generation:generation.digest}));
+  }
+  return{packages:[...new Map(packages.map(entry=>[entry.id,entry])).values()]};
+ }));
+ });}finally{clearTimeout(timer);}
 }
 
 /** 🕸️ Compares the admitted artifact contract with Cargo's actual native metadata graph. */

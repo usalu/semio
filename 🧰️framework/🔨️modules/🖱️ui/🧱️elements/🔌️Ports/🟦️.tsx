@@ -184,4 +184,6 @@ export function setFlowHostPort(port: FlowHostPort): FlowHostPort {
 export const HostReactFlow = flowHostPort.flow;
 /** 🔖️ JSX alias for diagram flow provider. */
 export const HostReactFlowProvider = flowHostPort.provider;
+/** 🧊️ JSX alias for the three.js canvas host. */
+export const HostThreeCanvas = sceneHostPort.fiber.canvas;
 //#endregion 🔌️Ports

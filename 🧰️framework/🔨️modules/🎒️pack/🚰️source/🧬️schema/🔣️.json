@@ -1,0 +1,156 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "sourceBoundary",
+    "reads",
+    "exact",
+    "writes",
+    "consumers"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "semio-framework-pack-source"
+    },
+    "sourceBoundary": {
+      "const": {
+        "maxSourceBytes": 16384,
+        "maxSourceFiles": 4,
+        "maxActiveLines": 250
+      }
+    },
+    "reads": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "input",
+          "offset",
+          "length",
+          "output",
+          "truncatedAt"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "input": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})*$"
+          },
+          "offset": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,19})$"
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "output": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})*$"
+          },
+          "truncatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:0|[1-9][0-9]{0,19})$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "exact": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "input",
+          "offset",
+          "length",
+          "output",
+          "truncatedAt"
+        ],
+        "properties": {
+          "input": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})*$"
+          },
+          "offset": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,19})$"
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "output": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})*$"
+          },
+          "truncatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:0|[1-9][0-9]{0,19})$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "writes": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "chunks",
+          "output"
+        ],
+        "properties": {
+          "chunks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(?:[0-9a-f]{2})*$"
+            }
+          },
+          "output": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})*$"
+          }
+        }
+      }
+    },
+    "consumers": {
+      "type": "array",
+      "minItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

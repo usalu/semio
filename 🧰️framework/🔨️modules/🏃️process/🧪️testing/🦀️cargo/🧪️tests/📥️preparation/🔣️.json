@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "default",
+      "args": [],
+      "compiler": []
+    },
+    {
+      "name": "libtest-output",
+      "args": [
+        "--",
+        "--nocapture"
+      ],
+      "compiler": []
+    },
+    {
+      "name": "exact-target-and-filter",
+      "args": [
+        "--test",
+        "portable",
+        "original_law",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "compiler": [
+        "--test",
+        "portable"
+      ]
+    },
+    {
+      "name": "nextest-filter",
+      "args": [
+        "--features",
+        "feature-a",
+        "-E",
+        "test(original)",
+        "--no-fail-fast"
+      ],
+      "compiler": [
+        "--features",
+        "feature-a"
+      ]
+    },
+    {
+      "name": "offline-target",
+      "args": [
+        "--offline",
+        "--target",
+        "aarch64-apple-darwin",
+        "--lib"
+      ],
+      "compiler": [
+        "--offline",
+        "--target",
+        "aarch64-apple-darwin",
+        "--lib"
+      ]
+    }
+  ],
+  "invalid": [
+    [
+      "--profile",
+      "dev"
+    ],
+    [
+      "--release"
+    ],
+    [
+      "--target-dir",
+      "/escape"
+    ],
+    [
+      "--features"
+    ]
+  ]
+}

@@ -1,0 +1,1 @@
+{ "source": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️.tsx", "target": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🌲️tree-source/🟦️.ts", "names": ["TreePanelSource"], "doc": "🌲 Owns the tree panel source shapes that tab bars and panels exchange." }

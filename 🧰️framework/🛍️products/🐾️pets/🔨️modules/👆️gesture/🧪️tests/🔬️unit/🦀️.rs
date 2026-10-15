@@ -10,9 +10,9 @@
 //! @see ../../../../🧫️fixtures/👆️gesture-recognition/🔣️.json — the committed vectors (numpy's winding, scipy's peaks)
 
 use super::*;
-use crate::schema::tests::{assert_same, entries, fixture, number};
-use crate::schema::TIERS;
-use crate::trigonometry::{cos_turns, sin_turns};
+use semio_framework_pets_contract::schema::TIERS;
+use semio_framework_pets_contract::testkit::{assert_same, entries, fixture, number};
+use semio_framework_pets_kinematics::trigonometry::{cos_turns, sin_turns};
 use serde_json::{json, Value};
 
 const BODY: Rect = Rect { x: 380.0, y: 276.0, width: 40.0, height: 48.0 };

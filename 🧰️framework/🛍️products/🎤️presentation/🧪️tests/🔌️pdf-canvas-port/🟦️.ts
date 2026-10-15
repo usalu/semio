@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { PdfCanvasResourceOwner, pdfCanvasBitmapSize, pdfCanvasStatusAnnouncement, type PdfCanvasDocument, type PdfCanvasLoadingTask, type PdfCanvasPage, type PdfCanvasRenderTask } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🔨️modules/🔌️pdf-canvas-port/🟦️.ts";
+import { PdfCanvasResourceOwner, pdfCanvasBitmapSize, pdfCanvasStatusAnnouncement, type PdfCanvasDocument, type PdfCanvasLoadingTask, type PdfCanvasPage, type PdfCanvasRenderTask } from "../../🎯️targets/⚛️react/🔨️modules/🔌️pdf-canvas-port/🟦️.ts";
 
 describe("PdfCanvasResourceOwner", () => {
   it("cancels the render before cleaning the page and destroying the document", () => {

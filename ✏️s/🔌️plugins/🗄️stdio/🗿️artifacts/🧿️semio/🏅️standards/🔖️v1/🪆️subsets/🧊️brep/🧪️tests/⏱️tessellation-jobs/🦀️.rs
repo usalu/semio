@@ -9,7 +9,7 @@
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
 // #region 🔖️Imports
-use semio_framework_3d_brep_operations::primitives::{make_box, make_sphere};
+use semio_framework_3d_brep_construction::primitives::{make_box, make_sphere};
 use semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle};
 use semio_framework_3d_brep_tessellation::{tessellate_solid, TessellationJob, TessellationPhase, TessellationStep};
 use semio_framework_3d_brep_representation::arena::SolidId;

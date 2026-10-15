@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maximumCompressedBytes",
+        "maximumInflatedBytes",
+        "maximumEntries",
+        "maximumFileBytes",
+        "maximumPathBytes",
+        "maximumMetadataBytes",
+        "progressEntries"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "maximumCompressedBytes": {
+          "const": 33554432
+        },
+        "maximumInflatedBytes": {
+          "const": 67108864
+        },
+        "maximumEntries": {
+          "const": 4096
+        },
+        "maximumFileBytes": {
+          "const": 16777216
+        },
+        "maximumPathBytes": {
+          "const": 256
+        },
+        "maximumMetadataBytes": {
+          "const": 65536
+        },
+        "progressEntries": {
+          "const": 64
+        }
+      }
+    }
+  }
+}

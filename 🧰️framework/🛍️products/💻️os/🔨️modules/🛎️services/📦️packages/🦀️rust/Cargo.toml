@@ -18,6 +18,9 @@ name = "semio_framework_os_services"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+
 # 🧵️ INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b: `entrypoint` unlocks
 # `semio_framework_async::block_on` — the future-polling bridge every `WorkerPool` job submitted by
 # `ScopeTable::spawn_scoped`/`TimerWheel::spawn_driver`/`HttpPool::spawn_refill_driver` uses to turn
@@ -47,6 +50,8 @@ semio-framework-value = { workspace = true }
 tokio = { workspace = true, features = ["sync", "macros"] }
 
 [dev-dependencies]
+semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
+
 semio-framework-job = { workspace = true, features = ["testkit"] }
 # 🧵️ INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b: `testkit` (and `ManualRuntime`, the
 # deterministic-clock `HostAsyncRuntime` test double it gates) is DROPPED here — every test that used

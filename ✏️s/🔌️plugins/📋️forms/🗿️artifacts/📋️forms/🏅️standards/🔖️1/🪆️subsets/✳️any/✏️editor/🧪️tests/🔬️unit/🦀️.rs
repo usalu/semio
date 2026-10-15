@@ -523,7 +523,7 @@ async fn export_media_dictionary_out_returns_default_values() {
     let MediaPayload::Intrinsic { schema, value } = media.payload else { panic!("expected intrinsic payload") };
     assert_eq!(schema, "form.dictionary");
     assert!(value.as_object().is_some());
-    let dictionary=crate::schema::dictionary::FormDictionary::from_intrinsic(value).expect("actual configured dictionary");
+    let dictionary=semio_framework_value_dictionary::QuestionDictionary::from_intrinsic(value).expect("actual configured dictionary");
     assert_eq!(dictionary,crate::schema::configured_dictionary(&document).expect("configured defaults"));
 }
 

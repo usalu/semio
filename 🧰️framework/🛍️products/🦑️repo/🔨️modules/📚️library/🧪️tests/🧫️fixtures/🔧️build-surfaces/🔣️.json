@@ -192,6 +192,8 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
   ],
   "commandSources": [
+    "🧰️framework/🔨️modules/🚪️io/📦️codec/📦️packages/🦀️rust/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts",
     "package.json",
     "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
     "🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/📜️script.ts",

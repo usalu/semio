@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "artifactKind": "s.print.chart",
+  "artifactKind": "framework.print.chart",
   "dialect": {
     "standard": "v1",
     "subset": "any"

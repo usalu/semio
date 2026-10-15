@@ -9,7 +9,8 @@
     "files",
     "directories",
     "links",
-    "bytes"
+    "bytes",
+    "binaries"
   ],
   "properties": {
     "version": {
@@ -30,6 +31,28 @@
     "bytes": {
       "type": "integer",
       "minimum": 0
+    },
+    "binaries": {
+      "type": "object",
+      "required": [
+        "version",
+        "digest",
+        "objects"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "objects": {
+          "type": "array",
+          "maxItems": 256
+        }
+      },
+      "additionalProperties": false
     }
   },
   "$defs": {
@@ -38,7 +61,11 @@
         "concurrency": 64,
         "maximumEntries": 200000,
         "maximumPath": 256,
-        "copyOnWrite": true
+        "copyOnWrite": true,
+        "sharedBinaryExtensions": [
+          ".wasm",
+          ".node"
+        ]
       }
     },
     "Receipt": {
@@ -47,7 +74,8 @@
       "required": [
         "version",
         "digest",
-        "patches"
+        "patches",
+        "binaries"
       ],
       "properties": {
         "version": {
@@ -78,6 +106,27 @@
                   "pattern": "^[a-f0-9]{64}$"
                 }
               }
+            }
+          }
+        },
+        "binaries": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "entry",
+            "digest"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "entry": {
+              "const": ".semio-nx-sdk-binaries.json"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
             }
           }
         }

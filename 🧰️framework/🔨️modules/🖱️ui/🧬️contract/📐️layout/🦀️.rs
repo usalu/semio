@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 /// verbatim (`None,Xs,Sm,Md,Lg,Xl,…`) pending a registrar-added token set — flagged in the packet report.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum SpaceToken {
     #[default]
     None,
@@ -75,7 +75,7 @@ impl EdgeSpace {
 /// [`SpaceToken`], never a pixel value.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Sizing {
     #[default]
     Hug,
@@ -86,7 +86,7 @@ pub enum Sizing {
 /// ↔️ The main axis a [`StackLayout`] or [`WindowLayoutNode::Split`] lays its children along.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Axis {
     #[default]
     Horizontal,
@@ -97,7 +97,7 @@ pub enum Axis {
 /// cross axis unless it opts out.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Align {
     Start,
     Center,
@@ -110,7 +110,7 @@ pub enum Align {
 /// ↔️ Main-axis distribution — the CSS `justify-content` equivalent.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Justify {
     #[default]
     Start,
@@ -124,7 +124,7 @@ pub enum Justify {
 /// 🔲️ One grid track's sizing rule — `Fraction` is a proportion count, never a pixel width.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum GridTrack {
     #[default]
     Auto,
@@ -137,7 +137,7 @@ pub enum GridTrack {
 /// 🖱️ Which axes a [`ScrollLayout`] permits overflow scrolling on.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum ScrollAxes {
     #[default]
     None,
@@ -150,7 +150,7 @@ pub enum ScrollAxes {
 /// RTL locales without a renderer-side flip (CLAUDE.md's multi-language accessibility mandate).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum Anchor {
     TopStart,
     Top,
@@ -168,7 +168,7 @@ pub enum Anchor {
 /// of four always-present fields — mirrors CSS shorthand's 1/2/4-value forms.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum EdgeSpace {
     All(SpaceToken),
     Symmetric { vertical: SpaceToken, horizontal: SpaceToken },
@@ -185,7 +185,7 @@ impl Default for EdgeSpace {
 /// 📚️ A one-axis flex-like arrangement — expressible by CSS flex, a taffy tree, or a native stack.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct StackLayout {
     pub axis: Axis,
     pub gap: SpaceToken,
@@ -202,7 +202,7 @@ pub type UiGridTracks = crate::UiFixedList<GridTrack, UI_GRID_TRACKS>;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct GridLayout {
     pub columns: UiGridTracks,
     pub rows: UiGridTracks,
@@ -227,7 +227,7 @@ impl GridLayout {
 /// modals, popovers, tooltips.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct OverlayLayout {
     pub anchor: Anchor,
     pub inset: EdgeSpace,
@@ -237,7 +237,7 @@ pub struct OverlayLayout {
 /// 🖱️ A viewport clipping its content and permitting overflow scroll on the named axes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct ScrollLayout {
     pub axes: ScrollAxes,
     pub padding: EdgeSpace,
@@ -247,7 +247,7 @@ pub struct ScrollLayout {
 /// 📌️ A freeform positioning context — children carry their own placement outside normal flow.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct AbsoluteLayout {
     pub sizing_width: Sizing,
     pub sizing_height: Sizing,
@@ -256,7 +256,7 @@ pub struct AbsoluteLayout {
 /// 🍃️ A childless terminal node's own box sizing — text, image, and other atomic components.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct LeafLayout {
     pub width: Sizing,
     pub height: Sizing,
@@ -267,7 +267,7 @@ pub struct LeafLayout {
 /// geometry: every metric is a closed enum over [`SpaceToken`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase")]
 pub enum LayoutSpec {
     /// 🍃️ A node that participates in its parent's layout but imposes none of its own.
     Leaf(LeafLayout),
@@ -294,7 +294,7 @@ impl Default for LayoutSpec {
 /// React's `FlowInline` (`🔨️modules/🧭️flow-direction-context/🟦️.tsx:14`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum FlowInline {
     #[default]
     Ltr,
@@ -323,7 +323,7 @@ impl FlowInline {
 /// (`🔨️modules/🧭️flow-direction-context/🟦️.tsx:17`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum FlowBlock {
     #[default]
     Down,
@@ -342,7 +342,7 @@ impl FlowBlock {
 /// (`🔨️modules/🧭️flow-direction-context/🟦️.tsx:20-23`), whose default is `{ ltr, down }`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct UiFlow {
     pub inline: FlowInline,
     pub block: FlowBlock,
@@ -384,7 +384,7 @@ impl UiFlow {
 /// `WindowStackCorner`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum WindowStackCorner {
     #[default]
     TopLeft,
@@ -401,7 +401,7 @@ pub enum WindowStackCorner {
 /// re-handcrafted, no compatibility requirement.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
-#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum WindowLayoutNode {
     Window {
         window_kind_id: String,
@@ -440,7 +440,7 @@ pub enum WindowLayoutNode {
 /// recursive `WindowLayoutNode` root instead of the old `WindowLayoutRoot` `Axis`/`Stack` union.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct WindowLayout {
     pub root: WindowLayoutNode,
 }

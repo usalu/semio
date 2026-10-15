@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "imageBytes": 33554432,
+  "workspaceBytes": 25165824,
+  "unitBytes": 12582912,
+  "rounds": 2,
+  "expected": {
+    "busyStoreEffects": 0,
+    "busyPhysicalEffects": 0,
+    "completed": 2,
+    "retainedArtifact": true
+  }
+}

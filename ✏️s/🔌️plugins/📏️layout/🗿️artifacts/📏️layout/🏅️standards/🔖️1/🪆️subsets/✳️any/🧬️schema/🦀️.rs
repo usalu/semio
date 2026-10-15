@@ -60,7 +60,7 @@ pub struct LayoutArtifact {
     pub print_target: Option<String>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub data_fields: Option<semio_s_artifact_forms_forms::schema::dictionary::FormDictionary>,
+    pub data_fields: Option<semio_framework_value_dictionary::QuestionDictionary>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]

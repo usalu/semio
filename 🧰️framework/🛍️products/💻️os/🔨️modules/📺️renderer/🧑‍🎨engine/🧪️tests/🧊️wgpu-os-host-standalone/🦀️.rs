@@ -34,7 +34,7 @@ pub(crate) fn finish_retired_cpu_only_map_fixture_close() {
 }
 
 #[cfg(test)]
-pub(crate) fn finish_cpu_only_fixture_component_close(close: impl FnOnce(&crate::interpreter::ScenePointerTarget)) {
+pub(crate) fn finish_cpu_only_fixture_component_close(close: impl FnOnce(&crate::element_contracts::ScenePointerTarget)) {
     let Some(request) = take_component_surface_close_request() else { return };
     assert!(matches!(request.owner.kind, ui_wgpu::wgpu::SurfaceKind::TiledMap | ui_wgpu::wgpu::SurfaceKind::NodeGraph | ui_wgpu::wgpu::SurfaceKind::Board2d | ui_wgpu::wgpu::SurfaceKind::TextEditor));
     if let Some(token) = crate::engine_canvas::engine_surface_token(&request.owner.host_id) {
@@ -228,7 +228,7 @@ impl Drop for StalledNativeAssetServer {
 #[cfg(test)]
 fn retire_component_world_fixture(runtime: &RuntimeMailbox) {
     for (host_id, surface_id, key) in [("component-world-a", "document-world-a", "world-a"), ("component-world-b", "document-world-b", "world-b")] {
-        let mut target = crate::interpreter::fixture_scene_pointer_target("component-window", surface_id, key);
+        let mut target = crate::element_contracts::fixture_scene_pointer_target("component-window", surface_id, key);
         target.host_id = host_id.into();
         target.kind = ui_wgpu::wgpu::SurfaceKind::World3d;
         let mut asset_terminal = false;
@@ -306,7 +306,7 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
     };
     assert_eq!(token_a, expected_a);
     assert_ne!(token_a, token_b);
-    let mut target = crate::interpreter::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
+    let mut target = crate::element_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = "component-world-a".to_string();
     target.kind = ui_wgpu::wgpu::SurfaceKind::World3d;
     let request = ComponentSurfaceCloseRequest { token: ComponentSurfaceCloseToken(1), owner: target, engine_token: None };
@@ -405,7 +405,7 @@ fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_i
     assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), crate::RendererAssetSealStep::Granted));
     fetch.owner_mut().push_page(crate::WorldAssetResponsePage::try_from_owned(vec![41; 7]).unwrap()).unwrap();
     runtime.retain_native_asset_handoff(fetch, None, true, false);
-    let mut target = crate::interpreter::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
+    let mut target = crate::element_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = "component-world-a".into();
     target.kind = ui_wgpu::wgpu::SurfaceKind::World3d;
     let close_with_checked_out_response = runtime.close_component_asset_step(&target);
@@ -476,7 +476,7 @@ fn a_stalled_native_component_body_is_aborted_before_its_sibling_enters_the_sing
     let runtime = runtime_with_component_world_asset_urls(&server.url("/world-a.glb"), &server.url("/world-b.glb"));
     assert!(runtime.pump_native_asset(), "World A enters the real native fetch lane");
     let stalled_head_observed = server.stalled_head.recv_timeout(cleanup_deadline).is_ok();
-    let mut target = crate::interpreter::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
+    let mut target = crate::element_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = transport["stalledHostId"].as_str().expect("stalled host id").to_string();
     target.kind = ui_wgpu::wgpu::SurfaceKind::World3d;
     let deadline = std::time::Instant::now() + observation_deadline;
@@ -537,7 +537,7 @@ fn a_withheld_native_component_head_is_cancelled_before_its_sibling_enters_the_s
     let runtime = runtime_with_component_world_asset_urls(&server.url("/world-a.glb"), &server.url("/world-b.glb"));
     assert!(runtime.pump_native_asset(), "World A enters the real native fetch lane");
     let withheld_request_observed = server.stalled_request.recv_timeout(cleanup_deadline).is_ok();
-    let mut target = crate::interpreter::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
+    let mut target = crate::element_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = transport["stalledHostId"].as_str().expect("stalled host id").to_string();
     target.kind = ui_wgpu::wgpu::SurfaceKind::World3d;
     let deadline = std::time::Instant::now() + observation_deadline;
@@ -611,7 +611,7 @@ fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_res
         std::thread::yield_now();
     }
     let entered = barrier.entered.load(Ordering::Acquire);
-    let mut target = crate::interpreter::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
+    let mut target = crate::element_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = "component-world-a".into();
     target.kind = ui_wgpu::wgpu::SurfaceKind::World3d;
     let _ = runtime.close_component_asset_step(&target);

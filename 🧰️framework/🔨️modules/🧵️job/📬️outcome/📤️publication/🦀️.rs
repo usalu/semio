@@ -1,5 +1,6 @@
 //! 📤️ Original source identity and physical pages remain inside one artifact-neutral publication.
-use super::*;
+use semio_framework_job::{RetainedPayloadBuilder,JobPayloadStream,OperationId,Generation,StepContext,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,JobOutcomeKind,RetainedJobPayload,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::RetirementDemand;
 
 /// 🚦️ Describes a semantic publication without an artifact-specific serializer.
@@ -63,6 +64,3 @@ impl RetainedJobPublication{
 }
 impl Default for RetainedJobPublication{fn default()->Self{Self::new()}}
 impl Drop for RetainedJobPublication{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"publication reached Drop before original physical retirement");}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

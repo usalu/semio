@@ -1,4 +1,4 @@
-use super::*;
+use semio_framework_job::reconcile::*;
 
 #[test]
 fn neutral_reconcile_envelopes_match_language_agnostic_vectors() {

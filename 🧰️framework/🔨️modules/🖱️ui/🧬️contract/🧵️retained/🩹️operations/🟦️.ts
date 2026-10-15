@@ -1,6 +1,7 @@
 //#region 🧬️OwnedOperations
 import { NumericIndex, type NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
-import { RetainedUiNumericTable, retainedUiComponentStrings, retainedUiAccessibilityStrings, retainedUiBindingStrings, measureRetainedUiText } from "../🟦️.ts";
+import { retainedUiComponentStrings, retainedUiAccessibilityStrings, retainedUiBindingStrings, measureRetainedUiText } from "../🟦️.ts";
+import { RetainedUiNumericTable } from "../🧮️tables/🟦️.ts";
 import { OwnedUiNodeIndex, type OwnedUiNodeIndexEdit, type OwnedUiNodeIndexReader, type OwnedUiNodeIndexRetirement } from "../🗂️nodes/🟦️.ts";
 import { OwnedUiNode, captureTypedUiPayload, captureUiFieldChange, type OwnedUiPayload, type RetainedUiNodeRecord, type RetainedUiTypedValues, type RetainedUiFieldChange, type UiNodeRetirement, type UiPayloadRetirement } from "../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";

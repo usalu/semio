@@ -1,5 +1,35 @@
 {
   "version": 1,
+  "preparedPolicy": {
+    "initial": { "version": 1, "owner": "prepared-original-policy", "maximumElapsedMilliseconds": 1000 },
+    "mutations": [
+      { "key": "owner", "value": "", "accepted": false },
+      { "key": "owner", "value": "updated-original-policy", "accepted": true },
+      { "key": "maximumElapsedMilliseconds", "value": -1, "accepted": false },
+      { "key": "maximumElapsedMilliseconds", "value": 0, "accepted": true },
+      { "key": "extra", "value": true, "accepted": false },
+      { "key": "extra", "remove": true, "accepted": true },
+      { "key": "version", "remove": true, "accepted": false },
+      { "key": "version", "value": 1, "accepted": true }
+    ],
+    "controls": [
+      { "id": "finite", "maximum": 1000, "remaining": 750, "accepted": true },
+      { "id": "exhausted", "maximum": 1000, "remaining": 0, "accepted": false },
+      { "id": "expanded", "maximum": 1000, "remaining": 1001, "accepted": false },
+      { "id": "finite-null", "maximum": 1000, "remaining": null, "accepted": false },
+      { "id": "ordinary", "maximum": 0, "remaining": null, "accepted": true },
+      { "id": "ordinary-finite", "maximum": 0, "remaining": 1, "accepted": false },
+      { "id": "cancelled", "maximum": 1000, "remaining": 750, "abort": true, "accepted": false }
+    ],
+    "advances": [
+      { "id": "unchanged", "change": "none", "accepted": true, "checks": 3, "events": ["publish:start", "publish:end", "yield:start", "yield:end"] },
+      { "id": "publish-policy", "change": "publish-policy", "accepted": false, "checks": 1, "events": ["publish:start", "publish:end"] },
+      { "id": "publish-cancel", "change": "publish-cancel", "accepted": false, "checks": 1, "events": ["publish:start", "publish:end"] },
+      { "id": "yield-policy", "change": "yield-policy", "accepted": false, "checks": 2, "events": ["publish:start", "publish:end", "yield:start", "yield:end"] },
+      { "id": "yield-expiry", "change": "yield-expiry", "accepted": false, "checks": 3, "events": ["publish:start", "publish:end", "yield:start", "yield:end"] }
+    ],
+    "topLevelPreparations": 1
+  },
   "cases": [
     {
       "id": "positive-policy-null-deadline-refused",

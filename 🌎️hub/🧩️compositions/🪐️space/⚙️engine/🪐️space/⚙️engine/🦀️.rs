@@ -20,7 +20,7 @@ use std::collections::HashMap;
 //#region 🔖️SyncBridge
 /// 🌉️ `app_commands!`'s generated `dispatch(doc, cfg)` (framework-fixed, `🧰️framework/🛍️products/
 /// 💻️os/🔨️modules/🔌️plugin/🦀️.rs`) calls every command's `handle` SYNCHRONOUSLY — matches the same
-/// `pub(crate) fn resolve_kernel_future` bridge `🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs` uses
+/// `pub(crate) fn resolve_kernel_future` bridge `🧰️framework/🛍️products/💻️os/🖥️host/🔌️plugin-host/🦀️.rs` uses
 /// internally (not `pub`, so unreachable from a plugin crate — this is the plugin-local twin of the
 /// same technique). Every `async fn` in this whole wasm component is a run-to-completion frame
 /// transaction that never truly suspends (no real I/O inside an `s` command), so polling once is

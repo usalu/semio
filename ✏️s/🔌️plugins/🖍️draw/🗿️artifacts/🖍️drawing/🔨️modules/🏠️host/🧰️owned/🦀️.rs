@@ -1,6 +1,7 @@
 //! 🧰️ Drawing owned envelope decoder, recursive retirement, and retained store initializer.
 
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_s_artifact_draw_drawing_host_arena::DRAWING_DUPLICATE_ID_BYTES;
 use semio_s_artifact_draw_drawing_host_arena::DRAWING_MAXIMUM_LAYER_DEPTH;
 use semio_s_artifact_draw_drawing_host_arena::DRAWING_MAXIMUM_NESTED_BYTES;
@@ -1261,7 +1262,7 @@ struct DrawingStoreInitializationAuthority {
     pub snapshot_source: std::mem::ManuallyDrop<Option<RetainedCloneSource<DrawingSnapshot, std::sync::Arc<DrawingSnapshot>>>>,
     pub mutation_candidate: std::mem::ManuallyDrop<Option<DrawingMutationCandidateAuthority>>,
     pub prepared_history_id: std::mem::ManuallyDrop<Option<String>>,
-    pub publication: semio_framework_job::RetainedJobPublication,
+    pub publication: semio_framework_job_publication::RetainedJobPublication,
     pub edit_index: store::ArtifactStoreInitializationEditIndex,
     /// 🧬️ The paged clone of `envelope.vcs.genesis.facts().snapshot()` that becomes the runtime's live fold —
     /// the envelope keeps its own initial snapshot, which `print_document_pack` / the cold from-scratch
@@ -1312,7 +1313,7 @@ impl DrawingStoreInitializationAuthority {
             snapshot_source: std::mem::ManuallyDrop::new(None),
             mutation_candidate: std::mem::ManuallyDrop::new(None),
             prepared_history_id: std::mem::ManuallyDrop::new(None),
-            publication: semio_framework_job::RetainedJobPublication::new(),
+            publication: semio_framework_job_publication::RetainedJobPublication::new(),
             edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             initial_clone: std::mem::ManuallyDrop::new(None),
             initial_snapshot_clone: std::mem::ManuallyDrop::new(None),
@@ -2081,7 +2082,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingInitializationTurn::Cancelled => semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx),
             DrawingInitializationTurn::Fault => {
                 let detail = self.fault.as_deref().unwrap_or(b"drawing-store.initializer-fault");
-                self.publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, detail, cx)
+                self.publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, detail, cx)
             }
         }
     }

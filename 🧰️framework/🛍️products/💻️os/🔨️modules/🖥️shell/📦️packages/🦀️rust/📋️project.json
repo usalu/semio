@@ -9,6 +9,7 @@
   },
   "targets": {
     "check": {
+      "cache": false,
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
@@ -16,6 +17,7 @@
       }
     },
     "test": {
+      "cache": false,
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
@@ -23,6 +25,7 @@
       }
     },
     "typegen": {
+      "cache": false,
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
@@ -32,6 +35,7 @@
       "outputs": ["{projectRoot}/../../🤖️generated"]
     },
     "schema-check": {
+      "cache": false,
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
@@ -41,6 +45,7 @@
       "outputs": []
     },
     "preview-generated": {
+      "cache": false,
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",

@@ -30,6 +30,21 @@
       "owners": {
         "main.rs": null
       }
+    },
+    {
+      "id": "explicit-ignored-source",
+      "roots": {
+        ".cache": "unit"
+      },
+      "files": {
+        ".cache/observed.rs": "pub fn admitted()->u32{7}"
+      },
+      "owners": {
+        ".cache/observed.rs": "unit"
+      },
+      "unrelated": {
+        "owned.txt": "context initialization"
+      }
     }
   ],
   "seed": ".semio-native-index"

@@ -1,6 +1,7 @@
 //! 📋️ Compute parameters retain the actual supplier across separately funded metadata, cancellation alias and publication.
 use semio_framework_async::{CancelToken,CancelTokenRetirement,CancelTokenRetirementError};
-use semio_framework_job::{BatchDriveConfig,BatchJobParams,StepContext,OriginalTurnFailure,OperationId,Generation};
+use semio_framework_job::{StepContext,OriginalTurnFailure,OperationId,Generation};
+use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
 use std::mem::{ManuallyDrop,size_of};
 

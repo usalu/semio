@@ -45,7 +45,7 @@ class NativeInputScript extends Script {
 class ContractScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("contract-check accepts no overrides");
-    await runRepositoryCommand(this.invocation,"bun",["test", join(import.meta.dir, "🧪️tests/🟦️.ts"), join(import.meta.dir,"🧪️tests/🪆️nested-owners/🟦️.ts")],this.root,"cargo-workspace-contract",{version:1,maximumElapsedMilliseconds:15_000,output:{maximumBytes:134217728,maximumLines:65536}},{env: repoTestArtifactEnvironment(this.root, "cargo-workspace-contract")});
+    await runRepositoryCommand(this.invocation,"bun",["test", join(import.meta.dir, "🧪️tests/🟦️.ts"), join(import.meta.dir,"🧪️tests/🪆️nested-owners/🟦️.ts"), join(import.meta.dir,"🧪️tests/📦️identity/🟦️.ts")],this.root,"cargo-workspace-contract",{version:1,maximumElapsedMilliseconds:15_000,output:{maximumBytes:134217728,maximumLines:65536}},{env: repoTestArtifactEnvironment(this.root, "cargo-workspace-contract")});
   }
 }
 /** 🕰️ Verifies queued preparation with an independent owner holding the native lease. */

@@ -229,7 +229,8 @@
       "kind": "typescript",
       "anchor": "BackboneWorkerRequest",
       "consumers": [
-        "🧰️framework/🛍️products/💻️os/🟦️.ts"
+        "🧰️framework/🛍️products/💻️os/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧵️backbone/🟦️.ts"
       ],
       "sourceDisposition": "removed"
     },

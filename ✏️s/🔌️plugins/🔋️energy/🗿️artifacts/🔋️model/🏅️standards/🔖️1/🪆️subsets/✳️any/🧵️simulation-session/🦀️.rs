@@ -5,6 +5,7 @@
 //! The run is read-only: it holds no provisional document ops, so finalize publishes nothing.
 //! Source of record: `✏️editor/🧵️simulation-session/🔣️.json`.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
 
@@ -25,10 +26,7 @@ use crate::sim::{EnergyAdmissionRejected, EnergyJob};
 use crate::sim_retirement::{EnergyModelCloseCursor};
 use crate::sim_wire::{EnergyJobCursor, EnergyJobStage, EnergyNumericalBounds, EnergyQualityTier};
 use crate::snapshot::{EnergyModelSnapshot};
-use semio_framework_job::{
-    Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, JobPublicationKind, OperationId, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload,
-    RetainedJobPublication, StepBudget, StepContext,
-};
+use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, OperationId, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload, StepBudget, StepContext};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_tool_run::{

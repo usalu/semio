@@ -35,9 +35,7 @@ impl<'a> JobOutcomeBorrow<'a> {
  pub fn into_descriptor(self)->JobOutcomeDescriptor{match self{Self::Yield{admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::Yield,admission,[None,None]),Self::PreviewReady{payload,admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::PreviewReady,admission,[Some(payload),None]),Self::CheckpointReady{state,applied_progress,admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::CheckpointReady{applied_progress},admission,[Some(state),None]),Self::Complete{state,output,admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::Complete,admission,[state,output]),Self::Cancelled{admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::Cancelled,admission,[None,None]),Self::Fault{detail,admission}=>JobOutcomeDescriptor::from_original(JobOutcomeKind::Fault,admission,[Some(detail),None])}}
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
 
 /// ▶️ Drives the actual retained producer using an original caller context and its same receipt.
 pub fn drive_step<'a,J:InteractiveJob+?Sized>(job:&'a mut J,cx:&mut StepContext<'_>,site:&'static str,stage:InteractiveStage,callback_verdict:&mut Option<semio_framework_trace::CallbackVerdict>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{

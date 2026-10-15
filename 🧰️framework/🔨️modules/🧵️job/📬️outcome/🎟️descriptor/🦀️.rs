@@ -46,17 +46,15 @@ impl JobOutcomeView<'_>{
 }
 
 /// 📬️ The exclusive worker result slot acknowledges its child before a separate metadata removal.
-pub(super) struct JobOutcomeDescriptorSlot{original:MaybeUninit<JobOutcomeDescriptor>,present:bool}
+pub struct JobOutcomeDescriptorSlot{original:MaybeUninit<JobOutcomeDescriptor>,present:bool}
 impl JobOutcomeDescriptorSlot{
- pub(super) unsafe fn initialize_empty(target:*mut Self){unsafe{std::ptr::addr_of_mut!((*target).present).write(false);}}
- pub(super) fn empty()->Self{Self{original:MaybeUninit::uninit(),present:false}}
- pub(super) fn is_empty(&self)->bool{!self.present}
- pub(super) fn original(&self)->Option<&JobOutcomeDescriptor>{if self.present{Some(unsafe{self.original.assume_init_ref()})}else{None}}
- pub(super) fn retain(&mut self,original:JobOutcomeDescriptor)->Result<(),JobOutcomeDescriptor>{if self.present{return Err(original)}self.original.write(original);self.present=true;Ok(())}
- pub(super) fn retirement_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:0,depth:if self.original().is_some_and(|original|!original.is_acknowledged()){2}else{usize::from(self.present)},..Default::default()}}
- pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{if !self.present{return RetainedCloneStep::Complete(Default::default())}let demand=self.retirement_demands();if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_depth<demand.depth{return RetainedCloneStep::Progress(Default::default())}let original=unsafe{self.original.assume_init_mut()};if !original.is_acknowledged(){return RetainedCloneStep::Progress(original.acknowledge(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).progress())}unsafe{self.original.assume_init_drop();}self.present=false;RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()})}
+ pub unsafe fn initialize_empty(target:*mut Self){unsafe{std::ptr::addr_of_mut!((*target).present).write(false);}}
+ pub fn empty()->Self{Self{original:MaybeUninit::uninit(),present:false}}
+ pub fn is_empty(&self)->bool{!self.present}
+ pub fn original(&self)->Option<&JobOutcomeDescriptor>{if self.present{Some(unsafe{self.original.assume_init_ref()})}else{None}}
+ pub fn retain(&mut self,original:JobOutcomeDescriptor)->Result<(),JobOutcomeDescriptor>{if self.present{return Err(original)}self.original.write(original);self.present=true;Ok(())}
+ pub fn retirement_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:0,depth:if self.original().is_some_and(|original|!original.is_acknowledged()){2}else{usize::from(self.present)},..Default::default()}}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{if !self.present{return RetainedCloneStep::Complete(Default::default())}let demand=self.retirement_demands();if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_depth<demand.depth{return RetainedCloneStep::Progress(Default::default())}let original=unsafe{self.original.assume_init_mut()};if !original.is_acknowledged(){return RetainedCloneStep::Progress(original.acknowledge(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).progress())}unsafe{self.original.assume_init_drop();}self.present=false;RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()})}
 }
 impl Drop for JobOutcomeDescriptorSlot{fn drop(&mut self){assert!(std::thread::panicking()||self.is_empty(),"exclusive worker semantic descriptor requires original paid acknowledgement and removal");}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

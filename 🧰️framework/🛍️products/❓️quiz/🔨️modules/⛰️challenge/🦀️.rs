@@ -16,7 +16,7 @@
 //! @see ../📏️scoring/🦀️.rs — the scoring of guesses with misses
 //! @see ../⛰️challenge/🟦️.ts — the TypeScript twin
 
-use crate::schema::{Answer, Axis, CategoryHint, Challenge, ClassificationItem, CompareHint, GroupHint, Hint, MatchingItem, Profile, ProfileHint, Scale, Score, SheetTask, Slug, Task, TaskKind, Timestamp, Verdict};
+use quiz_schema::{Answer, Axis, CategoryHint, Challenge, ClassificationItem, CompareHint, GroupHint, Hint, MatchingItem, Profile, ProfileHint, Scale, Score, SheetTask, Slug, Task, TaskKind, Timestamp, Verdict};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -31,7 +31,7 @@ pub struct ChallengeRules {
     pub par: f64,
 }
 
-/// 🗻️ The rules of every challenge, in the order of [`crate::schema::CHALLENGES`] (indexed by
+/// 🗻️ The rules of every challenge, in the order of [`quiz_schema::CHALLENGES`] (indexed by
 /// [`challenge_rank`]).
 pub const CHALLENGE_RULES: [ChallengeRules; 4] = [
     ChallengeRules { keys: true, hints: true, timed: false, par: 100.0 },

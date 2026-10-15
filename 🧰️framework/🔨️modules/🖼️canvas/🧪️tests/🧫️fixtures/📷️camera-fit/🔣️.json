@@ -5,7 +5,7 @@
     "calibration": "`minCoverage` 0.85 is the one judgement call here. The live generation3d boot camera (x=94.75 y=-97.5 zoom=1.78 in a 483x814 pane) covers 0.570 of its own graph and shows one node of seven, so 0.6 would have decided it by 0.03; 0.85 decides it by 0.28 and still adopts a camera with a sliver of the graph off the edge.",
     "implementations": [
       "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs — canvas::camera::{content_coverage,fit_camera,startup_camera}",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx — dagContentCoverage/dagFitCamera/dagStartupCamera"
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🖼️dag-overlays/🟦️.tsx — dagContentCoverage/dagFitCamera/dagStartupCamera"
     ],
     "constants": {
       "paddingPx": 24.0,

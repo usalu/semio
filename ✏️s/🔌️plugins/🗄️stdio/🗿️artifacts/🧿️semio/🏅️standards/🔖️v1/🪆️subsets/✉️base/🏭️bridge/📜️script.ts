@@ -23,35 +23,11 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { spawnSync } from "node:child_process";
+import {runRepositoryMutationBridgeScriptV1} from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏭️inventory/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🚪️Entry
-const BRIDGE_VERSION = 1;
-
-function main(argv: readonly string[]): number {
-  const [command = "", artifact = "s.stdio.semio", standard = "v1", subset = "base"] = argv;
-  if (command !== "list-mutations") {
-    console.error(`[bridge] unknown command ${JSON.stringify(command)} — expected list-mutations <artifact> <standard> <subset>`);
-    return 2;
-  }
-  // 🏭️`--offline`: the bridge runs inside a test sweep alongside peer sessions; the shared build-dir
-  // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any per-bridge override here.
-  const built = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", "semio-semio-v1-base-bridge", "--", command, artifact, standard, subset], {
-    cwd: import.meta.dir,
-    encoding: "utf8",
-  });
-  if (built.status !== 0) {
-    // 🚫️A bridge that cannot run must SAY SO and exit non-zero. Emitting a plausible-looking inventory
-    // from the manifest would make the equality gate compare the manifest with itself, which is the
-    // one thing Protocol v2's runtime half exists to prevent.
-    console.error(`[bridge] cargo exited ${built.status}: ${(built.stderr ?? "").trim().split("\n").slice(-6).join("\n")}`);
-    return 1;
-  }
-  process.stdout.write(built.stdout);
-  return 0;
-}
-
-if (import.meta.main) process.exit(main(process.argv.slice(2)));
-export { BRIDGE_VERSION };
+const BRIDGE_VERSION=1;
+if(import.meta.main)await runRepositoryMutationBridgeScriptV1(import.meta.dir,"semio-semio-v1-base-bridge");
+export {BRIDGE_VERSION};
 //#endregion 🚪️Entry

@@ -7,6 +7,7 @@ import { PassThrough } from "node:stream";
 import type { ChildProcess } from "node:child_process";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { readModuleTreeSource } from "../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { orderedDirectoryPublicationOracle } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
 import { directChildEnvironment, directChildLaunch, deliverCredentialEnvelopeToChild, sealedDirectChildEnvironment, type CredentialChildOperations } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
@@ -395,7 +396,7 @@ test("source definition boundaries match TypeScript AST and reject stale credent
 
   const mcp = {
     entrypoint: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/🦀️.rs"), "utf8"),
-    workspace: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs"), "utf8"),
+    workspace: readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs")),
     remote: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs"), "utf8"),
     directory: native.credential,
     runner: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts"), "utf8"),

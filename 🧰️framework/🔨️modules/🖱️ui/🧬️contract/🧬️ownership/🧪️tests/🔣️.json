@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "owner": "semio-framework-ui-contract",
+  "valueOwner": "semio-framework-value",
+  "forbiddenDependency": "semio-framework-replication",
+  "forbiddenPath": "protocol::value"
+}

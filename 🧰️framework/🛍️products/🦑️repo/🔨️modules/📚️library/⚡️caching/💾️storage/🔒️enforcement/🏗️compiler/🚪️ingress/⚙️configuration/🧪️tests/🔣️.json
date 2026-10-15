@@ -1,0 +1,1 @@
+{"version":1,"phases":[{"phase":"open","admitted":true},{"phase":"consuming","admitted":true},{"phase":"retired","admitted":false}],"refusal":"Original Cargo configuration view retired","compilerMarker":"owned_configuration","mutationFlags":["-Zdump-mir=all","-Zdump-mir-dir="],"fallbackMarker":"unselected_configuration"}

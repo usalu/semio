@@ -10,6 +10,7 @@ import law from "./🧫️fixtures/🫴️receiving.json";
 import grant from "../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
 import originalCloseSchema from "./🧬️schema/🧵️original-close.json";
 import originalClose from "./🧫️fixtures/🧵️original-close.json";
+import { readModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 test("original UI close keeps both causes and one actual initiating context",()=>{
  const validate=new Ajv({strict:true}).compile(originalCloseSchema);expect(validate(originalClose)).toBe(true);for(const key of ["wholePrimary","wholeReceiptRefusal","sameSourcePointers","originalContext","debitOnce"]){expect(validate({...originalClose,[key]:false})).toBe(false);}expect(validate({...originalClose,terminalDrop:1})).toBe(false);
@@ -23,7 +24,7 @@ test("actual worker close and frame consumers parse with mandatory original cont
   ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",["render_chrome_step"]],
   ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",["frame_before_input_step"]]
  ]as const;
- try{for(const[path,names]of rows){const ast=parser.parse(readFileSync(resolve(process.cwd(),path),"utf8"))!;const found:Parser.SyntaxNode[]=[];const visit=(node:Parser.SyntaxNode):void=>{if(node.type==="function_item"&&names.some(name=>node.childForFieldName("name")?.text===name))found.push(node);for(const child of node.namedChildren)visit(child);};visit(ast.rootNode);expect(found).toHaveLength(names.length);for(const node of found){expect(node.hasError()).toBe(false);expect(node.childForFieldName("parameters")!.text).toContain("StepContext");}ast.delete();}}finally{parser.delete();}console.log("[DEBUG] Independent TreeSitter accepts the actual original-context worker/surface/interpreter/chrome/frame functions; source syntax is separate from native System and GPU acceptance");
+ try{for(const[path,names]of rows){const ast=parser.parse(readModuleTreeSource(resolve(process.cwd(),path)))!;const found:Parser.SyntaxNode[]=[];const visit=(node:Parser.SyntaxNode):void=>{if(node.type==="function_item"&&names.some(name=>node.childForFieldName("name")?.text===name))found.push(node);for(const child of node.namedChildren)visit(child);};visit(ast.rootNode);expect(found).toHaveLength(names.length);for(const node of found){expect(node.hasError()).toBe(false);expect(node.childForFieldName("parameters")!.text).toContain("StepContext");}ast.delete();}}finally{parser.delete();}console.log("[DEBUG] Independent TreeSitter accepts the actual original-context worker/surface/interpreter/chrome/frame functions; source syntax is separate from native System and GPU acceptance");
 });
 
 test("mounted receiving declares the original policy and exact ownership obligations",()=>{

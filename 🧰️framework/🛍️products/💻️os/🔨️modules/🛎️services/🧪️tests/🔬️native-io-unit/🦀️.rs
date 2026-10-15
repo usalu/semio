@@ -62,11 +62,11 @@ fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
     let grant = fixture_compute_grant();
     let operation=semio_framework_job::allocate_operation_id();let generation=semio_framework_job::Generation(1);
     let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,grant,semio_framework_job::default_now_us,u64::MAX,1);
-    let params = semio_framework_job::BatchJobParams {
+    let params = semio_framework_job_worker_authority::BatchJobParams {
         operation,
         generation,
         cancel: caller.admit_alias(grant),
-        config: semio_framework_job::BatchDriveConfig {
+        config: semio_framework_job_worker_authority::BatchDriveConfig {
             retained: grant,
             site: "native_io_test",
             stage: semio_framework_job::InteractiveStage::InteractiveStep,
@@ -79,8 +79,8 @@ fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
     let mut job = Some(NativeIoJob::new(request));
     let mut params = Some(params);
     let mut recipient = semio_framework_job::RetainedCloneProgress::default();
-    let mut control = semio_framework_job::WorkerJobAdmissionContext::new(identity.0, identity.1, semio_framework_job::StepBudget::new(1, u64::MAX, grant), semio_framework_job::default_now_us, &mut recipient).expect("native I/O admission context");
-    let admitted = semio_framework_job::BatchJobSession::try_admit_owned(&mut job, &mut params, &mut control);
+    let mut control = semio_framework_job_worker_authority::WorkerJobAdmissionContext::new(identity.0, identity.1, semio_framework_job::StepBudget::new(1, u64::MAX, grant), semio_framework_job::default_now_us, &mut recipient).expect("native I/O admission context");
+    let admitted = semio_framework_job_worker::BatchJobSession::try_admit_owned(&mut job, &mut params, &mut control);
     drop(control);
     let (mut session, progress) = admitted.expect("native I/O test session admission").unwrap_or_else(|| panic!("native I/O test session retained its unchanged sources"));
     assert!(job.is_none() && params.is_none() && progress.fits(grant));

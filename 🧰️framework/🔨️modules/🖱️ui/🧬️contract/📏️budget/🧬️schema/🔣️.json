@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "version": 1,
+    "documentNodes": 128,
+    "nodeBindings": 32,
+    "textMaxBytes": 512,
+    "fixedListItems": 32,
+    "fixedBytes": 32768,
+    "valuePageItems": 1,
+    "valueMaxItems": 256,
+    "valueNestingDepth": 256,
+    "valueArgumentEntries": 4,
+    "valueRowActions": 2,
+    "valueLivePages": 1,
+    "builtChildRetireSlots": 384,
+    "treeFixedHeadroom": 24
+  }
+}

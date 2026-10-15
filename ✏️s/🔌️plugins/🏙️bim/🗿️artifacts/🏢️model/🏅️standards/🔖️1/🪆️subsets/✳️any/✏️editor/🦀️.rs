@@ -1193,3 +1193,72 @@ pub(crate) mod unit_tests;
 #[cfg(test)]
 #[path = "🧪️tests/⌨️completeness/🦀️.rs"]
 mod completeness_tests;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod kit {
+    #[path = "🧰️kit/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod terminology {
+    #[path = "🗣️terminology/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod entities {
+    #[path = "🧩️entities/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod interaction {
+    #[path = "🕹️interaction/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod utilities {
+    #[path = "🪛️utilities/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod gestures {
+    #[path = "🧵️gestures/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod chrome {
+    #[path = "🎛️chrome/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod transient {
+    #[path = "🫧️transient/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "🎮️commands/🦀️.rs"]
+pub mod commands;
+#[path = "🎭️modes/🦀️.rs"]
+pub mod modes;
+#[path = "📌️panels/🦀️.rs"]
+pub mod panels;
+//#endregion 🧩️Modules

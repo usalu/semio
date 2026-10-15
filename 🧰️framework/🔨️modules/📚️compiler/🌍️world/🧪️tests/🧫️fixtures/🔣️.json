@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "directory": "🔤️fonts",
+  "fonts": [
+    { "role": "math", "file": "🧮️LibertinusMath-Regular.otf", "bytes": 588848, "sfntTag": "OTTO" },
+    { "role": "serif", "file": "📖️LibertinusSerif-Regular.otf", "bytes": 337132, "sfntTag": "OTTO" },
+    { "role": "serif-italic", "file": "🖋️LibertinusSerif-Italic.otf", "bytes": 332312, "sfntTag": "OTTO" },
+    { "role": "mono", "file": "⌨️LibertinusMono-Regular.otf", "bytes": 59264, "sfntTag": "OTTO" },
+    { "role": "emoji", "file": "🔤️NotoColorEmoji-subset.ttf", "bytes": 152308, "sfntTag": "00010000" }
+  ]
+}

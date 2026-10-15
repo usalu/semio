@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "owner": "semio-framework-os-store-link-schema",
+  "sourceBoundary": {
+    "maxSourceBytes": 65536,
+    "maxSourceFiles": 8,
+    "maxActiveLines": 1000
+  },
+  "valid": [
+    {
+      "target": {
+        "artifactId": "linked-雪",
+        "dialect": {
+          "artifactKind": "s.stdio.image",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "pin": {
+        "kind": "head"
+      },
+      "role": "cover-雪"
+    },
+    {
+      "target": {
+        "artifactId": "linked-雪",
+        "dialect": {
+          "artifactKind": "s.stdio.image",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "pin": {
+        "kind": "checkpoint",
+        "id": "checkpoint-雪"
+      },
+      "role": "cover-雪"
+    },
+    {
+      "target": {
+        "artifactId": "linked-雪",
+        "dialect": {
+          "artifactKind": "s.stdio.image",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "pin": {
+        "kind": "snapshot",
+        "blob": {
+          "hash": "",
+          "size": 4294967296,
+          "mediaType": "image/svg+xml"
+        }
+      },
+      "role": "cover-雪"
+    }
+  ],
+  "invalid": [
+    {
+      "target": {
+        "artifactId": "linked-雪",
+        "dialect": {
+          "artifactKind": "s.stdio.image",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "pin": {
+        "kind": "head",
+        "id": "extra"
+      },
+      "role": ""
+    },
+    {
+      "target": {
+        "artifactId": "linked-雪",
+        "dialect": {
+          "artifactKind": "s.stdio.image",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "pin": {
+        "kind": "checkpoint"
+      },
+      "role": ""
+    },
+    {
+      "target": {
+        "artifactId": "linked-雪",
+        "dialect": {
+          "artifactKind": "s.stdio.image",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "pin": {
+        "kind": "snapshot",
+        "blob": {
+          "hash": "h",
+          "size": -1,
+          "mediaType": "m"
+        }
+      },
+      "role": ""
+    },
+    {
+      "target": {
+        "artifactId": "linked-雪",
+        "dialect": {
+          "artifactKind": "s.stdio.image",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "pin": {
+        "kind": "unknown"
+      },
+      "role": ""
+    },
+    {
+      "target": {
+        "artifactId": "linked-雪",
+        "dialect": {
+          "artifactKind": "s.stdio.image",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "pin": {
+        "kind": "head"
+      }
+    },
+    {
+      "target": {
+        "artifactId": "linked-雪",
+        "dialect": {
+          "artifactKind": "s.stdio.image",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
+      "pin": {
+        "kind": "head"
+      },
+      "role": "",
+      "extra": true
+    }
+  ],
+  "workspace": "repository"
+}

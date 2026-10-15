@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "sourceRoots"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "module",
+          "owner",
+          "namespace"
+        ],
+        "properties": {
+          "module": {
+            "enum": [
+              "euler",
+              "primitives",
+              "staged",
+              "sew",
+              "transform",
+              "boolean",
+              "sweep",
+              "offset",
+              "blend"
+            ]
+          },
+          "owner": {
+            "enum": [
+              "semio-framework-3d-brep-construction",
+              "semio-framework-3d-brep-boolean",
+              "semio-framework-3d-brep-sweep",
+              "semio-framework-3d-brep-offset"
+            ]
+          },
+          "namespace": {
+            "enum": [
+              "",
+              "euler",
+              "primitives",
+              "staged",
+              "sew",
+              "transform",
+              "blend"
+            ]
+          }
+        }
+      }
+    },
+    "sourceRoots": {
+      "const": [
+        "🧰️framework/🔨️modules/🧊️3d/📐️brep",
+        "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+        "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep"
+      ]
+    }
+  }
+}

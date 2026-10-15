@@ -29,7 +29,7 @@ async fn playbook_child_restore_projection_accepts_the_one_owned_flow_child() {
     let snapshot = PlaybookSnapshot::default();
     let projection = playbook_child_restore_projection(&snapshot).expect("canonical Playbook flow child");
     assert_eq!(projection.len(), 1);
-    assert!(projection.admits_member("flow", &snapshot.flow.target));
+    assert!(projection.admits_member("flow", snapshot.flow.target.borrowed()));
     assert_eq!(snapshot.flow.child_id, PLAYBOOK_GENESIS_FLOW_ID);
     assert_eq!(snapshot.flow.child_id, snapshot.flow.target.artifact_id);
 }

@@ -7,14 +7,16 @@
 //! This file is a routing table: `handle` → `LayoutCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 use semio_s_artifact_layout_layout_model::{Frame, GridSettings, LayoutBounds, Page, PageOverride};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, RevisionId};
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, Operation, RetainedJobPublication, StepContext};
+use semio_framework_job::{Generation, InteractiveStage, RevisionId};
+use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -688,9 +690,9 @@ struct LayoutImportJob {
     history: Option<std::sync::Arc<semio_framework_plugin::HistoryView>>,
     mutations: Option<Vec<LayoutMutation>>,
     active: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
-    checkpoint_publication: semio_framework_job::RetainedJobPublication,
+    checkpoint_publication: semio_framework_job_publication::RetainedJobPublication,
     checkpoint_delivered: bool,
-    fault_publication: semio_framework_job::RetainedJobPublication,
+    fault_publication: semio_framework_job_publication::RetainedJobPublication,
     fault_detail: Option<Vec<u8>>,
     decoded: bool,
     completed: bool,
@@ -710,9 +712,9 @@ impl LayoutImportJob {
             history: Some(request.history),
             mutations: None,
             active: None,
-            checkpoint_publication: semio_framework_job::RetainedJobPublication::new(),
+            checkpoint_publication: semio_framework_job_publication::RetainedJobPublication::new(),
             checkpoint_delivered: false,
-            fault_publication: semio_framework_job::RetainedJobPublication::new(),
+            fault_publication: semio_framework_job_publication::RetainedJobPublication::new(),
             fault_detail: None,
             decoded: false,
             completed: false,
@@ -728,7 +730,7 @@ impl LayoutImportJob {
             self.fault_detail = Some(bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec());
         }
         let bytes = self.fault_detail.as_deref().unwrap_or_default();
-        self.fault_publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, bytes, cx)
+        self.fault_publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, bytes, cx)
     }
 
     fn decode(&mut self) -> Result<(), &'static str> {
@@ -872,7 +874,7 @@ impl InteractiveJob for LayoutImportJob {
             cx.consume_fuel(1);
         }
         if !self.checkpoint_delivered {
-            let outcome = self.checkpoint_publication.advance_from_source(semio_framework_job::JobPublicationKind::Checkpoint { applied_progress: 1 }, &[1], cx)?;
+            let outcome = self.checkpoint_publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Checkpoint { applied_progress: 1 }, &[1], cx)?;
             if outcome.is_some() {
                 self.checkpoint_delivered = true;
             }
@@ -1298,7 +1300,7 @@ impl ArtifactEditor for LayoutPlayApp {
                 let MediaPayload::Intrinsic {schema,value}= &media.payload else{return Err(MediaError::Payload(port.to_string(),"fields:in requires an intrinsic form dictionary".into()))};
                 if schema!="form.dictionary"{return Err(MediaError::Payload(port.to_string(),"fields:in requires the declared form.dictionary schema".into()))}
                 let mut callback=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut callback);
-                let dictionary=semio_s_artifact_forms_forms::schema::dictionary::FormDictionary::from_intrinsic_controlled(value,&mut control).map_err(|error|MediaError::Payload(port.to_string(),error.into_message()))?;
+                let dictionary=semio_framework_value_dictionary::QuestionDictionary::from_intrinsic_controlled(value,&mut control).map_err(|error|MediaError::Payload(port.to_string(),error.into_message()))?;
                 Ok(Emit::mutations(vec![LayoutMutation::ChangeDataFields(ChangeDataFields {new_fields:Some(dictionary)})]))
             }
             _ => Err(MediaError::NotImplemented),

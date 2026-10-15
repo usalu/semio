@@ -27,6 +27,7 @@ deflate = ["pack/deflate", "protocol/deflate"]
 record-codec-laws = ["pack/corruption-testing"]
 
 [dependencies]
+semio-framework-pack-source = { path = "../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 semio-framework-pack-record-token = { path = "../../../../../../🔨️modules/🎒️pack/🧬️schema/📡️record-token/📦️packages/🦀️rust" }
 pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 protocol = { path = "../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }

@@ -1,6 +1,16 @@
 /** 🧬️ Dag durable document with exact owned-child coordinates. */
 import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import { parseSemioChild, type ArtifactChild } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { requireArtifactDialect, type ArtifactDialect } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+
+const CONTENT_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.semio", standard: "v1", subset: "graph" };
+
+/** 🪆️ Admits the content child by its declared graph dialect, independent of the plugin that owns that dialect. */
+export function parseDagContentChild(value: unknown, at = "$"): ArtifactChild {
+  const child = parseArtifactChild(value);
+  requireArtifactDialect(child.target.dialect, CONTENT_DIALECT, at);
+  return child;
+}
 
 export interface DagArtifact {
   /** @state artifact */ schema: "dag.dag";
@@ -11,5 +21,5 @@ export interface DagArtifact {
 export function parseDagArtifact(value: unknown, at = "$"): DagArtifact {
   const row = parseSchemaRecord(value, ["schema", "content"], at);
   if (row.schema !== "dag.dag") throw new Error(`${at}.schema: invalid Dag marker`);
-  return { schema: row.schema, content: parseSemioChild(row.content, "graph", `${at}.content`) };
+  return { schema: row.schema, content: parseDagContentChild(row.content, `${at}.content`) };
 }

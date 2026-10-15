@@ -35,7 +35,7 @@ use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_scene::identity::SceneIdentity;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
-use semio_framework_job::FixedOperationOwner;
+use semio_framework_job_registry::{FixedOperationOwner};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ActionDescriptor;
 use semio_framework_plugin::ActionKind;
@@ -249,8 +249,8 @@ impl FixedOperationOwner for DrawingGestureOperationOwner {
 const DRAWING_GESTURE_OPERATION_SLOTS: usize = 64;
 
 struct DrawingInstanceOperationOwner {
-    operations: semio_framework_job::FixedOperationRegistry<DrawingGestureOperationOwner, DRAWING_GESTURE_OPERATION_SLOTS>,
-    active: Option<(semio_framework_job::FixedOperationKey, SceneIdentity)>,
+    operations: semio_framework_job_registry::FixedOperationRegistry<DrawingGestureOperationOwner, DRAWING_GESTURE_OPERATION_SLOTS>,
+    active: Option<(semio_framework_job_registry::FixedOperationKey, SceneIdentity)>,
     closing: bool,
     /// 🚪️ Every slot has been marked closing. `FixedOperationRegistry::begin_close_step` and
     /// `close_step` share one cursor and each advance it by one, so a close that calls both per step
@@ -262,11 +262,11 @@ struct DrawingInstanceOperationOwner {
 
 impl DrawingInstanceOperationOwner {
     fn new() -> Self {
-        Self { operations: semio_framework_job::FixedOperationRegistry::new(DRAWING_GESTURE_OPERATION_SLOTS * DRAWING_GESTURE_RETAINED_BYTES), active: None, closing: false, close_begun: false }
+        Self { operations: semio_framework_job_registry::FixedOperationRegistry::new(DRAWING_GESTURE_OPERATION_SLOTS * DRAWING_GESTURE_RETAINED_BYTES), active: None, closing: false, close_begun: false }
     }
 
     fn dispatch(&mut self, payload: &DrawingGestureOperationPayload, context:&mut semio_framework_job::StepContext<'_>) -> Result<Option<(Emit<DrawingMutation, NoConfigMutation, NoDraftMutation>, DrawingCanvasWindowTransient)>, Fault> {
-        let key = semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
+        let key = semio_framework_job_registry::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
         let source_identity = payload.source_identity;
         let command = &payload.command;
         let snapshot = payload.snapshot.as_ref();
@@ -1505,8 +1505,8 @@ impl ArtifactEditor for DrawingPlayApp {
     /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields;
     /// without it every live envelope load faults `editor did not declare a loaded-parent child
     /// projection` before the decoded document can replace the store.
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("drawing.child-projection"), error.to_string()))
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("drawing.child-projection"), error.to_string()))
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {

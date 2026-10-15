@@ -1,4 +1,5 @@
 import type { IconRenderRequest } from "@semio-tech/ui-styling";
+import * as ui from "../../🎯️targets/⚛️react/🟦️.tsx";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🖼️icon-render-camera/🔣️.json";
 /** 📐️ three.js itself, the oracle the icon camera is measured against (a test of the ui module, the library's interface owner). */
@@ -85,3 +86,5 @@ export async function registerIconRenderCameraTests(vitest: NonNullable<ImportMe
     });
   });
 }
+
+await registerIconRenderCameraTests(await import("vitest"), ui);

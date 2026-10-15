@@ -8,7 +8,13 @@ import fallbackSchema from "../🧬️schema/📥️fallback.json" with {type:"j
 import fixture from "./🔣️.json" with {type:"json"};
 import {readRustBuildIntentV1,rustBuildIntentArgumentsV1,qualifyRustBuildFallbackV1,readRustBuildFallbackDecisionV1} from "../🟦️.ts";
 import {declaredRustBuildArgumentsV1,declaredRustBuildFallbackV1} from "../🏃️routing/🟦️.ts";
-import {selectedCargoBuildOwnerV1,selectedRustAggregateTargetV1} from "../../🟦️.ts";
+import {selectedCargoBuildOwnerV1,selectedRustAggregateTargetV1,selectedRustFallbackTargetV1} from "../../🟦️.ts";
+import {Database} from "bun:sqlite";
+
+test("Rust entry recursion guards consume the neutral task identity from either backend",()=>{
+ const oracle=new Database(":memory:");try{for(const row of fixture.neutralRouting){const selected=Boolean((oracle.query("select json_extract(?1, '$.SEMIO_TASK_PROJECT') = ?2 and json_extract(?1, '$.SEMIO_TASK_TARGET') = ?3 as selected").get(JSON.stringify(row.environment),row.project,row.target) as {selected:number|null}).selected);expect(selected).toBe(row.selected);if(selected)expect(()=>declaredRustBuildArgumentsV1(row.project,[],row.environment,row.target)).toThrow("selected graph");else expect(declaredRustBuildArgumentsV1(row.project,[],row.environment,row.target)).toEqual(["run",row.project+":"+row.target]);}}finally{oracle.close();}
+ console.log("[DEBUG] Neutral Rust task identity corpus agrees with independent SQLite predicates and the actual recursion guard");
+});
 
 test("ordinary Rust build entry Source excludes the catalog barrel while retaining finite test ownership",async()=>{
  for(const row of fixture.routes){const declaration=JSON.parse(readFileSync(row.declaration,"utf8")),script=readFileSync(resolve(row.declaration,"../📜️script.ts"),"utf8");expect(script).not.toContain("📚️library/📦️packages/🟦️typescript/🟦️.ts");}
@@ -34,7 +40,7 @@ test("bounded Cargo fallback requires every typed unsupported adapter and reject
  expect(decision.adapters).toEqual(fixture.fallback.expected);expect(readRustBuildFallbackDecisionV1(decision,intent)).toEqual(decision);expect(qualifyRustBuildFallbackV1(intent,[])).toBeUndefined();
  for(const unsupported of fixture.fallback.rejected)expect(()=>qualifyRustBuildFallbackV1(intent,unsupported)).toThrow("fallback");
  expect(()=>qualifyRustBuildFallbackV1({...intent,fallback:undefined},fixture.fallback.unsupported)).toThrow("fallback");expect(()=>readRustBuildFallbackDecisionV1(decision,{...intent,package:"different"})).toThrow("fallback");
- const project="@semio-tech/repo-yaml-rs",target="build",environment={NX_TASK_TARGET_PROJECT:project,NX_TASK_TARGET_TARGET:target,SEMIO_RUST_BUILD_FALLBACK:JSON.stringify({...decision,project,target})};expect(declaredRustBuildFallbackV1(project,target,intent,environment)).toEqual(decision);expect(()=>declaredRustBuildFallbackV1(project,target,intent,{...environment,NX_TASK_TARGET_PROJECT:"other"})).toThrow("fallback");expect(()=>declaredRustBuildFallbackV1(project,"build-cli",intent,environment)).toThrow("fallback");
+ const project="@semio-tech/repo-yaml-rs",target="build",environment={SEMIO_TASK_PROJECT:project,SEMIO_TASK_TARGET:target,SEMIO_RUST_BUILD_FALLBACK:JSON.stringify({...decision,project,target})};expect(declaredRustBuildFallbackV1(project,target,intent,environment)).toEqual(decision);expect(()=>declaredRustBuildFallbackV1(project,target,intent,{...environment,SEMIO_TASK_PROJECT:"other"})).toThrow("fallback");expect(()=>declaredRustBuildFallbackV1(project,"build-cli",intent,environment)).toThrow("fallback");
  console.log("[DEBUG] Bounded Cargo fallback permits exactly declared unavailable adapter categories, keeps supported units selected, and rejects stale intent identity");
 });
 
@@ -42,8 +48,21 @@ test("every ordinary Repo Rust package build declares its actual package and red
  expect(fixture.routes.length).toBe(21);
  for(const route of fixture.routes){
   const declaration=JSON.parse(readFileSync(route.declaration,"utf8")),build=declaration.targets.build,intent=readRustBuildIntentV1(build.metadata?.semio?.rustBuildIntent),manifest=readFileSync(route.manifest,"utf8"),script=readFileSync(route.manifest.replace("Cargo.toml","📜️script.ts"),"utf8");
-  expect(declaration.name).toBe(route.project);expect(intent.manifest).toBe(route.manifest);expect(intent.package).toBe(manifest.match(/^name = "([^"]+)"/mu)?.[1]);expect(intent.scope).toBe("package");expect(script).toContain('await runDeclaredRustBuildV1(this.repoRoot, '+JSON.stringify(route.project));expect(build.cache).toBe(false);expect(build.options.command).toBe("bun ./📜️script.ts build");expect(declaredRustBuildArgumentsV1(route.project,[],{})).toEqual(["run",route.project+":build"]);expect(()=>declaredRustBuildArgumentsV1(route.project,[],{NX_TASK_TARGET_PROJECT:route.project,NX_TASK_TARGET_TARGET:"build"})).toThrow("selected graph");
+  expect(declaration.name).toBe(route.project);expect(intent.manifest).toBe(route.manifest);expect(intent.package).toBe(manifest.match(/^name = "([^"]+)"/mu)?.[1]);expect(intent.scope).toBe("package");expect(script).toContain('await runDeclaredRustBuildV1(this.repoRoot, '+JSON.stringify(route.project));expect(build.cache).toBe(false);expect(build.options.command).toBe("bun ./📜️script.ts build");expect(declaredRustBuildArgumentsV1(route.project,[],{})).toEqual(["run",route.project+":build"]);expect(()=>declaredRustBuildArgumentsV1(route.project,[],{SEMIO_TASK_PROJECT:route.project,SEMIO_TASK_TARGET:"build"})).toThrow("selected graph");
   const original={execution:{kind:"command" as const,command:build.options.command,cwd:build.options.cwd},metadata:build.metadata},owner=selectedCargoBuildOwnerV1(original,process.cwd());expect(owner).toBe(resolve(route.manifest));for(const mode of ["prototype","release"]){const aggregate=selectedRustAggregateTargetV1(original,owner!,mode,["rust-unit-declaration"]);expect(aggregate.execution).toEqual({kind:"noop"});expect(aggregate.cache).toBe(false);expect(aggregate.dependsOn).toEqual(["rust-unit-declaration:compile"]);expect(selectedCargoBuildOwnerV1(aggregate,process.cwd())).toBe(owner);expect((aggregate.metadata as any).semio.rustBuildIntent).toEqual(intent);}
  }
- console.log("[DEBUG] All 21 actual Repo package build declarations retain Cargo default deliverables and canonical Nx redirect refuses failed graph consumption before Cargo writes");
+ console.log("[DEBUG] All 21 actual Repo package build declarations retain Cargo default deliverables and canonical build redirect refuses failed graph consumption before Cargo writes");
+});
+
+import {readBuildGraphV1,resolveBuildTargetV1} from "../../../🟦️.ts";
+import graphSchema from "../../../../🧬️schema/🔣️.json";
+import Ajv2020 from "ajv/dist/2020.js";
+test("bounded Rust fallback keeps mode execution inside the portable graph contract",()=>{
+ const decision=qualifyRustBuildFallbackV1(readRustBuildIntentV1(fixture.fallback.intent),fixture.fallback.unsupported)!,target=selectedRustFallbackTargetV1({...fixture.fallbackTarget,execution:{...fixture.fallbackTarget.execution,kind:"command"}},decision,"leaf","build"),value={version:1,projects:{leaf:{name:"leaf",root:"leaf",targets:{build:target}}},dependencies:[]};expect(new Ajv2020({strict:false}).compile(graphSchema)(value)).toBe(true);const graph=readBuildGraphV1(value);for(const mode of ["prototype","release"]){const selected=resolveBuildTargetV1(graph.projects.leaf!.targets.build!,mode);expect(selected.cache).toBe(false);expect(selected.outputs).toEqual([]);expect(selected.execution.command).toBe(fixture.fallbackTarget.execution.command);expect(selected.execution.args).toEqual([mode]);expect(selected.execution.env?.BASE).toBe("original");expect(selected.execution.env?.MODE).toBe(mode);expect(JSON.parse(selected.execution.env!.SEMIO_RUST_BUILD_FALLBACK!)).toEqual({...decision,project:"leaf",target:"build"});}console.log("[DEBUG] Bounded Rust fallback preserves every mode's execution while cache/output authority stays on the target");
+});
+
+
+test("neutral build orchestration projects only declared task children without native widening",async()=>{
+ const api=await import("../../../../📥️caller/📤️orchestration/🟨️.mjs"),row=fixture.orchestration;
+ expect(typeof api.projectBuildOrchestrationCapabilitiesV1).toBe("function");
 });

@@ -3,8 +3,8 @@
 //! @see ../../🦀️.rs — the implementation under test
 
 use super::*;
-use crate::schema::Anchor;
 use crate::views::learner_tag;
+use quiz_schema::Anchor;
 use serde_json::json;
 
 fn place(screen: Screen, quiz: Option<&str>, task: Option<&str>) -> Place {
@@ -107,7 +107,7 @@ fn cursor_states_are_admitted_only_inside_their_anchor_box() {
 
 #[test]
 fn shared_presence_vectors_of_the_python_reference_hold() {
-    use crate::schema::tests::{entries, fixture, typed};
+    use quiz_schema::testkit::{entries, fixture, typed};
     let vectors = fixture("shared-presence");
     for vector in entries(&vectors["scopes"]) {
         let catalog = vector["catalog"].as_str().unwrap_or_default();
@@ -149,7 +149,7 @@ fn presence_and_cursor_states_use_their_wire_shapes() {
 }
 
 fn dragging(anchor: &str, item: Option<&str>) -> CursorState {
-    CursorState { drag: item.map(|item| crate::schema::CursorDrag { item: item.to_string() }), ..cursor("0a1b2c3d", Some((anchor, 0.5, 0.5)), Some(anchor)) }
+    CursorState { drag: item.map(|item| quiz_schema::CursorDrag { item: item.to_string() }), ..cursor("0a1b2c3d", Some((anchor, 0.5, 0.5)), Some(anchor)) }
 }
 
 #[test]

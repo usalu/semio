@@ -1,6 +1,6 @@
 // 🚪️ IoEntryDescriptor[] mirror for `s.stdio.txt@utf-8/*` (ticket
 // 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P pilot). Empty by the carrier law: this
-// dialect IS `CARRIER_TEXT`, so it registers zero foreign io hops on its own side — see the Rust
+// dialect's native payload equals the framework carrier `CARRIER_TEXT`, so it registers zero foreign io hops on its own side — see the Rust
 // twin `🦀️.rs`'s `io()` doc comment (mirrors `💾️binary`'s own, same reasoning).
 export interface IoEntryDescriptorMirror {
   from: string;

@@ -145,7 +145,10 @@ class CheckScript extends BundleScript {
 //#endregion 🔖️typegen
 
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir)
+  /** 🌱️ Validates the complete semantic contract's direct canonical Value ownership. */
+class OwnershipScript extends BundleScript {async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-ownership");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Finite original UI ownership budget required");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🧬️ownership/🧪️tests/🟦️.ts")],this.repoRoot,"ui:ownership",remaining,{signal:this.invocation.control.signal});}}
+
+const router = new ScriptRouter(import.meta.dir).register("test-ownership",OwnershipScript)
     .register("test", TestScript)
     .register("built-tree-retirement-check", BuiltTreeRetirementScript)
     .register("conformance", ConformanceScript)

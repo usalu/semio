@@ -19,6 +19,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const engineRoot = join(import.meta.dir, "..", "..");
 const law = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "♻️hot-swap-session-handover", "🔣️.json"), "utf8"));
@@ -87,7 +88,7 @@ describe("♻️ a hot swap hands every window over to the successor instance", 
   });
 
   test("`reloadPlugin` retires the session before it destroys the instance, and presents the canvas only after the successor exists", () => {
-    const source = readFileSync(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+    const source = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
     const reload = source.indexOf("const reloadPlugin = useCallback(");
     expect(reload, "reloadPlugin must still be where this law reads it").toBeGreaterThan(0);
     const body = source.slice(reload, source.indexOf("const uninstallPlugin = useCallback(", reload));
@@ -103,7 +104,7 @@ describe("♻️ a hot swap hands every window over to the successor instance", 
   });
 
   test("the node-graph surface is keyed on its surfaceId alone — which is why the ordering, not a retry, is the fix", () => {
-    const source = readFileSync(join(engineRoot, "🧱️elements", "🕸️NodeGraph", "🟦️.tsx"), "utf8");
+    const source = readModuleTreeSource(join(engineRoot, "🧱️elements", "🕸️NodeGraph", "🟦️.tsx"));
     const unmount = source.indexOf('console.log("[TRACE] node-graph host unmount surface=%s", surfaceId);');
     expect(unmount).toBeGreaterThan(0);
     expect(source.slice(unmount, unmount + 600)).toContain(law.sourceScan.nodeGraphSurfaceEffectKey);

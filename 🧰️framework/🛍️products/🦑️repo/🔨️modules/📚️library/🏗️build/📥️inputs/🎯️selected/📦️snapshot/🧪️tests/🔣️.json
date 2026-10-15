@@ -11,6 +11,14 @@
     "symlink",
     "duplicate",
     "traversal",
-    "bytes"
-  ]
+    "bytes",
+    "initialization"
+  ],
+  "initializationFile": ".semio-native-index",
+  "asyncParser": {
+    "awaitedCalls": 3,
+    "command": "hold",
+    "delayMs": 20
+  },
+  "maximumPublicationRechecks": 4
 }

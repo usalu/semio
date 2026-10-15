@@ -93,7 +93,7 @@ impl ArtifactViewer for CadViewer {
     const DIALECT: Dialect = CAD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         semio_s_artifact_cad_cad_model::snapshot::cad_child_restore_projection(snapshot)
     }
 

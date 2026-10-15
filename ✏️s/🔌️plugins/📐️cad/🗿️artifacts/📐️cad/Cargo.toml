@@ -74,9 +74,6 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract
 path = "../../../🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust"
 
 
-[workspace.dependencies.semio-s-artifact-stdio-dwg-model]
-path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-s-artifact-stdio-dwg-geometry]
 path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-obj]

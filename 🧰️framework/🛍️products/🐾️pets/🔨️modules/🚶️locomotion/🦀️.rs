@@ -6,13 +6,13 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../🚶️locomotion/🟦️.ts — the TypeScript twin
 
-use crate::animation::clip_ticks;
-use crate::behavior::dwell_of;
 use crate::draft::{beat_of, clip_at, clip_of, hover_of, release, remove, settle, shift, shoulders, Draft, Launch, ORIGIN, RATE};
-use crate::schema::{Activity, Footing, Gait, Perch, Point, Slug, Species, Ticks};
 use crate::spacing::{clearway, hindered, soars, vacancy, COMFORT_GAP, MEET_GAP};
-use crate::terrain::{fall_step, hop_landing, hop_of, hop_step, landing_of, larger, perch_at, smaller, stride_to, HOP_DISTANCE, HOP_HEIGHT};
-use crate::trigonometry::clamp;
+use semio_framework_pets_character::behavior::dwell_of;
+use semio_framework_pets_contract::schema::{Activity, Footing, Gait, Perch, Point, Slug, Species, Ticks};
+use semio_framework_pets_kinematics::animation::clip_ticks;
+use semio_framework_pets_kinematics::terrain::{fall_step, hop_landing, hop_of, hop_step, landing_of, larger, perch_at, smaller, stride_to, HOP_DISTANCE, HOP_HEIGHT};
+use semio_framework_pets_kinematics::trigonometry::clamp;
 
 //#region 🔖️Constants
 const PATIENCE: Ticks = 1920;

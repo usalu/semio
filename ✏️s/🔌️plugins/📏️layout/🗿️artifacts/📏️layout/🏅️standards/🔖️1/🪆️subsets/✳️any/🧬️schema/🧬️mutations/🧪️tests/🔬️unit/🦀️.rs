@@ -51,8 +51,8 @@ async fn document_scalar_mutations_round_trip() {
     let cleared = round_trip(&with_target, &LayoutMutation::ChangePrintTarget(semio_s_artifact_layout_layout_mutations_content::change_print_target::ChangePrintTarget { new_print_target: None }));
     assert!(cleared.print_target.is_none());
 
-    let with_fields = round_trip(&doc, &LayoutMutation::ChangeDataFields(semio_s_artifact_layout_layout_mutations_content::change_data_fields::ChangeDataFields { new_fields: Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"key".into(),value:semio_framework_value::DslValue::String("value".into())}]}) }));
-    assert_eq!(with_fields.data_fields,Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"key".into(),value:semio_framework_value::DslValue::String("value".into())}]}));
+    let with_fields = round_trip(&doc, &LayoutMutation::ChangeDataFields(semio_s_artifact_layout_layout_mutations_content::change_data_fields::ChangeDataFields { new_fields: Some(semio_framework_value_dictionary::QuestionDictionary{entries:vec![semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"key".into(),value:semio_framework_value::DslValue::String("value".into())}]}) }));
+    assert_eq!(with_fields.data_fields,Some(semio_framework_value_dictionary::QuestionDictionary{entries:vec![semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"key".into(),value:semio_framework_value::DslValue::String("value".into())}]}));
     let cleared_fields = round_trip(&with_fields, &LayoutMutation::ChangeDataFields(semio_s_artifact_layout_layout_mutations_content::change_data_fields::ChangeDataFields { new_fields: None }));
     assert!(cleared_fields.data_fields.is_none());
 }

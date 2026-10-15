@@ -1,0 +1,39 @@
+# Read-Only Canonical Candidate Plan
+
+This is a design, not an executed candidate check. No current canonical graph, authority or immutable snapshot has been accepted. Core owns any bounded diagnostic implementation after Root release.
+
+## Existing API Boundary
+
+`loadBuildGraphV1(..., {reuse:true, selection})` verifies a supplied pin's exact byte SHA, expands its immutable input references, validates the graph and compares its selection. It deliberately does not establish current canonical module authority, workspace membership or current Source facts. Pin reuse must not be used as proof of those properties.
+
+The normal non-reuse branch validates current authority, membership and Source facts, but falls into actual inference when the candidate is absent or stale. There is no public no-fallback canonical loader. Do not call this branch for the read-only diagnostic. Do not call `withRepositoryBuildGraphArtifactV1`: it can publish/retain snapshots and is not an inspection-only API.
+
+Existing read-only pieces are `buildGraphPathV1`, `buildGraphProducerAuthorityV1`, `requireBuildGraphModuleAuthorityV1`, `workspaceBuildFilesV1`, `buildGraphMembersV1`, `buildGraphMembershipV1`, `buildGraphSourceFactsHoldV1`, the closed registry/selection readers and `readBuildGraphV1`. The actual producer's `libraryBootstrap` plus `prepareSourceAnalysesV1` is required before semantic analysis observations can be checked. All must run under the original finite control and genuine shared graph-store image custody; none may be replaced by a fabricated receipt/provider or inferred authority.
+
+## Fingerprint Drift Found Before Execution
+
+The retained qualifier's independent `currentModuleFingerprint` hashes seven files, while current production `graphModuleAuthorityV1` hashes nine. The two additional implementation inputs are input storage `📒️ledger/🟨️.mjs` and `🧬️schema/📒️ledger.json`. Core owns the authorized retained-harness-only alignment and actual TypeScript architectural witness. The implementation list must retain exact order, not merely equal set membership; publication-schema SHA is separate. No production module is changed to fix the diagnostic.
+
+Core subsequently retained actual RED (nine production paths versus seven retained paths, order refusal), corrected the two missing retained entries, and ran a terminal-zero GREEN witness. Independent read-only review confirmed that it traverses the production TypeScript AST's actual ordered URL array, resolves physical paths including the graph module itself, compares the retained ordered paths, hashes publication separately and invokes the actual module-authority equality guard. The GREEN implementation digest is `f9f2a0d5dae17163eb7908c11286c735ac63bdcb8b7cae8a1259e4a0612ad32d`; publication digest is `a4e8db13331728264e4ad98f5838437b86381a358215ac35c33007741a75479b`. Logs and full arrays are `🗑️generated/module-fingerprint-witness-{red,green}.{json,log}`. This proves retained fingerprint alignment at that witness; it is not canonical current-Source admission.
+
+## Proposed Refusal-First Sequence
+
+1. Issue the existing genuine original bounded diagnostic control and declared normal cache/dependency authority. Acquire the normal shared graph-store handle, recheck its actual identity and derive canonical, authority and snapshot locations from the neutral publication declaration. No FactStore, maintenance, graph writer or inference is opened.
+2. Inspect only the canonical and authority candidates as no-follow, regular, single-link files on the enforcing device. Enforce explicit finite file/total-read bounds before complete reads; oversized candidates are a diagnostic refusal, not truncated JSON. An absent candidate is terminal evidence of absence, never a reason to infer.
+3. Read the authority first and pass it to actual `buildGraphProducerAuthorityV1` with an independently recomputed exact nine-file module fingerprint and publication-schema digest. Read those Source bytes again at exit and use `requireBuildGraphModuleAuthorityV1` to refuse loaded/current changes. A schema/module mismatch should stop before expensive membership or graph parsing.
+4. Bootstrap the actual registered parsers under their existing managed custody. Capture actual ALL membership with `workspaceBuildFilesV1` → `buildGraphMembersV1` → `buildGraphMembershipV1`, retaining original cancellation/progress. Compare with authority membership. Use actual `buildGraphSourceFactsHoldV1` on all admitted authority observations with empty shortcut sets and retain the first refusal. Unknown/mismatched provider identity is not relabeled as physical Source mutation.
+5. Hash the complete raw canonical bytes independently and require equality to `authority.graph`. Strictly parse with `readBuildGraphV1`; explicitly require closed `admission.selection.kind === "all"`. Compare normalized current registry digest to graph admission and ALL closure identity to the actual complete member list. Structural ALL alone is insufficient. Retain actual project/base/configuration/edge counts; an empty ALL can be a valid generic shape but does not satisfy production nonvacuity acceptance.
+6. Inspect the existing immutable snapshot named by the exact canonical byte digest, if present. Use the existing snapshot's genuine shared `build-graph:<absolute path>` lease for the inspected lifetime, under original control and normal image custody; preserve the owning resource identity. Verify regular-file identity before/after and full SHA against its filename and canonical bytes. Missing snapshot is a separate outcome, not authorization to publish one. Do not copy or rewrite canonical bytes into a pin.
+7. Recheck canonical/authority bytes and identities, registry bytes, current module fingerprint, ALL membership and Source facts before returning. If a legitimate shared graph-state reader lease is used, it must match the current global canonical publication resource and original control; it does not replace byte/Source checks. Any concurrent change makes the candidate unaccepted, with no fallback.
+
+The private `portableInputs` representation reader is not exported. A current producer writes the fully portable graph, but any compact input token in a candidate requires complete immutable closure-byte SHA validation through an existing truthful reader before claiming full equivalence. `readBuildGraphV1` alone does not expand those tokens. Do not add a second ad hoc expander or use reuse mode as Source authority. If no existing read-only representation port satisfies a candidate, report that limit rather than accepting it.
+
+## Outcomes And Limits
+
+Report absent, malformed, oversized, module/schema mismatch, membership mismatch, first stale Source fact, canonical digest mismatch, non-ALL admission, current registry/closure mismatch, missing/corrupt immutable snapshot, concurrent change, original deadline expiry, or all checks satisfied. Each outcome retains exact byte digests and paths without printing graph contents.
+
+Even all checks satisfied is a read-only current-candidate finding, not a fabricated ALL9 publication or proof that ALL9 finished. Root must decide subsequent genuine public admission and immutable consumer custody. No planner, Stdio run, graph producer, snapshot publisher, quota increase, Source edit or peer action is performed by this plan.
+
+## Subsequent Core Diagnostic
+
+Root subsequently authorized Core's one bounded shared-custody candidate check. It exited 0 as a diagnostic and found the actual current canonical file absent. The check refused immediately: authority, Source, membership and immutable snapshot validation were not reached, inference did not run, and no graph/pin was accepted. Evidence is `🗑️generated/canonical-read-only-candidate.json` and `.log`. This early refusal does not satisfy any final planner or Stdio gate.

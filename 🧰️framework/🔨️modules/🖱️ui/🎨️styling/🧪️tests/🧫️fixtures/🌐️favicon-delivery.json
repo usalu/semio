@@ -1,7 +1,6 @@
 {
   "documents": [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🌐️.html",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🧪️multi-shell-harness/🌐️.html"
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🌐️.html"
   ],
   "requests": [
     { "target": "/🛡️favicon.svg", "kind": "svg" },

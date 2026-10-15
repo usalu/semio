@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "limits": {
+    "maxSourceBytes": 262144,
+    "maxSourceFiles": 32,
+    "maxActiveLines": 4000
+  },
+  "owners": [
+    {
+      "name": "semio-framework-job",
+      "root": "🧰️framework/🔨️modules/🧵️job",
+      "dependencies": [],
+      "declarations": [
+        "StepContext",
+        "InteractiveJob"
+      ]
+    },
+    {
+      "name": "semio-framework-job-worker",
+      "root": "🧰️framework/🔨️modules/🧵️job/👷️worker",
+      "dependencies": [
+        "semio-framework-job",
+        "semio-framework-job-worker-authority"
+      ],
+      "declarations": [
+        "WorkerJobSession",
+        "BatchJobSession",
+        "MountedWorkerJobSession"
+      ]
+    },
+    {
+      "name": "semio-framework-job-registry",
+      "root": "🧰️framework/🔨️modules/🧵️job/🗄️registry",
+      "dependencies": [
+        "semio-framework-job"
+      ],
+      "declarations": [
+        "FixedOperationRegistry",
+        "FixedOperationOwner"
+      ]
+    },
+    {
+      "name": "semio-framework-job-scope",
+      "root": "🧰️framework/🔨️modules/🧵️job/👶️scope",
+      "dependencies": [
+        "semio-framework-job"
+      ],
+      "declarations": [
+        "JobScope",
+        "ChildJobGuard"
+      ]
+    },
+    {
+      "name": "semio-framework-job-progress",
+      "root": "🧰️framework/🔨️modules/🧵️job/📡️progress",
+      "dependencies": [
+        "semio-framework-job"
+      ],
+      "declarations": [
+        "ProgressEvent",
+        "ProgressChannelKind"
+      ]
+    },
+    {
+      "name": "semio-framework-job-conformance",
+      "root": "🧰️framework/🔨️modules/🧵️job/🧪️conformance",
+      "dependencies": [
+        "semio-framework-job",
+        "semio-framework-job-scope"
+      ],
+      "declarations": [
+        "TortureJob"
+      ]
+    },
+    {
+      "name": "semio-framework-job-preview",
+      "root": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive",
+      "dependencies": [
+        "semio-framework-job",
+        "semio-framework-job-worker",
+        "semio-framework-job-worker-authority"
+      ],
+      "declarations": [
+        "JobPreviewDriver",
+        "JobPreviewLimits",
+        "JobPreviewStatus"
+      ]
+    },
+    {
+      "name": "semio-framework-job-fault-publication",
+      "root": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault",
+      "dependencies": [
+        "semio-framework-job"
+      ],
+      "declarations": [
+        "RetainedFaultPublication"
+      ]
+    },
+    {
+      "name": "semio-framework-job-publication",
+      "root": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication",
+      "dependencies": [
+        "semio-framework-job"
+      ],
+      "declarations": [
+        "RetainedJobPublication",
+        "JobPublicationKind"
+      ]
+    },
+    {
+      "name": "semio-framework-job-worker-authority",
+      "root": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority",
+      "dependencies": [
+        "semio-framework-job"
+      ],
+      "declarations": [
+        "OriginalWorkerJobAuthority",
+        "WorkerJobSource",
+        "WorkerJobAdmissionControl"
+      ]
+    }
+  ]
+}

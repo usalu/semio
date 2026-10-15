@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/repo-graphql-fs-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

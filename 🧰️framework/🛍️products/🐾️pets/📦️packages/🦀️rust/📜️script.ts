@@ -2,18 +2,21 @@
 import {repositoryCargoNetworkV1} from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 🐾️ `semio-framework-pets` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]` and `bun ./📜️script.ts build [args…]`. */
+/** 🐾️ `semio-framework-pets` (and the pets crates carved from it) task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]` and `bun ./📜️script.ts build [args…]`. */
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { runRepositoryCargoTests } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-/** 🧪️ Runs the crate's unit and fixture suites at the requested level. */
+/** 🐾️ The pets crates, bottom up: the core carved along its domain seams, then the façade the subject hosts link. */
+const PETS_PACKAGES = ["semio-framework-pets-contract", "semio-framework-pets-kinematics", "semio-framework-pets-clearance", "semio-framework-pets-traversal", "semio-framework-pets-interaction", "semio-framework-pets-character", "semio-framework-pets-staging", "semio-framework-pets"];
+
+/** 🧪️ Runs the pets crates' unit and fixture suites at the requested level. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-pets"], this.repoRoot, this.invocation, rest);
+    await runRepositoryCargoTests(PETS_PACKAGES, this.repoRoot, this.invocation, rest);
   }
 }
 

@@ -63,6 +63,14 @@ typegen = []
 native-bin = []
 
 [dependencies]
+semio-framework-job-publication = { path = "../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-pack-source = { path = "../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
+semio-framework-job-worker = { path = "../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+
+semio-framework-os-store-link-schema = { path = "../../🔨️modules/🏪️store/🔗️link/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-blob-identity = { path = "../../🔨️modules/🏪️store/📦️blob/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-composition-admission = { path = "../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-mutation-diff={path="../../../../🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust"}
 semio-framework-io-control = { path = "../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 semio-framework-pack-json-retained-schema = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
@@ -195,6 +203,8 @@ path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
 required-features = ["native-bin"]
 
 [dev-dependencies]
+semio-framework-job-worker = { path = "../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
+
 semio-framework-os-store-cursor = { path = "../../🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework = { workspace = true }

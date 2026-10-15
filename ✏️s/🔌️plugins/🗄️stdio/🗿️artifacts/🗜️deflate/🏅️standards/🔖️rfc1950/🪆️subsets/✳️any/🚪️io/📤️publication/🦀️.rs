@@ -1,8 +1,7 @@
 //! 📤️ Resumable publication of bounded DEFLATE checkpoint state and committed output bytes.
 
-use semio_framework_job::{
-    InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobPayloadStream, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPublication, RetainedPayloadBuilder, StepContext,
-};
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
+use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobPayloadStream, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedPayloadBuilder, StepContext};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 
 #[derive(Clone, Copy)]

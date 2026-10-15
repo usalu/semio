@@ -26,10 +26,10 @@
 //! @see ../../🧬️schema/🦀️.rs — `Point`, `Grip`, `Hang`, `Canopy`, `Ticks`, `Turns`
 //! @see ../🪢️swing/🟦️.ts — the TypeScript twin
 
-use crate::animation::spring_step;
-use crate::schema::{Canopy, Grip, Hang, Point, Ticks, Turns};
-use crate::terrain::{FALL_SPEED, GRAVITY};
-use crate::trigonometry::{atan_turns, sin_turns};
+use semio_framework_pets_contract::schema::{Canopy, Grip, Hang, Point, Ticks, Turns};
+use semio_framework_pets_kinematics::animation::spring_step;
+use semio_framework_pets_kinematics::terrain::{FALL_SPEED, GRAVITY};
+use semio_framework_pets_kinematics::trigonometry::{atan_turns, sin_turns};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants

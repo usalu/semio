@@ -9,22 +9,22 @@ const SCAN_ROOTS: &[&str] = &["🧰️framework/🛍️products/💻️os/🔨�
 
 const ALLOWLIST: &[(&str, &str, &str)] = &[
     (
-        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
+        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🖌️canvas2d/🦀️.rs",
         "const CANVAS2D_SELECTION_RING",
         "🟡️ Verbatim port of React `canvas-2d-host.tsx`'s own `rgba(251, 191, 36, …)` literal; the drift lives on the React side, so tokenising only this half would create the divergence it prevents.",
     ),
     (
-        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
+        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🖌️canvas2d/🦀️.rs",
         "const CANVAS2D_SELECTION_GLOW",
         "🟡️ Same literal as `CANVAS2D_SELECTION_RING`, at the glow alpha.",
     ),
     (
-        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
+        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🖌️canvas2d/🦀️.rs",
         "fn canvas_color_channels",
         "🧮️ Per-channel default of a pure `[f64]` → `Rgba` payload decoder: what a malformed scene packet gets, not theme paint. The decoder takes no `Theme`; plumbing one in is a Scenes packet, not a token one.",
     ),
     (
-        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
+        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🖌️canvas2d/🦀️.rs",
         "fn canvas_gradient_color_at",
         "🧮️ Empty-stop-list fallback of the same pure payload decoder — see `canvas_color_channels`.",
     ),

@@ -30,12 +30,6 @@ import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_T
 export * from "./🏛️model/🟦️.ts";
 import { parseUiTheme, resolveThemeSpacingPx, resolveThemeGeometry, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme, type Rgba8, type UiTheme } from "./🏛️model/🟦️.ts";
 
-//#region 🧪️ThemeModelTests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("../🧪️tests/🧪️theme-resolve/🟦️.ts");
-  await registerTests1(import.meta.vitest, { parseUiTheme, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️ThemeModelTests
 //#endregion 🔖️ThemeModel
 
 //#region 🔖️sizing
@@ -582,12 +576,6 @@ export function syncSessionCanvasTheme(session: CanvasThemeSession | null | unde
 }
 //#endregion 🎨️Resolve
 
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTests2 } = await import("../🧪️tests/🧪️theme-resolve/🟦️.ts");
-  await registerTests2(import.meta.vitest, { SPATIAL_AXIS_COLOR_REFS, STYLING_BOARD_PALETTES, blendTokenHex, clearColorResolveCache, contrastRatio, contrastRatioRgba, themePaintContrast, wcagContrastGrade, readableForegroundHex, relativeLuminance, resolveColorHex, resolveColorRgba, resolveSemanticColorHex, resolveSpatialAxisColors, serializeCanvasThemeJson, syncSessionCanvasTheme, tokenHex, tokenVar }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️Tests
 //#endregion 🔖️resolve
 
 //#region 🔖️theme
@@ -732,12 +720,6 @@ export function setActiveUiTheme(theme: UiTheme): void {
 }
 //#endregion 🔑️ActiveTheme
 
-//#region 🧪️ThemeTests
-if (import.meta.vitest) {
-  const { registerTests3 } = await import("../🧪️tests/🧪️theme-resolve/🟦️.ts");
-  await registerTests3(import.meta.vitest, { STYLING_BOARD_PALETTES, _activeUiTheme, _appliedThemeCssPropsByRoot, activeUiTheme, applyUiThemeToDocument, applyUiThemeToRoot, builtinUiThemes, clearUiThemeFromRoot, semioTheme, serializeCanvasThemeJson, setActiveUiTheme, subscribeActiveUiTheme }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️ThemeTests
 //#endregion 🔖️theme
 
 //#region 🔖️icon-render-port

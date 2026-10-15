@@ -22,7 +22,7 @@ use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
 use semio_s_artifact_procedural_3d_geometry_value::Outputs;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{BrepOperation, GeometryKind, ShapeRoot, ShapeValue, ShapeWire};
-use semio_framework_3d_brep_operations::euler::{make_edge, make_vertex};
+use semio_framework_3d_brep_construction::euler::{make_edge, make_vertex};
 use semio_framework_3d_brep_intersect::{intersect_curve_curve, intersect_curve_surface, intersect_surface_surface};
 use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_tolerance::Tol;

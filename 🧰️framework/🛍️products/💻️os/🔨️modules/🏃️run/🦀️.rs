@@ -1989,7 +1989,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         if let Some(refusal)=&self.service_identity_refusal{return Err(RunError::Host(refusal.error.to_string()))}
         if !self.service_identities.contains_key(plugin_id){match(self.direct_identity)(actor){Ok(identity)=>{self.service_identities.insert(plugin_id.to_string(),identity);},Err(refusal)=>{let message=refusal.error.to_string();self.service_identity_refusal=Some(refusal);return Err(RunError::Host(message))}}}
         let(instance,original_input)=self.prepare_service_original(plugin_id,&compiled).await?;
-        let handle=Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor,Arc::clone(&self.guest_runtime),instance,original_input,semio_framework_plugin_host::GuestRelayWakeAuthority{drive_policy:self.host_driver_policy.drive,policy:self.host_driver_policy.wake,issuer:semio_framework_job::admit_original_thread_worker_wake,receiver:self.host_driver.clone()}).await);
+        let handle=Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor,Arc::clone(&self.guest_runtime),instance,original_input,semio_framework_plugin_host::GuestRelayWakeAuthority{drive_policy:self.host_driver_policy.drive,policy:self.host_driver_policy.wake,issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:self.host_driver.clone()}).await);
 
         let artifact_dialect_entries: Vec<_> = descriptor.contributions.composer_entries.iter().map(|entry| (entry.writes.clone(), entry.reads.clone())).collect();
         // 🕳️ `ContributionSet.io_entries` (owner/counterpart/direction) carries no `fidelity`/

@@ -125,5 +125,16 @@
     2,
     3,
     4
-  ]
+  ],
+  "initialStock": [
+    512,
+    4096,
+    262144,
+    262144,
+    64
+  ],
+  "initialFuel": 100000,
+  "initialDeadline": 1000000,
+  "clockBindingPreserved": true,
+  "absoluteDeadlineStable": true
 }

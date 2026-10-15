@@ -26,7 +26,7 @@ semio-framework-value.workspace = true
 
 [dev-dependencies]
 semio-framework-trace.workspace = true
-semio-framework-3d-brep-operations.workspace = true
+semio-framework-3d-brep-construction.workspace = true
 semio-framework-async.workspace = true
 semio-framework-async-macros.workspace = true
 semio-framework-job = { workspace = true, features = ["testkit"] }

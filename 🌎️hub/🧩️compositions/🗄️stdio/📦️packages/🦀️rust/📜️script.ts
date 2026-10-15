@@ -847,7 +847,7 @@ class HomeIoSurfaceScript extends BundleScript {
     assert(!consumers.includes(osHostManifestPath), "OS host must not select domain artifact codecs");
     assert(!osHostManifest.includes("semio-hub-stdio"), "OS host depends on Stdio");
     const osHostRoot = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"), "utf8");
-    for (const module of ["host", "backbone", "instance", "workflow", "registry"]) assert.match(osHostRoot, new RegExp(`^pub mod ${module} \\{`, "mu"));
+    for (const module of ["host", "backbone", "instance", "workflow", "registry"]) assert.match(osHostRoot, new RegExp(`^pub mod ${module};`, "mu"));
     const spaceRoot = resolve(this.repoRoot, "✏️s/🔌️plugins/🪐️space");
     const productionRefs = stdioWalkText(spaceRoot)
       .filter((path) => path.endsWith(".rs") && path.includes("/🗿️artifacts/🏠️home/") && !path.includes("/🧪️tests/"))
@@ -1009,7 +1009,7 @@ class TestScript extends BundleScript {
     if (rest[0] === "editor-catalog-contract") return;
     await runCatalogRootContractTests(this.root, this.repoRoot);
     if (rest[0] === "catalog-root-contract") return;
-    await runRepositoryCargoTests([PACKAGE_NAME], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests([PACKAGE_NAME], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -1236,11 +1236,11 @@ class SnapshotSqliteTestScript extends BundleScript {
         return;
       }
       if (segments[1] === "all") resolveTestLevel(segments.slice(2), "long");
-      await runRepositoryCargoTests([PACKAGE_NAME], this.repoRoot, this.invocation.control, ["--test", "shipped_fleet", ...(segments[1] === "all" ? [] : ["sqlite_snapshot_primary_"]), "--no-fail-fast", "--", "--nocapture"]);
+      await runRepositoryCargoTests([PACKAGE_NAME], this.repoRoot, this.invocation, ["--test", "shipped_fleet", ...(segments[1] === "all" ? [] : ["sqlite_snapshot_primary_"]), "--no-fail-fast", "--", "--nocapture"]);
       return;
     }
     if (segments[0] === "foundation") {
-      await runRepositoryCargoTests(["semio-s-artifact-stdio-binary", "semio-s-artifact-stdio-txt", "semio-s-artifact-stdio-csv", "semio-s-artifact-stdio-tsv", "semio-s-artifact-stdio-json", "semio-s-artifact-stdio-xml"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      await runRepositoryCargoTests(["semio-s-artifact-stdio-binary", "semio-s-artifact-stdio-txt", "semio-s-artifact-stdio-csv", "semio-s-artifact-stdio-tsv", "semio-s-artifact-stdio-json", "semio-s-artifact-stdio-xml"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       const artifacts = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts");
       await runRepositoryTestCommand(process.execPath, ["test", ...[
         "💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any",
@@ -1259,11 +1259,11 @@ class SnapshotSqliteTestScript extends BundleScript {
       assert.deepEqual(law, { format: 1, schemaVersion: 1, minimumDomainTables: 1, integrity: [{ integrity_check: "ok" }], foreignKeys: [], nativeEncodings: ["binary", "text"] });
       console.log("[DEBUG] Stdio catalog expected physical SQLite integrity and encoding examples validated");
       if (segments[0] === "catalog-contract") return;
-      await runRepositoryCargoTests(["semio-hub-stdio"], this.repoRoot, this.invocation.control, ["--test", "editor_catalog", "sqlite_snapshot_", "--no-fail-fast"]);
+      await runRepositoryCargoTests(["semio-hub-stdio"], this.repoRoot, this.invocation, ["--test", "editor_catalog", "sqlite_snapshot_", "--no-fail-fast"]);
       return;
     }
     if (segments[0] === "geometry") {
-      await runRepositoryCargoTests(["semio-s-artifact-stdio-stl", "semio-s-artifact-stdio-obj", "semio-s-artifact-stdio-ply"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      await runRepositoryCargoTests(["semio-s-artifact-stdio-stl", "semio-s-artifact-stdio-obj", "semio-s-artifact-stdio-ply"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       const artifacts = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts");
       await runRepositoryTestCommand(process.execPath, ["test", ...[
         "🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any",
@@ -1273,7 +1273,7 @@ class SnapshotSqliteTestScript extends BundleScript {
       return;
     }
     if (segments[0] === "images") {
-      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-bmp", "semio-s-artifact-stdio-png"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-bmp", "semio-s-artifact-stdio-png"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       const artifacts = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts");
       await runRepositoryTestCommand(process.execPath, ["test", ...[
         "🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any",
@@ -1282,7 +1282,7 @@ class SnapshotSqliteTestScript extends BundleScript {
       return;
     }
     if (segments[0] === "archives") {
-      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-deflate", "semio-s-artifact-stdio-zip"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-deflate", "semio-s-artifact-stdio-zip"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       const artifacts = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts");
       await runRepositoryTestCommand(process.execPath, ["test", ...[
         "🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any",
@@ -1291,7 +1291,7 @@ class SnapshotSqliteTestScript extends BundleScript {
       return;
     }
     if (segments[0] === "gif") {
-      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-gif"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-gif"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       const artifacts = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards");
       await runRepositoryTestCommand(process.execPath, ["test", ...[
         "7️⃣87a/🪆️subsets/✳️any",
@@ -1300,17 +1300,17 @@ class SnapshotSqliteTestScript extends BundleScript {
       return;
     }
     if (segments[0] === "jpg") {
-      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-jpg"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-jpg"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "md") {
-      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-md"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-md"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "mp3") {
-      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-mp3"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-mp3"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       if (segments[1] !== "native") await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
       return;
     }
@@ -1319,17 +1319,17 @@ class SnapshotSqliteTestScript extends BundleScript {
       const owners = ["✉️base", "🔤️text", "🔢️value", "🔊️audio", "🎬️video", "🖼️image", "🌊️flow", "📊️table", "🕸️graph", "🎞️animation", "📦️object", "🧰️kit", "🔺️mesh", "🏛️model", "📐️cad", "📑️document", "🖊️drawing", "📽️presentation", "🧊️brep"];
       const selected = segments[2] === undefined ? owners : owners.filter(owner => owner.endsWith(segments[2]!));
       if (selected.length === 0) throw new Error("Unknown Semio SQLite snapshot owner");
-      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-semio"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-semio"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       await runRepositoryTestCommand(process.execPath, ["test", ...selected.map(owner => join(artifacts, owner, "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"))], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "tiff") {
-      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-tiff"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-tiff"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "wav") {
-      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-wav"], this.repoRoot, this.invocation.control, ["--lib", "sqlite_snapshot_"]);
+      if (segments[1] !== "source") await runRepositoryCargoTests(["semio-s-artifact-stdio-wav"], this.repoRoot, this.invocation, ["--lib", "sqlite_snapshot_"]);
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
       return;
     }

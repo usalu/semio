@@ -29,8 +29,8 @@
 // #region 🔖️Imports
 use parry3d::mass_properties::details::trimesh_signed_volume_and_center_of_mass;
 use parry3d::na::Point3;
-use {semio_framework_3d_brep_operations::primitives::{make_planar_face_from_wire, make_polyline_wire}, semio_framework_3d_brep_representation::topology::Wire};
-use semio_framework_3d_brep_operations::sweep::extrude_face;
+use {semio_framework_3d_brep_construction::primitives::{make_planar_face_from_wire, make_polyline_wire}, semio_framework_3d_brep_representation::topology::Wire};
+use semio_framework_3d_brep_sweep::extrude_face;
 use semio_framework_3d_brep_representation::contract::MeshTransfer;
 use semio_framework_3d_brep_queries::mass_properties::solid_signed_volume;
 use semio_framework_3d_brep_tessellation::tessellate_solid;

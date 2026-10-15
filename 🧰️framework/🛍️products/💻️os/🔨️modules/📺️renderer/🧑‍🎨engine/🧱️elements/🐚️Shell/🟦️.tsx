@@ -39,7 +39,6 @@ import {
   SHELL_LOCALES,
   type AppDefinition,
   type AppRole,
-  type CommandDefinition,
   type Conflict,
   type ConflictId,
   type DockSkeleton,
@@ -47,11 +46,7 @@ import {
   type Fault,
   type MergePolicy,
   type AppCatalogue,
-  type ManifestExample,
   type PluginAppLabelsOverlay,
-  type PluginDependency,
-  type PluginViewState,
-  type TopicContribution,
   type PresenceInteraction,
   type Severity,
   type ShellBrand,
@@ -74,7 +69,7 @@ import { DEFAULT_PANEL_WIDTH_PX, mergeRecordPreservingIdentity } from "../🛠�
 import { FrameworkOsShell } from "../🏛️ShellHost/🟦️.tsx";
 import type { WindowFault } from "../🏛️ShellHost/🩺️fault/🟦️.ts";
 import type { UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
-import { type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
+import type { PluginManifest, PluginWasmHandle, ViewModel } from "../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import { PRESENCE_CLIENT_STORAGE_KEY, EMPTY_APP_LABELS_OVERLAY, EMPTY_APP_CATALOGUE } from "../🛠️ShellHelpers/🟦️.tsx";
 import { readUiPreferences, resolveUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -92,42 +87,6 @@ import { readUiPreferences, resolveUiPreferences } from "../../🎚️UiPreferen
 export function uiInspectorMixedPlaceholder(): ReturnType<typeof shellLabel> {
   return shellLabel("ui.common.mixedValues");
 }
-
-/** 🎭️ Renderer-side view state passed to program wasm calls — structurally mirrors `@semio-tech/framework`'s {@link PluginViewState}, kept as a distinct local alias since `ViewModel` is the established name used throughout this file. */
-export type ViewModel = PluginViewState;
-
-/** ⚠️ Not folded into `@semio-tech/framework`'s `PluginManifest`: this shell-local shape types `apps` richly (`AppDefinition[]`) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
-export type PluginManifest = {
-  readonly pluginId: string;
-  readonly label: string;
-  readonly version: string;
-  readonly apps: readonly AppDefinition[];
-  readonly examples: readonly ManifestExample[];
-  readonly contributions?: readonly {
-    readonly kind: "playbookBlockKind";
-    readonly appId: string;
-    readonly blockKind: string;
-    readonly label: string;
-    readonly iconId: IconName;
-    readonly defaultValueJson?: string;
-    readonly paramsBodyKey: string;
-    readonly previewBodyKey: string;
-  }[];
-  /** 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused. */
-  readonly commands?: readonly CommandDefinition[];
-  /** 🗂️ This plugin's OWNED artifact kinds — mirrors Rust `PluginManifest.artifact_kinds`. Feeds
-   * {@link AppRouter.build}'s "owner plugin's surface first" ordering and its
-   * `surface.missing-owner-surface`/`surface.contribution-not-permitted` checks (contract freeze §3).
-   * Optional: a wasm build that predates the C3 router still decodes, just with no owner ordering. */
-  readonly artifactKinds?: readonly { readonly id: string }[];
-  /** 🔗️ This plugin's direct dependencies — mirrors Rust `PluginManifest.dependencies`, gates a
-   * contributed surface through {@link AppRouter.build}'s `surface.contribution-not-permitted` check. */
-  readonly dependencies?: readonly PluginDependency[];
-  /** 🗂️ Open plugin contributions — the SAME rows core's `PluginManifest.topicContributions` carries.
-   * The host→guest contributions push (`scopeContributionsJson`) reads exactly this field off a
-   * loaded program, so leaving it off this shape made that push typecheck against nothing. */
-  readonly topicContributions?: readonly TopicContribution[];
-};
 
 /** 🧩️ The catalog module a hub document's program runs: its plugin, catalog generation and module bundle, where its
  * verified bytes came from, and the program of every module of its closure (plugin id → program id), so the requests it

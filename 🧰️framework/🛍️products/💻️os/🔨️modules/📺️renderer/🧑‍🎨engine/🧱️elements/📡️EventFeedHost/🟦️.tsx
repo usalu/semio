@@ -9,9 +9,8 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { type ComponentSceneHostProps, type EventFeedEntry, type MutationMessage } from "@semio-tech/framework";
 import { cn, ContextMenuController, Icon, interactiveHoverFillClass, useLabel, type ContextMenuItem, type IconName } from "@semio-tech/ui-react";
-import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
-import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
-import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
+import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { parseSceneJsonField, WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { formatHostTemporalValueV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts";
 // #endregion 🔌️Adapters
 

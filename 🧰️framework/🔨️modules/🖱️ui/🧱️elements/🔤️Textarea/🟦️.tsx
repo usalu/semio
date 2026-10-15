@@ -9,7 +9,7 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
-import { PropertyValueColumnContext } from "../🌳️Tree/🟦️.tsx";
+import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { type UiLabel, uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { CollapsedFieldDisplay } from "../✏️Input/🟦️.tsx";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";

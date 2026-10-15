@@ -365,7 +365,7 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
     let archive = semio_framework_deflate::zip_archive::ZipArchive::parse(bytes)?;
     let collection_pack = archive.read("collection.collection.pack", MAX_COLLECTION_ENTRY_BYTES)?;
     let collection_spr = archive.read("collection.collection.spr", MAX_COLLECTION_ENTRY_BYTES)?;
-    let collection = <CollectionSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    let collection = <CollectionSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
 
     let mut artifacts = Vec::new();
     let mut blobs = Vec::new();

@@ -6,6 +6,7 @@ import { describe, expect, test } from "vitest";
 import { hubConnectionSummaryV1 } from "../../🧱️elements/🔄️ShellSync/🟦️.tsx";
 import { hubConnectionOperationOwnerCurrentV1 } from "../../🧱️elements/🔗️HubConnection/🟦️.tsx";
 import { SHELL_HUB_ROUTE } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🔗️hub-projection", "🔣️.json"), "utf8"));
@@ -57,7 +58,7 @@ describe("🔗️ target-neutral Hub projection", () => {
 
   test("the React workspace and host publish the neutral opener and sections", () => {
     const workspace = readFileSync(join(engineRoot, "🧱️elements", "🔗️HubConnection", "🏛️workspace", "🟦️.tsx"), "utf8");
-    const host = readFileSync(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+    const host = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
     const shellSync = readFileSync(join(engineRoot, "🧱️elements", "🔄️ShellSync", "🟦️.tsx"), "utf8");
     const signIn = readFileSync(join(engineRoot, "🧱️elements", "🔐️HubSignIn", "🟦️.tsx"), "utf8");
     const spaces = readFileSync(join(engineRoot, "🧱️elements", "🏘️SpaceBrowser", "🟦️.tsx"), "utf8");
@@ -74,7 +75,7 @@ describe("🔗️ target-neutral Hub projection", () => {
 
   test("the browser host publishes every document status into the bounded wgpu projection", () => {
     const shell = readFileSync(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
-    const host = readFileSync(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+    const host = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
     const transport = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🚚️browser-frame-transport", "🟦️.ts"), "utf8");
     const boot = (readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🚀️browser-boot", "🟦️.ts"), "utf8") + "\n" + readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🌐️browser-host", "🟦️.ts"), "utf8"));
     expect(shell).toContain("pub hub_documents: BTreeMap<String, ShellHubRemoteV1>");

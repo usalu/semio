@@ -54,5 +54,97 @@
         "standard": "v1"
       }
     }
+  ],
+  "dialectExpectations": [
+    {
+      "actual": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "kit"
+      },
+      "expected": [
+        {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "kit"
+        },
+        {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "*"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "actual": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "*"
+      },
+      "expected": [
+        {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "kit"
+        },
+        {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "*"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "actual": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "graph"
+      },
+      "expected": [
+        {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "kit"
+        },
+        {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "*"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "actual": {
+        "artifactKind": "s.other.semio",
+        "standard": "v1",
+        "subset": "kit"
+      },
+      "expected": [
+        {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "kit"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "actual": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v2",
+        "subset": "kit"
+      },
+      "expected": [
+        {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "kit"
+        }
+      ],
+      "accepted": false
+    }
   ]
 }

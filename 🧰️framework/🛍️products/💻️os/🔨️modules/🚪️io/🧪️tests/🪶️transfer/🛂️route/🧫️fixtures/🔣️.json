@@ -79,7 +79,7 @@
               "subset": "*"
             },
             "into": {
-              "artifactKind": "s.framework.sqlite-snapshot",
+              "artifactKind": "framework.io.sqlite-snapshot",
               "standard": "1",
               "subset": "*"
             },
@@ -88,7 +88,7 @@
           },
           {
             "from": {
-              "artifactKind": "s.framework.sqlite-snapshot",
+              "artifactKind": "framework.io.sqlite-snapshot",
               "standard": "1",
               "subset": "*"
             },
@@ -122,7 +122,7 @@
               "subset": "*"
             },
             "into": {
-              "artifactKind": "s.framework.sqlite-snapshot",
+              "artifactKind": "framework.io.sqlite-snapshot",
               "standard": "1",
               "subset": "*"
             },
@@ -146,12 +146,12 @@
         "hops": [
           {
             "from": {
-              "artifactKind": "s.framework.sqlite-snapshot",
+              "artifactKind": "framework.io.sqlite-snapshot",
               "standard": "1",
               "subset": "*"
             },
             "into": {
-              "artifactKind": "s.framework.sqlite-snapshot",
+              "artifactKind": "framework.io.sqlite-snapshot",
               "standard": "1",
               "subset": "*"
             },

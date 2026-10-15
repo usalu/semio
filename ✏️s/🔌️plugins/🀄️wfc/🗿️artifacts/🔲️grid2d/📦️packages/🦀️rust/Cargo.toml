@@ -45,8 +45,6 @@ semio-s-plugin-wfc-engine = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-os-flow = { workspace = true }
-semio-framework-os-infinite = { workspace = true }
 semio-framework-ui = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-styling = { workspace = true }

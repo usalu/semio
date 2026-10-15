@@ -9,9 +9,8 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Button, ContextMenuController, Icon, Input, Table, Textarea, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
-import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
-import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
-import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
+import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { parseSceneJsonField, WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️TableHost

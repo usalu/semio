@@ -1,0 +1,7 @@
+{
+  "source": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+  "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/👻️ghost/🟦️.tsx",
+  "names": ["interactionMergeFromModifiers","PANEL_GHOST_MOVE_THRESHOLD_PX","PanelGhostValue","PanelGhostContext","usePanelGhost","InteractionCommands","InteractionContext","ActiveInteractionContext","useInteractionCommands","GhostController","findGhostRegionAncestor","isChromeResizeHandleTarget","shouldBeginAutomaticGhostInteraction","useGhostController","GhostProvider","GhostRegionShellProps","GhostRegionShell","PanelGhostRootProps","PanelGhostRoot"],
+  "doc": "👻 Owns the panel ghost and interaction command contexts that drag surfaces, trees and layouts share.",
+  "keepExports": "named"
+}

@@ -216,7 +216,7 @@ impl TrustedArtifactCatalog for LinkedGisMapCatalog {
 async fn gis_map_ledger(mutations: Vec<semio_s_artifact_gis_gismap::GisMapMutation>) -> (ArtifactPair, Vec<protocol::MutationEnvelope>) {
     use ::directory::os_store::{store_schema::ArtifactCommand, pack::snapshot::ArtifactPack, ArtifactStore, SnapshotRetirementStep};
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot, GIS_MAP_SCHEMA};
-    let pack = <GisMapSnapshot as ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::encode_pack(&GisMapSnapshot::default());
+    let pack = <GisMapSnapshot as ArtifactPack>::encode_pack(&GisMapSnapshot::default());
     let spr = ::directory::os_store::text_format::empty_document_spr("karte", GIS_MAP_SCHEMA).await;
     let parsed = ::directory::os_store::text_format::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&pack, &spr).await.expect("genesis pair parses");
     let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(parsed.into_envelope(), directory::ActorId(directory::os_spr::LOCAL_ACTOR_ID.into())).await.expect("editor store");

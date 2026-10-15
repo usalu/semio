@@ -6,6 +6,7 @@ import{Database}from"bun:sqlite";
 import schema from"../🧬️schema/🔣️.json";
 import law from"./🧫️fixtures/🔣️.json";
 import accepted from"../../../../../🧪️tests/🧫️fixtures/🎬️presented-media-slots/🔣️.json";
+import { readModuleTreeSource } from "../../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 test("original roster source owns its typed grammar, paid coverage and original collection until close",()=>{
  expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  expect(createHash("sha256").update(JSON.stringify(accepted.tokenIdentity)).digest("hex")).toBe(law.token);
@@ -32,7 +33,7 @@ test("original native resource owner follows the full tree and same caller throu
 test("original render tree remains stationary across receiver denial and post-render failure",()=>{
  const db=new Database(":memory:");try{expect(db.query("SELECT json_extract(?,'$.source') AS source,json_extract(?,'$.source') AS denied").get(JSON.stringify({source:"original"}),JSON.stringify({source:"original"}))).toEqual({source:"original",denied:"original"});}finally{db.close()}
  const root=process.cwd(),base=`${root}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin`,read=(path:string)=>readFileSync(`${base}/${path}`,"utf8");
- const instance=read("🧵️instance/🦀️.rs");for(const required of["pending_render_tree:","pending_render_tree_identity:","close_pending_render_tree_on_original","fn original_render_tree_source","self.pending_render_tree=", "stamp_pending_render_interaction_ui"]){expect(instance.includes(required)).toBe(true)}
+ const instance=readModuleTreeSource(`${base}/🧵️instance/🦀️.rs`);for(const required of["pending_render_tree:","pending_render_tree_identity:","close_pending_render_tree_on_original","fn original_render_tree_source","self.pending_render_tree=", "stamp_pending_render_interaction_ui"]){expect(instance.includes(required)).toBe(true)}
  const app=read("⚛️reactor/🔌️app/🦀️.rs");expect(app.includes("fn original_render_tree_source")).toBe(true);
  const runtime=read("⚛️reactor/🏃️runtime/🦀️.rs");expect(runtime.includes("instance.app.original_render_tree_source(cx)")).toBe(true);
  const turn=read("⚛️reactor/🔄️turn/🦀️.rs");expect(turn.includes("grant.commit_source(tree).is_err()")).toBe(false);

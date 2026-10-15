@@ -29,6 +29,7 @@ function catalog(v:unknown):ArtifactChild{const child=parseArtifactChild(v);p.te
 export function parseBlock3dSnapshot(v:unknown):Block3dSnapshot{const r=p.row(v);return{schema:p.text(r.schema),objectKind:shared.parseBlockKindIdentity(r.objectKind),representations:p.list(r.representations,shared.parseBlockRepresentation),catalog:catalog(r.catalog),vortexKindExtra:p.list(r.vortexKindExtra,parseBlock3dVortexKindExtra),vortices:p.list(r.vortices,parseBlock3dVortexTemplate),compatibility:p.list(r.compatibility,shared.parseBlockCompatibilityRule),attributes:p.list(r.attributes,shared.parseBlockAttribute),authors:p.list(r.authors,shared.parseBlockAuthor),camera3d:shared.parseBlockCamera3d(r.camera3d),meta:shared.parseBlockMeta(r.meta)}}
 
 
-import {semioKitDialectParts} from "../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🟦️.ts";
+import {requireArtifactDialect,type ArtifactDialect} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+const catalogDialects:readonly ArtifactDialect[]=[{artifactKind:"s.stdio.semio",standard:"v1",subset:"kit"},{artifactKind:"s.stdio.semio",standard:"v1",subset:"*"}];
 /** 🪆️ Admit the genuine typed catalog owner before any domain publication. */
-export function validateBlock3dCatalogDialect(dialect:{artifactKind:string;standard:string;subset:string}):void{if(!semioKitDialectParts(dialect.artifactKind,dialect.standard,dialect.subset))throw Error("Block3d catalog requires the typed Semio Kit dialect")}
+export function validateBlock3dCatalogDialect(dialect:ArtifactDialect):void{requireArtifactDialect(dialect,catalogDialects,"Block3d catalog")}

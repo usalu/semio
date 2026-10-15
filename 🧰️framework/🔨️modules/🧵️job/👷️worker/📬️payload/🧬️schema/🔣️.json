@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operation",
+    "generation",
+    "fuel",
+    "deadline",
+    "grant",
+    "denials",
+    "expected"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "const": 99701
+    },
+    "generation": {
+      "const": 3
+    },
+    "fuel": {
+      "const": 100000
+    },
+    "deadline": {
+      "const": 18446744073709551615
+    },
+    "grant": {
+      "const": {
+        "maximumItems": 256,
+        "maximumCopyBytes": 1048576,
+        "maximumCapacityBytes": 1048576,
+        "maximumReleaseBytes": 1048576,
+        "maximumDepth": 128
+      }
+    },
+    "denials": {
+      "const": [
+        "maximum_items",
+        "maximum_copy_bytes",
+        "maximum_capacity_bytes",
+        "maximum_depth"
+      ]
+    },
+    "expected": {
+      "const": {
+        "deniedHeapBytes": 0,
+        "deniedReceiptItems": 0,
+        "sourcesPreserved": true,
+        "birthEqualsReceipt": true,
+        "releasedEqualsBirth": true,
+        "terminalDropBytes": 0
+      }
+    }
+  }
+}

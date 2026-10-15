@@ -19,10 +19,10 @@
 //! @see ../🧗️climbing/🦀️.rs — `Toss`, a velocity with which an actor is thrown into the air
 //! @see ../📐️trigonometry/🦀️.rs — `sin_turns`, `smoothstep`, `clamp`
 
-use crate::climbing::Toss;
-use crate::schema::{Facing, Fixture, Footing, Perch, PetMode, Pitch, Point, Ticks, Turns};
-use crate::terrain::{larger, smaller};
-use crate::trigonometry::{clamp, sin_turns, smoothstep};
+use semio_framework_pets_contract::schema::{Facing, Fixture, Footing, Perch, PetMode, Pitch, Point, Ticks, Turns};
+use semio_framework_pets_kinematics::terrain::{larger, smaller};
+use semio_framework_pets_kinematics::trigonometry::{clamp, sin_turns, smoothstep};
+use semio_framework_pets_traversal::climbing::Toss;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants

@@ -72,7 +72,7 @@ impl ArtifactViewer for FormsViewer {
 })())
 }
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         crate::forms_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;

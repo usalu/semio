@@ -54,11 +54,28 @@
         "generation",
         "firstEpoch",
         "cases",
-        "work"
+        "work",
+        "closedContextCases"
       ],
       "properties": {
-        "totalGrant": {"type":"array","minItems":5,"maxItems":5,"items":{"type":"integer","minimum":0}},
-        "callPolicy": {"type":"array","minItems":5,"maxItems":5,"items":{"type":"integer","minimum":0}},
+        "totalGrant": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "callPolicy": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
         "operation": {
           "type": "integer",
           "minimum": 1
@@ -126,6 +143,35 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991
+            }
+          }
+        },
+        "closedContextCases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "axis",
+              "increment",
+              "accepted"
+            ],
+            "properties": {
+              "axis": {
+                "enum": [
+                  "fuel",
+                  "items"
+                ]
+              },
+              "increment": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
             }
           }
         }

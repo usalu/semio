@@ -9,7 +9,7 @@
 //! @see ../🏅️badges/🟦️.ts — the TypeScript twin
 
 use crate::challenge::challenge_meets;
-use crate::schema::{Badge, BadgeRule, Challenge, Quiz, RunResult, Slug};
+use quiz_schema::{Badge, BadgeRule, Challenge, Quiz, RunResult, Slug};
 use std::borrow::Borrow;
 use std::collections::BTreeSet;
 

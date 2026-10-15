@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "left": "authorityA",
+      "right": "contextA",
+      "same": true
+    },
+    {
+      "left": "authorityA",
+      "right": "captureA",
+      "same": true
+    },
+    {
+      "left": "authorityA",
+      "right": "authorityB",
+      "same": false
+    },
+    {
+      "left": "authorityA",
+      "right": "childB",
+      "same": false
+    }
+  ],
+  "origins": {
+    "authorityA": 1,
+    "contextA": 1,
+    "captureA": 1,
+    "authorityB": 2,
+    "childB": 2
+  }
+}

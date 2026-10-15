@@ -14,8 +14,7 @@
 use super::*;
 
 fn chrome_lane_source() -> String {
-    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs").canonicalize().expect("wgpu shell source");
-    std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))
+    crate::shell::SHELL_SOURCE.to_string()
 }
 
 fn lane_body(source: &str, name: &str) -> String {

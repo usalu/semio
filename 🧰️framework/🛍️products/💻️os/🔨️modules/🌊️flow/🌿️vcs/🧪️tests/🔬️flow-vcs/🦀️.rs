@@ -1926,8 +1926,8 @@ fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
 fn flow_fixture_default_pack_uses_canonical_envelope_and_round_trips() {
     let host_snapshot = FlowHostSnapshot::default();
     assert_eq!(<FlowHostSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(), "flow.flow");
-    let encoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::encode_pack_with(&host_snapshot, &crate::os_store::PackEncodeOptions::default()).expect("default flow fixture pack");
-    let decoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>::decode_pack_with(&encoded, &crate::os_store::PackDecodeOptions::default()).expect("default flow fixture unpack");
+    let encoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack>::encode_pack_with(&host_snapshot, &crate::os_store::PackEncodeOptions::default()).expect("default flow fixture pack");
+    let decoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(&encoded, &crate::os_store::PackDecodeOptions::default()).expect("default flow fixture unpack");
     assert_eq!(decoded, host_snapshot);
 }
 

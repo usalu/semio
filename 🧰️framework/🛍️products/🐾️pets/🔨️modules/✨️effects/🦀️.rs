@@ -19,10 +19,10 @@
 //! @see ../📐️trigonometry/🦀️.rs — `sin_turns`, `cos_turns`, `smoothstep`, `fast_neg_exp`
 //! @see ../🎲️randomness/🦀️.rs — `unit_of`, the one place a word becomes a unit
 
-use crate::randomness::unit_of;
-use crate::schema::{Drift, Emitter, Facing, Point, Ticks, Turns, TICKS_PER_SECOND};
-use crate::terrain::smaller;
-use crate::trigonometry::{cos_turns, fast_neg_exp, sin_turns, smoothstep};
+use semio_framework_pets_contract::schema::{Drift, Emitter, Facing, Point, Ticks, Turns, TICKS_PER_SECOND};
+use semio_framework_pets_kinematics::randomness::unit_of;
+use semio_framework_pets_kinematics::terrain::smaller;
+use semio_framework_pets_kinematics::trigonometry::{cos_turns, fast_neg_exp, sin_turns, smoothstep};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
@@ -116,7 +116,7 @@ pub fn mix(a: u32, b: u32) -> u32 {
 }
 
 /// 🪙️ A word as a number in [0, 1): the randomness module's one division by 2³², under the name the effects use.
-pub use crate::randomness::unit_of as unit;
+pub use semio_framework_pets_kinematics::randomness::unit_of as unit;
 
 /// 🎲️ The number in [0, 1) that particle `index` of the emitter keyed `key` reads from its lane `lane`: `unit(mix(mix(key, index), lane))`, the index entering the hash by its low 32 bits.
 pub fn scattered(key: u32, index: i64, lane: u32) -> f64 {

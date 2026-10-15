@@ -1,0 +1,61 @@
+{
+  "name": "@semio-tech/os-store-link-schema-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ],
+  "targets": {
+    "test-contract": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-contract",
+        "forwardAllArgs": false
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    },
+    "test-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-native",
+        "forwardAllArgs": false
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    }
+  }
+}

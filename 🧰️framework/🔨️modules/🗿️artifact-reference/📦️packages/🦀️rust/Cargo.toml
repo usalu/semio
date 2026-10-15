@@ -17,6 +17,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-artifact-reference-borrow = { path = "../../../🧬️schema/🗿️artifact-reference/🔗️borrow/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }

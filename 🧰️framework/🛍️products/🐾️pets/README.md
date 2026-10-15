@@ -5,7 +5,7 @@ parts attached to them, a face, keyframed clips — that lives on a stage: it id
 with its eyes, walks along the top edges of the interface, hops between them, and meets the other pets it
 likes or squabbles with. The model is render-independent and deterministic: a stage is a pure fold of events,
 and the same seed with the same events yields the same frames bit for bit in TypeScript (`@semio-tech/pets`)
-and Rust (`semio-framework-pets`). The product knows nothing about what the pets stand for; a domain ships its
+and Rust (`semio-framework-pets`, a façade over the producer crates `semio-framework-pets-*`). The product knows nothing about what the pets stand for; a domain ships its
 own menagerie (the architecture quizzes: `🎓️teaching/🏛️architecture/🐾️pets`) and a render target draws the
 frames (`🎯️targets/⚛️react`, `@semio-tech/pets-react`).
 
@@ -36,7 +36,14 @@ frames (`🎯️targets/⚛️react`, `@semio-tech/pets-react`).
 | `🔨️modules/✅️validation/` | `menagerieIssues`, `speciesIssues`, `ensembleIssues` without any schema library, and `assembleMenagerie`. |
 | `🔨️modules/<module>/🧪️tests/🔬️unit/` | The unit suite of a module: `🟦️.ts` (vitest, found by a glob) and `🦀️.rs` (attached with `#[path]`). |
 | `📦️packages/🟦️typescript/` | `@semio-tech/pets`: package glue only, a barrel over `🧬️schema` and `🔨️modules`. Zero runtime imports. |
-| `📦️packages/🦀️rust/` | Crate `semio-framework-pets` (lib `pets`), nx `@semio-tech/pets-rs`: `#[path]` glue over the Rust twins. |
+| `🦀️.rs`, `📦️packages/🦀️rust/` | The façade crate `semio-framework-pets` (lib `pets`), nx `@semio-tech/pets-rs`: `🦀️.rs` is its lib root and holds no code, only explicit `pub use` of the names the Protocol v2 subject hosts call and the `serde_json` codec they decode the vectors with. The Rust twins below are carved into seven producer crates, each below the next. |
+| `🔨️modules/📜️contract/` | Crate `semio-framework-pets-contract`, nx `@semio-tech/pets-contract-rs`: `#[path]` glue over `🧬️schema/🦀️.rs` and `🔨️modules/✅️validation/🦀️.rs`, and the `testkit` feature (`🧬️schema/🧪️tests/🧰️testkit/`) every other crate's unit tests share. |
+| `🔨️modules/⚙️kinematics/` | Crate `semio-framework-pets-kinematics`, nx `@semio-tech/pets-kinematics-rs`: trigonometry, randomness, rig, animation and terrain. |
+| `🔨️modules/🚧️clearance/` | Crate `semio-framework-pets-clearance`, nx `@semio-tech/pets-clearance-rs`: the clearance module is its lib root. |
+| `🔨️modules/🧭️traversal/` | Crate `semio-framework-pets-traversal`, nx `@semio-tech/pets-traversal-rs`: swing and climbing. |
+| `🔨️modules/🖱️interaction/` | Crate `semio-framework-pets-interaction`, nx `@semio-tech/pets-interaction-rs`: gesture, effects and mischief. |
+| `🔨️modules/🎭️character/` | Crate `semio-framework-pets-character`, nx `@semio-tech/pets-character-rs`: behavior and feeling. |
+| `🔨️modules/🎬️staging/` | Crate `semio-framework-pets-staging`, nx `@semio-tech/pets-staging-rs`: draft, spacing, schedule, attention, locomotion, sociability, choice, population, clock, projection and the stage. |
 | `🎯️targets/⚛️react/` | `@semio-tech/pets-react`: the inline SVG depiction, the DOM survey, the pacer, the decorative pet layer and the stories gallery. |
 | `🧪️tests/🎚️config/🟦️.ts` | Vitest configuration of the TypeScript core; its `include` is a glob over every module's unit suite. It also tells the suites how much to sample at the test level of the run (`sampled(few, full, more)`). |
 | `🧪️tests/<case>/` | The language-agnostic Protocol v2 cases (`🥒️.feature` with one adapter per language) and the suites of the React target (`🟦️.tsx`). |
@@ -56,7 +63,7 @@ bun ./📜️script.ts test exhaustive             # more seeds, finer grids, lo
 
 bun repo run @semio-tech/pets:test              # the same through nx
 bun repo run @semio-tech/pets:typecheck         # the core, its suites, adapters
-bun repo run @semio-tech/pets-rs:test           # the Rust core
+bun repo run @semio-tech/pets-rs:test           # the Rust core: the unit suites of all seven producer crates
 bun repo run @semio-tech/pets-react:test        # the React target
 bun repo run @semio-tech/pets-react:typecheck   # its types
 bun run dashboard run @semio-tech/pets-react:dev --detach --wait-ready   # the stories gallery (prints its URL)

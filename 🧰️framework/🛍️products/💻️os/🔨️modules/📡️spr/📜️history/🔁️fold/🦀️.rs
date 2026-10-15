@@ -1,7 +1,7 @@
 //! ⏳️ Retained normalization and folding of immutable persisted history.
 
 use super::HistoryLog;
-use protocol::{self as protocol, wire::ProtocolError};
+use protocol::{self as protocol, ProtocolError};
 use std::sync::Arc;
 
 /// 🧮️ Derived facts and exact normalized transition owners of one immutable history.

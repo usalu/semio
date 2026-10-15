@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "collector": {
+    "version": 1,
+    "maximumUnits": 1000000,
+    "maximumOwnedBytes": 1048576,
+    "maximumMilliseconds": 120000
+  },
+  "providers": [
+    {
+      "root": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge",
+      "binary": "semio-space-home-mutation-bridge",
+      "package": "semio-s-artifact-space-home-mutation-bridge",
+      "coordinates": [
+        {
+          "artifact": "s.space.home",
+          "standard": "1",
+          "subset": "any"
+        }
+      ]
+    },
+    {
+      "root": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge",
+      "binary": "semio-space-space-mutation-bridge",
+      "package": "semio-s-artifact-space-space-mutation-bridge",
+      "coordinates": [
+        {
+          "artifact": "s.space.space",
+          "standard": "1",
+          "subset": "any"
+        }
+      ]
+    },
+    {
+      "root": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge",
+      "binary": "semio-wfc-3d-mutation-bridge",
+      "package": "semio-s-artifact-wfc-3d-mutation-bridge",
+      "coordinates": [
+        {
+          "artifact": "s.wfc.wfc3d",
+          "standard": "1",
+          "subset": "any"
+        },
+        {
+          "artifact": "s.wfc.wfc3d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "✏️editor/🎚️config"
+        },
+        {
+          "artifact": "s.wfc.wfc3d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "✏️editor/🫧️transient"
+        }
+      ]
+    },
+    {
+      "root": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏭️bridge",
+      "binary": "semio-wfc-grid3d-mutation-bridge",
+      "package": "semio-s-artifact-wfc-grid3d-mutation-bridge",
+      "coordinates": [
+        {
+          "artifact": "s.wfc.grid3d",
+          "standard": "1",
+          "subset": "any"
+        }
+      ]
+    },
+    {
+      "root": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏭️bridge",
+      "binary": "semio-wfc-bitmap-mutation-bridge",
+      "package": "semio-s-artifact-wfc-bitmap-mutation-bridge",
+      "coordinates": [
+        {
+          "artifact": "s.wfc.bitmap",
+          "standard": "1",
+          "subset": "any"
+        },
+        {
+          "artifact": "s.wfc.bitmap",
+          "standard": "1",
+          "subset": "any",
+          "surface": "✏️editor/🫧️transient"
+        }
+      ]
+    },
+    {
+      "root": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏭️bridge",
+      "binary": "semio-wfc-2d-mutation-bridge",
+      "package": "semio-s-artifact-wfc-2d-mutation-bridge",
+      "coordinates": [
+        {
+          "artifact": "s.wfc.wfc2d",
+          "standard": "1",
+          "subset": "any"
+        },
+        {
+          "artifact": "s.wfc.wfc2d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "✏️editor/🎚️config"
+        },
+        {
+          "artifact": "s.wfc.wfc2d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "✏️editor/🫧️transient"
+        }
+      ]
+    }
+  ],
+  "environment": {}
+}

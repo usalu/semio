@@ -22,9 +22,9 @@
 //! @see ../../🧬️schema/🦀️.rs — `Activity`, `Actor`, `Cast`, `Menagerie`, `Needs`, `PetMode`, `Rapport`, `Species`, `Temperament`
 //! @see ../🧠️behavior/🟦️.ts — the TypeScript twin
 
-use crate::randomness::{random_words, weighted_index, CAST_STREAM};
-use crate::schema::{Activity, Actor, Cast, Menagerie, Needs, PetMode, Rapport, Slug, Species, Temperament, Ticks, ACTIVITIES, TICKS_PER_SECOND};
-use crate::trigonometry::clamp;
+use semio_framework_pets_contract::schema::{Activity, Actor, Cast, Menagerie, Needs, PetMode, Rapport, Slug, Species, Temperament, Ticks, ACTIVITIES, TICKS_PER_SECOND};
+use semio_framework_pets_kinematics::randomness::{random_words, weighted_index, CAST_STREAM};
+use semio_framework_pets_kinematics::trigonometry::clamp;
 use serde::{Deserialize, Serialize};
 use std::ops::Index;
 

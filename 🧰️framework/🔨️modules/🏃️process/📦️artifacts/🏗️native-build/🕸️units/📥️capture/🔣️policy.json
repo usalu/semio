@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "execution": "run",
+  "planning": "build",
+  "forwardedArguments": "exclude",
+  "defaultBinary": "metadata"
+}

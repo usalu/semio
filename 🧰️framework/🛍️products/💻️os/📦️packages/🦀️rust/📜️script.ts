@@ -18,6 +18,7 @@ import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️pr
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
 import { blake3Hex } from "../../../../🔨️modules/🔏️hash/🟦️.ts";
+import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 /** 🧬️ A compiled owned-schema export, typed as a boolean runtime check so `assert` never narrows its validated subject to `unknown`. */
@@ -2170,7 +2171,7 @@ class SnapshotRouteAdmissionScript extends BundleScript {
    oracle.run('CREATE TABLE original_authority(axis TEXT PRIMARY KEY,remaining INTEGER NOT NULL CHECK(remaining=0)) WITHOUT ROWID');for(const[axis,remaining]of Object.entries(fixture.original.grant))oracle.run('INSERT INTO original_authority VALUES(?,?)',axis,remaining as number);
    assert.throws(()=>oracle.run('UPDATE original_authority SET remaining=? WHERE axis=?',enlarged.original.grant.maximumItems,'maximumItems'));
    assert.deepEqual(oracle.query('SELECT axis,remaining FROM original_authority ORDER BY axis').all(),Object.entries(fixture.original.grant).map(([axis,remaining])=>({axis,remaining})).sort((left,right)=>left.axis.localeCompare(right.axis)));
-   oracle.run('CREATE TABLE original_hops(ordinal INTEGER PRIMARY KEY,source TEXT,destination TEXT,is_sqlite INTEGER)');for(const row of fixture.cases){oracle.run('DELETE FROM original_hops');for(const[index,hop]of row.route.hops.entries()){const coordinate=(value:{artifactKind:string;standard:string;subset:string})=>JSON.stringify([value.artifactKind,value.standard,value.subset]);const sqlite=(value:{artifactKind:string;standard:string;subset:string})=>value.artifactKind==='s.framework.sqlite-snapshot'&&value.standard==='1'&&value.subset==='*';oracle.run('INSERT INTO original_hops VALUES(?,?,?,?)',index,coordinate(hop.from),coordinate(hop.into),Number(sqlite(hop.from)||sqlite(hop.into)));}const observed=oracle.query("SELECT CASE WHEN count(*)=0 OR EXISTS(SELECT 1 FROM original_hops a JOIN original_hops b ON b.ordinal=a.ordinal+1 WHERE a.destination<>b.source) THEN 'io_run: route must contain connected hops' WHEN max(is_sqlite)=1 AND (count(*)<>1 OR ?<>'Exact') THEN 'io_run: SQLite snapshots are exact endpoint transfers and cannot be intermediate hops' WHEN max(is_sqlite)=1 AND min(source=destination)=1 THEN 'io_run: inconsistent SQLite snapshot descriptor' ELSE NULL END cause FROM original_hops").get(row.route.fidelity)as{cause:string|null};assert.equal(observed.cause,row.cause,row.id);assert.equal(observed.cause===null,row.accepted,row.id);}}finally{oracle.close();}
+   oracle.run('CREATE TABLE original_hops(ordinal INTEGER PRIMARY KEY,source TEXT,destination TEXT,is_sqlite INTEGER)');for(const row of fixture.cases){oracle.run('DELETE FROM original_hops');for(const[index,hop]of row.route.hops.entries()){const coordinate=(value:{artifactKind:string;standard:string;subset:string})=>JSON.stringify([value.artifactKind,value.standard,value.subset]);const sqlite=(value:{artifactKind:string;standard:string;subset:string})=>value.artifactKind==='framework.io.sqlite-snapshot'&&value.standard==='1'&&value.subset==='*';oracle.run('INSERT INTO original_hops VALUES(?,?,?,?)',index,coordinate(hop.from),coordinate(hop.into),Number(sqlite(hop.from)||sqlite(hop.into)));}const observed=oracle.query("SELECT CASE WHEN count(*)=0 OR EXISTS(SELECT 1 FROM original_hops a JOIN original_hops b ON b.ordinal=a.ordinal+1 WHERE a.destination<>b.source) THEN 'io_run: route must contain connected hops' WHEN max(is_sqlite)=1 AND (count(*)<>1 OR ?<>'Exact') THEN 'io_run: SQLite snapshots are exact endpoint transfers and cannot be intermediate hops' WHEN max(is_sqlite)=1 AND min(source=destination)=1 THEN 'io_run: inconsistent SQLite snapshot descriptor' ELSE NULL END cause FROM original_hops").get(row.route.fidelity)as{cause:string|null};assert.equal(observed.cause,row.cause,row.id);assert.equal(observed.cause===null,row.accepted,row.id);}}finally{oracle.close();}
   console.log('[DEBUG] Original OS route admission uses canonical per-route/Grant schemas and independent SQLite identity/cause/edge-adjacency/fidelity/zero-authority outcomes; whole-test schema absent; Native custody remains separately observed');
   if(segments[0]==='native')await runRepositoryCargoTests(['semio-framework-os-kernel'],this.repoRoot,this.invocation,['--test','sqlite_snapshot_native_admission','sqlite_snapshot_whole_hop_original_route_refusals','--no-fail-fast','--success-output','immediate']);
  }
@@ -2333,8 +2334,9 @@ export async function directoryEventPageClientOracle(repoRoot: string): Promise<
   assert.throws(() => accept(canonical, 4));
   assert.throws(() => accept(canonical, -1));
   assert.throws(() => accept(`${canonical} `, 3));
-  const typescript = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"), "utf8");
-  const method = typescript.slice(typescript.indexOf("async eventPage("), typescript.indexOf("stream(since", typescript.indexOf("async eventPage(")));
+  const osRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts");
+  const typescript = readModuleTreeSource(osRoot);
+  const method = sliceModuleTreeSource(osRoot, "async eventPage(", "stream(since");
   assert(
     method.includes("response.text()") && method.includes("parseDirectoryEventPageV1(canonicalJson)") && method.includes("page.afterSeqExclusive !== after") && !method.includes("response.json()"),
     "TypeScript canonical page transport is incomplete",

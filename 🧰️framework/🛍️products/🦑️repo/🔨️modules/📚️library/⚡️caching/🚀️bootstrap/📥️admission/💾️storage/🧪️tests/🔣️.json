@@ -1,0 +1,30 @@
+{
+  "cases": [
+    {
+      "version": 1,
+      "platform": "posix",
+      "workspace": "/repository",
+      "storage": "/repository/.cache/b/g/m"
+    },
+    {
+      "version": 1,
+      "platform": "windows",
+      "workspace": "C:\\repository",
+      "storage": "C:\\repository\\.cache\\b\\g\\m"
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "platform": "posix",
+      "workspace": "relative",
+      "storage": "/repository/.cache/b/g/m"
+    },
+    {
+      "version": 1,
+      "platform": "windows",
+      "workspace": "C:\\repository",
+      "storage": "D:\\invented"
+    }
+  ]
+}

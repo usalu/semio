@@ -5,7 +5,8 @@ mod original_poll_input;
 use original_poll_input::OriginalActorPollInput;
 use semio_framework_diagnostic::Fault;
 use semio_framework_actor::{OriginalJobSource,OriginalJobStep,OriginalActorJobProvider,OriginalJobOutputState,OriginalJobOutcome,OriginalJobOutputChunk};
-use semio_framework_job::{OriginalTurnFailure,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,RetainedFaultPublication};
+use semio_framework_job::{OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView};
+use semio_framework_job_fault_publication::RetainedFaultPublication;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneGrant};
 #[path="📤️receipt/🦀️.rs"]
 mod fixed_receipt;

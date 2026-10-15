@@ -401,7 +401,7 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
     if(executable!=="cargo")return capture(environment);
     const prepared=cargoWorkspacePreparationInvocationV1(preparation,root,command.slice(1),root,environment);if(prepared)await captureOwnedCommandV1(prepared.command,[...prepared.args],prepared.cwd,{control:diagnostics.control,env:prepared.environment,output:{maximumBytes:16777216,maximumLines:65536}});
     const index=command.indexOf("--manifest-path"),manifest=index<0?join(root,"Cargo.toml"):resolve(root,command[index+1]!);
-    return withRepositoryCargoInputsV1({workspace:root,manifest,args:command.slice(1),network,control:diagnostics.control,storage:store.storage,environment},capture);
+    return withRepositoryCargoInputsV1({workspace:root,cwd:root,manifest,args:command.slice(1),network,control:diagnostics.control,storage:store.storage,environment},capture);
   };
   try {
     if (!provenance && !artifacts) {

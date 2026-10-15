@@ -421,7 +421,7 @@ fn set_active_example_is_host_only_and_the_flow_child_mints_its_genesis_pack() {
     assert_eq!(demo.flow.child_id, crate::examples::demo::FLOW_ID);
     assert_eq!(demo.flow.target.artifact_id, demo.flow.child_id, "the target must name its own child_id or ChildRestoreProjection refuses the whole load");
     let projection = PlaybookPlayApp::child_restore_projection(&demo).expect("the demo's loaded-parent child projection");
-    assert!(projection.admits_member("flow", &demo.flow.target));
+    assert!(projection.admits_member("flow", demo.flow.target.borrowed()));
     let pack = PlaybookPlayApp::genesis_child_pack(&demo, "flow", &demo.flow.child_id).expect("valid genesis owner").expect("the demo flow child mints its genesis pack");
     let content = <semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("the genesis pack decodes");
     assert_eq!(crate::steps_from_flow_content(&content).expect("decodable demo steps").len(), 3);

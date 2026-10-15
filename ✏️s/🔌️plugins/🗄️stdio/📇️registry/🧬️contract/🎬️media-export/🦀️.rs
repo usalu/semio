@@ -1,6 +1,7 @@
 //! 🎬️ Format-neutral lifecycle for a truly incremental Stdio media serializer.
 
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, RetainedFaultPublication, StepContext};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
+use semio_framework_job_fault_publication::RetainedFaultPublication;
 use semio_framework_plugin::app::{ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactSnapshotCloseLease};
 use semio_framework_plugin::{
     ArtifactApp, ArtifactMediaExportJobRequest, ArtifactReservedJob, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, ToolExecutionContract,

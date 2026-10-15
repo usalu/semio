@@ -10,7 +10,7 @@ use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_scene::identity::SceneIdentity;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
-use semio_framework_job::FixedOperationOwner;
+use semio_framework_job_registry::{FixedOperationOwner};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ActionDescriptor;
 use semio_framework_plugin::ActionKind;

@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_3d_brep_operations::primitives::{make_box, make_cylinder, make_sphere};
+use semio_framework_3d_brep_construction::primitives::{make_box, make_cylinder, make_sphere};
 use crate::mass_properties::oracle::{ClosedFormMass, Sdf};
 use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;

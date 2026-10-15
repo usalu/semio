@@ -8,6 +8,7 @@ import { SUSTAINED_TURN_OVERRUN_TURNS, TurnClock, TurnLedger, WORKER_STEP_BUDGET
 import { FrameTurnScheduler, WorkerTurnTaskQueue, nextFrameSequence } from "../../🎯️targets/🧊️wgpu/🧵️frame-turn-scheduler/🟦️.ts";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import catalogFixture from "../../../../🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/🧩️composition/🔣️.json";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 const catalog = pluginCatalogV1(admitPluginCatalogV1(catalogFixture.cases[1].input, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }));
 
 const ENGINE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -548,7 +549,7 @@ describe("wgpu frame-Worker step budget", () => {
     expect(browserWorkerSource).toContain("request_frame: continue_frame,");
     expect(browserWorkerSource).toContain("next_deadline_delay_ms: host.scheduler.next_deadline()");
     expect(turnSource).toContain("nextDeadlineDelayMs: result.nextDeadlineDelayMs");
-    const rendererSource = readFileSync(RENDERER_RS, "utf8");
+    const rendererSource = readModuleTreeSource(RENDERER_RS);
     const textContinuationAt = rendererSource.lastIndexOf("fn has_pending_text_work");
     const textContinuation = rendererSource.slice(textContinuationAt, rendererSource.indexOf("fn drive_text_operation", textContinuationAt));
     expect(textContinuation).toContain("text_buffer.runnable_work_pending()");

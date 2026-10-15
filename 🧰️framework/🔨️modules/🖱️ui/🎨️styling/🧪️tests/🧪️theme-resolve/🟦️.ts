@@ -4,6 +4,9 @@ type TestSource = { readonly directory: string; readonly url: string };
 type ColorStringOracle = { readonly get: { rgb(value: string): readonly [number, number, number, number] | null } };
 
 import canonicalThemeDocument from "../🧫️fixtures/🎨️canonical-theme-document/🔣️.json" with { type: "json" };
+import * as ModuleUnderTest from "../../🌓️theme/🟦️.ts";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🌓️theme/🟦️.ts"), "parseUiTheme" | "resolveThemeAppearancePalettes" | "resolveThemeMetrics" | "resolveThemePaint" | "serializeUiTheme">, source: TestSource): Promise<void> {
   const { parseUiTheme, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme } = dependencies;
@@ -370,3 +373,8 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { parseUiTheme: ModuleUnderTest.parseUiTheme, resolveThemeAppearancePalettes: ModuleUnderTest.resolveThemeAppearancePalettes, resolveThemeMetrics: ModuleUnderTest.resolveThemeMetrics, resolveThemePaint: ModuleUnderTest.resolveThemePaint, serializeUiTheme: ModuleUnderTest.serializeUiTheme }, { directory: resolve(import.meta.dirname, "../../🌓️theme"), url: pathToFileURL(resolve(import.meta.dirname, "../../🌓️theme/🟦️.ts")).href });
+await registerTests2(vitestApi, { SPATIAL_AXIS_COLOR_REFS: ModuleUnderTest.SPATIAL_AXIS_COLOR_REFS, STYLING_BOARD_PALETTES: ModuleUnderTest.STYLING_BOARD_PALETTES, blendTokenHex: ModuleUnderTest.blendTokenHex, clearColorResolveCache: ModuleUnderTest.clearColorResolveCache, contrastRatio: ModuleUnderTest.contrastRatio, contrastRatioRgba: ModuleUnderTest.contrastRatioRgba, themePaintContrast: ModuleUnderTest.themePaintContrast, wcagContrastGrade: ModuleUnderTest.wcagContrastGrade, readableForegroundHex: ModuleUnderTest.readableForegroundHex, relativeLuminance: ModuleUnderTest.relativeLuminance, resolveColorHex: ModuleUnderTest.resolveColorHex, resolveColorRgba: ModuleUnderTest.resolveColorRgba, resolveSemanticColorHex: ModuleUnderTest.resolveSemanticColorHex, resolveSpatialAxisColors: ModuleUnderTest.resolveSpatialAxisColors, serializeCanvasThemeJson: ModuleUnderTest.serializeCanvasThemeJson, syncSessionCanvasTheme: ModuleUnderTest.syncSessionCanvasTheme, tokenHex: ModuleUnderTest.tokenHex, tokenVar: ModuleUnderTest.tokenVar }, { directory: resolve(import.meta.dirname, "../../🌓️theme"), url: pathToFileURL(resolve(import.meta.dirname, "../../🌓️theme/🟦️.ts")).href });
+await registerTests3(vitestApi, { STYLING_BOARD_PALETTES: ModuleUnderTest.STYLING_BOARD_PALETTES, _activeUiTheme: ModuleUnderTest._activeUiTheme, _appliedThemeCssPropsByRoot: ModuleUnderTest._appliedThemeCssPropsByRoot, activeUiTheme: ModuleUnderTest.activeUiTheme, applyUiThemeToDocument: ModuleUnderTest.applyUiThemeToDocument, applyUiThemeToRoot: ModuleUnderTest.applyUiThemeToRoot, builtinUiThemes: ModuleUnderTest.builtinUiThemes, clearUiThemeFromRoot: ModuleUnderTest.clearUiThemeFromRoot, semioTheme: ModuleUnderTest.semioTheme, serializeCanvasThemeJson: ModuleUnderTest.serializeCanvasThemeJson, setActiveUiTheme: ModuleUnderTest.setActiveUiTheme, subscribeActiveUiTheme: ModuleUnderTest.subscribeActiveUiTheme }, { directory: resolve(import.meta.dirname, "../../🌓️theme"), url: pathToFileURL(resolve(import.meta.dirname, "../../🌓️theme/🟦️.ts")).href });

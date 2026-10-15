@@ -13,13 +13,13 @@ fn expected_clock_cause(samples: &[Option<u64>]) -> super::super::RuntimeCleanup
     RuntimeCleanupFault::InteractiveCeiling
 }
 
-fn admit_fixture_session<J:semio_framework_job::InteractiveJob+'static>(job:J,config:semio_framework_job::BatchDriveConfig,cx:&mut semio_framework_job::StepContext<'_>)->semio_framework_job::BatchJobSession<J>{
+fn admit_fixture_session<J:semio_framework_job::InteractiveJob+'static>(job:J,config:semio_framework_job_worker_authority::BatchDriveConfig,cx:&mut semio_framework_job::StepContext<'_>)->semio_framework_job_worker::BatchJobSession<J>{
     let mut original=semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()));
     for _ in 0..crate::app_testing::OriginalFixtureCaller::maximum_turns(){if let Some(session)=original.admit_pending_batch(config,cx).expect("same original fixture session admission"){assert!(original.terminal_is_empty());return session;}}
     panic!("original session admission exceeded its supplied fixture turns")
 }
 
-fn close_fixture_session<J:semio_framework_job::InteractiveJob+'static>(session:&mut semio_framework_job::BatchJobSession<J>,cx:&mut semio_framework_job::StepContext<'_>){
+fn close_fixture_session<J:semio_framework_job::InteractiveJob+'static>(session:&mut semio_framework_job_worker::BatchJobSession<J>,cx:&mut semio_framework_job::StepContext<'_>){
     for _ in 0..crate::app_testing::OriginalFixtureCaller::maximum_turns(){if session.terminal_is_empty(){break;}session.close_step(cx).expect("same original fixture session close");}
     assert!(session.terminal_is_empty());
 }
@@ -34,7 +34,7 @@ fn drive_fixture_close_with_samples(state:&std::sync::Arc<super::super::RuntimeC
 fn terminal_close_state(complete: bool, faulted: bool, blocked: bool,cx:&mut semio_framework_job::StepContext<'_>) -> std::sync::Arc<super::super::RuntimeCloseWorkerState<TestRuntimeApps>> {
     use super::super::*;
     let job = RuntimeCloseCleanupJob { state: None, instance_id: 7, progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: true };
-    let params = semio_framework_job::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
+    let params = semio_framework_job_worker_authority::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
     let mut session = admit_fixture_session(job, params,cx);
     session.begin_close();
     close_fixture_session(&mut session,cx);
@@ -239,7 +239,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(true, false, false,cx);
     let job = RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(&state)), instance_id: 7, progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: false };
-    let params = semio_framework_job::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
+    let params = semio_framework_job_worker_authority::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
     let mut session = admit_fixture_session(job, params,cx);
     session.step_on_original_caller(cx).unwrap();
     assert!(session.checkout_outcome());

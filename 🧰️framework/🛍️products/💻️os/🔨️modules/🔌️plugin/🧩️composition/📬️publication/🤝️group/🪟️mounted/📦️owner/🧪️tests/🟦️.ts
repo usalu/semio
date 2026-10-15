@@ -14,7 +14,7 @@ test("mounted private group frames retain every original owner on zero or underf
  const source=await Bun.file(new URL("../../../../../../🪆️child/🦀️.rs",import.meta.url)).text();
  const owner=await Bun.file(new URL("../🦀️.rs",import.meta.url)).text();
  const instance=await Bun.file(new URL("../../../../../../🧵️instance/🤝️group/🦀️.rs",import.meta.url)).text();
- const mounted=await Bun.file(new URL("../../../../../../🧵️instance/🦀️.rs",import.meta.url)).text();
+ const mounted=await (await Promise.all(["🦀️.rs","🚪️ingress/🦀️.rs","📨️dispatch/🦀️.rs","🖼️render/🦀️.rs","🧷️command-routes/🦀️.rs","🧾️typed-operations/🦀️.rs","🔌️plugin-app-impl/🦀️.rs"].map(s=>Bun.file(new URL("../../../../../../🧵️instance/"+s,import.meta.url)).text()))).join("\n");
  expect(mounted.includes("private_child_groups: ArtifactFixedRegistry")).toBe(true);
  expect(source.includes('include!("../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs")')).toBe(true);
  expect(instance.includes("fn admit_private_child_group_frame(")).toBe(true);

@@ -1,15 +1,15 @@
 //! 🎟️ Original operation identity and retained currencies survive every native and component turn.
-use protocol::value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
 use semio_framework_value_derive::{FromValue,ToValue};
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-#[value(crate="::protocol::value")]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct OriginalActorTurnWork{pub clock_binding:u64,pub absolute_deadline_us:u64,pub fuel:u64}
 semio_framework_value::artifact_retire_leaf!(OriginalActorTurnWork);
 /// 🪙️ The issuer's actual bounded semantic view stays separate from its total source authority.
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-#[value(crate="::protocol::value")]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct OriginalActorTurnLoan{pub retained_policy:RetainedCloneGrant,pub work_fuel:u64,pub deadline_us:u64}
 semio_framework_value::artifact_retire_leaf!(OriginalActorTurnLoan);
 impl OriginalActorTurnLoan{
@@ -22,12 +22,12 @@ impl OriginalActorTurnLoan{
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-#[value(crate="::protocol::value")]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct RetainedTurnInput{pub operation:u64,pub generation:u64,pub epoch:u64,pub work:OriginalActorTurnWork,pub grant:RetainedCloneGrant}
 semio_framework_value::artifact_retire_leaf!(RetainedTurnInput);
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-#[value(crate="::protocol::value")]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct RetainedTurnReceipt{pub input:RetainedTurnInput,pub spent:RetainedCloneProgress,pub work_units_spent:u64,pub remaining:RetainedCloneGrant,pub remaining_fuel:u64}
 impl RetainedTurnInput{
  pub fn borrow_original(cx:&semio_framework_job::StepContext<'_>)->Result<Self,ValueError>{cx.original_source_parent()?;let original=Self{operation:cx.operation().0,generation:cx.generation().0,epoch:cx.original_source_epoch().ok_or_else(||refusal("original actor input requires its actual issued epoch"))?,work:OriginalActorTurnWork{clock_binding:cx.original_clock_binding().ok_or_else(||refusal("original actor input requires its bound issuer clock"))?,absolute_deadline_us:cx.original_absolute_deadline_us(),fuel:cx.original_total_fuel_remaining()},grant:cx.original_total_retained_grant()};original.validate()?;Ok(original)}
@@ -136,8 +136,7 @@ pub use original_job_source_wire::{OriginalJobSourceWireCursor,OriginalJobSource
 mod original_actor_park;
 pub use original_actor_park::{OriginalActorParkRefusal,OriginalActorParkedTurn,OriginalActorParkedOutcome,OriginalActorParkedReturn};
 
-#[path="🎟️context/🦀️.rs"]
-pub mod context;
+
 
 #[cfg(test)]
 #[path="🪙️loan/🧪️tests/🦀️.rs"]

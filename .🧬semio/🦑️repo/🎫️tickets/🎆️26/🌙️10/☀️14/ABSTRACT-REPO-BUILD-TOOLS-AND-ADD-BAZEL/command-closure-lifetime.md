@@ -1,0 +1,31 @@
+# Command Closure Lifetime
+
+This is a bounded read-only source trace. No FactStore, test, benchmark, compiler, graph publication or production edit was performed. It identifies repeated work that exists in Source; it does not assign an unmeasured runtime cost to that work.
+
+The full ALL producer already shares one script cache across projects. emojiProjectJsonNodes creates createScriptInputCache(context) once, before constructing project jobs, and passes that same object into every observed project assembly. A new cross-project script cache by itself therefore does not address the observed ALL run. Each fresh settlement round calls emojiProjectJsonNodes again and receives fresh maps, which is the correct lifetime for source attempts.
+
+The selected inventory differs: discoverBuildOwnerAdmissionFactsV1 creates a fresh script cache per owner callback. Only nativeCache/nativeClosures are shared inside each inventory capture. Sharing the entire script cache there would be incorrect: modules/resources are mutable membership sets subsequently used to choose the receiving owner's compiler closure and dependencies. Carrying another owner's sets into that stage would pollute selection; cached closure hits would also need to replay their own membership effects.
+
+relativeScriptInputs has three layers of existing reuse:
+
+- The whole closure key is JSON of resolved workspace, sorted distinct absolute roots, and requiredSources. A hit returns its original input-array value after observation validation.
+- Its per-file imports key is JSON of physical path and requiredSources. A different entry-set closure still visits the reachable graph afresh, but shared file imports can hit this map.
+- Command parsing separately uses bounded content-addressed source-analysis caches. The parser exposes commandSourceParseStats for an isolated future law.
+
+A whole-closure or file-import hit in memoizedObservedAsyncComputationV1 still iterates every saved observation and awaits its checkpoint. That checkpoint checks the original invocation every time and publishes/continues every sixteen steps. It then replays every saved fact into both the receiving inference scope and the independent source capture. projectObservationHoldsV1 already shares actual validation by observation identity and exact fact within inferenceValidationScopes for the current settlement round. Thus repeat hit work is not equivalent to repeat parsing or repeat physical validation; iteration, awaited checkpoints and fact replay remain. Different root combinations additionally repeat DAG traversal and edges even when per-file imports hit.
+
+Outside those memos, targetScriptSources binds every base/configured command recipe and readPhysicalSource-checks each script before the final distinct entry set is passed to relativeScriptInputs. Configuration recipes with identical command/cwd/args still repeat that binding and physical root read. Native classification, process classification and final command-input inference can invoke the same target closure at different stages. This is a concrete repeated-work opportunity, not measured proof that it dominates ALL time.
+
+Any later reuse must retain all of these guards:
+
+- Allocate only inside the same attempt/capture, never globally across source rounds or provider revisions.
+- Key physical closure roots by workspace, absolute root set and requiredSources, with command parsing/resolution using the current immutable provider handle and revision.
+- Preserve raw/url binary leaves versus executable modules, selected receiver membership, type companions, command-list forwarding, effective configured cwd/command/array args, and Cargo continuation declarations.
+- Replay all original observations into every receiving project and source capture, including absent paths, resolver/ancestor facts and contradictory reads. Do not replace facts with a digest or skip final Source receipt validation.
+- Retain awaited original cancellation, progress and continuation during both cold traversal and cache replay. Existing source-cancellation law specifically covers cache-hit replay.
+
+A meaningful isolated TDD would use a small language-neutral diamond: two script entrypoints import a common module and binary raw/url leaves; one configured entrypoint changes cwd and imports another owner; a type-only companion exercises compile membership. Actual esbuild metafile inputs and TypeScript preProcessFile supply independent reachability. Compare fresh and shared outputs and complete normalized captured facts for each receiver, verify no membership pollution between owners, and observe parser misses separately from hit/checkpoint counts. Mutate the shared module and resolver absence, then require fresh/shared equality and new facts without stale ones. Fresh attempts must allocate new maps. Original cancellation must abort both cold and replay paths at the existing bounded continuation, with no successful cache entry from a failed computation. Count-based reuse assertions are appropriate; wall-clock speed thresholds are not.
+
+For the current ALL slowdown, first measure repeated closure keys, file-map hits, parser misses and replay observation counts under the original invocation. A selected-only cache change cannot truthfully be presented as an ALL fix. No optimization has been implemented or qualified by this trace.
+
+A proposed warmed-singleton union was exercised by an isolated language-neutral diamond. Its independent esbuild/TypeScript inputs, full fresh/warm facts and module/resource sets agreed; the proposed no-retraversal assertion failed with four current per-file memo lookups. This was an optimization diagnostic, not a correctness defect. Core measured a real warmed pair with 287 repeated lookups and equal inputs/facts, but the actual OS production normalizer had zero eligible multi-root calls. Root therefore rejected leaving that unsupported feature RED in the permanent suite. Only the newly authored EOF law and its fixture key were removed, preserving all unrelated fields and tests; the language-neutral input remains closure/🔣️.json and actual diagnostic output remains generated/command-closure-compose-red.txt. No composition production change was made or claimed.

@@ -1,0 +1,209 @@
+{
+  "locales": [
+    "en",
+    "de"
+  ],
+  "document": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/os/shell-helpers/staged-arg-controls/choice-document.json",
+    "title": "StagedChoiceDocument",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "items"
+    ],
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/StagedChoiceNode"
+        }
+      }
+    },
+    "$defs": {
+      "StagedChoiceNode": {
+        "title": "StagedChoiceNode",
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "text",
+              "role": "value",
+              "label": {
+                "en": "Kind",
+                "de": "Art"
+              },
+              "description": {
+                "en": "For example alpha, beta or gamma.",
+                "de": "Zum Beispiel alpha, beta oder gamma."
+              },
+              "group": "choice",
+              "order": 10
+            }
+          },
+          "mode": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "mutation": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/os/shell-helpers/staged-arg-controls/create-item.json",
+    "title": "CreateItem",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mutation",
+      "item"
+    ],
+    "properties": {
+      "mutation": {
+        "const": "createItem"
+      },
+      "item": {
+        "x-semio-ui": {
+          "role": "value",
+          "label": {
+            "en": "Item",
+            "de": "Element"
+          },
+          "description": {
+            "en": "The complete item to add.",
+            "de": "Das vollständige hinzuzufügende Element."
+          },
+          "group": "record",
+          "order": 30
+        },
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/shell-helpers/staged-arg-controls/choice-document.json#/$defs/StagedChoiceNode"
+          }
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "alpha",
+              "beta",
+              "gamma",
+              "delta"
+            ],
+            "x-semio-ui": {
+              "widget": "select",
+              "role": "value",
+              "label": {
+                "en": "Kind",
+                "de": "Art"
+              },
+              "options": {
+                "alpha": {
+                  "en": "Alpha",
+                  "de": "Alpha"
+                },
+                "beta": {
+                  "en": "Beta",
+                  "de": "Beta"
+                },
+                "gamma": {
+                  "en": "Gamma",
+                  "de": "Gamma"
+                },
+                "delta": {
+                  "en": "Delta",
+                  "de": "Delta"
+                }
+              },
+              "group": "choice",
+              "order": 10
+            }
+          },
+          "mode": {
+            "enum": [
+              "plain",
+              "inverted",
+              "mirrored",
+              "doubled",
+              "hushed"
+            ],
+            "x-semio-ui": {
+              "widget": "select",
+              "role": "value",
+              "label": {
+                "en": "Mode",
+                "de": "Modus"
+              },
+              "options": {
+                "plain": {
+                  "en": "Plain",
+                  "de": "Schlicht"
+                },
+                "inverted": {
+                  "en": "Inverted",
+                  "de": "Invertiert"
+                },
+                "mirrored": {
+                  "en": "Mirrored",
+                  "de": "Gespiegelt"
+                },
+                "doubled": {
+                  "en": "Doubled",
+                  "de": "Verdoppelt"
+                },
+                "hushed": {
+                  "en": "Hushed",
+                  "de": "Gedämpft"
+                }
+              },
+              "group": "choice",
+              "order": 20
+            }
+          }
+        }
+      }
+    }
+  },
+  "fields": [
+    {
+      "id": "kind",
+      "label": {
+        "en": "Kind",
+        "de": "Art"
+      },
+      "options": [
+        "alpha",
+        "beta",
+        "gamma",
+        "delta"
+      ],
+      "invalid": [
+        "invalid-kind",
+        "omega"
+      ]
+    },
+    {
+      "id": "mode",
+      "label": {
+        "en": "Mode",
+        "de": "Modus"
+      },
+      "options": [
+        "plain",
+        "inverted",
+        "mirrored",
+        "doubled",
+        "hushed"
+      ],
+      "invalid": [
+        "invalid-mode",
+        "custom mode"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 use super::*;
-use {semio_framework_3d_brep_operations::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use {semio_framework_3d_brep_construction::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
 use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_tolerance::Tol;
@@ -272,8 +272,8 @@ async fn sliver_face_is_detected_when_tolerance_exceeds_face_area() {
 async fn self_intersection_probe_warns_on_overlapping_non_adjacent_faces() {
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
-    let a = semio_framework_3d_brep_operations::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-    let b = semio_framework_3d_brep_operations::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+    let a = semio_framework_3d_brep_construction::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+    let b = semio_framework_3d_brep_construction::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
     let mut faces = body.solid_faces(a);
     faces.extend(body.solid_faces(b));
     let shell = add_shell(&mut body, faces, &mut rec);

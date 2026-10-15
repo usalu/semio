@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020";
 import { describe, expect, it } from "vitest";
 import { flowAddWidgetArgs, nodeGraphEditRows } from "../../🧱️elements/🕸️NodeGraph/🟦️.tsx";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const engineRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const repoRoot = resolve(engineRoot, "../../../../../..");
@@ -50,15 +51,15 @@ describe("node-graph edit rows", () => {
   });
 
   it("never publishes the whole fixture from either React node-graph surface", () => {
-    const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
+    const reactGraph = readModuleTreeSource(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"));
     expect(reactGraph).not.toContain("setHostSnapshot");
     expect(reactGraph).not.toContain("commitFixture");
     expect(reactGraph).not.toContain("session.addWidget(");
-    const wgpu = readFileSync(resolve(engineRoot, "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
+    const wgpu = readModuleTreeSource(resolve(engineRoot, "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"));
     expect(wgpu).not.toContain("setHostSnapshot");
     expect(wgpu).toContain("flow::dag::write_dag_graph_edit_rows(edits, &mut BoundedGraphEditRows(builder))?");
     expect(wgpu).not.toContain('builder.string(Some("operation")');
-    const dag = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"), "utf8");
+    const dag = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"));
     for (const operation of ["connect", "disconnect", "move", "setSlider", "insertPort"]) expect(dag).toContain(`sink.text("operation", "${operation}")?`);
   });
 });

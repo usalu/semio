@@ -11,6 +11,10 @@ assert.equal(process.env.SEMIO_TEST_ARTIFACT_DIR,artifacts,"Original ticket arti
 assert.equal(process.env.SEMIO_BUILD_GRAPH_PATH,path,"Original all-workspace pin handoff required");
 assert.equal(process.env.SEMIO_BUILD_GRAPH_DIGEST,digestArgument,"Original all-workspace digest handoff required");
 assert.equal(process.env.SEMIO_BUILD_REUSE_GRAPH,"true","Original all-workspace reuse required");
+if(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION!==undefined)throw Error("Standalone command audit requires its own original envelope");
+const routing=await import(join(root,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts")),{createBuildBootstrapCapabilitiesV1}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts")),arguments_=["show","targets","--json"];
+await routing.withScriptProcessEnvelope(routing.createScriptProcessEnvelope({version:1,owner:"repository:build",maximumElapsedMilliseconds:120000},await createBuildBootstrapCapabilitiesV1(root,arguments_,process.env),Date.now()),async original=>{
+routing.checkScriptInvocation(original);
 const source=readFileSync(path,"utf8"),digest=createHash("sha256").update(source).digest("hex");
 assert.equal(digest,digestArgument);
 const {readBuildGraphV1}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts"));
@@ -22,6 +26,7 @@ let targets=0,configurations=0,continuous=0,commandRecipes=0,scriptReferences=0,
 const processScript=join(root,"🧰️framework/🔨️modules/🏃️process/📜️script.ts");
 const {parseCommandArgumentsV1,resolveCommandConfigurationV1}=await import(join(dirname(processScript),"🧭️routing/🎛️command/⚙️configuration/🟦️.ts"));
 const inspect=(argv:string[],cwd:string,id:string,command:string)=>{
+ routing.checkScriptInvocation(original);
  const boundary=argv.indexOf("--"),wrapper=argv.findIndex(argument=>argument.endsWith("📜️script.ts")&&resolve(cwd,argument)===processScript);
  const owned=wrapper>=0&&argv[wrapper+1]==="command"&&boundary>wrapper;
  for(const argument of owned?argv.slice(0,boundary):argv)if(argument.endsWith("📜️script.ts")){
@@ -33,13 +38,13 @@ const inspect=(argv:string[],cwd:string,id:string,command:string)=>{
   assert(configuration>=0&&owner>=0,"Owned command requires explicit configuration and owner");
   const configurationPath=resolve(cwd,options[configuration+1]!),value=JSON.parse(readFileSync(configurationPath,"utf8")),workspace=resolve(dirname(configurationPath),value.workspace),nested=resolve(workspace,options[owner+1]!);
   const selection=parseCommandArgumentsV1([...options.map((value,index)=>index===configuration+1?configurationPath:value),"--",...argv.slice(boundary+1)]);
-  assert.equal(resolveCommandConfigurationV1(selection,{...process.env,SEMIO_BUILD_MODE:"prototype"}).request.cwd,nested);
+  assert.equal(resolveCommandConfigurationV1(selection,{...process.env,SEMIO_BUILD_MODE:"prototype"},original).request.cwd,nested);
   if(!existsSync(nested))failures.push({id,cwd:nested,error:"Missing nested execution directory"});
   nestedCommandBoundaries++;inspect(argv.slice(boundary+1),nested,id,command);
  }
 };
 for(const project of Object.values(graph.projects) as any[])for(const [name,target]of Object.entries(project.targets)as any[]){
- targets++;if(target.continuous)continuous++;
+ targets++;routing.checkScriptInvocation(original);if(targets%64===0)await routing.advanceScriptInvocation(original,"command-audit","running");if(target.continuous)continuous++;
  for(const [configuration,overrides]of[["",{}],...Object.entries(target.configurations??{})]as any[]){
   if(configuration)configurations++;
   const execution={...target.execution,...overrides.execution},expand=(value:string)=>value.replaceAll("{workspaceRoot}",root).replaceAll("{projectRoot}",project.root);
@@ -53,6 +58,8 @@ for(const project of Object.values(graph.projects) as any[])for(const [name,targ
   }
  }
 }
-const result={digest,projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length,targets,configurations,continuous,commandRecipes,scriptReferences,nestedCommandBoundaries,dynamicReferences:dynamic.length,failures};
+routing.checkScriptInvocation(original);
+const result={originalMaximumElapsedMilliseconds:original.policy.maximumElapsedMilliseconds,digest,projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length,targets,configurations,continuous,commandRecipes,scriptReferences,nestedCommandBoundaries,dynamicReferences:dynamic.length,failures};
 writeFileSync(join(artifacts,"graph-command-audit.json"),JSON.stringify(result,null,2)+"\n");
 console.log("[DEBUG] Canonical command audit "+JSON.stringify(result));assert.equal(failures.length,0);
+});

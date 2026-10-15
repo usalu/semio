@@ -65,5 +65,25 @@ class CatalogPublicationTestScript extends BundleScript {
     await runOwnedCommand(process.execPath,["test",resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/📣️publication/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/🌐️browser-host/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧪️tests/🟦️.ts"),resolve(this.root,"🔁️rebuild/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🧩️native-prerequisites/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🏗️preparation/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🌐️playground-site-dist/🟦️.ts")],this.repoRoot,"catalog-publication",120000,{signal:this.invocation.control.signal});
   }
 }
-const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication",CatalogPublicationScript).register("catalog-publication-test",CatalogPublicationTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript);
+/** 🤝️ The real-client end-to-end gate: spawns BOTH `.mcp.json` servers with the literal `command`/`args` a Claude Code or Cursor host uses, then drives the whole agent journey over stdio JSON-RPC against the pins this specific layer owns. `--folder <path>` binds an existing space instead of a throwaway one; the capability catalog always comes from the repo's installed plugin registry. */
+class McpClientEndToEndScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    const flag = args.indexOf("--folder");
+    if (flag >= 0 && !args[flag + 1]) throw new Error("usage: mcp-client-e2e [--folder <path>]");
+    const { mkdtempSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { requireMcpBinary, runMcpClientEndToEnd } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts");
+    const { SPECIFIC_MCP_CLIENT_E2E_PINS_V1 } = await import("./🤝️mcp-client-e2e/🟦️.ts");
+    const folder = flag >= 0 ? join(this.repoRoot, args[flag + 1] as string) : mkdtempSync(join(tmpdir(), "semio-mcp-client-e2e-"));
+    console.log(`[mcp-client-e2e] binary ${requireMcpBinary(this.repoRoot)}`);
+    console.log(`[mcp-client-e2e] workspace folder ${folder}`);
+    const steps = await runMcpClientEndToEnd(this.repoRoot, folder, SPECIFIC_MCP_CLIENT_E2E_PINS_V1);
+    for (const step of steps) console.log(`${step.ok ? "PASS" : "FAIL"}  ${step.step} — ${step.detail}`);
+    const failed = steps.filter((step) => !step.ok);
+    console.log(`mcp-client-e2e: ${steps.length - failed.length}/${steps.length} steps green over the two real .mcp.json servers.`);
+    if (failed.length > 0) throw new Error(`mcp-client-e2e: ${failed.length} step(s) red: ${failed.map((step) => step.step).join(", ")}`);
+  }
+}
+const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("mcp-client-e2e", McpClientEndToEndScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication",CatalogPublicationScript).register("catalog-publication-test",CatalogPublicationTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

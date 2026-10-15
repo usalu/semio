@@ -6,9 +6,9 @@
 use super::*;
 use crate::draft::draft_of;
 use crate::population::CENTRED;
-use crate::schema::{Glanced, Hushed, Over, Point, Pointed, Rate, StageEvent, Ticked, Unpointed};
 use crate::stage::tests::{meadow, plain, pointed, rested, run, ticked, troupe};
 use crate::stage::{advance, frame_of};
+use semio_framework_pets_contract::schema::{Glanced, Hushed, Over, Point, Pointed, Rate, StageEvent, Ticked, Unpointed};
 
 #[test]
 fn a_quiet_hour_of_sleep_is_jumped_over() {

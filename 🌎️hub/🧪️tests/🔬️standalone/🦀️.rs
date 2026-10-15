@@ -3,7 +3,7 @@ use semio_hub::directory::CommandResult;
 /// 🧪️ A document socket grant without the open-plan route: the credential's subject and actor, a
 /// descriptor-only plan-free admission for socket laws that are not about plan revalidation.
 #[cfg(test)]
-async fn issue_document_socket_grant_fixture(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentSocketGrantReceiptV1>, StatusCode> {
+pub(crate) async fn issue_document_socket_grant_fixture(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentSocketGrantReceiptV1>, StatusCode> {
     if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) {
         return Err(StatusCode::BAD_REQUEST);
     }
@@ -31,7 +31,7 @@ async fn issue_document_socket_grant_fixture(Path((space_id, document_id)): Path
 }
 
 #[cfg(test)]
-async fn pause_directory_command_authority(state: &HubState, user_id: &str, fenced: bool) {
+pub(crate) async fn pause_directory_command_authority(state: &HubState, user_id: &str, fenced: bool) {
     if let Some(gate) = &state.live_gate {
         if !fenced {
             gate.directory_command_attempted.add_permits(1);
@@ -45,7 +45,7 @@ async fn pause_directory_command_authority(state: &HubState, user_id: &str, fenc
 }
 
 #[cfg(test)]
-async fn pause_directory_command_membership_fence(state: &HubState) {
+pub(crate) async fn pause_directory_command_membership_fence(state: &HubState) {
     if let Some(test_gate) = &state.live_gate {
         if test_gate.socket_membership_remove_enabled.load(std::sync::atomic::Ordering::Acquire) {
             test_gate.socket_membership_remove_admitted.add_permits(1);
@@ -55,7 +55,7 @@ async fn pause_directory_command_membership_fence(state: &HubState) {
 }
 
 #[cfg(test)]
-async fn pause_admin_effect_started(state: &HubState) {
+pub(crate) async fn pause_admin_effect_started(state: &HubState) {
     if let Some(gate) = &state.live_gate {
         if gate.admin_effect_pause_enabled.load(std::sync::atomic::Ordering::Acquire) {
             gate.admin_effect_admitted.add_permits(1);
@@ -65,7 +65,7 @@ async fn pause_admin_effect_started(state: &HubState) {
 }
 
 #[cfg(test)]
-async fn execute_directory_command_fenced(state: &HubState, actor: DirectoryActor, command: DirectoryCommand) -> Result<(Vec<DirectoryEvent>, Option<CommandResult>), FencedDirectoryCommandErrorV1> {
+pub(crate) async fn execute_directory_command_fenced(state: &HubState, actor: DirectoryActor, command: DirectoryCommand) -> Result<(Vec<DirectoryEvent>, Option<CommandResult>), FencedDirectoryCommandErrorV1> {
     let _authority = acquire_directory_command_fence(state, Vec::new(), &command).await?;
     if matches!(&command, DirectoryCommand::RemoveMember { .. }) {
         pause_directory_command_membership_fence(state).await;
@@ -76,7 +76,7 @@ async fn execute_directory_command_fenced(state: &HubState, actor: DirectoryActo
 }
 
 #[cfg(test)]
-async fn pause_global_directory_send_for_test(state: &HubState, record: &SocketGrantRecordV1, mode: u8) {
+pub(crate) async fn pause_global_directory_send_for_test(state: &HubState, record: &SocketGrantRecordV1, mode: u8) {
     let Some(gate) = &state.live_gate else { return };
     let SocketSubjectV1::Session { user_id, .. } = &record.subject else { return };
     let pause = gate.socket_global_send_pause.lock().expect("global send pause").clone();

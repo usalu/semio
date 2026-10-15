@@ -298,7 +298,7 @@ impl ArtifactViewer for EnergyModelViewer {
     const DIALECT: Dialect = MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         crate::snapshot::energy_child_restore_projection(snapshot)
     }
 

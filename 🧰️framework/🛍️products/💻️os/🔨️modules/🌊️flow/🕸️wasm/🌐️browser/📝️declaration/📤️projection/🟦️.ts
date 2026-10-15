@@ -48,7 +48,8 @@ ${["document", "interaction", "editing", "surface", "drawing"].map((group, index
 }
 export interface FlowRetainedProgress { readonly copiedItems:number; readonly copiedBytes:number; readonly retainedCapacityBytes:number; readonly releasedBytes:number; }
 export interface FlowRetainedGrant { readonly maximumItems:number; readonly maximumCopyBytes:number; readonly maximumCapacityBytes:number; readonly maximumReleaseBytes:number; readonly maximumDepth:number; }
-export interface FlowBrowserOptions { readonly source: unknown; readonly bindings?: unknown; readonly imports?: WebAssembly.Imports; readonly instantiate?: typeof WebAssembly.instantiate; readonly schedule?: (callback: () => void) => void; readonly now?: () => number; readonly maximumInFlight?: number; readonly retainedGrant?: FlowRetainedGrant; }
+export interface FlowCompilerFonts { readonly math: Uint8Array; readonly serif: Uint8Array; readonly serifItalic: Uint8Array; readonly mono: Uint8Array; readonly emoji: Uint8Array; }
+export interface FlowBrowserOptions { readonly source: unknown; readonly bindings?: unknown; readonly compilerFonts?: FlowCompilerFonts; readonly imports?: WebAssembly.Imports; readonly instantiate?: typeof WebAssembly.instantiate; readonly schedule?: (callback: () => void) => void; readonly now?: () => number; readonly maximumInFlight?: number; readonly retainedGrant?: FlowRetainedGrant; }
 export interface FlowBrowserRuntime { openSession(): FlowSession; close(): Promise<void>; terminalIsEmpty(): boolean; stepProgress(): FlowRetainedProgress; }
 export declare function createFlowBrowserRuntime(options: FlowBrowserOptions): Promise<FlowBrowserRuntime>;
 export declare class FlowSession {

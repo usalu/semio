@@ -92,6 +92,6 @@ fn din18599_child_restore_projection_accepts_the_derived_climate_table() {
     let snapshot = Din18599Snapshot::default();
     let projection = din18599_child_restore_projection(&snapshot).expect("canonical DIN 18599 climate table child");
     assert_eq!(projection.len(), 1);
-    assert!(projection.admits_member(DIN18599_CLIMATE_TABLE_SLOT, &snapshot.climate_table.target));
+    assert!(projection.admits_member(DIN18599_CLIMATE_TABLE_SLOT, snapshot.climate_table.target.borrowed()));
     assert_eq!(snapshot.climate_table, din18599_climate_table_child(&snapshot.climate));
 }

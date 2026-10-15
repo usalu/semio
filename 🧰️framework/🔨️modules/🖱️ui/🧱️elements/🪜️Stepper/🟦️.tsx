@@ -9,7 +9,7 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
-import { PropertyValueColumnContext } from "../🌳️Tree/🟦️.tsx";
+import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { formatNumber } from "../✏️Input/🟦️.tsx";
 import { roundUiNumber } from "../../🧬️contract/🔢️number-format/🟦️.ts";
 import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
@@ -18,7 +18,8 @@ import { borderNormalClass } from "../../🔨️modules/📏️border-presentati
 import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useLabel, Label } from "../🏷️Label/🟦️.tsx";
-import { useInteractionCommands, RemoveIcon, AddIcon } from "../../🎯️targets/⚛️react/🟦️";
+import { RemoveIcon, AddIcon } from "../🔣️Icons/🟦️.tsx";
+import { useInteractionCommands } from "../👻️PanelGhost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🏬️Stepper

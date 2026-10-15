@@ -26,7 +26,7 @@ async fn empty_document_renders_an_empty_mesh() {
 async fn a_real_box_solid_renders_a_non_empty_mesh() {
     let mut body = Body::new();
     let mut rec = semio_framework_3d_brep_representation::topology::history::OpRecorder::new();
-    semio_framework_3d_brep_operations::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+    semio_framework_3d_brep_construction::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
     let document = crate::schema::snapshot::body::snapshot_from_body(&body);
     let mesh = document_mesh_data(&document);
     assert!(!mesh.positions.is_empty());

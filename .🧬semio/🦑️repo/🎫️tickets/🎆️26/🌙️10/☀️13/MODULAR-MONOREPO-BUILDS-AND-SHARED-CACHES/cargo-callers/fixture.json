@@ -1,0 +1,312 @@
+{
+  "version": 1,
+  "callee": "runRepositoryCargoTests",
+  "argument": 2,
+  "original": "this.invocation",
+  "callers": [
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 3
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📖️playbook/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 2
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📏️layout/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/➗️mathematical/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎥️shooting/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📋️forms/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📜️imperative/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🕸️dag/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 3
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🔱️trinity/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/💡️reasoning/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🎬️sequence/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 14
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/📜️script.ts",
+      "calls": 1
+    }
+  ]
+}

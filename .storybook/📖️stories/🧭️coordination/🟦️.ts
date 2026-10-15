@@ -154,6 +154,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     },
     assets: [
       { kind: "static-dir", route: "/plugin-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules" },
+      { kind: "static-dir", route: "/renderer-modules/compiler-fonts", root: "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts" },
       { kind: "static-dir", route: "/renderer-modules", root: ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules" },
     ],
     vitePlugins: async () => {

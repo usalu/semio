@@ -470,7 +470,7 @@ impl ArtifactEditor for NotePlayApp {
     /// `ArtifactEditor::ROLE` is NOT restated per-impl) via `surface_app_id`.
     const DIALECT: Dialect = crate::NOTE_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::note_child_restore_projection`).
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         crate::note_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;

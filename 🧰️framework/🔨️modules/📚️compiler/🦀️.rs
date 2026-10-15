@@ -13,30 +13,63 @@ use crate::math::FontContext;
 use crate::svg::{FontSet as SvgFontSet, SvgOptions};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use crate::text::Font;
+use crate::world::{FontRole, FontSet};
 //#region 🔖️Fonts
+/// 🌍️ The host-supplied fonts, parsed once. Build it from the host's [`FontSet`] and share it:
+/// every `compile_*_to_svg` call takes it by reference and parses nothing.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-struct Fonts {
-    math: Font<'static>,
-    serif: Font<'static>,
-    mono: Font<'static>,
-    emoji: Font<'static>,
+pub struct CompilerFonts<'a> {
+    math: Font<'a>,
+    serif: Font<'a>,
+    mono: Font<'a>,
+    emoji: Font<'a>,
 }
 
-/// 🌍️ Lazily parses the embedded font set once per process — every `compile_snippet_to_svg`
-/// call after the first reuses the same parsed `Font`s.
+/// 🌍️ `wasm32-wasip2` arm: no glyph engine is linked on this target, so there is nothing to
+/// parse; [`CompilerFonts::estimate_only`] is the only value and the `compile_*_to_svg` arms
+/// estimate size from character count.
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+pub struct CompilerFonts<'a> {
+    bytes: std::marker::PhantomData<&'a [u8]>,
+}
+
+/// 🚫️ The host's bytes for `role` are not a parseable font face.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FontParseError {
+    pub role: FontRole,
+}
+
+impl std::fmt::Display for FontParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "compiler font {:?} ({}) does not parse", self.role, self.role.asset_file_name())
+    }
+}
+
+impl std::error::Error for FontParseError {}
+
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-fn fonts() -> &'static Fonts {
-    use std::sync::OnceLock;
-    static FONTS: OnceLock<Fonts> = OnceLock::new();
-    FONTS.get_or_init(|| {
-        let embedded = crate::world::embedded_fonts();
-        Fonts {
-            math: Font::from_bytes(embedded.math, 0).expect("embedded Math font must parse"),
-            serif: Font::from_bytes(embedded.serif, 0).expect("embedded Serif font must parse"),
-            mono: Font::from_bytes(embedded.mono, 0).expect("embedded Mono font must parse"),
-            emoji: Font::from_bytes(embedded.emoji, 0).expect("embedded Emoji font must parse"),
-        }
-    })
+impl<'a> CompilerFonts<'a> {
+    /// 🔤️ Parses the Math, Serif, Mono and Emoji faces out of `set`; the host keeps the bytes alive.
+    pub fn parse(set: &FontSet<'a>) -> Result<Self, FontParseError> {
+        let face = |role: FontRole| Font::from_bytes(set.get(role), 0).ok_or(FontParseError { role });
+        Ok(Self { math: face(FontRole::Math)?, serif: face(FontRole::Serif)?, mono: face(FontRole::Mono)?, emoji: face(FontRole::Emoji)? })
+    }
+
+    fn layout_context(&self) -> FontContext<'_> {
+        FontContext { math: &self.math, serif: &self.serif, mono: &self.mono, emoji: &self.emoji }
+    }
+}
+
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+impl<'a> CompilerFonts<'a> {
+    /// 🔤️ Accepts any set and parses nothing — this target never paints glyphs.
+    pub fn parse(_set: &FontSet<'a>) -> Result<Self, FontParseError> {
+        Ok(Self::estimate_only())
+    }
+
+    pub const fn estimate_only() -> Self {
+        Self { bytes: std::marker::PhantomData }
+    }
 }
 //#endregion 🔖️Fonts
 
@@ -74,9 +107,8 @@ impl std::fmt::Display for CompileError {
 impl std::error::Error for CompileError {}
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-fn render_to_svg(box_: &crate::math::MathBox, options: SnippetOptions) -> SvgSnippet {
-    let f = fonts();
-    let svg_ctx = SvgFontSet { math: &f.math, serif: &f.serif, mono: &f.mono };
+fn render_to_svg(fonts: &CompilerFonts<'_>, box_: &crate::math::MathBox, options: SnippetOptions) -> SvgSnippet {
+    let svg_ctx = SvgFontSet { math: &fonts.math, serif: &fonts.serif, mono: &fonts.mono };
     let svg = crate::svg::render_svg(box_, &svg_ctx, SvgOptions { font_size_pt: options.font_size_pt, margin_pt: options.margin_pt });
     SvgSnippet { svg }
 }
@@ -85,43 +117,35 @@ fn render_to_svg(box_: &crate::math::MathBox, options: SnippetOptions) -> SvgSni
 /// it to a standalone SVG string — the functional replacement for
 /// `typst::compile::<PagedDocument>` + `typst_svg::svg_merged` at both existing Typst call sites.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub fn compile_snippet_to_svg(src: &str, options: SnippetOptions) -> Result<SvgSnippet, CompileError> {
+pub fn compile_snippet_to_svg(fonts: &CompilerFonts<'_>, src: &str, options: SnippetOptions) -> Result<SvgSnippet, CompileError> {
     let node = crate::syntax::parse_formula(src).map_err(CompileError::Syntax)?;
-    let f = fonts();
-    let layout_ctx = FontContext { math: &f.math, serif: &f.serif, mono: &f.mono, emoji: &f.emoji };
-    let box_ = crate::math::layout(&layout_ctx, &node);
-    Ok(render_to_svg(&box_, options))
+    let box_ = crate::math::layout(&fonts.layout_context(), &node);
+    Ok(render_to_svg(fonts, &box_, options))
 }
 
 /// 🔤️ Renders arbitrary `text` (not parsed as math notation — see
 /// [`crate::math::layout_raw_text`]) to a standalone SVG string. For callers with a plain string
 /// to render as an icon/label, where `text` isn't guaranteed to be valid math notation syntax.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub fn compile_text_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
-    let f = fonts();
-    let layout_ctx = FontContext { math: &f.math, serif: &f.serif, mono: &f.mono, emoji: &f.emoji };
-    let box_ = crate::math::layout_raw_text(&layout_ctx, text);
-    render_to_svg(&box_, options)
+pub fn compile_text_to_svg(fonts: &CompilerFonts<'_>, text: &str, options: SnippetOptions) -> SvgSnippet {
+    let box_ = crate::math::layout_raw_text(&fonts.layout_context(), text);
+    render_to_svg(fonts, &box_, options)
 }
 
 /// 😀️ Renders arbitrary emoji `text` (see [`crate::math::layout_raw_emoji`]) to a
 /// standalone SVG string.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub fn compile_emoji_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
-    let f = fonts();
-    let layout_ctx = FontContext { math: &f.math, serif: &f.serif, mono: &f.mono, emoji: &f.emoji };
-    let box_ = crate::math::layout_raw_emoji(&layout_ctx, text);
-    render_to_svg(&box_, options)
+pub fn compile_emoji_to_svg(fonts: &CompilerFonts<'_>, text: &str, options: SnippetOptions) -> SvgSnippet {
+    let box_ = crate::math::layout_raw_emoji(&fonts.layout_context(), text);
+    render_to_svg(fonts, &box_, options)
 }
 
 /// 💻️ Renders arbitrary `code` (not parsed — see [`crate::math::layout_raw_code`]) via the
 /// Mono font to a standalone SVG string. For callers rendering a monospace code/source snippet.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub fn compile_code_to_svg(code: &str, options: SnippetOptions) -> SvgSnippet {
-    let f = fonts();
-    let layout_ctx = FontContext { math: &f.math, serif: &f.serif, mono: &f.mono, emoji: &f.emoji };
-    let box_ = crate::math::layout_raw_code(&layout_ctx, code);
-    render_to_svg(&box_, options)
+pub fn compile_code_to_svg(fonts: &CompilerFonts<'_>, code: &str, options: SnippetOptions) -> SvgSnippet {
+    let box_ = crate::math::layout_raw_code(&fonts.layout_context(), code);
+    render_to_svg(fonts, &box_, options)
 }
 
 /// ↔ `wasm32-wasip2` arm shared by all four `compile_*_to_svg` entry points: no
@@ -145,23 +169,23 @@ fn estimate_svg(char_count: usize, options: SnippetOptions) -> SvgSnippet {
 }
 
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-pub fn compile_snippet_to_svg(src: &str, options: SnippetOptions) -> Result<SvgSnippet, CompileError> {
+pub fn compile_snippet_to_svg(_fonts: &CompilerFonts<'_>, src: &str, options: SnippetOptions) -> Result<SvgSnippet, CompileError> {
     crate::syntax::parse_formula(src).map_err(CompileError::Syntax)?;
     Ok(estimate_svg(src.chars().count(), options))
 }
 
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-pub fn compile_text_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
+pub fn compile_text_to_svg(_fonts: &CompilerFonts<'_>, text: &str, options: SnippetOptions) -> SvgSnippet {
     estimate_svg(text.chars().count(), options)
 }
 
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-pub fn compile_emoji_to_svg(text: &str, options: SnippetOptions) -> SvgSnippet {
+pub fn compile_emoji_to_svg(_fonts: &CompilerFonts<'_>, text: &str, options: SnippetOptions) -> SvgSnippet {
     estimate_svg(text.chars().count(), options)
 }
 
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-pub fn compile_code_to_svg(code: &str, options: SnippetOptions) -> SvgSnippet {
+pub fn compile_code_to_svg(_fonts: &CompilerFonts<'_>, code: &str, options: SnippetOptions) -> SvgSnippet {
     estimate_svg(code.chars().count(), options)
 }
 //#endregion 🔖️Snippet

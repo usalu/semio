@@ -5,8 +5,8 @@ import { parseArtifactLink, type ArtifactLink } from "../../../../../../../../..
 export type { ArtifactChild, ArtifactLink };
 import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseSemioDrawingSnapshot,type SemioDrawingSnapshot} from '../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts';
-import{parseFormDictionary,type FormDictionary}from"../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️dictionary/🟦️.ts";
-export{parseFormDictionary,type FormDictionary};
+import{parseQuestionDictionary,type QuestionDictionary}from"../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🟦️.ts";
+export{parseQuestionDictionary,type QuestionDictionary};
 
 export interface GridSettings { baselineGrid: Binary64; baselineOffset: Binary64; snapToBaseline: boolean }
 export interface ParagraphStyle { id: string; name: string; fontFamily: string; fontSize: Binary64; fontWeight: number; leading: Binary64; tracking: Binary64; alignment: string }
@@ -40,7 +40,7 @@ export interface LayoutArtifact {
   /** @state artifact */ spreads: Spread[];
   /** @state artifact */ pages: Page[];
   /** @state artifact */ printTarget: string | null;
-  /** @state artifact */ dataFields?: FormDictionary;
+  /** @state artifact */ dataFields?: QuestionDictionary;
   /** @state artifact @child kind=s.stdio.semio */ backgroundDrawing?: LayoutDrawingChild;
   /** @state artifact @link_slot roles=model */ referencedModel?: ArtifactLink;
 }
@@ -189,7 +189,7 @@ export function parseLayoutArtifact(value: unknown, at = "$" ): LayoutArtifact {
     pages: array(row.pages, `${at}.pages`).map((item, index) => parsePage(item, `${at}.pages[${index}]`)),
     printTarget: nullable(row.printTarget, string, `${at}.printTarget`),
   };
-  if (Object.hasOwn(row, "dataFields")) result.dataFields = parseFormDictionary(row.dataFields, `${at}.dataFields`);
+  if (Object.hasOwn(row, "dataFields")) result.dataFields = parseQuestionDictionary(row.dataFields, `${at}.dataFields`);
   if (Object.hasOwn(row, "backgroundDrawing")) result.backgroundDrawing = parseLayoutDrawingChild(row.backgroundDrawing, `${at}.backgroundDrawing`);
   if (Object.hasOwn(row, "referencedModel")) result.referencedModel = parseArtifactLink(row.referencedModel);
   return result;

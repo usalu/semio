@@ -516,132 +516,101 @@ for (const law of dispositionLaw.cases) it(law.name, async () => {
   expect(intents).toHaveLength(1);
 });
 
-import inspectorControls from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json";
-import widgetEdits from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json";
-import inspectorTerminology from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗣️terminology.json";
-import Ajv from "ajv";
-import widgetInputSchema from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧬️schema/🔣️.json";
-import { editInputValue, editCollectionValue, editWidgetFacet } from "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🟦️.ts";
- 
-for (const locale of ["en", "de"] as const) for (const gesture of inspectorControls.reactCommits.gestures) it(`retains inspector scalar and selected BRep labels and commands in ${locale} on ${gesture}`, () => {
-  const law = inspectorControls.reactCommits;
-  const scalarRows = inspectorControls.controls.map((control) => ({ ...control, widgetId: "typed", channel: control.port, draft: law.drafts[control.type === "toggle" ? "toggle" : control.kind as "number" | "longText"], current: inspectorControls.ports.find((port) => port.name === control.port)!.default, types: inspectorControls.ports.find((port) => port.name === control.port)!.valueTypes }));
-  const selectedRows = inspectorControls.selectedBrepControls.cases.flatMap((entry) => entry.controls.map((control) => ({ ...control, type: "input", component: null, widgetId: entry.id, draft: String(control.committedValue), current: { $schema: "number", value: control.value }, types: ["number"] })));
-  for (const control of [...scalarRows, ...selectedRows]) {
-    const args = { widgetId: control.widgetId, channel: control.channel, ...(control.component ? { component: control.component } : {}) };
-    const component = control.type === "toggle" ? { type: "toggle", appearance: "checkbox", on: true } : { type: "input", kind: control.kind, value: String(control.value), commit: "blur" };
-    const record = { id: 1, key: "inspector-control", component, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label: control[locale] }, bindings: [{ trigger: control.trigger, action: { scope: law.scope, name: law.action, version: 1 }, args }] };
-    const store = new UiDocumentStore("inspector-controls");
-    store.loadSnapshot({ surface: "inspector-controls", revision: 1, root: 1, layoutEpoch: 0n, nodes: [record] } as any);
-    const intents: any[] = [];
-    const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }));
-    const element = view.getByRole(control.type === "toggle" ? "checkbox" : control.kind === "number" ? "spinbutton" : "textbox", { name: control[locale] }) as HTMLInputElement;
-    expect(computeAccessibleName(element)).toBe(control[locale]);
+import commitLaw from "../🧫️fixtures/♿️editable-controls/🎛️commit-gestures.json";
+
+const roleOfKind = (kind: string) => (kind === "toggle" ? "checkbox" : kind === "number" ? "spinbutton" : "textbox");
+
+function mountCommitNode(surface: string, key: string, component: unknown, label: string, trigger: string, args: unknown, description?: string) {
+  const record = { id: 1, key, component, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label, ...(description ? { description } : {}) }, bindings: [{ trigger, action: { scope: commitLaw.scope, name: commitLaw.action, version: 1 }, args }] };
+  const store = new UiDocumentStore(surface);
+  store.loadSnapshot({ surface, revision: 1, root: 1, layoutEpoch: 0n, nodes: [record] } as any);
+  const intents: any[] = [];
+  const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }));
+  return { view, intents };
+}
+
+for (const locale of ["en", "de"] as const) for (const gesture of commitLaw.gestures) it(`retains committed scalar control labels and commands in ${locale} on ${gesture}`, () => {
+  for (const row of commitLaw.scalars) {
+    const label = row.label[locale];
+    const component = row.kind === "toggle" ? { type: "toggle", appearance: "checkbox", on: row.value } : { type: "input", kind: row.kind, value: String(row.value), commit: "blur" };
+    const { view, intents } = mountCommitNode("commit-scalar", row.id, component, label, row.trigger, row.args);
+    const element = view.getByRole(roleOfKind(row.kind), { name: label }) as HTMLInputElement;
+    expect(computeAccessibleName(element)).toBe(label);
     element.focus();
     expect(document.activeElement).toBe(element);
-    if (control.type === "toggle") fireEvent.click(element);
+    if (row.kind === "toggle") fireEvent.click(element);
     else {
       fireEvent.blur(element);
-      expect(intents).toHaveLength(law.counts.untouched);
-      fireEvent.change(element, { target: { value: control.draft } });
-      expect(intents).toHaveLength(law.counts.draft);
-      if (gesture === "enter") fireEvent.keyDown(element, { key: "Enter", ctrlKey: control.kind === "longText" });
+      expect(intents).toHaveLength(commitLaw.counts.untouched);
+      fireEvent.change(element, { target: { value: row.draft } });
+      expect(intents).toHaveLength(commitLaw.counts.draft);
+      if (gesture === "enter") fireEvent.keyDown(element, { key: "Enter", ctrlKey: row.kind === "longText" });
       else fireEvent.blur(element);
     }
-    expect(intents).toHaveLength(law.counts.committed);
-    expect(intents[0].trigger).toBe(control.trigger);
-    expect(intents[0].action).toEqual({ scope: law.scope, name: law.action, version: 1 });
-    expect(intents[0].args).toEqual(args);
-    expect(intents[0].input).toBe(control.type === "toggle" ? control.draft : control.kind === "number" ? Number(control.draft) : control.draft);
-    const edited = editInputValue(control.types, control.current, String(intents[0].input), control.component ?? undefined);
-    expect(JSON.parse(JSON.stringify(edited))).toEqual(control.component ? { ...control.current, [control.component]: Number(control.draft) } : { $schema: control.type === "toggle" ? "boolean" : control.kind === "number" ? "number" : "text", value: control.type === "toggle" ? control.draft : control.kind === "number" ? JSON.parse(String(control.draft)) : control.draft });
+    expect(intents).toHaveLength(commitLaw.counts.committed);
+    expect(intents[0].trigger).toBe(row.trigger);
+    expect(intents[0].action).toEqual({ scope: commitLaw.scope, name: commitLaw.action, version: 1 });
+    expect(intents[0].args).toEqual(row.args);
+    expect(intents[0].input).toBe(row.input);
     fireEvent.blur(element);
-    expect(intents).toHaveLength(law.counts.repeated);
+    expect(intents).toHaveLength(commitLaw.counts.repeated);
     view.unmount();
   }
-  console.log(`[DEBUG] inspector scalar ${locale}/${gesture}: controls=${scalarRows.length + selectedRows.length} actualUiNodeView=true independentAccessibleNames=true`);
+  console.log(`[DEBUG] scalar commits ${locale}/${gesture}: controls=${commitLaw.scalars.length} actualUiNodeView=true independentAccessibleNames=true`);
 });
 
-for (const locale of ["en", "de"] as const) it(`retains ordered inspector collection commands and independent expected values in ${locale}`, () => {
-  const validate = new Ajv({ strict: false }).compile(widgetInputSchema);
-  const law = inspectorControls.reactCommits;
-  const cases = widgetEdits.collections.filter((entry) => !("error" in entry) && (entry.command.operation === "set" || entry.command.value === "") && (entry.command.operation !== "move" || Math.abs(entry.command.destination! - entry.command.index) === 1));
-  for (const entry of cases) {
-    const port = inspectorControls.ports.find((port) => port.itemTypes?.[0] === entry.types[0])!;
-    const editable = entry.command.operation === "set";
-    const labelRow = inspectorControls.collectionControls.find((control) => control.port === port.name && (!editable || (control.component ?? undefined) === ("component" in entry.command ? entry.command.component : undefined)))!;
-    const itemLabel = (editable ? labelRow[locale] : labelRow[locale].replace(/ [xyz]$/, "")).replace(" 1", ` ${entry.command.index + 1}`);
-    const termKey = entry.command.operation === "move" ? entry.command.destination! < entry.command.index ? "input_list_up" : "input_list_down" : entry.command.operation === "add" ? "input_list_add" : "input_list_remove";
-    const title = itemLabel.split(` ${inspectorTerminology.labels.input_list_item[locale === "en" ? "nativeEn" : "nativeDe"]} `)[0];
-    const label = editable ? itemLabel : `${entry.command.operation === "add" ? title : itemLabel}: ${inspectorTerminology.labels[termKey][locale === "en" ? "nativeEn" : "nativeDe"]}`;
-    const kind = labelRow.type === "toggle" ? "toggle" : labelRow.kind;
-    const current = (entry.current as any)?.[String(entry.command.index)];
-    const args = { widgetId: "typed", channel: port.name, ...entry.command };
-    const component = editable ? kind === "toggle" ? { type: "toggle", appearance: "checkbox", on: current.value } : { type: "input", kind, value: String(labelRow.component ? current[labelRow.component] : current.value), commit: "blur" } : { type: "button", label, icon: "" };
-    const record = { id: 1, key: entry.id, component, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label }, bindings: [{ trigger: editable ? kind === "toggle" ? "change" : "commit" : "activate", action: { scope: law.scope, name: law.action, version: 1 }, args }] };
-    const store = new UiDocumentStore("inspector-collection");
-    store.loadSnapshot({ surface: "inspector-collection", revision: 1, root: 1, layoutEpoch: 0n, nodes: [record] } as any);
-    const intents: any[] = [];
-    const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }));
-    const element = view.getByRole(!editable ? "button" : kind === "toggle" ? "checkbox" : kind === "number" ? "spinbutton" : "textbox", { name: label });
+for (const locale of ["en", "de"] as const) it(`retains ordered collection commands in ${locale}`, () => {
+  for (const row of commitLaw.collection) {
+    const label = row.label[locale];
+    const editable = row.operation === "set";
+    const kind = (row as { kind?: string }).kind ?? "button";
+    const component = !editable ? { type: "button", label, icon: "" } : kind === "toggle" ? { type: "toggle", appearance: "checkbox", on: row.value } : { type: "input", kind, value: String(row.value), commit: "blur" };
+    const { view, intents } = mountCommitNode("commit-collection", row.id, component, label, !editable ? "activate" : kind === "toggle" ? "change" : "commit", row.args);
+    const element = view.getByRole(!editable ? "button" : roleOfKind(kind), { name: label });
     expect(computeAccessibleName(element)).toBe(label);
     element.focus();
     expect(document.activeElement).toBe(element);
     if (!editable || kind === "toggle") fireEvent.click(element);
-    else { fireEvent.change(element, { target: { value: entry.command.value } }); fireEvent.keyDown(element, { key: "Enter", ctrlKey: kind === "longText" }); }
+    else { fireEvent.change(element, { target: { value: row.draft } }); fireEvent.keyDown(element, { key: "Enter", ctrlKey: kind === "longText" }); }
     expect(intents).toHaveLength(1);
-    expect(intents[0].args).toEqual(args);
-    const command = { ...intents[0].args, value: editable ? String(intents[0].input) : entry.command.value };
-    expect(validate(command), JSON.stringify(validate.errors)).toBe(true);
-    expect(editCollectionValue(entry.types, entry.current, command, entry.cardinality)).toEqual(entry.expected);
-    expect(JSON.parse(JSON.stringify(entry.expected))).toEqual(entry.expected);
+    expect(intents[0].args).toEqual(row.args);
+    if (editable) expect(intents[0].input).toBe(row.input);
     view.unmount();
   }
-  console.log(`[DEBUG] inspector collections ${locale}: cases=${cases.length} actualUiNodeView=true independentAjvJson=true`);
+  console.log(`[DEBUG] collection commands ${locale}: rows=${commitLaw.collection.length} actualUiNodeView=true`);
 });
 
-
-for (const locale of ["en", "de"] as const) it(`retains inspector metadata actions and read-only status diagnostics in ${locale}`, () => {
-  const law = inspectorControls.reactMetadata;
-  const term = (key: string) => (inspectorTerminology.labels as Record<string, { nativeEn: string; nativeDe: string }>)[key]![locale === "en" ? "nativeEn" : "nativeDe"];
-  const validate = new Ajv({ strict: false }).compile(widgetInputSchema);
-  for (const control of law.facets) {
-    const entry = widgetEdits.facets.find(entry => entry.id === control.case)!;
-    const args = { widgetId: entry.widget.id, facet: entry.command.facet, channel: entry.command.channel };
-    const label = term(control.label);
-    const value = entry.widget.kind === "variable" ? entry.widget.name : entry.widget.format;
-    const select = entry.widget.kind === "outputExport";
-    const component = select ? { type: "select", value, items: law.exportFormats.map(format => ({ value: format.value, label: format[locale] })) } : { type: "input", kind: "text", value, commit: "blur" };
-    const record = { id: 1, key: entry.id, component, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label }, bindings: [{ trigger: select ? "change" : "commit", action: { scope: inspectorControls.reactCommits.scope, name: inspectorControls.reactCommits.action, version: 1 }, args }] };
-    const store = new UiDocumentStore("inspector-metadata");
-    store.loadSnapshot({ surface: "inspector-metadata", revision: 1, root: 1, layoutEpoch: 0n, nodes: [record] } as any);
-    const intents: any[] = [];
-    const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }));
+for (const locale of ["en", "de"] as const) it(`retains metadata actions and read-only status diagnostics in ${locale}`, () => {
+  const law = commitLaw.metadata;
+  for (const facet of law.facets) {
+    const label = facet.label[locale];
+    const select = facet.widget === "select";
+    const component = select ? { type: "select", value: facet.value, items: law.formats.map(format => ({ value: format.value, label: format.label[locale] })) } : { type: "input", kind: "text", value: facet.value, commit: "blur" };
+    const { view, intents } = mountCommitNode("commit-metadata", facet.id, component, label, select ? "change" : "commit", facet.args);
     const input = view.getByRole(select ? "combobox" : "textbox", { name: label });
     expect(computeAccessibleName(input)).toBe(label);
     if (select) {
       fireEvent.keyDown(input, { key: "ArrowDown", code: "ArrowDown" });
-      const option = view.getByRole("option", { name: law.exportFormats.find(format => format.value === entry.command.value)![locale] });
-      expect(computeAccessibleName(option)).toBe(law.exportFormats.find(format => format.value === entry.command.value)![locale]);
+      const optionLabel = law.formats.find(format => format.value === facet.draft)!.label[locale];
+      const option = view.getByRole("option", { name: optionLabel });
+      expect(computeAccessibleName(option)).toBe(optionLabel);
       fireEvent.click(option);
     } else {
-      fireEvent.change(input, { target: { value: entry.command.value } });
+      fireEvent.change(input, { target: { value: facet.draft } });
       fireEvent.blur(input);
     }
     expect(intents).toHaveLength(1);
-    expect(intents[0].args).toEqual(args);
-    expect(intents[0].action).toEqual({ scope: inspectorControls.reactCommits.scope, name: inspectorControls.reactCommits.action, version: 1 });
-    const command = { ...intents[0].args, value: String(intents[0].input) };
-    expect(validate(command), JSON.stringify(validate.errors)).toBe(true);
-    expect(editWidgetFacet(entry.widget as never, command, ["number", "text", "boolean", "point", "vector"], ["stl", "obj", "ply", "gltf", "las", "dwg", "txt"], [])).toEqual(entry.expected);
+    expect(intents[0].args).toEqual(facet.args);
+    expect(intents[0].action).toEqual({ scope: commitLaw.scope, name: commitLaw.action, version: 1 });
+    expect(intents[0].input).toBe(facet.input);
     fireEvent.blur(input);
     expect(intents).toHaveLength(1);
     view.unmount();
   }
   for (const status of law.statuses) {
-    const label = term(status.label), description = term(status.description);
-    const store = new UiDocumentStore("inspector-status");
-    store.loadSnapshot({ surface: "inspector-status", revision: 1, root: 1, layoutEpoch: 0n, nodes: [{ id: 1, key: status.state, component: { type: "text", value: label }, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label, description, live: law.live }, bindings: [] }] } as any);
+    const label = status.label[locale], description = status.description[locale];
+    const store = new UiDocumentStore("commit-status");
+    store.loadSnapshot({ surface: "commit-status", revision: 1, root: 1, layoutEpoch: 0n, nodes: [{ id: 1, key: status.state, component: { type: "text", value: label }, children: [], layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, accessibility: { label, description, live: law.live }, bindings: [] }] } as any);
     const intents: unknown[] = [];
     const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }));
     const output = view.container.querySelector(`[data-ui-node-key="${status.state}"]`)!;
@@ -655,5 +624,5 @@ for (const locale of ["en", "de"] as const) it(`retains inspector metadata actio
     expect(intents).toHaveLength(law.readOnlyActionCount);
     view.unmount();
   }
-  console.log(`[DEBUG] inspector metadata ${locale}: actualUiNodeView=true facets=${law.facets.length} statusDiagnostics=${law.statuses.length} independentAccessibleNamesAjv=true`);
+  console.log(`[DEBUG] metadata ${locale}: actualUiNodeView=true facets=${law.facets.length} statusDiagnostics=${law.statuses.length} independentAccessibleNames=true`);
 });

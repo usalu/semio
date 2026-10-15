@@ -9,7 +9,7 @@
  *
  * That is the half a Rust-only law cannot prove: the wgpu renderer builds this payload by hand into
  * a bounded action, so nothing in Rust would catch it drifting away from the shape React sends. It
- * is read out of `🕸️NodeGraph/🟦️.tsx`'s own source rather than restated here, so a rename on either
+ * is read out of `🕸️NodeGraph`'s own module tree rather than restated here, so a rename on either
  * side fails this test instead of silently splitting the two renderers.
  *
  * The defect: wgpu's node-graph dispatch called only the bounded `plan_pointer`/`commit_pointer`
@@ -21,11 +21,13 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const dagRoot = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag");
 const nodeGraphSource = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx");
+const diagramNodeSource = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🔷️diagram-node/🟦️.tsx");
 
 type EditRow = Record<string, string>;
 type FixtureCase = { readonly name: string; readonly gesture: { readonly kind: string; readonly from?: string; readonly to?: string }; readonly expectedEdits?: readonly EditRow[]; readonly expectedEdges?: readonly { readonly source: string; readonly target: string }[] };
@@ -40,7 +42,7 @@ const law = JSON.parse(readFileSync(resolve(dagRoot, "🧪️tests/🧫️fixtur
 
 /** 🔗️ The argument names React's own `onConnect` dispatches a created wire under — read out of its source, not restated. */
 const reactConnectFields = (): readonly string[] => {
-  const source = readFileSync(nodeGraphSource, "utf8");
+  const source = readFileSync(diagramNodeSource, "utf8");
   const block = source.slice(source.indexOf('operation: "connect"'));
   const fields = [...block.slice(0, block.indexOf("]")).matchAll(/^\s*(\w+):\s/gmu)].map((match) => match[1]!);
   return fields.filter((field) => field !== "operation");
@@ -90,7 +92,7 @@ describe("node graph wire edit", () => {
     const body = handler.slice(0, handler.indexOf("handleGesturePointerUp();"));
     expect(body).toContain("nodeGraphEditRows(flowJsonText(value))");
     expect(body).toContain("dispatch(nodeGraphActions.edit, { operations })");
-    expect(source).not.toContain("setHostSnapshot");
+    expect(readModuleTreeSource(nodeGraphSource)).not.toContain("setHostSnapshot");
   });
 
   it("holds the pointer for the whole gesture, so a drag that leaves the canvas still releases on it", () => {
@@ -114,8 +116,8 @@ describe("node graph wire edit", () => {
     const guestDisconnect = guest.slice(guest.indexOf('"disconnect" =>'));
     const guestField = /closed\(&\["operation", "(\w+)"\]\)/u.exec(guestDisconnect)?.[1];
     expect(guestField).toBe("synapseId");
-    const wgpu = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
-    const dag = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"), "utf8");
+    const wgpu = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"));
+    const dag = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"));
     expect(dag).toContain(`sink.text("${guestField}", synapse_id)?`);
     expect(wgpu).toContain("flow::dag::write_dag_graph_edit_rows(edits, &mut BoundedGraphEditRows(builder))?");
     expect(law.rules.disconnectNamesTheSynapse).toContain(guestField!);
@@ -140,7 +142,7 @@ describe("node graph wire edit", () => {
     // the bounded path, which faults — measured on 6118 as
     // `wgpu-shell graph move fault surface=procedural-main fault=Structure`, after which the frame
     // loop published nothing further.
-    const canvas = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
+    const canvas = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"));
     const asks = [...canvas.matchAll(/node_graph_gesture_is_screen_path\(surface_id, ([^)]*\)?)\)/gu)].map((match) => match[1]);
     // 🖐️ Three PHASE questions — down, move, up — each asked about the point the pointer is at, plus
     // the one the screen-path dispatcher asks with no point at all: "is a gesture already in flight?",

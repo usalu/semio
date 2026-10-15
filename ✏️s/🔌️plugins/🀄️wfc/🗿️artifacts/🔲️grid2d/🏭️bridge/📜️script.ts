@@ -1,15 +1,13 @@
 #!/usr/bin/env bun
-/** 🏭️ Runs only this artifact's contributed production mutation inventory. */
-import {resolve} from "node:path";
-import {runMutationInventoryCargoProducerCommand} from "../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🟦️.ts";
-import {readMutationInventoryExecutionPolicy} from "../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts";
-import {readCargoTestPolicyV1,runCargoTestsV1} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-const manifestPath=resolve(import.meta.dir,"📦️packages/🦀️rust/Cargo.toml"),cwd=resolve(import.meta.dir,"..");
+/** 🏭️ Collects only this artifact's actual production inventory under Original compiler custody. */
+import {join} from "node:path";
+import {runRepositoryMutationBridgeScriptV1} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏭️inventory/🟦️.ts";
+import {runRepositoryCargoCommandV1} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import {getWorkspaceRoot} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import {receiveScriptProcessInvocation} from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import collector from "./🔣️collector.json" with {type:"json"};
+const packageRoot=join(import.meta.dir,"📦️packages/🦀️rust"),binary="semio-wfc-grid2d-mutation-bridge";
 if(process.argv[2]==="check"){
-  if(process.argv.length!==3)throw Error("check accepts no overrides");
-  const controller=new AbortController(),cancel=()=>controller.abort(),policy=readMutationInventoryExecutionPolicy(process.env);
-  process.once("SIGINT",cancel);process.once("SIGTERM",cancel);
-  if(process.env.CARGO_TARGET_DIR!==policy.compilerStorage.targetDirectory||process.env.CARGO_BUILD_BUILD_DIR!==policy.compilerStorage.buildDirectory)throw Error("Compiler custody differs from the authored child policy");
-  try{await runCargoTestsV1({manifestPath,packages:["semio-s-artifact-wfc-grid2d-mutation-bridge"],cwd,extraArgs:["--offline","--locked","--bin","semio-wfc-grid2d-mutation-bridge","--","--nocapture"],environment:process.env,signal:controller.signal},readCargoTestPolicyV1(process.env));}
-  finally{process.off("SIGINT",cancel);process.off("SIGTERM",cancel);}
-}else await runMutationInventoryCargoProducerCommand({manifestPath,binary:"semio-wfc-grid2d-mutation-bridge",cwd});
+ if(process.argv.length!==3)throw Error("check accepts no overrides");
+ await receiveScriptProcessInvocation(process.env,original=>runRepositoryCargoCommandV1(original,getWorkspaceRoot(),["test","--manifest-path",join(packageRoot,"Cargo.toml"),"--offline","--locked","--bin",binary,"--","--nocapture"],import.meta.dir,process.env,collector.maximumMilliseconds));
+}else await runRepositoryMutationBridgeScriptV1(packageRoot,binary,{...collector,version:1});

@@ -1,0 +1,24 @@
+# Nx Pin Namespace and Output Hook Validation
+
+Core owns the namespace implementation, bootstrap/daemon propagation and actual immutable-publication pin law. This focused test scope changes only the existing output-custody test and its language-neutral fixture.
+
+The explicit namespace contract separates tooling identity, normalized watched workspace, nullable graph identity and optional watcher identity. The test independently hashes the data tuple `[workspace, graphIdentity]` and socket tuple `[toolingIdentity, workspace, graphIdentity, watcherIdentity]` using Bun SHA, checks exact Node path composition, and validates selections against the actual closed schemas with Ajv. Independent SQLite grouping confirms that repeated identical identities share paths while null, another pin and watcher cases form four distinct namespaces. Artifact cache remains shared. Missing, malformed, uppercase and non-string graph identities refuse; both socket endpoint spellings retain the 95-byte bound.
+
+The logical path law uses an actual regular owned directory below ticket generated output, and removes only that directory. Its first run correctly refused the nonexistent `/fixed/rust` fixture root; the test was corrected without changing the physical guard. Logical digest vectors do not claim valid published graph authority.
+
+The actual hook law runs under the original 120-second SDK/namespace gate and its existing 60-second test limit. It receives the real sealed tooling identity and real funded Rust/products/lease stores. Its explicit unpinned namespace is revalidated by the hook. Independent real lease attempts prove cache publication retains output readers and restoration retains output writers for the entire callback. The test also proves unsafe nested reader/writer upgrades refuse, escaped callbacks refuse after their original scope ends, forged graph digest or graph-data directory cannot enter, and the original cancellation signal remains active. A unique owned output directory replaces the prior shared fixed test directory.
+
+Initial `--nx-hook-gate` result: terminal 0; 3 tests, 97 assertions, 2.11 seconds (`🗑️generated/nx-pinned-hook-final.log`). A further same-object mutation case then reproduced actual nested callback entry after changing graph digest in the held environment: terminal 1, 2 pass/1 fail, 88 assertions, 1.55 seconds (`nx-pinned-hook-mutation-red.log`). Core snapshots the admitted graph identity and rejects a changed held binding. The digest-mutation gate was terminal 0; 3 tests, 101 assertions, 845 milliseconds (`nx-pinned-hook-mutation-green.log`), including no-entry checks in both actual publication and restore modes. The neutral `heldMutation` vector declares that refusal and the test restores the original environment value in `finally`. The earlier run had 2 passes and one legitimate nonexistent-root fixture refusal (`nx-pinned-hook-current.log`). The hook runtime passed in both runs.
+
+Permanent registration already exists: `repo-nx-output-custody:test` in the output domain's `📋️project.json` invokes its existing `📜️script.ts test`, which explicitly runs these tests plus path-classification tests. No new public command or launch entry was added. Core's separate real immutable-pin/runtime law remains necessary to prove current publication pin handoff; this focused hook result does not establish an ALL pin, backend task acceptance or exhaustive planner/Stdio success.
+
+## Full held-binding regression
+
+The additional neutral `heldFields` vectors reproduced actual nested entry after same-object changes to graph-data directory, socket directory and watcher identity. All three outcomes were collected before assertion: terminal 1; 2 pass/1 fail, 90 assertions, 665 milliseconds (`nx-pinned-hook-fields-red.log`). Core now captures the complete validated namespace/socket/watcher map before waiting and rechecks it at callback boundaries. The final focused gate is **terminal 0; 3 tests, 105 assertions, 660 milliseconds** (`nx-pinned-hook-fields-green.log`). Both actual publication and restore cases reject these mutations, restore each value in `finally`, and then prove unchanged same-mode nesting still enters. The test therefore cannot pass by rejecting every nested call.
+
+The separate timing window during actual image/lease admission was reviewed in Source by Core and Low; this focused runtime law does not claim an injected mutation during that awaited window. No fake lease, SDK facade, image backing or widened budget was used.
+
+## Owned final source hashes
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts`: `ec952478268bf6857156006ffa43b1399011cd099a3d82bd23aabc58bd397801`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🔣️.json`: `eea5a48bfadee99cc949b395129a07665a7fb4cc8fff093bbf3c1c93e053cc05`

@@ -38,9 +38,9 @@ async fn working_scene_belongs_to_the_exact_content_child() {
 #[semio_framework_async_macros::async_test]
 async fn jack_child_restore_projection_accepts_the_exact_owned_content() {
     let snapshot = SemioJackComposition::initial_viewer_snapshot();
-    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Jack content child");
+    let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Jack content child");
     assert_eq!(projection.len(), 1);
-    assert!(projection.admits_member("content", &snapshot.content.target));
+    assert!(projection.admits_member("content", snapshot.content.target.borrowed()));
     assert_eq!(snapshot.content.child_id, snapshot.content.target.artifact_id);
 }
 

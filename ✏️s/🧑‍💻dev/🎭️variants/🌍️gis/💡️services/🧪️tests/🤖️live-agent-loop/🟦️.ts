@@ -73,10 +73,46 @@ const APPROVAL_WORDS: Readonly<Record<"en" | "de", Readonly<{ once: string; deny
   en: { once: "Approve Once", deny: "Deny", withdrawnCancelled: "the agent's request was cancelled" },
   de: { once: "Einmal genehmigen", deny: "Ablehnen", withdrawnCancelled: "die Anfrage des Agenten wurde abgebrochen" },
 };
-/** 🧱️ The one module the shell-bound artifact route lives in. A serve transforming an older copy
- * of it answers every (f) step from a route that no longer exists in the tree under test, which is
- * how two runs of this gate on two serves produced two different verdicts (LB1 §11.2). */
-const SHELL_HOST_MODULE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx";
+/** 🧱️ The directory the shell-bound artifact route lives in. `ShellHost` is split into child modules, so the
+ * route is carried by whichever of the files listed below declares it (an explicit list, no framework
+ * import). A serve transforming an older copy of them answers every (f) step from a route that no longer
+ * exists in the tree under test, which is how two runs of this gate on two serves produced two different
+ * verdicts (LB1 §11.2). */
+const SHELL_HOST_DIRECTORY = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost";
+/** 📋️ The `ShellHost` parent and the children split out of it (the modules already beside it before that split are not part of this text). */
+const SHELL_HOST_FILES = [
+  "🟦️.tsx",
+  "⚡️host-effects/🟦️.ts",
+  "✅️check-in-sync/🟦️.tsx",
+  "🎚️shell-model/🟦️.tsx",
+  "🎥️tutorial-orchestration/🟦️.ts",
+  "🎨️theme-driver-settings/🟦️.tsx",
+  "🎬️tutorial-recorder/🟦️.tsx",
+  "🎮️focus-and-input/🟦️.tsx",
+  "🏁️operation-settle/🟦️.ts",
+  "🏗️dock-assembly/🟦️.ts",
+  "🏠️space-administration/🟦️.ts",
+  "📋️panel-hosting/🟦️.tsx",
+  "📐️layout-hotkeys/🟦️.ts",
+  "📤️document-transfer-tabs/🟦️.tsx",
+  "📨️window-invocation/🟦️.ts",
+  "📬️artifact-opening/🟦️.ts",
+  "🔁️contributions-refresh/🟦️.ts",
+  "🔌️extension-runtime/🟦️.ts",
+  "🔎️command-bar/🟦️.tsx",
+  "🔐️identity-binding/🟦️.ts",
+  "🔒️identity-document-ports/🟦️.ts",
+  "🖱️shell-actions/🟦️.ts",
+  "🖼️canvas-footer/🟦️.tsx",
+  "🗄️shell-uri-documents/🟦️.ts",
+  "🚀️plugin-lifecycle/🟦️.ts",
+  "🛂️directory-route/🟦️.ts",
+  "🛫️spawned-session/🟦️.ts",
+  "🧩️shell-core-state/🟦️.ts",
+  "🧱️built-node-stores/🟦️.ts",
+  "🧵️backbone-worker/🟦️.ts",
+  "🧾️space-artifact-creation/🟦️.ts",
+] as const;
 /** 🧷️ The adversarial text a collaborator plants in the note for the (g) chain: the canary of the
  * untrusted-content law, so this gate and the laws probe one and the same string. */
 const UNTRUSTED_LAW = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧫️fixtures/🧷️untrusted-content/🔣️.json";
@@ -301,10 +337,15 @@ if (!reachable)
 // 🧱️ Precondition, not a step: a serve that is not transforming THIS tree's `🏛️ShellHost` cannot
 // answer the (f) chain from the route under test, and a gate that ran anyway would report a verdict
 // about somebody else's code. Refusing here is why two runs on two serves can now be compared.
-const servedShellHost = await fetch(`${SHELL_ORIGIN}/@fs${join(REPO_ROOT, SHELL_HOST_MODULE)}`)
-  .then((response) => (response.ok ? response.text() : ""))
-  .catch(() => "");
-if (!servedShellHost.includes("agentArtifactRouteRef"))
+const shellHostRouteCarriers = SHELL_HOST_FILES.map((file) => join(REPO_ROOT, SHELL_HOST_DIRECTORY, file)).filter((file) => readFileSync(file, "utf8").includes("agentArtifactRouteRef"));
+const servedShellHostRoutes = await Promise.all(
+  shellHostRouteCarriers.map((file) =>
+    fetch(`${SHELL_ORIGIN}/@fs${file}`)
+      .then((response) => (response.ok ? response.text() : ""))
+      .catch(() => ""),
+  ),
+);
+if (shellHostRouteCarriers.length === 0 || !servedShellHostRoutes.every((served) => served.includes("agentArtifactRouteRef")))
   throw new Error(
     `${SHELL_ORIGIN} does not serve this tree's shell-bound artifact route: the transformed \`🏛️ShellHost\` carries no \`agentArtifactRouteRef\`. Restart that serve against this working tree (LB1 §11.2 precondition 2) before running the gate.`,
   );

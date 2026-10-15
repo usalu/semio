@@ -149,13 +149,14 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
                 break;
             }
         }
-        input
+        let ids = input
             .staged_hits()
             .iter()
             .filter_map(|hit| hit.control_id.clone())
             .filter(|id| id.starts_with("tree.label.") && id.contains(WORLD_PROJECTION_PANE_PARENT))
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>();
         caller.retire_world(&mut world_resources);
+        ids
     };
     assert!(rows(&mut shell).is_empty(), "🔀️ a folded projection pane paints no body");
 
@@ -310,8 +311,8 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
             }
         }
         let rows = input.staged_hits().iter().filter(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("tree.label.") && id.contains(WORLD_PROJECTION_PANE_PARENT))).cloned().collect::<Vec<_>>();
-        (opportunities, rows, draw)
         caller.retire_world(&mut world_resources);
+        (opportunities, rows, draw)
     };
 
     let mut shell = world_pane_shell();

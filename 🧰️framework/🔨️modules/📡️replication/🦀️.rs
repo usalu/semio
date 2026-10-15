@@ -7,7 +7,8 @@
 //! the Rust and TypeScript codecs must both reproduce byte-identically.
 
 use crate::format::{Blake3Hasher, FrameCursor, RecoveryMode, SprWriter};
-use crate::wire::{ProtocolError, ProtocolLimits, RecordHasher};
+use semio_framework_replication_error::ProtocolError;
+use crate::wire::{ProtocolLimits, RecordHasher};
 
 //#region 🔖️Sync
 /// 🔗️ Zero-copy: one contiguous borrowed byte span of whole record frames covering an edit-ordinal

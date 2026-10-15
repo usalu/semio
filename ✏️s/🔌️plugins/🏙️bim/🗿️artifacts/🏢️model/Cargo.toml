@@ -48,10 +48,6 @@ path = "../../../🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀�
 
 [workspace.dependencies.semio-s-artifact-stdio-gltf-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust"
-[workspace.dependencies.semio-s-artifact-stdio-ifc]
-path = "../../../🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base]
 path = "../../../🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust"
 

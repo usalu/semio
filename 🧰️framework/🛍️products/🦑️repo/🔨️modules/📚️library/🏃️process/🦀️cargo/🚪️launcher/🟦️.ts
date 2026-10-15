@@ -1,9 +1,12 @@
+import{withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+import {checkScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import {scriptInvocationEnvironment} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {randomBytes} from "node:crypto";
 import {copyFileSync,mkdirSync,readdirSync,rmSync} from "node:fs";
 import {availableParallelism,constants,totalmem} from "node:os";
 import {dirname,join,resolve} from "node:path";
-import {acquireResourceLease,resourceLeasePathV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {captureOwnedCommandV1,runOwnedCommand,OwnedCommandFailure} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {checkResourceLeaseControl,acquireResourceLease,resourceLeasePathV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {captureOwnedCommandResultV1,runOwnedCommand,OwnedCommandFailure,type OwnedCommandCaptureV1} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import type {BuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import {acquireCompilerCapacityLeaseV1,scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import {cargoArtifactArgumentsV1,cargoConfigurationArgumentsV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -13,11 +16,12 @@ import {createJobserverV1,defaultJobserverStyleV1} from "../../../../../../../�
 import {memoryCountersV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import {readPhysicalCargoSourceV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import {withRepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withRepositoryCompilerStoreV1,type RepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {repositoryCargoNetworkV1,withRepositoryCargoInputsV1,withRepositoryCargoResolutionV1} from "../📥️dependencies/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import authored from "./🔣️policy.json" with {type:"json"};
@@ -72,24 +76,51 @@ function cargoManifestV1(args:readonly string[],cwd:string):string{
 /** 🎯️ The compilation target a broker pass is keyed by: the first `--target`, else the host. */
 function cargoTargetV1(args:readonly string[]):string{const delimiter=args.indexOf("--"),head=delimiter<0?args:args.slice(0,delimiter),index=head.indexOf("--target"),inline=head.find(argument=>argument.startsWith("--target="));return(index>=0?head[index+1]:inline?.slice("--target=".length))??"host";}
 
+/** 📐️ Declares finite separated Cargo output, independently of passive stream execution. */
+export type RepositoryCargoCapturePolicyV1=Readonly<{maximumBytes:number;maximumLines:number}>;
+/** 🪢️ Carries the actual retained compiler store and Original control through result consumption. */
+export type RepositoryCargoCaptureContextV1=Readonly<{store:RepositoryCompilerStoreV1;environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl;generated?:Uint8Array}>;
+/** 🔐️ Admits the closed Cargo result capture policy before acquiring any store. */
+export function readRepositoryCargoCapturePolicyV1(value:unknown):RepositoryCargoCapturePolicyV1{return Object.freeze({...admit<RepositoryCargoCapturePolicyV1>("CapturePolicy",value)});}
+/** 🤖️ Bounds one generated output inside issued Rust backing without an external publish path. */
+export type RepositoryCargoGeneratedCapturePolicyV1=Readonly<{version:1;maximumBytes:number}>;
+/** 🔒️ Admits generated output custody before compiler/store admission. */
+export function readRepositoryCargoGeneratedCapturePolicyV1(value:unknown):RepositoryCargoGeneratedCapturePolicyV1{return Object.freeze({...admit<RepositoryCargoGeneratedCapturePolicyV1>("GeneratedCapturePolicy",value)});}
+type StreamOptions=Readonly<{maximumMilliseconds:number;output:"stream"}>;
+type CaptureOptions<T>=Readonly<{maximumMilliseconds:number;output:"capture";limits:RepositoryCargoCapturePolicyV1;generated?:RepositoryCargoGeneratedCapturePolicyV1;consume(result:OwnedCommandCaptureV1,context:RepositoryCargoCaptureContextV1):Promise<T>}>;
+
 /** 🦀️ Runs one admitted Cargo command inside the issued compiler-workspace reservation and returns Cargo's own exit status. Compilers share the machine through
  * the host capacity gate, a jobserver of exactly the admitted cores and the memory-admitting rustc broker sized to the same share of physical memory.
  * @see ../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🟦️.ts
  * @see ../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts */
-export async function launchRepositoryCargoV1(invocation:ScriptInvocation,workspace:string,request:RepositoryCargoLaunchV1,cwd:string,environment:Readonly<Record<string,string|undefined>>,options:Readonly<{maximumMilliseconds:number;output:"stream"|"capture"}>):Promise<number>{
- request=admit<RepositoryCargoLaunchV1>("Request",request);
+export function launchRepositoryCargoV1(invocation:ScriptInvocation,workspace:string,request:RepositoryCargoLaunchV1,cwd:string,environment:Readonly<Record<string,string|undefined>>,options:StreamOptions):Promise<number>;
+export function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,workspace:string,request:RepositoryCargoLaunchV1,cwd:string,environment:Readonly<Record<string,string|undefined>>,options:CaptureOptions<T>):Promise<T>;
+export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,workspace:string,request:RepositoryCargoLaunchV1,cwd:string,environment:Readonly<Record<string,string|undefined>>,options:StreamOptions|CaptureOptions<T>):Promise<number|T>{
+ request=admit<RepositoryCargoLaunchV1>("Request",request);checkScriptInvocation(invocation);
+ if(options.output==="capture"){readRepositoryCargoCapturePolicyV1(options.limits);if(typeof options.consume!=="function")throw Error("Actual retained Cargo result consumer required");}
+ const generatedPolicy=options.output==="capture"&&options.generated?readRepositoryCargoGeneratedCapturePolicyV1(options.generated):undefined;if(generatedPolicy&&(request.kind!=="compile"||environment.SEMIO_TYPEGEN_OUT!==undefined))throw Error("Generated capture requires compiler execution without an external publication path");
  const args=request.cargo,label="cargo:"+args[0],admission=scriptCompilerAdmissionControlV1(invocation,label,options.maximumMilliseconds);let publishedAtMs=0;
  const control:ResourceLeaseControl={...admission,publish:async progress=>{const now=Date.now();if(now-publishedAtMs<policy.progressMilliseconds)return;publishedAtMs=now;await admission.publish(progress);}},network=repositoryCargoNetworkV1(invocation,workspace),configuration=join(workspace,".cargo/config.toml");
- const execute=async(command:readonly string[],env:Readonly<Record<string,string|undefined>>):Promise<number>=>{
-  const remaining=control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo deadline exhausted");
-  try{if(options.output==="capture"){await captureOwnedCommandV1("cargo",command,cwd,{control,env,output:{maximumBytes:16777216,maximumLines:65536}});return 0;}await runOwnedCommand("cargo",[...command],cwd,label,remaining===null?0:Math.floor(remaining),{env,signal:control.signal,onProgress:line=>{process.stderr.write(line+"\n");}});return 0;}
-  catch(error){if(!(error instanceof OwnedCommandFailure))throw error;return error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}
- };
- return withRepositoryCompilerStoreV1(workspace,request.configuration,control,{...environment,SEMIO_BUILD_MODE:request.configuration},async store=>{
-  const admitted=async(compilerArgs:readonly string[],env:Readonly<Record<string,string|undefined>>,selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string}>):Promise<number>=>{
+ return withRepositoryCompilerStoreV1(workspace,request.configuration,control,scriptInvocationEnvironment(invocation,{...environment,SEMIO_BUILD_MODE:request.configuration}),async store=>{
+  const execute=async(command:readonly string[],env:Readonly<Record<string,string|undefined>>,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>{
+   const remaining=control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo deadline exhausted");
+   if(options.output==="capture"){
+    const result=await captureOwnedCommandResultV1("cargo",command,cwd,{control,env:scriptInvocationEnvironment(invocation,env),output:options.limits});
+    if(result.status===0&&result.signal===null)beforeConsume?.();
+    await store.storage.recheck();await control.publish({resource:"cargo:consume",mode:"shared",elapsedMs:0});await control.yieldContinuation();
+    const generated=generatedPolicy&&result.status===0&&result.signal===null&&generatedFile?await readPhysicalCargoSourceV1(generatedFile,{version:1,root:store.root,maximumBytes:generatedPolicy.maximumBytes,remainingFiles:1},control):undefined;if(generatedPolicy&&result.status===0&&result.signal===null&&!generated)throw Error("Actual generated Cargo output absent");
+    const value=await options.consume(result,Object.freeze({store,environment:Object.freeze({...env}),control,...(generated?{generated}:{})}));
+    checkResourceLeaseControl(control);await store.storage.recheck();checkScriptInvocation(invocation);return value;
+   }
+   let status:number;
+   try{await runOwnedCommand("cargo",[...command],cwd,label,remaining===null?0:Math.floor(remaining),{env:scriptInvocationEnvironment(invocation,env),signal:control.signal,onProgress:line=>{process.stderr.write(line+"\n");}});status=0;}
+   catch(error){if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}
+   if(status===0)beforeConsume?.();return status;
+  };
+  const admitted=async(compilerArgs:readonly string[],env:Readonly<Record<string,string|undefined>>,selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string}>,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>withCompilerWorkspaceWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),control,async()=>{
    const lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/b/l/m/data"),buildDirectory:selected.build,targetDirectory:selected.target,args:compilerArgs,signal:control.signal,control});
    try{
-    if(env.SEMIO_COMPILER_CAPACITY_HELD==="true")return await execute(compilerArgs,env);
+    if(env.SEMIO_COMPILER_CAPACITY_HELD==="true")return await execute(compilerArgs,env,beforeConsume,generatedFile);
     const capacity=await acquireCompilerCapacityLeaseV1({directory:join(workspace,policy.capacityLeaseDirectory),control,environment:env,requestedParallelism:request.parallelism});
     try{
      const scheduler=(await buildSchedulerV1({cwd:workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,environment:store.environment,control,storage:store.storage,sourceBoundary:store.sourceBoundary})).get("semio-build-scheduler")!,tokens=capacity.parallelism;
@@ -97,20 +128,21 @@ export async function launchRepositoryCargoV1(invocation:ScriptInvocation,worksp
      try{
       const broker=await startAdmissionBrokerV1({physicalBytes:ADMISSION_POLICY_V1.reserveBytes+Math.floor((totalmem()-ADMISSION_POLICY_V1.reserveBytes)*tokens/availableParallelism()),history});let previous:Readonly<{atMs:number;bytes:number}>|undefined;
       const sampler=setInterval(()=>{void memoryCountersV1().then(counters=>{const atMs=Date.now(),rate=previous&&counters.swappedOutBytes!==null?Math.max(0,(counters.swappedOutBytes-previous.bytes)*1000/Math.max(1,atMs-previous.atMs)):null;if(counters.swappedOutBytes!==null)previous={atMs,bytes:counters.swappedOutBytes};broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:rate});},error=>{clearInterval(sampler);process.stderr.write(`[repo cargo] memory sampling stopped: ${error instanceof Error?error.message:String(error)}\n`);});},policy.swapSampleMilliseconds);
-      try{broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});process.stderr.write(`[repo cargo] ${request.store} store, ${tokens} of ${availableParallelism()} cores admitted, rustc memory budget ${(broker.stats().budgetBytes/1024**3).toFixed(1)} GiB\n`);return await execute(compilerArgs,{...env,...jobserver.environment(),RUSTC_WRAPPER:scheduler,[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(tokens)});}
+      try{broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});process.stderr.write(`[repo cargo] ${request.store} store, ${tokens} of ${availableParallelism()} cores admitted, rustc memory budget ${(broker.stats().budgetBytes/1024**3).toFixed(1)} GiB\n`);return await execute(compilerArgs,{...env,...jobserver.environment(),RUSTC_WRAPPER:scheduler,[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(tokens)},beforeConsume,generatedFile);}
       finally{clearInterval(sampler);await broker.close();}
      }finally{jobserver.close();rmSync(jobserverDirectory,{recursive:true,force:true});}
     }finally{capacity.release();}
    }finally{lease.release();}
-  };
-  const run=async(selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string;temporary:string}>):Promise<number>=>{
-   const inputs={workspace,manifest:cargoManifestV1(args,cwd),args,network,control,storage:store.storage,environment:{...store.environment,CARGO_TARGET_DIR:selected.target,CARGO_BUILD_BUILD_DIR:selected.build,TMPDIR:selected.temporary,TMP:selected.temporary,TEMP:selected.temporary}};
-   if(request.kind==="lock")return withRepositoryCargoResolutionV1(inputs,env=>execute(cargoConfigurationArgumentsV1(args,configuration,selected.build),env));
+  });
+  const run=async(selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string;temporary:string}>):Promise<number|T>=>{
+   const inputs={workspace,cwd,manifest:cargoManifestV1(args,cwd),args,network,control,storage:store.storage,environment:{...store.environment,CARGO_TARGET_DIR:selected.target,CARGO_BUILD_BUILD_DIR:selected.build,TMPDIR:selected.temporary,TMP:selected.temporary,TEMP:selected.temporary}};
+   const resolved=async(env:Readonly<Record<string,string|undefined>>):Promise<number|T>=>{const command=cargoConfigurationArgumentsV1(args,configuration,selected.build),lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/b/l/m/data"),buildDirectory:selected.build,targetDirectory:selected.target,args:command,signal:control.signal,control});try{return await execute(command,env);}finally{lease.release();}};
+   if(request.kind==="lock")return withRepositoryCargoResolutionV1(inputs,resolved);
    return withRepositoryCargoInputsV1(inputs,async env=>{
-    if(request.kind==="resolve")return execute(cargoConfigurationArgumentsV1(args,configuration,selected.build),env);
-    const generated=env.SEMIO_TYPEGEN_OUT?join(store.captureDirectory,"typegen-"+randomBytes(4).toString("hex")+".ts"):undefined,compilerEnvironment={...env,...(generated?{SEMIO_TYPEGEN_OUT:generated}:{})},compilerArgs=cargoArtifactArgumentsV1(args,{mode:request.configuration,compilerConfiguration:configuration,buildDirectory:selected.build});
+    if(request.kind==="resolve")return resolved(env);
+    const generated=env.SEMIO_TYPEGEN_OUT||generatedPolicy?join(store.captureDirectory,"typegen-"+randomBytes(4).toString("hex")+".ts"):undefined,compilerEnvironment={...env,...(generated?{SEMIO_TYPEGEN_OUT:generated}:{})},compilerArgs=cargoArtifactArgumentsV1(args,{mode:request.configuration,compilerConfiguration:configuration,buildDirectory:selected.build});
     const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args:compilerArgs,environment:compilerEnvironment,maximumOutputBytes:16777216},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(compilerEnvironment,cwd,store.storage));await store.storage.recheck();
-    try{const status=await admitted(compilerArgs,compilerEnvironment,selected);if(generated&&status===0)copyFileSync(generated,env.SEMIO_TYPEGEN_OUT!);return status;}finally{if(generated)rmSync(generated,{force:true});}
+    try{return await admitted(compilerArgs,compilerEnvironment,selected,generated&&!generatedPolicy?()=>copyFileSync(generated,env.SEMIO_TYPEGEN_OUT!):undefined,generated);}finally{if(generated)rmSync(generated,{force:true});}
    });
   };
   return request.store==="shared"?run({target:store.environment.CARGO_TARGET_DIR!,build:store.buildDirectory,temporary:store.environment.TMPDIR!}):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run);

@@ -8,7 +8,7 @@ pub const ACTOR_RETURN_RESULT_MAXIMUM_BYTES: usize = 4138;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
-#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorReturnOrigin {
     #[cfg_attr(test, serde(with = "decimal_generation"))]
     #[value(with = "decimal_generation")]
@@ -20,7 +20,7 @@ pub struct ActorReturnOrigin {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
-#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorReturnIdentity {
     pub origin: ActorReturnOrigin,
     #[cfg_attr(test, serde(with = "decimal_generation"))]
@@ -30,7 +30,7 @@ pub struct ActorReturnIdentity {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
-#[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorReturnPageReceipt {
     pub identity: ActorReturnIdentity,
     #[cfg_attr(test, serde(with = "decimal_generation"))]
@@ -44,7 +44,7 @@ pub struct ActorReturnPageReceipt {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields))]
-#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ActorReturnControl {
     Poll { identity: ActorReturnIdentity },
     InputAck { receipt: ActorReturnPageReceipt },
@@ -54,7 +54,7 @@ pub enum ActorReturnControl {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields))]
-#[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ActorReturnDrive {
     Execute { origin: ActorReturnOrigin },
     Control {
@@ -69,7 +69,7 @@ macro_rules! wire_enum {
         #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
         #[derive(serde::Serialize, serde::Deserialize)]
         #[cfg_attr(test, serde(rename_all = "camelCase"))]
-        #[value(crate = "::protocol::value", rename_all = "camelCase")]
+        #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
         #[repr(u8)]
         pub enum $name { $($variant = $tag),+ }
         impl $name {

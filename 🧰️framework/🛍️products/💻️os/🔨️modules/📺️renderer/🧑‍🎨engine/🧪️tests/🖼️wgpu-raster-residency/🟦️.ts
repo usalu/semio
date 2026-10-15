@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
@@ -176,8 +177,8 @@ describe("wgpu prepared raster residency", () => {
     const draw = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs"), "utf8");
     const prepared = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs"), "utf8");
     const gpu = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs"), "utf8");
-    const renderer = readFileSync(resolve(engineRoot, "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"), "utf8");
-    const canvas = readFileSync(resolve(engineRoot, "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
+    const renderer = readModuleTreeSource(resolve(engineRoot, "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"));
+    const canvas = readModuleTreeSource(resolve(engineRoot, "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"));
     for (const source of ["pass.textured_draws", "layer.raster_instances", "layer.overlay_raster_instances"]) expect(drawTypes).toContain(source);
     expect(prepared).toContain("self.overlay.as_ref()");
     expect(draw).toContain("committed: RasterKeepSetV1");

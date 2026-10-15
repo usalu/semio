@@ -26,16 +26,15 @@ import { STYLING_METRICS, syncSessionCanvasTheme } from "@semio-tech/ui-styling"
 import { type DemandFrameSchedulerV1, createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/canvas-react-renderer";
 import { GestureRecognizer, applyPinchToCamera, type ComponentSceneHostProps, type Board2dScene, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type Board2dWasmSession, type Board2dPeer, type BoardPeerScope, BoardSessionFactoryContext, createBoardPeerScope } from "../🪪️WasmSessionLoader/🟦️.tsx";
-import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { createCoalescingActionDispatcher } from "../🛠️ShellHelpers/🟦️.tsx";
 import { suggestionPopupOwnsWindow, suggestionRowsWithFocus, suggestionSubmenuTarget, useSuggestionSubmenuSearch, withSuggestionSubmenu } from "../🎣️suggestion-submenu/🟦️.ts";
 import { parseSelectionIds } from "../🖋️InkCanvasHost/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`🟦️Interpreter` already landed in a prior batch.
-import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
 import { useToolRunTraceCursorEcho } from "../🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx";
 import { ToolRunTrace2dLayer } from "../📐️Canvas2dHost/⏯️tool-run-trace/🟦️.tsx";
 import { board2dToolRunTracePathForShape, board2dToolRunTraceShapes } from "./⏯️tool-run-trace/🟦️.tsx";
-import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
+import { useMapContextMenuSpecs, useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
 import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../👕️canvas-presence/🟦️.ts";
 // #endregion 🔌️Adapters

@@ -137,8 +137,18 @@ path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/�
 [workspace.dependencies.semio-framework-3d-brep-vector]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-3d-brep-operations]
+[workspace.dependencies.semio-framework-3d-brep-construction]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-boolean]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-sweep]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-offset]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/📦️packages/🦀️rust"
+
 
 [workspace.dependencies.semio-framework-3d-brep-queries]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust"

@@ -650,7 +650,8 @@ const ROUTER_EFFECT_ADMISSION_TURNS: usize = 4_096;
 const ROUTER_EFFECT_CLOSE_TURNS: usize = 65_536;
 
 pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, retained: semio_framework_job::RetainedCloneGrant, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect) -> RouterEffectJobOutcome {
-    use semio_framework_job::{BatchJobParams, Generation, OperationId, RetainedCloneProgress, StepBudget, WorkerJobAdmissionContext};
+    use semio_framework_job::{Generation,OperationId,RetainedCloneProgress,StepBudget};
+use semio_framework_job_worker_authority::{BatchJobParams,WorkerJobAdmissionContext};
     use semio_framework_os_services::ComputeRetainedRecipient;
     if ctx.cancel.is_cancelled().await {
         return RouterEffectJobOutcome::Cancelled;
@@ -749,7 +750,7 @@ pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, r
 }
 
 /// 🧹️ Retires the original job and parameters of an effect whose compute admission was refused.
-async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, job: &mut Option<DynRouterEffectJob>, params: &mut Option<semio_framework_job::BatchJobParams>, grant: semio_framework_job::RetainedCloneGrant) {
+async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, job: &mut Option<DynRouterEffectJob>, params: &mut Option<semio_framework_job_worker_authority::BatchJobParams>, grant: semio_framework_job::RetainedCloneGrant) {
     for _ in 0..ROUTER_EFFECT_CLOSE_TURNS {
         let Some(original) = job.as_mut() else { break };
         original.begin_close();

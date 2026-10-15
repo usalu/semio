@@ -25,6 +25,21 @@ export interface DocumentContractOracle {
   committed: { snapshots: number; diffs: number };
 }
 
+/** 🪆️ Builds the declared-dialect child definitions a consumer references by schema id, so its tests resolve that reference without importing the owner's files. */
+export function declaredChildDialectSchema(id: string, childSchemaId: string, dialects: Readonly<Record<string, { artifactKind: string; standard: string; subset: string }>>): object {
+  const pin = (value: string) => ({ const: value });
+  return {
+    $schema: "http://json-schema.org/draft-07/schema#",
+    $id: id,
+    $defs: Object.fromEntries(Object.entries(dialects).map(([name, dialect]) => [name, {
+      allOf: [
+        { $ref: childSchemaId },
+        { type: "object", properties: { target: { type: "object", properties: { dialect: { type: "object", properties: { artifactKind: pin(dialect.artifactKind), standard: pin(dialect.standard), subset: pin(dialect.subset) } } } } } },
+      ],
+    }])),
+  };
+}
+
 /** 🧬️ Validates production parsers independently with Ajv and the owner's committed native inputs. */
 export function assertDocumentContractOracle(spec: DocumentContractOracle): void {
   const ajv = new Ajv({ strict: false, allErrors: true, validateFormats: false });

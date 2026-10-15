@@ -21,8 +21,6 @@ pub mod codec {
     pub use self::ids::*;
 }
 
-#[path = "../../🚰️source/🦀️.rs"]
-pub mod source;
 
 use semio_framework_diagnostic::*;
 
@@ -45,8 +43,8 @@ pub mod scalar;
 #[path = "../../📖️dictionary/🦀️.rs"]
 pub mod dictionary;
 
-#[path = "../../🔐️crypto/🦀️.rs"]
-pub mod crypto;
+pub use semio_framework_replication_crypto as crypto;
+pub use semio_framework_replication_error::{ProtocolError,protocol_cause_retirement_demand,protocol_error_retirement_demand,close_protocol_cause_one,close_protocol_error_one};
 
 #[path = "../../🚪️io/🦀️.rs"]
 pub mod io;
@@ -104,7 +102,6 @@ pub use crate::conflict::*;
 pub use crate::format::*;
 pub use crate::mutation::*;
 pub use crate::scalar::*;
-pub use crate::source::*;
 pub use crate::value::*;
 pub use crate::wire::*;
 

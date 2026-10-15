@@ -204,7 +204,8 @@ export function browserActorActionOwnerMatchesV1(left: BrowserActorActionOwnerV1
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️browser-actor-action-handoff-validates-the-neutral-schema-and-exact-owne/🟦️.ts");
-  const { decodeAppCommand, decodePackValue } = await import("../../../../🟦️.ts");
+  const { decodeAppCommand } = await import("../../../🧾️app-channel/🟦️.ts");
+  const { decodePackValue } = await import("../../../🎁️packs/🟦️.ts");
   const { createBrowserActorAppCommandRequestV1 } = await import("./🎛️command/🟦️.ts");
   const { createBrowserActorUiIntentRequestV1 } = await import("./🧭️intent/🟦️.ts");
   const { browserActorActionRefusalReasonV1 } = await import("./📮️requests/🟦️.ts");

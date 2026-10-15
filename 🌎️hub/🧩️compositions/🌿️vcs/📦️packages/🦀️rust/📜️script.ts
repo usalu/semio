@@ -18,7 +18,7 @@ class NativeCodecOracleScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-vcs"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-hub-vcs"], this.repoRoot, this.invocation, rest);
   }
 }
 

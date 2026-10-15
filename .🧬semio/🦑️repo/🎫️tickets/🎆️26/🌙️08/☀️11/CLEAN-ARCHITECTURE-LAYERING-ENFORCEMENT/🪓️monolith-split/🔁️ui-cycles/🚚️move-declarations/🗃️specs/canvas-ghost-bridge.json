@@ -1,0 +1,6 @@
+{
+  "source": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx",
+  "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/👻️ghost/🟦️.tsx",
+  "names": ["PanelGhostSessionBridge","panelGhostSessionBridge","setPanelGhostSessionBridge"],
+  "doc": "unused"
+}

@@ -20,10 +20,6 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 
 
 
-/** 🐚️ Fixed port for `dev multi` — the multi-shell harness (`🧪️tests/🧪️multi-shell-harness/🟦️.tsx`), free in the 60xx range
- * used by every other os-dev variant dashboard command. */
-const FRAMEWORK_OS_MULTI_HARNESS_PORT = "6071";
-
 //#region 🔖️PollHelpers
 /** 🏛️ THE RULE (poll census, W6): a deadline-bounded poll is legitimate here if and only if
  * the thing it waits on is EXTERNAL — a TCP port or HTTP endpoint belonging to a process we did not
@@ -162,4 +158,4 @@ class ColdBootCheckScript extends BundleScript {
 }
 //#endregion 🩺️ColdBootReceipt
 
-export { ColdBootCheckScript, FRAMEWORK_OS_MULTI_HARNESS_PORT, type PollOutcome, awaitChildExit, awaitHttpOk, awaitTcpReady };
+export { ColdBootCheckScript, type PollOutcome, awaitChildExit, awaitHttpOk, awaitTcpReady };

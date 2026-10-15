@@ -19,7 +19,7 @@ const MD = "s.stdio.md@commonmark/*";
 const JSON_DIALECT = "s.stdio.json@rfc8259/*";
 const PNG = "s.stdio.png@1.2/*";
 const SVG = "s.stdio.svg@1.1/*";
-const TXT = "s.stdio.txt@utf-8/*";
+const TXT = "framework.io.text@utf-8/*";
 
 export const ioEntries: IoEntryDescriptorMirror[] = [
   { from: DAG, into: JSON_DIALECT, fidelity: "Exact", sniffs: false },

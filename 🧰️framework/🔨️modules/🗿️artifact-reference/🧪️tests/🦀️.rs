@@ -39,3 +39,20 @@ fn native_reference_text_extensions_preserve_literal_identity_and_control() {
     assert!(ArtifactRef::parse_uri_controlled(&expected.to_uri(),&mut control).is_err());
     eprintln!("[DEBUG] Explicit native reference text extension retains bounded admission and cancellation");
 }
+
+
+#[test]
+fn borrowed_reference_preserves_four_owned_string_addresses_and_neutral_output() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🗿️artifact-reference/🧪️tests/🧫️fixtures/🪪️identity/🔣️.json")).unwrap();
+    for expected in fixture["valid"].as_array().unwrap() {
+        let value: semio_framework_value::DslValue = serde_json::from_value(expected.clone()).unwrap();
+        let reference = ArtifactRef::from_value(value).unwrap();
+        let borrowed = reference.borrowed();
+        let output = serde_json::json!({"artifactId":borrowed.artifact_id,"dialect":{"artifactKind":borrowed.artifact_kind,"standard":borrowed.standard,"subset":borrowed.subset}});
+        assert_eq!(output, *expected);
+        for (view, owned) in [(borrowed.artifact_id, &reference.artifact_id), (borrowed.artifact_kind, &reference.dialect.artifact_kind), (borrowed.standard, &reference.dialect.standard), (borrowed.subset, &reference.dialect.subset)] {
+            assert!(std::ptr::eq(view.as_ptr(), owned.as_ptr()));
+        }
+    }
+    eprintln!("[DEBUG] Actual owned ArtifactRef borrowed view preserves all four original strings and independent neutral JSON output");
+}

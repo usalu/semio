@@ -1,6 +1,6 @@
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import { parseSemioChild, type ArtifactChild } from "../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🟦️.ts";
-import { parseCurationCount, parseCurationList, parseCurationText, parseCuratedItem, parseObjectKindExtra, type CuratedItem, type ObjectKindExtra } from "../🟦️.ts";
+import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { parseCurationCatalogChild, parseCurationCount, parseCurationList, parseCurationText, parseCuratedItem, parseObjectKindExtra, type CuratedItem, type ObjectKindExtra } from "../🟦️.ts";
 export interface CurationObjectKindExtraPatchEntry { extra: ObjectKindExtra }
 export interface CurationCuratedPatchEntry { count?: number | null }
 export interface CurationListRemoval { id: string; index: number }
@@ -53,7 +53,7 @@ function delta<T, P>(value: unknown, parse: (value: unknown, at: string) => T, p
 export function parseCurationDiff(value: unknown, at = "$"): CurationDiff {
   const row = parseSchemaRecord(value, ["catalog", "stockExtra", "curated"], at);
   return {
-    ...(Object.hasOwn(row, "catalog") ? { catalog: row.catalog === null ? null : parseSemioChild(row.catalog, "kit", at + ".catalog") } : {}),
+    ...(Object.hasOwn(row, "catalog") ? { catalog: row.catalog === null ? null : parseCurationCatalogChild(row.catalog, at + ".catalog") } : {}),
     ...(Object.hasOwn(row, "stockExtra") ? { stockExtra: row.stockExtra === null ? null : delta(row.stockExtra, parseObjectKindExtra, stockPatch, at + ".stockExtra") } : {}),
     ...(Object.hasOwn(row, "curated") ? { curated: row.curated === null ? null : delta(row.curated, parseCuratedItem, parseCurationCuratedPatchEntry, at + ".curated") } : {}),
   };

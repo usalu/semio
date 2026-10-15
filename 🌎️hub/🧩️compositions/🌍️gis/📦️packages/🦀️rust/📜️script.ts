@@ -44,7 +44,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await proveGisNativeCodecReceipts(this.repoRoot);
-    await runRepositoryCargoTests(["semio-hub-gis"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-hub-gis"], this.repoRoot, this.invocation, rest);
   }
 }
 

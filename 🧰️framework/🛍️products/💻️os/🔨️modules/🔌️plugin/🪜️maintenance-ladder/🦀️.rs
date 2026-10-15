@@ -145,7 +145,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             && self.retired_window_transient_stores.is_empty()
             && self.presence_store.local_read_maintenance_is_idle()
             && self.snapshot_read_returns_terminal_is_empty()
-            && !semio_framework_job::worker_job_retirements_are_parked()
+            && !semio_framework_job_worker::worker_job_retirements_are_parked()
             && self.live_runtime_instance_id.is_none_or(|instance_id| A::mounted_jobs_terminal_is_empty(instance_id))
     }
 
@@ -322,7 +322,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             MAINTENANCE_CHILD_MEMBER_STAGE => (!self.child_member_retirements.is_empty()).then(|| self.child_member_retirement_demands(body)).transpose()?,
             21 => (!self.retired_window_transient_stores.is_empty()).then(|| self.document_windows_retirement_demands(body, false)).transpose()?,
             22 => Some(self.window_transient_store.maintenance_demands(body)?).filter(|demand| *demand != RetirementDemand::default()),
-            23 => semio_framework_job::worker_job_retirements_are_parked().then(item_demand),
+            23 => semio_framework_job_worker::worker_job_retirements_are_parked().then(item_demand),
             24 => self.document_archive_target(false).map(|_| self.document_archive_demands(false, body)).transpose()?,
             MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE => {
                 if !self.config_store.maintenance_retirements_terminal_is_empty() {
@@ -361,7 +361,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         if stage==16{return self.instance_operation_owner.maintenance_step(cx,grant)}
         if stage==15{return match self.live_runtime_instance_id{Some(instance)=>A::mounted_job_maintenance_step(instance,cx,grant),None=>Ok(idle())}}
         if stage==14{return self.drive_store_replacement_jobs(cx,grant,false)}
-        if stage==23{return Ok(match semio_framework_job::pump_worker_job_retirements(1,cx)?{semio_framework_job::WorkerJobCloseStep::Pending{progress}|semio_framework_job::WorkerJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original worker retirement awaits custody"}})}
+        if stage==23{return Ok(match semio_framework_job_worker::pump_worker_job_retirements(1,cx)?{semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{progress}|semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original worker retirement awaits custody"}})}
         if stage==0{return match self.maintenance_tool_selection(){MaintenanceTool::Awaiting=>Ok(PluginLifecycleStep::AwaitingInput{reason:"every typed operation awaits its exact presented host result ACK"}),MaintenanceTool::Idle=>Ok(idle()),MaintenanceTool::Worker(index,operation_id)=>{self.maintenance_tool_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;let owner=self.tool_operations.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.maintenance-tool-authority","typed operation authority changed during its original turn"))?;owner.drive_worker_step(cx).map_err(Into::into)}}}
         if stage==1{
             let Some((index,operation_id))=self.media_closures.next_id_from(self.maintenance_media_cursor)else{return Ok(idle())};self.maintenance_media_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;

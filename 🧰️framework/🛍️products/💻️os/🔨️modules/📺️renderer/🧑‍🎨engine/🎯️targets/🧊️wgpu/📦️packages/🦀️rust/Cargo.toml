@@ -42,7 +42,6 @@ infinite_canvas = { path = "../../../../../../♾️infinite/📦️packages/�
 # 🎬️ Direct dependency (rather than reaching through `infinite_world`, which imports these privately)
 # so the Tutorial track's camera keyframes can convert to/from `OrbitController`/`Camera3d` — see
 # `//#region 🎬️Tutorial` in lib.rs.
-semio-framework-3d = { path = "../../../../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 # 👕️ The replication contract's pure peer-overlay derivation (`peers_for_window`, `canvas_point_to_screen`, …) the wgpu
 # canvas-presence twin (`🧱️elements/👕️canvas-presence/🎯️targets/🧊️wgpu`) paints peers with. Workspace-internal.
@@ -73,7 +72,7 @@ ui_render = { path = "../../../../../../../../../🔨️modules/🖱️ui/🖌�
 # 🧬️ The renderer-neutral UI contract: `🐚️Shell/🎯️targets/🧊️wgpu` reads `ui_contract::FlowInline` for
 # the shared anchored-overlay positioner (ticket 26/09/17 packet W2k). Workspace-internal, 238→238.
 ui_contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-# 🎨️ Same undeclared-dependency shape once more — `🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`
+# 🎨️ Same undeclared-dependency shape once more — `🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🕸️node-graph/🦀️.rs`
 # reads `ui_styling::metrics::label::LEGIBLE_MIN_PX` for its engine-surface label gate. Workspace-internal.
 ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 semio-framework-plugin = { path = "../../../../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
@@ -199,6 +198,9 @@ ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️p
 accesskit_consumer = "0.39.1"
 
 [dependencies]
+semio-framework-job-worker = { path = "../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+
 semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-framework-canvas = { path = "../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }

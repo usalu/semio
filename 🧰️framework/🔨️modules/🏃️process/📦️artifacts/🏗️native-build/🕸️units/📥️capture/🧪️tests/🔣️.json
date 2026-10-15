@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "facts": {
+    "packages": [
+      {
+        "id": "root",
+        "name": "demo",
+        "default_run": "primary",
+        "targets": [
+          {
+            "name": "primary",
+            "kind": [
+              "bin"
+            ]
+          },
+          {
+            "name": "second",
+            "kind": [
+              "bin"
+            ]
+          }
+        ]
+      }
+    ],
+    "resolve": {
+      "root": "root"
+    },
+    "workspace_default_members": [
+      "root"
+    ]
+  },
+  "cases": [
+    {
+      "name": "explicit-bin-keeps-selectors",
+      "arguments": [
+        "run",
+        "-p",
+        "demo",
+        "--bin",
+        "second",
+        "--features",
+        "a,b",
+        "--no-default-features",
+        "--target",
+        "host",
+        "--profile",
+        "prototype",
+        "--",
+        "--runtime",
+        "x"
+      ],
+      "expected": [
+        "build",
+        "-p",
+        "demo",
+        "--bin",
+        "second",
+        "--features",
+        "a,b",
+        "--no-default-features",
+        "--target",
+        "host",
+        "--profile",
+        "prototype"
+      ]
+    },
+    {
+      "name": "default-run-selects-one-binary",
+      "arguments": [
+        "run",
+        "--manifest-path",
+        "Cargo.toml",
+        "--",
+        "runtime"
+      ],
+      "expected": [
+        "build",
+        "--manifest-path",
+        "Cargo.toml",
+        "--bin",
+        "primary"
+      ]
+    },
+    {
+      "name": "example-keeps-specific-target",
+      "arguments": [
+        "run",
+        "--example=show",
+        "--",
+        "--runtime"
+      ],
+      "expected": [
+        "build",
+        "--example=show"
+      ]
+    },
+    {
+      "name": "compiler-arguments-retained",
+      "arguments": [
+        "rustc",
+        "--lib",
+        "--",
+        "--cfg",
+        "selected"
+      ],
+      "expected": [
+        "rustc",
+        "--lib",
+        "--",
+        "--cfg",
+        "selected"
+      ]
+    }
+  ]
+}

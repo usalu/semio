@@ -80,7 +80,7 @@ fn inputs(now_ms: f64) -> FrameBuildInputs {
 fn compute(inputs: FrameBuildInputs) -> FrameDirectives {
     let params = batch_params(OperationId(1), Generation(1), root_cancel_token(), fixture_frame_grant());
     let mut session = BatchJobSession::try_new(FrameBuildJob::new(inputs), params).unwrap_or_else(|_| panic!("frame compute session admission"));
-    assert!(matches!(session.step(), Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)));
+    assert!(matches!(session.step(), Ok(semio_framework_job_worker::WorkerJobPoll::Outcome | semio_framework_job_worker::WorkerJobPoll::Terminal)));
     assert!(session.checkout_outcome(), "frame compute outcome checkout");
     let directives = session.checked_out_job_mut().and_then(FrameBuildJob::take_directives).unwrap_or_else(|| panic!("completed directives"));
     let mut outcome = session.take_outcome().unwrap_or_else(|| panic!("frame compute retained outcome"));

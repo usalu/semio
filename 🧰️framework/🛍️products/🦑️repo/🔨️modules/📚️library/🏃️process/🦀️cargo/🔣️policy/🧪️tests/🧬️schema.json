@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "valid",
+    "invalid",
+    "defaults",
+    "coverage"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "valid": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "directory",
+          "expected",
+          "retain"
+        ],
+        "properties": {
+          "directory": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "string"
+          },
+          "retain": {
+            "const": false
+          }
+        }
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "defaults": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "directory",
+          "retain"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "directory": {
+            "type": "string"
+          },
+          "retain": {
+            "const": false
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "enabled"
+        ],
+        "properties": {
+          "value": {
+            "enum": [
+              null,
+              "0",
+              "1"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

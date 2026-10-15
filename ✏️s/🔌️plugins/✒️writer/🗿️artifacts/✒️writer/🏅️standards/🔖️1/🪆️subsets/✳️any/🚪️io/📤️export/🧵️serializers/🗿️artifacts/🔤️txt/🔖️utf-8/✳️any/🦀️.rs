@@ -1,4 +1,4 @@
-//! 📤️ Foreign leaf — serialize `WriterSnapshot` INTO `s.stdio.txt@utf-8/*`. `s.stdio.txt` is a
+//! 📤️ Foreign leaf — serialize `WriterSnapshot` INTO `framework.io.text@utf-8/*`. `framework.io.text` is a
 //! CARRIER dialect (design.md §3): its native `Text` `IoPayload` IS the raw external file text,
 //! verbatim — so this writes the document's plain content text directly, never writer's own
 //! hex-encoded wire DSL (that bug — dumping the internal wire format into a plain `.txt` export —
@@ -7,9 +7,9 @@
 use crate::{writer_text, WriterSnapshot};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
-use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use semio_framework_artifact_reference::Dialect;
 
-pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
+pub const TXT_DIALECT: Dialect = semio_framework::io_schema::CARRIER_TEXT;
 
 //#region 🔖️Serializer
 pub struct WriterIntoTxt;

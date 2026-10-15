@@ -67,7 +67,7 @@
       "discardTransient": ["wire-preview", "node-drag-preview", "queued-mutation-terminal"],
       "publishOnCancel": [],
       "nextDown": "accepted",
-      "source": "🧱️elements/🕸️NodeGraph/🟦️.tsx"
+      "source": "🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx"
     },
     {
       "family": "board2d",

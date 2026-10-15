@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases", "funding", "observations"],
+  "properties": {
+    "version": {"const": 1},
+    "cases": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["mode", "count", "expected"],
+        "properties": {
+          "mode": {"enum": ["issuer-baseline-count-drain", "issuer-baseline-keybytes-drain"]},
+          "count": {"enum": [342, 8192]},
+          "expected": {"const": "Complete baseline key budget exceeded"}
+        }
+      }
+    },
+    "funding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["filesystemBytes", "maximumPhysicalBytes", "maximumAvailableBeforeAttempt", "expected", "observations"],
+      "properties": {
+        "filesystemBytes": {"const": 33554432},
+        "maximumPhysicalBytes": {"const": 34603008},
+        "maximumAvailableBeforeAttempt": {"const": 4194304},
+        "expected": {"const": "Complete bounded baseline publication capacity required"},
+        "observations": {
+          "type": "object", "additionalProperties": false,
+          "required": ["actualInsufficientBackingRefused", "noPublishedMetadataCreated", "originalGuardInodePreserved", "independentAvailableBytesMatch", "actualExclusiveImageRetirementCompleted", "acceptedFailureStillRejectsOriginal"],
+          "properties": {
+            "actualInsufficientBackingRefused": {"const": true},
+            "noPublishedMetadataCreated": {"const": true},
+            "originalGuardInodePreserved": {"const": true},
+            "independentAvailableBytesMatch": {"const": true},
+            "actualExclusiveImageRetirementCompleted": {"const": true},
+            "acceptedFailureStillRejectsOriginal": {"const": true}
+          }
+        }
+      }
+    },
+    "observations": {
+      "type": "object", "additionalProperties": false,
+      "required": ["realQuotaRefusedBeforePublication", "rollbackLeavesNoPublishedTables", "allConnectionsClosedBeforeOwnCleanup", "acceptedFailureStillRejectsOriginal"],
+      "properties": {
+        "realQuotaRefusedBeforePublication": {"const": true},
+        "rollbackLeavesNoPublishedTables": {"const": true},
+        "allConnectionsClosedBeforeOwnCleanup": {"const": true},
+        "acceptedFailureStillRejectsOriginal": {"const": true}
+      }
+    }
+  }
+}

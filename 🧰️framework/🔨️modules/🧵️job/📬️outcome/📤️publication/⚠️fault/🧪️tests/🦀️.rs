@@ -1,6 +1,6 @@
 //! 🧪️ Same canonical typed Fault streams into original native pages with independent physical receipts.
 use super::*;
-use crate::{CancelToken,JobPayloadAuthority,StepBudget,logical_now_us};
+use semio_framework_job::{CancelToken,JobPayloadAuthority,StepBudget,logical_now_us};
 use semio_framework_diagnostic::Fault;
 use semio_framework_value::FromValue;
 fn observed<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}

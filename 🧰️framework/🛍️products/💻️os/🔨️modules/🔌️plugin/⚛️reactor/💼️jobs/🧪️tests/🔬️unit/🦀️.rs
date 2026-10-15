@@ -126,4 +126,4 @@ fn original_checkpoint_keeps_replay_input(){register_fixture();let mut source=so
 
 /// 🧮️ Builtin semantic decode/execute may not hide allocation behind a fuel-only phase price.
 #[test]
-fn a_builtin_walks_decode_then_execute_to_a_terminal_outcome(){let payload=semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Text("hello".into()));let input=format!("{{\"source\":\"s.stdio.binary@raw/*\",\"target\":\"s.jobtest.walk@1/*\",\"payload\":{payload}}}").into_bytes();let mut source=source_fixture(50,JOB_KIND_IO_SNIFF,input,None);assert!(admit_fixture(&mut source,fixture_grant()).unwrap());assert!(matches!(terminal_fixture(50),JobStep::Done(_)))}
+fn a_builtin_walks_decode_then_execute_to_a_terminal_outcome(){let payload=semio_framework_pack_json::to_json_string(&semio_framework::io_schema::IoPayload::Text("hello".into()));let input=format!("{{\"source\":\"framework.io.binary@raw/*\",\"target\":\"s.jobtest.walk@1/*\",\"payload\":{payload}}}").into_bytes();let mut source=source_fixture(50,JOB_KIND_IO_SNIFF,input,None);assert!(admit_fixture(&mut source,fixture_grant()).unwrap());assert!(matches!(terminal_fixture(50),JobStep::Done(_)))}

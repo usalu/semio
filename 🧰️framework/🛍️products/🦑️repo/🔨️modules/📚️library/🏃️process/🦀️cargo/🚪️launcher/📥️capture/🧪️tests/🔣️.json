@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "capture": {
+    "maximumBytes": 4096,
+    "maximumLines": 64
+  },
+  "invalid": [
+    {
+      "maximumBytes": 0,
+      "maximumLines": 1
+    },
+    {
+      "maximumBytes": 16777217,
+      "maximumLines": 1
+    },
+    {
+      "maximumBytes": 1,
+      "maximumLines": 65537
+    },
+    {
+      "maximumBytes": 1,
+      "maximumLines": 1,
+      "unknown": true
+    }
+  ],
+  "runtime": {
+    "package": "capture-original",
+    "binary": "capture-original",
+    "stdout": "{\"cargo\":\"actual-json\"}\n",
+    "stderr": "[DEBUG] actual finite Cargo capture\n",
+    "status": 0
+  },
+  "generated": {
+    "version": 1,
+    "maximumBytes": 4096
+  },
+  "generatedText": "export type Generated = \"original\";\n",
+  "generatedInvalid": [
+    {
+      "version": 1,
+      "maximumBytes": 0
+    },
+    {
+      "version": 1,
+      "maximumBytes": 16777217
+    },
+    {
+      "version": 2,
+      "maximumBytes": 1
+    },
+    {
+      "version": 1,
+      "maximumBytes": 1,
+      "path": "/tmp/unissued"
+    }
+  ],
+  "shellUncachedTargets": [
+    "check",
+    "test",
+    "typegen",
+    "schema-check",
+    "preview-generated"
+  ]
+}

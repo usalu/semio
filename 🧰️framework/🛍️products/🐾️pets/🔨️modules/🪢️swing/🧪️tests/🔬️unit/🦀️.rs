@@ -6,8 +6,9 @@
 //! @see ../../../../🧫️fixtures/🪂️parachute-descent/🔣️.json — the restated descents scipy and numpy confirmed
 
 use super::*;
-use crate::randomness::random_unit;
-use crate::schema::tests::{assert_same, bits, entries, fixture, json, number, typed};
+use semio_framework_pets_contract::testkit::{assert_same, bits, entries, fixture, json, number, typed};
+use semio_framework_pets_kinematics::randomness::random_unit;
+use semio_framework_pets_kinematics::terrain::fall_step;
 use serde_json::{json, Value};
 
 const SOURCE: &str = include_str!("../../🦀️.rs");
@@ -161,7 +162,7 @@ fn dropped(vector: &Value) -> Value {
         }
         match canopy {
             None => {
-                let fall = crate::terrain::fall_step(y, vy);
+                let fall = fall_step(y, vy);
                 y = fall.y;
                 vy = fall.vy;
                 touch = vy;

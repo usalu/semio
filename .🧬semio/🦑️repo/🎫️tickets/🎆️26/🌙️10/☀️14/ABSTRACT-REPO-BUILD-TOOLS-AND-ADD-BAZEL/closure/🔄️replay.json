@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "diagnosticOnly": true,
+  "files": {
+    "entry.json": "{\"imports\":[\"./leaf.json\"],\"value\":1}\n",
+    "leaf.json": "{\"value\":2}\n"
+  },
+  "provider": {"id":"same-receiver-replay-fixture","firstRevision":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","secondRevision":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+  "tuple": ["cacheEntry","parentMap","sourceCaptureMap","validationMap"],
+  "scenarios": [
+    {"name":"cold-compute","entry":"E1","parent":"P1","capture":"C1","validation":"V1","expected":"compute-and-retain","markSuccessfulHit":false},
+    {"name":"first-validated-hit","entry":"E1","parent":"P1","capture":"C1","validation":"V1","expected":"validate-and-full-replay","markSuccessfulHit":true},
+    {"name":"repeated-same-receiver","entry":"E1","parent":"P1","capture":"C1","validation":"V1","expected":"original-checkpoint-and-existing-facts","markSuccessfulHit":true},
+    {"name":"new-parent-same-capture-validation","entry":"E1","parent":"P2","capture":"C1","validation":"V1","expected":"validate-and-full-replay","markSuccessfulHit":true},
+    {"name":"new-capture-same-parent-validation","entry":"E1","parent":"P1","capture":"C2","validation":"V1","expected":"validate-and-full-replay","markSuccessfulHit":true},
+    {"name":"fresh-validation","entry":"E1","parent":"P3","capture":"C3","validation":"V2","expected":"validate-and-full-replay","markSuccessfulHit":true},
+    {"name":"replacement-entry-same-receivers","entry":"E2","parent":"P1","capture":"C1","validation":"V1","expected":"validate-and-full-replay","markSuccessfulHit":true},
+    {"name":"physical-change-fresh-attempt","entry":"E1","parent":"P4","capture":"C4","validation":"V3","expected":"invalidate-recompute-and-current-facts","markSuccessfulHit":false},
+    {"name":"provider-revision-fresh-attempt","entry":"E1","parent":"P5","capture":"C5","validation":"V4","expected":"invalidate-and-use-new-registered-provider","markSuccessfulHit":false},
+    {"name":"cancel-first-validation","entry":"E1","parent":"P6","capture":"C6","validation":"V5","expected":"original-cancel-no-success-mark","markSuccessfulHit":false},
+    {"name":"validation-failure","entry":"E1","parent":"P7","capture":"C7","validation":"V6","expected":"failure-no-success-mark","markSuccessfulHit":false},
+    {"name":"cancel-repeated-receiver","entry":"E1","parent":"P1","capture":"C1","validation":"V1","expected":"await-original-checkpoint-and-reject","markSuccessfulHit":true}
+  ],
+  "sqliteOracle": {
+    "schema":"CREATE TABLE facts(receiver TEXT NOT NULL,kind TEXT NOT NULL,path TEXT NOT NULL,fact TEXT NOT NULL,PRIMARY KEY(receiver,kind,path,fact)) WITHOUT ROWID",
+    "missing":"SELECT kind,path,fact FROM facts WHERE receiver=? EXCEPT SELECT kind,path,fact FROM facts WHERE receiver=?",
+    "extra":"SELECT kind,path,fact FROM facts WHERE receiver=? EXCEPT SELECT kind,path,fact FROM facts WHERE receiver=?",
+    "duplicateMeaning":"SELECT kind,path,count(DISTINCT fact) FROM facts WHERE receiver=? GROUP BY kind,path HAVING count(DISTINCT fact)>1"
+  },
+  "mutation":{"path":"leaf.json","before":"{\"value\":2}\n","after":"{\"value\":3}\n"},
+  "cancelReason":"original same-receiver replay cancelled"
+}

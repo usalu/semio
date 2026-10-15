@@ -614,7 +614,7 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
     // 🧭️ SAME fixture as the Rust twin (`💻️os/🔌️plugin/🖥️host/🦀️.rs`,
     // `io_router_w1d_fixture_entries`) and `🧪️w1d-io-router-parity.ts` — `stdio` owns one Exact
     // hop, `gif` owns a Canonical migration hop AND a competing Lossy direct shortcut.
-    const binaryRaw: ArtifactDialect = { artifactKind: "s.stdio.binary", standard: "raw", subset: "*" };
+    const binaryRaw: ArtifactDialect = { artifactKind: "framework.io.binary", standard: "raw", subset: "*" };
     const gif87a: ArtifactDialect = { artifactKind: "s.stdio.gif", standard: "87a", subset: "*" };
     const gif89a: ArtifactDialect = { artifactKind: "s.stdio.gif", standard: "89a", subset: "*" };
     const fixturePlugins: IoEntryGraphPlugin[] = [
@@ -673,7 +673,7 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
         calls.push(`${pluginId}:${dialectCoordinate(from)}->${dialectCoordinate(into)}`);
         return new Uint8Array([...payload, payload.length]);
       });
-      expect(calls).toEqual(["stdio:s.stdio.binary@raw/*->s.stdio.gif@87a/*", "gif:s.stdio.gif@87a/*->s.stdio.gif@89a/*"]);
+      expect(calls).toEqual(["stdio:framework.io.binary@raw/*->s.stdio.gif@87a/*", "gif:s.stdio.gif@87a/*->s.stdio.gif@89a/*"]);
       expect(Array.from(result)).toEqual([1, 1, 2]);
     });
 

@@ -1,5 +1,21 @@
 mod tests {
     use super::*;
+    use std::sync::OnceLock;
+
+    pub(crate) fn compiler_font_set() -> FontSet<'static> {
+        static SET: OnceLock<FontSet<'static>> = OnceLock::new();
+        *SET.get_or_init(|| {
+            let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../📚️compiler/🌍️world/🔤️fonts");
+            FontSet::from_directory(&directory).expect("compiler font assets must be readable from the repository")
+        })
+    }
+
+    pub(crate) fn install_compiler_fonts_for_tests() {
+        match install_compiler_fonts(compiler_font_set()) {
+            Ok(()) | Err(CompilerFontsInstallError::AlreadyInstalled) => {}
+            Err(failure) => panic!("{failure}"),
+        }
+    }
 
     fn round_trip(s: &str) {
         let icon = decode_icon(s).expect("decode");
@@ -43,6 +59,7 @@ mod tests {
 
     #[test]
     fn icon_codec_resolves_emoji_shortcode_to_svg() {
+        install_compiler_fonts_for_tests();
         let r = resolve_icon_kind(":grinning:", |_| None);
         match r {
             ResolvedIcon::SvgPlain(s) => assert!(s.contains("<svg")),
@@ -70,11 +87,32 @@ mod tests {
 
     #[test]
     fn icon_codec_resolves_text_to_svg() {
+        install_compiler_fonts_for_tests();
         let r = resolve_icon_kind("text:Hi", |_| None);
         match r {
             ResolvedIcon::SvgPlain(s) => assert!(s.contains("<svg")),
             other => panic!("unexpected: {other:?}"),
         }
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    #[test]
+    fn icon_codec_resolves_math_to_svg_through_the_installed_fonts() {
+        install_compiler_fonts_for_tests();
+        match resolve_icon_kind("math:x^2", |_| None) {
+            ResolvedIcon::SvgPlain(s) => assert!(s.contains("<path"), "{}", &s[..s.len().min(240)]),
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    #[test]
+    fn icon_codec_refuses_unparseable_compiler_fonts_and_a_second_install() {
+        let real = compiler_font_set();
+        let garbage: &'static [u8] = &[0u8; 16];
+        assert_eq!(install_compiler_fonts(FontSet { serif: garbage, ..real }), Err(CompilerFontsInstallError::Unparseable { role: FontRole::Serif }));
+        install_compiler_fonts_for_tests();
+        assert_eq!(install_compiler_fonts(real), Err(CompilerFontsInstallError::AlreadyInstalled));
     }
 
     #[test]

@@ -357,7 +357,7 @@ fn placeholder_face_for_build() -> FaceId {
 
 impl Body {
     /// 🌱 Reconstructs a `Body` from `seed`, inserting directly into each `Store` — the ONE place
-    /// outside [`semio_framework_3d_brep_operations::euler`] allowed to construct topology entities directly. This
+    /// outside [`semio_framework_3d_brep_construction::euler`] allowed to construct topology entities directly. This
     /// mirrors euler's own "the *only* functions permitted to mutate a `Body`" docstring rather
     /// than violating it: `from_seed` constructs a *fresh* `Body`, it does not mutate an existing
     /// one. It must NOT call `euler::make_vertex`/`make_edge`/`add_face`/`add_shell`/`add_solid` —
@@ -473,7 +473,7 @@ impl Body {
 
 pub mod history {
     //! 📜️ Operation provenance: a [`PersistentLabel`] assigned once at an entity's birth and never
-    //! reused, plus the [`OpDelta`] every mutating operation in [`semio_framework_3d_brep_operations::euler`] returns.
+    //! reused, plus the [`OpDelta`] every mutating operation in [`semio_framework_3d_brep_construction::euler`] returns.
     //! **Host authority:** `LabelSource` lives only inside a `Body` owned by engine compute or cache.
 
     // #region 🔖️Labels
@@ -552,7 +552,7 @@ pub mod history {
         }
     }
 
-    /// 📜️ Accumulates an [`OpDelta`] as a checked editor runs; passed by every [`semio_framework_3d_brep_operations::euler`]
+    /// 📜️ Accumulates an [`OpDelta`] as a checked editor runs; passed by every [`semio_framework_3d_brep_construction::euler`]
     /// operator so no operation can forget to log what it touched. `record_deleted` and friends are
     /// idempotent against duplicate reporting within one operation, since some editors touch the same
     /// entity more than once (e.g. splitting an edge modifies the vertex on both sides).

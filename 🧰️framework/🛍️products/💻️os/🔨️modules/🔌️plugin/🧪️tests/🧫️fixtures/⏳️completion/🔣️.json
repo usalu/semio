@@ -178,7 +178,7 @@
     "reservedCallers": [
       {
         "family": "puzzle5d-copy",
-        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
         "sourceStart": "struct Puzzle5dClipboardJob {",
         "sourceEnd": "enum Puzzle5dPasteStage {",
         "terminalGuard": "if self.rejection.is_some()",
@@ -195,7 +195,7 @@
       },
       {
         "family": "puzzle5d-cut",
-        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
         "sourceStart": "struct Puzzle5dClipboardJob {",
         "sourceEnd": "enum Puzzle5dPasteStage {",
         "terminalGuard": "if self.rejection.is_some()",
@@ -212,8 +212,8 @@
       },
       {
         "family": "puzzle5d-paste",
-        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        "sourceStart": "\nstruct Puzzle5dPasteJob {",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
+        "sourceStart": "\npub(super) struct Puzzle5dPasteJob {",
         "sourceEnd": "\nenum Puzzle5dImportStage {",
         "terminalGuard": "puzzle5d paste completion remains rejected",
         "retainedOwner": "self.pending_completion_rejection = Some(rejected)",
@@ -229,8 +229,8 @@
       },
       {
         "family": "puzzle5d-import",
-        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        "sourceStart": "\nstruct Puzzle5dImportJob {",
+        "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
+        "sourceStart": "\npub(super) struct Puzzle5dImportJob {",
         "sourceEnd": "\n//#endregion 🧵️ReservedJobs",
         "terminalGuard": "puzzle5d import completion remains rejected",
         "retainedOwner": "self.pending_completion_rejection = Some(rejected)",

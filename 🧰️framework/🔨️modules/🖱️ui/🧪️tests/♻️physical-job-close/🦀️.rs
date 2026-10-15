@@ -161,7 +161,8 @@ fn cancelled_clipboard_driver_binds_the_original_producer_witness(){
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn original_clipboard_session_admission_is_paid_before_birth_and_preserves_denied_owners() {
-    use semio_framework_job::{BatchDriveConfig,BatchJobParams,Generation,InteractiveJob,InteractiveStage,OperationId,RetainedCloneGrant,RetainedCloneProgress,StepBudget,StepContextOwner,WorkerJobSession};
+    use semio_framework_job::{Generation,InteractiveJob,InteractiveStage,OperationId,RetainedCloneGrant,RetainedCloneProgress,StepBudget,StepContextOwner};
+use semio_framework_job_worker::{WorkerJobSession};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let original:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy=&original["policy"];

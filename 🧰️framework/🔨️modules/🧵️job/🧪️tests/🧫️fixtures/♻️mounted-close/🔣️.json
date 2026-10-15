@@ -58,7 +58,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 1,
+            "copiedBytes": 0,
             "retainedCapacityBytes": 0,
             "releasedBytes": 0
           }
@@ -91,7 +91,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 1,
+            "copiedBytes": 0,
             "retainedCapacityBytes": 0,
             "releasedBytes": 0
           }
@@ -102,7 +102,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 176,
+            "copiedBytes": 0,
             "retainedCapacityBytes": 0,
             "releasedBytes": 0
           }
@@ -113,18 +113,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 48,
-            "retainedCapacityBytes": 0,
-            "releasedBytes": 64
-          }
-        },
-        {
-          "phase": "ParamsRelease",
-          "next": "ParamsRelease",
-          "kind": "pending",
-          "receipt": {
-            "copiedItems": 1,
-            "copiedBytes": 56,
+            "copiedBytes": 0,
             "retainedCapacityBytes": 0,
             "releasedBytes": 0
           }
@@ -135,7 +124,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 64,
+            "copiedBytes": 0,
             "retainedCapacityBytes": 0,
             "releasedBytes": 0
           }
@@ -146,7 +135,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 120,
+            "copiedBytes": 0,
             "retainedCapacityBytes": 0,
             "releasedBytes": 128
           }
@@ -157,9 +146,9 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 32,
+            "copiedBytes": 0,
             "retainedCapacityBytes": 0,
-            "releasedBytes": 4912
+            "releasedBytes": 7296
           }
         },
         {
@@ -168,7 +157,7 @@
           "kind": "pending",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 112,
+            "copiedBytes": 0,
             "retainedCapacityBytes": 0,
             "releasedBytes": 104
           }
@@ -179,17 +168,17 @@
           "kind": "complete",
           "receipt": {
             "copiedItems": 1,
-            "copiedBytes": 18,
+            "copiedBytes": 0,
             "retainedCapacityBytes": 0,
             "releasedBytes": 40
           }
         }
       ],
       "totalReceipt": {
-        "copiedItems": 13,
-        "copiedBytes": 628,
+        "copiedItems": 12,
+        "copiedBytes": 0,
         "retainedCapacityBytes": 0,
-        "releasedBytes": 21633
+        "releasedBytes": 23953
       }
     }
   ],

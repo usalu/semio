@@ -19,6 +19,7 @@ import Ajv from "ajv";
 import { parseRetainedCloneGrant } from "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
 import grantSchema from "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
 import laws from "../🧫️fixtures/🖌️wgpu-document-owner-move/🔣️.json";
+import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
@@ -33,7 +34,7 @@ const fixture = JSON.parse(readFileSync(resolve(suiteRoot, laws.fixture), "utf8"
   readonly terminalCursor: Record<string, string>;
 };
 
-const source = (key: "shellSource" | "interpreterSource" | "rendererSource" | "frameJobSource" | "winitSource") => readFileSync(join(engineRoot, laws[key]), "utf8");
+const source = (key: "shellSource" | "interpreterSource" | "rendererSource" | "frameJobSource" | "winitSource") => readModuleTreeSource(join(engineRoot, laws[key]));
 
 describe("wgpu retained document owner move", () => {
   it("admits the exact original five-axis invocation grant with an independent schema oracle", () => {
@@ -46,9 +47,7 @@ describe("wgpu retained document owner move", () => {
 
   it("retains original asset invocation authority through the canonical producer and receiving ports", () => {
     const renderer = source("rendererSource");
-    const start = renderer.indexOf("impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob");
-    const end = renderer.indexOf("struct RendererAssetDecodeWake", start);
-    const producer = renderer.slice(start, end);
+    const producer = sliceModuleTreeSource(join(engineRoot, laws.rendererSource), "impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob", "struct RendererAssetDecodeWake");
     expect(producer).toContain("Result<Option<");
     expect(producer).toContain("JobOutcomeBorrow");
     expect(producer).toContain("fn borrow_outcome");
@@ -62,10 +61,7 @@ describe("wgpu retained document owner move", () => {
 
   it("the live asset session receives original authority without constructing its own policy or cancellation", () => {
     const renderer = source("rendererSource");
-    const start = renderer.indexOf("impl RendererAssetDecodeSession {");
-    const end = renderer.indexOf("fn renderer_asset_svg_prefix_is_valid", start);
-    expect(start).toBeGreaterThan(0);
-    const session = renderer.slice(start, end);
+    const session = sliceModuleTreeSource(join(engineRoot, laws.rendererSource), "impl RendererAssetDecodeSession {", "fn renderer_asset_svg_prefix_is_valid");
     for (const forbidden of laws.workerInvocation.forbiddenSessionAuthority) expect(session).not.toContain(forbidden);
     expect(session).toContain("RendererAssetDecodeInvocation");
     expect(session).toContain("try_admit_owned");
@@ -134,11 +130,11 @@ describe("wgpu retained document owner move", () => {
     const superseded = [...renderer.matchAll(new RegExp(`AppFrameTransactionStep::${laws.supersededVariant}`, "gu"))];
     expect(superseded.length, "the variant plus one answer per guard").toBeGreaterThanOrEqual(3);
     expect(fixture.frameOpportunity.every((row) => row.verdict === "superseded"), "every freshness condition is a rebuild, not a fault").toBe(true);
-    const start = renderer.indexOf("context.set_stage(self.stage_label());");
-    const end = renderer.indexOf("self.base_witness = Some(current_witness);", start);
-    expect(start, "the freshness guard opens the transaction step").toBeGreaterThan(0);
-    expect(end, "the freshness guard closes on the base witness it adopts").toBeGreaterThan(start);
-    expect(renderer.slice(start, end), "no freshness condition may record a renderer fault").not.toContain(laws.supersededFaultRecorder);
+    const opening = "context.set_stage(self.stage_label());", closing = "self.base_witness = Some(current_witness);";
+    const guard = sliceModuleTreeSource(join(engineRoot, laws.rendererSource), opening, closing);
+    expect(guard, "the freshness guard opens the transaction step").toContain(opening);
+    expect(guard, "the freshness guard closes on the base witness it adopts").not.toBe(sliceModuleTreeSource(join(engineRoot, laws.rendererSource), opening));
+    expect(guard, "no freshness condition may record a renderer fault").not.toContain(laws.supersededFaultRecorder);
     expect(source("frameJobSource")).toContain(`AppFrameTransactionStep::${laws.supersededVariant}`);
   });
 

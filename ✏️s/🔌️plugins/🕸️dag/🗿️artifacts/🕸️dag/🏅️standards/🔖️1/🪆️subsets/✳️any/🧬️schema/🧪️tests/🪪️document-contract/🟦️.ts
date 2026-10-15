@@ -1,11 +1,10 @@
 import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import { applyPatch, compare } from "fast-json-patch";
 import { applyDagDiff } from "../../🔺️diff/🟦️.ts";
-import semioChildSchema from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🔣️.json" with { type: "json" };
 /** 🧪️ DAG document facets use the native shared graph-child identity. */
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
-import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
+import { assertDocumentContractOracle, declaredChildDialectSchema } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
 import ioSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
@@ -15,6 +14,8 @@ import { parseDagArtifact } from "../../🟦️.ts";
 import { parseDagSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseDagDiff } from "../../🔺️diff/🟦️.ts";
 import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json" with { type: "json" };
+
+const semioChildSchema = declaredChildDialectSchema("https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json", childSchema.$id, { graph: { artifactKind: "s.stdio.semio", standard: "v1", subset: "graph" } });
 
 /** 🪪️ Checks every committed DAG snapshot plus independent embedded-graph and editor-state refusals. */
 export function testDagDocumentContractOracle(): void {

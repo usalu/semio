@@ -1,4 +1,5 @@
 //! 👷️ The tool job contract an app declares: bounded proofs, factories and registrations, instance operation owners, owned and reserved job requests, completions and faults.
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_framework_diagnostic::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::gesture_contract::GestureSlot;
@@ -9,8 +10,8 @@ use semio_framework_job::JobOutcomeDescriptor;
 use semio_framework_job::JobOutcomeKind;
 use semio_framework_job::JobOutcomeView;
 use semio_framework_job::JobPayloadStream;
-use semio_framework_job::JobPublicationKind;
-use semio_framework_job::RetainedJobPublication;
+use semio_framework_job_publication::JobPublicationKind;
+use semio_framework_job_publication::RetainedJobPublication;
 use semio_framework_job::RetainedPayloadBuilder;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use std::mem::ManuallyDrop;

@@ -27,7 +27,7 @@ pub type BsplineCurveAttributes = (usize, Vec<u64>, Vec<u32>, Vec<f64>);
 use std::collections::HashMap;
 use std::fmt::Write as _;
 
-use {semio_framework_3d_brep_operations::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use {semio_framework_3d_brep_construction::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
 use semio_framework_3d_brep_representation::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
 use semio_framework_3d_brep_curve::bspline::KnotVector;
 use semio_framework_3d_brep_curve::Curve3;

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "commands": ["preview", "prune"],
+  "original": "original",
+  "store": "store",
+  "minimumAvailableBytes": 1610612736,
+  "requiredCalls": {
+    "receiveScriptProcessInvocation": 1,
+    "withRepositoryToolingStoreV1": 1,
+    "retireManagedToolingGenerationsV1": 1,
+    "statfs": 1,
+    "store.recheck": 2
+  },
+  "forbiddenCalls": ["planNxToolingRetentionV1", "withResourceLeases", "captureOwnedProcess", "unlinkSync", "rmdirSync", "rmSync", "rm", "unlink", "rmdir", "spawn", "exec"],
+  "forbiddenSource": ["keepNewest", "birthtime", "lsof", "ps -", "/tmp/semio-nx-", "cache/tools/nx", "cache/agents/resource-leases", "process.platform"]
+}

@@ -74,11 +74,28 @@ fn original_actor_retirement_binding_preserves_private_source_on_refusal() {
     let mut metadata = 0;
     retained.epoch = 22;
     while !slot.terminal_is_empty() {
+        if slot.context.as_ref().is_some_and(|original| original.terminal_is_empty()) {
+            for row in law["closedContextCases"].as_array().unwrap() {
+                let mut altered = retained;
+                let increment = row["increment"].as_u64().unwrap();
+                match row["axis"].as_str().unwrap() {
+                    "fuel" => altered.work.fuel += increment,
+                    "items" => altered.grant.maximum_items += increment as usize,
+                    _ => unreachable!(),
+                }
+                let (call, heap) = observe(|| slot.close_step(altered, loan(policy, altered.grant)));
+                assert_eq!(heap, (0, 0));
+                assert_eq!(call.result.is_ok(), row["accepted"].as_bool().unwrap());
+                assert_eq!(call.receipt_spent, Default::default());
+                assert_eq!(call.work_units_spent, 0);
+                assert!(!slot.terminal_is_empty());
+            }
+        }
         let (call, heap) = observe(|| slot.close_step(retained, loan(policy, retained.grant)));
         assert_eq!(heap, (0, 0));
         metadata += call.receipt_spent.copied_items;
         let returned = call.receipt().unwrap();
-        assert!(call.result.is_ok());
+        assert!(call.result.is_ok(), "{:?}", call.result);
         retained = RetainedTurnInput {
             epoch: retained.epoch + 1, grant: returned.remaining,
             work: OriginalActorTurnWork { fuel: returned.remaining_fuel, ..retained.work }, ..retained

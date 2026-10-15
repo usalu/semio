@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-repo-graphql-schema"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "semio repo GraphQL schema: the type vocabulary, the repo schema builders and the SDL rendering the executor serves"
+
+[package.metadata.semio]
+role = "library"
+id = "repo-graphql-schema"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+serde_json = { workspace = true }
+
+[dev-dependencies]

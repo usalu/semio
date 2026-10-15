@@ -14,11 +14,11 @@
 //! @see ../📏️scoring/🟦️.ts — the TypeScript twin
 
 use crate::challenge::{misses, points, reach};
-use crate::schema::{
+use crate::validation::{answer_complete, answer_rejection};
+use quiz_schema::{
     Answer, Category, ClassificationAnswer, ClassificationItemResult, ClassificationTask, DimensionResult, MatchingAnswer, MatchingItem, MatchingItemResult, MatchingTask, Quiz, RunResult, Scale, Sheet, SheetClassificationTask, SheetMatchingTask, SheetSortingTask, SheetTask,
     Slug, SortingAnswer, SortingItem, SortingItemResult, SortingTask, Task, TaskResult,
 };
-use crate::validation::{answer_complete, answer_rejection};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 

@@ -35,8 +35,8 @@ async fn live_vcs_forms_dictionary_out_to_layout_fields_in_retains_complete_intr
  let contract=&fixture["liveVcs"];
  let mut values:Vec<DslValue>=fixture["dictionary"]["entries"].as_array().unwrap().iter().map(|entry|live_intrinsic_value(&entry["value"])).collect();
  values.extend(fixture["floatWords"].as_array().unwrap().iter().map(|word|DslValue::Number(Number::Float(f64::from_bits(u64::from_str_radix(word.as_str().unwrap(),16).unwrap())))));
- let entries:Vec<crate::FormDictionaryEntry>=contract["questionIds"].as_array().unwrap().iter().zip(values).map(|(id,value)|crate::FormDictionaryEntry{question_id:id.as_str().unwrap().into(),value}).collect();
- let expected=crate::FormDictionary{entries};
+ let entries:Vec<semio_framework_value_dictionary::QuestionDictionaryEntry>=contract["questionIds"].as_array().unwrap().iter().zip(values).map(|(id,value)|semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:id.as_str().unwrap().into(),value}).collect();
+ let expected=semio_framework_value_dictionary::QuestionDictionary{entries};
  expected.validate().expect("unique actual question identities");
  let steps=vec![FormStep{id:"live-step".into(),title:"Intrinsic defaults".into(),description:None,blocks:expected.entries.iter().map(|entry|live_question(entry.question_id.clone(),entry.value.clone())).collect()}];
  let snapshot=semio_s_artifact_forms_forms::forms_snapshot_with_state("forms.form".into(),"live-form".into(),"1".into(),Some("Full intrinsic defaults".into()),&steps);

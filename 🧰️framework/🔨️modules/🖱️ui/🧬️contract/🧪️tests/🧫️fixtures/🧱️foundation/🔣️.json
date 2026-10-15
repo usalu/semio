@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "budgets": {
+    "pageRows": 128,
+    "rowCollections": 5,
+    "rowItems": 14,
+    "admissionSlots": 640,
+    "aggregateItems": 1792,
+    "handbackWords": 10,
+    "patchOps": 1153,
+    "treeBudget": 103
+  },
+  "texts": [
+    {
+      "unit": "",
+      "repeat": 1,
+      "valid": true,
+      "bytes": 0
+    },
+    {
+      "unit": "hello",
+      "repeat": 1,
+      "valid": true,
+      "bytes": 5
+    },
+    {
+      "unit": "ä",
+      "repeat": 256,
+      "valid": true,
+      "bytes": 512
+    },
+    {
+      "unit": "🧬",
+      "repeat": 128,
+      "valid": true,
+      "bytes": 512
+    },
+    {
+      "unit": "🧬",
+      "repeat": 129,
+      "valid": false,
+      "bytes": 516
+    },
+    {
+      "unit": "a",
+      "repeat": 513,
+      "valid": false,
+      "bytes": 513
+    }
+  ],
+  "identities": [
+    {
+      "revision": "0",
+      "next": "1"
+    },
+    {
+      "revision": "18446744073709551614",
+      "next": "18446744073709551615"
+    },
+    {
+      "revision": "18446744073709551615",
+      "next": null
+    }
+  ]
+}

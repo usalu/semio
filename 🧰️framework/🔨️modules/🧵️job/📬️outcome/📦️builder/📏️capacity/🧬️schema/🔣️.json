@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "readOnly",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.job.payload-capacity-observation.v1"
+    },
+    "readOnly": {
+      "const": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "pages",
+          "expectedCapacity",
+          "expectedLength"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "empty",
+              "partial",
+              "three-pages"
+            ]
+          },
+          "pages": {
+            "type": "array",
+            "maxItems": 256,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "capacity",
+                "length"
+              ],
+              "properties": {
+                "capacity": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 16384
+                },
+                "length": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 16384
+                }
+              }
+            }
+          },
+          "expectedCapacity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4194304
+          },
+          "expectedLength": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4194304
+          }
+        }
+      }
+    }
+  }
+}

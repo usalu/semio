@@ -213,7 +213,7 @@ async fn solid_mass_properties_sphere_matches_closed_form() {
 
 #[semio_framework_async_macros::async_test]
 async fn solid_mass_properties_cylinder_general_path_matches_closed_form_within_error_estimate() {
-    use semio_framework_3d_brep_operations::primitives::make_cylinder;
+    use semio_framework_3d_brep_construction::primitives::make_cylinder;
     use semio_framework_3d_brep_representation::topology::history::OpRecorder;
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
@@ -240,7 +240,7 @@ async fn distance_solid_solid_overlap_returns_zero_via_real_classifier() {
 /// real area to within the inscribed-octagon bound, instead of the zero a two-point "circle" gave.
 #[semio_framework_async_macros::async_test]
 async fn coarse_chord_tolerance_keeps_small_circular_faces_measurable() {
-    use semio_framework_3d_brep_operations::primitives::make_cylinder;
+    use semio_framework_3d_brep_construction::primitives::make_cylinder;
     use semio_framework_3d_brep_representation::topology::history::OpRecorder;
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
@@ -255,7 +255,7 @@ async fn coarse_chord_tolerance_keeps_small_circular_faces_measurable() {
 /// surface of revolution is constant in `u`, so it converged immediately while `cos^3 u` did not).
 #[semio_framework_async_macros::async_test]
 async fn curved_solids_converge_in_centroid_and_inertia_not_only_in_volume() {
-    use semio_framework_3d_brep_operations::primitives::{make_cylinder, make_torus};
+    use semio_framework_3d_brep_construction::primitives::{make_cylinder, make_torus};
     use semio_framework_3d_brep_representation::topology::history::OpRecorder;
     let mut body = Body::new();
     let mut rec = OpRecorder::new();

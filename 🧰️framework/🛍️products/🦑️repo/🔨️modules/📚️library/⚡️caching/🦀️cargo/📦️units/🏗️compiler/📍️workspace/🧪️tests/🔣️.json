@@ -1,0 +1,194 @@
+[
+  {
+    "name": "posix-prototype-current",
+    "request": {
+      "version": 1,
+      "root": "/owned",
+      "mode": "prototype",
+      "directory": "/owned/b/p/units/unit",
+      "temporary": "/owned/b/p/units/unit.tmp",
+      "platform": "posix"
+    },
+    "expected": true
+  },
+  {
+    "name": "posix-prototype-old",
+    "request": {
+      "version": 1,
+      "root": "/owned",
+      "mode": "prototype",
+      "directory": "/owned/cargo/prototype/build/units/unit",
+      "temporary": "/owned/cargo/prototype/build/units/unit.tmp",
+      "platform": "posix"
+    },
+    "expected": false
+  },
+  {
+    "name": "posix-prototype-nested",
+    "request": {
+      "version": 1,
+      "root": "/owned",
+      "mode": "prototype",
+      "directory": "/owned/b/p/units/unit/nested",
+      "temporary": "/owned/b/p/units/unit/nested.tmp",
+      "platform": "posix"
+    },
+    "expected": false
+  },
+  {
+    "name": "posix-prototype-wrong-temporary",
+    "request": {
+      "version": 1,
+      "root": "/owned",
+      "mode": "prototype",
+      "directory": "/owned/b/p/units/unit",
+      "temporary": "/owned/b/p/units/unit.other",
+      "platform": "posix"
+    },
+    "expected": false
+  },
+  {
+    "name": "posix-release-current",
+    "request": {
+      "version": 1,
+      "root": "/owned",
+      "mode": "release",
+      "directory": "/owned/b/r/units/unit",
+      "temporary": "/owned/b/r/units/unit.tmp",
+      "platform": "posix"
+    },
+    "expected": true
+  },
+  {
+    "name": "posix-release-old",
+    "request": {
+      "version": 1,
+      "root": "/owned",
+      "mode": "release",
+      "directory": "/owned/cargo/release/build/units/unit",
+      "temporary": "/owned/cargo/release/build/units/unit.tmp",
+      "platform": "posix"
+    },
+    "expected": false
+  },
+  {
+    "name": "posix-release-nested",
+    "request": {
+      "version": 1,
+      "root": "/owned",
+      "mode": "release",
+      "directory": "/owned/b/r/units/unit/nested",
+      "temporary": "/owned/b/r/units/unit/nested.tmp",
+      "platform": "posix"
+    },
+    "expected": false
+  },
+  {
+    "name": "posix-release-wrong-temporary",
+    "request": {
+      "version": 1,
+      "root": "/owned",
+      "mode": "release",
+      "directory": "/owned/b/r/units/unit",
+      "temporary": "/owned/b/r/units/unit.other",
+      "platform": "posix"
+    },
+    "expected": false
+  },
+  {
+    "name": "win32-prototype-current",
+    "request": {
+      "version": 1,
+      "root": "C:\\owned",
+      "mode": "prototype",
+      "directory": "C:\\owned\\b\\p\\units\\unit",
+      "temporary": "C:\\owned\\b\\p\\units\\unit.tmp",
+      "platform": "win32"
+    },
+    "expected": true
+  },
+  {
+    "name": "win32-prototype-old",
+    "request": {
+      "version": 1,
+      "root": "C:\\owned",
+      "mode": "prototype",
+      "directory": "C:\\owned\\cargo\\prototype\\build\\units\\unit",
+      "temporary": "C:\\owned\\cargo\\prototype\\build\\units\\unit.tmp",
+      "platform": "win32"
+    },
+    "expected": false
+  },
+  {
+    "name": "win32-prototype-nested",
+    "request": {
+      "version": 1,
+      "root": "C:\\owned",
+      "mode": "prototype",
+      "directory": "C:\\owned\\b\\p\\units\\unit\\nested",
+      "temporary": "C:\\owned\\b\\p\\units\\unit\\nested.tmp",
+      "platform": "win32"
+    },
+    "expected": false
+  },
+  {
+    "name": "win32-prototype-wrong-temporary",
+    "request": {
+      "version": 1,
+      "root": "C:\\owned",
+      "mode": "prototype",
+      "directory": "C:\\owned\\b\\p\\units\\unit",
+      "temporary": "C:\\owned\\b\\p\\units\\unit.other",
+      "platform": "win32"
+    },
+    "expected": false
+  },
+  {
+    "name": "win32-release-current",
+    "request": {
+      "version": 1,
+      "root": "C:\\owned",
+      "mode": "release",
+      "directory": "C:\\owned\\b\\r\\units\\unit",
+      "temporary": "C:\\owned\\b\\r\\units\\unit.tmp",
+      "platform": "win32"
+    },
+    "expected": true
+  },
+  {
+    "name": "win32-release-old",
+    "request": {
+      "version": 1,
+      "root": "C:\\owned",
+      "mode": "release",
+      "directory": "C:\\owned\\cargo\\release\\build\\units\\unit",
+      "temporary": "C:\\owned\\cargo\\release\\build\\units\\unit.tmp",
+      "platform": "win32"
+    },
+    "expected": false
+  },
+  {
+    "name": "win32-release-nested",
+    "request": {
+      "version": 1,
+      "root": "C:\\owned",
+      "mode": "release",
+      "directory": "C:\\owned\\b\\r\\units\\unit\\nested",
+      "temporary": "C:\\owned\\b\\r\\units\\unit\\nested.tmp",
+      "platform": "win32"
+    },
+    "expected": false
+  },
+  {
+    "name": "win32-release-wrong-temporary",
+    "request": {
+      "version": 1,
+      "root": "C:\\owned",
+      "mode": "release",
+      "directory": "C:\\owned\\b\\r\\units\\unit",
+      "temporary": "C:\\owned\\b\\r\\units\\unit.other",
+      "platform": "win32"
+    },
+    "expected": false
+  }
+]

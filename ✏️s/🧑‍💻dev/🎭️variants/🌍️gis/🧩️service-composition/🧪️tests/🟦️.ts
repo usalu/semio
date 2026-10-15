@@ -871,7 +871,40 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("keeps the private session port out of malicious plugin shard source, and leaves no broker-proof lane behind", async () => {
       const { readFile } = await import("node:fs/promises");
       const pluginShard = await readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", source.url), "utf8");
-      const shellHost = await readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx", source.url), "utf8");
+      const shellHostFiles = [
+        "🟦️.tsx",
+        "⚡️host-effects/🟦️.ts",
+        "✅️check-in-sync/🟦️.tsx",
+        "🎚️shell-model/🟦️.tsx",
+        "🎥️tutorial-orchestration/🟦️.ts",
+        "🎨️theme-driver-settings/🟦️.tsx",
+        "🎬️tutorial-recorder/🟦️.tsx",
+        "🎮️focus-and-input/🟦️.tsx",
+        "🏁️operation-settle/🟦️.ts",
+        "🏗️dock-assembly/🟦️.ts",
+        "🏠️space-administration/🟦️.ts",
+        "📋️panel-hosting/🟦️.tsx",
+        "📐️layout-hotkeys/🟦️.ts",
+        "📤️document-transfer-tabs/🟦️.tsx",
+        "📨️window-invocation/🟦️.ts",
+        "📬️artifact-opening/🟦️.ts",
+        "🔁️contributions-refresh/🟦️.ts",
+        "🔌️extension-runtime/🟦️.ts",
+        "🔎️command-bar/🟦️.tsx",
+        "🔐️identity-binding/🟦️.ts",
+        "🔒️identity-document-ports/🟦️.ts",
+        "🖱️shell-actions/🟦️.ts",
+        "🖼️canvas-footer/🟦️.tsx",
+        "🗄️shell-uri-documents/🟦️.ts",
+        "🚀️plugin-lifecycle/🟦️.ts",
+        "🛂️directory-route/🟦️.ts",
+        "🛫️spawned-session/🟦️.ts",
+        "🧩️shell-core-state/🟦️.ts",
+        "🧱️built-node-stores/🟦️.ts",
+        "🧵️backbone-worker/🟦️.ts",
+        "🧾️space-artifact-creation/🟦️.ts",
+      ];
+      const shellHost = (await Promise.all(shellHostFiles.map((file) => readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/" + file, source.url), "utf8")))).join("\n");
       const worker = await readFile(new URL("./🔨️modules/🏪️store/👷️worker/🟦️.ts", source.url), "utf8");
       expect(pluginShard).not.toContain("semio-hub-session-port");
       expect(pluginShard).not.toContain("authorization");

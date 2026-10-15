@@ -19,8 +19,9 @@ pub mod retained;
 
 use crate::codec::CompressionCodec;
 use semio_framework_pack_error::PackRefusal;
-use crate::source::{PackSink, PackSource};
-use crate::wire::{frame_flags, ProtocolError, ProtocolLimits, RecordHasher, FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL};
+use semio_framework_pack_source::{PackSink, PackSource};
+use semio_framework_replication_error::ProtocolError;
+use crate::wire::{frame_flags, ProtocolLimits, RecordHasher, FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL};
 
 //#region 🔖️Header
 /// 🧲️ The 8-byte magic every `.spr` file begins with — distinct from pack's `.spk` magic

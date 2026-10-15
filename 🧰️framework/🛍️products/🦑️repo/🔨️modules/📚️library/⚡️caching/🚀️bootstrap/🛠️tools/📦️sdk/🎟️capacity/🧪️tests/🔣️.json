@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "valid": [
+    {
+      "name": "empty-file",
+      "material": {
+        "version": 1,
+        "entries": 1,
+        "copyAllocatedBytes": 0
+      },
+      "minimumAvailableBytes": 138477568
+    },
+    {
+      "name": "shared-binary-only",
+      "material": {
+        "version": 1,
+        "entries": 2,
+        "copyAllocatedBytes": 0
+      },
+      "minimumAvailableBytes": 138543104
+    },
+    {
+      "name": "rounded-copy",
+      "material": {
+        "version": 1,
+        "entries": 3,
+        "copyAllocatedBytes": 131072
+      },
+      "minimumAvailableBytes": 138739712
+    },
+    {
+      "name": "current-shape-upper-bound",
+      "material": {
+        "version": 1,
+        "entries": 11701,
+        "copyAllocatedBytes": 87490560
+      },
+      "minimumAvailableBytes": 992739328
+    },
+    {
+      "name": "three-separate-one-byte-files-64KiB-allocation",
+      "material": {
+        "version": 1,
+        "entries": 3,
+        "copyAllocatedBytes": 196608
+      },
+      "minimumAvailableBytes": 138805248
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "entries": 0,
+      "copyAllocatedBytes": 0
+    },
+    {
+      "version": 1,
+      "entries": 1,
+      "copyAllocatedBytes": -1
+    },
+    {
+      "version": 1,
+      "entries": 200001,
+      "copyAllocatedBytes": 0
+    },
+    {
+      "version": 1,
+      "entries": 1,
+      "override": 1,
+      "copyAllocatedBytes": 0
+    }
+  ]
+}

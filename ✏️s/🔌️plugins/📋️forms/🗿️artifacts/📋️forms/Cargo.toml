@@ -51,22 +51,10 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀
 [workspace.dependencies.semio-s-artifact-stdio-semio-base]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio-table]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-semio-table-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📦️packages/🦀️rust"
-[workspace.dependencies.semio-s-artifact-stdio-semio-value]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-semio-value-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust"
-[workspace.dependencies.semio-s-artifact-stdio-xlsx]
-path = "../../../🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-xlsx-base-model]
 path = "../../../🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
 

@@ -28,7 +28,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_utf_8::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 
-fn registered_full_fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/📸️typed-snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn registered_full_fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🗂️typed-file.json")).unwrap()}
 
 fn txt_full_file_retire<T:semio_framework_value::retirement::RetireOwned>(output:T,backing:usize,policy:store::io::testing::SnapshotFileCaller){
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;let(mut owner,heap)=observe(||semio_framework_value::retirement::controlled::ControlledRetirement::new(output).ok().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(zero,heap)=observe(||owner.step(Default::default()).unwrap());assert_eq!(zero.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(mut born,mut released)=(0,0);

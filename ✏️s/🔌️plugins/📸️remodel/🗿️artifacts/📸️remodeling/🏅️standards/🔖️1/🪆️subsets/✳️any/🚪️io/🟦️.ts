@@ -23,7 +23,7 @@ export { encodeRemodelingDiff, encodeRemodelingSnapshot, floatLexeme, remodeling
 
 /** 🚧 The foreign dialects this subset can only refuse, with the reason each refusal carries. */
 export const REMODELING_UNIMPLEMENTED_IO: readonly { dialect: string; direction: "import" | "export"; reason: string }[] = [
-  { dialect: "s.stdio.txt@utf-8", direction: "export", reason: "no TypeScript DSL printer exists; dsl::print has no TS twin" },
+  { dialect: "framework.io.text@utf-8", direction: "export", reason: "no TypeScript DSL printer exists; dsl::print has no TS twin" },
   ...(["s.stdio.ply@1.0", "s.stdio.las@1.0", "s.stdio.obj@3.0", "s.stdio.stl@ascii", "s.stdio.gltf@2.0"] as const).flatMap((dialect) =>
     (["import", "export"] as const).map((direction) => ({ dialect, direction, reason: "geometry lives behind a content-addressed ArtifactChild handle, never as inline vertex data a leaf can reach" })),
   ),

@@ -85,7 +85,7 @@ fn restore_boot_descriptor(descriptor: crate::WgpuBootDescriptor) {
 /// description is the resolved chord list, so it must follow the door.
 #[test]
 fn the_shell_reads_its_platform_from_the_host_platform_door() {
-    let source = read_engine("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
+    let source = crate::shell::SHELL_SOURCE.to_string();
     let body = rust_fn_body(&source, "fn command_host_platform() -> semio_framework::manifest::Platform {");
     assert!(body.contains("crate::host_platform()"), "`command_host_platform` answers the door: {body}");
     assert!(!body.contains("web_sys::window()"), "and never re-derives the platform from a `window` the frame Worker realm does not own: {body}");
@@ -310,7 +310,7 @@ fn the_introduction_seen_key_is_brand_scoped() {
 /// route (a live-looking row that silently no-ops) nor a route dropped from under a listed row.
 #[test]
 fn every_palette_command_shape_has_a_live_route() {
-    let source = read_engine("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
+    let source = crate::shell::SHELL_SOURCE.to_string();
     let routes = rust_fn_body(&source, "pub async fn activate_search_item(&mut self, index: usize) -> Result<(), String> {");
     for prefix in ["os-command:", "command:", "command-form:"] {
         assert!(routes.contains(&format!("strip_prefix(\"{prefix}\")")), "🎛️ `{prefix}` is routed in `activate_search_item`");

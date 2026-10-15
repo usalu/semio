@@ -1,0 +1,447 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.caching/NxDaemonLifetimeV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "repositoryRoot",
+    "workspaceRoot",
+    "toolkitRoot",
+    "toolingIdentity",
+    "directory",
+    "generation",
+    "parentWitness",
+    "parentEnvelopeDigest",
+    "watcherIdentity",
+    "graphIdentity",
+    "implementationIdentity"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "repositoryRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "workspaceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "toolkitRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "toolingIdentity": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "parentEnvelopeDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "generation": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "parentWitness": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+    },
+    "watcherIdentity": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        }
+      ]
+    },
+    "graphIdentity": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      ]
+    },
+    "implementationIdentity": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "$defs": {
+    "Event": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "acquired"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "server-open"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "ready"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "parent-exit"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "drain"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "server-close"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "terminal"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "resource"
+          ],
+          "properties": {
+            "type": {
+              "const": "acquire"
+            },
+            "resource": {
+              "enum": [
+                "leases",
+                "tools",
+                "rust",
+                "sdk"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "const": "worker-open"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "const": "worker-close"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "const": "request-open"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "const": "request-close"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          }
+        }
+      ]
+    },
+    "ServicePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "maximumElapsedMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "repository:nx-daemon-service"
+        },
+        "maximumElapsedMilliseconds": {
+          "const": 0
+        }
+      }
+    },
+    "ServiceCapabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "repositoryRoot",
+        "workspaceRoot",
+        "toolingIdentity",
+        "generation",
+        "directory",
+        "kind",
+        "watcherIdentity",
+        "graphIdentity",
+        "implementationIdentity"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "repositoryRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "workspaceRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "toolingIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "const": "nx-daemon-service"
+        },
+        "watcherIdentity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{24}$"
+            }
+          ]
+        },
+        "graphIdentity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "implementationIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "WorkerLoan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "repositoryRoot",
+        "workspaceRoot",
+        "toolingIdentity",
+        "generation",
+        "directory",
+        "kind",
+        "token",
+        "processId",
+        "threadId",
+        "watcherIdentity",
+        "graphIdentity",
+        "implementationIdentity"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "repositoryRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "workspaceRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "toolingIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "const": "daemon-worker"
+        },
+        "token": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "processId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "threadId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "watcherIdentity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{24}$"
+            }
+          ]
+        },
+        "graphIdentity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "implementationIdentity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

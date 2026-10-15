@@ -1,0 +1,156 @@
+{
+  "lifecycle": {
+    "phaseMilliseconds": 60000,
+    "runnerMilliseconds": 65000,
+    "wrongCapacityReduction": 4096,
+    "wrongCapacityFields": [
+      "maximumPhysicalBytes",
+      "filesystemBytes"
+    ],
+    "file": "proof.bin",
+    "bytes": "original bounded native cache reader",
+    "cancelReason": "Owned native lifecycle cancelled"
+  },
+  "native": {
+    "maximumPhysicalBytes": 67108864,
+    "filesystemBytes": 66060288,
+    "relative": [
+      "native",
+      "m"
+    ],
+    "namespace": {
+      "version": 1,
+      "toolingIdentity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "workspaceRoot": "/workspace",
+      "graphIdentity": null,
+      "implementationIdentity": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "invalid": [
+      {
+        "maximumPhysicalBytes": 67108865
+      },
+      {
+        "maximumPhysicalBytes": 67108863
+      },
+      {
+        "extra": true
+      }
+    ]
+  },
+  "retirementInvalid": [
+    {
+      "filesystemBytes": 66060288
+    },
+    {
+      "filesystemBytes": 66060288,
+      "maximumPhysicalBytes": null
+    },
+    {
+      "filesystemBytes": 66060288,
+      "maximumPhysicalBytes": "67108864"
+    },
+    {
+      "filesystemBytes": 66060288.5,
+      "maximumPhysicalBytes": 67108864
+    },
+    {
+      "filesystemBytes": 0,
+      "maximumPhysicalBytes": 67108864
+    }
+  ],
+  "adaptiveCapacity": [
+    {
+      "name": "ALL parent and selected child reserve independent finite envelopes",
+      "namespaceBytes": [
+        367362048,
+        134217728
+      ],
+      "namespaceLimits": [
+        371556352,
+        138412032
+      ],
+      "extraBytes": 104857600,
+      "availableBytes": 268435456,
+      "admitted": true
+    },
+    {
+      "name": "two large generations cannot promise another full replacement",
+      "namespaceBytes": [
+        367362048,
+        367362048
+      ],
+      "namespaceLimits": [
+        371556352,
+        371556352
+      ],
+      "extraBytes": 300253184,
+      "availableBytes": 536870912,
+      "admitted": false
+    },
+    {
+      "name": "physical exact boundary",
+      "namespaceBytes": [
+        367362048
+      ],
+      "namespaceLimits": [
+        371556352
+      ],
+      "extraBytes": 104857600,
+      "availableBytes": 125829120,
+      "admitted": true
+    },
+    {
+      "name": "physical boundary minus one",
+      "namespaceBytes": [
+        367362048
+      ],
+      "namespaceLimits": [
+        371556352
+      ],
+      "extraBytes": 104857600,
+      "availableBytes": 125829119,
+      "admitted": false
+    }
+  ],
+  "disabledMarker": {
+    "maximumBytes": 4096,
+    "text": "daemon explicitly disabled",
+    "unicode": "🦑️",
+    "invalid": [
+      null,
+      {},
+      12
+    ]
+  },
+  "pressure": {
+    "parentFiles": [
+      {
+        "name": "project-graph.json",
+        "bytes": 229524109
+      },
+      {
+        "name": "source-maps.json",
+        "bytes": 44507540
+      },
+      {
+        "name": "file-map.json",
+        "bytes": 26214185
+      }
+    ],
+    "childFiles": [
+      {
+        "name": "project-graph.json",
+        "bytes": 50331648
+      },
+      {
+        "name": "source-maps.json",
+        "bytes": 16777216
+      },
+      {
+        "name": "file-map.json",
+        "bytes": 8388608
+      }
+    ],
+    "refusedNextBytes": 419430400
+  }
+}

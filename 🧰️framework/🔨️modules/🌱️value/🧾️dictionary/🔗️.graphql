@@ -1,0 +1,5 @@
+"""🧾️ Unique literal question identities retain complete intrinsic value owners."""
+type QuestionDictionaryEntry { questionId: String! value: DslValue! }
+type QuestionDictionary { entries: [QuestionDictionaryEntry!]! }
+input QuestionDictionaryEntryInput { questionId: String! value: DslValueInput! }
+input QuestionDictionaryInput { entries: [QuestionDictionaryEntryInput!]! }

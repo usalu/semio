@@ -5458,6 +5458,19 @@
           "subset": "*"
         },
         "counterpart": {
+          "artifactKind": "framework.io.text",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.writer.writer",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
           "artifactKind": "s.stdio.docx",
           "standard": "ecma-376",
           "subset": "*"
@@ -5510,11 +5523,11 @@
           "subset": "*"
         },
         "counterpart": {
-          "artifactKind": "s.stdio.txt",
+          "artifactKind": "framework.io.text",
           "standard": "utf-8",
           "subset": "*"
         },
-        "direction": "import"
+        "direction": "export"
       },
       {
         "owner": {
@@ -5565,19 +5578,6 @@
           "artifactKind": "s.stdio.pdf",
           "standard": "1.4",
           "subset": "base"
-        },
-        "direction": "export"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.writer.writer",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.txt",
-          "standard": "utf-8",
-          "subset": "*"
         },
         "direction": "export"
       }

@@ -1235,6 +1235,26 @@ fn upload_tile_invalid_png_bytes_returns_err() {
 }
 
 #[test]
+fn upload_tile_png_decode_matches_image_crate_oracle_for_every_8_bit_color_type() {
+    use image::codecs::png::PngEncoder;
+    use image::{ColorType, ImageEncoder};
+    let (width, height) = (19u32, 13u32);
+    for (color, channels) in [(ColorType::Rgba8, 4usize), (ColorType::Rgb8, 3), (ColorType::L8, 1), (ColorType::La8, 2)] {
+        let samples: Vec<u8> = (0..width as usize * height as usize * channels).map(|index| (index * 37 + index / 7 * 11) as u8).collect();
+        let mut png = Vec::new();
+        PngEncoder::new(&mut png).write_image(&samples, width, height, color.into()).expect("encode oracle png");
+        let oracle = image::load_from_memory(&png).expect("oracle decode").to_rgba8();
+        let owned = semio_framework_pixels::decode_png(&png).expect("owned decode");
+        assert_eq!((owned.width, owned.height), oracle.dimensions(), "{color:?} extent");
+        assert_eq!(owned.pixels, oracle.into_raw(), "{color:?} pixels");
+        let mut host = super::MapHost::new();
+        host.upload_tile(0, 0, 0, &png).expect("upload decodes through the owned codec");
+        let stored = host.tiles.tile_images.get("0/0/0").expect("stored tile");
+        assert_eq!((stored.width(), stored.height()), (width, height), "{color:?} stored extent");
+    }
+}
+
+#[test]
 fn upload_vector_tile_invalid_bytes_returns_err() {
     let mut host = super::MapHost::new();
     assert!(host.upload_vector_tile(0, 0, 0, &[0x80]).is_err());

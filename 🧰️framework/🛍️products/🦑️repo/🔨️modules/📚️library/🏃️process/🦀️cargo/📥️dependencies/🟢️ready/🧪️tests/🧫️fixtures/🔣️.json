@@ -1,0 +1,263 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "first-party",
+      "resolution": {
+        "version": 1,
+        "workspaceManifest": "fixture/Cargo.toml",
+        "lock": "fixture/Cargo.lock",
+        "members": [
+          "base",
+          "consumer"
+        ],
+        "packages": [
+          {
+            "id": "base",
+            "manifest": "fixture/base/Cargo.toml",
+            "source": null
+          },
+          {
+            "id": "consumer",
+            "manifest": "fixture/consumer/Cargo.toml",
+            "source": null
+          }
+        ],
+        "resolved": [
+          "base",
+          "consumer"
+        ]
+      },
+      "ready": true
+    },
+    {
+      "name": "registry",
+      "resolution": {
+        "version": 1,
+        "workspaceManifest": "fixture/Cargo.toml",
+        "lock": "fixture/Cargo.lock",
+        "members": [
+          "base",
+          "consumer"
+        ],
+        "packages": [
+          {
+            "id": "base",
+            "manifest": "fixture/base/Cargo.toml",
+            "source": "registry+https://example.test/index"
+          },
+          {
+            "id": "consumer",
+            "manifest": "fixture/consumer/Cargo.toml",
+            "source": null
+          }
+        ],
+        "resolved": [
+          "base",
+          "consumer"
+        ]
+      },
+      "ready": false
+    },
+    {
+      "name": "git",
+      "resolution": {
+        "version": 1,
+        "workspaceManifest": "fixture/Cargo.toml",
+        "lock": "fixture/Cargo.lock",
+        "members": [
+          "base",
+          "consumer"
+        ],
+        "packages": [
+          {
+            "id": "base",
+            "manifest": "fixture/base/Cargo.toml",
+            "source": "git+https://example.test/repo#abc"
+          },
+          {
+            "id": "consumer",
+            "manifest": "fixture/consumer/Cargo.toml",
+            "source": null
+          }
+        ],
+        "resolved": [
+          "base",
+          "consumer"
+        ]
+      },
+      "ready": false
+    },
+    {
+      "name": "glob-members",
+      "resolution": {
+        "version": 1,
+        "workspaceManifest": "fixture/Cargo.toml",
+        "lock": "fixture/Cargo.lock",
+        "members": [
+          "packages/*"
+        ],
+        "packages": [
+          {
+            "id": "base",
+            "manifest": "fixture/base/Cargo.toml",
+            "source": null
+          },
+          {
+            "id": "consumer",
+            "manifest": "fixture/consumer/Cargo.toml",
+            "source": null
+          }
+        ],
+        "resolved": [
+          "base",
+          "consumer"
+        ]
+      },
+      "ready": false
+    },
+    {
+      "name": "missing-resolved-owner",
+      "resolution": {
+        "version": 1,
+        "workspaceManifest": "fixture/Cargo.toml",
+        "lock": "fixture/Cargo.lock",
+        "members": [
+          "base",
+          "consumer"
+        ],
+        "packages": [
+          {
+            "id": "base",
+            "manifest": "fixture/base/Cargo.toml",
+            "source": null
+          },
+          {
+            "id": "consumer",
+            "manifest": "fixture/consumer/Cargo.toml",
+            "source": null
+          }
+        ],
+        "resolved": [
+          "base",
+          "consumer",
+          "missing"
+        ]
+      },
+      "ready": false
+    },
+    {
+      "name": "escaped-manifest",
+      "resolution": {
+        "version": 1,
+        "workspaceManifest": "fixture/Cargo.toml",
+        "lock": "fixture/Cargo.lock",
+        "members": [
+          "base",
+          "consumer"
+        ],
+        "packages": [
+          {
+            "id": "base",
+            "manifest": "../foreign/Cargo.toml",
+            "source": null
+          },
+          {
+            "id": "consumer",
+            "manifest": "fixture/consumer/Cargo.toml",
+            "source": null
+          }
+        ],
+        "resolved": [
+          "base",
+          "consumer"
+        ]
+      },
+      "ready": false
+    },
+    {
+      "name": "backslash-manifest",
+      "resolution": {
+        "version": 1,
+        "workspaceManifest": "fixture\\Cargo.toml",
+        "lock": "fixture/Cargo.lock",
+        "members": [
+          "base",
+          "consumer"
+        ],
+        "packages": [
+          {
+            "id": "base",
+            "manifest": "fixture/base/Cargo.toml",
+            "source": null
+          },
+          {
+            "id": "consumer",
+            "manifest": "fixture/consumer/Cargo.toml",
+            "source": null
+          }
+        ],
+        "resolved": [
+          "base",
+          "consumer"
+        ]
+      },
+      "ready": false
+    },
+    {
+      "name": "repeated-manifest",
+      "resolution": {
+        "version": 1,
+        "workspaceManifest": "fixture/Cargo.toml",
+        "lock": "fixture/Cargo.lock",
+        "members": [
+          "base",
+          "consumer"
+        ],
+        "packages": [
+          {
+            "id": "base",
+            "manifest": "fixture/base/Cargo.toml",
+            "source": null
+          },
+          {
+            "id": "consumer",
+            "manifest": "fixture/base/Cargo.toml",
+            "source": null
+          }
+        ],
+        "resolved": [
+          "base",
+          "consumer"
+        ]
+      },
+      "ready": false
+    },
+    {
+      "name": "empty-members",
+      "resolution": {
+        "version": 1,
+        "workspaceManifest": "fixture/Cargo.toml",
+        "lock": "fixture/Cargo.lock",
+        "members": [],
+        "packages": [
+          {
+            "id": "base",
+            "manifest": "fixture/base/Cargo.toml",
+            "source": null
+          },
+          {
+            "id": "consumer",
+            "manifest": "fixture/consumer/Cargo.toml",
+            "source": null
+          }
+        ],
+        "resolved": [
+          "base",
+          "consumer"
+        ]
+      },
+      "ready": true
+    }
+  ]
+}

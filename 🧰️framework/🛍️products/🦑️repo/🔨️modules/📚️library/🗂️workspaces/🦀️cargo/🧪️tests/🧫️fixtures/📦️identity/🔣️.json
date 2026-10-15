@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "current-package",
+      "dependency": "construction",
+      "package": "construction",
+      "valid": true
+    },
+    {
+      "id": "renamed-package",
+      "dependency": "operations",
+      "package": "construction",
+      "valid": false
+    }
+  ]
+}

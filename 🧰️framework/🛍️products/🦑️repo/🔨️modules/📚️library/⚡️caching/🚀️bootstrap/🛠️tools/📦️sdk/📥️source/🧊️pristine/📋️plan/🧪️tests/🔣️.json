@@ -1,0 +1,98 @@
+[
+  {
+    "name": "ordinary original",
+    "observation": {
+      "path": "source.js",
+      "present": true,
+      "links": 1,
+      "archive": true,
+      "shared": false,
+      "matches": false
+    },
+    "expected": "replace"
+  },
+  {
+    "name": "bun install metadata",
+    "observation": {
+      "path": "source.js",
+      "present": true,
+      "links": 1,
+      "archive": false,
+      "shared": false,
+      "matches": false
+    },
+    "expected": "remove"
+  },
+  {
+    "name": "immutable exact",
+    "observation": {
+      "path": "source.js",
+      "present": true,
+      "links": 3,
+      "archive": true,
+      "shared": true,
+      "matches": true
+    },
+    "expected": "preserve"
+  },
+  {
+    "name": "immutable mismatch",
+    "observation": {
+      "path": "source.js",
+      "present": true,
+      "links": 3,
+      "archive": true,
+      "shared": true,
+      "matches": false
+    },
+    "expected": null
+  },
+  {
+    "name": "immutable absent archive",
+    "observation": {
+      "path": "source.js",
+      "present": true,
+      "links": 3,
+      "archive": false,
+      "shared": true,
+      "matches": true
+    },
+    "expected": null
+  },
+  {
+    "name": "unknown hardlink",
+    "observation": {
+      "path": "source.js",
+      "present": true,
+      "links": 2,
+      "archive": true,
+      "shared": false,
+      "matches": false
+    },
+    "expected": null
+  },
+  {
+    "name": "missing archive source",
+    "observation": {
+      "path": "source.js",
+      "present": false,
+      "links": 0,
+      "archive": true,
+      "shared": false,
+      "matches": false
+    },
+    "expected": null
+  },
+  {
+    "name": "nested lock layout",
+    "observation": {
+      "path": "node_modules/semver/index.js",
+      "present": true,
+      "links": 1,
+      "archive": false,
+      "shared": false,
+      "matches": false
+    },
+    "expected": "nested"
+  }
+]

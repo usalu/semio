@@ -9,7 +9,7 @@ import { runScriptMain } from "../../../../../../../🧰️framework/📦️pack
 
 class TestScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
-    await runRepositoryCargoTests(["semio-s-plugin-imperative-text"], this.repoRoot, this.invocation.control);
+    await runRepositoryCargoTests(["semio-s-plugin-imperative-text"], this.repoRoot, this.invocation);
   }
 }
 

@@ -36,7 +36,7 @@ export const FEM2D_DIALECT: IoDialect = { artifactKind: "s.fem.fem2d", standard:
 
 const foreign = (artifactKind: string, standard: string): IoDialect => ({ artifactKind, standard, subset: "*" });
 
-const TXT = foreign("s.stdio.txt", "utf-8");
+const TXT = foreign("framework.io.text", "utf-8");
 const JSON_RFC8259 = foreign("s.stdio.json", "rfc8259");
 const CSV = foreign("s.stdio.csv", "rfc4180");
 const STL = foreign("s.stdio.stl", "ascii");

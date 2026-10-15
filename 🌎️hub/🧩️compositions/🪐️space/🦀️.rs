@@ -242,6 +242,7 @@ pub fn plugin() -> Result<Plugin<SpaceApps>, PluginAssemblyError> {
         .editor_mutation_roster::<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>()
         .viewer::<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>(semio_s_artifact_space_space::viewer::space_index::create_space_index_viewer())
         .viewer_mutation_roster::<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>()
+        .contributes_topic(semio_s_artifact_space_space::space_index_topic_contribution())
         .document_app::<engine::space::SpaceApp>(::semio_framework_async::poll::resolve_ready(engine::space::create_space_app()))
         .foreign_document_codec::<engine::space::SpaceApp>(OS_SPACE_SCHEMA)
         .activation(ActivationEvent::OnArtifactKind { kind: ::semio_framework_async::poll::resolve_ready(semio_s_artifact_space_home::artifact_kind()).id })

@@ -17,8 +17,8 @@
 //! @see <https://www.w3.org/WAI/WCAG22/Understanding/pointer-cancellation.html>
 //! @see <https://www.w3.org/WAI/WCAG22/Understanding/pointer-gestures.html>
 
-use crate::schema::{Circling, Cue, Dragged, Hover, Point, Pointer, Press, PressPhase, Pressed, Rect, Released, Shaking, Stroking, Ticks, Tier, Warmth, TICKS_PER_SECOND};
-use crate::terrain::{larger, smaller};
+use semio_framework_pets_contract::schema::{Circling, Cue, Dragged, Hover, Point, Pointer, Press, PressPhase, Pressed, Rect, Released, Shaking, Stroking, Ticks, Tier, Warmth, TICKS_PER_SECOND};
+use semio_framework_pets_kinematics::terrain::{larger, smaller};
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 

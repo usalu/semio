@@ -30,3 +30,45 @@ pub fn layout() -> WindowLayout {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod windows {
+    #[path = "."]
+    pub mod plan {
+        #[path = "🪟️windows/🗺️plan/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod world {
+        #[path = "🪟️windows/🧊️world/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod section {
+        #[path = "🪟️windows/📐️section/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod schedule {
+        #[path = "🪟️windows/🧮️schedule/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod family {
+        #[path = "🪟️windows/🧬️family/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod sheet {
+        #[path = "🪟️windows/📄️sheet/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+}
+//#endregion 🧩️Modules

@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "generation": "0123456789abcdef",
+  "files": [
+    {
+      "name": "project-graph.json",
+      "value": {
+        "nodes": {
+          "accepted": {}
+        },
+        "dependencies": {}
+      }
+    },
+    {
+      "name": "source-maps.json",
+      "value": {
+        "accepted": {}
+      }
+    },
+    {
+      "name": "file-map.json",
+      "value": {
+        "fileMap": {
+          "projectFileMap": {},
+          "nonProjectFiles": []
+        }
+      }
+    }
+  ],
+  "faults": [
+    {
+      "phase": "stage",
+      "at": 1
+    },
+    {
+      "phase": "commit",
+      "at": 1
+    },
+    {
+      "phase": "commit",
+      "at": 2
+    },
+    {
+      "phase": "commit",
+      "at": 3
+    }
+  ],
+  "crashes": [
+    "intent",
+    "linked",
+    "staged",
+    "renamed",
+    "committed"
+  ],
+  "foreignLink": "outside.json",
+  "phaseMilliseconds": 20000,
+  "runnerMilliseconds": 25000
+}

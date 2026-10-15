@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "origins"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "origins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorityA",
+        "contextA",
+        "captureA",
+        "authorityB",
+        "childB"
+      ],
+      "properties": {
+        "authorityA": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "contextA": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "captureA": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "authorityB": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "childB": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "left",
+          "right",
+          "same"
+        ],
+        "properties": {
+          "left": {
+            "enum": [
+              "authorityA",
+              "contextA",
+              "captureA",
+              "authorityB",
+              "childB"
+            ]
+          },
+          "right": {
+            "enum": [
+              "authorityA",
+              "contextA",
+              "captureA",
+              "authorityB",
+              "childB"
+            ]
+          },
+          "same": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

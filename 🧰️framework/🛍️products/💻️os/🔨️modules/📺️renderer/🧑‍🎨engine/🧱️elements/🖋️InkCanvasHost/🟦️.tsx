@@ -23,10 +23,9 @@ import {
   type SelectionMarqueePoint,
 } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
-import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { hostLabel } from "../✏️TextEditor/🟦️.tsx";
-import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
-import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
+import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
 import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, clearLocalPresenceWindowViewV1, publishLocalPresenceWindowViewV1 } from "../👕️canvas-presence/🟦️.ts";
 // #endregion 🔌️Adapters

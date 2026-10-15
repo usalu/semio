@@ -737,7 +737,7 @@ async fn import_media_fields_in_sets_typed_dictionary() {
     let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Intrinsic { schema: "form.dictionary".into(), value: semio_framework_value::DslValue::Object(vec![("name".into(),semio_framework_value::DslValue::String("Ada".into()))]) } };
     app.import_media("fields:in", media, &artifact_app_laws::meta("local")).await.expect("import fields:in");
     let document = app.snapshot().expect("projection");
-    assert_eq!(document.data_fields,Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"name".into(),value:semio_framework_value::DslValue::String("Ada".into())}]}));
+    assert_eq!(document.data_fields,Some(semio_framework_value_dictionary::QuestionDictionary{entries:vec![semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"name".into(),value:semio_framework_value::DslValue::String("Ada".into())}]}));
 }
 
 #[semio_framework_async_macros::async_test]

@@ -4,8 +4,8 @@
 
 use super::*;
 use crate::challenge::CLOCK_LEAD;
-use crate::schema::{Badge, BadgeRule, ClassificationAnswer, Introduction, MatchingAnswer, SheetTask, SortingAnswer, Task, TaskKind, CHALLENGES, DEFAULT_LIMITS, MAX_TIMESTAMP};
 use crate::sheet::tests::{quiz, text};
+use quiz_schema::{Badge, BadgeRule, ClassificationAnswer, Introduction, MatchingAnswer, SheetTask, SortingAnswer, Task, TaskKind, CHALLENGES, DEFAULT_LIMITS, MAX_TIMESTAMP};
 
 pub(crate) const ALICE: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 pub(crate) const BOB: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
@@ -59,12 +59,12 @@ pub(crate) fn perfect(quiz: &Quiz, sheet_task: &SheetTask) -> Answer {
     match (task, sheet_task) {
         (Some(Task::Classification(task)), SheetTask::Classification(sheet)) => Answer::Classification(ClassificationAnswer { assignments: sheet.items.iter().filter_map(|item| task.items.iter().find(|candidate| candidate.id == item.id).map(|candidate| (item.id.clone(), candidate.category.clone()))).collect() }),
         (Some(Task::Sorting(task)), SheetTask::Sorting(sheet)) => {
-            let mut order: Vec<(usize, &crate::schema::SortingItem)> = task.items.iter().enumerate().filter(|(_, item)| sheet.items.iter().any(|presented| presented.id == item.id)).collect();
+            let mut order: Vec<(usize, &quiz_schema::SortingItem)> = task.items.iter().enumerate().filter(|(_, item)| sheet.items.iter().any(|presented| presented.id == item.id)).collect();
             order.sort_by(|a, b| a.1.value.total_cmp(&b.1.value).then(a.0.cmp(&b.0)));
             Answer::Sorting(SortingAnswer { order: order.iter().map(|(_, item)| item.id.clone()).collect(), guesses: sheet.keys.is_none().then(|| order.iter().map(|(_, item)| (item.id.clone(), item.value)).collect()) })
         }
         (Some(Task::Matching(task)), SheetTask::Matching(sheet)) => {
-            let value = |item: &crate::schema::SheetItem, dimension: &str| task.items.iter().find(|candidate| candidate.id == item.id)?.values.get(dimension).copied();
+            let value = |item: &quiz_schema::SheetItem, dimension: &str| task.items.iter().find(|candidate| candidate.id == item.id)?.values.get(dimension).copied();
             let hidden = sheet.dimensions.iter().any(|dimension| dimension.cards.is_none());
             let guesses = sheet.dimensions.iter().map(|dimension| (dimension.id.clone(), sheet.items.iter().filter_map(|item| Some((item.id.clone(), value(item, &dimension.id)?))).collect())).collect();
             let assignments = sheet
@@ -463,7 +463,7 @@ fn evolve_ignores_foreign_facts_and_takes_the_latest_identity() {
 }
 
 pub(crate) fn replay(vectors: &serde_json::Value, sequence: &serde_json::Value) -> (Vec<Decision>, LearnerState, BTreeMap<Slug, LoadedQuiz>) {
-    use crate::schema::tests::{entries, typed};
+    use quiz_schema::testkit::{entries, typed};
     let catalog: Catalog = typed(&vectors["catalog"]);
     let quizzes: Vec<Quiz> = entries(&vectors["quizzes"]).iter().map(typed).collect();
     let mut revisions: BTreeMap<Slug, String> = typed(&vectors["revisions"]);
@@ -593,7 +593,7 @@ fn a_run_starts_at_the_instant_the_device_claims_whenever_it_is_decided() {
 
 #[test]
 fn shared_registrations_and_quotas_of_the_python_reference_hold() {
-    use crate::schema::tests::{assert_close, entries, fixture, json, typed};
+    use quiz_schema::testkit::{assert_close, entries, fixture, json, typed};
     let vectors = fixture("learner-lifecycle");
     for sequence in entries(&vectors["registrations"]).iter().chain(entries(&vectors["malformed"]["registrations"])) {
         let mut handle = empty_handle_state(sequence["key"].as_str().unwrap_or_default());
@@ -612,7 +612,7 @@ fn shared_registrations_and_quotas_of_the_python_reference_hold() {
 
 #[test]
 fn shared_learner_decisions_of_the_python_reference_hold() {
-    use crate::schema::tests::{assert_close, entries, fixture, json};
+    use quiz_schema::testkit::{assert_close, entries, fixture, json};
     let vectors = fixture("learner-lifecycle");
     for sequence in entries(&vectors["learners"]).iter().chain(entries(&vectors["malformed"]["learners"])) {
         let (decisions, _, _) = replay(&vectors, sequence);

@@ -1,3 +1,5 @@
+import {captureOwnedCommandBodyV1} from "./📥️capture/🟦️.ts";
+export {writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1} from "./📥️capture/🟦️.ts";
 import { terminateOwnedChildTree } from "../🪓️termination/🟦️.ts";
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";
@@ -26,37 +28,10 @@ export interface OwnedCommandOptions {
 /** 🧺️ Runs one tool without blocking the event loop and without forwarding its output: several tools run at once (jco, wasm-opt, a descriptor emitter, a
  * module probe), so their output is kept as a 64 KiB tail and surfaced only in the failure. Cancellation terminates the tool's process tree, forcefully after 2 s.
  * Resolves with the output tail. */
-export function captureOwnedCommandV1(command: string, args: readonly string[], cwd: string, options: Readonly<{ env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; control?: ResourceLeaseControl; output?: OwnedCommandOptions["output"] }> = {}): Promise<string> {
-  if(options.output&&validateJsonSchemaSubset(outputSchema,options.output).length)throw Error("Owned data capture requires complete output limits");
-  const signal = options.control?.signal ?? options.signal;
-  if (options.control) {
-    const remaining = checkResourceLeaseControl(options.control);
-    if (options.signal && options.signal !== signal) throw Error("Owned capture requires its original signal");
-    if (remaining !== null && Math.floor(remaining) < 1) throw Error("Original compiler admission deadline exhausted");
-  }
-  signal?.throwIfAborted();
-  return new Promise((accept, reject) => {
-    const child = spawn(command, [...args], { cwd, env: (options.env ?? process.env) as NodeJS.ProcessEnv, shell: false, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
-    let output = "", forced: ReturnType<typeof setTimeout> | undefined, deadline: ReturnType<typeof setTimeout> | undefined, stopped: unknown;
-    const cancel = (): void => { terminateOwnedChildTree(child); forced ??= setTimeout(() => { if (child.pid && process.platform !== "win32") try { process.kill(-child.pid, "SIGKILL"); } catch {} }, 2_000); };
-    const check = (): void => { if (!options.control) return; try { const remaining = checkResourceLeaseControl(options.control); deadline = setTimeout(check, Math.min(remaining ?? 1000, 1000)); } catch (error) { stopped = error; cancel(); } };
-    signal?.addEventListener("abort", cancel, { once: true });
-    check();
-    let capturedBytes=0,capturedLines=0;const open={stdout:false,stderr:false},decoders={stdout:new StringDecoder("utf8"),stderr:new StringDecoder("utf8")};
-    const capture=(chunk:Buffer,stream:OwnedCommandStreamV1):void=>{if(stopped!==undefined)return;if(options.output){capturedBytes+=chunk.length;for(const byte of chunk){if(!open[stream])capturedLines++;open[stream]=byte!==10;}if(capturedBytes>options.output.maximumBytes||capturedLines>options.output.maximumLines){stopped=Error("Owned data capture output limit exceeded");cancel();return;}}const decoded=decoders[stream].write(chunk);output=options.output?output+decoded:(output+decoded).slice(-64*1024);};
-    child.stdout?.on("data",chunk=>capture(chunk,"stdout"));child.stderr?.on("data",chunk=>capture(chunk,"stderr"));for(const stream of ["stdout","stderr"] as const)child[stream]?.once("end",()=>{if(stopped===undefined)output+=decoders[stream].end();});
-    child.once("error", reject);
-    child.once("close", (code) => {
-      if (forced) clearTimeout(forced);
-      if (deadline) clearTimeout(deadline);
-      signal?.removeEventListener("abort", cancel);
-      if (options.control) try { checkResourceLeaseControl(options.control); } catch (error) { reject(error); return; }
-      if (stopped !== undefined) reject(stopped);
-      else if (signal?.aborted) reject(signal.reason);
-      else if (code === 0) accept(output);
-      else reject(new Error(`${command} ${args.join(" ")} exited with status ${code}\n${output}`));
-    });
-  });
+export async function captureOwnedCommandV1(command: string, args: readonly string[], cwd: string, options: Readonly<{ env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; control?: ResourceLeaseControl; output?: OwnedCommandOptions["output"] }> = {}): Promise<string> {
+ const {result,tail}=await captureOwnedCommandBodyV1(command,args,cwd,options,false);
+ if(result.status===0&&result.signal===null)return tail;
+ throw new Error(`${command} ${args.join(" ")} exited with status ${result.status} signal ${result.signal}\n${tail}`);
 }
 
 /** ⏱️ Keeps long native queue waits observable until the owning operation completes. */

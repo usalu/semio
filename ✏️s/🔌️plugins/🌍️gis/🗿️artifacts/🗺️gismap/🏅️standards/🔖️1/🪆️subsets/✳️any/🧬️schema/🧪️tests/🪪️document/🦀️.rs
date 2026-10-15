@@ -10,7 +10,7 @@ fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {
     let snapshot: GisMapSnapshot = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(artifact.to_snapshot(), snapshot);
     assert_eq!(GisMapArtifact::from_snapshot(snapshot.clone()), artifact);
-    assert_eq!(store::ChildRestoreProjection::from_snapshot(&snapshot).unwrap().len(), 3);
+    assert_eq!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).unwrap().len(), 3);
     assert_eq!(GisMapSnapshot::parse_dsl(&snapshot.print_dsl()).unwrap(), snapshot);
     assert_eq!(GisMapSnapshot::decode_pack(&snapshot.encode_pack()).unwrap(), snapshot);
     assert_eq!(protocol::apply_diff(&GisMapDiff::default(), &snapshot).unwrap(), snapshot);
@@ -40,7 +40,7 @@ fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {
 fn default_document_boot_child_projection_and_genesis_packs_are_valid() {
     use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
     let snapshot = default_document();
-    let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("reuse-map default document child refs");
+    let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("reuse-map default document child refs");
     assert_eq!(projection.len(), 2, "drawing and value; image is absent on the default map");
     assert!(crate::genesis_gis_map_child_pack(&snapshot, "drawing", &snapshot.drawing.child_id).is_some());
     assert!(crate::genesis_gis_map_child_pack(&snapshot, "value", &snapshot.value.child_id).is_some());

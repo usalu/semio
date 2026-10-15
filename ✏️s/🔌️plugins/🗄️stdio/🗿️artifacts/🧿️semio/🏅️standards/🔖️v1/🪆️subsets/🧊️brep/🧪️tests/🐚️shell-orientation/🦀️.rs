@@ -45,8 +45,8 @@
 // #region 🔖️Imports
 use parry3d::mass_properties::details::trimesh_signed_volume_and_center_of_mass;
 use parry3d::na::Point3;
-use semio_framework_3d_brep_operations::offset::shell_solid;
-use semio_framework_3d_brep_operations::primitives::make_box;
+use semio_framework_3d_brep_offset::shell_solid;
+use semio_framework_3d_brep_construction::primitives::make_box;
 use {semio_framework_3d_brep_engine::Brep, semio_framework_3d_brep_representation::contract::MeshTransfer};
 use semio_framework_3d_brep_queries::mass_properties::{shell_signed_volume, solid_signed_volume};
 use semio_framework_3d_brep_tessellation::tessellate_solid;

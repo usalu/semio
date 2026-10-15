@@ -404,5 +404,40 @@
       "path": "archive/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "accepted": false
     }
+  ],
+  "tomlCases": [
+    {
+      "source": "[toolchain]\nchannel=\"nightly-2026-07-20\"\nprofile=\"minimal\"\ncomponents=[\"rust-src\",\"llvm-tools-preview\"]\ntargets=[\"wasm32-wasip2\",\"wasm32-unknown-unknown\"]\n",
+      "expected": {
+        "toolchain": {
+          "channel": "nightly-2026-07-20",
+          "profile": "minimal",
+          "components": [
+            "rust-src",
+            "llvm-tools-preview"
+          ],
+          "targets": [
+            "wasm32-wasip2",
+            "wasm32-unknown-unknown"
+          ]
+        }
+      }
+    },
+    {
+      "source": "date=\"2026-07-20\"\n[pkg.rustc.target.\"aarch64-apple-darwin\"]\navailable=true\nxz_url=\"https://static.rust-lang.org/dist/2026-07-20/rustc.tar.xz\"\n",
+      "expected": {
+        "date": "2026-07-20",
+        "pkg": {
+          "rustc": {
+            "target": {
+              "aarch64-apple-darwin": {
+                "available": true,
+                "xz_url": "https://static.rust-lang.org/dist/2026-07-20/rustc.tar.xz"
+              }
+            }
+          }
+        }
+      }
+    }
   ]
 }

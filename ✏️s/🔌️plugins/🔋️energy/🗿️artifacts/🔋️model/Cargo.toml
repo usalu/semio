@@ -113,36 +113,16 @@ path = "../../../../../🧰️framework/🔨️modules/⏯️tool-run/📦️pac
 [workspace.dependencies.semio-framework-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-csv]
-path = "../../../🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-epw]
-path = "../../../🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-s-artifact-stdio-json]
 path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-semio]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio-table]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-semio-table-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📦️packages/🦀️rust"
-[workspace.dependencies.semio-s-artifact-stdio-semio-value]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-semio-value-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust"
-[workspace.dependencies.semio-s-artifact-stdio-txt]
-path = "../../../🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-xlsx]
-path = "../../../🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-s-artifact-stdio-zip]
 path = "../../../🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust"
 

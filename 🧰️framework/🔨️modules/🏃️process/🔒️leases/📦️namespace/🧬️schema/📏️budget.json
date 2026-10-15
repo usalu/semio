@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://process.leases/BoundedResourceNamespacePolicyV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "catalogShards",
+    "entriesPerShard",
+    "maximumEntries",
+    "maximumClaims",
+    "maximumDatabaseBytes",
+    "maximumCatalogBytes",
+    "minimumAvailableBytes",
+    "metadataReserveBytes",
+    "maximumPins",
+    "maximumResourceUtf8Bytes",
+    "maximumConcurrentMetadataWriters",
+    "maximumMetadataJournalBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "catalogShards": {
+      "const": 16
+    },
+    "entriesPerShard": {
+      "const": 4
+    },
+    "maximumEntries": {
+      "const": 64
+    },
+    "maximumClaims": {
+      "const": 64
+    },
+    "maximumDatabaseBytes": {
+      "const": 16384
+    },
+    "maximumCatalogBytes": {
+      "const": 16384
+    },
+    "minimumAvailableBytes": {
+      "const": 65536
+    },
+    "metadataReserveBytes": {
+      "const": 131072
+    },
+    "maximumPins": {
+      "const": 64
+    },
+    "maximumResourceUtf8Bytes": {
+      "const": 4096
+    },
+    "maximumConcurrentMetadataWriters": {
+      "const": 2
+    },
+    "maximumMetadataJournalBytes": {
+      "const": 49152
+    }
+  }
+}

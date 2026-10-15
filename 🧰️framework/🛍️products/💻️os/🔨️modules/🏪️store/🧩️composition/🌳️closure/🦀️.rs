@@ -1,5 +1,6 @@
 //! 🌳️ Retained admission of one complete recursively owned document closure.
-use super::{CHILD_RESTORE_MAXIMUM_FIELD_BYTES, ChildRestoreProjection, ChildRestoreProjectionError, OwnerRef};
+use super::OwnerRef;
+use semio_framework_composition_admission::{CHILD_RESTORE_MAXIMUM_FIELD_BYTES,ChildRestoreProjection,ChildRestoreProjectionError};
 use {semio_framework_artifact_reference::ArtifactRef};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use std::hash::{Hash, Hasher};

@@ -28,6 +28,7 @@ name = "process3d_text_snapshot"
 path = "../../../🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"
 
 [dependencies]
+semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 framework_hash = { workspace = true }
 machine = { workspace = true }
 semio-framework-3d-brep-engine = { workspace = true }

@@ -8,9 +8,11 @@ use semio_framework_dsl_record::RecordLayout;
 use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::RecordValue;
 use semio_framework_dsl_record::Shape;
-use semio_framework_os_pack::{ByteReader, ByteWriter, CodecId, PackSink};
+use semio_framework_os_pack::{ByteReader, ByteWriter, CodecId};
+use semio_framework_pack_source::{PackSink};
 use protocol::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
-use protocol::wire::{DictBuilder, DictReader, ProtocolError, ProtocolLimits, RecordHasher};
+use protocol::ProtocolError;
+use protocol::wire::{DictBuilder, DictReader, ProtocolLimits, RecordHasher};
 use std::collections::{HashMap, HashSet};
 
 

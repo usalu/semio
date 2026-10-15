@@ -22,22 +22,14 @@ name = "original-retained-receiving"
 path = "../../🎟️retained-turn/🫴️receiving/🧪️tests/📬️public/🦀️.rs"
 
 [dependencies]
+semio-framework-actor-retained-context = { path = "../../🎟️retained-turn/🎟️context/📦️packages/🦀️rust" }
+semio-framework-actor-pack = { path = "../../🧵️pack/📦️packages/🦀️rust" }
+semio-framework-actor-retained-turn = { path = "../../🎟️retained-turn/📦️packages/🦀️rust" }
+semio-framework-actor-vocabulary = { path = "../../📖️vocabulary/📦️packages/🦀️rust" }
+semio-framework-actor-job-publication = { path = "../../💼️job/📨️publication/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.228", features = ["derive"] }
 semio-framework-job = { workspace = true }
-# 🧱️ `boxed_fixed_slots` — `JobReplayLog`'s fixed record table is built straight on the heap so a
-# 1 024-record array never lands in the constructing frame. Unconditional: `semio-framework-job`
-# above already pulls this crate in on every target.
-semio-framework-async = { workspace = true }
-# 🌱️ `protocol::value::{DslValue, ToValue, FromValue, ValueError}` — the SAME nominal type
-# `semio-framework-os-kernel` re-exports (`os_dsl::schema` re-exports `protocol::value::*`
-# unchanged; see `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs`), so an additive
-# `#[derive(ToValue, FromValue)]` here interoperates with os-kernel callers. `replication` has no
-# dependency edge back to this crate (`cargo tree -p semio-framework-replication` — hash,
-# io-base64, value-derive, serde, serde_json only), so this does not create the os-kernel cycle.
-semio-framework-replication = { workspace = true }
-# 🧬️ Proc-macro for `#[derive(ToValue, FromValue)]` — leaf crate (syn/quote/proc-macro2 only), no
-# edge back to this crate (`cargo tree -p semio-framework-value-derive -i`).
 semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 
 # 🌉️ Browser-only `KernelHost` wasm-bindgen bridge (`🦀️.rs`'s `kernel_host` mod, React-web /
@@ -51,10 +43,10 @@ semio-framework-async = { workspace = true }
 wasm-bindgen = "0.2.106"
 
 [dev-dependencies]
+semio-framework-async = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 # 🧪️ `#[cfg_attr(test, derive(Serialize, Deserialize))]` oracle: this crate's real wire stays
 # `pack_encode`/`pack_decode` (see the module doc's "opaque seam" note) — serde only proves the
 # `ToValue`/`FromValue` derive against serde's own independent shape inside `#[cfg(test)]`, so it

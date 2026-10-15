@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "staged-note-stays-the-only-index-entry",
+      "tracked": [{ "path": "base.md", "bytes": "base\n" }],
+      "staged": [{ "path": "staged-note.md", "bytes": "staged\n" }],
+      "unstaged": [{ "path": "base.md", "bytes": "worktree\n" }],
+      "untracked": [{ "path": "loose-note.md", "bytes": "loose\n" }],
+      "bullets": ["📝Revise staged note"],
+      "expectExit": 0
+    },
+    {
+      "id": "empty-index-is-rejected",
+      "tracked": [{ "path": "base.md", "bytes": "base\n" }],
+      "staged": [],
+      "unstaged": [{ "path": "base.md", "bytes": "worktree\n" }],
+      "untracked": [{ "path": "loose-note.md", "bytes": "loose\n" }],
+      "bullets": [],
+      "expectExit": 1
+    }
+  ]
+}

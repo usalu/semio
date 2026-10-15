@@ -45,6 +45,21 @@
         "command": "bun ./📜️script.ts test-path-literals",
         "forwardAllArgs": true
       }
+    },
+    "test-module-tree": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/**/*",
+        "sharedGlobals"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-module-tree",
+        "forwardAllArgs": true
+      }
     }
   }
 }

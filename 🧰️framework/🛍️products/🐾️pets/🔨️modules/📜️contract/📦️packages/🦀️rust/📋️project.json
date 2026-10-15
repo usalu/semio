@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/pets-contract-rs",
+  "tags": [
+    "lang:rust",
+    "role:product",
+    "family:pets"
+  ]
+}

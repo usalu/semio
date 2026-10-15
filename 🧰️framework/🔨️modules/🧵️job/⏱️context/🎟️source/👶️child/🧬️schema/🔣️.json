@@ -22,7 +22,12 @@
     "callbackSpent",
     "expectedRemaining",
     "close",
-    "cuts"
+    "cuts",
+    "initialStock",
+    "initialFuel",
+    "initialDeadline",
+    "clockBindingPreserved",
+    "absoluteDeadlineStable"
   ],
   "properties": {
     "contract": {
@@ -189,6 +194,27 @@
         3,
         4
       ]
+    },
+    "initialStock": {
+      "const": [
+        512,
+        4096,
+        262144,
+        262144,
+        64
+      ]
+    },
+    "initialFuel": {
+      "const": 100000
+    },
+    "initialDeadline": {
+      "const": 1000000
+    },
+    "clockBindingPreserved": {
+      "const": true
+    },
+    "absoluteDeadlineStable": {
+      "const": true
     }
   }
 }

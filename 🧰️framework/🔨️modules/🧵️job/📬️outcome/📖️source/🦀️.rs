@@ -5,6 +5,4 @@ impl RetainedJobPayload{
  pub fn original_byte_at(&self,index:usize)->Option<u8>{if index>=self.len(){return None}let mut offset=index;for page in self.pages.iter().flatten(){let bytes=page.bytes();if offset<bytes.len(){return bytes.get(offset).copied()}offset-=bytes.len();}None}
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

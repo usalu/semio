@@ -1,3 +1,4 @@
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use crate::app_views::{AppOperationContext, InteractionHoverState};
 use crate::app_contract::ArtifactApp;
 use crate::tool_contract::ArtifactOwnedToolJobContext;
@@ -7,7 +8,8 @@ use crate::app_emission::{Emit, EphemeralEmit};
 use crate::history_view::HistoryView;
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::Fault;
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedFaultPublication, RetainedJobPublication, StepContext};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
+use semio_framework_job_fault_publication::RetainedFaultPublication;
 use std::sync::Arc;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retirement::controlled::ControlledRetirement};

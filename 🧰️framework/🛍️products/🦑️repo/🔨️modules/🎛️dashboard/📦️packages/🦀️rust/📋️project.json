@@ -15,7 +15,13 @@
         "semio": {
           "execution": {
             "version": 1,
-            "kind": "orchestration"
+            "kind": "orchestration",
+            "children": [
+              {
+                "project": "@semio-tech/repo-dashboard-rs",
+                "target": "compile"
+              }
+            ]
           }
         }
       }

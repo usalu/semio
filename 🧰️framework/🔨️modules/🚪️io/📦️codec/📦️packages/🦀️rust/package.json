@@ -5,7 +5,7 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-contract": "bun --cwd \"../../../../../..\" nx run @semio-tech/framework-io-codec-rs:test-contract",
-    "test-native": "bun --cwd \"../../../../../..\" nx run @semio-tech/framework-io-codec-rs:test-native"
+    "test-contract": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-codec-rs:test-contract",
+    "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-codec-rs:test-native"
   }
 }

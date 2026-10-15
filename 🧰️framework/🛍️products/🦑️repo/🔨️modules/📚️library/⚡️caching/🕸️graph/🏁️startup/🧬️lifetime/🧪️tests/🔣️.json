@@ -1,0 +1,648 @@
+{
+  "version": 1,
+  "birth": {
+    "version": 1,
+    "repositoryRoot": "/repo",
+    "workspaceRoot": "/fixtures/target",
+    "toolkitRoot": "/repo/.cache/b/t/m/nx/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "toolingIdentity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "directory": "/repo/rust/m/nx/graphs/aaaaaaaaaaaaaaaaaaaa",
+    "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "parentWitness": "12345678-1234-4234-8234-123456789abc",
+    "parentEnvelopeDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "watcherIdentity": null,
+    "graphIdentity": null,
+    "implementationIdentity": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "cases": [
+    {
+      "name": "ready-with-all-loans",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "server-open"
+        },
+        {
+          "type": "ready"
+        }
+      ],
+      "accepted": true,
+      "phase": "ready",
+      "parentHeld": true,
+      "loans": 4,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "ready-before-acquired",
+      "events": [
+        {
+          "type": "ready"
+        }
+      ],
+      "accepted": false,
+      "phase": "awaiting-acquisition",
+      "parentHeld": true,
+      "loans": 0,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "native-server-before-loans",
+      "events": [
+        {
+          "type": "server-open"
+        }
+      ],
+      "accepted": false,
+      "phase": "awaiting-acquisition",
+      "parentHeld": true,
+      "loans": 0,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "partial-acquisition",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquired"
+        }
+      ],
+      "accepted": false,
+      "phase": "awaiting-acquisition",
+      "parentHeld": true,
+      "loans": 1,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "duplicate-loan",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        }
+      ],
+      "accepted": false,
+      "phase": "awaiting-acquisition",
+      "parentHeld": true,
+      "loans": 1,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "parent-exits-before-acquisition",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "parent-exit"
+        },
+        {
+          "type": "terminal"
+        }
+      ],
+      "accepted": true,
+      "phase": "terminal",
+      "parentHeld": false,
+      "loans": 0,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "parent-exits-after-acquisition",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "server-open"
+        },
+        {
+          "type": "ready"
+        },
+        {
+          "type": "parent-exit"
+        }
+      ],
+      "accepted": true,
+      "phase": "ready",
+      "parentHeld": false,
+      "loans": 4,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "worker-refusal-keeps-root",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "server-open"
+        },
+        {
+          "type": "worker-open",
+          "id": "11111111111111111111111111111111"
+        },
+        {
+          "type": "ready"
+        },
+        {
+          "type": "worker-close",
+          "id": "11111111111111111111111111111111"
+        }
+      ],
+      "accepted": true,
+      "phase": "ready",
+      "parentHeld": true,
+      "loans": 4,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "server-close-is-not-terminal",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "server-open"
+        },
+        {
+          "type": "worker-open",
+          "id": "11111111111111111111111111111111"
+        },
+        {
+          "type": "ready"
+        },
+        {
+          "type": "drain"
+        },
+        {
+          "type": "server-close"
+        },
+        {
+          "type": "terminal"
+        }
+      ],
+      "accepted": false,
+      "phase": "draining",
+      "parentHeld": true,
+      "loans": 4,
+      "workers": 1,
+      "requests": 0
+    },
+    {
+      "name": "request-close-is-required",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "server-open"
+        },
+        {
+          "type": "ready"
+        },
+        {
+          "type": "request-open",
+          "id": "22222222222222222222222222222222"
+        },
+        {
+          "type": "drain"
+        },
+        {
+          "type": "server-close"
+        },
+        {
+          "type": "terminal"
+        }
+      ],
+      "accepted": false,
+      "phase": "draining",
+      "parentHeld": true,
+      "loans": 4,
+      "workers": 0,
+      "requests": 1
+    },
+    {
+      "name": "complete-drain",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "server-open"
+        },
+        {
+          "type": "worker-open",
+          "id": "11111111111111111111111111111111"
+        },
+        {
+          "type": "ready"
+        },
+        {
+          "type": "request-open",
+          "id": "22222222222222222222222222222222"
+        },
+        {
+          "type": "parent-exit"
+        },
+        {
+          "type": "drain"
+        },
+        {
+          "type": "server-close"
+        },
+        {
+          "type": "worker-close",
+          "id": "11111111111111111111111111111111"
+        },
+        {
+          "type": "request-close",
+          "id": "22222222222222222222222222222222"
+        },
+        {
+          "type": "terminal"
+        }
+      ],
+      "accepted": true,
+      "phase": "terminal",
+      "parentHeld": false,
+      "loans": 0,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "readiness-repeated",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "server-open"
+        },
+        {
+          "type": "ready"
+        },
+        {
+          "type": "ready"
+        }
+      ],
+      "accepted": false,
+      "phase": "ready",
+      "parentHeld": true,
+      "loans": 4,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "close-unknown-worker",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "worker-close",
+          "id": "11111111111111111111111111111111"
+        }
+      ],
+      "accepted": false,
+      "phase": "acquired",
+      "parentHeld": true,
+      "loans": 4,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "duplicate-worker",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "worker-open",
+          "id": "11111111111111111111111111111111"
+        },
+        {
+          "type": "worker-open",
+          "id": "11111111111111111111111111111111"
+        }
+      ],
+      "accepted": false,
+      "phase": "acquired",
+      "parentHeld": true,
+      "loans": 4,
+      "workers": 1,
+      "requests": 0
+    },
+    {
+      "name": "request-before-ready",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "request-open",
+          "id": "22222222222222222222222222222222"
+        }
+      ],
+      "accepted": false,
+      "phase": "acquired",
+      "parentHeld": true,
+      "loans": 4,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "drain-idempotent",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "drain"
+        },
+        {
+          "type": "drain"
+        },
+        {
+          "type": "terminal"
+        }
+      ],
+      "accepted": true,
+      "phase": "terminal",
+      "parentHeld": false,
+      "loans": 0,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "new-reader-during-drain",
+      "events": [
+        {
+          "type": "acquire",
+          "resource": "leases"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        },
+        {
+          "type": "acquire",
+          "resource": "rust"
+        },
+        {
+          "type": "acquire",
+          "resource": "sdk"
+        },
+        {
+          "type": "acquired"
+        },
+        {
+          "type": "drain"
+        },
+        {
+          "type": "worker-open",
+          "id": "11111111111111111111111111111111"
+        }
+      ],
+      "accepted": false,
+      "phase": "draining",
+      "parentHeld": true,
+      "loans": 4,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "terminal-repeated",
+      "events": [
+        {
+          "type": "drain"
+        },
+        {
+          "type": "terminal"
+        },
+        {
+          "type": "terminal"
+        }
+      ],
+      "accepted": false,
+      "phase": "terminal",
+      "parentHeld": false,
+      "loans": 0,
+      "workers": 0,
+      "requests": 0
+    },
+    {
+      "name": "loan-after-terminal",
+      "events": [
+        {
+          "type": "drain"
+        },
+        {
+          "type": "terminal"
+        },
+        {
+          "type": "acquire",
+          "resource": "tools"
+        }
+      ],
+      "accepted": false,
+      "phase": "terminal",
+      "parentHeld": false,
+      "loans": 0,
+      "workers": 0,
+      "requests": 0
+    }
+  ]
+}

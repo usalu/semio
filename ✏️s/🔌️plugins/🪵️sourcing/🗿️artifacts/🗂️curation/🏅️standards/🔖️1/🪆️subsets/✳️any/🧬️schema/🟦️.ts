@@ -1,7 +1,8 @@
 /** 🗂️ Curation owns catalog references, sourcing geometry and curated quantities. */
 import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import { parseSemioChild, type ArtifactChild } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🟦️.ts";
-export type { ArtifactChild } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🟦️.ts";
+import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { requireArtifactDialect, type ArtifactDialect } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
 export type GeometryRecipe =
   | { kind: "box"; width: number; height: number; depth: number }
@@ -61,8 +62,15 @@ export function parseCuratedItem(value: unknown, at = "$"): CuratedItem {
   const row = parseSchemaRecord(value, ["objectId", "count"], at);
   return { objectId: parseCurationText(row.objectId, at + ".objectId"), count: parseCurationCount(row.count, at + ".count") };
 }
+const CATALOG_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.semio", standard: "v1", subset: "kit" };
+/** 🪆 Admits the catalog child by its declared Kit dialect, independent of the plugin that owns that dialect. */
+export function parseCurationCatalogChild(value: unknown, at = "$"): ArtifactChild {
+  const child = parseArtifactChild(value);
+  requireArtifactDialect(child.target.dialect, CATALOG_DIALECT, at);
+  return child;
+}
 /** 🪪 Admits exactly one persisted curation document. */
 export function parseCurationArtifact(value: unknown, at = "$"): CurationArtifact {
   const row = parseSchemaRecord(value, ["catalog", "stockExtra", "curated"], at);
-  return { catalog: parseSemioChild(row.catalog, "kit", at + ".catalog"), stockExtra: parseCurationList(row.stockExtra, parseObjectKindExtra, at + ".stockExtra"), curated: parseCurationList(row.curated, parseCuratedItem, at + ".curated") };
+  return { catalog: parseCurationCatalogChild(row.catalog, at + ".catalog"), stockExtra: parseCurationList(row.stockExtra, parseObjectKindExtra, at + ".stockExtra"), curated: parseCurationList(row.curated, parseCuratedItem, at + ".curated") };
 }

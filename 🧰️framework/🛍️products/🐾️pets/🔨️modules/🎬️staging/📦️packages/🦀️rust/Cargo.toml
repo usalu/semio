@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-pets-staging"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Pets staging: the stage that folds events into frames, with its draft, spacing, schedule, attention, locomotion, sociability, choice, population, clock and projection. Pure functions only, bit for bit the results of the TypeScript twin @semio-tech/pets."
+
+[package.metadata.semio]
+role = "product"
+id = "pets-staging"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pets-character = { path = "../../../🎭️character/📦️packages/🦀️rust" }
+semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust" }
+semio-framework-pets-interaction = { path = "../../../🖱️interaction/📦️packages/🦀️rust" }
+semio-framework-pets-kinematics = { path = "../../../⚙️kinematics/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = { workspace = true, features = ["float_roundtrip"] }

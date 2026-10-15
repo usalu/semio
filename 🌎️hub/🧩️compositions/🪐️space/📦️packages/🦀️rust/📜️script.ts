@@ -4,6 +4,7 @@ import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🪐️ `@semio-tech/space-plugin` router: `bun ./📜️script.ts test`. */
 import { join } from "node:path";
+import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
@@ -35,7 +36,7 @@ function retainedCommandValidators(repoRoot: string) {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-space"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-hub-space"], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -315,7 +316,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🚀️spawn-app/🧪️tests/🔬️unit/🦀️.rs",
   ]);
   const ownerScript = readFileSync(import.meta.filename, "utf8");
-  const osHost = readSources(["🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs", "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️workflow-unit/🦀️.rs"]);
+  const osHost = `${readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"))}\n${readSources(["🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️workflow-unit/🦀️.rs"])}`;
   const exact = (editorSource: string, editorTestSource: string, viewerTestSource: string): boolean => editorSource.includes("row.role == Some(crate::DirectorySpaceRole::Author)")
     && editorSource.includes('home_row_action(IconName::Users, labels.action_manage, "manageSpace")?')
     && editorTestSource.includes('assert_eq!(buttons.len(), 5')
@@ -596,7 +597,7 @@ function persistenceDataClassOracle(repoRoot: string): number {
   const sync = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
   assert(sync.includes("enum PersistenceDataClass"));
   assert(sync.includes("wire_lane_data_class"));
-  const osTs = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"), "utf8");
+  const osTs = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"));
   assert(osTs.includes("export type PersistenceDataClass"));
   assert(osTs.includes("dataClass: \"persistedShared\""));
   assert(fixture.homeUnion.hubSpace.origin === "hub");

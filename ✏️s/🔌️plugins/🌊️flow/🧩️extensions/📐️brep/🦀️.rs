@@ -4,7 +4,7 @@ use semio_s_spatial_kernel_semio_session::*;
 use flow_extension_sdk::mesh::*;
 use flow_extension_sdk::build_manifest_json;
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
-use semio_framework_3d_brep_operations::boolean::BooleanOp;
+use semio_framework_3d_brep_boolean::BooleanOp;
 use semio_framework_3d_brep_engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepKernel};
 
 #[path="📐️tessellate/🦀️.rs"]

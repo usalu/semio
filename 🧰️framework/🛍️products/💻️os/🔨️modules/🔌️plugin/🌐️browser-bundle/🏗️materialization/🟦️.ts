@@ -25,7 +25,7 @@ import { resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } f
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 import { classifyGuestLogLine } from "../🌐️wasi/🟦️.ts";
 import { actorCodecRuntimeSourceV1 } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
-import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../../🟦️.ts";
+import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../🧾️app-channel/🟦️.ts";
 export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";

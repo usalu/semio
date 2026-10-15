@@ -16,7 +16,8 @@ import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellFloatingSurfaceHost } from "../🐚️ShellScope/🟦️.tsx";
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { formatKeybindingShortcut } from "../../🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts";
-import { floatingMenuItemClass, ContextMenuChrome } from "../../🎯️targets/⚛️react/🟦️";
+import { ContextMenuChrome } from "./🥣️chrome/🟦️.tsx";
+import { floatingMenuItemClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { createDOMEventBinding } from "../../🔨️modules/👂️dom-event-binding/🟦️.ts";
 // #endregion 🔌️Adapters
 

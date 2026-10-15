@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "DerivativeMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "entries",
+        "copyAllocatedBytes",
+        "inputBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200000
+        },
+        "copyAllocatedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8589934592
+        },
+        "inputBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        }
+      }
+    },
+    "Material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "entries",
+        "copyAllocatedBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200000
+        },
+        "copyAllocatedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8589934592
+        }
+      }
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumEntries": 200000,
+        "maximumCopyBytes": 8589934592,
+        "maximumHeadroomBytes": 2147483648,
+        "allocationUnitBytes": 65536,
+        "metadataBytesPerEntry": 65536,
+        "publicationEntries": 64,
+        "maximumPublicationBytes": 134217728,
+        "maximumInputBytes": 16777216,
+        "maximumInputFiles": 32,
+        "maximumDerivativePatchBytes": 33554432,
+        "derivativeSnapshotCopies": 1,
+        "derivativeProgramCopies": 2,
+        "maximumDerivativeReceiptBytes": 65536
+      }
+    },
+    "InputPath": {
+      "type": "string",
+      "pattern": "^(?:package[.]json|bun[.]lock|[.]semio-authorizer-source[.]json|[.]semio-authorizer-compiler[.]json|[.]semio-sdk-material[.]json|patches/[a-f0-9]{64}[.]patch)$"
+    }
+  }
+}

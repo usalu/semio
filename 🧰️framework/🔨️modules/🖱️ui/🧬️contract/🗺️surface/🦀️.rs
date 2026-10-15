@@ -77,7 +77,7 @@ use serde::{Deserialize, Serialize};
 /// projection afterwards, so there is now exactly ONE spelling repo-wide — the law
 /// `surface_kind_wire_tags_agree_between_contract_and_wgpu_target` pins it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub enum SurfaceKind {
     /// 🖌️ The plainest surface a host can always satisfy, so a `SurfaceProps` built from defaults
     /// names something renderable rather than a kind no backend registered.
@@ -133,7 +133,7 @@ pub enum SurfaceKind {
 /// [`SurfaceProps`] names the version-specific shape (e.g. `"world3d@1"`) that some other layer (the
 /// `🎬️scene` crate) knows how to decode.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct SurfaceDoc {
     pub bytes: crate::UiFixedBytes,
 }

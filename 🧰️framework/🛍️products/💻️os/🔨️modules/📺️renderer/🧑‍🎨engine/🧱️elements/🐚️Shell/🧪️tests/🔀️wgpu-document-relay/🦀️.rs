@@ -233,7 +233,7 @@ fn a_presence_heartbeat_names_the_signed_in_person() {
 /// door and agent bridge ride the same pump. Pinned on the source because the gate lives in wasm32-only control flow.
 #[test]
 fn the_sync_pump_cadence_is_not_gated_off_the_browser_build() {
-    let renderer = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+    let renderer = crate::RENDERER_SOURCE;
     let deferred = renderer.split("FrameFinishPhase::Deferred => {").nth(1).expect("the deferred finish phase exists");
     let deferred = &deferred[..deferred.find("FrameFinishPhase::IconRaster => {").expect("the phase ends before the icon raster")];
     assert!(deferred.contains("cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= SHELL_SYNC_PUMP_INTERVAL_MS;"), "the pump is owed on a fixed cadence");

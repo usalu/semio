@@ -89,9 +89,6 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive
 [workspace.dependencies.semio-s-artifact-stdio-png]
 path = "../../../🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-s-artifact-stdio-semio-image]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/📦️packages/🦀️rust"
 

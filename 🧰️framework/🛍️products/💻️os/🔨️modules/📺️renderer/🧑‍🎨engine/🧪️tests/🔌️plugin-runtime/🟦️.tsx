@@ -5,7 +5,7 @@ import type { AppChannelClient } from "@semio-tech/framework-os";
 import { encodeAppFrame } from "@semio-tech/framework-os";
 import type { ActivationRegistry, TurnOutcome } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import type { ShardBudget, ShardClient, ShardEventEnvelope, ShardInstanceLifecycleLease, ShardJobStep, ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import type { PluginManifest } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
+import type { PluginManifest } from "../../🧱️elements/🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import type { PluginRuntimeTestDependenciesV1, PluginWasmHandle, RetainedSurface, WireTurnResult, WireVariant } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import { cancelSpawnedJobV1, resetSpawnedJobsForTestsV1, spawnedJobsSnapshotV1 } from "../../🧱️elements/🔌️PluginRuntime/💼️job-ledger/🟦️.ts";

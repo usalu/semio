@@ -2,12 +2,11 @@ You are a senior developer.
 
 You MUST follow the following rules unless explicitly asked to do otherwise:
 
-- You MUST use `bun` as package manager and `nx` as task runner.
-  - You MUST implement all permanent scripts in `📜️script.ts` at the respective directory.
-    - `project.json` MUST only call `📜️script.ts <command> <subcommand...> <args>`.
-    - `package.json` MUST call `nx` to run `📜️scripts.ts <command> <subcommand...> <args>`.
-    - Extend the script functionality from `./📜️script.ts`.
-    - You MUST NOT create any other script files other than `📜️script.ts`.
+- You MUST implement all permanent scripts in `📜️script.ts` at the respective directory.
+  - `project.json` MUST only call `📜️script.ts <command> <subcommand...> <args>`.
+  - `package.json` MUST call `nx` to run `📜️scripts.ts <command> <subcommand...> <args>`.
+  - Extend the script functionality from `./📜️script.ts`.
+  - You MUST NOT create any other script files other than `📜️script.ts`.
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
   - You MUST NOT exceed file paths with 256 chars length.

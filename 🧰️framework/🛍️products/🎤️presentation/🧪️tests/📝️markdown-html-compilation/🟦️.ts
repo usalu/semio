@@ -10,7 +10,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { type AdapterContext, type AdapterOutcome, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { compileOwnedMarkdownToHtml } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🔨️modules/📝️markdown-html-compiler/🟦️.ts";
+import { compileOwnedMarkdownToHtml } from "../../🎯️targets/⚛️react/🔨️modules/📝️markdown-html-compiler/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🔮️Reference

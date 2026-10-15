@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { compileOwnedMarkdownToHtml } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🔨️modules/📝️markdown-html-compiler/🟦️.ts";
-import { compileMarkdownToHtml } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx";
+import { compileOwnedMarkdownToHtml } from "../../🎯️targets/⚛️react/🔨️modules/📝️markdown-html-compiler/🟦️.ts";
+import { compileMarkdownToHtml } from "../../🎯️targets/⚛️react/🟦️.tsx";
 
 const tick = "\x60";
 const fixtures = [

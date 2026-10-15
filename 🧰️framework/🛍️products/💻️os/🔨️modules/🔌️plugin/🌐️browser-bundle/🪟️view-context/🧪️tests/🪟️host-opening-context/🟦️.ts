@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { parseBrowserActorViewStateRequest } from "../../🟦️.ts";
-import { encodeBackboneWorkerRequest, decodeBackboneWorkerRequest } from "../../../../../../🟦️.ts";
+import { encodeBackboneWorkerRequest, decodeBackboneWorkerRequest } from "../../../../../🧵️backbone/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import viewSchema from "../../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
 import fixture from "../🧫️fixtures/🪟️host-opening-context/🔣️.json";

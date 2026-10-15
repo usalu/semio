@@ -24,7 +24,10 @@
     "postedAfter",
     "callbackReceipt",
     "closeGrant",
-    "parentMetadataCopyBytes"
+    "parentMetadataCopyBytes",
+    "initialFuel",
+    "initialDeadline",
+    "initialStock"
   ],
   "properties": {
     "version": {
@@ -125,6 +128,21 @@
     },
     "parentMetadataCopyBytes": {
       "const": 0
+    },
+    "initialFuel": {
+      "const": 100000
+    },
+    "initialDeadline": {
+      "const": 1000000
+    },
+    "initialStock": {
+      "const": {
+        "maximumItems": 256,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 131072,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 64
+      }
     }
   }
 }

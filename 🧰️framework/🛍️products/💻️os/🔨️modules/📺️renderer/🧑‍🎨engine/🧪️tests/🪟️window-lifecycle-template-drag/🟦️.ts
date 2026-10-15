@@ -4,6 +4,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { partitionRefreshWindowInstancesV1 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const engineRoot = join(import.meta.dir, "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🪟️window-lifecycle-template-drag", "🔣️.json"), "utf8"));
@@ -92,7 +93,7 @@ describe("🪟️ window lifecycle and template drag contract", () => {
 
   test("React exposes the same MIME, cancellation and targeted drop oracle", () => {
     const canvas = readFileSync(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧱️elements", "🎨️Canvas", "🟦️.tsx"), "utf8");
-    const shell = readFileSync(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
     const tests = readFileSync(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧪️tests", "🧪️owned-locale-detector-retirement", "🟦️.tsx"), "utf8");
     expect(canvas).toContain(`COMPOSE_WINDOW_TEMPLATE_MIME = "${fixture.mime}"`);
     expect(canvas).toContain("insertWindowAtDropZone");
@@ -151,7 +152,7 @@ describe("🪟️ window lifecycle and template drag contract", () => {
   });
 
   test("React journals template transfers while its Display palette remains drag-only", () => {
-    const shell = readFileSync(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
     const panels = readFileSync(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"), "utf8");
     const transfer = shell.slice(shell.indexOf("const handleTemplateDrop"), shell.indexOf("const displayHostRef"));
     const display = panels.slice(panels.indexOf("function buildDisplayWindowsTree"), panels.indexOf("function buildDisplayLayoutTree"));
@@ -162,7 +163,7 @@ describe("🪟️ window lifecycle and template drag contract", () => {
   });
 
   test("renderer asset completion is guarded by the checked-out surface generation", () => {
-    const renderer = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🧊️renderer", "🦀️.rs"), "utf8");
+    const renderer = readModuleTreeSource(join(engineRoot, "🎯️targets", "🧊️wgpu", "🧊️renderer", "🦀️.rs"));
     expect(fixture.retirement.lateCompletion).toContain("old surface generation token");
     expect(renderer).toContain("surface_token: AdmittedSurfaceToken");
     expect(renderer).toContain("world3d_states.get_token_mut(surface_token)");

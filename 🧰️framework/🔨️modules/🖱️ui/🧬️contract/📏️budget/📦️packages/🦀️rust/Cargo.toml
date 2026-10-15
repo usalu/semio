@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-contract-budget"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Canonical UI budget foundation"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+
+[dev-dependencies]
+serde_json.workspace = true

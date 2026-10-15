@@ -1,14 +1,13 @@
 import {repositoryBuildGraphWriterDirectoryV1} from "./💾️storage/🟨️.mjs";
-import { createHash } from "node:crypto";
-import { mkdirSync, writeFileSync, existsSync as persistedExists } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdirSync, writeFileSync, readFileSync, lstatSync, renameSync, rmSync, existsSync as persistedExists } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { observedFs } from "../👁️observation/🟨️.mjs";
 
 const { existsSync, readdirSync } = observedFs;
 
-/** 🧵️ Matches portable source globs consistently across Node and Bun without build-tool imports. */
-export function buildInputPathMatchesV1(path,pattern) {
+function compileBuildInputPatternV1(pattern) {
   const compile=(source)=>{
     let result="";
     for(let index=0;index<source.length;index++){
@@ -36,8 +35,11 @@ export function buildInputPathMatchesV1(path,pattern) {
     }
     return result;
   };
-  return new RegExp("^"+compile(pattern)+"$","u").test(path);
+  return new RegExp("^"+compile(pattern)+"$","u");
 }
+
+/** 🧵️ Matches portable source globs consistently across Node and Bun without build-tool imports. */
+export function buildInputPathMatchesV1(path,pattern) { return compileBuildInputPatternV1(pattern).test(path); }
 
 /** 🧮️ Interns equivalent project/workspace coordinates before backends compile native glob sets. */
 export function deduplicateProjectInputs(inputs, root) {
@@ -50,10 +52,17 @@ export function deduplicateProjectInputs(inputs, root) {
   });
 }
 
+/** 🧾️ Publishes identical content-addressed closure bytes atomically across independent graph writers. */
+function publishInputClosureV1(path,contract){
+ const verify=()=>{const row=lstatSync(path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.size!==Buffer.byteLength(contract)||!readFileSync(path).equals(Buffer.from(contract)))throw Error("Original immutable input closure bytes required");};
+ if(persistedExists(path)){verify();return;}
+ const temporary=path+"~"+randomUUID();if(temporary.length>256||[...temporary].length>256)throw Error("Input closure staging path exceeds256 characters");try{writeFileSync(temporary,contract,{flag:"wx"});renameSync(temporary,path);verify();}finally{rmSync(temporary,{force:true});}
+}
+
 /** 🔒️ A lock projection is batched by the same native hasher without compiler subprocesses. */
 export function cargoLockInput(manifest, workspaceRoot) {
   const contract = JSON.stringify({ version: 1, manifest }), key = createHash("sha256").update(contract).digest("hex"), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-lock-closures"), path = join(directory, `${key}.json`);
-  if (!persistedExists(path)) { mkdirSync(directory, { recursive: true }); try { writeFileSync(path, contract, { flag: "wx" }); } catch (error) { if (error.code !== "EEXIST") throw error; } }
+  publishInputClosureV1(path,contract);
   return { env: `SEMIO_CARGO_LOCK_${key}` };
 }
 
@@ -66,15 +75,23 @@ export function compactSourceInputs(inputs, workspaceRoot, root = ".") {
   if (exact.length < 1) return inputs;
   const projectRoot = root === "." ? "." : root, normalize = input => input.replaceAll("{projectRoot}", projectRoot).replaceAll("{workspaceRoot}/", ""), exclusions = inputs.filter(input => typeof input === "string" && input.startsWith("!") && !input.startsWith("!^"));
   if (exclusions.length) {
-    const paths = exact.map(normalize), excluded = paths.map(() => false);
-    for (const input of exclusions) for (const [index,path] of paths.entries()) excluded[index] ||= buildInputPathMatchesV1(path,normalize(input.slice(1)));
+    const paths = exact.map(normalize), excluded = paths.map(() => false), patterns = new Map();
+    for (const input of exclusions) {
+      const pattern=normalize(input.slice(1));
+      for (const [index,path] of paths.entries()) {
+        if(excluded[index])continue;
+        let matcher=patterns.get(pattern);
+        if(!matcher){matcher=compileBuildInputPatternV1(pattern);patterns.set(pattern,matcher);}
+        excluded[index]=matcher.test(path);
+      }
+    }
     exact = exact.filter((input, index) => !excluded[index]);
   }
   if (exact.length < 1) return residual;
   const helpers = ["./💾️storage/🟨️.mjs", "./💾️storage/🧬️schema/🔣️.json", "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json", "./🧮️digest/🟨️.mjs", "./🧮️digest/🔣️schema.json", "./🔒️lock/📥️read/🟨️.mjs", "./🔒️lock/🟨️.mjs"].map(path => relative(workspaceRoot, fileURLToPath(new URL(path, import.meta.url))).split("\\").join("/"));
   const files = [...new Set([...exact.map(input => input.slice("{workspaceRoot}/".length)), ...helpers])].sort(), contract = JSON.stringify({ version: 1, files });
   const key = createHash("sha256").update(contract).digest("hex"), directory = repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"build-input-closures"), manifest = join(directory, `${key}.json`);
-  if (!persistedExists(manifest)) { mkdirSync(directory, { recursive: true }); try { writeFileSync(manifest, contract, { flag: "wx" }); } catch (error) { if (error.code !== "EEXIST") throw error; } }
+  publishInputClosureV1(manifest,contract);
   const script = fileURLToPath(new URL("./🧮️digest/🟨️.mjs", import.meta.url)), schema = fileURLToPath(new URL("./🧮️digest/🔣️schema.json", import.meta.url));
   return [...residual, `{workspaceRoot}/${relative(workspaceRoot, script).split("\\").join("/")}`, `{workspaceRoot}/${relative(workspaceRoot, schema).split("\\").join("/")}`, { env: `SEMIO_SOURCE_CLOSURE_${key}` }];
 }

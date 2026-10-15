@@ -172,7 +172,7 @@ pub struct ArtifactCreationFactAppendV1 {
 /// ⚛️ One reserved genesis publishes exactly three events and its private completion together.
 pub struct DocumentGenesisAppendV1 {
     pub intent: ArtifactCreationIntentV1,
-    pub events: [crate::directory::NewDirectoryEvent; 3],
+    pub events: [crate::directory::events::NewDirectoryEvent; 3],
     pub checkpoint: ArtifactCheckpoint,
     pub reservation: crate::artifact_authority::chunk_cas::ArtifactCasReservation,
     pub now_ms: u64,

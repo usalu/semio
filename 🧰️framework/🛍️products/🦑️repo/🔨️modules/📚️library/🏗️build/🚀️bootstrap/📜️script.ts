@@ -1,8 +1,11 @@
 import {createRequire} from "node:module";
 import {readFile,writeFile,mkdir,rename} from "node:fs/promises";
-import {readFileSync,lstatSync} from "node:fs";
-import {join,dirname,sep,resolve} from "node:path";
+import {readFileSync,lstatSync,realpathSync,readdirSync,openSync,fstatSync,readSync,closeSync} from "node:fs";
+import {join,dirname,sep,resolve,relative} from "node:path";
 import {createHash,randomUUID} from "node:crypto";
+import {buildParserReceiptMatchesV1,type BuildParserReceiptV1} from "./📦️parsers/🟦️.ts";
+import bindingsSchema from "../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️bindings.json" with {type:"json"};
+import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🌱️ Publishes system-only source prerequisites before any graph or application import. */
@@ -21,21 +24,34 @@ export async function ensureBuildEnvironmentV1(root:string,invocation:ScriptInvo
 },publish:(root:string)=>void=publishBuildBootstrapSourcesV1):Promise<void> {
   checkScriptInvocation(invocation);
   publish(root);
-  const manifest=JSON.parse(await readFile(join(root,"package.json"),"utf8")),lock=await readFile(join(root,"bun.lock")),key=createHash("sha256").update(JSON.stringify([manifest.dependencies,manifest.devDependencies,manifest.optionalDependencies,manifest.patchedDependencies,process.versions.bun,process.platform,process.arch])).update(lock).digest("hex"),path=join(root,".cache/b/d/m/bootstrap/dependencies.json");
-  const ready=()=>{try{
-    if(!lstatSync(join(root,"node_modules"),{throwIfNoEntry:false})?.isSymbolicLink())return false;
-    const require=createRequire(join(root,"package.json"));
-    for(const dependency of ["typescript","@iarna/toml"]){
-      const manifestPath=require.resolve(dependency+"/package.json"),entry=require.resolve(dependency),owned=resolve(root,".cache/b/d/m")+sep;
-      if(!manifestPath.startsWith(owned)||!entry.startsWith(owned)||!lstatSync(entry,{throwIfNoEntry:false})?.isFile())return false;
-      const installed=JSON.parse(readFileSync(manifestPath,"utf8")),escaped=dependency.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),locked=new RegExp('"'+escaped+'"\\s*:\\s*\\[\\s*"'+escaped+'@([^"\\s]+)"').exec(lock.toString("utf8"))?.[1],declared=manifest.devDependencies?.[dependency]??manifest.dependencies?.[dependency];
-      if(typeof installed.version!=="string"||(locked?installed.version!==locked:typeof declared!=="string"||!Bun.semver.satisfies(installed.version,declared)))return false;
-    }
-    return true;
-  }catch{return false;}};
-  const publishReceipt=async()=>{await mkdir(dirname(path),{recursive:true});const temporary=path+"."+randomUUID();await writeFile(temporary,JSON.stringify({version:1,key}));await rename(temporary,path);};
+  const workspace=(invocation.capabilities as {workspaceRoot?:unknown}).workspaceRoot;
+  if(typeof workspace!=="string"||resolve(workspace)!==resolve(root))throw Error("Original build bootstrap repository required");
+  const {withJavascriptDependencyStorageV1,requireJavascriptDependencyStorageV1}=await import("../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts");
+  const {requireNativeStoragePathV1}=await import("../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts");
+  const bounded=(path:string,maximum:number)=>{const before=lstatSync(path);if(!before.isFile()||before.isSymbolicLink()||before.size>maximum)throw Error("Bounded regular bootstrap input required");const descriptor=openSync(path,"r");try{const opened=fstatSync(descriptor);if(opened.dev!==before.dev||opened.ino!==before.ino||opened.size!==before.size)throw Error("Bootstrap input changed before read");const bytes=Buffer.alloc(opened.size);let offset=0;while(offset<bytes.length){checkScriptInvocation(invocation);const count=readSync(descriptor,bytes,offset,bytes.length-offset,offset);if(!count)throw Error("Bootstrap input truncated");offset+=count;}const after=fstatSync(descriptor),current=lstatSync(path);if(after.size!==opened.size||after.mtimeMs!==opened.mtimeMs||after.ctimeMs!==opened.ctimeMs||current.ino!==opened.ino||current.dev!==opened.dev)throw Error("Bootstrap input changed during read");return bytes;}finally{closeSync(descriptor);}};
+  const manifestBytes=bounded(join(root,"package.json"),8388608),manifest=JSON.parse(manifestBytes.toString()),lock=bounded(join(root,"bun.lock"),8388608),key=createHash("sha256").update(JSON.stringify([manifest.dependencies,manifest.devDependencies,manifest.optionalDependencies,manifest.patchedDependencies,process.versions.bun,process.platform,process.arch])).update(lock).digest("hex");
+  const inspect=async(publishReceipt:boolean)=>withJavascriptDependencyStorageV1(workspace,invocation,async store=>{
+    await requireJavascriptDependencyStorageV1(workspace,store);const path=requireNativeStoragePathV1(store.root,join(store.root,"bootstrap",createHash("sha256").update(resolve(root)).digest("hex").slice(0,24)+".json"));
+    const witness=():BuildParserReceiptV1=>{
+      if(!lstatSync(join(root,"node_modules")).isSymbolicLink())throw Error("Original parser dependency binding required");
+      const target=requireNativeStoragePathV1(store.root,realpathSync(join(root,"node_modules"))),stage=dirname(target),bindingPath=requireNativeStoragePathV1(store.root,join(stage,"bindings.json")),bindingBytes=bounded(bindingPath,1048576),binding=JSON.parse(bindingBytes.toString());
+      if(validateJsonSchemaSubset(bindingsSchema,binding).length||target!==join(store.root,"j",binding.generation.slice(0,20),"node_modules")||!binding.bindings.some((row:any)=>row.sourceDirectory===join(root,"node_modules")&&row.targetDirectory===target))throw Error("Original parser generation receipt required");
+      const require=createRequire(join(root,"package.json")),parsers=["typescript","@iarna/toml"].map(name=>{
+        const directory=requireNativeStoragePathV1(store.root,realpathSync(dirname(require.resolve(name+"/package.json")))) ,entry=realpathSync(require.resolve(name));
+        if(directory!==join(target,...name.split("/"))||!entry.startsWith(directory+sep))throw Error("Original installed parser package required");
+        const installed=JSON.parse(bounded(join(directory,"package.json"),1048576).toString()),escaped=name.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),locked=new RegExp('"'+escaped+'"\\s*:\\s*\\[\\s*"'+escaped+'@([^"\\s]+)"').exec(lock.toString())?.[1];
+        if(typeof installed.version!=="string"||!locked||installed.version!==locked)throw Error("Exact locked parser version required");
+        const hash=createHash("sha256");let files=0,bytes=0,entries=0;const walk=(parent:string)=>{const state=lstatSync(parent);if(!state.isDirectory()||state.isSymbolicLink())throw Error("Physical installed parser directory required");for(const item of readdirSync(parent).sort()){checkScriptInvocation(invocation);if(++entries>2048)throw Error("Bounded installed parser entries required");const path=requireNativeStoragePathV1(store.root,join(parent,item)),state=lstatSync(path);if(state.isDirectory()&&!state.isSymbolicLink())walk(path);else{if(!state.isFile()||state.isSymbolicLink()||++files>1024||bytes+state.size>33554432)throw Error("Bounded installed parser package required");const content=bounded(path,33554432-bytes);bytes+=content.length;hash.update(JSON.stringify([relative(directory,path).split(sep).join("/"),content.length])).update(content);}}};walk(directory);
+        return {name,version:installed.version,digest:hash.digest("hex"),files,bytes};
+      });return {version:1,key,generation:binding.generation,bindingDigest:createHash("sha256").update(bindingBytes).digest("hex"),parsers};
+    };
+    let current:BuildParserReceiptV1;try{current=witness();}catch(error){if(publishReceipt)throw error;return false;}
+    if(!bounded(join(root,"package.json"),8388608).equals(manifestBytes)||!bounded(join(root,"bun.lock"),8388608).equals(lock))throw Error("Build bootstrap defining Source changed");
+    await store.recheck();checkScriptInvocation(invocation);
+    if(!publishReceipt){try{return buildParserReceiptMatchesV1(JSON.parse(bounded(path,16384).toString()),current);}catch{return false;}}
+    if(!buildParserReceiptMatchesV1(current,current))throw Error("Closed parser material receipt required");await mkdir(dirname(path),{recursive:true});const temporary=requireNativeStoragePathV1(store.root,path+"."+randomUUID().slice(0,8));await writeFile(temporary,JSON.stringify(current));await rename(temporary,path);return true;
+  });
+  if(await inspect(false))return;
   await invocation.control.publish({owner:invocation.policy.owner,command:"build:dependencies","stage":"running"});
-  await install(root,invocation);checkScriptInvocation(invocation);
-  if(!ready())throw Error("Build inference dependencies are unavailable after synchronization");
-  await publishReceipt();
+  await install(root,invocation);checkScriptInvocation(invocation);await inspect(true);
 }

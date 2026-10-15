@@ -2,6 +2,7 @@
 //! observation and scheduling laws over the retained [`FlowEvalSession`]s, the surface-owned run link
 //! and the run job. The hop transport it drives lives in the parent `🧵️preview-eval` module.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use super::*;
 
 /// ⏯️ The tool id of the read-only preview evaluation run.
@@ -420,8 +421,8 @@ pub struct PreviewEvalRunJob<O: PreviewEvalRunOwner> {
     phase: PreviewEvalRunPhase,
     closing: bool,
     released: bool,
-    publication: semio_framework_job::RetainedJobPublication,
-    publishing: Option<semio_framework_job::JobPublicationKind>,
+    publication: semio_framework_job_publication::RetainedJobPublication,
+    publishing: Option<semio_framework_job_publication::JobPublicationKind>,
     source: Vec<u8>,
     delivered: bool,
     owner_type: std::marker::PhantomData<fn() -> O>,
@@ -453,7 +454,7 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
             phase: PreviewEvalRunPhase::Running,
             closing: false,
             released: false,
-            publication: semio_framework_job::RetainedJobPublication::new(),
+            publication: semio_framework_job_publication::RetainedJobPublication::new(),
             publishing: None,
             source: Vec::new(),
             delivered: false,
@@ -507,7 +508,7 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
     fn stage_fault(&mut self, detail: &[u8]) {
         self.source.clear();
         self.source.extend_from_slice(detail);
-        self.publishing = Some(semio_framework_job::JobPublicationKind::Fault);
+        self.publishing = Some(semio_framework_job_publication::JobPublicationKind::Fault);
     }
 
     fn stage_emit(&mut self, state: ToolRunState) {
@@ -515,7 +516,7 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
         match self.writer.finish().and_then(|tick| tick.encode().ok()) {
             Some(bytes) => {
                 self.source = bytes;
-                self.publishing = Some(semio_framework_job::JobPublicationKind::Preview);
+                self.publishing = Some(semio_framework_job_publication::JobPublicationKind::Preview);
             }
             None => self.stage_fault(b"generation-preview-eval.tick-encode"),
         }

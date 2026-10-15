@@ -15,8 +15,20 @@
   "privateBinding": true,
   "sourceAdmission": "first-party-paid-parent-seal",
   "binding": {
-    "totalGrant": [64, 0, 0, 0, 1],
-    "callPolicy": [1, 0, 0, 0, 1],
+    "totalGrant": [
+      64,
+      0,
+      0,
+      0,
+      1
+    ],
+    "callPolicy": [
+      1,
+      0,
+      0,
+      0,
+      1
+    ],
     "operation": 71,
     "generation": 3,
     "firstEpoch": 19,
@@ -62,6 +74,18 @@
       "clockBinding": 1571,
       "absoluteDeadlineUs": 1000000,
       "fuel": 64
-    }
+    },
+    "closedContextCases": [
+      {
+        "axis": "fuel",
+        "increment": 1,
+        "accepted": false
+      },
+      {
+        "axis": "items",
+        "increment": 1,
+        "accepted": false
+      }
+    ]
   }
 }

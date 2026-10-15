@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value = { workspace = true }

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "shared",
+      "accepted": true
+    },
+    {
+      "name": "forged",
+      "accepted": false
+    },
+    {
+      "name": "exclusive",
+      "accepted": false
+    },
+    {
+      "name": "mutated-exclusive",
+      "accepted": false
+    },
+    {
+      "name": "wrong-directory",
+      "accepted": false
+    },
+    {
+      "name": "wrong-resource",
+      "accepted": false
+    },
+    {
+      "name": "released",
+      "accepted": false
+    },
+    {
+      "name": "expired",
+      "accepted": false
+    }
+  ]
+}

@@ -47,6 +47,7 @@ import { applyUiRefreshResponseToCache, buildUiRefreshRequest, EMPTY_APP_LABELS_
 import declaredInstancesFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🪟️declared-instances.json";
 import contributionsReceiverFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🧩️contributions-receiver.json";
 import { resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 afterEach(cleanup);
 
@@ -56,7 +57,7 @@ const DRAW_KINDS = [
 ];
 const SPAWNED_ID = "draw-7";
 
-const shellHostSource = readFileSync(join(import.meta.dirname, "..", "..", "🧱️elements", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+const shellHostSource = readModuleTreeSource(join(import.meta.dirname, "..", "..", "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
 
 const windowDescriptor = (id: string, label: string): ModeWindowDescriptor =>
   ({ id, title: label as unknown as ModeWindowDescriptor["title"], iconId: "app-window", fill: true, children: <div data-testid={`body-${id}`}>{label}</div> }) as unknown as ModeWindowDescriptor;

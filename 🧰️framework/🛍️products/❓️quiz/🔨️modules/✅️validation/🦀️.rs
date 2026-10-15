@@ -24,7 +24,7 @@
 //! @see ../../🧬️schema/🔣️.json — the constraints mirrored here
 //! @see ../✅️validation/🟦️.ts — the TypeScript twin
 
-use crate::schema::{Answer, Axis, Badge, BadgeRule, Catalog, Category, ClassificationTask, Command, MatchingItem, MatchingTask, Quantity, Query, Quiz, Rejection, Scale, SheetItem, SheetMatchingTask, SheetTask, SortingTask, Task, Icon, Text, MAX_TIMESTAMP, SHORT_LENGTH};
+use quiz_schema::{Answer, Axis, Badge, BadgeRule, Catalog, Category, ClassificationTask, Command, MatchingItem, MatchingTask, Quantity, Query, Quiz, Rejection, Scale, SheetItem, SheetMatchingTask, SheetTask, SortingTask, Task, Icon, Text, MAX_TIMESTAMP, SHORT_LENGTH};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 

@@ -5,6 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Vector3 } from "three";
 import { describe, expect, test } from "vitest";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 let workspace = dirname(fileURLToPath(import.meta.url));
 while (!existsSync(join(workspace, ".git"))) workspace = resolve(workspace, "..");
@@ -18,7 +19,7 @@ describe("🧲️ World scene input and reference residency", () => {
     expect(snap(fixture.snap.point, false, fixture.snap.factor)).toEqual(fixture.snap.disabled);
     expect(snap(fixture.snap.point, true, fixture.snap.factor)).toEqual(fixture.snap.enabled);
 
-    const react = readFileSync(join(workspace, fixture.oracles.reactWorld3d), "utf8");
+    const react = readModuleTreeSource(join(workspace, fixture.oracles.reactWorld3d));
     expect(react).toContain("if (!gridSnapEnabled || gridFactor <= 0)");
     expect(react).toContain("snapWorldPointToGrid(moved, snap.gridSnapEnabled, snap.gridFactor)");
     expect(react).toContain("resolveCatalogueDropOrigin(clientX, clientY, rect, cameraRef.current, gridSnapEnabled, gridFactor)");
@@ -44,8 +45,8 @@ describe("🧲️ World scene input and reference residency", () => {
   });
 
   test("the WGPU source routes all input and decoded references through the shared ownership decisions", () => {
-    const source = readFileSync(join(world, "🦀️.rs"), "utf8");
-    const renderer = readFileSync(join(workspace, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🎯️targets", "🧊️wgpu", "🧊️renderer", "🦀️.rs"), "utf8");
+    const source = readModuleTreeSource(join(world, "🦀️.rs"));
+    const renderer = readModuleTreeSource(join(workspace, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🎯️targets", "🧊️wgpu", "🧊️renderer", "🦀️.rs"));
     expect(source).toContain("grid_snap_enabled: bool");
     expect(source.match(/snap_world_point_to_grid\(/g)?.length).toBe(4);
     expect(source).toContain("cancel_reference_image_url");

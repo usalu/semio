@@ -606,7 +606,7 @@ pub async fn dispatch_reporting_with_items(
 
 /// 📤 `dispatch` up to the point the host has minted the typed operation and NOT one continuation
 /// turn further: the operation is mounted, its worker session holds one of the process-wide
-/// [`semio_framework_job::WORKER_JOB_SESSION_SLOTS`] admissions, and nothing has retired it. Dropping
+/// [`semio_framework_job_worker::WORKER_JOB_SESSION_SLOTS`] admissions, and nothing has retired it. Dropping
 /// the scene_snapshot here is exactly what a closed tab, a cancelled command or a torn-down app does, which
 /// is the ONLY way a law can witness the retirement array a live app is expected to give back.
 pub async fn dispatch_unsettled(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {

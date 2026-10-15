@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "present",
+        "links",
+        "archive",
+        "shared",
+        "matches"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "links": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "archive": {
+          "type": "boolean"
+        },
+        "shared": {
+          "type": "boolean"
+        },
+        "matches": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Disposition": {
+      "enum": [
+        "nested",
+        "replace",
+        "preserve",
+        "remove"
+      ]
+    }
+  }
+}

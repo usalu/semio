@@ -1,12 +1,11 @@
-//! 🔤️ bitmap → `s.stdio.txt@utf-8` — the document's own `.wfcbitmap` DSL text. This artifact's
+//! 🔤️ bitmap → `framework.io.text@utf-8` — the document's own `.wfcbitmap` DSL text. This artifact's
 //! native serialization already IS utf-8 text, so the hop is exact, not lossy.
 
 use crate::BitmapSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
-use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
-pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId::ANY };
+pub const TXT_DIALECT: Dialect = semio_framework::io_schema::CARRIER_TEXT;
 
 pub struct BitmapIntoTxt;
 

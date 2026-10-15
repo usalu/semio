@@ -35,24 +35,6 @@
       },
       "outputs": []
     },
-    "client-e2e": {
-      "executor": "repo:script",
-      "cache": false,
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": [
-            "@semio-tech/framework-os-mcp-rs"
-          ]
-        }
-      ],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts client-e2e",
-        "forwardAllArgs": true
-      },
-      "outputs": []
-    },
     "test-approval-request-fixture": {
       "executor": "repo:script",
       "cache": false,

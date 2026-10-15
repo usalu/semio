@@ -17,7 +17,7 @@ use crate::STDIO_TXT_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
 /// 🧬️ CARRIER LAW (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3):
-/// `s.stdio.txt@utf-8/*` is `CARRIER_TEXT` — its native `Text` `IoPayload` IS the raw external
+/// `s.stdio.txt@utf-8/*`'s native `Text` `IoPayload` is the raw external
 /// file text, verbatim. The previous impl prepended a `semio stdio.txt.dsl v1` preamble line
 /// (`wrap_text`) and stripped it back off on parse, which made every exported `.txt` file carry
 /// a foreign header line instead of the honest raw text. Fixed here (the codec, not the test):

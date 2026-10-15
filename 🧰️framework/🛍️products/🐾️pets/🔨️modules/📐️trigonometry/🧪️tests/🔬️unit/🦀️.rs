@@ -4,7 +4,7 @@
 //! @see ../../../../🧫️fixtures/📐️turn-trigonometry/🔣️.json — numpy's answers and the committed bit patterns
 
 use super::*;
-use crate::schema::tests::{bits, entries, fixture, number};
+use semio_framework_pets_contract::testkit::{bits, entries, fixture, number};
 
 const BOUND: f64 = 1e-12;
 const ULP: f64 = f64::EPSILON;

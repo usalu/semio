@@ -1,0 +1,205 @@
+{
+  "version": 1,
+  "valid": [
+    {
+      "version": 1,
+      "manifest": "fixture/Cargo.toml",
+      "binary": "semio-fixture-mutation-bridge",
+      "command": "list-mutations",
+      "artifact": "s.fixture.fixture",
+      "standard": "1",
+      "subset": "any"
+    },
+    {
+      "version": 1,
+      "manifest": "🧪️fixture/Cargo.toml",
+      "binary": "semio-fixture-mutation-bridge",
+      "command": "list-mutations",
+      "artifact": "s.fixture.fixture",
+      "standard": "1",
+      "subset": "any",
+      "surface": "editor/config"
+    },
+    {
+      "version": 1,
+      "manifest": "🧪️fixture/Cargo.toml",
+      "binary": "semio-fixture-mutation-bridge",
+      "command": "list-mutations",
+      "artifact": "s.fixture.fixture",
+      "standard": "1",
+      "subset": "any",
+      "surface": "editor/config",
+      "collector": {
+        "version": 1,
+        "maximumUnits": 1000000,
+        "maximumOwnedBytes": 1048576,
+        "maximumMilliseconds": 120000
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "manifest": "../Cargo.toml",
+      "binary": "fixture",
+      "command": "list-mutations",
+      "artifact": "a",
+      "standard": "1",
+      "subset": "any"
+    },
+    {
+      "version": 1,
+      "manifest": "/Cargo.toml",
+      "binary": "fixture",
+      "command": "list-mutations",
+      "artifact": "a",
+      "standard": "1",
+      "subset": "any"
+    },
+    {
+      "version": 1,
+      "manifest": "fixture/Cargo.toml",
+      "binary": "fixture",
+      "command": "unknown",
+      "artifact": "a",
+      "standard": "1",
+      "subset": "any"
+    },
+    {
+      "version": 1,
+      "manifest": "fixture/Cargo.toml",
+      "binary": "fixture",
+      "storage": "invented",
+      "command": "list-mutations",
+      "artifact": "a",
+      "standard": "1",
+      "subset": "any"
+    },
+    {
+      "version": 1,
+      "manifest": "fixture/Cargo.toml",
+      "binary": "semio-fixture-mutation-bridge",
+      "command": "list-mutations",
+      "artifact": "s.fixture.fixture",
+      "standard": "1",
+      "subset": "any",
+      "collector": {
+        "version": 1,
+        "maximumUnits": 0,
+        "maximumOwnedBytes": 1,
+        "maximumMilliseconds": 1
+      }
+    },
+    {
+      "version": 1,
+      "manifest": "fixture/Cargo.toml",
+      "binary": "semio-fixture-mutation-bridge",
+      "command": "list-mutations",
+      "artifact": "s.fixture.fixture",
+      "standard": "1",
+      "subset": "any",
+      "collector": {
+        "version": 1,
+        "maximumUnits": 1,
+        "maximumOwnedBytes": 1,
+        "maximumMilliseconds": 120001
+      }
+    },
+    {
+      "version": 1,
+      "manifest": "fixture/Cargo.toml",
+      "binary": "semio-fixture-mutation-bridge",
+      "command": "list-mutations",
+      "artifact": "s.fixture.fixture",
+      "standard": "1",
+      "subset": "any",
+      "collector": {
+        "version": 1,
+        "maximumUnits": 1,
+        "maximumOwnedBytes": 1,
+        "maximumMilliseconds": 1,
+        "compilerStorage": {
+          "target": "unissued"
+        }
+      }
+    }
+  ],
+  "inventory": {
+    "schema": "semio.repository-test.runtime-inventory/v2",
+    "artifact": "s.fixture.fixture",
+    "standard": "1",
+    "subset": "any",
+    "surface": "editor/config",
+    "bridgeVersion": 1,
+    "producedBy": "fixture",
+    "mutations": [
+      {
+        "id": "set-name",
+        "variant": "SetName",
+        "outcomes": [
+          "applied",
+          "no-op"
+        ]
+      }
+    ]
+  },
+  "inventoryInvalid": [
+    {
+      "schema": "unknown",
+      "artifact": "s.fixture.fixture",
+      "standard": "1",
+      "subset": "any",
+      "surface": "editor/config",
+      "bridgeVersion": 1,
+      "producedBy": "fixture",
+      "mutations": [
+        {
+          "id": "set-name",
+          "variant": "SetName",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ]
+        }
+      ]
+    },
+    {
+      "schema": "semio.repository-test.runtime-inventory/v2",
+      "artifact": "s.fixture.fixture",
+      "standard": "1",
+      "subset": "any",
+      "surface": "editor/config",
+      "bridgeVersion": 1,
+      "producedBy": "fixture",
+      "mutations": [
+        {
+          "id": "set-name",
+          "variant": "SetName",
+          "outcomes": [
+            "unknown"
+          ]
+        }
+      ]
+    },
+    {
+      "schema": "semio.repository-test.runtime-inventory/v2",
+      "artifact": "s.fixture.fixture",
+      "standard": "1",
+      "subset": "any",
+      "surface": "editor/config",
+      "bridgeVersion": 1,
+      "producedBy": "fixture",
+      "mutations": [
+        {
+          "id": "set-name",
+          "variant": "SetName",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ]
+        }
+      ],
+      "unknown": "unowned"
+    }
+  ]
+}

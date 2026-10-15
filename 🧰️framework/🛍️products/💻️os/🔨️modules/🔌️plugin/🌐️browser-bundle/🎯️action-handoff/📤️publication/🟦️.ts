@@ -1,7 +1,8 @@
 import { boundedServicePayloadV1 } from "../../../../💡️inference/🔌️service/🟦️.ts";
 import type { ServiceOperationPayloadV1 } from "@semio-tech/framework";
 /** 📤️ Canonical guest publications and Shell-owned inference intent effects. */
-import { decodeAppFrame, decodeInvocationResultPacks, decodePackValue, packValueToExactJson, encodeAppFrame, encodePackValue, faultDisplayMessage } from "../../../../../🟦️.ts";
+import { decodeAppFrame, encodeAppFrame, faultDisplayMessage } from "../../../../🧾️app-channel/🟦️.ts";
+import { decodeInvocationResultPacks, decodePackValue, encodePackValue, packValueToExactJson } from "../../../../🎁️packs/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, parseBrowserActorHostEffectBytesV1 } from "../🟦️.ts";
 
 /** 🕰️ A pack-encoded `HistoryPatch` the guest published with a result, forwarded verbatim to the Shell's History projection. */

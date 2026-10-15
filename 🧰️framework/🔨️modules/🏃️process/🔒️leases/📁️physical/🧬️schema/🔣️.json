@@ -1,1 +1,42 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://semio.tech/framework/process/physical-file-lock/v1","definitions":{"Protocol":{"const":{"exclusive":2,"nonblocking":4,"unlock":8,"retryMilliseconds":40,"contentionErrno":{"darwin":35,"linux":11}}}},"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1,"maxLength":256}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/physical-file-lock/v1",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "exclusive": 2,
+        "nonblocking": 4,
+        "unlock": 8,
+        "retryMilliseconds": 40,
+        "contentionErrno": {
+          "darwin": 35,
+          "linux": 11
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "wait"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "wait": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "type": "array",
+  "minItems": 1,
+  "uniqueItems": true,
+  "items": {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 256
+  }
+}

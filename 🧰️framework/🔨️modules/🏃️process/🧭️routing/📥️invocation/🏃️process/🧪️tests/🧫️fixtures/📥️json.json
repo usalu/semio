@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "json": [
+    {"id": "plain", "value": {"command": "build", "arguments": ["prototype", 0, true, null]}, "accepted": true},
+    {"id": "prototype-named-key", "value": {"__proto__": {"command": "literal-data"}}, "accepted": true},
+    {"id": "empty", "value": {}, "accepted": true},
+    {"id": "unicode", "value": {"name": "原始"}, "accepted": true},
+    {"id": "array-root", "value": [], "accepted": false},
+    {"id": "null-root", "value": null, "accepted": false},
+    {"id": "string-root", "value": "foreign", "accepted": false}
+  ],
+  "constructed": [
+    {"id": "cycle", "accepted": false},
+    {"id": "object-proxy", "accepted": false},
+    {"id": "array-proxy", "accepted": false},
+    {"id": "revoked-proxy", "accepted": false},
+    {"id": "shared-json-object", "accepted": true},
+    {"id": "accessor", "accepted": false},
+    {"id": "custom-prototype", "accepted": false},
+    {"id": "date", "accepted": false},
+    {"id": "typed-array", "accepted": false},
+    {"id": "symbol-key", "accepted": false},
+    {"id": "undefined", "accepted": false},
+    {"id": "function", "accepted": false},
+    {"id": "bigint", "accepted": false},
+    {"id": "nan", "accepted": false},
+    {"id": "infinity", "accepted": false},
+    {"id": "sparse-array", "accepted": false},
+    {"id": "array-extra-property", "accepted": false},
+    {"id": "array-accessor", "accepted": false},
+    {"id": "unpaired-surrogate", "accepted": false},
+    {"id": "depth-overflow", "accepted": false},
+    {"id": "node-overflow", "accepted": false},
+    {"id": "object-overflow", "accepted": false},
+    {"id": "array-overflow", "accepted": false},
+    {"id": "key-utf8-overflow", "accepted": false},
+    {"id": "string-utf8-overflow", "accepted": false},
+    {"id": "aggregate-utf8-overflow", "accepted": false},
+    {"id": "escaped-wire-overflow", "accepted": false}
+  ],
+  "observations": {
+    "noAccessorExecuted": true,
+    "noProxyTrapExecuted": true,
+    "noToJsonExecuted": true,
+    "admittedGraphIsImmutableSnapshot": true,
+    "sharedObjectDoesNotBecomeCycle": true,
+    "independentJsonSchemaAgreement": true,
+    "rejectedBeforeRecursiveEnvelopeValidation": true
+  }
+}

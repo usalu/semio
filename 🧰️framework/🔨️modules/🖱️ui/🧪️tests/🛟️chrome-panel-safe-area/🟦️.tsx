@@ -3,7 +3,10 @@ import * as React from "react";
 import {act,render} from "@testing-library/react";
 import {expect,it} from "vitest";
 import {createMemoryStoragePort} from "@semio-tech/framework";
-import {Pane,PaneHost,Window,publishShellChromePanelBox,uiSpacingPx,type Anchor} from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { Window, uiSpacingPx } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { Pane, PaneHost } from "../../🧱️elements/📌️WindowPane/🟦️.tsx";
+import { publishShellChromePanelBox } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
+import { type Anchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import {ShellScopeProvider,createShellScope} from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 import fixture from "../🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
 

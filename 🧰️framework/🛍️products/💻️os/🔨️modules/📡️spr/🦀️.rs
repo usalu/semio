@@ -22,7 +22,8 @@ pub use crate::os_spr::history::{
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower};
 pub use crate::os_spr::materialize::{materialize_with, resolve_plan, BaseBytes, BaseSnapshot, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, SnapshotBodyKind, SnapshotRecord};
-pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
+pub use protocol::ProtocolError;
+use crate::os_spr::wire::{ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
 
 pub use crate::os_spr::io::binary::causal::{decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, DocumentBackboneBatchLimitsV1, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS, DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES};
 pub use crate::os_spr::causal::{

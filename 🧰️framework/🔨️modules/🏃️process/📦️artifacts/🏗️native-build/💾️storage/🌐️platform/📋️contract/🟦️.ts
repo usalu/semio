@@ -35,3 +35,6 @@ export function requireNativeStoragePathV1(root:string,path:string):string{
  let current=root;for(const[index,part]of parts.entries()){current=join(current,part);let status;try{status=lstatSync(current);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")continue;throw error;}if(status.isSymbolicLink())throw Error("Native storage symlink escapes enforcing boundary");if(status.dev!==device)throw Error("Native storage path crosses filesystem boundary");if(index<parts.length-1&&!status.isDirectory())throw Error("Native storage ancestor must be an original directory");}return path;
 }
 
+
+/** 📏️ Refuses missing, mutable or non-finite physical envelopes before image or lease side effects. */
+export function requireNativeImageEnvelopeV1(options:Readonly<{filesystemBytes:number;maximumPhysicalBytes:number}>):void{if(validateJsonSchemaSubset(schema.definitions.ImageRequest,{filesystemBytes:options.filesystemBytes,maximumPhysicalBytes:options.maximumPhysicalBytes},schema).length||options.filesystemBytes%protocol.unitBytes!==0||options.maximumPhysicalBytes<options.filesystemBytes+protocol.unitBytes)throw Error("Invalid fixed image allocation envelope");}

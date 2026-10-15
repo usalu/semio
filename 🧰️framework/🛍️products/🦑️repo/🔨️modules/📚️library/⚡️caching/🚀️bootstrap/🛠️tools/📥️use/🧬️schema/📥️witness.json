@@ -106,5 +106,6 @@
         }
       }
     }
-  }
+  },
+  "$id": "schema://repo.caching/NxToolingUseWitnessV1"
 }

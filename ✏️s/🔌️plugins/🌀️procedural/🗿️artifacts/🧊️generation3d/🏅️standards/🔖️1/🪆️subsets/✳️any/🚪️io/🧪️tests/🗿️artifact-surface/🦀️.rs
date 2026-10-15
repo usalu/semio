@@ -10,7 +10,7 @@
 //!
 //! **Why they are fixture-driven.** Every row is read from
 //! `🧫️fixtures/🚪️io/🗿️artifact-surface.json`, whose TypeScript twin
-//! (`🗿️artifact-surface/🟦️.ts`) re-derives the same answers without importing any of this — so a
+//! (`✏️s/🧪️tests/🏘️plugin-composition/🌀️procedural-formats/🗿️artifact-surface/🟦️.ts`) re-derives the same answers without importing any of this — so a
 //! roster that drifts in one implementation fails against the other rather than quietly becoming
 //! the new truth.
 //!

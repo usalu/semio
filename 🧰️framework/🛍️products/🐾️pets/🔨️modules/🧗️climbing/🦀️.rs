@@ -40,10 +40,10 @@
 //! @see ../../🧬️schema/🦀️.rs — `Gear`, `Perch`, `Pitch`, `Point`, `Rect`, `Size`, `Shot`, `Reeling`, `Facing`
 //! @see ../🧗️climbing/🟦️.ts — the TypeScript twin
 
-use crate::schema::{Facing, Gear, Perch, Pitch, Point, Rect, Reeling, Shot, Size, Ticks, TICKS_PER_SECOND};
 use crate::swing::{reel_step, REEL_LEAST};
-use crate::terrain::{larger, segment_hits, smaller, stride_to, Fall};
-use crate::trigonometry::{clamp, smoothstep};
+use semio_framework_pets_contract::schema::{Facing, Gear, Perch, Pitch, Point, Rect, Reeling, Shot, Size, Ticks, TICKS_PER_SECOND};
+use semio_framework_pets_kinematics::terrain::{larger, segment_hits, smaller, stride_to, Fall};
+use semio_framework_pets_kinematics::trigonometry::{clamp, smoothstep};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants

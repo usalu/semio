@@ -1,0 +1,1135 @@
+{
+  "exports": {
+    "worker": [
+      "BatchJobSession",
+      "ErasedBatchJobSession",
+      "MountedWorkerJobPumpFault",
+      "MountedWorkerJobSession",
+      "OriginalBatchSessionErasure",
+      "OriginalFixtureSession",
+      "OriginalPreviewSession",
+      "OriginalWorkerFixtureCaller",
+      "OriginalWorkerWakeIssuer",
+      "RetainedWorkerWake",
+      "WORKER_JOB_SESSION_SLOTS",
+      "WorkerJobAdmission",
+      "WorkerJobClosePhase",
+      "WorkerJobContention",
+      "WorkerJobDemandError",
+      "WorkerJobOutcome",
+      "WorkerJobPoll",
+      "WorkerJobRejected",
+      "WorkerJobSession",
+      "WorkerJobSessionAdmissionRejected",
+      "WorkerJobSessionPreparation",
+      "WorkerJobSubmitFault",
+      "WorkerJobTakeFault",
+      "WorkerJobTicket",
+      "admit_original_thread_worker_wake",
+      "admit_original_worker_wake",
+      "original_worker_wake_admission_demands",
+      "pump_worker_job_retirements",
+      "take_worker_job_retirement_wake",
+      "worker_job_retirement_phase",
+      "worker_job_retirements_are_parked"
+    ],
+    "registry": [
+      "FixedOperationAdmissionRejected",
+      "FixedOperationKey",
+      "FixedOperationOwner",
+      "FixedOperationRegistry"
+    ],
+    "scope": [
+      "ChildJobGuard",
+      "JOB_CHILD_SLOTS",
+      "JobChildAdmissionFault",
+      "JobChildAdmissionRejected",
+      "JobChildCompletionFault",
+      "JobChildToken",
+      "JobScope"
+    ],
+    "progress": [
+      "DiagnosticKind",
+      "EntityId",
+      "JOB_PROGRESS_AFFECTED_ENTITIES",
+      "LARGE_PREVIEW_PATCH_BYTES",
+      "ProgressChannelKind",
+      "ProgressEvent",
+      "RetainedEntitySet",
+      "channel_policy_for",
+      "default_channel_kind_for"
+    ],
+    "conformance": [
+      "TortureJob"
+    ],
+    "preview": [
+      "JobPreviewDriver",
+      "JobPreviewLimits",
+      "JobPreviewStatus",
+      "JobPreviewStep",
+      "JobPreviewVerdict"
+    ],
+    "fault-publication": [
+      "RetainedFaultPublication"
+    ],
+    "publication": [
+      "RetainedJobPublication",
+      "JobPublicationKind"
+    ],
+    "worker-authority": [
+      "BatchDriveConfig",
+      "BatchJobParams",
+      "WorkerJobAdmissionContext",
+      "WorkerJobAdmissionControl",
+      "WorkerJobCloseStep",
+      "WorkerJobInitializationStep",
+      "WorkerJobInitializer",
+      "WorkerJobSource"
+    ]
+  },
+  "files": [
+    {
+      "file": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/🏃️headless/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "BatchJobSession",
+          "WorkerJobPoll"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobAdmissionContext",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "pump_worker_job_retirements"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🦀️.rs",
+      "test": false,
+      "used": {
+        "registry": [
+          "FixedOperationOwner"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "test": false,
+      "used": {
+        "registry": [
+          "FixedOperationKey",
+          "FixedOperationOwner",
+          "FixedOperationRegistry"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️gesture-operation-owner/🦀️.rs",
+      "test": true,
+      "used": {
+        "registry": [
+          "FixedOperationKey",
+          "FixedOperationRegistry"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛂️manifest/🦀️.rs",
+      "test": false,
+      "used": {
+        "registry": [
+          "FixedOperationOwner"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🔨️modules/🏠️host/🦀️.rs",
+      "test": false,
+      "used": {
+        "registry": [
+          "FixedOperationKey",
+          "FixedOperationOwner",
+          "FixedOperationRegistry"
+        ],
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🦀️.rs",
+      "test": false,
+      "used": {
+        "registry": [
+          "FixedOperationKey",
+          "FixedOperationOwner",
+          "FixedOperationRegistry"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-frame-job-unit/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "WorkerJobPoll"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "WORKER_JOB_SESSION_SLOTS",
+          "WorkerJobSession"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "BatchJobSession",
+          "WorkerJobDemandError",
+          "WorkerJobOutcome",
+          "WorkerJobPoll",
+          "WorkerJobSession",
+          "WorkerJobSessionAdmissionRejected",
+          "WorkerJobSubmitFault",
+          "WorkerJobTicket"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "MountedWorkerJobSession",
+          "WorkerJobSessionAdmissionRejected"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker-authority": [
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "BatchJobSession",
+          "WorkerJobDemandError",
+          "WorkerJobPoll",
+          "pump_worker_job_retirements"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔁️asset-decode-jobs/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "WORKER_JOB_SESSION_SLOTS",
+          "WorkerJobContention",
+          "WorkerJobDemandError",
+          "WorkerJobPoll",
+          "WorkerJobSession",
+          "WorkerJobSessionAdmissionRejected",
+          "WorkerJobSubmitFault",
+          "WorkerJobTicket"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔗️hub-projection-workspace/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "pump_worker_job_retirements"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖌️brush/🧪️tests/🔬️unit/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "MountedWorkerJobPumpFault",
+          "MountedWorkerJobSession",
+          "WorkerJobPoll",
+          "WorkerJobSubmitFault"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobAdmissionContext",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🧩️retained-ui-engine/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "WorkerJobDemandError",
+          "WorkerJobOutcome",
+          "WorkerJobPoll",
+          "WorkerJobSession",
+          "WorkerJobSessionPreparation"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobInitializer"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧪️tests/🔬️board-host-standalone/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "MountedWorkerJobSession",
+          "WorkerJobOutcome",
+          "WorkerJobSessionAdmissionRejected"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎞️media/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "MountedWorkerJobSession",
+          "WorkerJobDemandError"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "MountedWorkerJobPumpFault",
+          "MountedWorkerJobSession",
+          "WorkerJobDemandError",
+          "WorkerJobPoll",
+          "WorkerJobSession",
+          "WorkerJobSubmitFault"
+        ],
+        "worker-authority": [
+          "BatchJobParams",
+          "WorkerJobAdmissionControl",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️component-unit/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "WorkerJobSession"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobAdmissionContext",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️native-io-unit/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "BatchJobSession"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobAdmissionContext"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧮️compute/🎟️invocation/📋️parameters/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧮️compute/🎟️invocation/📋️parameters/🧪️tests/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker-authority": [
+          "BatchDriveConfig"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "MountedWorkerJobSession",
+          "WorkerJobDemandError",
+          "WorkerJobPoll"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🚪️ingress/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "WorkerJobDemandError",
+          "WorkerJobPoll"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧷️command-routes/🦀️.rs",
+      "test": false,
+      "used": {
+        "fault-publication": [
+          "RetainedFaultPublication"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "MountedWorkerJobSession",
+          "WorkerJobPoll"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "MountedWorkerJobSession"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobAdmissionContext",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️guest-cold-relay/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "WorkerJobPoll",
+          "WorkerJobSession",
+          "pump_worker_job_retirements"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "BatchJobSession",
+          "WorkerJobDemandError",
+          "WorkerJobPoll"
+        ],
+        "fault-publication": [
+          "RetainedFaultPublication"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🚪️session/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "BatchJobSession",
+          "MountedWorkerJobSession",
+          "WorkerJobSession"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🚪️session/🫴️refusal/🧪️tests/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker-authority": [
+          "BatchDriveConfig"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "MountedWorkerJobPumpFault",
+          "WorkerJobSubmitFault",
+          "WorkerJobTakeFault"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker-authority": [
+          "BatchJobParams",
+          "WorkerJobAdmissionContext"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "WorkerJobSession"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📋️clipboard-ingress/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "WorkerJobOutcome",
+          "WorkerJobPoll",
+          "WorkerJobSession",
+          "WorkerJobSessionPreparation"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "OriginalWorkerWakeIssuer",
+          "RetainedWorkerWake",
+          "WorkerJobOutcome",
+          "WorkerJobPoll",
+          "WorkerJobSession",
+          "admit_original_thread_worker_wake"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobAdmissionContext",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🪗️retained-section-collapse/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "WorkerJobPoll"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "MountedWorkerJobSession",
+          "WorkerJobPoll"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "BatchJobSession"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "BatchJobSession",
+          "WorkerJobDemandError",
+          "WorkerJobPoll"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️surface-view-state-routing/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "worker_job_retirements_are_parked"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "MountedWorkerJobSession"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/♻️wake/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "RetainedWorkerWake",
+          "admit_original_worker_wake",
+          "original_worker_wake_admission_demands"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "MountedWorkerJobSession",
+          "WorkerJobDemandError",
+          "WorkerJobPoll"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🏃️host/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker-authority": [
+          "WorkerJobInitializationStep",
+          "WorkerJobInitializer"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "pump_worker_job_retirements",
+          "worker_job_retirements_are_parked"
+        ],
+        "worker-authority": [
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "MountedWorkerJobSession",
+          "WorkerJobDemandError",
+          "WorkerJobPoll",
+          "worker_job_retirements_are_parked"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "WorkerJobCloseStep"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🤖️agent-lane-preview/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🧪️tests/🔬️window-unit/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "WorkerJobSession",
+          "WorkerJobSessionPreparation"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams",
+          "WorkerJobCloseStep",
+          "WorkerJobInitializationStep",
+          "WorkerJobInitializer"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "pump_worker_job_retirements"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "admit_original_thread_worker_wake"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️context/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "WORKER_JOB_SESSION_SLOTS"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️panels/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "WORKER_JOB_SESSION_SLOTS",
+          "worker_job_retirements_are_parked"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+      "test": false,
+      "used": {
+        "worker": [
+          "BatchJobSession"
+        ],
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🔬️unit/🦀️.rs",
+      "test": true,
+      "used": {
+        "worker": [
+          "BatchJobSession"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🦀️.rs",
+      "test": false,
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "test": false,
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ],
+        "worker-authority": [
+          "BatchDriveConfig",
+          "BatchJobParams"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+      "test": false,
+      "used": {
+        "registry": [
+          "FixedOperationKey",
+          "FixedOperationOwner",
+          "FixedOperationRegistry"
+        ],
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🎬️media-export/🦀️.rs",
+      "used": {
+        "fault-publication": [
+          "RetainedFaultPublication"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏠️host/🦀️.rs",
+      "used": {
+        "fault-publication": [
+          "RetainedFaultPublication"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🦀️.rs",
+      "used": {
+        "fault-publication": [
+          "RetainedFaultPublication"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+      "used": {
+        "fault-publication": [
+          "RetainedFaultPublication"
+        ],
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🧵️job/🔭️preview/🎟️drive/🧪️tests/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/⏯️tool-run/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/⏯️tool-run/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🌱️initialization/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📤️outcomes/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/📬️outcome/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run/📬️outcome/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/📤️publication/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/📤️jobs/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/💼️job/📤️publication/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+      "used": {
+        "publication": [
+          "RetainedJobPublication",
+          "JobPublicationKind"
+        ]
+      }
+    }
+  ]
+}

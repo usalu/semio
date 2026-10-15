@@ -36,6 +36,7 @@ test("package wrappers route to the repository root with independent argv and pa
     for(const [name,command] of Object.entries(manifest.scripts??{})) {
       if(typeof command!=="string"||!/^bun (?:repo |--cwd )/u.test(command))continue;
       const argv=literalCommandTokensV1(command);
+      expect(argv[1]==="nx"||argv[3]==="nx",`${path}:${name}`).toBe(false);
       if(argv[1]!=="repo"&&argv[3]!=="repo")continue;
       expect(argv,`${path}:${name}`).toEqual(parseArgsStringToArgv(command));
       if(path==="package.json"){expect(argv[1]).toBe("repo");continue;}
@@ -125,6 +126,27 @@ test("native orchestration and rebuild declarations use neutral build commands",
   const manifest = JSON.parse(read("package.json"));
   for (const command of Object.values(manifest.scripts)) expect(command).not.toMatch(/(?:^|\s)(?:bun\s+(?:(?:run|x)\s+)?)?nx\s/u);
   for (const path of fixture.commandSources) expect(read(path), path).not.toMatch(/\bbun\s+nx\s|--skip-nx-cache|--excludeTaskDependencies|--outputStyle|"nx"\s*,|node_modules\/nx\/(?:dist\/)?bin\/nx\.js/u);
+});
+
+test("MCP native staging uses one neutral command with independent argv", () => {
+  const path=fixture.commandSources.find(path=>path.endsWith("/🌉️mcp/🟦️.ts"))!;
+  expect(path).toBeDefined();
+  const source=ts.createSourceFile(path,read(path),ts.ScriptTarget.Latest,true),calls:ts.CallExpression[]=[];
+  const visit=(node:ts.Node):void=>{if(ts.isVariableDeclaration(node)&&node.name.getText(source)==="nativeMcpBinaryStagingFor"){const collect=(child:ts.Node):void=>{if(ts.isCallExpression(child)&&child.expression.getText(source)==="spawnSync")calls.push(child);ts.forEachChild(child,collect);};collect(node);}else ts.forEachChild(node,visit);};visit(source);
+  expect(calls.length).toBe(1);
+  const project=JSON.parse(read(join(dirname(path),"📦️packages/🦀️rust/📋️project.json"))),target=project.name+":build",call=calls[0]!,argumentsNode=call.arguments[1];
+  expect(ts.isStringLiteral(call.arguments[0]!)&&call.arguments[0]!.text).toBe("bun");
+  expect(argumentsNode&&ts.isArrayLiteralExpression(argumentsNode)).toBe(true);
+  const argv=(argumentsNode as ts.ArrayLiteralExpression).elements.map(node=>ts.isStringLiteral(node)?node.text:node.getText(source)==="MCP_BINARY_TARGET"?target:undefined);
+  const expected=["repo","run",target,"--output=stream"],command=["bun",...argv].map(value=>JSON.stringify(value)).join(" ");
+  expect(argv).toEqual(expected);
+  expect(literalCommandTokensV1(command)).toEqual(parseArgsStringToArgv(command));
+  expect(parseArgsStringToArgv(command)).toEqual(["bun",...expected]);
+  const options=call.arguments[2] as ts.ObjectLiteralExpression,property=(name:string)=>options.properties.find(node=>ts.isPropertyAssignment(node)&&node.name.getText(source)===name) as ts.PropertyAssignment;
+  expect(property("cwd").initializer.getText(source)).toBe("repoRoot");
+  expect(property("shell").initializer.getText(source)).toBe("false");
+  expect(property("env").initializer.getText(source)).toContain("...process.env");
+  expect(property("env").initializer.getText(source)).toContain("[CARGO_BUILD_OWNER_PID_ENV]: String(process.pid)");
 });
 
 test("Bazel configuration files have explicit repository filename authority", () => {

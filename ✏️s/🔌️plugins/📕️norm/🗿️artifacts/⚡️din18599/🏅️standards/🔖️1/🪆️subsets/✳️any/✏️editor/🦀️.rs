@@ -138,7 +138,7 @@ impl ArtifactEditor for Din18599PlayApp {
         Din18599Snapshot::default()
     }
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         semio_s_artifact_norm_din18599_model::din18599_child_restore_projection(snapshot)
     }
 

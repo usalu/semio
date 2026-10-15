@@ -11,7 +11,7 @@ use crate::STDIO_BINARY_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
 /// 🧬️ CARRIER LAW (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3):
-/// `s.stdio.binary@raw/*` is `CARRIER_BINARY` — its native `Binary` `IoPayload` IS the raw
+/// `s.stdio.binary@raw/*`'s native `Binary` `IoPayload` is the raw
 /// external file content, byte-for-byte. The previous impl wrapped `self.bytes` in a
 /// `SemioEnvelope` (`BINARY_MAGIC` header + token), which made every exported `.bin` file an
 /// unopenable `.semio` pack container instead of the honest raw bytes — exactly the

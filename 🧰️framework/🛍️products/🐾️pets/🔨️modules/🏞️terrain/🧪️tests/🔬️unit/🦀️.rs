@@ -6,7 +6,7 @@
 //! @see ../../../../🧫️fixtures/🧗️wall-climbing/🔣️.json — pitches, stretches, nearests and sights
 
 use super::*;
-use crate::schema::tests::{entries, fixture, number, typed};
+use semio_framework_pets_contract::testkit::{entries, fixture, number, typed};
 use serde_json::Value;
 
 const TOLERANCE: f64 = 1e-9;

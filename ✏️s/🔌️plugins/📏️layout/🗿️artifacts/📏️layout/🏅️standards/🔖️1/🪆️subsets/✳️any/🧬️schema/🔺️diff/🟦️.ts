@@ -1,12 +1,12 @@
 /** 🔺️ Canonical Layout diff with every native `ToValue` field present and nullable. */
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import {parseFormDictionary,type FormDictionary,parseCharacterStyle,parseFrame,parseImageLink,parseLayoutDrawingChild,parseLayer,parseLayoutRect,parsePage,parsePageOverride,parseParagraphStyle,parseParentPage,parseSpread,parseTextStory,parseTextStyleRun,type ArtifactLink,type CharacterStyle,type Frame,type ImageLink,type Layer,type LayoutDrawingChild,type LayoutRect,type Page,type PageOverride,type ParagraphStyle,type ParentPage,type Spread,type TextStory,type TextStyleRun} from "../🟦️.ts";
+import {parseQuestionDictionary,type QuestionDictionary,parseCharacterStyle,parseFrame,parseImageLink,parseLayoutDrawingChild,parseLayer,parseLayoutRect,parsePage,parsePageOverride,parseParagraphStyle,parseParentPage,parseSpread,parseTextStory,parseTextStyleRun,type ArtifactLink,type CharacterStyle,type Frame,type ImageLink,type Layer,type LayoutDrawingChild,type LayoutRect,type Page,type PageOverride,type ParagraphStyle,type ParentPage,type Spread,type TextStory,type TextStyleRun} from "../🟦️.ts";
 import { parseArtifactLink } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 export * from "../🟦️.ts";
 import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 
-type FormDictionaryEntry = FormDictionary["entries"][number];
-function parseFormDictionaryEntry(candidate: unknown, at: string): FormDictionaryEntry { return parseFormDictionary({ entries: [candidate] }, at).entries[0]; }
+type QuestionDictionaryEntry = QuestionDictionary["entries"][number];
+function parseQuestionDictionaryEntry(candidate: unknown, at: string): QuestionDictionaryEntry { return parseQuestionDictionary({ entries: [candidate] }, at).entries[0]; }
 
 export interface ParagraphStylePatch { name?: string | null; fontFamily?: string | null; fontSize?: Binary64 | null; fontWeight?: number | null; leading?: Binary64 | null; tracking?: Binary64 | null; alignment?: string | null }
 export interface CharacterStylePatch { name?: string | null; fontFamily?: string | null; fontSize?: Binary64 | null; fontWeight?: number | null; italic?: boolean | null; color?: [Binary32, Binary32, Binary32, Binary32] | null; tracking?: Binary64 | null }
@@ -24,7 +24,7 @@ export interface PageOverridesDelta { removed: LayoutRemoval[]; inserted: Layout
 export interface GridPatch { baselineGrid?: Binary64 | null; baselineOffset?: Binary64 | null; snapToBaseline?: boolean | null }
 export interface PrintTargetChange { target: string | null }
 export type DataFieldsPresence = "created" | "deleted" | "replaced";
-export interface LayoutDataEntriesDelta { removed: LayoutRemoval[]; inserted: LayoutInsertion<FormDictionaryEntry>[]; moved: LayoutRelocation[] }
+export interface LayoutDataEntriesDelta { removed: LayoutRemoval[]; inserted: LayoutInsertion<QuestionDictionaryEntry>[]; moved: LayoutRelocation[] }
 export interface LayoutDataFieldsDelta { presence?: DataFieldsPresence | null; entries?: LayoutDataEntriesDelta | null }
 export interface LayoutDrawingTextRow { index: number; text: string }
 export interface ImageLinkPatch { path: string | null; width?: number | null; height?: number | null; dpi?: number | null; color_profile?: string | null }
@@ -128,7 +128,7 @@ export function parseLayoutDataFieldsDelta(value: unknown, at = "$" ): LayoutDat
   const presence = (item: unknown, path: string): DataFieldsPresence => { if (item !== "created" && item !== "deleted" && item !== "replaced") throw new Error(`${path}: created, deleted or replaced required`); return item; };
   const entries = (item: unknown, path: string): LayoutDataEntriesDelta => {
     const entry = record(item, ["removed", "inserted", "moved"], path);
-    return { removed: parseRemovals(entry.removed, `${path}.removed`), inserted: parseInserted(entry.inserted, parseFormDictionaryEntry, `${path}.inserted`), moved: parseRelocations(entry.moved, `${path}.moved`) };
+    return { removed: parseRemovals(entry.removed, `${path}.removed`), inserted: parseInserted(entry.inserted, parseQuestionDictionaryEntry, `${path}.inserted`), moved: parseRelocations(entry.moved, `${path}.moved`) };
   };
   return { ...optional(row, "presence", presence, at), ...optional(row, "entries", entries, at) };
 }

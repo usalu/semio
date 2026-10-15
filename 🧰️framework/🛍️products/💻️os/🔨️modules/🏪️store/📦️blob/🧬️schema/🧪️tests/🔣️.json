@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "owner": "semio-framework-os-store-blob-identity",
+  "sourceBoundary": {
+    "maxSourceBytes": 32768,
+    "maxSourceFiles": 4,
+    "maxActiveLines": 400
+  },
+  "cases": [
+    {
+      "json": "{\"hash\":\"\",\"size\":0,\"mediaType\":\"\"}",
+      "accepted": true
+    },
+    {
+      "json": "{\"hash\":\"漢字:ß🔗\",\"size\":4294967296,\"mediaType\":\"image/svg+xml; charset=utf-8\"}",
+      "accepted": true
+    },
+    {
+      "json": "{\"hash\":\"max\",\"size\":18446744073709551615,\"mediaType\":\"application/octet-stream\"}",
+      "accepted": true
+    },
+    {
+      "json": "{\"hash\":\"h\",\"size\":-1,\"mediaType\":\"m\"}",
+      "accepted": false
+    },
+    {
+      "json": "{\"hash\":\"h\",\"size\":18446744073709551616,\"mediaType\":\"m\"}",
+      "accepted": false
+    },
+    {
+      "json": "{\"hash\":\"h\",\"size\":1.5,\"mediaType\":\"m\"}",
+      "accepted": false
+    },
+    {
+      "json": "{\"hash\":\"h\",\"size\":\"1\",\"mediaType\":\"m\"}",
+      "accepted": false
+    },
+    {
+      "json": "{\"hash\":\"h\",\"size\":1,\"media_type\":\"m\"}",
+      "accepted": false
+    },
+    {
+      "json": "{\"hash\":\"h\",\"size\":1,\"mediaType\":\"m\",\"extra\":true}",
+      "accepted": false
+    },
+    {
+      "json": "{\"hash\":\"h\",\"size\":1}",
+      "accepted": false
+    }
+  ],
+  "workspace": "repository"
+}

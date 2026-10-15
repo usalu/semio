@@ -23,6 +23,9 @@ name = "semio-shard"
 path = "../../🧵️shard/👶️child/🦀️.rs"
 
 [dependencies]
+semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+
 semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -83,6 +86,8 @@ serde_json = "1.0.140"
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
+
 semio-framework-plugin-interpreter = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }

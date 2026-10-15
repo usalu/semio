@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-job-progress"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "job-progress"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-async = { workspace = true }

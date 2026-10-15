@@ -16,6 +16,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-publication = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-job-worker = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+
 semio-framework = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }

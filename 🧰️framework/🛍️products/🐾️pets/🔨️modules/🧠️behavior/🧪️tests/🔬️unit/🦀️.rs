@@ -6,10 +6,10 @@
 
 use super::*;
 use crate::feeling::at_rest;
-use crate::gesture::{no_hover, COLD};
-use crate::randomness::{random_pick, random_unit};
-use crate::schema::tests::{assert_same, entries, fixture, json, number, typed};
-use crate::schema::{Bond, Face, Facing, Footing, Gait, Gaze, Locomotion, Mood, Palette, Purr, Repertoire, Size, SpeciesState, Text, PET_MODES};
+use semio_framework_pets_contract::schema::{Bond, Face, Facing, Footing, Gait, Gaze, Locomotion, Mood, Palette, Purr, Repertoire, Size, SpeciesState, Text, MENAGERIE_SCHEMA, PET_MODES};
+use semio_framework_pets_contract::testkit::{assert_same, entries, fixture, json, number, typed};
+use semio_framework_pets_interaction::gesture::{no_hover, COLD};
+use semio_framework_pets_kinematics::randomness::{random_pick, random_unit};
 use serde_json::Value;
 
 const TOLERANCE: f64 = 1e-9;
@@ -92,7 +92,7 @@ fn kind(fidgets: bool) -> Species {
 }
 
 fn bonded(bonds: Vec<Bond>) -> Menagerie {
-    Menagerie { json_schema: None, schema: crate::schema::MENAGERIE_SCHEMA.to_string(), id: "bonds".to_string(), title: Text { en: "Bonds".to_string(), de: "Bande".to_string() }, species: Vec::new(), bonds, casts: Vec::new(), chemistry: Vec::new() }
+    Menagerie { json_schema: None, schema: MENAGERIE_SCHEMA.to_string(), id: "bonds".to_string(), title: Text { en: "Bonds".to_string(), de: "Bande".to_string() }, species: Vec::new(), bonds, casts: Vec::new(), chemistry: Vec::new() }
 }
 
 fn bond(a: &str, b: &str, affinity: f64) -> Bond {

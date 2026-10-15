@@ -1,0 +1,154 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "original",
+    "issued",
+    "actual",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "framework.job.original-worker-receipt-observation.v1"
+    },
+    "original": {
+      "const": "same-checked-out-authority"
+    },
+    "issued": {
+      "const": [
+        2,
+        32,
+        128,
+        128,
+        8
+      ]
+    },
+    "actual": {
+      "const": [
+        1,
+        17,
+        64,
+        64
+      ]
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "zero-items",
+          "parentRemaining": [
+            0,
+            17,
+            64,
+            64,
+            4
+          ],
+          "accepted": false,
+          "pendingAfter": true,
+          "recipientAfter": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "repeatTake": false
+        },
+        {
+          "name": "short-copy",
+          "parentRemaining": [
+            1,
+            16,
+            64,
+            64,
+            4
+          ],
+          "accepted": false,
+          "pendingAfter": true,
+          "recipientAfter": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "repeatTake": false
+        },
+        {
+          "name": "short-capacity",
+          "parentRemaining": [
+            1,
+            17,
+            63,
+            64,
+            4
+          ],
+          "accepted": false,
+          "pendingAfter": true,
+          "recipientAfter": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "repeatTake": false
+        },
+        {
+          "name": "short-release",
+          "parentRemaining": [
+            1,
+            17,
+            64,
+            63,
+            4
+          ],
+          "accepted": false,
+          "pendingAfter": true,
+          "recipientAfter": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "repeatTake": false
+        },
+        {
+          "name": "zero-depth",
+          "parentRemaining": [
+            1,
+            17,
+            64,
+            64,
+            0
+          ],
+          "accepted": false,
+          "pendingAfter": true,
+          "recipientAfter": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "repeatTake": false
+        },
+        {
+          "name": "funded",
+          "parentRemaining": [
+            1,
+            17,
+            64,
+            64,
+            4
+          ],
+          "accepted": true,
+          "pendingAfter": false,
+          "recipientAfter": [
+            1,
+            17,
+            64,
+            64
+          ],
+          "repeatTake": false
+        }
+      ]
+    }
+  }
+}

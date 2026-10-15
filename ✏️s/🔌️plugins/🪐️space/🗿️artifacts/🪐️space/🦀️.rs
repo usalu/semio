@@ -28,6 +28,11 @@ pub const S_SPACE_INDEX_DOCUMENT_SCHEMA: &str = "s.space";
 /// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Canonical
 /// surface id: `s.space.space@1/*#editor` / `s.space.space@1/*#viewer` (contract §1 grammar).
 pub const SPACE_INDEX_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.space.space", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
+/// 📇️ The `os.space-index` topic row through which this plugin names the artifact-index document the os shell opens for a hub space, so the framework never names this plugin's dialect or document schema.
+pub fn space_index_topic_contribution() -> semio_framework_plugin::TopicContribution {
+    semio_framework_plugin::SpaceIndexContribution { dialect: SPACE_INDEX_DIALECT.into(), document_schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string() }.into_topic_contribution()
+}
 //#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind

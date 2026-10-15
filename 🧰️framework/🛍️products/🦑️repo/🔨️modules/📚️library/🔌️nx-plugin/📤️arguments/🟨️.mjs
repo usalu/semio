@@ -1,3 +1,4 @@
+import {buildOrchestrationContextV1,projectBuildOrchestrationCapabilitiesV1} from "../../🏗️build/📥️caller/📤️orchestration/🟨️.mjs";
 import {dirname,resolve} from "node:path";
 import {createRequire} from "node:module";
 import {readFileSync} from "node:fs";
@@ -17,8 +18,9 @@ export async function executeLiteralBuildArgumentsV1(options,context,delegate){
  for(const key of ["args","__unparsed__"])if(options[key]!==undefined&&(!Array.isArray(options[key])||options[key].some(value=>typeof value!=="string")))throw Error("Literal build argument arrays required");
  if(["SEMIO_NX_COMMAND_RUNNER","SEMIO_NX_COMMAND_DIRECTORY"].some(key=>options.env?.[key]!==undefined))throw Error("Private Nx command runner environment reserved");
  const wire=process.env.SEMIO_SCRIPT_PROCESS_INVOCATION;if(typeof wire!=="string"||options.env?.SEMIO_SCRIPT_PROCESS_INVOCATION!==undefined&&options.env.SEMIO_SCRIPT_PROCESS_INVOCATION!==wire)throw Error("Original Nx parent invocation required");
- const directory=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??resolve(context.root,".🧬semio/🦑️repo/⚡️cache/build/nx-commands")),invocation=createHash("sha256").update(wire).digest("hex");await mkdir(directory,{recursive:true,mode:0o700});
+ const directory=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??resolve(context.root,".🧬semio/🦑️repo/⚡️cache/build/nx-commands")),invocationWire=(await issueNxBuildOrchestrationV1(options,context,{...process.env,...options.env},Date.now())),invocation=createHash("sha256").update(invocationWire?JSON.stringify(invocationWire):wire).digest("hex");await mkdir(directory,{recursive:true,mode:0o700});
  if(typeof options.command!=="string"&&!Array.isArray(options.commands)||options.command!==undefined&&options.commands!==undefined)throw Error("One build command form required");
+ const orchestration=invocationWire;
  const args=[...options.args??[],...options.__unparsed__??[]],quote=value=>"'"+value.replaceAll("'","'\\''")+"'",wrap=async operation=>{
   const command=typeof operation==="string"?operation:operation.command,forward=typeof operation==="string"?options.forwardAllArgs:operation.forwardAllArgs??options.forwardAllArgs;
   if(typeof command!=="string")throw Error("Build command string required");
@@ -28,13 +30,13 @@ export async function executeLiteralBuildArgumentsV1(options,context,delegate){
   const bridge=(process.platform==="win32"?'bun "%SEMIO_NX_COMMAND_RUNNER%"':'bun "$SEMIO_NX_COMMAND_RUNNER"')+" "+digest;
   return typeof operation==="string"?bridge:{...operation,command:bridge,forwardAllArgs:false};
  };
- const plan={...options,args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName,...(context.configurationName?{SEMIO_TASK_CONFIGURATION:context.configurationName}:{}),SEMIO_NX_COMMAND_DIRECTORY:directory,SEMIO_NX_COMMAND_RUNNER:fileURLToPath(new URL("./📜️script.ts",import.meta.url))}};
+ const plan={...options,args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName,...(context.configurationName?{SEMIO_TASK_CONFIGURATION:context.configurationName}:{}),SEMIO_NX_COMMAND_DIRECTORY:directory,SEMIO_NX_COMMAND_RUNNER:fileURLToPath(new URL("./📜️script.ts",import.meta.url)),...(orchestration?{SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(orchestration),SEMIO_SCRIPT_CAPABILITIES:undefined}:{})}};
  if(options.command!==undefined)plan.command=await wrap(options.command);else{plan.commands=[];for(const command of options.commands)plan.commands.push(await wrap(command));}
  return delegate(plan,context);
 }
 
 /** 📥️ Issues the exact discovered descendant with the original caller's unchanged deadline and resources. */
-export async function issueNativeOwnerInvocationV1(options,context,environment,now){
+async function readNxTaskAuthorityV1(options,context,environment,now){
  const wire=environment.SEMIO_SCRIPT_PROCESS_INVOCATION;if(typeof wire!=="string")throw Error("Original Nx native parent invocation required");
  const original=JSON.parse(wire),policy=original?.policy,caller=original?.capabilities;
  if(original?.version!==1||Object.keys(original).length!==4||!policy||Object.keys(policy).length!==3||policy.version!==1||typeof policy.owner!=="string"||policy.owner.length===0||!Number.isSafeInteger(policy.maximumElapsedMilliseconds)||policy.maximumElapsedMilliseconds<0||!Number.isFinite(now)||(policy.maximumElapsedMilliseconds===0?original.deadlineEpochMilliseconds!==null:!Number.isSafeInteger(original.deadlineEpochMilliseconds)||original.deadlineEpochMilliseconds<=now||original.deadlineEpochMilliseconds-now>policy.maximumElapsedMilliseconds)||!conforms(nativeCallerSchema,caller))throw Error("Original Nx native authority refused");
@@ -61,18 +63,29 @@ export async function issueNativeOwnerInvocationV1(options,context,environment,n
  }else throw Error("Original selected Nx command required");
  const reachable=new Set(),pending=[...selectedTasks];while(pending.length){const id=pending.pop();if(reachable.has(id))continue;if(!graph.tasks[id]||!Array.isArray(graph.dependencies[id]))throw Error("Original Nx dependency graph incomplete");reachable.add(id);pending.push(...graph.dependencies[id]);}
  const admitted=[...reachable].filter(id=>{const target=graph.tasks[id].target;return target.project===context.projectName&&target.target===context.targetName&&(target.configuration??undefined)===(context.configurationName??undefined);});
- const declared=context.projectsConfigurations?.projects?.[context.projectName]?.targets?.[context.targetName],request=options.nativeOwnerCommand;
+ const declared=context.projectsConfigurations?.projects?.[context.projectName]?.targets?.[context.targetName];
  if(admitted.length!==1)throw Error(`Original native task reachability refused: ${context.projectName}:${context.targetName}:${context.configurationName??""} admitted=${admitted.length}`);
  if(!declared)throw Error("Original discovered native target declaration required");
- if(!conforms(nativeSchema.properties.command,request))throw Error("Original discovered native command schema refused");
  const task=graph.tasks[admitted[0]],require=createRequire(import.meta.url),nxRoot=dirname(require.resolve("nx/package.json")),{combineOptionsForExecutor}=require(resolve(nxRoot,"dist/src/utils/params.js"));
  const expected=combineOptionsForExecutor(structuredClone(task.overrides),task.target.configuration,structuredClone(declared),executorSchema,context.projectName,context.cwd??".",false);
+ return {original,caller,declared,task,expected};
+}
+
+export async function issueNativeOwnerInvocationV1(options,context,environment,now){
+ const {original,caller,declared,task,expected}=await readNxTaskAuthorityV1(options,context,environment,now),request=options.nativeOwnerCommand;if(!conforms(nativeSchema.properties.command,request))throw Error("Original discovered native command schema refused");
  if(expected.command!==options.command||JSON.stringify(expected.nativeOwnerCommand)!==JSON.stringify(request)||(expected.forwardAllArgs!==false)!==(options.forwardAllArgs!==false))throw Error("Original discovered native task command changed");
  const expectedArguments=expected.forwardAllArgs===false?[]:[...expected.args??[],...expected.__unparsed__??[]],actualArguments=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]];
  if(JSON.stringify(expectedArguments)!==JSON.stringify(actualArguments))throw Error("Original native task arguments changed");
  if(typeof environment.CARGO_TARGET_DIR!=="string"||resolve(context.root,caller.native.artifactDirectory)!==resolve(context.root,environment.CARGO_TARGET_DIR)||environment.CARGO_NET_OFFLINE!==String(caller.native.network.offline))throw Error("Original native artifact or network authority changed");
  const forwarded=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]],capabilities={version:1,buildMode:caller.buildMode,repositoryRoot:context.root,artifactDirectory:resolve(context.root,caller.native.artifactDirectory),command:{...request,arguments:[...request.arguments,...forwarded]},transport:caller.native.transport,child:caller.native.child,network:caller.native.network};
  if(!conforms(nativeSchema,capabilities))throw Error("Issued original native capability refused");return {...original,capabilities};
+}
+
+/** 🧭️ Projects only a reachable immutable orchestration task before its owned script process is born. */
+export async function issueNxBuildOrchestrationV1(options,context,environment,now){
+ const declaration=context.projectsConfigurations?.projects?.[context.projectName]?.targets?.[context.targetName]?.metadata?.semio?.execution;if(declaration?.kind!=="orchestration"||declaration.children===undefined)return;
+ const {original,declared,task,expected}=await readNxTaskAuthorityV1(options,context,environment,now);if(options.nativeOwnerCommand!==undefined||expected.command!==options.command||JSON.stringify(expected.commands)!==JSON.stringify(options.commands)||JSON.stringify(expected.args??[])!==JSON.stringify(options.args??[])||JSON.stringify(expected.__unparsed__??[])!==JSON.stringify(options.__unparsed__??[]))throw Error("Original orchestration task command changed");
+ const projects=context.projectsConfigurations.projects,selection={project:context.projectName,target:context.targetName,...(context.configurationName?{configuration:context.configurationName}:{})},bound=buildOrchestrationContextV1(projects,selection),capabilities=projectBuildOrchestrationCapabilitiesV1(original,context.root,"nx",bound,now);return {...original,capabilities};
 }
 
 /** 🎯️ Keeps Nx process handling while its static owner command receives no dynamic shell interpolation. */
@@ -82,6 +95,7 @@ export async function executeOwnerArgumentsV1(options,context,delegate){
  if(options.forwardAllArgs!==false&&!Array.isArray(options.__unparsed__))throw Error("Nx did not admit the original forwarded arguments");
  const arguments_=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]];
  const environment={...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName};
+ const orchestration=await issueNxBuildOrchestrationV1(options,context,environment,Date.now());if(orchestration){environment.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify(orchestration);delete environment.SEMIO_SCRIPT_CAPABILITIES;}
  if(options.nativeOwnerCommand!==undefined){environment.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify(await issueNativeOwnerInvocationV1(options,context,environment,Date.now()));delete environment.SEMIO_SCRIPT_CAPABILITIES;}
  else if(/ native owner-command /u.test(options.command))throw Error("Original discovered native request required");
  const plan={...options,args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...environment,[key]:encodeOwnerArgumentsV1(arguments_)}};

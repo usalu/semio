@@ -21,11 +21,10 @@
       "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
-          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
-          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs"
         ],
-        "owner": "🧰️framework/🔨️modules/🗺️surface",
-        "plan": "Same underlying `image` crate reachability already recorded against the shared `image-jpeg` entry (✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json) — repeated here because the dependency gate keys recorded debt by (path, oracle id) pair, not by package, so a second oracle id sharing the same package needs its own record. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and every entry recording it, this one included."
+        "owner": "✏️s/🔌️plugins/🎞️animate",
+        "plan": "Same underlying `image` crate reachability already recorded against the shared `image-jpeg` entry (✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json) — repeated here because the dependency gate keys recorded debt by (path, oracle id) pair, not by package, so a second oracle id sharing the same package needs its own record. Phase 7 target: the remaining call site (the 🎞️animate video engine; surface tiled-map and paint no longer reach `image`) wants raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and every entry recording it, this one included."
       },
       "kind": "cross-semio-implementation",
       "engine": {
@@ -66,11 +65,10 @@
       ],
       "productionDebt": {
         "reachableFrom": [
-          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
-          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs"
         ],
-        "owner": "🧰️framework/🔨️modules/🗺️surface",
-        "plan": "Same package, same reachability finding as the sibling `image-jpeg-jfif-1-01-mutate` entry immediately above — repeated here because the dependency gate keys recorded debt by (path, oracle id) pair. Independently re-verified this session by reading the source at both `reachableFrom` paths directly: `writer` module in the animate video component (`use image::{ImageBuffer, Rgba};`, a real non-test partial-movie-writer path) and `upload_tile` in the surface tiled-map component (`image::load_from_memory`, a real non-test production method) — both non-optional, non-dev `image` dependencies per their own Cargo.toml. The repository-wide `🔒️dependencies.json` registry entry for `image` currently still reads `productionReachable: false`, which this finding contradicts; that shared file is not edited here (out of this ticket's scope), only this oracle's own field is corrected to match the evidence."
+        "owner": "✏️s/🔌️plugins/🎞️animate",
+        "plan": "Same package, same reachability finding as the sibling `image-jpeg-jfif-1-01-mutate` entry immediately above — repeated here because the dependency gate keys recorded debt by (path, oracle id) pair. Independently re-verified this session by reading the source at the `reachableFrom` path directly: `writer` module in the animate video component (`use image::{ImageBuffer, Rgba};`, a real non-test partial-movie-writer path), a non-optional, non-dev `image` dependency per its own Cargo.toml. The surface tiled-map `upload_tile` (and paint image uploads) formerly recorded as the second path now decode through `semio_framework_pixels::decode_png`, and the surface crate declares `image` only as a dev-dependency. The repository-wide `🔒️dependencies.json` registry entry for `image` currently still reads `productionReachable: false`, which this finding contradicts; that shared file is not edited here (out of this ticket's scope), only this oracle's own field is corrected to match the evidence."
       },
       "rationale": "Independent image-rs reads committed before/after JPEG fixtures through public dimensions, decoded pixels and XMP metadata. Five authored recipes are generated independently, including whole-image replacement. JFIF density is witnessed separately by Pillow because image-rs has no populated decoder getter for it."
     },

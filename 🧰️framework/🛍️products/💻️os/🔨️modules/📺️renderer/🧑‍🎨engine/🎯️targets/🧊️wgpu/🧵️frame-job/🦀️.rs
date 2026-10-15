@@ -12,9 +12,8 @@
 
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_async::Lane;
-use semio_framework_job::{
-    root_cancel_token, BatchDriveConfig, BatchJobParams, BatchJobSession, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, WorkerJobSessionAdmissionRejected, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US,
-};
+use semio_framework_job::{root_cancel_token,CancelToken,CommitCandidate,InteractiveJob,StepContext,StepOutcome,INTERACTIVE_LANE_FUEL,INTERACTIVE_LANE_WALL_US};
+use semio_framework_job_worker::{BatchJobSession,WorkerJobSessionAdmissionRejected};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::{mem::size_of, sync::Arc};
 use semio_framework_job::{InteractiveJobCloseStep, OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress};
@@ -150,13 +149,13 @@ fn batch_params(operation: OperationId, generation: Generation, cancel: CancelTo
 pub(crate) struct FrameBuildHandle {
     retained: RetainedCloneGrant,
     retained_progress: RetainedCloneProgress,
-    session: Option<semio_framework_job::WorkerJobSession<ActiveFrameBuild>>,
+    session: Option<semio_framework_job_worker::WorkerJobSession<ActiveFrameBuild>>,
     rejected: Option<WorkerJobSessionAdmissionRejected<ActiveFrameBuild>>,
-    ticket: Option<semio_framework_job::WorkerJobTicket>,
+    ticket: Option<semio_framework_job_worker::WorkerJobTicket>,
     original_job: Option<ActiveFrameBuild>,
     original_params: Option<BatchJobParams>,
     original_params_cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
-    original_outcome: Option<semio_framework_job::WorkerJobOutcome<ActiveFrameBuild>>,
+    original_outcome: Option<semio_framework_job_worker::WorkerJobOutcome<ActiveFrameBuild>>,
     original_outcome_acknowledged: bool,
     original_outcome_kind: Option<JobOutcomeKind>,
     original_refused_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
@@ -258,19 +257,19 @@ fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, w
             true
         }
         ActiveFramePhase::Deadlines(session) => {
-            if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+            if !matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
                 session.begin_close();
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
             }
             match session.has_original_cancel_alias_witness(witness) {
                 Ok(true)=>return crate::frame_receive_close(match session.return_original_cancel_alias_step(witness,grant) {
                     Ok(Some(step))=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
-                    Ok(None)|Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>Ok(InteractiveJobCloseStep::Blocked),
-                    Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>Err(error),
+                    Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>Ok(InteractiveJobCloseStep::Blocked),
+                    Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>Err(error),
                 },cx),
                 Ok(false)=>{},
-                Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(InteractiveJobCloseStep::Blocked),
-                Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(InteractiveJobCloseStep::Blocked),
+                Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
             }
             if !session.terminal_is_empty() { let step=session.close_step(cx)?;return crate::frame_worker_child_step(step,grant,session.terminal_is_empty()).map_err(OriginalTurnFailure::from); }
             true
@@ -446,7 +445,7 @@ impl ActiveFrameBuild {
                 if !self.deadline_receipt_received {
                     let expected=cx.retained_grant();let before=cx.retained_progress();
                     let poll=match session.step_on_original_caller(cx){Ok(poll)=>poll,Err(failure)=>return ActiveFrameStep::CloseFailure(failure)};
-                    if !matches!(poll,semio_framework_job::WorkerJobPoll::Outcome|semio_framework_job::WorkerJobPoll::Terminal)||!session.checkout_outcome(){return ActiveFrameStep::Pending}
+                    if !matches!(poll,semio_framework_job_worker::WorkerJobPoll::Outcome|semio_framework_job_worker::WorkerJobPoll::Terminal)||!session.checkout_outcome(){return ActiveFrameStep::Pending}
                     let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original deadline worker omitted its checked-out physical receipt"))};
                     self.deadline_receipt_received=true;
                     let after=cx.retained_progress();
@@ -575,7 +574,7 @@ impl InteractiveJob for ActiveFrameBuild {
 }
 
 /// 📬️ Receives one actual issued worker receipt and separately acknowledges its held descriptor.
-fn receive_frame_outcome(owner: &mut semio_framework_job::WorkerJobOutcome<ActiveFrameBuild>, grant: RetainedCloneGrant, recipient: &mut RetainedCloneProgress) -> Result<Option<JobOutcomeKind>, semio_framework_value::ValueError> {
+fn receive_frame_outcome(owner: &mut semio_framework_job_worker::WorkerJobOutcome<ActiveFrameBuild>, grant: RetainedCloneGrant, recipient: &mut RetainedCloneProgress) -> Result<Option<JobOutcomeKind>, semio_framework_value::ValueError> {
     if let Some((issued, progress)) = owner.retained_step_receipt() {
         if !progress.fits(*issued) || !progress.fits(grant) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "frame worker receipt exceeds its original receiving authority").with_retained_progress(*progress)); }
         let received = recipient.checked_add(*progress)?;
@@ -617,20 +616,20 @@ impl FrameBuildHandle {
         if let Some(session)=self.session.as_mut(){
             if self.closing||cx.is_cancelled(){let _=session.begin_close();}
             match session.poll(){
-                semio_framework_job::WorkerJobPoll::Idle=>{
-                    let before=cx.retained_progress();let expected=cx.retained_grant();let Some((ticket,poll))=session.try_step_on_original_caller(cx)?else{return Ok(None)};if poll==semio_framework_job::WorkerJobPoll::Idle{return Ok(None)}
-                    let mut owner=if poll==semio_framework_job::WorkerJobPoll::Terminal{session.take_terminal()}else{session.take_outcome(ticket)}.map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback lost its retained outcome"))?;
+                semio_framework_job_worker::WorkerJobPoll::Idle=>{
+                    let before=cx.retained_progress();let expected=cx.retained_grant();let Some((ticket,poll))=session.try_step_on_original_caller(cx)?else{return Ok(None)};if poll==semio_framework_job_worker::WorkerJobPoll::Idle{return Ok(None)}
+                    let mut owner=if poll==semio_framework_job_worker::WorkerJobPoll::Terminal{session.take_terminal()}else{session.take_outcome(ticket)}.map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback lost its retained outcome"))?;
                     let tuple=owner.take_retained_step_receipt();self.original_outcome_kind=owner.outcome_descriptor().map(JobOutcomeDescriptor::kind);self.ticket=Some(ticket);self.original_outcome=Some(owner);
                     let Some((issued,progress))=tuple else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback omitted its physical receipt").into())};
                     if issued!=expected||!progress.fits(issued)||!before.checked_add(progress).is_ok_and(|posted|posted==cx.retained_progress()){self.original_refused_receipt=Some((issued,progress));return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame callback receipt differs from its already posted initiating recipient").into())}
                 },
-                semio_framework_job::WorkerJobPoll::Closing=>{
+                semio_framework_job_worker::WorkerJobPoll::Closing=>{
                     let grant=cx.retained_grant();match session.has_original_cancel_alias_witness(cx.original_cancel_token()){
-                        Ok(true)=>match session.return_original_cancel_alias_step(cx.original_cancel_token(),grant){Ok(Some(step))=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Ok(None)|Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))},
-                        Ok(false)=>{session.close_step(cx)?;},Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
+                        Ok(true)=>match session.return_original_cancel_alias_step(cx.original_cancel_token(),grant){Ok(Some(step))=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))},
+                        Ok(false)=>{session.close_step(cx)?;},Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
                     }
                 },
-                semio_framework_job::WorkerJobPoll::TerminalEmpty=>{let grant=cx.retained_grant();if grant.maximum_items>0&&grant.maximum_depth>0{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.session=None;self.original_presentation_generation=None;}},
+                semio_framework_job_worker::WorkerJobPoll::TerminalEmpty=>{let grant=cx.retained_grant();if grant.maximum_items>0&&grant.maximum_depth>0{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.session=None;self.original_presentation_generation=None;}},
                 _=>{},
             }
             return Ok(None)
@@ -638,7 +637,7 @@ impl FrameBuildHandle {
         if self.closing||cx.is_cancelled(){return Ok(None)}
         if self.original_job.is_none(){let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(None)};let mut job=ActiveFrameBuild::new(runtime,inputs,cx.operation(),cx.generation(),cancel,cx.retained_grant());job.presentation_generation=presentation_generation;self.original_job=Some(job);self.original_presentation_generation=Some(presentation_generation);return Ok(None)}
         if self.original_params.is_none(){let Some(now)=cx.latest_us()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original frame admission requires its initiating clock").into())};let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(None)};self.original_params=Some(BatchJobParams{operation:cx.operation(),generation:cx.generation(),cancel,now_us:cx.clock_source(),config:BatchDriveConfig{retained:cx.retained_grant(),site:"os_renderer_frame_build",stage:InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:cx.deadline_us().saturating_sub(now)}});return Ok(None)}
-        if let Some((session,_already_posted))=semio_framework_job::WorkerJobSession::try_admit_owned(&mut self.original_job,&mut self.original_params,cx)?{self.session=Some(session)}Ok(None)
+        if let Some((session,_already_posted))=semio_framework_job_worker::WorkerJobSession::try_admit_owned(&mut self.original_job,&mut self.original_params,cx)?{self.session=Some(session)}Ok(None)
     }
 
     /// ♻️ Returns pending admission and checked-out custody before closing the same admitted session.
@@ -649,8 +648,8 @@ impl FrameBuildHandle {
         if let Some(params)=self.original_params.take(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(false)}
         if let Some(owner)=self.original_params_cancel_retirement.as_mut(){if !owner.terminal_is_empty(){match owner.return_alias_step(cx.original_cancel_token(),grant){Ok(step)=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>{},Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))}return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=None;return Ok(false)}
         if let Some(session)=self.session.as_mut(){let _=session.begin_close();if !session.terminal_is_empty(){match session.has_original_cancel_alias_witness(cx.original_cancel_token()){
-            Ok(true)=>match session.return_original_cancel_alias_step(cx.original_cancel_token(),grant){Ok(Some(step))=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Ok(None)|Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))},
-            Ok(false)=>{session.close_step(cx)?;},Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
+            Ok(true)=>match session.return_original_cancel_alias_step(cx.original_cancel_token(),grant){Ok(Some(step))=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))},
+            Ok(false)=>{session.close_step(cx)?;},Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
         }return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.session=None;self.ticket=None;return Ok(false)}
         if self.original_refused_receipt.is_some()||self.original_presentation_generation.is_some(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_refused_receipt=None;self.original_presentation_generation=None;return Ok(false)}
         Ok(self.rejected.is_none())
@@ -689,7 +688,7 @@ impl FrameBuildHandle {
 
     fn admit_active(&mut self, active: ActiveFrameBuild) {
         let params = batch_params(active.operation, active.generation, active.cancel.clone(), active.retained);
-        match semio_framework_job::WorkerJobSession::try_new(active, params) {
+        match semio_framework_job_worker::WorkerJobSession::try_new(active, params) {
             Ok(session) => self.session = Some(session),
             Err(mut rejected) => {
                 rejected.begin_close();
@@ -714,7 +713,7 @@ impl FrameBuildHandle {
         if let Some(session) = self.session.as_mut() {
             if session.generation() != generation {
                 self.cancel.cancel_now();
-                if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+                if !matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
                     let _ = session.begin_close();
                 } else {
                     let _ = session.close_step(self.retained);
@@ -729,9 +728,9 @@ impl FrameBuildHandle {
                 let _ = session.register_wake(&waker);
             }
             match session.poll() {
-                semio_framework_job::WorkerJobPoll::Idle => match session.try_submit_step(&crate::renderer_worker_pool(), Lane::Interactive, self.retained) {
+                semio_framework_job_worker::WorkerJobPoll::Idle => match session.try_submit_step(&crate::renderer_worker_pool(), Lane::Interactive, self.retained) {
                     Ok(ticket) => self.ticket = Some(ticket),
-                    Err(semio_framework_job::WorkerJobSubmitFault::Pool(kind)) => {
+                    Err(semio_framework_job_worker::WorkerJobSubmitFault::Pool(kind)) => {
                         if let Ok(rejected) = session.take_rejected() {
                             if matches!(kind, semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Contended) {
                                 rejected.resume();
@@ -744,7 +743,7 @@ impl FrameBuildHandle {
                         let _ = session.begin_close();
                     }
                 },
-                semio_framework_job::WorkerJobPoll::Outcome => {
+                semio_framework_job_worker::WorkerJobPoll::Outcome => {
                     if let Some(ticket) = self.ticket {
                         if let Ok(mut owner) = session.take_outcome(ticket) {
                             match receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress) {
@@ -755,7 +754,7 @@ impl FrameBuildHandle {
                         }
                     }
                 }
-                semio_framework_job::WorkerJobPoll::Terminal => {
+                semio_framework_job_worker::WorkerJobPoll::Terminal => {
                     if let Ok(mut owner) = session.take_terminal() {
                         if receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress).ok().flatten() != Some(JobOutcomeKind::Complete) { return None; }
                         let frame_generation = owner.job().generation;
@@ -764,18 +763,18 @@ impl FrameBuildHandle {
                         return frame;
                     }
                 }
-                semio_framework_job::WorkerJobPoll::Rejected => {
+                semio_framework_job_worker::WorkerJobPoll::Rejected => {
                     if let Ok(rejected) = session.take_rejected() {
                         rejected.resume();
                     }
                 }
-                semio_framework_job::WorkerJobPoll::Closing => {
+                semio_framework_job_worker::WorkerJobPoll::Closing => {
                     let _ = session.close_step(self.retained);
                     if session.terminal_is_empty() {
                         self.session = None;
                     }
                 }
-                semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::CheckedOut | semio_framework_job::WorkerJobPoll::TerminalEmpty => {}
+                semio_framework_job_worker::WorkerJobPoll::Submitted | semio_framework_job_worker::WorkerJobPoll::CheckedOut | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty => {}
             }
             return None;
         }
@@ -835,14 +834,14 @@ impl FrameBuildHandle {
             if session.generation() != generation {
                 crate::log_debug_once_per_transition("frame-session-generation", true, &format!("[TRACE] frame build superseded: session generation {:?} != requested {generation:?}", session.generation()));
                 self.cancel.cancel_now();
-                if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+                if !matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
                     let _ = session.begin_close();
                 }
             } else {
                 crate::log_debug_once_per_transition("frame-session-generation", false, "[TRACE] frame build session generation matches the requested one again");
             }
             let poll = match session.poll() {
-                semio_framework_job::WorkerJobPoll::Idle => match session.try_step_on_worker(self.retained) {
+                semio_framework_job_worker::WorkerJobPoll::Idle => match session.try_step_on_worker(self.retained) {
                     Ok((ticket, poll)) => {
                         self.ticket = Some(ticket);
                         poll
@@ -854,7 +853,7 @@ impl FrameBuildHandle {
             let mut presentation = None;
             let mut retire_session = false;
             match poll {
-                semio_framework_job::WorkerJobPoll::Outcome => {
+                semio_framework_job_worker::WorkerJobPoll::Outcome => {
                     if let Some(ticket) = self.ticket {
                         if let Ok(mut owner) = session.take_outcome(ticket) {
                             match receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress) {
@@ -865,7 +864,7 @@ impl FrameBuildHandle {
                         }
                     }
                 }
-                semio_framework_job::WorkerJobPoll::Terminal => {
+                semio_framework_job_worker::WorkerJobPoll::Terminal => {
                     if let Ok(mut owner) = session.take_terminal() {
                         if receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress).ok().flatten() != Some(JobOutcomeKind::Complete) { return None; }
                         let frame_generation = owner.job().generation;
@@ -874,11 +873,11 @@ impl FrameBuildHandle {
                         presentation = frame;
                     }
                 }
-                semio_framework_job::WorkerJobPoll::Closing => {
+                semio_framework_job_worker::WorkerJobPoll::Closing => {
                     let _ = session.close_step(self.retained);
                     retire_session = session.terminal_is_empty();
                 }
-                semio_framework_job::WorkerJobPoll::TerminalEmpty => retire_session = true,
+                semio_framework_job_worker::WorkerJobPoll::TerminalEmpty => retire_session = true,
                 _ => {}
             }
             if retire_session {
@@ -911,7 +910,7 @@ impl FrameBuildHandle {
                 self.rejected = None;
             }
         } else if let Some(session) = self.session.as_mut() {
-            if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+            if !matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
                 let _ = session.begin_close();
                 return false;
             }
@@ -942,7 +941,7 @@ impl FrameBuildHandle {
             return false;
         }
         if let Some(session) = self.session.as_mut() {
-            if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+            if !matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
                 let _ = session.begin_close();
                 return false;
             }

@@ -25,7 +25,7 @@ use std::sync::Mutex;
 /// patch before it is even applied to the shadow draft is cheaper than discovering the violation after.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct UiDocumentLimits {
     /// 📦️ Total live nodes in one surface. 20 000 comfortably covers the largest known tree (a fully
     /// expanded product tree view or timeline) with headroom, while still bounding a malicious
@@ -281,7 +281,7 @@ fn row_target_is_valid(record: &crate::UiNodeRecord) -> bool {
 /// shape property, never a per-patch wire quota (those are [`PatchRejection::QuotaExceeded`]).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[value(crate = "::protocol::value", tag = "type", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", tag = "type", rename_all = "camelCase")]
 #[expect(clippy::large_enum_variant, reason = "The fixed-capacity diagnostic census owns the bounded duplicate-key witness inline without per-violation allocation.")]
 pub enum UiContractViolation {
     CensusCapacity,
@@ -558,7 +558,7 @@ fn validate_core<'a>(
 /// wire event to explain itself and for the sender to resynchronise.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[value(crate = "::protocol::value", tag = "type", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", tag = "type", rename_all = "camelCase")]
 pub enum PatchRejection {
     AliasCapacity,
     StaleGeneration {
@@ -1363,7 +1363,7 @@ pub fn close_ui_patch_owner_one() -> bool {
 /// after the draft is built.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum QuotaKind {
     Children,
     TextBytes,

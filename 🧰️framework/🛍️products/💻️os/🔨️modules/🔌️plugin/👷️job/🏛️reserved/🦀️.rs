@@ -793,23 +793,23 @@ pub(crate) const RESERVED_OUTCOME_ACKNOWLEDGE_TURNS: usize = 8;
 /// has not landed yet all return an `Err` that says NOTHING about this job — the exact same set the
 /// mounted typed-operation path already answers with `AwaitingInput`. Faulting a framework-reserved
 /// route on them made every `interactionHover`/`interactionSelect` a coin flip against pool load.
-pub(crate) fn reserved_pump_fault_is_transient(fault: &semio_framework_job::MountedWorkerJobPumpFault) -> bool {
+pub(crate) fn reserved_pump_fault_is_transient(fault: &semio_framework_job_worker::MountedWorkerJobPumpFault) -> bool {
     matches!(
         fault,
-        semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Contention(_))
-            | semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated))
-            | semio_framework_job::MountedWorkerJobPumpFault::Take(semio_framework_job::WorkerJobTakeFault::Pending)
+        semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Contention(_))
+            | semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated))
+            | semio_framework_job_worker::MountedWorkerJobPumpFault::Take(semio_framework_job_worker::WorkerJobTakeFault::Pending)
     )
 }
 
 /// 🏷️ The exact rejection a structural pump fault carries, so the route's fault message names the
 /// transition it lost instead of a bare code.
-pub(crate) fn reserved_pump_fault_detail(fault: &semio_framework_job::MountedWorkerJobPumpFault) -> String {
+pub(crate) fn reserved_pump_fault_detail(fault: &semio_framework_job_worker::MountedWorkerJobPumpFault) -> String {
     match fault {
-        semio_framework_job::MountedWorkerJobPumpFault::Submit(submit) => format!("submit {submit:?}"),
-        semio_framework_job::MountedWorkerJobPumpFault::Take(take) => format!("take {take:?}"),
-        semio_framework_job::MountedWorkerJobPumpFault::MissingTicket => "submitted step lost its exact ticket".to_string(),
-        semio_framework_job::MountedWorkerJobPumpFault::CheckedOut => "outcome is already checked out".to_string(),
+        semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(submit) => format!("submit {submit:?}"),
+        semio_framework_job_worker::MountedWorkerJobPumpFault::Take(take) => format!("take {take:?}"),
+        semio_framework_job_worker::MountedWorkerJobPumpFault::MissingTicket => "submitted step lost its exact ticket".to_string(),
+        semio_framework_job_worker::MountedWorkerJobPumpFault::CheckedOut => "outcome is already checked out".to_string(),
     }
 }
 

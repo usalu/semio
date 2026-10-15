@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "owner": "semio-framework-job-worker",
+  "phases": [
+    {
+      "phase": 0,
+      "name": "transition",
+      "classification": "contention"
+    },
+    {
+      "phase": 1,
+      "name": "idle",
+      "classification": "contention"
+    },
+    {
+      "phase": 2,
+      "name": "submitted",
+      "classification": "contention"
+    },
+    {
+      "phase": 3,
+      "name": "outcome",
+      "classification": "contention"
+    },
+    {
+      "phase": 4,
+      "name": "terminal",
+      "classification": "contention"
+    },
+    {
+      "phase": 5,
+      "name": "rejected",
+      "classification": "contention"
+    },
+    {
+      "phase": 6,
+      "name": "checked-out",
+      "classification": "contention"
+    },
+    {
+      "phase": 7,
+      "name": "close",
+      "classification": "borrow"
+    },
+    {
+      "phase": 8,
+      "name": "empty",
+      "classification": "empty"
+    }
+  ],
+  "receipt": {
+    "before": [
+      4,
+      0,
+      224,
+      0
+    ],
+    "actual": [
+      1,
+      25029,
+      30144,
+      0
+    ],
+    "after": [
+      5,
+      25029,
+      30368,
+      0
+    ]
+  },
+  "initialStock": [
+    20000,
+    16777216,
+    16777216,
+    16777216,
+    128
+  ]
+}

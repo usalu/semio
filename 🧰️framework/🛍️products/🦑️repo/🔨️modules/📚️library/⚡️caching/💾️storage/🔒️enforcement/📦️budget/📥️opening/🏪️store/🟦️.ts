@@ -36,3 +36,9 @@ export async function withRepositoryCacheStoreV1<T>(workspace:string,id:Reposito
   const temporary=requireNativeStoragePathV1(image.root,join(image.root,"tmp"));await storage.recheck();mkdirSync(temporary,{recursive:true});checkResourceLeaseControl(control);const store=Object.freeze({root:image.root,storage,control,invocation,image,recheck:()=>storage.recheck(),environment:Object.freeze({...process.env,...(id==="diagnostics"?{SEMIO_DIAGNOSTIC_DIRECTORY:temporary}:{}),TMPDIR:temporary,TMP:temporary,TEMP:temporary})}),active=new Map(originalCacheStores.getStore());const scope={live:true,store};active.set(key,scope);try{return await originalCacheStores.run(active,()=>body(store));}finally{scope.live=false;}
  }finally{await image.close();}
 }
+
+/** 🏦️ Admits a new enforcing subdivision only while the entire parent image is actually quiescent. */
+export async function withRepositoryCacheStoreMaintenanceV1<T>(workspace:string,id:RepositoryCachePartitionIdV1,invocation:ScriptInvocation,body:(store:RepositoryCacheStoreV1)=>Promise<T>):Promise<T>{
+ const control=scriptCompilerAdmissionControlV1(invocation,"cache:"+id+"-storage-admission",0),image=await openRepositoryCachePartitionV1(workspace,id,control);
+ try{const result=await image.withExclusiveMaintenance({version:1,wait:false},async()=>{const storage=await repositoryCacheStoreReservationV1(workspace,id,image,control);let live=true;const store=Object.freeze({root:image.root,storage,control,invocation,image,recheck:async()=>{if(!live)throw Error("Original cache maintenance owner released");await storage.recheck();},environment:Object.freeze({...process.env})});try{await store.recheck();return await body(store);}finally{live=false;}});if(!result.acquired)throw Error("Quiescent pre-pin cache storage admission required");return result.value;}finally{await image.close();}
+}

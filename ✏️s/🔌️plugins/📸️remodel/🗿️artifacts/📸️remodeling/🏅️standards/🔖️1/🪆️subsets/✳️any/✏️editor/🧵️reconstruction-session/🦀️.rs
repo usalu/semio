@@ -7,6 +7,7 @@
 //! provisional `append-content` ops plus one `commit-reconstruction` op; nothing reaches the document before
 //! finalize. Source of record: `🔣️.json` beside this file.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images::BoundedDecodeProgress;
 use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images::BoundedStillDecoder;
 use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images::CompressedChunkRope;
@@ -46,7 +47,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SparseCloud;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::WatertightReportSnapshot;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DURABLE_CHUNK_RAW_BYTES;
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedJobPublication, StepContext};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, ValueError};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_tool_run::{

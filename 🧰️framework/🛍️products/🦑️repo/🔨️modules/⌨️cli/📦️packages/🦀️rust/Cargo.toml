@@ -45,5 +45,6 @@ semio-framework-repo-providers = { path = "../../../🧩️providers/📦️pack
 semio-framework-repo-events = { path = "../../../📡️events/📦️packages/🦀️rust" }
 semio-framework-repo-search = { path = "../../../🔎️search/📦️packages/🦀️rust" }
 semio-framework-repo-graphql = { path = "../../../🔗️graphql/📦️packages/🦀️rust" }
+semio-framework-repo-graphql-fs = { path = "../../../🔗️graphql/🗄️fs-context/📦️packages/🦀️rust" }
 semio-framework-repo-mcp = { path = "../../../🔌️mcp/📦️packages/🦀️rust" }
 semio-framework-repo-yaml = { path = "../../../🧾️yaml/📦️packages/🦀️rust" }

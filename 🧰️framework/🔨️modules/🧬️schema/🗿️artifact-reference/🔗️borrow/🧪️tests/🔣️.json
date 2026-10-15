@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "owner": "semio-framework-artifact-reference-borrow",
+  "sourceBoundary": {
+    "maxSourceBytes": 32768,
+    "maxSourceFiles": 4,
+    "maxActiveLines": 400
+  },
+  "cases": [
+    {
+      "kind": "s.test.member",
+      "accepted": true
+    },
+    {
+      "kind": "9.a.0",
+      "accepted": true
+    },
+    {
+      "kind": "s.a-b.member-1",
+      "accepted": true
+    },
+    {
+      "kind": "",
+      "accepted": false
+    },
+    {
+      "kind": "s.test",
+      "accepted": false
+    },
+    {
+      "kind": "s.test.member.extra",
+      "accepted": false
+    },
+    {
+      "kind": "S.test.member",
+      "accepted": false
+    },
+    {
+      "kind": "s.-test.member",
+      "accepted": false
+    },
+    {
+      "kind": "s.test-.member",
+      "accepted": false
+    },
+    {
+      "kind": "s.te--st.member",
+      "accepted": false
+    },
+    {
+      "kind": "s.te_st.member",
+      "accepted": false
+    },
+    {
+      "kind": "s.tést.member",
+      "accepted": false
+    },
+    {
+      "kind": "s.test.member\n",
+      "accepted": false
+    },
+    {
+      "kind": "s.test. member",
+      "accepted": false
+    },
+    {
+      "kind": "s.test.9",
+      "accepted": true
+    },
+    {
+      "kind": "s.0.1",
+      "accepted": true
+    }
+  ]
+}

@@ -602,7 +602,7 @@ pub mod artifact_app_laws {
         M: store::MemberFactory,
     {
         let snapshot = std::mem::ManuallyDrop::new(snapshot);
-        let projection = store::ChildRestoreProjection::from_snapshot(&*snapshot).map_err(|error| super::plugin_sdk_fault(format!("initial snapshot child projection failed: {error}")))?;
+        let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&*snapshot).map_err(|error| super::plugin_sdk_fault(format!("initial snapshot child projection failed: {error}")))?;
         let mut derived = 0;
         for index in 0..projection.len() {
             let Some((slot, fields)) = projection.get(index) else { break };
@@ -1729,7 +1729,7 @@ pub mod artifact_app_laws {
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
     {
         let Ok(snapshot) = app.snapshot() else { return Vec::new() };
-        let declared: Vec<(String, String)> = match store::ChildRestoreProjection::from_snapshot(&snapshot) {
+        let declared: Vec<(String, String)> = match semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot) {
             Ok(projection) => (0..projection.len()).filter_map(|index| projection.get(index)).map(|(slot, fields)| (slot.to_string(), fields.child_id.to_string())).collect(),
             Err(error) => vec![(String::from("projection"), error.to_string())],
         };
@@ -2381,7 +2381,7 @@ pub mod artifact_app_laws {
         type TransientMutation = super::NoTransientMutation;
         type Command = V::Command;
 
-        fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, super::Fault> {
+        fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, super::Fault> {
             V::child_restore_projection(snapshot)
         }
         fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {

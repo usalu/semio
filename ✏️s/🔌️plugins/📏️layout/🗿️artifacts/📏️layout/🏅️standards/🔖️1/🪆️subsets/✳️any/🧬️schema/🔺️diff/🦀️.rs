@@ -249,7 +249,7 @@ protocol::plain_list_delta! {
 
 /// 🧾️ One dictionary row keyed by its question; the forms crate owns the entry type, so the delta keys it through this wrapper.
 #[derive(Clone, Debug, PartialEq)]
-struct LayoutDataEntryRow(semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry);
+struct LayoutDataEntryRow(semio_framework_value_dictionary::QuestionDictionaryEntry);
 
 impl protocol::list_delta::Keyed for LayoutDataEntryRow {
     type Key = String;
@@ -271,7 +271,7 @@ pub struct LayoutDataEntryRemoval {
 #[value(rename_all = "camelCase")]
 pub struct LayoutDataEntryInsertion {
     pub index: usize,
-    pub row: semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry,
+    pub row: semio_framework_value_dictionary::QuestionDictionaryEntry,
 }
 
 /// ↕️ One `entries` row moved from its base index to its index in the resulting list.
@@ -313,7 +313,7 @@ impl LayoutDataEntriesDelta {
     }
 
     /// ➕️ The delta that inserts `row` at `index` of the after list.
-    pub fn insertion(index: usize, row: semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry) -> Self {
+    pub fn insertion(index: usize, row: semio_framework_value_dictionary::QuestionDictionaryEntry) -> Self {
         Self::from_parts(protocol::list_delta::Parts::insertion(index, LayoutDataEntryRow(row)))
     }
 
@@ -328,13 +328,13 @@ impl LayoutDataEntriesDelta {
     }
 
     /// ✍️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
-    pub fn commit_onto(&self, base: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry], capability: ApplyCapability) -> Result<Vec<semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry>, protocol::list_delta::ApplyError> {
+    pub fn commit_onto(&self, base: &[semio_framework_value_dictionary::QuestionDictionaryEntry], capability: ApplyCapability) -> Result<Vec<semio_framework_value_dictionary::QuestionDictionaryEntry>, protocol::list_delta::ApplyError> {
         let rows = base.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<LayoutDataEntryRow>>();
         Ok(self.clone().into_parts().commit_onto(&rows, capability)?.into_iter().map(|row| row.0).collect())
     }
 
     /// 🔁️ The negative delta over `base`, read row by row.
-    pub fn inverse(&self, base: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry]) -> Self {
+    pub fn inverse(&self, base: &[semio_framework_value_dictionary::QuestionDictionaryEntry]) -> Self {
         let rows = base.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<LayoutDataEntryRow>>();
         Self::from_parts(self.clone().into_parts().inverse(&rows))
     }
@@ -971,8 +971,8 @@ pub fn page_override_rows(held: &[PageOverride], payload: &[PageOverride]) -> Pa
 }
 
 /// 🎯️ The dictionary rows that turn the held entries into the payload entries.
-pub fn data_entry_rows(held: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry], payload: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry]) -> LayoutDataEntriesDelta {
-    let wrap = |rows: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry]| rows.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<_>>();
+pub fn data_entry_rows(held: &[semio_framework_value_dictionary::QuestionDictionaryEntry], payload: &[semio_framework_value_dictionary::QuestionDictionaryEntry]) -> LayoutDataEntriesDelta {
+    let wrap = |rows: &[semio_framework_value_dictionary::QuestionDictionaryEntry]| rows.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<_>>();
     LayoutDataEntriesDelta::from_parts(payload_parts(&wrap(held), &wrap(payload)))
 }
 //#endregion 🔖️PayloadRows
@@ -989,14 +989,14 @@ macro_rules! absorb_lists {
 }
 
 impl LayoutDiff {
-    fn apply_data_fields(&self, base: &Option<semio_s_artifact_forms_forms::schema::dictionary::FormDictionary>, capability: ApplyCapability) -> MutationApplyResult<Option<semio_s_artifact_forms_forms::schema::dictionary::FormDictionary>> {
+    fn apply_data_fields(&self, base: &Option<semio_framework_value_dictionary::QuestionDictionary>, capability: ApplyCapability) -> MutationApplyResult<Option<semio_framework_value_dictionary::QuestionDictionary>> {
         let Some(delta) = &self.data_fields else { return Ok(base.clone()) };
         let entries = delta.entries.clone().unwrap_or_default();
-        let commit = |held: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry]| entries.commit_onto(held, capability).map_err(|error| error.under(["dataFields", "entries"]));
+        let commit = |held: &[semio_framework_value_dictionary::QuestionDictionaryEntry]| entries.commit_onto(held, capability).map_err(|error| error.under(["dataFields", "entries"]));
         Ok(match (base, delta.presence) {
             (_, Some(DataFieldsPresence::Deleted)) => None,
-            (None, Some(DataFieldsPresence::Created)) | (Some(_), Some(DataFieldsPresence::Replaced)) | (None, Some(DataFieldsPresence::Replaced)) => Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary { entries: commit(&[])? }),
-            (Some(dictionary), _) => Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary { entries: commit(&dictionary.entries)? }),
+            (None, Some(DataFieldsPresence::Created)) | (Some(_), Some(DataFieldsPresence::Replaced)) | (None, Some(DataFieldsPresence::Replaced)) => Some(semio_framework_value_dictionary::QuestionDictionary { entries: commit(&[])? }),
+            (Some(dictionary), _) => Some(semio_framework_value_dictionary::QuestionDictionary { entries: commit(&dictionary.entries)? }),
             (None, None) => {
                 if entries.is_empty() {
                     None

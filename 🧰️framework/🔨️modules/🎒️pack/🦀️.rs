@@ -1,23 +1,10 @@
-//! 📦️ `pack` — the facade crate for the `pack` binary document format family: re-exports the
-//! full public surface of `pack_core`, `pack_format`, `pack_value`, `pack_io` (native-only,
-//! cfg-gated out on `wasm32`), `pack_async`, `pack_http`, and `pack_index` under one crate so
-//! downstream callers (`vcs`, `dsl_derive`, apps) depend on a single `pack = { path = ... }`
-//! rather than seven. Also exposes three top-level convenience functions —
-//! `encode_document`/`decode_document`/`content_hash` — that are thin forwards onto
-//! `pack_value`/`pack_format`.
-//!
-//! See the `## pack (facade)` section of the wave-0 contract at
-//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`. This crate does
-//! NOT re-export `dsl_schema` itself as `crate::dsl_schema` — callers pass in
-//! `&os_dsl::schema::RecordSpec`/`&os_dsl::schema::RecordValue` they already depend on directly.
+//! 📦️ Pack document operations and format exports. Byte sources and sinks belong to
+//! `semio-framework-pack-source`, shared directly with record streams and storage.
 
 //#region 🔖️Reexports
 
 //#region 🔖️Core
-pub use crate::{
-    crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
-    SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
-};
+pub use crate::{crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS, };
 
 /// 🆔️ Computes the canonical pack content identity for `bytes`.
 pub fn content_hash(bytes: &[u8]) -> ContentHash {

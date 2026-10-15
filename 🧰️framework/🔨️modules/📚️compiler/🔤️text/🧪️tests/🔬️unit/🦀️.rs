@@ -2,15 +2,15 @@
 use super::*;
 
 fn math_font_bytes() -> &'static [u8] {
-    crate::world::embedded_fonts().math
+    crate::world::tests::test_fonts().math
 }
 
 fn serif_font_bytes() -> &'static [u8] {
-    crate::world::embedded_fonts().serif
+    crate::world::tests::test_fonts().serif
 }
 
 #[test]
-fn loads_embedded_fonts_and_reports_sane_metrics() {
+fn loads_font_assets_and_reports_sane_metrics() {
     let font = Font::from_bytes(math_font_bytes(), 0).expect("parse Libertinus Math");
     assert!(font.units_per_em() >= 1000, "unexpected units_per_em: {}", font.units_per_em());
     assert!(font.ascender() > 0);
@@ -69,7 +69,7 @@ fn math_stretch_variants_exist_for_parenthesis_on_the_math_font() {
 
 #[test]
 fn glyph_raster_image_extracts_a_png_from_the_emoji_font() {
-    let font_bytes = crate::world::embedded_fonts().emoji;
+    let font_bytes = crate::world::tests::test_fonts().emoji;
     let font = Font::from_bytes(font_bytes, 0).expect("parse Noto Color Emoji subset");
     // U+1F680 ROCKET must be present — the subset was curated for exactly this kind of usage.
     let id = font.glyph_index('🚀').expect("emoji subset must cover the rocket emoji");

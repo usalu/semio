@@ -798,10 +798,10 @@ where
         self.members.entry_by_ordinal(index).map(|entry| &entry.owner)
     }
 
-    fn child_projection(&self, parent: Option<usize>) -> Result<store::ChildRestoreProjection<'_>, store::ChildRestoreProjectionError> {
+    fn child_projection(&self, parent: Option<usize>) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_composition_admission::ChildRestoreProjectionError> {
         match parent {
-            None => store::ChildRestoreProjection::from_snapshot(self.root_snapshot),
-            Some(index) => self.members.entry_by_ordinal(index).ok_or(store::ChildRestoreProjectionError::IncompleteSet)?.member.child_restore_projection(),
+            None => semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(self.root_snapshot),
+            Some(index) => self.members.entry_by_ordinal(index).ok_or(semio_framework_composition_admission::ChildRestoreProjectionError::IncompleteSet)?.member.child_restore_projection(),
         }
     }
 }

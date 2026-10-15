@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-pets-kinematics"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Pets numerical and kinematic ground: deterministic trigonometry in turns, counter-based randomness, the forward kinematics of a rig, animation (clips, springs, blinks) and terrain (perches, walls, strides, falls, hops). Pure functions only."
+
+[package.metadata.semio]
+role = "product"
+id = "pets-kinematics"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = { workspace = true, features = ["float_roundtrip"] }

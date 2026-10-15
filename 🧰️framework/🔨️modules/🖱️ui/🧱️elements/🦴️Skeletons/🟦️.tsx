@@ -10,7 +10,8 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
-import { WindowChrome, windowBodyFrameClass, windowChromeTitleChipClass } from "../../🎯️targets/⚛️react/🟦️.tsx";
+import { WindowChrome, windowChromeTitleChipClass } from "../🗂️WindowChrome/🟦️.tsx";
+import { windowBodyFrameClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { LevelProvider, SurfaceScope, useSurface } from "../🌈️Surface/🟦️.tsx";
 import { SceneSkeleton } from "../🎬️Scene/🟦️.tsx";
 // #endregion 🔌️Adapters

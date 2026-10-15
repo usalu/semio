@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/quiz-schema-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

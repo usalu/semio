@@ -1,6 +1,6 @@
 use super::*;
 
-const LIBRARY_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
+const LIBRARY_SOURCE: &str = crate::RENDERER_SOURCE;
 const BINARY_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs");
 const MANIFEST_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml");
 const WINT_APP_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
@@ -8,7 +8,7 @@ const OS_HOST_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🏠
 const GPU_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs");
 const DRAW_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs");
 const PREPARED_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs");
-const ENGINE_CANVAS_SOURCE: &str = include_str!("../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
+const ENGINE_CANVAS_SOURCE: &str = crate::engine_canvas::ENGINE_CANVAS_SOURCE;
 const DRAW_LAWS_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-draw-unit/🦀️.rs");
 
 /// 🩺️ LAW: a frame build that ends because its PREPARATION refused must name the refusal. Nothing
@@ -835,7 +835,7 @@ fn an_independent_decoder_job_preserves_its_exact_response_through_cancellation(
 const WORKER_SESSION_SATURATION_CHILD: &str = "SEMIO_RENDERER_WORKER_SESSION_SATURATION_CHILD";
 
 /// 🎟️ Session saturation returns the unchanged decoder response while rejected metadata closes separately. The law owns every
-/// process-wide [`semio_framework_job::WORKER_JOB_SESSION_SLOTS`] admission at once, so it runs alone in a child process of this
+/// process-wide [`semio_framework_job_worker::WORKER_JOB_SESSION_SLOTS`] admission at once, so it runs alone in a child process of this
 /// test binary: beside it, parallel laws of the same process admit sessions too — one lost race refused a neighbour's admission,
 /// the other dropped a rejected admission mid-unwind and aborted the whole binary.
 #[cfg(not(target_arch = "wasm32"))]
@@ -848,7 +848,7 @@ fn an_independent_decoder_job_recovers_its_response_from_an_exact_rejected_sessi
         assert!(output.status.success() && stdout.contains("test result: ok. 1 passed"), "the isolated saturation law passes alone: {stdout}{}", String::from_utf8_lossy(&output.stderr));
         return;
     }
-    use semio_framework_job::*;
+    use semio_framework_job::*;use semio_framework_job_worker::{WORKER_JOB_SESSION_SLOTS,WorkerJobSession};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
     struct Occupied;
     impl InteractiveJob for Occupied {
         fn step(&mut self, _: &mut StepContext<'_>) -> StepOutcome {

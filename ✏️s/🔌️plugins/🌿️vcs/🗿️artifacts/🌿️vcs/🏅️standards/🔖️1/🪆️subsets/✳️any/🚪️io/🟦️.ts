@@ -18,7 +18,7 @@ const JSON_DIALECT = "s.stdio.json@rfc8259/*";
 const CSV = "s.stdio.csv@rfc4180/*";
 const XLSX = "s.stdio.xlsx@ecma-376/*";
 const ZIP = "s.stdio.zip@2.0/*";
-const TXT = "s.stdio.txt@utf-8/*";
+const TXT = "framework.io.text@utf-8/*";
 
 export const ioEntries: IoEntryDescriptorMirror[] = [
   { from: VCS, into: JSON_DIALECT, fidelity: "Exact", sniffs: false },

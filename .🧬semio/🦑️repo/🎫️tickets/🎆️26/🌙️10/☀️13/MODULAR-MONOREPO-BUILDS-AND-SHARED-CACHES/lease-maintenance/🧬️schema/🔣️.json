@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["version","layout","catalog","resource","reserveBytes"],"properties":{"version":{"const":1},"layout":{"const":"resource-lease-proof-retention-v1"},"catalog":{"const":"queue-claim-catalog"},"resource":{"const":"real-retained-claim"},"reserveBytes":{"const":4194304}}}

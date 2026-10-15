@@ -7,7 +7,7 @@ import {consumeOwnerArgumentsV1} from "../../../🏗️build/📤️arguments/�
 import {nativeOwnerTestManifestRequestV1} from "./🗺️owner-test-manifests/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { BundleScript, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { advanceScriptInvocation, scriptInvocationEnvironment } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readNativeOwnerCapabilities } from "./📥️invocation/🟦️.ts";
@@ -41,7 +41,7 @@ export class CargoRelayScript extends BundleScript {
     const budgetMs = Number(process.env[CARGO_RELAY_BUDGET_ENV] ?? 0);
     try {
       const control=scriptCompilerAdmissionControlV1(this.invocation,"cargo:relay",scriptInvocationBudget(this.invocation,budgetMs));
-      process.exitCode = await withRepositoryCompilerStoreV1(this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),control,process.env,store=>withRepositoryCargoInputsV1({workspace:this.repoRoot,manifest:cargoInvocationManifestV1(args,process.cwd()),args,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),control,storage:store.storage,environment:store.environment},environment=>cargoStreamingStatus(args,process.cwd(),environment,{invocation:this.invocation,storage:store.storage,sourceBoundary:store.sourceBoundary,policy:{...repositoryCargoArtifactBuildPolicyV1(process.cwd(),this.repoRoot,store.environment),buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory,budgetMs:scriptInvocationBudget(this.invocation,budgetMs)}})));
+      process.exitCode = await withRepositoryCompilerStoreV1(this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),control,process.env,store=>withRepositoryCargoInputsV1({workspace:this.repoRoot,cwd:process.cwd(),manifest:cargoInvocationManifestV1(args,process.cwd()),args,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),control,storage:store.storage,environment:store.environment},environment=>cargoStreamingStatus(args,process.cwd(),environment,{invocation:this.invocation,storage:store.storage,sourceBoundary:store.sourceBoundary,policy:{...repositoryCargoArtifactBuildPolicyV1(process.cwd(),this.repoRoot,store.environment),buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory,budgetMs:scriptInvocationBudget(this.invocation,budgetMs)}})));
     } catch (error) {
       console.error(error instanceof Error ? error.message : String(error));
       process.exitCode = 1;

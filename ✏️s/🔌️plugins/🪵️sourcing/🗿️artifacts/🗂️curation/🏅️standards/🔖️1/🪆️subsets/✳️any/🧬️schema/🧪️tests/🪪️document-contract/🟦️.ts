@@ -1,10 +1,9 @@
 import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
-import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
+import { assertDocumentContractOracle, declaredChildDialectSchema } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
 import ioSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
-import semioChildSchema from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
@@ -13,6 +12,7 @@ import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
 import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json" with { type: "json" };
 
+const semioChildSchema = declaredChildDialectSchema("https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json", childSchema.$id, {kit: { artifactKind: "s.stdio.semio", standard: "v1", subset: "kit" }});
 /** 🪪️ Curation owns catalog content references and rejects editor settings in documents. */
 export function testCurationDocumentContractOracle(): void {
   for (const catalog of vectors.invalidChildren) assert.throws(() => artifact.parseCurationArtifact({ ...vectors.document, catalog }));

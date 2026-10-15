@@ -10,7 +10,7 @@ use semio_framework_plugin::ExampleSource;
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use std::sync::OnceLock;
 
-/// 🎯️ `s.stdio.txt@utf-8/*` — `CARRIER_TEXT` in `semio_framework::io_schema`.
+/// 🎯️ `s.stdio.txt@utf-8/*` — this artifact's own dialect; its native `Text` payload equals the framework carrier `CARRIER_TEXT`.
 pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

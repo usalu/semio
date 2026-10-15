@@ -1,4 +1,3 @@
-// @vitest-environment node
 // #region 🧲️Header
 /** 🌐️ Vite plugins serving the asset-owned `/🖼️assets/*` namespace. */
 // #endregion 🧲️Header
@@ -1561,10 +1560,4 @@ export const STATIC_DIRECTORY_ASSET_PROVIDER_V1: AssetDeliveryProviderV1 = Objec
   plugins: (context, declaration) => staticDirVitePlugin(context.root, admitBuildAssetSpecV1(declaration, "StaticDirectoryAssetSpecV1")),
 });
 
-if (import.meta.vitest) {
-  const { createAssetHttpServerV1, createAssetBuildPluginsV1, resolveAssetDeliveryModeV1 } = await import("../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts");
-  const { MESH_DELIVERY_CATALOG } = await import("../../../../🖼️assets/🥽️mesh/📇️catalog/🟦️.ts");
-  const { registerTests1 } = await import("../../🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts");
-  await registerTests1(import.meta.vitest, { MESH_DELIVERY_CATALOG, TILE_PROXY_ASSET_PROVIDER_V1, MESH_COLLECTION_ASSET_PROVIDER_V1, STATIC_DIRECTORY_ASSET_PROVIDER_V1, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createWorkspaceViteResolveConfig, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, meshCollectionVitePlugin, createAssetBuildPluginsV1, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, resolveAssetDeliveryModeV1, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, createAssetHttpServerV1, staticDirVitePlugin, statusSurfaceHtml, tileProxyVitePlugin }, { directory: import.meta.dir, url: import.meta.url });
-}
 //#endregion 🔖️ViteElementsAssets

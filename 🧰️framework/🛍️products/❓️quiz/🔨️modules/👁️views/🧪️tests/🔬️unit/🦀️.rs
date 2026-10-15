@@ -7,8 +7,8 @@ use crate::challenge::{points, HINTS_PER_TASK};
 use crate::lifecycle::tests::{catalog, command_start_at, fold, id, perfect, play_perfect, play_perfect_at, quizzes, registered, step, ALICE, BOB, REVISION, RUN};
 use crate::lifecycle::{decide_learner, empty_learner_state, LearnerContext};
 use crate::randomness::run_seed;
-use crate::schema::{Answer, ClassificationAnswer, Command, CompareHint, Event, Identity, ProfileHint, RunResult, SheetTask, SortingAnswer, TaskKind, Verdict, CHALLENGES, DEFAULT_LIMITS, LEADERBOARD_PERIODS};
 use crate::sheet::tests::{matching, quiz, text};
+use quiz_schema::{Answer, ClassificationAnswer, Command, CompareHint, Event, Identity, ProfileHint, RunResult, SheetTask, SortingAnswer, TaskKind, Verdict, CHALLENGES, DEFAULT_LIMITS, LEADERBOARD_PERIODS};
 
 fn submitted_at(state: &mut LearnerState, run: &str, quiz: &str, challenge: Challenge, score: f64, at: Timestamp) {
     for event in [
@@ -395,7 +395,7 @@ fn leaderboard_rows_never_carry_the_learner_id_and_ties_break_by_the_hidden_id()
 #[test]
 fn shared_learner_and_run_views_of_the_python_reference_hold() {
     use crate::lifecycle::tests::replay;
-    use crate::schema::tests::{assert_close, entries, fixture, json, typed};
+    use quiz_schema::testkit::{assert_close, entries, fixture, json, typed};
     let vectors = fixture("learner-lifecycle");
     let quizzes: Vec<Quiz> = entries(&vectors["quizzes"]).iter().map(typed).collect();
     let catalog = catalog_view(&typed(&vectors["catalog"]), &quizzes);
@@ -411,7 +411,7 @@ fn shared_learner_and_run_views_of_the_python_reference_hold() {
 
 #[test]
 fn shared_leaderboards_of_the_python_reference_hold() {
-    use crate::schema::tests::{assert_close, entries, fixture, json, typed};
+    use quiz_schema::testkit::{assert_close, entries, fixture, json, typed};
     let vectors = fixture("leaderboard");
     let quizzes: Vec<Quiz> = entries(&vectors["quizzes"]).iter().map(typed).collect();
     let catalog = catalog_view(&typed(&vectors["catalog"]), &quizzes);
@@ -442,7 +442,7 @@ fn shared_leaderboards_of_the_python_reference_hold() {
 
 #[test]
 fn shared_windows_of_the_python_reference_hold() {
-    use crate::schema::tests::{entries, fixture, json};
+    use quiz_schema::testkit::{entries, fixture, json};
     for vector in entries(&fixture("leaderboard")["windows"]) {
         for period in LEADERBOARD_PERIODS {
             let name = json(&period).as_str().unwrap_or_default().to_string();
@@ -453,7 +453,7 @@ fn shared_windows_of_the_python_reference_hold() {
 
 #[test]
 fn shared_cuts_of_the_python_reference_hold() {
-    use crate::schema::tests::{assert_close, entries, fixture, typed};
+    use quiz_schema::testkit::{assert_close, entries, fixture, typed};
     let vectors = fixture("leaderboard");
     let quizzes: Vec<Quiz> = entries(&vectors["quizzes"]).iter().map(typed).collect();
     let catalog = catalog_view(&typed(&vectors["catalog"]), &quizzes);
@@ -561,7 +561,7 @@ fn classified(items: &[(&str, &str)]) -> TaskResult {
     TaskResult::Classification {
         task: "standards".to_string(),
         score: 0.0,
-        items: items.iter().map(|(item, assigned)| crate::schema::ClassificationItemResult { item: (*item).to_string(), assigned: Some((*assigned).to_string()), correct: "old".to_string(), credit: 0.0, explanation: None }).collect(),
+        items: items.iter().map(|(item, assigned)| quiz_schema::ClassificationItemResult { item: (*item).to_string(), assigned: Some((*assigned).to_string()), correct: "old".to_string(), credit: 0.0, explanation: None }).collect(),
     }
 }
 
@@ -642,7 +642,7 @@ fn the_crowd_mixes_every_challenge_counts_guesses_under_authored_values_and_leav
     let unanswered = TaskResult::Classification {
         task: "standards".to_string(),
         score: 0.25,
-        items: [("a", Some("low")), ("b", None), ("c", Some("old")), ("d", None)].iter().map(|(item, assigned)| crate::schema::ClassificationItemResult { item: (*item).to_string(), assigned: assigned.map(str::to_string), correct: "old".to_string(), credit: 0.0, explanation: None }).collect(),
+        items: [("a", Some("low")), ("b", None), ("c", Some("old")), ("d", None)].iter().map(|(item, assigned)| quiz_schema::ClassificationItemResult { item: (*item).to_string(), assigned: assigned.map(str::to_string), correct: "old".to_string(), credit: 0.0, explanation: None }).collect(),
     };
     let at = |challenge: Challenge, score: f64, tasks: Vec<TaskResult>| RunResult { quiz: "energy".to_string(), challenge, score, points: points(score, challenge), tasks };
     let results = [
@@ -786,7 +786,7 @@ fn the_crowd_bins_run_task_and_dimension_scores_of_the_first_task_result_and_pla
 
 #[test]
 fn shared_crowd_views_of_the_python_reference_hold() {
-    use crate::schema::tests::{assert_close, entries, fixture, json, typed};
+    use quiz_schema::testkit::{assert_close, entries, fixture, json, typed};
     let vectors = fixture("crowd-view");
     let quizzes: Vec<Quiz> = entries(&vectors["quizzes"]).iter().map(typed).collect();
     for vector in entries(&vectors["vectors"]) {

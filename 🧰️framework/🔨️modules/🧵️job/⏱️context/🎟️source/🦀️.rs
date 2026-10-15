@@ -1,6 +1,7 @@
 //! 🧳️ Genuine parent roots stay in one strong source while static children borrow actual incoming turns.
 use super::*;
-use semio_framework_value::{RetirementDemand,RetainedCloneStep,retirement::{RetireOwned,RetirementCursor,RetirementStep,shared::sealed::{SealedShared,SharedIssuer}}};
+use semio_framework_value::{RetirementDemand,RetainedCloneStep,retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+use semio_framework_value_shared_issuance::{SealedShared,SharedIssuer};
 
 struct SourceRoots{authority:JobPayloadAuthority,cancel:CancelToken}
 impl SourceRoots{fn issuer()->SharedIssuer<Self>{let mut issuer=SharedIssuer::owned();issuer.transfer_copy_bytes=|_|0;issuer}}
@@ -31,6 +32,7 @@ pub struct OriginalCallerSourceParent{original:ManuallyDrop<Option<SealedShared<
 impl OriginalCallerSourceParent{
  /// 🪪️ Stable paid source identity survives moves of its original parent or borrowed wrapper.
  pub fn source_identity(&self)->Result<usize,ValueError>{Ok(self.original.as_ref().ok_or_else(||refused("original source identity has entered physical retirement"))?.identity())}
+ pub fn payload_authority_identity(&self)->Result<OriginalPayloadSourceIdentity,ValueError>{self.original.as_ref().and_then(|source|source.get().authority.identity()).ok_or_else(||refused("original payload source identity has entered physical retirement"))}
  pub fn cancellation(&self)->Result<&CancelToken,ValueError>{Ok(&self.original.as_ref().ok_or_else(||refused("original parent cancellation has entered physical retirement"))?.get().cancel)}
  pub fn admission_demand()->RetirementDemand{RetirementDemand{capacity_bytes:SealedShared::<SourceRoots>::birth_bytes(),depth:1,..Default::default()}}
  pub fn admit(authority:JobPayloadAuthority,cancel:CancelToken,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,JobPayloadAuthority,CancelToken)>{if authority.terminal_is_empty(){return Err((refused("original parent requires its live paid payload source"),authority,cancel))}match SealedShared::admit(SourceRoots{authority,cancel},SourceRoots::issuer(),grant){Ok((original,progress))=>Ok((Self{original:ManuallyDrop::new(Some(original)),retiring:ManuallyDrop::new(None),borrowed_cancel:false,borrowed_source:false,lending_open:true,clock_authority:None},progress)),Err((error,roots))=>Err((error,roots.authority,roots.cancel))}}
@@ -70,6 +72,4 @@ fn cancel_refusal(error:CancelTokenRetirementError)->ValueError{match error{Canc
 #[path="👶️child/🦀️.rs"]
 mod child_source;
 pub use child_source::{OriginalCallerChildSource,OriginalChildTurnReturn};
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

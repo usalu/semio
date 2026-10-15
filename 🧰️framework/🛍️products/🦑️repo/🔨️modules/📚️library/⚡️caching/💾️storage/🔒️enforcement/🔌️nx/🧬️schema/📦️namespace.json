@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.caching/NxFundedNamespaceV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "workspaceRoot",
+    "graphIdentity",
+    "watcherIdentity",
+    "implementationIdentity"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "workspaceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "watcherIdentity": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        }
+      ]
+    },
+    "graphIdentity": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      ]
+    },
+    "implementationIdentity": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

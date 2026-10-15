@@ -839,7 +839,7 @@ impl ArtifactEditor for SourcingCurationApp {
     const DIALECT: Dialect = crate::SOURCING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         crate::curation_child_restore_projection(snapshot)
     }
 

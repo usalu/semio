@@ -20,7 +20,7 @@ import { buildRepositoryCargoArtifacts } from "../../../🦑️repo/🔨️modul
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runCargo(["test", "-p", "semio-framework-server", ...rest], this.repoRoot);
+    runCargo(["test", ...["server", "server-contract", "server-storage", "server-policy", "server-authority", "server-throttle"].flatMap(name => ["-p", `semio-framework-${name}`]), ...rest], this.repoRoot);
     runCargo(["check", "-p", "semio-framework-server", "--features", "conformance"], this.repoRoot);
   }
 }

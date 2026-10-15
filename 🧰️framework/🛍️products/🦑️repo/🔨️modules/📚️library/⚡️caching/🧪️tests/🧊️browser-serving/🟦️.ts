@@ -26,14 +26,14 @@ export async function testWgpuBrowserServing(workspace: string, output: string, 
   try {
     for (const profile of fixture.profiles) {
       const app = join(root, profile), publicRoot = join(app, "public"), config = join(app, "⚙️vite.config.ts");
-      const roots = Object.fromEntries(["boot", "library", "worker", "compiler", "modules", "extensions"].map(name => [name, join(app, name)]));
+      const roots = Object.fromEntries(["boot", "library", "worker", "compiler", "modules", "extensions", "fonts"].map(name => [name, join(app, name)]));
       const reloadFile = join(roots.modules, "reload.json");
       for (const route of fixture.routes) { put(join(roots[route.root], route.file), route.content); put(join(publicRoot, decodeURI(route.url)), route.content); }
       const wasm = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);
       writeFileSync(join(roots.compiler, "semio-framework-os-renderer-wgpu-component_bg.wasm"), wasm);
       put(reloadFile, "0");
       copyFileSync(template, join(app, "🌐️.html"));
-      put(config, 'import { createWgpuBrowserConfig } from ' + JSON.stringify(implementation) + ';\nexport default () => createWgpuBrowserConfig(' + JSON.stringify({ catalog: { version: 1, targets: [], hosts: [], playgrounds: [] }, workspace: root, root: app, profile, compilerRoot: roots.compiler, moduleRoot: roots.modules, extensionRoot: roots.extensions, bootRoot: roots.boot, libraryRoot: roots.library, workerRoot: roots.worker, reloadFile, assets: [], assetServeMode: "fetch" }) + ');\n');
+      put(config, 'import { createWgpuBrowserConfig } from ' + JSON.stringify(implementation) + ';\nexport default () => createWgpuBrowserConfig(' + JSON.stringify({ catalog: { version: 1, targets: [], hosts: [], playgrounds: [] }, workspace: root, root: app, profile, compilerRoot: roots.compiler, moduleRoot: roots.modules, extensionRoot: roots.extensions, bootRoot: roots.boot, libraryRoot: roots.library, workerRoot: roots.worker, fontRoot: roots.fonts, reloadFile, assets: [], assetServeMode: "fetch" }) + ');\n');
       const controller = new AbortController();
       let ready!: (url: string) => void;
       const readiness = new Promise<string>(resolve => ready = resolve);

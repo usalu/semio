@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -1794,7 +1795,7 @@ async function runAuthoredSurfaceOracle(repoRoot: string, output: string): Promi
   const shader = await readFile(join(shaderDirectory, "world3d-authored.wgsl"), "utf8");
   const mipShader=await readFile(join(shaderDirectory,"raster-mip.wgsl"),"utf8");
   const typescript = await import("typescript");
-  const materialSource = await readFile(join(engine, "🧱️elements/🌐️World3dHost/🟦️.tsx"), "utf8");
+  const materialSource = readModuleTreeSource(join(engine, "🧱️elements/🌐️World3dHost/🟦️.tsx"));
   const syntax = typescript.createSourceFile("World3dHost.tsx", materialSource, typescript.ScriptTarget.Latest, true, typescript.ScriptKind.TSX);
   const declarations = syntax.statements.filter((statement) => typescript.isFunctionDeclaration(statement) && ["surfaceTuple", "worldSurfaceMaterial"].includes(statement.name?.text ?? ""));
   if (declarations.length !== 2) throw new Error("Production material constructor declarations were not found");

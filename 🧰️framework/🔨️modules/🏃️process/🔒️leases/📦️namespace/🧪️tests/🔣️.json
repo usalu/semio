@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "operation": "create-file",
+      "allowed": false
+    },
+    {
+      "operation": "create-directory",
+      "allowed": false
+    },
+    {
+      "operation": "rename-parent",
+      "allowed": false
+    },
+    {
+      "operation": "existing-read",
+      "allowed": true
+    },
+    {
+      "operation": "existing-shared",
+      "allowed": true
+    },
+    {
+      "operation": "existing-exclusive",
+      "allowed": true
+    },
+    {
+      "operation": "existing-capped-pragma",
+      "allowed": true
+    }
+  ],
+  "oldOpener": {
+    "existingOriginal": true,
+    "conflict": true,
+    "newCreation": false,
+    "uninitializedPublish": false,
+    "sameInode": true
+  },
+  "queuedOpener": {
+    "heldRelease": true,
+    "pendingContinuation": true,
+    "lateCreation": false,
+    "sameInode": true
+  },
+  "catalogBarrier": {
+    "preopenedReaderBlocksCatalog": true,
+    "activeBodyBlocksRetirement": true,
+    "retiredClosedInode": true,
+    "replacementDistinctInode": true
+  },
+  "nestedPin": {
+    "waiterReleasesCatalog": true,
+    "newResourceCompletesWhileAIsHeld": true,
+    "retirementRefusedByPin": true,
+    "waiterSettlesAfterA": true,
+    "stableGuardInode": true
+  },
+  "reserveTransition": {
+    "sameReserveInode": true,
+    "oldRetainerRefusedBeforeWrite": true,
+    "initializedHolderReleased": true,
+    "initializedWaiterSettled": true,
+    "lateOlderAdmissionRefused": true
+  },
+  "fullJournal": {
+    "actualFullRefusedMutation": true,
+    "originalRowsPreserved": true,
+    "sameReserveInode": true,
+    "twoJournalsWithinBound": true,
+    "commitAfterRecovery": true,
+    "reserveRestoredAtFull": true,
+    "sameGuardInodes": true,
+    "independentRowsConfirmed": true
+  },
+  "oldPendingRefusal": {
+    "uninitializedTargetRefused": true,
+    "uninitializedTargetInodePreserved": true,
+    "initializedClaimReleased": true,
+    "missingForeignClaimRefused": true,
+    "replayedTicketNotGranted": true,
+    "ownArrivalRemovedAfterRefusal": true
+  }
+}

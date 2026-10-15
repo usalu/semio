@@ -1,7 +1,7 @@
 //#region 🧬️OwnedValidation
 import { NumericIndex, type NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import type { UiContractViolation, UiDocumentLimits } from "../../../../🛂️manifest/🟦️.ts";
-import { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../🟦️.ts";
+import { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../🧮️tables/🟦️.ts";
 import { OwnedUiNodeIndex, type OwnedUiNodeIndexReader, type OwnedUiNodeIndexRetirement } from "../🗂️nodes/🟦️.ts";
 import type { OwnedUiNode, RetainedUiNodeRecord, UiNodeRetirement } from "../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";

@@ -3,22 +3,126 @@
     "resource": "nx-tooling-provision",
     "activationResource": "nx-tooling-activation",
     "activationWaitMilliseconds": 150,
-    "request": {"version":1,"minimumAvailableBytes":1610612736},
+    "request": {
+      "version": 1,
+      "minimumAvailableBytes": 1610612736
+    },
     "cases": [
-      {"availableBytes":1610612735,"expected":false},
-      {"availableBytes":1610612736,"expected":true},
-      {"availableBytes":2147483648,"expected":true}
+      {
+        "availableBytes": 1610612735,
+        "expected": false
+      },
+      {
+        "availableBytes": 1610612736,
+        "expected": true
+      },
+      {
+        "availableBytes": 2147483648,
+        "expected": true
+      }
     ],
     "invalidRequests": [
-      {"version":1,"minimumAvailableBytes":0},
-      {"version":1,"minimumAvailableBytes":2147483649},
-      {"version":1,"minimumAvailableBytes":1610612736,"ignoreLiveReaders":true}
+      {
+        "version": 1,
+        "minimumAvailableBytes": 0
+      },
+      {
+        "version": 1,
+        "minimumAvailableBytes": 2147483649
+      },
+      {
+        "version": 1,
+        "minimumAvailableBytes": 1610612736,
+        "ignoreLiveReaders": true
+      }
+    ],
+    "intentCases": [
+      {
+        "publicationRequested": false,
+        "availableBytes": 0,
+        "admitted": true
+      },
+      {
+        "publicationRequested": true,
+        "availableBytes": 1610612735,
+        "admitted": false
+      },
+      {
+        "publicationRequested": true,
+        "availableBytes": 1610612736,
+        "admitted": true
+      }
     ]
   },
-  "arguments": ["two words", "", "literal$()", "single'quote"],
+  "arguments": [
+    "two words",
+    "",
+    "literal$()",
+    "single'quote"
+  ],
   "maximumElapsedMilliseconds": 5000,
   "publications": 2,
   "continuations": 2,
-  "refusedBudgets": [0, 0.5],
-  "commandLabels": ["nx:install", "nx:authorizers"]
+  "refusedBudgets": [
+    0,
+    0.5
+  ],
+  "commandLabels": [
+    "nx:install",
+    "nx:authorizers"
+  ],
+  "publicationScenarios": [
+    {
+      "name": "detached-success",
+      "callbackFailure": null,
+      "taskFailure": null,
+      "expectedFailure": null,
+      "events": [
+        "first:start",
+        "first:settled",
+        "second:start",
+        "second:settled"
+      ],
+      "detached": true
+    },
+    {
+      "name": "detached-writer-failure",
+      "callbackFailure": null,
+      "taskFailure": "writer-failure",
+      "expectedFailure": "writer-failure",
+      "events": [
+        "first:start",
+        "first:settled",
+        "second:start",
+        "second:settled"
+      ],
+      "detached": true
+    },
+    {
+      "name": "callback-and-writer-failure",
+      "callbackFailure": "callback-failure",
+      "taskFailure": "writer-failure",
+      "expectedFailure": "callback-failure",
+      "events": [
+        "first:start",
+        "first:settled",
+        "second:start",
+        "second:settled"
+      ],
+      "detached": true
+    },
+    {
+      "name": "awaited-reentrancy",
+      "callbackFailure": null,
+      "taskFailure": null,
+      "expectedFailure": null,
+      "events": [
+        "first:start",
+        "first:settled",
+        "second:start",
+        "second:settled"
+      ],
+      "detached": false
+    }
+  ]
 }

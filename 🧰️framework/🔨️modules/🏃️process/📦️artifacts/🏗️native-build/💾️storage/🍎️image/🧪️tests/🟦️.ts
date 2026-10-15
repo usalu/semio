@@ -65,7 +65,7 @@ export async function recoverOriginalFailedImageV1(directory:string,leaseDirecto
   if(state.allocations.length!==1||state.allocations[0]?.owner!=="nx:actual:publish"||state.allocations[0]?.kind!=="artifact-publication"||state.allocations[0]?.bytes!==67108864)throw Error("Exact original failed fixture allocation required");
   const policy:NativeStoragePolicyV1={version:1,root:image.root,leaseDirectory,capacityBytes:image.maximumPhysicalBytes,maximumWorkspaceBytes:image.maximumPhysicalBytes,maximumArtifactBytes:image.maximumPhysicalBytes},port=nativeStorageRetirementPortV1(actual,async()=>{for(const name of["workspace","cache","data","tmp","native"]){const path=requireNativeStoragePathV1(image.root,join(image.root,name));rmSync(path,{recursive:true,force:true});}}),allocation=await recoverNativeStorageReservationV1({policy,control,port,id:state.allocations[0]!.id});await allocation.retire();console.log("[DEBUG] Exact original failed Nx allocation physically retired without PID or age inference");
  });}finally{await image.close();}
- await retireNativeImageStorageV1({directory,leaseDirectory,control});
+ await retireNativeImageStorageV1({directory,leaseDirectory,filesystemBytes:receipt.filesystemBytes,maximumPhysicalBytes:receipt.maximumPhysicalBytes+1048576,control});
 }
 /** 🧪️ Qualifies concurrent shared reopen, durable crash charge and original physical release. */
 export async function proveSharedNativeImageStorageV1(directory:string,leaseDirectory:string,control:ResourceLeaseControl):Promise<void>{
@@ -82,7 +82,7 @@ export async function proveSharedNativeImageStorageV1(directory:string,leaseDire
   let state=nativeStorageStateV1();for(const line of readFileSync(join(first.root,"storage-events.jsonl"),"utf8").split("\n").filter(Boolean))state=nativeStorageEventV1(state,JSON.parse(line),policy.capacityBytes);
   if(nativeStorageUsedBytesV1(state)!==fixture.shared.remainingChargeBytes||state.allocations[0]?.phase!=="retiring")throw Error("Interrupted physical retirement lost charge");const recovered=await recoverNativeStorageReservationV1({policy,control,port,id:allocation.allocation.id});requireNativeStorageReservationV1(recovered,control);const stale=await recoverNativeStorageReservationV1({policy,control,port,id:allocation.allocation.id});acknowledged=true;await recovered.retire();let staleRefused=false;try{await stale.recheck();}catch(error){if(!(error instanceof Error)||!error.message.includes("no longer held"))throw error;staleRefused=true;}if(!staleRefused)throw Error("Retired durable allocation admitted stale writer");if(existsSync(path))throw Error("Original allocation still exists");
   await first.recheck();await second.recheck();console.log("[DEBUG] Shared1GiB image simultaneous original users; excess reservation refused; interrupted retirement retained734003200 bytes until original writer acknowledgement");
- }finally{await second?.close();await first.close();await retireNativeImageStorageV1({directory,leaseDirectory,control});}
+ }finally{await second?.close();await first.close();await retireNativeImageStorageV1(options);}
 }
 
 /** 🧪️ Qualifies real bounded writes and retained host image size using the original controller. */

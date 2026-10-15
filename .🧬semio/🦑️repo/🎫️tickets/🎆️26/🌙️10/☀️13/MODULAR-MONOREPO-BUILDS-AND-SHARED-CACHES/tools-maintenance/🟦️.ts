@@ -1,0 +1,26 @@
+import{test,expect}from"bun:test";
+import{readFileSync}from"node:fs";
+import{join,resolve}from"node:path";
+import ts from"typescript";
+import Ajv from"ajv";
+import fixture from"./fixture.json"with{type:"json"};
+import schema from"./schema.json"with{type:"json"};
+const root=resolve(import.meta.dir,"../../../../../../../.."),body=readFileSync(join(import.meta.dir,"📜️script.ts"),"utf8"),source=ts.createSourceFile("📜️script.ts",body,ts.ScriptTarget.Latest,true),calls=new Map<string,ts.CallExpression[]>();
+function visit(node:ts.Node){if(ts.isCallExpression(node)){const name=node.expression.getText(source);calls.set(name,[...(calls.get(name)??[]),node]);}ts.forEachChild(node,visit);}visit(source);
+test("tooling maintenance retains actual bounded storage and delegates authenticated retirement",()=>{
+ expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
+ for(const[name,count]of Object.entries(fixture.requiredCalls))expect(calls.get(name)?.length??0,name).toBe(count);
+ for(const name of fixture.forbiddenCalls)expect(calls.has(name),name).toBe(false);
+ for(const text of fixture.forbiddenSource)expect(body.includes(text),text).toBe(false);
+ expect(calls.get("withRepositoryToolingStoreV1")![0]!.arguments[1]?.getText(source)).toBe(fixture.original);
+ const retirement=calls.get("retireManagedToolingGenerationsV1")![0]!;
+ let conditional:ts.Node|undefined=retirement.parent;while(conditional&&!ts.isConditionalExpression(conditional))conditional=conditional.parent;
+ expect(conditional&&ts.isConditionalExpression(conditional)?conditional.condition.getText(source):undefined).toBe('command==="prune"');
+ expect(retirement.arguments[1]?.getText(source)).toBe(fixture.store);
+ expect(retirement.arguments[2]?.getText(source)).toBe("request");
+ const policy=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧬️schema/🔣️.json"),"utf8"));
+ expect(policy.definitions.Protocol.const.minimumInstallerAvailableBytes).toBe(fixture.minimumAvailableBytes);
+ expect(body).toContain("schema.definitions.Protocol.const.minimumInstallerAvailableBytes");
+ for(const command of fixture.commands)expect(body).toContain('"'+command+'"');
+ console.log("[DEBUG] Tooling maintenance uses the actual Original tools store and sole canonical retirement owner");
+});

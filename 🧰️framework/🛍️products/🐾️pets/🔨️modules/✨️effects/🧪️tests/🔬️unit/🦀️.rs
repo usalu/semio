@@ -5,9 +5,9 @@
 //! @see ../../🟦️.ts — the TypeScript twin, whose suite these tests follow
 
 use super::*;
-use crate::randomness::random_unit;
-use crate::schema::tests::{entries, fixture, number, typed};
-use crate::schema::DRIFTS;
+use semio_framework_pets_contract::schema::DRIFTS;
+use semio_framework_pets_contract::testkit::{entries, fixture, number, typed};
+use semio_framework_pets_kinematics::randomness::random_unit;
 use serde_json::Value;
 
 const SEED: u32 = 20_261_003;

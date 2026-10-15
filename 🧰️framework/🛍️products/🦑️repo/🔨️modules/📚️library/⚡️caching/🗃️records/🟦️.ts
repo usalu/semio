@@ -1,4 +1,4 @@
-import { closeSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
+import { closeSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { createHash, randomBytes } from "node:crypto";
 import { dirname, join, relative, resolve } from "node:path";
 
@@ -7,6 +7,7 @@ export const RECORD_STORE_FORMAT = 1;
 
 const RECORD_KEY = /^[0-9a-f]{64}$/u;
 const PACK_NAME = /^[0-9a-z]+-[0-9]+-[0-9a-f]{16}$/u;
+const PACK_TEMPORARY = /^[0-9a-z]+-[0-9]+-[0-9a-f]{16}\.(?:pack|idx)\.[0-9a-f]{8}\.tmp$/u;
 const ORPHAN_MS = 60 * 60 * 1000;
 const PENDING_FLUSH_BYTES = 64 * 1024 * 1024;
 
@@ -95,7 +96,14 @@ export function openRecordStore(directory: string, options:RecordStoreOptionsV1=
   const now = Date.now();
   for (const entry of readdirSync(root).sort()) {
     if (entry.endsWith(".tmp")) {
-      try { if (now - statSync(join(root, entry)).mtimeMs > ORPHAN_MS) removeQuietly(join(root, entry)); } catch {}
+      if(options.publication&&!PACK_TEMPORARY.test(entry))continue;
+      const path=join(root,entry);let original;try{original=lstatSync(path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;continue;}
+      if(now-original.mtimeMs>ORPHAN_MS){
+        if(options.publication){
+          if(!original.isFile()||original.isSymbolicLink()||original.nlink!==1)throw Error("Original optional record temporary leaf required");
+          options.publication({peakBytes:0,retainedDeltaBytes:-original.size},()=>{const current=lstatSync(path);if(!current.isFile()||current.isSymbolicLink()||current.nlink!==1||current.dev!==original.dev||current.ino!==original.ino||current.size!==original.size||current.mtimeMs!==original.mtimeMs)throw Error("Original optional record temporary identity changed");rmSync(path);});
+        }else removeQuietly(path);
+      }
       continue;
     }
     if (!entry.endsWith(".idx")) continue;

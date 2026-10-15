@@ -1,5 +1,6 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 extern crate semio_framework_os_kernel as dsl;
@@ -261,7 +262,7 @@ struct RasterStoreInitializationAuthority {
     envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     clone: std::mem::ManuallyDrop<Option<RasterSnapshotCloneAuthority>>,
     mutation_candidate: std::mem::ManuallyDrop<Option<RasterMutationCandidateAuthority>>,
-    publication: semio_framework_job::RetainedJobPublication,
+    publication: semio_framework_job_publication::RetainedJobPublication,
     delivered: bool,
     edit_index: store::ArtifactStoreInitializationEditIndex,
     phase: RasterStoreInitializationPhase,
@@ -599,7 +600,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     }
                     return Ok(None);
                 }
-                let result = self.publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(b"raster-store.initializer-fault"), cx)?;
+                let result = self.publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(b"raster-store.initializer-fault"), cx)?;
                 if result.is_some() {
                     self.delivered = true;
                 }
@@ -1721,7 +1722,7 @@ impl RasterStoreInitializationAuthority {
             envelope_retirement: std::mem::ManuallyDrop::new(None),
             clone: std::mem::ManuallyDrop::new(None),
             mutation_candidate: std::mem::ManuallyDrop::new(None),
-            publication: semio_framework_job::RetainedJobPublication::new(),
+            publication: semio_framework_job_publication::RetainedJobPublication::new(),
             delivered: false,
             edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             resume_phase: None,

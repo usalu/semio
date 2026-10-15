@@ -21,6 +21,9 @@ name = "semio-framework-os-run"
 path = "../../🏗️bootstrap/🦀️.rs"
 
 [dependencies]
+semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+
 semio-framework-job = { workspace = true }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

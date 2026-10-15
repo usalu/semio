@@ -43,17 +43,7 @@ fn credited_bindings(bindings: &crate::UiNodeBindings) -> Option<crate::UiNodeBi
     Some(aliased)
 }
 
-/// 🪟️ How wide ONE built node fans out: exactly the host [`crate::UiNodeChildren`] capacity
-/// ([`crate::UI_DOCUMENT_NODES`]), so a built page and the document child list it reconciles into are
-/// the same size and no authored window can be materialised here only to be refused downstream. It is
-/// a page width, not a document ceiling — a longer logical list is windowed with
-/// [`crate::TreeWindow`], never truncated with a continuation row.
-pub const UI_BUILT_CHILDREN_MAX: usize = crate::UI_DOCUMENT_NODES;
-/// ♻️ How many built-child pages may be in flight at once — live plus handed back for retirement —
-/// independent of [`UI_BUILT_CHILDREN_MAX`], which sizes each page rather than the backlog. Widening
-/// the page does not widen the backlog: [`close_built_node_page_one`] still retires exactly one child
-/// per call, so a wider page costs more calls, never a bigger frame.
-pub const UI_BUILT_CHILD_RETIRE_SLOTS: usize = 384;
+use semio_framework_ui_contract_budget::{UI_BUILT_CHILDREN_MAX,UI_BUILT_CHILD_RETIRE_SLOTS};
 
 type BuiltChildBacking = Box<[Option<Box<BuiltNode>>]>;
 

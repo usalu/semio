@@ -1,0 +1,9 @@
+# Old Compiler Provenance Frontier
+
+Root read-only Source inspection on2026-10-15. No retirement, SQLite open, new Native Original or old-root ownership grant was performed by this inspection.
+
+The SDK authorizer receipt authenticates actual `.semio-authorizer-source.json` bytes and exact compiled `semio-authorizers.mjs` output bytes. Its Source manifest records Source path and SHA256, not historical raw Source bytes. Therefore a retained generation path or manifest entry alone cannot be described as an available raw historical compiler implementation. Exact matching bytes need a real retained Source/version-history artifact, or direct semantic review of the actual receipt-authenticated compiled bundle. No missing bytes were fabricated or copied into ticket folders.
+
+For additional Rust capacity, Root directed Nx to correlate the exact original compiler allocation/charge with its original precise root, actual old compiler-store resource identity and real Cargo physical-lock protocol. The existing bounded unit retirement API may then retire recognized old data only under actual original matching exclusion, complete descriptor census and recensus. A descriptor census alone does not stop a later old opener; the actual lock held through retirement must do so. Profile/lock inodes and unrelated children remain intact. This is old-data retirement, not a legacy compiler execution path or generic cache sweep.
+
+Nx actual compact retirements now removed260prototype and146release eligible units, preserving the active14.65MBunit and every historical Cargo/Nxroot. Observed actual available space is1,773,330,432bytes, still below the4GiBinitial compiler floor. Whole-root size/age alone never funded an admission. `rust-additional-reclaimability-independent-review-current.md` records the exact remaining API seam and unknown Nx owners.

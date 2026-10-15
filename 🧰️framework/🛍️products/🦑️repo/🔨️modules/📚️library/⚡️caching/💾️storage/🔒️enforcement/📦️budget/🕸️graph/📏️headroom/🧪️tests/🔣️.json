@@ -1,0 +1,49 @@
+{
+  "requests": [
+    {
+      "value": {
+        "minimumAvailableBytes": 0
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 2684354560
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 2684354561
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": -1
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 1.5
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 1,
+        "unknown": true
+      },
+      "accepted": false
+    }
+  ],
+  "physical": {
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 35651584,
+    "snapshotBytes": 1048576,
+    "canonicalBytes": 1048576,
+    "requiredRecoveryBytes": 3145728,
+    "unknownBytes": 131072
+  }
+}

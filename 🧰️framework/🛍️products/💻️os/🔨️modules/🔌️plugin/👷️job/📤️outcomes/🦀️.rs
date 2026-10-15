@@ -1,7 +1,8 @@
 //! 📤️ One job lends every semantic outcome from payload pages it still owns until a paid physical closure.
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use crate::tool_contract::ReservedOutcomeKind;
 use crate::tool_contract::BoundedFaultText;
-use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedJobPublication, StepContext,OriginalTurnFailure};
+use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext, OriginalTurnFailure};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
 

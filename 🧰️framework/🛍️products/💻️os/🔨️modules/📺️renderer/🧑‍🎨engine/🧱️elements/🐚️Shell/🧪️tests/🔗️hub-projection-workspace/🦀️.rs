@@ -296,7 +296,7 @@ fn drive<F: std::future::Future>(future: F) -> F::Output {
             return output;
         }
         let advanced = crate::pump_renderer_io_sessions(1);
-        let _ = semio_framework_job::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         if advanced == 0 {
             std::thread::sleep(std::time::Duration::from_millis(1));
         }
@@ -476,7 +476,7 @@ fn is_live(shell: &ShellState) -> bool {
 #[cfg(not(target_arch = "wasm32"))]
 fn frame_pump(shell: &mut ShellState) -> usize {
     let advanced = crate::pump_renderer_io_sessions(1);
-    let _ = semio_framework_job::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
     drive(shell.pump_sync_events());
     shell.request_presence_preview();
     if shell.chrome_present.maintenance.presence_requested {
@@ -1277,7 +1277,7 @@ fn a_long_guest_turn_shares_the_kernel_and_only_its_owners_cancel_ends_it() {
     let mut context = std::task::Context::from_waker(waker);
     let pump = || {
         let _ = crate::pump_renderer_io_sessions(1);
-        let _ = semio_framework_job::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
     };
 
     let started = std::time::Instant::now();
@@ -1375,7 +1375,7 @@ fn pump_until(shell: &mut ShellState, budget: std::time::Duration, done: impl Fn
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn the_sign_in_verb_arms_a_task_and_returns_while_the_hub_is_still_answering() {
-    let source = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
+    let source = crate::shell::SHELL_SOURCE;
     let dispatch = source.split("fn handle_hub_workspace_action<'a>(").nth(1).expect("the hub verb dispatch exists");
     let dispatch = &dispatch[..dispatch.find("\n    }\n").expect("the dispatch closes")];
     assert!(dispatch.contains("hub_action::SIGN_IN => self.start_hub_sign_in(),"), "SIGN_IN arms and returns");

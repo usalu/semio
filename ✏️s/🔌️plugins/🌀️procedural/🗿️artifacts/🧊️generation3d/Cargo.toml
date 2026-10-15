@@ -133,8 +133,18 @@ path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/�
 [workspace.dependencies.semio-framework-3d-brep-vector]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-3d-brep-operations]
+[workspace.dependencies.semio-framework-3d-brep-construction]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-boolean]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-sweep]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-offset]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/📦️packages/🦀️rust"
+
 
 [workspace.dependencies.semio-framework-3d-brep-queries]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust"
@@ -220,10 +230,6 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive
 [workspace.dependencies.semio-s-artifact-stdio-dwg]
 path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-dwg-model]
-path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
-
-
 [workspace.dependencies.semio-s-artifact-stdio-dwg-geometry]
 path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust"
 
@@ -253,9 +259,6 @@ path = "../../../🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🦀�
 
 [workspace.dependencies.semio-s-artifact-stdio-png]
 path = "../../../🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-semio]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-base]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust"

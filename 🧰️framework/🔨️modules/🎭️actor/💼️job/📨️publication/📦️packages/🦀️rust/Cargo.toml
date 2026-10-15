@@ -1,0 +1,28 @@
+[package]
+name = "semio-framework-actor-job-publication"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+workspace = "../../../../../.."
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-actor-pack = { path = "../../../../🧵️pack/📦️packages/🦀️rust" }
+semio-framework-actor-vocabulary = { path = "../../../../📖️vocabulary/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { path = "../../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-framework-async = { workspace = true }
+serde = { version = "1.0.228", features = ["derive"] }
+
+[dev-dependencies]
+semio-framework-trace = { workspace = true }
+semio-framework-actor-retained-turn = { path = "../../../../🎟️retained-turn/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }
+semio-framework-async-macros = { path = "../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

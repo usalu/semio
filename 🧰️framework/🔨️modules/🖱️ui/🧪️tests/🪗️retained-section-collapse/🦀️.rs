@@ -73,7 +73,7 @@ fn advance_to_checked_out_layout(ui: &mut Ui, atlas: &mut FontAtlas, pool: &semi
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview_sequence,&mut actual_retained_progress);
         let _ = ui.step_layouts(pool, atlas, &mut cx);
-        let checked_out = ui.windows.get("fixture").and_then(|window| window.layout_session.as_ref().filter(|session| session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut).map(|_| window.layout_generation));
+        let checked_out = ui.windows.get("fixture").and_then(|window| window.layout_session.as_ref().filter(|session| session.poll() == semio_framework_job_worker::WorkerJobPoll::CheckedOut).map(|_| window.layout_generation));
         if let Some(generation) = checked_out {
             return generation;
         }

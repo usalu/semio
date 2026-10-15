@@ -1958,6 +1958,28 @@ export type TopicContribution = {
   readonly payload: unknown;
 };
 
+/** 📇️ Topic under which a plugin names the artifact-index document the os shell opens for a hub space; mirrors Rust `SPACE_INDEX_TOPIC`. The framework reads the contribution and never names the plugin that supplies it. */
+export const SPACE_INDEX_TOPIC = "os.space-index";
+
+/** 📇️ Payload of {@link SPACE_INDEX_TOPIC}: the dialect of the app that edits the space index and the document schema the shell opens it with — mirrors Rust `SpaceIndexContribution`. */
+export type SpaceIndexContribution = {
+  readonly dialect: ArtifactDialect;
+  readonly documentSchema: string;
+};
+
+/** 📥️ Reads the first well-formed {@link SPACE_INDEX_TOPIC} row among a manifest's topic contributions. */
+export function spaceIndexOf(topicContributions: readonly TopicContribution[] | undefined): SpaceIndexContribution | undefined {
+  for (const row of topicContributions ?? []) {
+    if (row.topic !== SPACE_INDEX_TOPIC) continue;
+    const payload = row.payload as { readonly dialect?: Partial<ArtifactDialect>; readonly documentSchema?: unknown } | null;
+    const dialect = payload?.dialect;
+    if (typeof dialect?.artifactKind === "string" && typeof dialect.standard === "string" && typeof dialect.subset === "string" && typeof payload?.documentSchema === "string") {
+      return { dialect: { artifactKind: dialect.artifactKind, standard: dialect.standard, subset: dialect.subset }, documentSchema: payload.documentSchema };
+    }
+  }
+  return undefined;
+}
+
 /** 📚️ One authored example document on the manifest — TS twin of Rust `ExampleDefinition`. It carries
  * the DIALECT it was authored for, never one app id: every surface bound to that dialect (the editor
  * and the viewer alike) opens the same fixtures (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */

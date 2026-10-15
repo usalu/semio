@@ -8,13 +8,12 @@
 //! @see ../../../../🧫️fixtures/🎪️stage-trace/🔣️.json
 
 use super::*;
-use crate::schema::tests::{assert_same, entries, fixture, json, typed};
-use crate::feeling::{at_rest, settled, spirits_of};
-use crate::gesture::{no_hover, COLD};
-use crate::schema::{
-    Actor, Facing, Fixture, Footing, Frame, Hushed, Needs, Over, PetMode, Permitted, Point, Pointed, Pointer, Pressed, Rate, Reclaimed, Rect, Released, Repertoire, Scrolled, Stirred, Summoned, Surface, Surveyed, Ticked, Ticks,
-    Tuned, Wall,
+use semio_framework_pets_character::feeling::{at_rest, settled, spirits_of};
+use semio_framework_pets_contract::schema::{
+    Actor, Facing, Fixture, Footing, Frame, Hushed, Needs, Over, Permitted, PetMode, Point, Pointed, Pointer, Pressed, Rate, Reclaimed, Rect, Released, Repertoire, Scrolled, Stirred, Summoned, Surface, Surveyed, Ticked, Ticks, Tuned, Wall,
 };
+use semio_framework_pets_contract::testkit::{assert_same, entries, fixture, json, typed};
+use semio_framework_pets_interaction::gesture::{no_hover, COLD};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 

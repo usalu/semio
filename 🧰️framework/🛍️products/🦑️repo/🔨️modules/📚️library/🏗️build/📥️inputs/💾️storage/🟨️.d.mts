@@ -16,7 +16,7 @@ export interface BuildInferenceDatasetV1{readonly version:1;readonly identity:st
 /** 🧬️ Refuses undeclared dataset transport fields and ambient paths. */
 export function readBuildInferenceDatasetV1(value:unknown):BuildInferenceDatasetV1;
 /** 🧷️ Runs one logical dataset in original real repository graph custody. */
-export function withRepositoryBuildInferenceDatasetV1<T>(workspace:string,invocation:ScriptInvocation,value:unknown,body:(scope:Readonly<{root:string;retire:()=>void}>)=>T|Promise<T>):Promise<T>;
+export function withRepositoryBuildInferenceDatasetV1<T>(workspace:string,invocation:ScriptInvocation,value:unknown,body:(scope:Readonly<{root:string;retire:()=>Promise<void>}>)=>T|Promise<T>):Promise<T>;
 
 /** 🧮️ Models exact optional cache peaks independently of physical custody. */
 export interface BuildGraphOptionalQuotaStateV1{readonly maximumBytes:number;readonly usedBytes:number;readonly availableBytes:number;readonly minimumAvailableBytes:number}
@@ -33,4 +33,17 @@ export function registerBuildGraphOptionalHandleV1(close:()=>void):void;
 /** 🚰️ Decides whether a writer session must first retire optional leaves down to the low-water mark. */
 export function buildGraphOptionalRetirementDueV1(usedBytes:number,availableBytes:number):boolean;
 /** 🧹️ Defers optional pressure recovery when original exclusive image custody is unavailable. */
+/** 🚪️ Requests closed optional cache recovery before mandatory graph publication. */
+export function prepareBuildGraphOptionalHeadroomV1(image:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts").RepositoryCacheStoreV1["image"],control:import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts").ResourceLeaseControl,request:Readonly<{minimumAvailableBytes:number}>):Promise<boolean>;
 export function maintainBuildGraphOptionalCachesV1(image:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts").RepositoryCacheStoreV1["image"],control:import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts").ResourceLeaseControl):Promise<boolean>;
+
+/** 🧭️ Maps all admitted namespace identities into a fixed writer catalog. */
+export function buildGraphWriterResourceV1(workspace:string,kind:"selection"|"dataset",identity:string):string;
+
+/** 🗂️ Admits closed directory kinds for an isolated writer. */
+export function buildGraphWriterDirectoryAdmittedV1(scope:{readonly kind:"selection"|"dataset";readonly identity:string},namespace:string):boolean;
+/** 🧷️ Admits only the isolated writer own optional leaves. */
+export function buildGraphWriterOptionalPathAdmittedV1(scope:{readonly kind:"selection"|"dataset";readonly identity:string},path:string):boolean;
+
+/** 🚰️ Keeps pressure recovery independent of producer scope. */
+export function buildGraphWriterMaintenanceDueV1(request:{readonly kind:"full"|"selection"|"dataset";readonly usedBytes:number;readonly availableBytes:number}):boolean;

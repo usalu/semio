@@ -28,8 +28,8 @@
 // #region 🔖️Imports
 use parry3d::mass_properties::details::trimesh_signed_volume_and_center_of_mass;
 use parry3d::na::Point3;
-use semio_framework_3d_brep_operations::blend::{chamfer_edges, fillet_edges};
-use semio_framework_3d_brep_operations::primitives::make_box;
+use semio_framework_3d_brep_offset::blend::{chamfer_edges, fillet_edges};
+use semio_framework_3d_brep_construction::primitives::make_box;
 use semio_framework_3d_brep_representation::contract::MeshTransfer;
 use semio_framework_3d_brep_queries::mass_properties::{solid_signed_volume, solid_volume};
 use semio_framework_3d_brep_tessellation::tessellate_solid;

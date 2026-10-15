@@ -59,14 +59,11 @@ fn externalize_oversized_example_bodies(manifest: &mut PluginManifest, assets: &
     }
 }
 
-/// 🗂️ Whether `artifact_kind` is owned by `plugin_id` — every plugin's own IO `Dialect.artifact_kind`
-/// in the tree is the bare `"s.<plugin_id>"` coordinate (confirmed across every `const DIALECT:
-/// Dialect` in `✏️s/🔌️plugins/**/🚪️io/🦀️.rs`, e.g. `"s.note"`, `"s.flow"`, `"s.raster"` —
-/// distinct from the separate 3-segment `s.<plugin>.<artifact>` `ArtifactRef`/`ArtifactIdentity`
-/// capability-row grammar, `🚪️io/🧬️schema/🦀️component.rs`), with `"s.<plugin_id>.<suffix>"` also
-/// accepted for any dialect a plugin registers as a sub-kind of its own.
+/// 🗂️ Whether `artifact_kind` is owned by `plugin_id` — the plugin is the second segment of the
+/// `<domain>.<plugin_id>[.<suffix>]` kind coordinate, whichever domain the kind lives in.
 async fn owns_artifact_kind(plugin_id: &str, artifact_kind: &str) -> bool {
-    artifact_kind == format!("s.{plugin_id}") || artifact_kind.starts_with(&format!("s.{plugin_id}."))
+    let mut segments = artifact_kind.split('.');
+    segments.next().is_some() && segments.next() == Some(plugin_id)
 }
 
 /// 🗂️ Flattens every app's `AppIo.export_formats`/`import_formats` into one row per distinct format

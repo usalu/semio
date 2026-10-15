@@ -1,5 +1,6 @@
 import {existsSync} from "node:fs";
 import {resolve} from "node:path";
+import {sliceModuleTreeSource} from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 /** 🧾️ Checks original receiving publication and terminal child work against independent SQLite. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
@@ -82,8 +83,7 @@ test("original Pack receiving requires the caller owner and preserves Probe type
  const native=await Bun.file(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🦀️.rs")).text();
  const required=native.slice(native.indexOf("pub trait ArtifactPackReceiving"),native.indexOf("/// 🛬️ Borrows the envelope"));
  expect(required.includes("fn receive_pack(")).toBe(true);expect(required.includes("NativeSnapshotDecodeOwner")).toBe(true);expect(required.includes("decode_pack_with")).toBe(false);expect(required.includes("Default::default")).toBe(false);
- const probe=await Bun.file(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs")).text();
- const implementation=probe.slice(probe.indexOf("impl store::ArtifactPackReceiving for ProbeSnapshot"),probe.indexOf("/// 🌉️ Projects the first-party tree"));
+ const implementation=sliceModuleTreeSource(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs"),"impl store::ArtifactPackReceiving for ProbeSnapshot","/// 🌉️ Projects the first-party tree");
  expect(implementation.includes("probe_json::receive_snapshot(text,owner)")).toBe(true);expect(implementation.includes("owner.native().checkpoint()?" )).toBe(true);
  const body=await Bun.file(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🚪️io/🔤️json/🦀️.rs")).text();const original=body.slice(body.indexOf("fn read_original"),body.indexOf("/// 🪶️ Borrows the unchanged tree"));
  expect(original.includes("owner.receive::<Receiving<T>,T>")).toBe(true);expect(original.includes("Option<T>")).toBe(true);expect(original.includes("admit_inline::<T>(body)?")).toBe(true);expect(original.includes("*typed=Some(construct(output.take().unwrap()))")).toBe(true);expect(original.indexOf("*typed=Some(construct(output.take().unwrap()))")).toBeLessThan(original.indexOf("record_inline::<T>(body)?"));expect(original.includes("body.remaining_grant()")).toBe(true);expect(original.includes("body.record_progress(performed)?")).toBe(true);

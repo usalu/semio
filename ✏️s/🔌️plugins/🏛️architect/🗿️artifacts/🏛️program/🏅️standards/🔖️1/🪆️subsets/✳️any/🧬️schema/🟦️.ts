@@ -7,7 +7,7 @@ export { parseArtifactChild, type ArtifactChild } from "../../../../../../../../
 export type { RegisterKey, RegisterRow } from "./🗄️registers/🗂️catalog/🟦️.ts";
 
 //#region 🔖️Entities
-/** 🧬️ Register entity types, mirrored field-for-field from `🗄️registers/🦀️.rs` and
+/** 🧬️ Register entity types, mirrored field-for-field from the `🗄️registers/<family>/🦀️.rs` families and
  * `🧱️kernel/🦀️.rs` (`EntityHeader` etc, `#[serde(flatten)]`d onto every register row —
  * hence `extends EntityHeader` below instead of a nested `header` field). `ArtifactRecord` mirrors
  * Rust `ArtifactRecord` (this schema's own field name for that register). */

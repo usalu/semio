@@ -14,7 +14,7 @@ import { buildRepositoryCargoArtifacts } from "../../../🦑️repo/🔨️modul
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-quiz"], this.repoRoot, this.invocation, rest);
+    await runRepositoryCargoTests(["semio-framework-quiz-schema", "semio-framework-quiz"], this.repoRoot, this.invocation, rest);
   }
 }
 

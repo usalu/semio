@@ -219,7 +219,7 @@ fn the_published_control_ids_are_reacts_own() {
     let shell = super::appearance_tour_and_footer_pill_tests::tour_shell(None);
     assert_eq!(shell.panel_tab_anchor("nothing.like.a.tab"), None, "🆔️ a non-tab id is not a panel tab");
 
-    let source = std::fs::read_to_string(engine_root().join("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs")).expect("the wgpu shell source");
+    let source = crate::shell::SHELL_SOURCE.to_string();
     for dead in ["\"shell.tour.skip\"", "\"shell.tour.next\"", "\"shell.tour.back\"", "fn dock_tab_control("] {
         assert!(!source.contains(dead), "🆔️ {dead} is gone — no alias, no second vocabulary");
     }
@@ -243,7 +243,7 @@ fn a_panel_toggle_journals_reacts_own_shell_commands() {
     assert!(host.contains("noteShellCommand(\"shell.panelToggle\", shellLabelTextV1(\"ui.shellCommand.panelToggle\"), { anchor, visible: value })"), "🕒️ React journals a visibility flip");
     assert!(host.contains("noteShellCommand(\"shell.panelTab\", shellLabelTextV1(\"ui.shellCommand.panelTab\"), { anchor, tabId })"), "🕒️ and a path move");
 
-    let source = std::fs::read_to_string(engine_root().join("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs")).expect("the wgpu shell source");
+    let source = crate::shell::SHELL_SOURCE.to_string();
     let journal = source.split("async fn journal_panel_selection").nth(1).expect("the panel journal exists");
     let journal = &journal[..journal.find("async fn select_panel_tab").unwrap_or(journal.len())];
     assert!(journal.contains("\"shell.panelToggle\"") && journal.contains("\"shell.panelTab\""), "🕒️ and so does this shell");
@@ -307,7 +307,7 @@ fn the_platform_door_is_wired_end_to_end() {
     assert!(renderer.contains("js_name = semioWgpuSetHostPlatform"), "⌨️ the browser hook is exported");
     assert!(renderer.contains("const { std::cell::Cell::new(cfg!(target_os = \"macos\")) }"), "⌨️ and a native process answers from its own OS with no door call at all");
 
-    let shell = std::fs::read_to_string(engine_root().join("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs")).expect("the wgpu shell source");
+    let shell = crate::shell::SHELL_SOURCE.to_string();
     let formatter = shell.split("fn format_keybinding_shortcut").nth(1).expect("the formatter exists");
     let formatter = &formatter[..formatter.find("\n}\n").unwrap_or(formatter.len())];
     assert!(formatter.contains("crate::host_platform_uses_meta()"), "⌨️ the formatter reads the published platform");
@@ -534,7 +534,7 @@ fn the_cards_chips_carry_reacts_label_chord_icon_order() {
 /// in a screenshot nobody takes until the sheet is open.
 #[test]
 fn every_overlay_sheet_with_a_glass_region_encodes_its_glyphs_in_the_foreground_pass() {
-    let source = std::fs::read_to_string(engine_root().join("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs")).expect("the wgpu shell source");
+    let source = crate::shell::SHELL_SOURCE.to_string();
     let mut bare = Vec::new();
     for (index, line) in source.lines().enumerate() {
         if !line.contains("push_glass(") || line.contains("fn ") {

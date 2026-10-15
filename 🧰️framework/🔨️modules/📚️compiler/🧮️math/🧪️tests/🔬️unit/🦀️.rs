@@ -3,7 +3,7 @@ use super::*;
 use crate::syntax::parse_formula;
 
 fn with_fonts<R>(f: impl FnOnce(&FontContext<'_>) -> R) -> R {
-    let fonts = crate::world::embedded_fonts();
+    let fonts = crate::world::tests::test_fonts();
     let math = Font::from_bytes(fonts.math, 0).expect("parse math font");
     let serif = Font::from_bytes(fonts.serif, 0).expect("parse serif font");
     let mono = Font::from_bytes(fonts.mono, 0).expect("parse mono font");

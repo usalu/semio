@@ -18,7 +18,7 @@ fn drive_test_job<J: InteractiveJob + 'static>(job: J, params: BatchJobParams) -
 /// media wrappers take ownership of the sealed queue before the job closes.
 fn drive_test_job_then<J: InteractiveJob + 'static, R>(job: J, params: BatchJobParams, at_terminal: impl FnOnce() -> R) -> (StepOutcome, R) {
     let mut at_terminal = Some(at_terminal);
-    let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
+    let mut session = match semio_framework_job_worker::BatchJobSession::try_new(job, params) {
         Ok(session) => session,
         Err(mut rejected) => {
             rejected.begin_close();
@@ -1304,9 +1304,9 @@ fn pdf_export_prints_a_front_rect_after_the_image() {
     assert!(rect > image, "the front rectangle follows the image in the content stream");
 }
 
-fn dictionary_with_nulls(count:usize)->semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:String::new(),value:semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Null;count])}]}}
-fn dictionary_at_json_bytes(count:usize)->semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{
- let mut dictionary=semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:(0..8).map(|index|semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:index.to_string(),value:semio_framework_value::DslValue::String(String::new())}).collect()};
+fn dictionary_with_nulls(count:usize)->semio_framework_value_dictionary::QuestionDictionary{semio_framework_value_dictionary::QuestionDictionary{entries:vec![semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:String::new(),value:semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Null;count])}]}}
+fn dictionary_at_json_bytes(count:usize)->semio_framework_value_dictionary::QuestionDictionary{
+ let mut dictionary=semio_framework_value_dictionary::QuestionDictionary{entries:(0..8).map(|index|semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:index.to_string(),value:semio_framework_value::DslValue::String(String::new())}).collect()};
  let base=semio_framework_pack_json::to_json_string(&dictionary).len();let mut remaining=count.checked_sub(base).expect("dictionary wrapper fits byte witness");
  for entry in &mut dictionary.entries{let bytes=remaining.min(MAX_LAYOUT_EXPORT_STRING_BYTES);entry.value=semio_framework_value::DslValue::String("a".repeat(bytes));remaining-=bytes;}
  assert_eq!(remaining,0);assert_eq!(semio_framework_pack_json::to_json_string(&dictionary).len(),count);dictionary

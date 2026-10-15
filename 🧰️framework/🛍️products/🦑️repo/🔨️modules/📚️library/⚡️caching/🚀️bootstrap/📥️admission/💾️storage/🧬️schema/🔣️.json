@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "platform",
+    "workspace",
+    "storage"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "platform": {
+      "enum": [
+        "posix",
+        "windows"
+      ]
+    },
+    "workspace": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "storage": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "namespace": "admission",
+        "writerPrefix": "nx-collection-boundary:",
+        "maximumSnapshotBytes": 67108864
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "receipt": {
+    "version": 1,
+    "key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "bindingDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "parsers": [
+      {
+        "name": "typescript",
+        "version": "5.9.3",
+        "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "files": 4,
+        "bytes": 24
+      },
+      {
+        "name": "@iarna/toml",
+        "version": "2.2.5",
+        "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "files": 3,
+        "bytes": 12
+      }
+    ]
+  },
+  "changed": [
+    "key",
+    "generation",
+    "bindingDigest"
+  ],
+  "unknown": {
+    "field": "ignored",
+    "value": true
+  },
+  "workspace": {
+    "root": ".",
+    "inherited": ".agents",
+    "expected": "."
+  }
+}

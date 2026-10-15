@@ -42,7 +42,6 @@ semio-framework-graph-manifest = { path = "../../../../../../🔨️modules/🕸
 semio-framework-graph-dsl = { path = "../../../../../../🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
-semio-framework-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust" }
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }

@@ -13,6 +13,19 @@ import corpus from "./🧫️fixtures/🔣️.json";
 import invocationSchema from "../📥️invocation/🧬️schema/🔣️.json";
 import invocationCorpus from "../📥️invocation/🧪️tests/🧫️fixtures/🔣️.json";
 import Ajv from "ajv";
+import ts from "typescript";
+import {types} from "node:util";
+
+test("immutable admitted policy data avoids schema replay while mutable and executable properties remain checked",async()=>{
+ const source=readFileSync(new URL("../📥️invocation/🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("invocation.ts",source,ts.ScriptTarget.Latest,true),printer=ts.createPrinter(),body=tree.statements.filter(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="readScriptPolicy"||ts.isVariableStatement(node)&&node.declarationList.declarations.some(declaration=>declaration.name.getText(tree)==="immutablePolicies")).map(node=>printer.printNode(ts.EmitHint.Unspecified,node,tree)).join("\n").replaceAll("export function","function"),javascript=ts.transpileModule(body,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,{compileJsonSchemaSubset}=await import("../../../🧬️schema/✅️validator/🟦️.ts"),contract=compileJsonSchemaSubset(invocationSchema),oracle=new Ajv({strict:true}).compile(invocationSchema);
+ for(const row of invocationCorpus.immutablePolicyCases){let validations=0;const read=new Function("scriptPolicyContract","types",javascript+";return readScriptPolicy;")({validate(value:unknown){validations++;return contract.validate(value);}},types),base={version:1,owner:"immutable-policy-fixture",maximumElapsedMilliseconds:15000};let value:any;
+  if(row.kind==="null-prototype")value=Object.freeze(Object.assign(Object.create(null),base));else if(row.kind==="accessor")value=Object.freeze({...base,get owner(){return base.owner;}});else if(row.kind==="proxy")value=new Proxy(Object.freeze({...base}),{});else value=row.kind==="frozen"?Object.freeze({...base}):{...base};
+  expect(oracle(value),row.kind).toBe(true);expect(read(value)).toBe(value);expect(read(value)).toBe(value);expect(validations,row.kind).toBe(row.validations);
+  if(row.kind==="mutable"||row.kind==="accessor"){base.owner="";if(row.kind==="mutable")value.owner="";expect(oracle(value)).toBe(false);expect(()=>read(value)).toThrow("Complete Script policy required");}
+ }
+ for(const value of [Object.freeze({version:1,owner:"",maximumElapsedMilliseconds:15000}),Object.freeze({version:1,owner:"invalid-frozen",maximumElapsedMilliseconds:-1})]){let validations=0;const read=new Function("scriptPolicyContract","types",javascript+";return readScriptPolicy;")({validate(value:unknown){validations++;return contract.validate(value);}},types);expect(oracle(value)).toBe(false);expect(()=>read(value)).toThrow("Complete Script policy required");expect(()=>read(value)).toThrow("Complete Script policy required");expect(validations).toBe(2);}
+ console.log("[DEBUG] Actual policy admission method agrees with independent Ajv; only exact immutable plain data avoids repeated schema work");
+});
 
 /** 🧫️ Supplies each original routing case its real authored 15-second control and progress ledger. */
 function fixtureInvocation(owner: string): ScriptInvocation<{ events: ScriptProgress[] }> {
@@ -284,7 +297,7 @@ test("owned child environment carries the caller's current original invocation",
     const wire = JSON.parse(environment[api.SCRIPT_PROCESS_INVOCATION_ENV]!) as { policy: unknown; capabilities: unknown; deadlineEpochMilliseconds: number };
     expect(wire.policy).toEqual(policy);
     expect(wire.capabilities).toEqual(capabilities);
-    expect(wire.deadlineEpochMilliseconds - Date.now()).toBeLessThanOrEqual(parent.control.remainingMilliseconds()!);
+    expect<number|null>(wire.deadlineEpochMilliseconds).toBe(api.readIssuedScriptProcessEnvelopeV1(parent).deadlineEpochMilliseconds);
     await api.receiveScriptProcessInvocation(environment, async child => {
       expect(child.policy).toEqual(policy);
       expect(child.capabilities).toEqual(capabilities);
@@ -293,9 +306,9 @@ test("owned child environment carries the caller's current original invocation",
   });
   const aborted = new AbortController();
   await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope(policy, capabilities, Date.now()), async parent => {
-    const cancelled = { ...parent, control: { ...parent.control, signal: aborted.signal } };
-    aborted.abort(Error("parent cancelled"));
-    expect(() => api.scriptInvocationEnvironment(cancelled, {})).toThrow("parent cancelled");
+    expect(()=>api.scriptInvocationEnvironment({...parent},{})).toThrow("Live Original process issuance required");
+    await api.withScriptInvocationSignalV1(parent,aborted.signal,async cancelled=>{aborted.abort(Error("parent cancelled"));expect(()=>api.scriptInvocationEnvironment(cancelled,{})).toThrow("parent cancelled");api.acknowledgeScriptInvocationSignalStopV1(cancelled);});
+    expect(parent.control.signal.aborted).toBe(false);
   });
 });
 
@@ -306,7 +319,8 @@ test("original process child handoff preserves deadline and real ports", async (
   const envelope = api.createScriptProcessEnvelope(policy, capabilities, Date.now()), environment = api.scriptProcessEnvironment(envelope, {});
   expect(JSON.parse(environment[api.SCRIPT_PROCESS_INVOCATION_ENV]!)).toEqual(envelope);
   const beforeInterrupt = process.listenerCount("SIGINT"), beforeTerminate = process.listenerCount("SIGTERM");
-  await api.receiveScriptProcessInvocation(environment, async original => {
+  const priorWire=process.env[api.SCRIPT_PROCESS_INVOCATION_ENV];process.env[api.SCRIPT_PROCESS_INVOCATION_ENV]=environment[api.SCRIPT_PROCESS_INVOCATION_ENV];
+  try{await api.receiveScriptProcessInvocation(environment, async original => {
     expect(original.policy).toEqual(policy);
     expect(original.capabilities).toEqual(envelope.capabilities);
     expect(original.capabilities).toEqual(capabilities);
@@ -317,6 +331,7 @@ test("original process child handoff preserves deadline and real ports", async (
     await original.control.yieldContinuation();
     expect(original.control.remainingMilliseconds()).toBeLessThanOrEqual(before);
   });
+  }finally{if(priorWire===undefined)delete process.env[api.SCRIPT_PROCESS_INVOCATION_ENV];else process.env[api.SCRIPT_PROCESS_INVOCATION_ENV]=priorWire;}
   expect(process.listenerCount("SIGINT")).toBe(beforeInterrupt);
   expect(process.listenerCount("SIGTERM")).toBe(beforeTerminate);
   await expect(api.receiveScriptProcessInvocation({}, async () => true)).rejects.toThrow("Original parent");
@@ -335,14 +350,18 @@ test("original process deadline refuses late completion through actual AbortSign
   console.log("[DEBUG] Original process deadline cancelled actual signal and refused late terminal success");
 });
 
-test("the complete process envelope preserves original caller capabilities by identity", async () => {
+test("the complete process envelope captures immutable original caller capabilities", async () => {
   const api = await import("../📥️invocation/🏃️process/🟦️.ts"), schema = (await import("../📥️invocation/🏃️process/🧬️schema/🔣️.json")).default;
   const capabilities = { owner: "original-process-caller", command: "original-handoff" }, policy = readScriptPolicy({ version: 1, owner: "original-process-caller", maximumElapsedMilliseconds: 1000 });
   const envelope = { version: 1 as const, policy, deadlineEpochMilliseconds: Date.now() + 1000, capabilities };
   expect(new Ajv({ strict: true }).addSchema(invocationSchema).compile(schema)(envelope)).toBe(true);
   await api.withScriptProcessEnvelope(envelope, async original => {
-    expect(original.policy).toBe(policy);
-    expect(original.capabilities).toBe(capabilities);
+    expect(original.policy).toEqual(policy);
+    expect(original.capabilities).toEqual(capabilities);
+    expect(Object.isFrozen(original.policy)).toBe(true);
+    expect(Object.isFrozen(original.capabilities)).toBe(true);
+    capabilities.command="changed-after-admission";
+    expect((original.capabilities as typeof capabilities).command).toBe("original-handoff");
     await original.control.publish({ owner: policy.owner, command: "original-handoff", stage: "running" });
     await original.control.yieldContinuation();
     expect(original.control.remainingMilliseconds()).toBeLessThanOrEqual(1000);
@@ -364,7 +383,7 @@ test("original ordinary no-deadline authority preserves cancellation and fractio
   const policyValidate = new Ajv({ strict: true }).compile(invocationSchema), envelopeValidate = new Ajv({ strict: true }).addSchema(invocationSchema).compile(wire);
   for (const row of rows.envelopes) {
     expect(envelopeValidate(row.value)).toBe(row.accepted);
-    if (row.accepted) expect(Object.is(api.readScriptProcessEnvelope(row.value, row.now),row.value)).toBe(true);
+    if (row.accepted) {const admitted=api.readScriptProcessEnvelope(row.value,row.now);expect<unknown>(admitted).toEqual(row.value);expect(Object.is(admitted,row.value)).toBe(false);expect(Object.isFrozen(admitted)).toBe(true);}
     else expect(() => api.readScriptProcessEnvelope(row.value, row.now)).toThrow();
   }
   const controller = new AbortController(), progress: ScriptProgress[] = [], capabilities = { owner: "zero-authority-original-caller", commands: [] as string[] };
@@ -399,4 +418,13 @@ test("original ordinary no-deadline authority preserves cancellation and fractio
   }
   expect(outcomes).toEqual(rows.budgets.map(row => ({ accepted: row.accepted, ...("expected" in row ? { expected: row.expected } : {}) })));
   console.log("[DEBUG] Original ordinary0/null actual load, main, constructor and SIGINT preserve no deadline; strict Ajv and Node preserve fractional remaining with original integer child ceilings");
+});
+
+test("unacknowledged derived cancellation refuses terminal success after accepted work settles",async()=>{const api=await import("../📥️invocation/🏃️process/🟦️.ts"),controller=new AbortController();await expect(api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"fixture:signal-stop",maximumElapsedMilliseconds:1000},{fixture:"signal-stop"},Date.now()),original=>api.withScriptInvocationSignalV1(original,controller.signal,async()=>{controller.abort(Error("unacknowledged stop"));}))).rejects.toThrow("unacknowledged stop");});
+
+test("derived signal stop requires an explicit private acknowledgement with independent SQLite agreement",async()=>{
+ const api=await import("../📥️invocation/🏃️process/🟦️.ts"),fixture=(await import("./🧫️fixtures/🛑️signal.json")).default,rows:boolean[]=[];
+ for(const row of fixture.cases){let accepted=true;try{await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"fixture:signal-corpus",maximumElapsedMilliseconds:2000},{fixture:"signal-corpus"},Date.now()),original=>{const controller=new AbortController();return api.withScriptInvocationSignalV1(original,controller.signal,async alias=>{if(row.additionalAborted)controller.abort(Error("owned stop"));if(row.parentAborted)process.emit("SIGINT");if(row.acknowledged)api.acknowledgeScriptInvocationSignalStopV1(alias);});});}catch{accepted=false;}expect(accepted).toBe(row.accepted);rows.push(accepted);}
+ const{captureOwnedCommandV1}=await import("../../🎛️owned-execution/🟦️.ts"),oracle="import sqlite3,json,sys;d=sqlite3.connect(':memory:');rows=json.loads(sys.argv[1]);print(json.dumps([bool(d.execute('SELECT NOT ? AND ((NOT ? AND NOT ?) OR (? AND ?))',(r['parentAborted'],r['additionalAborted'],r['acknowledged'],r['additionalAborted'],r['acknowledged'])).fetchone()[0]) for r in rows]))";
+ await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"fixture:signal-oracle",maximumElapsedMilliseconds:5000},{fixture:"signal-oracle"},Date.now()),async original=>{const output=await captureOwnedCommandV1("python3",["-c",oracle,JSON.stringify(fixture.cases)],process.cwd(),{control:api.createIssuedResourceControlV1(original,"fixture:sqlite-signal",5000),output:{maximumBytes:4096,maximumLines:32}});expect(JSON.parse(output)).toEqual(rows);});console.log("[DEBUG] Actual private signal-stop disposition agrees with independent SQLite for five neutral cases");
 });

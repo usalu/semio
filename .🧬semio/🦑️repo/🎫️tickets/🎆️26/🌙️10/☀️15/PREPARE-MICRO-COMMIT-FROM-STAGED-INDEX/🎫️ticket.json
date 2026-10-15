@@ -1,0 +1,11 @@
+{
+  "title": "Prepare Micro Commit From Staged Index",
+  "emoji": "📦",
+  "status": "closed",
+  "description": "The micro-commit skill must not stage unstaged changes. Prepare the commit message only for paths already in the index. `micro-commit prepare` must not run `git add -A`. An empty index fails without touching the worktree.",
+  "summary": "Micro-commit prepare now writes the commit message for the index that is already staged. It does not run git add. The skill diffs that index and prepares it. An empty index exits without touching the worktree.",
+  "goal": "🎯repocommitmechanism",
+  "sessions": [
+    "⚪c3337434742a4307950b1a655206374b"
+  ]
+}

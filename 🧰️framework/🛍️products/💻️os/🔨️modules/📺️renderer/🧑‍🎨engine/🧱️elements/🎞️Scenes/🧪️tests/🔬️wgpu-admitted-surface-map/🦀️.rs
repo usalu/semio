@@ -79,7 +79,7 @@ fn replacement_and_slot_reuse_invalidate_surface_aba_tokens() {
 
 #[test]
 fn production_surface_authority_has_no_hash_map_or_structural_deref() {
-    let source = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
+    let source = include_str!("../../🎯️targets/🧊️wgpu/🗃️scene-state/🦀️.rs");
     let authority = source.split("#[cfg(test)]\nmod admitted_surface_map_tests").next().unwrap();
     assert!(!authority.contains("values: HashMap<String, T>"));
     assert!(!authority.contains("DerefMut"));

@@ -59,7 +59,7 @@ fn layout_document_contract_json_text_pack_projection_and_identity() {
     assert_eq!(child.handle.target.dialect.artifact_kind, "s.stdio.semio");
     assert_eq!(child.handle.target.dialect.standard, "v1");
     assert_eq!(child.handle.target.dialect.subset, "drawing");
-    assert_eq!(store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Layout child projection").len(), 1);
+    assert_eq!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Layout child projection").len(), 1);
 
     let artifact = semio_s_artifact_layout_layout_model::LayoutArtifact::from_snapshot(snapshot.clone());
     assert_eq!(artifact.to_snapshot(), snapshot, "artifact/snapshot projection must preserve every Layout document field");
@@ -81,7 +81,7 @@ fn layout_document_contract_json_text_pack_projection_and_identity() {
 
     let mut wrong_identity = snapshot.clone();
     wrong_identity.background_drawing.as_mut().expect("background drawing child").handle.target.artifact_id = "wrong".into();
-    assert!(store::ChildRestoreProjection::from_snapshot(&wrong_identity).is_err(), "child projection must reject mismatched child identity");
+    assert!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&wrong_identity).is_err(), "child projection must reject mismatched child identity");
 }
 
 

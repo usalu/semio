@@ -6,10 +6,10 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../📝️draft/🟦️.ts — the TypeScript twin
 
-use crate::animation::clip_ticks;
-use crate::behavior::{dwell_of, needs_after};
-use crate::randomness::{random_words, unit_of, STAGE_STREAM};
-use crate::schema::{Activity, Actor, Clip, Facing, Gait, Menagerie, Perch, Point, Slug, Species, Stage, Surface, Ticks, TICKS_PER_SECOND};
+use semio_framework_pets_character::behavior::{dwell_of, needs_after};
+use semio_framework_pets_contract::schema::{Activity, Actor, Clip, Facing, Gait, Menagerie, Perch, Point, Slug, Species, Stage, Surface, Ticks, TICKS_PER_SECOND};
+use semio_framework_pets_kinematics::animation::clip_ticks;
+use semio_framework_pets_kinematics::randomness::{random_words, unit_of, STAGE_STREAM};
 use std::borrow::Borrow;
 
 //#region 🔖️Constants

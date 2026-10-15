@@ -3,8 +3,8 @@
 //! @see ../../🦀️.rs — the implementation under test
 
 use super::*;
-use crate::schema::{Category, ClassificationAnswer, ClassificationItem, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SortingAnswer, CHALLENGES, MAX_TIMESTAMP};
 use crate::sheet::tests::{classification, matching, quantity, sorting, text};
+use quiz_schema::{Category, ClassificationAnswer, ClassificationItem, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SortingAnswer, CHALLENGES, MAX_TIMESTAMP};
 use std::collections::BTreeMap;
 use Verdict::{Over, Reversed, Under};
 
@@ -437,7 +437,7 @@ fn without_profiles_a_misplaced_item_is_questioned_against_another_item_or_its_c
 
 #[test]
 fn shared_challenge_rules_of_the_python_numpy_reference_hold() {
-    use crate::schema::tests::{assert_close, entries, fixture, json, typed};
+    use quiz_schema::testkit::{assert_close, entries, fixture, json, typed};
     let vectors = fixture("challenge-rules");
     let challenges: Vec<Challenge> = entries(&vectors["rules"]["challenges"]).iter().map(typed).collect();
     assert_eq!(challenges, CHALLENGES);
@@ -483,7 +483,7 @@ fn shared_challenge_rules_of_the_python_numpy_reference_hold() {
 
 #[test]
 fn hints_use_their_wire_shapes() {
-    assert_eq!(serde_json::to_value(crate::schema::VERDICTS).ok(), Some(serde_json::json!(["under", "over", "reversed"])));
+    assert_eq!(serde_json::to_value(quiz_schema::VERDICTS).ok(), Some(serde_json::json!(["under", "over", "reversed"])));
     let shapes = [
         (ratio("s4", "s1", 0.5, Under), serde_json::json!({"kind": "compare", "item": "s4", "other": "s1", "factor": 0.5, "verdict": "under"})),
         (ratio("s4", "s1", 4.0, Over), serde_json::json!({"kind": "compare", "item": "s4", "other": "s1", "factor": 4.0, "verdict": "over"})),

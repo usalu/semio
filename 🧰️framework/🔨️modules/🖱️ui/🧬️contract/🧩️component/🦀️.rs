@@ -38,19 +38,19 @@ impl<'de> Deserialize<'de> for UiPublicationRevision {
     }
 }
 
-impl ::protocol::value::ToValue for UiPublicationRevision {
-    fn to_value(&self) -> ::protocol::value::DslValue { ::protocol::value::DslValue::String(self.0.to_string()) }
+impl ::semio_framework_value::ToValue for UiPublicationRevision {
+    fn to_value(&self) -> ::semio_framework_value::DslValue { ::semio_framework_value::DslValue::String(self.0.to_string()) }
 }
 
-impl ::protocol::value::FromValue for UiPublicationRevision {
-    fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
-        let ::protocol::value::DslValue::String(value) = value else {
-            return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, "publication revision must be a decimal string"));
+impl ::semio_framework_value::FromValue for UiPublicationRevision {
+    fn from_value(value: ::semio_framework_value::DslValue) -> Result<Self, ::semio_framework_value::ValueError> {
+        let ::semio_framework_value::DslValue::String(value) = value else {
+            return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "publication revision must be a decimal string"));
         };
         if value != "0" && (value.starts_with('0') || !value.bytes().all(|byte| byte.is_ascii_digit())) {
-            return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, "publication revision must be canonical decimal u64"));
+            return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "publication revision must be canonical decimal u64"));
         }
-        value.parse::<u64>().map(Self).map_err(|_| ::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, "publication revision must fit u64"))
+        value.parse::<u64>().map(Self).map_err(|_| ::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "publication revision must fit u64"))
     }
 }
 
@@ -70,7 +70,7 @@ impl ::protocol::value::FromValue for UiPublicationRevision {
 /// happens upstream of the runtime (manifest/host), before a `Label` ever reaches this contract.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
-#[value(crate = "::protocol::value", transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 pub struct Label(pub crate::UiText);
 
 impl TryFrom<String> for Label {
@@ -104,7 +104,7 @@ impl std::fmt::Display for Label {
 /// previously express as a single node.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum ContainerRole {
     #[default]
     Plain,
@@ -126,7 +126,7 @@ pub enum ContainerRole {
 /// change, if a plugin needs it later).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum InputKind {
     #[default]
     Text,
@@ -140,7 +140,7 @@ pub enum InputKind {
 /// 📍️ Where a [`RowAction`] paints: on the tree row itself, or folded into the row's context menu.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum RowActionPlacement {
     #[default]
     Row,
@@ -153,7 +153,7 @@ pub enum RowActionPlacement {
 /// container, ahead of its `Drop`-triggered [`crate::ActionBinding`] firing on release.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct DropOverlaySpec {
     pub title: Label,
     pub hint: Label,
@@ -165,7 +165,7 @@ pub struct DropOverlaySpec {
 /// 🔽️ One option of a [`Component::Select`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct SelectItem {
     pub value: crate::UiText,
     pub label: Label,
@@ -174,7 +174,7 @@ pub struct SelectItem {
 /// 🗝️ One row of a [`Component::KeyValueList`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct KeyValueEntry {
     pub label: Label,
     pub value: crate::UiText,
@@ -186,7 +186,7 @@ pub struct KeyValueEntry {
 /// verbs, never N argument maps.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct RowAction {
     /// 🖼️ Icon key. See [`ButtonProps::icon`] for why this is a plain `String`, not a closed enum.
     pub icon: crate::UiText,
@@ -306,7 +306,7 @@ fn is_enabled_row_action(disabled: &bool) -> bool {
 /// `child: Box<UiNode>` is simply `children[0]` on the record; there is nothing left to special-case.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct ContainerProps {
     #[serde(default, skip_serializing_if = "is_default_container_role")]
     #[value(default, skip_serializing_if = "is_default_container_role")]
@@ -339,7 +339,7 @@ fn is_default_container_role(value: &ContainerRole) -> bool {
 /// 📝️ Props for `Component::Text`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct TextProps {
     pub value: Label,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -373,7 +373,7 @@ impl TextProps {
 /// `Trigger::Activate`); `style` moved to the record's `crate::StyleSpec`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct ButtonProps {
     /// 🖼️ Icon key. The old `IconName` is generated per-consuming-crate via a `#[path]` mount (see
     /// `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs`), not a publishable
@@ -389,14 +389,14 @@ pub struct ButtonProps {
 /// (`presence`, `menu`) now lives on the record, so this is intentionally empty — kept as its own
 /// struct (rather than a unit variant) purely for structural symmetry with every other component.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct SeparatorProps {}
 
 /// ⌨️ Props for `Component::Input`. `on_change` moved to the record's `bindings`
 /// (`Trigger::Change`/`Trigger::Commit`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct InputProps {
     #[serde(default, skip_serializing_if = "is_default_input_kind")]
     #[value(default, skip_serializing_if = "is_default_input_kind")]
@@ -472,7 +472,7 @@ fn is_default_input_kind(value: &InputKind) -> bool {
 /// choice is shown ([`SelectAppearance`]); value, items and `Trigger::Change` are the same in both.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct SelectProps {
     pub value: crate::UiText,
     pub items: crate::UiFixedList<SelectItem>,
@@ -489,7 +489,7 @@ pub struct SelectProps {
 /// declares segmented (`x-semio-ui.widget: "segmented"`). Arrow keys move the choice along a segmented row.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum SelectAppearance {
     #[default]
     Menu,
@@ -507,7 +507,7 @@ impl SelectAppearance {
 /// contract exists to remove. `on_change` moved to the record's `bindings`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct ToggleProps {
     #[serde(default, skip_serializing_if = "ToggleAppearance::is_button")]
     #[value(default, skip_serializing_if = "ToggleAppearance::is_button")]
@@ -522,7 +522,7 @@ pub struct ToggleProps {
 /// ☑️ Closed binary-control presentation shared by every renderer.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum ToggleAppearance {
     #[default]
     Button,
@@ -538,7 +538,7 @@ impl ToggleAppearance {
 /// 🗝️ Props for `Component::KeyValueList`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct KeyValueListProps {
     pub entries: crate::UiFixedList<KeyValueEntry>,
 }
@@ -547,7 +547,7 @@ pub struct KeyValueListProps {
 /// travel) — see [`slider_axis_position`]/[`slider_axis_value`].
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum UiNumberScale {
     #[default]
     Linear,
@@ -565,7 +565,7 @@ impl UiNumberScale {
 /// ([`dial_angle`]/[`dial_position`]). Both take the same keys, pointer law and accessibility.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum SliderAppearance {
     #[default]
     Track,
@@ -589,7 +589,7 @@ fn is_inclusive(exclusive: &bool) -> bool {
 /// kept and the refusal shown.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct UiNumberBound {
     pub value: f64,
     #[serde(default, skip_serializing_if = "is_inclusive")]
@@ -604,7 +604,7 @@ pub struct UiNumberBound {
 /// are then only its travel (a soft range): a typed value may leave the travel while the limits admit it.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct UiNumberLimits {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -655,7 +655,7 @@ pub fn ui_number_crossed_bound(value: f64, min: Option<f64>, max: Option<f64>, l
 /// travel itself when absent).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct SliderProps {
     pub value: f64,
     pub min: f64,
@@ -706,7 +706,7 @@ impl SliderProps {
 /// value (`min`/`max` themselves when absent).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct NumberStepperProps {
     pub value: f64,
     pub step: f64,
@@ -1013,7 +1013,7 @@ fn decimal_digits(value: f64) -> u16 {
 /// 💍️ Props for `Component::Ring`. `on_change` moved to the record's `bindings`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct RingProps {
     pub orb_id: crate::UiText,
     pub t: f64,
@@ -1022,7 +1022,7 @@ pub struct RingProps {
 /// 🖼️ Props for `Component::IconSelect`. `on_change` moved to the record's `bindings`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct IconSelectProps {
     pub value: crate::UiText,
     pub uniform: bool,
@@ -1036,7 +1036,7 @@ pub struct IconSelectProps {
 /// `📋️tool-run-contract.md` §2.3 and §2.6 of ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct ProgressProps {
     pub completed: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1065,7 +1065,7 @@ pub fn progress_fraction(completed: f64, total: Option<f64>) -> Option<f64> {
 /// `drop_action` moved to the record's `bindings` (`Trigger::Drop`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct TreeProps {
     #[serde(default, skip_serializing_if = "TreePresentation::is_standard")]
     #[value(default, skip_serializing_if = "TreePresentation::is_standard")]
@@ -1080,7 +1080,7 @@ pub struct TreeProps {
 /// 🌳️ A tree's inherited row and value-column presentation.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum TreePresentation {
     #[default]
     Standard,
@@ -1096,7 +1096,7 @@ impl TreePresentation {
 /// 🪟️ Closed geometry token for one unmaterialised row in a virtual Tree window.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub enum TreeWindowRowExtent {
     #[default]
     Standard,
@@ -1111,45 +1111,14 @@ pub enum TreeWindowRowExtent {
 /// rows as spacers so the scrollbar spans the whole document instead of the loaded window.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct TreeWindow {
     pub total: u32,
     pub offset: u32,
     pub row_extent: TreeWindowRowExtent,
 }
 
-/// 🧾️ Node records a presented panel body may spend OUTSIDE its windowed containers: the fixed rows a
-/// panel still builds without a [`TreeWindow`] (an Actions section, a properties block, a nested
-/// control child) carry no node key, so neither side can address or budget them per container. The
-/// body budget holds this many records back for them.
-///
-/// 🧾️ The value is the fleet's MEASURED worst case, not a guess. The fattest shipped un-windowed block
-/// is the energy inspector with a fenestration selected
-/// (`✏️s/🔌️plugins/🔋️energy/…/📌️panels/🔍️inspection/🦀️.rs`): a `Window` section node plus the
-/// **sixteen** field rows `fenestration_rows` pushes (id, name, surface, U-value, SHGC, VLT, area,
-/// height, sill height, frame, divider, overhang depth/offset, fin depth/offset, glazing), plus an
-/// `Actions` section node and its ≤3 rows = **21** records that carry no window and no node key, so
-/// neither side can budget them per container. Next fattest: fem2d/fem3d's inspector with a solid
-/// selected (1 + 10 + 1 + 3 = 15) and the framework's own history panel (1 + 5 + 1 = 7). 24 covers the
-/// measured maximum with three records of margin, and `tree_window_headroom_covers_the_fattest_shipped_panel`
-/// in the plugin SDK's `🔬️app-panel-kit` laws rebuilds that energy body shape and pins it.
-///
-/// ⚠️ A panel that builds MORE than this in fixed rows must move them onto a window: the ledger cannot
-/// see them, so they are the one way a body can still outgrow [`crate::UI_DOCUMENT_NODES`].
-pub const TREE_WINDOW_FIXED_NODE_HEADROOM: usize = 24;
-
-/// 🧾️ The ONE body-wide node budget both sides of the streaming loop spend, in node records:
-/// `UI_DOCUMENT_NODES` (the reconciler's per-surface record arena,
-/// `SurfaceReconcileLimits::max_nodes`) less the tree root, less
-/// [`TREE_WINDOW_FIXED_NODE_HEADROOM`].
-///
-/// 🧾️ **Cost model, identical on host and guest**: one windowed container costs
-/// `1 (its own node) + its materialised rows`, nested containers included, and every node is charged
-/// exactly ONCE — a nested container is one row of its parent, so its own `1` is the row its parent
-/// already paid for. The host caps what it requests so `Σ(1 + rows) ≤ TREE_WINDOW_BODY_NODE_BUDGET`
-/// (`🌳️Tree/🟦️.tsx`), and the guest's `semio_framework_plugin::TreeWindows` ledger spends the same
-/// number, so a request the host is allowed to make is a request the guest can always honour in full.
-pub const TREE_WINDOW_BODY_NODE_BUDGET: usize = crate::UI_DOCUMENT_NODES - 1 - TREE_WINDOW_FIXED_NODE_HEADROOM;
+use semio_framework_ui_contract_budget::{TREE_WINDOW_FIXED_NODE_HEADROOM,TREE_WINDOW_BODY_NODE_BUDGET};
 
 /// 🔑️ Joins the segments of a windowed container's **window path** — the identity both sides of the
 /// streaming loop address a container by (`ViewModel::tree_windows[].node_key`).
@@ -1177,7 +1146,7 @@ pub const TREE_WINDOW_PATH_SEPARATOR: &str = "␟";
 /// 🌲️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct TreeSectionProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -1290,7 +1259,7 @@ fn credited_target(target: &Option<RowTarget>) -> Option<Option<RowTarget>> {
 /// ledger ([`TREE_WINDOW_BODY_NODE_BUDGET`]) for trees and tables alike.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct TableProps {
     /// 🏷️ The table's accessible name — what assistive technology announces on entering it.
     pub label: Label,
@@ -1346,7 +1315,7 @@ impl TableRowProps {
 /// 🖼️ Props for `Component::Image`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 pub struct ImageProps {
     pub src: crate::UiText,
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -70,7 +70,6 @@ import {
   treeWindowVisibleRowsForViewport,
   useLabel,
   waitingBorderElementClass,
-  type ContextMenuItem,
   type ElementSkeletonKind,
   type IconName,
   type TreeDataActivationContext,
@@ -91,7 +90,6 @@ import {
   type ActionBinding,
   type ActionDispatchLifecycleV1,
   type ActionDescriptor,
-  type AppCatalogue,
   type ComponentKind,
   type ComponentSceneHostProps,
   type ContextMenuItemSpec,
@@ -163,14 +161,15 @@ import {
   type UiTrigger,
   type UiValue,
 } from "@semio-tech/framework";
-import { decodeScenePackField, decodeScenePackValue } from "@semio-tech/framework-os";
+import { decodeScenePackValue } from "@semio-tech/framework-os";
 import { uiAccessibilityValueV1, uiProgressFractionV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🟦️.ts";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts";
 import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, uiTextInputKey, uiTextInputKeyOf } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
-import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
+import { useMapContextMenuSpecs, openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult } from "./🖱️surface-menu/🟦️.ts";
+import { parseSceneJsonField, wireLabel, WindowInstanceIdContext } from "./🌉️scene-host-contract/🟦️.ts";
 import { ShellFaultBoundary } from "../🐚️Shell/🟦️.tsx";
-import { WindowInstanceIdContext, World3dHost } from "../🌐️World3dHost/🟦️.tsx";
+import { World3dHost } from "../🌐️World3dHost/🟦️.tsx";
 import { NodeGraphHost } from "../🕸️NodeGraph/🟦️.tsx";
 import { TextEditorHost } from "../✏️TextEditor/🟦️.tsx";
 import { TableHost } from "../📊️Table/🟦️.tsx";
@@ -186,6 +185,8 @@ import { EventFeedHost } from "../📡️EventFeedHost/🟦️.tsx";
 // 🐢️ Direct element-to-element import — `🟦️Interpreter` and `Canvas2dHost` landed in the same batch.
 import { Canvas2dHost } from "../📐️Canvas2dHost/🟦️.tsx";
 // #endregion 🔌️Adapters
+
+
 
 //#region 🔖️UiInterpreter
 //#region PresenceOverlay
@@ -437,12 +438,6 @@ function resolveComponentSceneHost(kind: ComponentKind): ComponentType<Component
 
 function interpLabel(key: UiTranslationKey): UiLabel {
   return shellLabel(key);
-}
-
-/** 🕳️ Sanctioned wire-boundary mint point (see ui-react's `UiLabel` docstring): brands an
- * already plugin/manifest-resolved string as {@link UiLabel}. */
-export function wireLabel(value: string): UiLabel {
-  return value as UiLabel;
 }
 
 //#region SurfaceBridge
@@ -754,110 +749,13 @@ export type UiInterpreterContext = {
 };
 //#endregion UiInterpreterContext
 
-/** 🛍️ The APP-STATIC operator/palette catalogue for the app owning this subtree — fetched ONCE
- * per app instance from the reserved `framework.section.catalogue` retained surface and cached by
- * `ShellHost` for that instance's whole lifetime. Never read off a scene: with the real `brep`/`math`
- * operator sets installed the payload is ~100 KB, more than three times the 32 KiB fixed per-surface
- * admission every scene is encoded against, so carrying it per scene made the node-graph window
- * unrenderable (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). A scene names an operator by KIND ID;
- * this is where that kind's record, ports and palette entry come from. Declared here, beside the other
- * scene-host contexts, so neither `ShellHost` (the provider) nor `NodeGraph` (the consumer) has to
- * import the other for it. */
-export const AppCatalogueContext = createContext<AppCatalogue>(Object.freeze({}));
-
-/** 🛍️ Reads the nearest {@link AppCatalogueContext} — `{}` when no app instance provides one. */
-export function useAppCatalogue(): AppCatalogue {
-  return useContext(AppCatalogueContext);
-}
-
 export const PluginSurfaceActionsContext = createContext<UiInterpreterContext["requestContextMenu"]>(undefined);
 
 export function usePluginSurfaceActions(): UiInterpreterContext["requestContextMenu"] {
   return useContext(PluginSurfaceActionsContext);
 }
 
-export const ShellContextMenuFallbackContext = createContext<(() => ContextMenuItem[]) | undefined>(undefined);
-
-export function useShellContextMenuFallback(): (() => ContextMenuItem[]) | undefined {
-  return useContext(ShellContextMenuFallbackContext);
-}
-
-export type SurfaceContextMenuResult = {
-  readonly items: ContextMenuItem[];
-  readonly titleKey: UiTranslationKey;
-};
-
-const contextMenuSurfaceTitleKeys = {
-  blockList: "ui.surfaceContextMenu.step",
-  board2d: "ui.surfaceContextMenu.board",
-  canvas2d: "ui.surfaceContextMenu.canvas",
-  diffView: "ui.surfaceContextMenu.diff",
-  eventFeed: "ui.surfaceContextMenu.event",
-  graphTimeline: "ui.surfaceContextMenu.history",
-  inkCanvas: "ui.surfaceContextMenu.ink",
-  nodeGraph: "ui.surfaceContextMenu.flow",
-  paint2d: "ui.surfaceContextMenu.paint",
-  table: "ui.surfaceContextMenu.row",
-  textEditor: "ui.surfaceContextMenu.editor",
-  tiledMap: "ui.surfaceContextMenu.map",
-  virtualFileSystem: "ui.surfaceContextMenu.file",
-  world3d: "ui.surfaceContextMenu.scene",
-} as const satisfies Record<string, UiTranslationKey>;
-
-const contextMenuTargetTitleKeys = {
-  architecture: "ui.surfaceContextMenu.architecture",
-  attraction: "ui.surfaceContextMenu.attraction",
-  block: "ui.surfaceContextMenu.block",
-  edge: "ui.surfaceContextMenu.edge",
-  entry: "ui.surfaceContextMenu.entry",
-  feature: "ui.surfaceContextMenu.feature",
-  group: "ui.surfaceContextMenu.group",
-  handle: "ui.surfaceContextMenu.handle",
-  layer: "ui.surfaceContextMenu.layer",
-  node: "ui.surfaceContextMenu.node",
-  object: "ui.surfaceContextMenu.object",
-  part: "ui.surfaceContextMenu.part",
-  path: "ui.surfaceContextMenu.path",
-  pixel: "ui.surfaceContextMenu.pixel",
-  position: "ui.surfaceContextMenu.position",
-  reference: "ui.surfaceContextMenu.reference",
-  route: "ui.surfaceContextMenu.route",
-  row: "ui.surfaceContextMenu.row",
-  slider: "ui.surfaceContextMenu.slider",
-  vortex: "ui.surfaceContextMenu.vortex",
-} as const satisfies Record<string, UiTranslationKey>;
-
-export function surfaceContextMenuTitleKey(request: PluginContextMenuRequest): UiTranslationKey {
-  const hitDomain = request.surface?.hits?.[0]?.domain;
-  if (hitDomain && hitDomain in contextMenuTargetTitleKeys) return contextMenuTargetTitleKeys[hitDomain as keyof typeof contextMenuTargetTitleKeys];
-  const surfaceKind = request.surface?.kind;
-  if (surfaceKind && surfaceKind in contextMenuSurfaceTitleKeys) return contextMenuSurfaceTitleKeys[surfaceKind as keyof typeof contextMenuSurfaceTitleKeys];
-  return "ui.surfaceContextMenu.workspace";
-}
-
-export async function openSurfaceContextMenu(
-  requestContextMenu: ((request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>) | undefined,
-  request: PluginContextMenuRequest,
-  mapSpecs: (specs: readonly ContextMenuItemSpec[]) => ContextMenuItem[],
-  shellFallback: (() => ContextMenuItem[]) | undefined,
-): Promise<SurfaceContextMenuResult> {
-  const titleKey = surfaceContextMenuTitleKey(request);
-  if (!requestContextMenu) return { items: shellFallback?.() ?? [], titleKey };
-  try {
-    // 🖱️ An EMPTY plugin answer stays empty — it is the surface saying "nothing here", and the shell
-    // fallback is deliberately NOT substituted for it (law: "openSurfaceContextMenu keeps an empty
-    // plugin answer off the shell fallback"). The fallback is only for a surface with no resolver at all.
-    return { items: mapSpecs(await requestContextMenu(request)), titleKey };
-  } catch {
-    return { items: [], titleKey };
-  }
-}
-
 //#region VirtualFileSystemHost
-export function parseSceneJsonField<T>(encoded: string): T {
-  if (encoded.startsWith("pk:")) return decodeScenePackField(encoded) as T;
-  return JSON.parse(encoded) as T;
-}
 
 export function virtualFileSystemNavigation(row: Pick<VirtualFileSystemNode, "navigateUri">): { readonly action: string; readonly args: Readonly<Record<string, string>> } | null {
   const uri = row.navigateUri;

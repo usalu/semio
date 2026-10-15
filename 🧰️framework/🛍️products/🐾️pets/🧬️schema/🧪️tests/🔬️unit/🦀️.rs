@@ -4,59 +4,9 @@
 //! @see ../../🔣️.json — the normative contract the enumerations are read from
 
 use super::*;
+use crate::testkit::{assert_same, entries, fixture, json, normative, typed};
 use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
-use std::path::PathBuf;
-
-pub(crate) fn fixture(case: &str) -> Value {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🧫️fixtures");
-    let directory = std::fs::read_dir(&root).into_iter().flatten().flatten().map(|entry| entry.path()).find(|path| path.file_name().and_then(|name| name.to_str()).is_some_and(|name| name.ends_with(case)));
-    let path = directory.unwrap_or_else(|| panic!("no fixture case {case} under {}", root.display())).join("🔣️.json");
-    let text = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
-    serde_json::from_str(&text).unwrap_or_else(|error| panic!("{}: {error}", path.display()))
-}
-
-pub(crate) fn typed<T: DeserializeOwned>(value: &Value) -> T {
-    serde_json::from_value(value.clone()).unwrap_or_else(|error| panic!("{error}: {value}"))
-}
-
-pub(crate) fn json<T: Serialize>(value: &T) -> Value {
-    serde_json::to_value(value).unwrap_or_else(|error| panic!("{error}"))
-}
-
-pub(crate) fn entries(value: &Value) -> &[Value] {
-    value.as_array().map_or(&[], Vec::as_slice)
-}
-
-pub(crate) fn number(value: &Value) -> f64 {
-    value.as_f64().unwrap_or_else(|| panic!("not a number: {value}"))
-}
-
-pub(crate) fn bits(value: f64) -> String {
-    format!("{:016x}", value.to_bits())
-}
-
-pub(crate) fn assert_same(context: &str, produced: &Value, expected: &Value) {
-    match (produced, expected) {
-        (Value::Number(left), Value::Number(right)) => {
-            let (left, right) = (left.as_f64().unwrap_or(f64::NAN), right.as_f64().unwrap_or(f64::NAN));
-            assert!(left == right, "{context}: {left} ≠ {right}");
-        }
-        (Value::Object(left), Value::Object(right)) => {
-            assert_eq!(left.keys().collect::<Vec<_>>(), right.keys().collect::<Vec<_>>(), "{context}: keys");
-            for (key, value) in left {
-                assert_same(&format!("{context}/{key}"), value, &right[key]);
-            }
-        }
-        (Value::Array(left), Value::Array(right)) => {
-            assert_eq!(left.len(), right.len(), "{context}: length");
-            for (index, (left, right)) in left.iter().zip(right).enumerate() {
-                assert_same(&format!("{context}/{index}"), left, right);
-            }
-        }
-        _ => assert_eq!(produced, expected, "{context}"),
-    }
-}
 
 fn round_trips<T: Serialize + DeserializeOwned>(context: &str, value: &Value) {
     assert_same(context, &json(&typed::<T>(value)), value);
@@ -69,10 +19,6 @@ fn round_trips_as(context: &str, definition: &str, document: &Value) {
         "Ensemble" => round_trips::<Ensemble>(context, document),
         other => panic!("{context}: no twin is tested for the definition {other}"),
     }
-}
-
-fn normative() -> Value {
-    serde_json::from_str(include_str!("../../🔣️.json")).unwrap_or_else(|error| panic!("🧬️schema/🔣️.json: {error}"))
 }
 
 fn joined(parts: &[Value]) -> Value {

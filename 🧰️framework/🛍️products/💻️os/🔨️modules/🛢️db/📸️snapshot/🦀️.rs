@@ -292,7 +292,7 @@ async fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>
 
 //#region 🔖️SegmentIo
 /// 🪟️ A length-bounded, base-shifted view over a borrowed byte buffer that implements
-/// `pack::PackSource` — the mechanism this crate uses to open one generation's own pack structure
+/// `semio_framework_pack_source::PackSource` — the mechanism this crate uses to open one generation's own pack structure
 /// (`PackFile::open_manifest`, `read_footer_only`) at an arbitrary offset inside a larger
 /// multi-generation concatenation, without touching any `pack_format` private internals.
 #[cfg(test)]
@@ -303,7 +303,7 @@ struct SubSource<'a> {
 }
 
 #[cfg(test)]
-impl<'a> pack::PackSource for SubSource<'a> {
+impl<'a> semio_framework_pack_source::PackSource for SubSource<'a> {
     async fn len(&self) -> u64 {
         self.len
     }
@@ -324,7 +324,7 @@ struct PageSubSource<'pages> {
     len: u64,
 }
 
-impl pack::PackSource for PageSubSource<'_> {
+impl semio_framework_pack_source::PackSource for PageSubSource<'_> {
     async fn len(&self) -> u64 {
         self.len
     }
@@ -356,7 +356,7 @@ impl pack::PackSource for PageSubSource<'_> {
     }
 }
 
-struct SnapshotDescriptorReader<'source, 'control, S: pack::PackSource> {
+struct SnapshotDescriptorReader<'source, 'control, S: semio_framework_pack_source::PackSource> {
     source: &'source S,
     cursor: u64,
     end: u64,
@@ -364,7 +364,7 @@ struct SnapshotDescriptorReader<'source, 'control, S: pack::PackSource> {
     control: &'control mut SnapshotCursorControl,
 }
 
-impl<S: pack::PackSource> SnapshotDescriptorReader<'_, '_, S> {
+impl<S: semio_framework_pack_source::PackSource> SnapshotDescriptorReader<'_, '_, S> {
     async fn fixed<const N: usize>(&mut self) -> Result<[u8; N], DbError> {
         if self.cursor.checked_add(N as u64).is_none_or(|end| end > self.end) {
             return Err(DbError::Corrupt("snapshot descriptor ended early".to_string()));
@@ -436,7 +436,7 @@ impl<S: pack::PackSource> SnapshotDescriptorReader<'_, '_, S> {
     }
 }
 
-async fn decode_snapshot_descriptor(source: &impl pack::PackSource, control: &mut SnapshotCursorControl) -> Result<SnapshotDescriptor, DbError> {
+async fn decode_snapshot_descriptor(source: &impl semio_framework_pack_source::PackSource, control: &mut SnapshotCursorControl) -> Result<SnapshotDescriptor, DbError> {
     let offset = pack::HEADER_SIZE as u64;
     let mut prefix = [0u8; 12];
     control.grant()?;
@@ -495,7 +495,7 @@ struct SnapshotPageSink {
     writer: db_storage::DbIoPageWriter,
 }
 
-impl pack::PackSink for SnapshotPageSink {
+impl semio_framework_pack_source::PackSink for SnapshotPageSink {
     async fn write_all(&mut self, bytes: &[u8]) -> Result<(), pack::PackError> {
         let mut cursor = 0;
         while cursor < bytes.len() {

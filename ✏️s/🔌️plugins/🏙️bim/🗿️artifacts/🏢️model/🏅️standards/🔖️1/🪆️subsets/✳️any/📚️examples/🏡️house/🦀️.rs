@@ -15,3 +15,9 @@ pub const DERIVATIONS: &str = include_str!("../../🖼️assets/🏡️house/�
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }
+
+//#region 🧩️Modules
+#[cfg(test)]
+#[path = "🧪️tests/🧩️example/🦀️.rs"]
+mod tests;
+//#endregion 🧩️Modules

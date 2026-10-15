@@ -135,7 +135,7 @@ export interface ChangePrintTarget {
 }
 
 export interface ChangeDataFields {
-  newFields: import("../🟦️.ts").FormDictionary | null;
+  newFields: import("../🟦️.ts").QuestionDictionary | null;
 }
 
 export interface CreatePage {

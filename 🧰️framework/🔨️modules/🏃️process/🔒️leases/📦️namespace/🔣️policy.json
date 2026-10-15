@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "catalogShards": 16,
+  "entriesPerShard": 4,
+  "maximumEntries": 64,
+  "maximumClaims": 64,
+  "maximumDatabaseBytes": 16384,
+  "maximumCatalogBytes": 16384,
+  "minimumAvailableBytes": 65536,
+  "metadataReserveBytes": 131072,
+  "maximumPins": 64,
+  "maximumResourceUtf8Bytes": 4096,
+  "maximumConcurrentMetadataWriters": 2,
+  "maximumMetadataJournalBytes": 49152
+}

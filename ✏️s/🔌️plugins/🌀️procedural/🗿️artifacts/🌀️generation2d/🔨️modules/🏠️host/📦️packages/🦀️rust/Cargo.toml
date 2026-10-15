@@ -16,6 +16,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job-publication = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-job-registry = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
+
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-job = { workspace = true }

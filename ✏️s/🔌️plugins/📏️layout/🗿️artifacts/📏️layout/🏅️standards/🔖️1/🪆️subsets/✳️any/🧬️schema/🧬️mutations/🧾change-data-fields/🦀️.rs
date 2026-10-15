@@ -14,7 +14,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ChangeDataFields {
-    pub new_fields: Option<semio_s_artifact_forms_forms::schema::dictionary::FormDictionary>,
+    pub new_fields: Option<semio_framework_value_dictionary::QuestionDictionary>,
 }
 
 

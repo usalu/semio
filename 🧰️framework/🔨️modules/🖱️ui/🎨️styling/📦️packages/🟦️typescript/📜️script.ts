@@ -48,7 +48,7 @@ class TwinScript extends BundleScript {
 class AssetTransportTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("test-asset-transport has a fixed neutral transport selection");
-    await runVitestV1(readVitestPolicyV1(process.env,this.root), ["../../🏗️builder/🌐️vite/🟦️.ts", "--testNamePattern", "resolveAssetDeliveryModeV1|tileProxyVitePlugin|createAssetBuildPluginsV1"], "../../🧪️tests/🎚️config/🟦️.ts", process.env);
+    await runVitestV1(readVitestPolicyV1(process.env,this.root), ["../../🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts", "--testNamePattern", "resolveAssetDeliveryModeV1|tileProxyVitePlugin|createAssetBuildPluginsV1"], "../../🧪️tests/🎚️config/🟦️.ts", process.env);
   }
 }
 

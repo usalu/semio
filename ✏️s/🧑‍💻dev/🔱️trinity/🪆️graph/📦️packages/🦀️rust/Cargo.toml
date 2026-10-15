@@ -21,6 +21,7 @@ id = "s-dev-trinity-jack"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-composition-admission = { path = "../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-jack = { path = "../../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio = { path = "../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio-graph = { path = "../../../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/📦️packages/🦀️rust" }

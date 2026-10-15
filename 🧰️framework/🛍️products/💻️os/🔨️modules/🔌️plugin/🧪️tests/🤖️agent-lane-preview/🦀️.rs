@@ -138,11 +138,11 @@ mod agent_lane_preview_tests {
             if case["cancelled"].as_bool() == Some(true) {
                 cancel.cancel_now();
             }
-            let params = semio_framework_job::BatchJobParams {
+            let params = semio_framework_job_worker_authority::BatchJobParams {
                 operation: semio_framework_job::allocate_operation_id(),
                 generation: semio_framework_job::Generation(1),
                 cancel,
-                config: semio_framework_job::BatchDriveConfig { retained: crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance, site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 },
+                config: semio_framework_job_worker_authority::BatchDriveConfig { retained: crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance, site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 },
                 now_us: scripted_now_us,
             };
             let verdict = drive_agent_lane_preview(job, params, crate::app_testing::artifact_app_laws::fixture_mounted_policy().close, name);

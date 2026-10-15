@@ -24,7 +24,7 @@
 //! used at the time. `MeshTransfer` moved again in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME
 //! wave 1 (W1-A): the parent's own `engine::contract` module now owns it same-crate.
 
-use semio_framework_3d_brep_operations::euler::{add_shell, add_solid};
+use semio_framework_3d_brep_construction::euler::{add_shell, add_solid};
 use semio_framework_3d_brep_representation::contract::MeshTransfer;
 use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
 use semio_framework_mesh_engine::HistoryFoldIndex;
@@ -228,9 +228,9 @@ impl MeshImportCursor {
                     let keys=points.map(|point|[point.x,point.y,point.z].map(|value|if value==0.0 {0}else {value.to_bits()}));
                     for i in 0..3 {let a=keys[i];let b=keys[(i+1)%3];let key=(a.min(b),a.max(b));if let Some((_,uses,direction))=self.edge_map.get(&key) {let forward=a==key.0;if *uses>=2 || (*uses==1 && *direction==forward) {return Err(KernelError::InvalidInput("triangle import requires manifold coherent winding".into()));}}}
                     let mut local=OpRecorder::new();let mut vertices=Vec::with_capacity(3);let mut members=Vec::with_capacity(3);
-                    for i in 0..3 {let id=if let Some(id)=self.vertex_map.get(&keys[i]) {*id}else {let id=semio_framework_3d_brep_operations::euler::make_vertex(body,points[i],Tol::DEFAULT,&mut local);self.vertex_map.insert(keys[i],id);id};vertices.push(id);}
-                    for i in 0..3 {let j=(i+1)%3;let key=(keys[i].min(keys[j]),keys[i].max(keys[j]));let forward=keys[i]==key.0;let edge=if let Some((edge,uses,_))=self.edge_map.get_mut(&key) {*uses+=1;self.boundary_edges-=1;*edge}else {let (a,b)=if forward {(i,j)}else {(j,i)};let edge=semio_framework_3d_brep_operations::primitives::line_edge(body,points[a],points[b],vertices[a],vertices[b],Tol::DEFAULT,&mut local);self.edge_map.insert(key,(edge,1,forward));self.boundary_edges+=1;edge};members.push((edge,forward));}
-                    let wire=semio_framework_3d_brep_representation::topology::Wire {members,vertices,closed:true};let face=semio_framework_3d_brep_operations::primitives::make_planar_face_from_wire(body,&wire,p0,normal,&mut local)?;
+                    for i in 0..3 {let id=if let Some(id)=self.vertex_map.get(&keys[i]) {*id}else {let id=semio_framework_3d_brep_construction::euler::make_vertex(body,points[i],Tol::DEFAULT,&mut local);self.vertex_map.insert(keys[i],id);id};vertices.push(id);}
+                    for i in 0..3 {let j=(i+1)%3;let key=(keys[i].min(keys[j]),keys[i].max(keys[j]));let forward=keys[i]==key.0;let edge=if let Some((edge,uses,_))=self.edge_map.get_mut(&key) {*uses+=1;self.boundary_edges-=1;*edge}else {let (a,b)=if forward {(i,j)}else {(j,i)};let edge=semio_framework_3d_brep_construction::primitives::line_edge(body,points[a],points[b],vertices[a],vertices[b],Tol::DEFAULT,&mut local);self.edge_map.insert(key,(edge,1,forward));self.boundary_edges+=1;edge};members.push((edge,forward));}
+                    let wire=semio_framework_3d_brep_representation::topology::Wire {members,vertices,closed:true};let face=semio_framework_3d_brep_construction::primitives::make_planar_face_from_wire(body,&wire,p0,normal,&mut local)?;
                     local.own_triangle(body,face);self.recorder.append_disjoint(local);self.faces.push(face);
                 }
                 self.cursor+=3;
