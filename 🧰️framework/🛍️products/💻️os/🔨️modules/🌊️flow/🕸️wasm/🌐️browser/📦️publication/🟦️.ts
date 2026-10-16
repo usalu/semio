@@ -1,5 +1,5 @@
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withProducedWasmPackageTaskV1,readWasmPackageOwnerV1,type ProducedWasmPackageV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import {withProducedWasmPackageTaskV1,readWasmPackageOwnerV1,type ProducedWasmPackageV1} from "@semio-tech/process/wasm-build";
 import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
 import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
@@ -7,7 +7,7 @@ import {withRepositoryCacheStoreV1} from "../../../../../../🦑️repo/🔨️m
 import {readNativeCallerAuthorityV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {bundleVirtualJavaScript} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts";
 import {readArtifactBytesV1} from "../../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
-import {type CompilerAdmissionControl} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {type CompilerAdmissionControl} from "@semio-tech/process/compiler-capacity";
 import {flowBrowserDeclaration} from "../📝️declaration/📤️projection/🟦️.ts";
 import {flowBrowserPackageRequestV1} from "./📋️contract/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};

@@ -7,8 +7,8 @@
 //! `MemoryAuthorityStore::new()` in every body. A downstream instance with a durable backend could
 //! therefore only *re-type* them, and a re-typed contract is two contracts that drift. Each function
 //! here takes `&mut impl <Role>Store` and is compiled into the framework only when somebody asks for
-//! it — the crate's own tests (`cfg(test)`) and any instance crate enabling the `conformance`
-//! feature on its dev-dependency. A default build of the product contains none of it.
+//! it — the companion crate `semio-framework-server-tests` and any instance crate enabling the
+//! `conformance` feature on its dev-dependency. A default build of the product contains none of it.
 //!
 //! **What a backend must bring.** Every function is handed a store that is *empty*; a durable
 //! backend opens a fresh directory for each. Nothing here reaches a clock, a task or the filesystem,

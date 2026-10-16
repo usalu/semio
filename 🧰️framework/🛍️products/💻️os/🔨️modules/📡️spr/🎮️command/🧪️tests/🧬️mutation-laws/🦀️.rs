@@ -71,7 +71,7 @@ mod tests {
     use protocol::{Mutation, OpBinary, OpText};
 
     fn cases() -> serde_json::Value {
-        serde_json::from_str(include_str!("../../🧪️testing/🧬️mutation-laws/🔣️.json")).unwrap()
+        serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️testing/🧬️mutation-laws/🔣️.json")).expect("fixture").as_str()).unwrap()
     }
 
     const WITNESSES: [&str; 5] = [

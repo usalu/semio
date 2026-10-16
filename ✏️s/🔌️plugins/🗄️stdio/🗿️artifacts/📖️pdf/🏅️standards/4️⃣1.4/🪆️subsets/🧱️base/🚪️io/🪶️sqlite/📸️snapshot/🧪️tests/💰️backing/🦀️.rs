@@ -1,6 +1,5 @@
 //! 🔬️ Complete direct domain backing is observed without a copied carrier authority.
-#[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
-mod observer;
+use semio_framework_io_sqlite_snapshot_testing_backing as observer;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_4::subsets::base::io::sqlite::snapshot::*;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;

@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-os-space-testing-sqlite-native-caller"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Actual original native caller for the Semio SQLite snapshot suites: independent body and close grants drive every erased conversion."
+
+[package.metadata.semio]
+role = "test"
+id = "os-space-testing-sqlite-native-caller"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

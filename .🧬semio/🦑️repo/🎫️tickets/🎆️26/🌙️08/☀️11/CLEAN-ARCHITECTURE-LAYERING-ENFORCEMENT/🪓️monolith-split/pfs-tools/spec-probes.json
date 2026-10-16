@@ -1,0 +1,58 @@
+{
+ "file": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts",
+ "label": "probes",
+ "childRoot": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes",
+ "deleteParent": false,
+ "children": [
+  {
+   "folder": "🧰️probe-kit",
+   "doc": "/** 🧰️ Shared kit of the differential check table of `@semio-tech/print-viz-inference`: the three sampling densities every check table honours, the shape of one differential check, the sample counts of a level and the recorder of a d3 path.\n *\n * @see ../🟦️.ts — the differential check table that assembles the topics\n */",
+   "stmts": [
+    "30-52",
+    "1677"
+   ]
+  },
+  {
+   "folder": "📐️scale-and-format",
+   "doc": "/** 📐️ Differential checks of the scale and format kernels against the d3 packages registered as their oracles.\n *\n * @see ../🧰️probe-kit/🟦️.ts — the check shape and the sampling densities\n * @see ../🟦️.ts — the differential check table that assembles the topics\n */",
+   "stmts": [
+    "55-222"
+   ]
+  },
+  {
+   "folder": "🧮️transform-and-shape",
+   "doc": "/** 🧮️ Differential checks of the transform and shape kernels against the d3 packages registered as their oracles.\n *\n * @see ../🧰️probe-kit/🟦️.ts — the check shape and the sampling densities\n * @see ../🟦️.ts — the differential check table that assembles the topics\n */",
+   "stmts": [
+    "274-421"
+   ]
+  },
+  {
+   "folder": "🧭️coordinate-and-hierarchy",
+   "doc": "/** 🧭️ Differential checks of the coordinate and hierarchy kernels against the d3 packages registered as their oracles.\n *\n * @see ../🧰️probe-kit/🟦️.ts — the check shape and the sampling densities\n * @see ../🟦️.ts — the differential check table that assembles the topics\n */",
+   "stmts": [
+    "629-756"
+   ]
+  },
+  {
+   "folder": "🕸️network-and-flow",
+   "doc": "/** 🕸️ Differential checks of the network and flow kernels against the d3 packages registered as their oracles.\n *\n * @see ../🧰️probe-kit/🟦️.ts — the check shape and the d3 path recorder\n * @see ../🟦️.ts — the differential check table that assembles the topics\n */",
+   "stmts": [
+    "890-1095"
+   ]
+  },
+  {
+   "folder": "🌍️geo-and-spatial",
+   "doc": "/** 🌍️ Differential checks of the geo and spatial kernels against the d3 packages registered as their oracles.\n *\n * @see ../🧰️probe-kit/🟦️.ts — the check shape and the d3 path recorder\n * @see ../🟦️.ts — the differential check table that assembles the topics\n */",
+   "stmts": [
+    "1160-1314"
+   ]
+  },
+  {
+   "folder": "🖼️theme-and-render",
+   "doc": "/** 🖼️ Differential checks of the theme and render kernels: the planned chart against the TikZ the native emitter writes for the demo specification.\n *\n * @see ../🧰️probe-kit/🟦️.ts — the check shape\n * @see ../🟦️.ts — the differential check table that assembles the topics\n */",
+   "stmts": [
+    "1446-1532"
+   ]
+  }
+ ]
+}

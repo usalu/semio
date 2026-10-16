@@ -130,12 +130,12 @@ fn controlled_output_is_the_only_allocation_and_matches_independent_engine() {
         let validation_requests = std::cell::Cell::new(0);
         let mut accepted = |progress: Base64Progress| {
             if progress.phase == Base64Phase::Validate {
-                validation_requests.set(test_allocation::observed_requested_bytes().unwrap_or(0));
+                validation_requests.set(semio_framework_trace_memory_testing::observed_requested_bytes().unwrap_or(0));
             }
             true
         };
         let mut control = Base64Control { maximum_output_bytes: length, progress: &mut accepted };
-        let (decoded, requests, releases) = test_allocation::observe_backing(|| base64_standard_decode_controlled(text.as_bytes(), &mut control));
+        let (decoded, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| base64_standard_decode_controlled(text.as_bytes(), &mut control));
         let decoded = decoded.unwrap();
         assert_eq!(decoded, bytes);
         assert_eq!(decoded, oracle.decode(&text).unwrap());
@@ -145,7 +145,7 @@ fn controlled_output_is_the_only_allocation_and_matches_independent_engine() {
         assert_eq!(decoded.capacity(), length);
         let mut accepted = |_| true;
         let mut control = Base64Control { maximum_output_bytes: text.len(), progress: &mut accepted };
-        let (encoded, requests, releases) = test_allocation::observe_backing(|| base64_standard_encode_controlled(&bytes, &mut control));
+        let (encoded, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| base64_standard_encode_controlled(&bytes, &mut control));
         let encoded = encoded.unwrap();
         assert_eq!(encoded, text);
         assert_eq!(requests, text.len(), "encode requests length {length}");
@@ -153,11 +153,11 @@ fn controlled_output_is_the_only_allocation_and_matches_independent_engine() {
         assert_eq!(encoded.capacity(), text.len());
         if length != 0 {
             let mut control = Base64Control { maximum_output_bytes: length - 1, progress: &mut accepted };
-            let (result, requests) = test_allocation::observe(|| base64_standard_decode_controlled(text.as_bytes(), &mut control));
+            let (result, requests) = semio_framework_trace_memory_testing::observe(|| base64_standard_decode_controlled(text.as_bytes(), &mut control));
             assert_eq!(result, Err(Base64ControlError::OutputLimit));
             assert_eq!(requests, 0);
             let mut control = Base64Control { maximum_output_bytes: text.len() - 1, progress: &mut accepted };
-            let (result, requests) = test_allocation::observe(|| base64_standard_encode_controlled(&bytes, &mut control));
+            let (result, requests) = semio_framework_trace_memory_testing::observe(|| base64_standard_encode_controlled(&bytes, &mut control));
             assert_eq!(result, Err(Base64ControlError::OutputLimit));
             assert_eq!(requests, 0);
         }
@@ -182,7 +182,7 @@ fn controlled_cancellation_preserves_phase_and_exact_output_custody() {
         };
         let expected = if phase == Base64Phase::Encode { text.len() } else { bytes.len() };
         let mut control = Base64Control { maximum_output_bytes: expected, progress: &mut callback };
-        let (result, requests, releases) = test_allocation::observe_backing(|| {
+        let (result, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| {
             if phase == Base64Phase::Encode { base64_standard_encode_controlled(&bytes, &mut control).map(|_| ()) }
             else { base64_standard_decode_controlled(text.as_bytes(), &mut control).map(|_| ()) }
         });
@@ -211,7 +211,7 @@ fn controlled_malformed_inputs_allocate_nothing_and_preserve_refusal_precedence(
         };
         let mut accepted = |_| true;
         let mut control = Base64Control { maximum_output_bytes: encoded.len(), progress: &mut accepted };
-        let (result, requests) = test_allocation::observe(|| base64_standard_decode_controlled(encoded.as_bytes(), &mut control));
+        let (result, requests) = semio_framework_trace_memory_testing::observe(|| base64_standard_decode_controlled(encoded.as_bytes(), &mut control));
         assert_eq!(result, Err(Base64ControlError::Codec(error)));
         assert_eq!(requests, 0, "malformed {encoded}");
         assert!(base64::engine::general_purpose::STANDARD.decode(encoded).is_err());
@@ -220,14 +220,14 @@ fn controlled_malformed_inputs_allocate_nothing_and_preserve_refusal_precedence(
     encoded[4097] = b' ';
     let mut accepted = |_| true;
     let mut control = Base64Control { maximum_output_bytes: encoded.len(), progress: &mut accepted };
-    let (result, requests) = test_allocation::observe(|| base64_standard_decode_controlled(&encoded, &mut control));
+    let (result, requests) = semio_framework_trace_memory_testing::observe(|| base64_standard_decode_controlled(&encoded, &mut control));
     assert_eq!(result, Err(Base64ControlError::Codec(Base64Error::InvalidByte { index: 4097, byte: b' ' })));
     assert_eq!(requests, 0);
     let competing = &corpus["competingRefusal"];
     encoded = competing["block"].as_str().unwrap().repeat(competing["repeats"].as_u64().unwrap() as usize).into_bytes();
     encoded[competing["invalidByteOffset"].as_u64().unwrap() as usize] = b' ';
     encoded[competing["paddingOffset"].as_u64().unwrap() as usize] = b'=';
-    let (result, requests) = test_allocation::observe(|| base64_standard_decode_controlled(&encoded, &mut control));
+    let (result, requests) = semio_framework_trace_memory_testing::observe(|| base64_standard_decode_controlled(&encoded, &mut control));
     assert_eq!(result, Err(Base64ControlError::Codec(Base64Error::InvalidPadding)));
     assert_eq!(requests, 0);
     let mut denied = |_| false;
@@ -250,7 +250,7 @@ fn retained_decode_uses_exact_work_grants_and_original_input_owner() {
         let bytes = controlled_bytes(length, &corpus);
         let source = engine.encode(&bytes);
         let pointer = source.as_ptr();
-        let (mut cursor, requests) = test_allocation::observe(|| Base64DecodeCursor::new(Base64Input::OwnedText(source)));
+        let (mut cursor, requests) = semio_framework_trace_memory_testing::observe(|| Base64DecodeCursor::new(Base64Input::OwnedText(source)));
         assert_eq!(requests, 0);
         assert_eq!(cursor.output_capacity(), 0);
         assert!(cursor.take_output().is_none());
@@ -264,14 +264,14 @@ fn retained_decode_uses_exact_work_grants_and_original_input_owner() {
             assert!(demand > 0 && demand <= 8192);
             for grant in corpus["stepGrants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).filter(|grant| *grant < demand) {
                 let prior_callbacks = callbacks.get();
-                let (state, requested) = test_allocation::observe(|| cursor.step(grant, &mut control));
+                let (state, requested) = semio_framework_trace_memory_testing::observe(|| cursor.step(grant, &mut control));
                 assert_eq!(state.unwrap(), Base64DecodeState::Pending);
                 assert_eq!(cursor.progress(), before);
                 assert_eq!(requested, 0);
                 assert_eq!(callbacks.get(), prior_callbacks);
             }
             let prior_capacity=cursor.output_capacity();
-            let (_,requested)=test_allocation::observe(||cursor.step(demand, &mut control).unwrap());
+            let (_,requested)=semio_framework_trace_memory_testing::observe(||cursor.step(demand, &mut control).unwrap());
             assert_eq!(cursor.output_capacity(),prior_capacity+requested);
             assert!(cursor.output_capacity()==0||cursor.output_capacity()==length);
             turns += 1;
@@ -311,16 +311,16 @@ fn retained_input_ranges_preserve_backing_and_span_progress() {
             let pointer = text.as_ptr();
             let capacity = text.capacity();
             let range = Base64InputRange { start: row["utf8Start"].as_u64().unwrap() as usize, end: row["utf8Start"].as_u64().unwrap() as usize + encoded.len() };
-            let (mut cursor, requests, releases) = test_allocation::observe_backing(|| Base64DecodeCursor::new_range(Base64Input::OwnedText(text), range));
+            let (mut cursor, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| Base64DecodeCursor::new_range(Base64Input::OwnedText(text), range));
             assert_eq!((requests, releases), (0, 0));
             let mut progress = |event: Base64Progress| { assert_eq!(event.total, encoded.len()); assert!(event.completed <= event.total); true };
             let mut control = Base64Control { maximum_output_bytes: length, progress: &mut progress };
-            let (_, requests, releases) = test_allocation::observe_backing(|| {
+            let (_, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| {
                 while !cursor.is_complete() { cursor.step(cursor.next_work_demand(), &mut control).unwrap(); }
             });
             assert_eq!((requests, releases), (length, 0));
             assert_eq!(cursor.take_output().unwrap(), bytes);
-            let (parts, requests, releases) = test_allocation::observe_backing(|| cursor.into_parts());
+            let (parts, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| cursor.into_parts());
             assert_eq!((requests, releases), (0, 0));
             assert_eq!(parts.range, range);
             assert_eq!(parts.outcome, Base64DecodeOutcome::Complete);
@@ -334,7 +334,7 @@ fn retained_input_ranges_preserve_backing_and_span_progress() {
         let input = row["input"].as_str().unwrap().to_owned();
         let pointer = input.as_ptr();
         let range = Base64InputRange { start: row["utf8"]["start"].as_u64().unwrap() as usize, end: row["utf8"]["end"].as_u64().unwrap() as usize };
-        let (mut cursor, requests, releases) = test_allocation::observe_backing(|| Base64DecodeCursor::new_range(Base64Input::OwnedText(input), range));
+        let (mut cursor, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| Base64DecodeCursor::new_range(Base64Input::OwnedText(input), range));
         assert_eq!((requests, releases), (0, 0));
         let mut progress = |_| panic!("invalid range reached progress");
         assert_eq!(cursor.step(100, &mut Base64Control { maximum_output_bytes: 100, progress: &mut progress }), Err(Base64ControlError::InputRange));
@@ -351,7 +351,7 @@ fn retained_input_ranges_preserve_backing_and_span_progress() {
     let mut cursor = Base64DecodeCursor::new_range(Base64Input::OwnedText(text), range);
     let mut progress = |event: Base64Progress| event.phase != Base64Phase::Decode || event.completed != 4096;
     let mut control = Base64Control { maximum_output_bytes: bytes.len(), progress: &mut progress };
-    let (result, requests, releases) = test_allocation::observe_backing(|| {
+    let (result, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| {
         loop { match cursor.step(cursor.next_work_demand(), &mut control) { Ok(Base64DecodeState::Pending) => {}, result => break result } }
     });
     assert_eq!(result, Err(Base64ControlError::Cancelled));
@@ -388,7 +388,7 @@ fn retained_decode_refusal_transfers_exact_original_input_and_partial_output() {
         accepted
     };
     let mut control = Base64Control { maximum_output_bytes: bytes.len(), progress: &mut callback };
-    let (result, requests, releases) = test_allocation::observe_backing(|| {
+    let (result, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| {
         loop { match cursor.step(cursor.next_work_demand(), &mut control) { Ok(Base64DecodeState::Pending) => {}, result => break result } }
     });
     assert_eq!(result, Err(Base64ControlError::Cancelled));
@@ -399,7 +399,7 @@ fn retained_decode_refusal_transfers_exact_original_input_and_partial_output() {
     assert!(cursor.take_output().is_none());
     control.maximum_output_bytes = 0;
     assert_eq!(cursor.step(8192, &mut control), Err(Base64ControlError::Cancelled));
-    let (parts, requests, releases) = test_allocation::observe_backing(|| cursor.into_parts());
+    let (parts, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| cursor.into_parts());
     assert_eq!((requests, releases), (0, 0));
     assert_eq!(parts.outcome, Base64DecodeOutcome::Refused(Base64ControlError::Cancelled));
     let output = parts.output.unwrap();

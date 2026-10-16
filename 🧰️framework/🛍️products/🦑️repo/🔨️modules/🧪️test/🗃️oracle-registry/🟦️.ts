@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type ComparisonProfile, type Implementation, type PlatformId, type EngineFamily } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type ComparisonProfile, type Implementation, type PlatformId, type EngineFamily } from "@semio-tech/framework/test/adapter";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { type DiscoveredCase } from "../🧭️case-discovery/🟦️.ts";

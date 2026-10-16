@@ -2,8 +2,7 @@
 
 extern crate semio_framework_os_kernel as protocol;
 
-#[path = "../../../../../🧪️tests/🔬️vectors/🦀️.rs"]
-mod vectors;
+use semio_s_artifact_remodel_remodeling_mut_vectors as vectors;
 
 #[path = "../../../../../🥣update-ingest-params/🧪️tests/📥️widens/🦀️.rs"]
 mod update_ingest_params_tests_widens_the_73f33e;

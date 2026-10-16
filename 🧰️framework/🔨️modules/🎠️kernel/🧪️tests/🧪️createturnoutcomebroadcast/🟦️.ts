@@ -1,10 +1,27 @@
+/** 🧰️ The kernel children's behaviour suites: the turn outcome broadcast, app router, activation registry, plugin registry, io router and plugin sources. This module is a vitest test file that imports each child and registers its suite; no child imports it back. */
+import * as vitest from "vitest";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { fixtureOriginalWorkStock } from "../../../🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { ShardClient } from "../../../🎭️actor/📮️shard-client/🟦️.ts";
+import { dialectCoordinate } from "../../../🚪️io/🧬️schema/🟦️.ts";
+import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
+import { ActivationRegistry, intersectCapabilityGrants } from "../../🎛️activation-registry/🟦️.ts";
+import { AppRouter } from "../../🧭️app-router/🟦️.ts";
+import { IoEntryGraph, ioIdentify, ioRun } from "../../🚪️io-router/🟦️.ts";
+import { DEFAULT_MAX_RESIDENT_ACTORS, residentActorCapFromMemory } from "../../🧯️memory-pressure/🟦️.ts";
+import { createBundledPluginSource, createDevPluginSource, createExtensionSource } from "../../🔌️plugin-source/🟦️.ts";
+import { expandPluginRegistry } from "../../🗂️plugin-registry/🟦️.ts";
+import { RUNTIME_METRICS_PUBLISH_INTERVAL_MS, runtimeMetricsDue } from "../../⏱️runtime-metrics/🟦️.ts";
+import { createTurnOutcomeBroadcast } from "../../📡️turn-outcome-broadcast/🟦️.ts";
+
+type Vitest = typeof import("vitest");
 type TestSource = { readonly directory: string; readonly url: string };
 type IoSchemaTestModule = typeof import("../../../🚪️io/🧬️schema/🟦️.ts");
 type ActorTestModule = typeof import("../../../🎭️actor/📮️shard-client/🟦️.ts");
-type ResidentTestModule = typeof import("../../../🌱️value/💾️resident/🟦️.ts");
+type ResidentTestModule = typeof import("@semio-tech/value-ts/resident");
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../📡️turn-outcome-broadcast/🟦️.ts"), "createTurnOutcomeBroadcast">, source: TestSource): Promise<void> {
+async function registerTests1(vitest: Vitest, dependencies: Pick<typeof import("../../📡️turn-outcome-broadcast/🟦️.ts"), "createTurnOutcomeBroadcast">, source: TestSource): Promise<void> {
   const { createTurnOutcomeBroadcast } = dependencies;
   type TurnOutcome = import("../../📡️turn-outcome-broadcast/🟦️.ts").TurnOutcome;
 
@@ -56,12 +73,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🧭️app-router/🟦️.ts"), "AppRouter">, source: TestSource): Promise<void> {
+async function registerTests2(vitest: Vitest, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🧭️app-router/🟦️.ts"), "AppRouter">, source: TestSource): Promise<void> {
   const { AppRouter, dialectCoordinate } = dependencies;
-  type AppRef = import("../../../🛂️manifest/🧬️schema/🟦️.ts").AppRef;
-  type AppRole = import("../../../🛂️manifest/🧬️schema/🟦️.ts").AppRole;
+  type AppRef = import("@semio-tech/framework/manifest/schema").AppRef;
+  type AppRole = import("@semio-tech/framework/manifest/schema").AppRole;
   type AppRouterManifest = import("../../🧭️app-router/🟦️.ts").AppRouterManifest;
-  type ArtifactDialect = import("../../../🧬️schema/🗿️artifact-reference/🟦️.ts").ArtifactDialect;
+  type ArtifactDialect = import("@semio-tech/schema-ts/artifact-reference").ArtifactDialect;
 
   const { describe, expect, it } = vitest;
 
@@ -109,7 +126,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../🌱️value/💾️resident/🟦️.ts"), "OwnedResidentLedger"> & Pick<typeof import("../../../🎭️actor/📮️shard-client/🟦️.ts"), "ShardClient"> & Pick<typeof import("../../🎛️activation-registry/🟦️.ts"), "ActivationRegistry" | "intersectCapabilityGrants"> & Pick<typeof import("../../🧯️memory-pressure/🟦️.ts"), "DEFAULT_MAX_RESIDENT_ACTORS" | "residentActorCapFromMemory"> & Pick<typeof import("../../⏱️runtime-metrics/🟦️.ts"), "RUNTIME_METRICS_PUBLISH_INTERVAL_MS" | "runtimeMetricsDue">, source: TestSource): Promise<void> {
+async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("@semio-tech/value-ts/resident"), "OwnedResidentLedger"> & Pick<typeof import("../../../🎭️actor/📮️shard-client/🟦️.ts"), "ShardClient"> & Pick<typeof import("../../🎛️activation-registry/🟦️.ts"), "ActivationRegistry" | "intersectCapabilityGrants"> & Pick<typeof import("../../🧯️memory-pressure/🟦️.ts"), "DEFAULT_MAX_RESIDENT_ACTORS" | "residentActorCapFromMemory"> & Pick<typeof import("../../⏱️runtime-metrics/🟦️.ts"), "RUNTIME_METRICS_PUBLISH_INTERVAL_MS" | "runtimeMetricsDue">, source: TestSource): Promise<void> {
   const { ActivationRegistry, DEFAULT_MAX_RESIDENT_ACTORS, OwnedResidentLedger, RUNTIME_METRICS_PUBLISH_INTERVAL_MS, ShardClient, intersectCapabilityGrants, residentActorCapFromMemory, runtimeMetricsDue } = dependencies;
   type MemoryProbe = import("../../🧯️memory-pressure/🟦️.ts").MemoryProbe;
   type PluginCatalog = import("../../📚️plugin-catalog/🟦️.ts").PluginCatalog;
@@ -118,7 +135,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
   type ShardBudget = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardBudget;
   type ShardCapabilityGrant = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardCapabilityGrant;
   type ShardClient = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardClient;
-  type OwnedResidentLedger = import("../../../🌱️value/💾️resident/🟦️.ts").OwnedResidentLedger;
+  type OwnedResidentLedger = import("@semio-tech/value-ts/resident").OwnedResidentLedger;
 
   const { describe, expect, it, vi } = vitest;
 
@@ -575,7 +592,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🗂️plugin-registry/🟦️.ts"), "expandPluginRegistry">, source: TestSource): Promise<void> {
+async function registerTests4(vitest: Vitest, dependencies: Pick<typeof import("../../🗂️plugin-registry/🟦️.ts"), "expandPluginRegistry">, source: TestSource): Promise<void> {
   const { expandPluginRegistry } = dependencies;
 
   const { describe, expect, it } = vitest;
@@ -602,9 +619,9 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🚪️io-router/🟦️.ts"), "IoEntryGraph" | "ioIdentify" | "ioRun">, source: TestSource): Promise<void> {
+async function registerTests5(vitest: Vitest, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🚪️io-router/🟦️.ts"), "IoEntryGraph" | "ioIdentify" | "ioRun">, source: TestSource): Promise<void> {
   const { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun } = dependencies;
-  type ArtifactDialect = import("../../../🧬️schema/🗿️artifact-reference/🟦️.ts").ArtifactDialect;
+  type ArtifactDialect = import("@semio-tech/schema-ts/artifact-reference").ArtifactDialect;
   type IoEntryGraphPlugin = import("../../🚪️io-router/🟦️.ts").IoEntryGraphPlugin;
 
   const { describe, expect, it } = vitest;
@@ -705,7 +722,7 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests6(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🔌️plugin-source/🟦️.ts"), "createBundledPluginSource" | "createDevPluginSource" | "createExtensionSource">, source: TestSource): Promise<void> {
+async function registerTests6(vitest: Vitest, dependencies: Pick<typeof import("../../🔌️plugin-source/🟦️.ts"), "createBundledPluginSource" | "createDevPluginSource" | "createExtensionSource">, source: TestSource): Promise<void> {
   const { createBundledPluginSource, createDevPluginSource, createExtensionSource } = dependencies;
   type PluginCatalog = import("../../📚️plugin-catalog/🟦️.ts").PluginCatalog;
   type PluginSourceEvent = import("../../🔌️plugin-source/🟦️.ts").PluginSourceEvent;
@@ -826,3 +843,11 @@ export async function registerTests6(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const source: TestSource = { directory: dirname(dirname(dirname(fileURLToPath(import.meta.url)))), url: import.meta.url };
+await registerTests1(vitest, { createTurnOutcomeBroadcast }, source);
+await registerTests2(vitest, { AppRouter, dialectCoordinate }, source);
+await registerTests3(vitest, { ActivationRegistry, DEFAULT_MAX_RESIDENT_ACTORS, OwnedResidentLedger, RUNTIME_METRICS_PUBLISH_INTERVAL_MS, ShardClient, intersectCapabilityGrants, residentActorCapFromMemory, runtimeMetricsDue }, source);
+await registerTests4(vitest, { expandPluginRegistry }, source);
+await registerTests5(vitest, { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun }, source);
+await registerTests6(vitest, { createBundledPluginSource, createDevPluginSource, createExtensionSource }, source);

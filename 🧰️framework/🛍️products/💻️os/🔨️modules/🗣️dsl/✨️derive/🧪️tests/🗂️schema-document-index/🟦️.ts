@@ -4,7 +4,7 @@ import { strict as assert } from "node:assert";
 import fg from "fast-glob";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { schemaDocumentIndex } from "../../📦️packages/🦀️rust/📜️script.ts";
+import { schemaDocumentIndex } from "../../🗂️schema-index/🟦️.ts";
 const vector = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧬️schema-search/🔣️.json", import.meta.url), "utf8"));
 const collections = new Set(["🧫️fixtures", "🧪️fixtures", "🧫️examples", "🧪️examples", "🧪️tests"]);
 const isCollection = (path: string) => path.split("/").some((part, ordinal, parts) => collections.has(part) && parts[ordinal - 1] !== "🔨️modules");

@@ -4,7 +4,7 @@
  */
 
 import { type Effect } from "@semio-tech/framework";
-import { decodePackWire } from "@semio-tech/framework-os";
+import { decodePackWire } from "@semio-tech/framework/packs";
 import { type BuiltNode, type Component, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
 import { applyUiPatch, emptyUiDocumentState, type UiDocumentState } from "../../📃️UiDocumentStore/🟦️.tsx";
 import type { RetainedUiNodeRecord } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";

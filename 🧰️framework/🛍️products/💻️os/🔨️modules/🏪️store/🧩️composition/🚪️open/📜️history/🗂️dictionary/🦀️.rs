@@ -512,7 +512,7 @@ impl VerifiedMemberHistoryDictionary {
         checked
     }
 
-    pub(super) fn initial_history_is_exact(&self) -> bool {
+    pub fn initial_history_is_exact(&self) -> bool {
         self.initial_history_exact
     }
 

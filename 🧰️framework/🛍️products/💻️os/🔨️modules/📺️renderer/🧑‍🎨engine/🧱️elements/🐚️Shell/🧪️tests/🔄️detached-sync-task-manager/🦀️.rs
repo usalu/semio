@@ -1,5 +1,6 @@
 //! 🔄️ LAW: detached Sync Attach and the unattached Task Manager remain real Shell-owned leaves.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::host_test_shell;
 use super::*;
 use serde_json::Value;
 
@@ -20,7 +21,7 @@ fn find_id<'a>(value: &'a Value, id: &str) -> Option<&'a Value> {
 
 #[test]
 fn detached_sync_leaf_is_always_dockable_and_owns_all_three_choices() {
-    let shell = super::panel_anchor_model_tests::host_test_shell();
+    let shell = host_test_shell();
     let fixture = fixture();
     assert!(shell.sync.sync_backbone_uri.is_none());
     let dock = SessionCtx::of(&mut shell).default_dock();
@@ -35,9 +36,9 @@ fn detached_sync_leaf_is_always_dockable_and_owns_all_three_choices() {
 
 #[test]
 fn sync_body_routes_draft_attach_and_detach_through_the_existing_controller() {
-    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut shell = host_test_shell();
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_sync_action(ActionDescriptor { controller_id: "framework.sync".into(), action: "selectRemote".into(), args: None })).expect("select remote");
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_sync_action(ActionDescriptor { controller_id: "framework.sync".into(), action: "setSyncDraft".into(), args: crate::action_args_json!({ "value": "https://hub.example" }) })).expect("draft route");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_sync_action(ActionDescriptor { controller_id: "framework.sync".into(), action: "setSyncDraft".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": "https://hub.example" }) })).expect("draft route");
     assert_eq!(shell.sync.sync_card_draft, "https://hub.example");
     let remote = serde_json::to_value(shell.sync.build_sync_attach_ui(&shell.prefs)).expect("remote body");
     let attach = find_id(&remote, "framework.sync.attach").expect("attach action").to_string();
@@ -53,7 +54,7 @@ fn sync_body_routes_draft_attach_and_detach_through_the_existing_controller() {
 
 #[test]
 fn task_manager_leaf_body_and_command_report_the_unattached_runtime_truthfully() {
-    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut shell = host_test_shell();
     let fixture = fixture();
     let dock = SessionCtx::of(&mut shell).default_dock();
     let roots: Vec<&str> = dock.tabs(PanelAnchor::BottomRight).iter().map(|tab| tab.id.as_str()).collect();
@@ -74,7 +75,7 @@ fn task_manager_leaf_body_and_command_report_the_unattached_runtime_truthfully()
 
 #[test]
 fn shell_owned_retained_document_closure_includes_sync_and_task_manager() {
-    let shell = super::panel_anchor_model_tests::host_test_shell();
+    let shell = host_test_shell();
     let leaves = shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs);
     assert!(leaves.iter().any(|leaf| leaf == FRAMEWORK_SYNC_PANEL_TAB_ID));
     assert!(leaves.iter().any(|leaf| leaf == FRAMEWORK_TASK_MANAGER_PANEL_ID));

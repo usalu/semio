@@ -84,7 +84,7 @@ fn assert_structurally_equal(ours: &MeshData, oracle: &MeshData) {
 
 #[test]
 fn differential_embedded_bin_chunk_matches_gltf_crate_oracle() {
-    let bytes = include_bytes!("../🧫️fixtures/🧊️gltf-codec/🧊️single-triangle-embedded.glb");
+    let bytes = crate::test_inputs::bytes("🧪️tests/🧫️fixtures/🧊️gltf-codec/🧊️single-triangle-embedded.glb");
     let ours = mesh_from_glb(bytes).expect("first-party decode");
     let oracle = oracle_mesh_from_glb(bytes).expect("oracle decode");
     assert_structurally_equal(&ours, &oracle);
@@ -101,7 +101,7 @@ fn differential_generated_uv_sphere_glb_matches_gltf_crate_oracle() {
 
 #[test]
 fn differential_puzzle_fixture_glb_matches_gltf_crate_oracle() {
-    let bytes = include_bytes!("../../../🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
+    let bytes = crate::test_inputs::bytes("../🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
     let ours = mesh_from_glb(bytes).expect("first-party decode");
     let oracle = oracle_mesh_from_glb(bytes).expect("oracle decode");
     assert_structurally_equal(&ours, &oracle);

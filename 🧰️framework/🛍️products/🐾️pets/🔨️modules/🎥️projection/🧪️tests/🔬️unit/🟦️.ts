@@ -21,7 +21,7 @@ import { atRest, faceOf, impulse, settled, spiritsOf } from "../../../💗️fee
 import { HOOK_RETURN, HOOK_SPEED, MUZZLE_FORWARD, MUZZLE_HEIGHT, RUNG_SPACING, hookStep, hookTicks } from "../../../🧗️climbing/🟦️.ts";
 import { LIFT_RETURNS, LIFT_TICKS, liftAt } from "../../../🪄️mischief/🟦️.ts";
 import { CHUTE_ROD, canopyOf, chuteOf, hangOf } from "../../../🪢️swing/🟦️.ts";
-import { PUFF_TICKS } from "../../../🚶️locomotion/🟦️.ts";
+import { PUFF_TICKS } from "../../../🚶️locomotion/📐️constants/🟦️.ts";
 import { WALL_LEAN, extentAt, extentOf } from "../../../📏️spacing/🟦️.ts";
 import { restPose, solveRig, type Pose } from "../../../🦴️rig/🟦️.ts";
 import { advance, openStage } from "../../../🎪️stage/🟦️.ts";

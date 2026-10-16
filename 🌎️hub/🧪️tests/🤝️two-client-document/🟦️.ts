@@ -1,3 +1,10 @@
+import type {LocalProfile} from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
+import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
+import {withBuiltLocalHubHostV1,withLocalHubHostTaskV1,stopLocalHubV1,waitForLocalHubExitV1,startLocalHub,finishLocalHub,waitForReadiness,TRUSTED_CATALOG_READINESS_STALL_BOUND_MS} from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import {withMaterializedTrustedCatalogBundleV1} from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import {trustedBootstrapSelectPackages} from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 // #region Header
 /**
  * 🤝️ Two-client document collaboration e2e (language-agnostic fixture).
@@ -9,9 +16,7 @@
 // #endregion Header
 
 import Ajv from "ajv";
-import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -68,6 +73,9 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
   it(
     "proves A commands and presence reach B over a real os-hub binary",
     async () => {
+      return receiveScriptProcessInvocation(process.env,invocation=>{const backend=process.env.HUB_E2E_BACKEND;if(backend!=="sqlite")throw Error("External backend scenarios require genuine owned claim, cleanup and writer observation");const phase=scriptCompilerAdmissionControlV1(invocation,"hub:e2e",0);return withBuiltLocalHubHostV1(invocation,phase,(host,initial)=>withMaterializedTrustedCatalogBundleV1(host,initial.control,trustedBootstrapSelectPackages("stdio,gis,note"),(_receipt,actualPhase)=>withLocalHubHostTaskV1(host,actualPhase,async context=>{
+      const dataRoot=context.dataRoot,bin=context.binaryPath;
+
       const packages = pick(hubRoot, (n) => n.includes("packages"));
       const hubRustRoot = pick(packages, (n) => n.includes("rust"));
       const localBootstrap = pick(hubRoot, (n) => n.includes("local-bootstrap"));
@@ -98,7 +106,6 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
       const validateTraceLine = new Ajv({ allErrors: true, strict: true }).compile(JSON.parse(readFileSync(join(pick(traceRecord, (n) => n.includes("schema")), "🔣️.json"), "utf8")));
       const traceVocabulary = JSON.parse(readFileSync(join(pick(pick(trace, (n) => n.includes("fixtures")), (n) => n.includes("span-vocabulary")), "🔣️.json"), "utf8")) as { events: string[] };
 
-      const { startLocalHub, finishLocalHub, waitForReadiness, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS } = await import(join(execution, "🟦️.ts"));
       const { sealDirectoryCommandRequestV1, directoryCommandRequestJson } = await import(join(schemaDir, "🟦️.ts"));
       const { sealSpaceArtifactCreateV1 } = await import(join(creation, "🟦️.ts"));
       const { encodeClientFrame, decodeServerFrame, encodePresencePeer, decodePresencePeer } = await import(join(replication, "🟦️.ts"));
@@ -112,39 +119,19 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
       const writerDir = pick(storageDir, (n) => n.includes("writer"));
       const writerFence = JSON.parse(readFileSync(join(pick(pick(writerDir, (n) => n.includes("fixtures")), (n) => n.includes("remote-guard")), "🔣️.json"), "utf8"));
 
-      const staged = join(hubRustRoot, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-      const bin = process.env.OS_HUB_BINARY && existsSync(process.env.OS_HUB_BINARY) ? process.env.OS_HUB_BINARY : staged;
-      if (!existsSync(bin)) throw new Error(`os-hub binary missing at ${bin}`);
-
-      const catalogSource =
-        process.env.OS_HUB_TRUSTED_CATALOG_SOURCE ?? join(repoRoot, ".🧬semio", "🌐hub", "hc1-boot", "trusted-catalog");
-      if (!existsSync(catalogSource)) throw new Error(`trusted catalog missing: ${catalogSource}`);
-
-      const dataParent = process.env.HUB_E2E_DATA_PARENT ?? tmpdir();
-      mkdirSync(dataParent, { recursive: true, mode: 0o700 });
-      const dataRoot = mkdtempSync(join(realpathSync(dataParent), "two-client-"));
-      cpSync(catalogSource, join(dataRoot, "trusted-catalog"), { recursive: true });
-
       const ADA = { email: "ada-tc@example.org", password: "correct horse battery staple", display: "Ada TC" };
       const BO = { email: "bo-tc@example.org", password: "another perfectly fine phrase", display: "Bo TC" };
       for (const account of [ADA, BO]) {
-        const result = spawnSync(bin, ["credential", "set", "--email", account.email, "--display-name", account.display], {
-          env: { ...process.env, OS_HUB_DATA: dataRoot },
-          input: account.password,
-          encoding: "utf8",
-        });
-        if (result.status !== 0) throw new Error(`credential set failed status=${result.status} signal=${result.signal} stderr=${result.stderr} stdout=${result.stdout}`);
+        const result=await captureOwnedCommandResultV1(bin,["credential","set","--email",account.email,"--display-name",account.display],context.root,{control:context.control,env:scriptInvocationEnvironment(invocation,{...context.environment,OS_HUB_DATA:dataRoot,OS_HUB_STORAGE_BACKEND:"sqlite",OS_HUB_DIRECTORY_BACKEND:"sqlite"}),input:{version:1,text:account.password},output:{maximumBytes:65536,maximumLines:128}});
+        if(result.status!==0||result.signal!==null)throw Error("Credential set failed: "+result.stderr);
       }
 
-      process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
-      process.env.SEMIO_TRACE_LEVEL = "info";
-      delete process.env.SEMIO_TRACE_SINK;
       const port = Number(process.env.HUB_TWO_CLIENT_PORT ?? 7711);
-      const profiles = [
+      const profiles:readonly LocalProfile[] = [
         { profileId: "a", subject: "author-a", displayName: "Author A", allowedClientClasses: ["native", "mcp"] },
         { profileId: "b", subject: "author-b", displayName: "Author B", allowedClientClasses: ["native", "mcp"] },
       ];
-      const run = await startLocalHub(repoRoot, hubRustRoot, profiles, { port, dataDir: dataRoot, binaryPath: bin, capture: true });
+      const run = await startLocalHub(host, profiles, { port, capture: true,credentialSignIn:true,traceLevel:"info" });
       const origin = `http://127.0.0.1:${port}`;
       const wsOrigin = `ws://127.0.0.1:${port}`;
 
@@ -152,7 +139,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         try {
           return await waitForReadiness(hubRun, true, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS);
         } catch (error) {
-          throw new Error(`${label}: ${(error as Error).message}\n${hubRun.output().slice(-12000)}`);
+          console.error(`${label}: ${hubRun.output().slice(-12000)}`);throw error;
         }
       };
 
@@ -172,7 +159,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         };
 
         const fetchTimed = async (url: string, init: RequestInit = {}, ms = 30_000) => {
-          const res = await fetch(url, { ...init, signal: AbortSignal.timeout(ms) });
+          const res = await fetch(url, { ...init, signal: AbortSignal.any([context.control.signal,AbortSignal.timeout(ms)]) });
           return res;
         };
 
@@ -576,12 +563,10 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         const frontierBefore = b2.welcome.server_frontier;
         b2.socket.close();
 
-        const backend = process.env.OS_HUB_STORAGE_BACKEND ?? "fs";
         const receipt: Record<string, unknown> = { backend };
         const note = (key: string, value: unknown) => {
           receipt[key] = value;
           console.log(`[two-client] backend=${backend} ${key}=${JSON.stringify(value)}`);
-          if (process.env.HUB_E2E_RECEIPT) writeFileSync(process.env.HUB_E2E_RECEIPT, JSON.stringify(receipt, null, 2));
         };
         note("growthEditsAcceptedBeforeRestart", fixture.growth.editsBeforeRestart);
         note("growthMsBeforeRestart", growthMsBeforeRestart);
@@ -589,15 +574,11 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         note("directoryTimings", directoryTimings);
         note("agentExecutionTargetMs", agentExecutionTargetMs);
         const fenceRelease = writerFence.backends.find((row: any) => row.backend === backend)?.crashRelease as string | undefined;
-        const exitOf = (hubRun: typeof run, ms: number) =>
-          new Promise<{ code: number | null; signal: string | null }>((resolve, reject) => {
-            if (hubRun.child.exitCode !== null || hubRun.child.signalCode !== null) return resolve({ code: hubRun.child.exitCode, signal: hubRun.child.signalCode });
-            const timer = setTimeout(() => reject(new Error(`hub did not exit within ${ms} ms\n${hubRun.output().slice(-8000)}`)), ms);
-            hubRun.child.once("exit", (code: number | null, signal: string | null) => {
-              clearTimeout(timer);
-              resolve({ code, signal });
-            });
-          });
+        const exitOf = async (hubRun: typeof run, ms: number) => {
+          const started = Date.now(), result = await waitForLocalHubExitV1(hubRun);
+          expect(Date.now() - started, hubRun.output().slice(-8000)).toBeLessThanOrEqual(ms);
+          return { code: result.status, signal: result.signal };
+        };
         const reopen = async (label: string, token: string, until: number) => {
           let refused = 0;
           for (;;) {
@@ -611,15 +592,8 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           }
         };
 
-        const writerProbe = process.env.HUB_E2E_WRITER_PROBE ? (JSON.parse(process.env.HUB_E2E_WRITER_PROBE) as string[]) : undefined;
-        const liveWriters = (): number => {
-          const [command, ...args] = writerProbe!;
-          const probed = spawnSync(command!, [...args, fixture.shutdown.liveWriterProbe[backend]], { encoding: "utf8" });
-          if (probed.status !== 0) throw new Error(`live writer probe failed: ${probed.stderr}`);
-          const count = probed.stdout.trim().split("\n").at(-1)!.trim();
-          if (!/^\d+$/u.test(count)) throw new Error(`live writer probe answered ${JSON.stringify(probed.stdout)}`);
-          return Number(count);
-        };
+        const writerProbe=backend!=="sqlite";
+        const liveWriters=():number=>{throw Error("External writer assertions require a genuine owned backend observer; selection is refused before effects");};
         if (writerProbe) {
           const before = liveWriters();
           note("liveWritersWhileOpen", before);
@@ -627,17 +601,16 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         }
 
         const sigtermAt = Date.now();
-        run.child.kill("SIGTERM");
+        await stopLocalHubV1(run,"graceful");
         const gracefulExit = await exitOf(run, fixture.shutdown.gracefulExitWithinMs);
         const exitedAt = Date.now();
         expect(gracefulExit.code, run.output().slice(-8000)).toBe(0);
         await finishLocalHub(run);
-        process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
-        const run2 = await startLocalHub(repoRoot, hubRustRoot, profiles, { port, dataDir: dataRoot, binaryPath: bin, capture: true });
+          const run2 = await startLocalHub(host, profiles, { port, capture: true,credentialSignIn:true,traceLevel:"info" });
         const exitToRestartSpawnMs = Date.now() - exitedAt;
         note("exitToRestartSpawnMs", exitToRestartSpawnMs);
         expect(exitToRestartSpawnMs, "the restart is spawned within 1 s of the graceful exit").toBeLessThan(fixture.shutdown.restartWithinMs);
-        try {
+        {
           const drained = await Promise.race([a.closed, sleep(2000).then(() => ({ code: -1, reason: "no close frame" }))]);
           expect(drained.code).toBe(fixture.shutdown.closeCode);
           expect(run.output()).toContain(fixture.shutdown.databaseClosedMarker);
@@ -693,7 +666,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           expect((a3.welcome.server_frontier.last_commit_seq ?? 0) >= (frontierBefore.last_commit_seq ?? 0)).toBe(true);
 
           const crashAt = Date.now();
-          run2.child.kill("SIGKILL");
+          await stopLocalHubV1(run2,"crash");
           expect((await exitOf(run2, 5000)).signal).toBe("SIGKILL");
           if (writerProbe && fenceRelease === "after-lease-ttl") {
             const leased = liveWriters();
@@ -707,8 +680,8 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
             note("sigkillToServerReleaseMs", Date.now() - crashAt);
           }
           await finishLocalHub(run2);
-          const run3 = await startLocalHub(repoRoot, hubRustRoot, profiles, { port, dataDir: dataRoot, binaryPath: bin, capture: true });
-          try {
+          const run3 = await startLocalHub(host, profiles, { port, capture: true,credentialSignIn:true,traceLevel:"info" });
+          {
             hubOutput = () => run3.output();
             await waitReady(run3, "crash-restart");
             const bootedAfterCrashMs = Date.now() - crashAt;
@@ -723,18 +696,12 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
             if (fenceRelease === "after-lease-ttl" && bootedAfterCrashMs < writerFence.neo4j.leaseTtlMs) expect(reopened.refused).toBeGreaterThan(0);
             expect((reopened.holder.welcome.server_frontier.last_commit_seq ?? 0) >= (frontierBefore.last_commit_seq ?? 0)).toBe(true);
             reopened.holder.socket.close();
-          } finally {
-            await finishLocalHub(run3);
           }
-        } finally {
-          await finishLocalHub(run2);
         }
       } catch (error) {
-        throw new Error(`${(error as Error).message}\n--- first hub output (last 12000 chars) ---\n${run.output().slice(-12000)}`, { cause: error });
-      } finally {
-        try { await finishLocalHub(run); } catch { /* done */ }
-        rmSync(dataRoot, { recursive: true, force: true });
+        console.error(run.output().slice(-12000));throw error;
       }
+      })));});
     },
     TEST_TIMEOUT_MS,
   );

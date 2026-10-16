@@ -382,7 +382,7 @@ export async function registerExtensionInvocationWireTests(vitest: PluginRuntime
 
       it("reconciles failed actual actor bindings without giving a successor stale control", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧪️tests/🧫️fixtures/🔣️.json");
-        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
+        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../../../../🔨️modules/🛰️backbone/🔗️binding/🟦️.ts");
         for (const row of fixture.bindingRetirement) {
           const commands: string[] = [];
           let instance = 0, current = true;
@@ -417,7 +417,7 @@ export async function registerExtensionInvocationWireTests(vitest: PluginRuntime
       });
   
       it("binds the actual actor document port and retires it before guest disposal", async () => {
-        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
+        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../../../../🔨️modules/🛰️backbone/🔗️binding/🟦️.ts");
         const { encodeBackboneMessage } = await import("@semio-tech/framework-os");
         const outgoing = encodeBackboneMessage({ kind: "ack", opIds: ["operation"] });
         let outgoingUri = "actor://map";
@@ -458,7 +458,7 @@ export async function registerExtensionInvocationWireTests(vitest: PluginRuntime
       it("awaits actual actor handle disposal until its exact document retirement settles", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧪️tests/🧫️fixtures/🔣️.json");
         const { default: deepEqual } = await import("fast-deep-equal");
-        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
+        const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../../../../🔨️modules/🛰️backbone/🔗️binding/🟦️.ts");
         let release!: () => void, entered!: () => void;
         const gate = new Promise<void>(resolve => { release = resolve; });
         const retiring = new Promise<void>(resolve => { entered = resolve; });

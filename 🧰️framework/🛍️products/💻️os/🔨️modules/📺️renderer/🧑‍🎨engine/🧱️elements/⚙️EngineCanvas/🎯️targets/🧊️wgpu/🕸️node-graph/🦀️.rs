@@ -33,7 +33,7 @@ pub fn component_scene_has_editable_caret(scene: &UiComponentSceneNode) -> bool 
     })
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn component_scene_begin_note_edit_fixture(scene: &UiComponentSceneNode, widget_id: &str) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut surfaces = cell.borrow_mut();

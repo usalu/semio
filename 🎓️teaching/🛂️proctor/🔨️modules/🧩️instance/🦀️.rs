@@ -52,7 +52,7 @@
 //! bus reads or places anything ([`ProctorModule`]'s `command_admission`, the [`Admission`] the
 //! deciders hold as well).
 //!
-//! @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️.rs — `ServerInstance`, `ServerBuilder`
+//! @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🧩️instance/🦀️.rs and `🖥️server/🦀️.rs` — `ServerInstance`, `ServerBuilder`
 //! @see ../../../../🧰️framework/🛍️products/🖥️server/🧪️tests/🧩️instance/🦀️.rs — the worked example this follows
 
 use std::fmt;

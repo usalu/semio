@@ -52,7 +52,7 @@ pub struct PreparedGpuReadback {
 }
 
 impl PreparedGpuReadback {
-    pub(super) fn begin(device: &gpu_device::Device, queue: &gpu_device::Queue, composite: &crate::draw::PreparedCompositeTarget, layout: PreparedReadbackLayout) -> Result<Self, String> {
+    pub(super) fn begin(device: &gpu_device::Device, queue: &gpu_device::Queue, composite: &semio_framework_ui_wgpu_draw_execution::PreparedCompositeTarget, layout: PreparedReadbackLayout) -> Result<Self, String> {
         if layout.byte_length > device.limits().max_buffer_size {
             return Err("prepared readback exceeds the device buffer budget".into());
         }

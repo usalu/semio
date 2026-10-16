@@ -663,6 +663,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-native-build-compiler-resources"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+]
+
+[[package]]
 name = "semio-framework-os-channel"
 version = "0.1.0"
 dependencies = [
@@ -803,6 +810,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -816,13 +824,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-async-macros",
- "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack",
- "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "serde_json",
@@ -870,6 +876,27 @@ dependencies = [
 name = "semio-framework-pack-json"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-pack-record-schema"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-hash",
+ "semio-framework-pack-error",
+ "semio-framework-pack-json",
+ "semio-framework-pack-schema-index",
+ "semio-framework-replication-codec",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-pack-schema-index"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
  "semio-framework-value",
 ]
 
@@ -944,6 +971,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-process-routing-workspace"
+version = "0.1.0"
+
+[[package]]
 name = "semio-framework-replication"
 version = "0.1.0"
 dependencies = [
@@ -961,6 +992,28 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-replication-codec"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-deflate",
+ "semio-framework-diagnostic",
+ "semio-framework-io-base64",
+ "semio-framework-pack-error",
+ "semio-framework-replication-error",
+ "semio-framework-value",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-replication-error"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-pack-error",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -1154,12 +1207,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "syn",
 ]
 
 [[package]]
 name = "semio-repo-test-host"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-process-routing-workspace",
+]
 
 [[package]]
 name = "semio-s-artifact-stdio-binary"

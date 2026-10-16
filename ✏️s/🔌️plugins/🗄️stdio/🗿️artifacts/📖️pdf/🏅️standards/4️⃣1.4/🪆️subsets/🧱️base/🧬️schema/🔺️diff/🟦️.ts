@@ -2,6 +2,7 @@
  *  `PdfDiff` shape 1:1. `removed`/`modified` indices address the BASE state (removals applied
  *  descending); `added` indices address the FINAL state (insertions applied ascending). There is
  *  no `snapshot?: PdfSnapshot` full-replace slot; every change stays page-addressed. */
+import { parsePageDoc } from "../📸️snapshot/🟦️.ts";
 import type { PageDoc } from '../📸️snapshot/🟦️.ts';
 
 export interface PdfPageDiff {
@@ -103,5 +104,13 @@ export function parsePdfPagesDiff(value: unknown, at = "$"): PdfPagesDiff {
     removed: row["removed"] === undefined ? undefined : stdioPdf14BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioPdf14BaseDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
     modified: row["modified"] === undefined ? undefined : stdioPdf14BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parsePdfPageModified(item, `${at}.modified[${index}]`)),
     added: row["added"] === undefined ? undefined : stdioPdf14BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parsePdfPageAdded(item, `${at}.added[${index}]`)),
+  };
+}
+
+export function parsePdfPageAdded(value: unknown, at = "$"): PdfPageAdded {
+  const row = stdioPdf14BaseDiffGuardObject(value, at);
+  return {
+    index: stdioPdf14BaseDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    page: parsePageDoc(row["page"], `${at}.page`),
   };
 }

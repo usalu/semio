@@ -58,8 +58,7 @@ pub fn plugin()->Result<Plugin<FixtureApps>,PluginAssemblyError> {
     PluginBuilder::<_, FixtureApps>::new("neutral-host-fixture").label("Neutral Host Fixture").version("1.0.0").package_id("semio:neutral-host-fixture").declare_artifact(artifact).declare_artifact(refusal_artifact()?).try_build()
 }
 
-#[path="🗿️artifacts/🚫️snapshot-refusal/🦀️.rs"]
-mod refusal;
+use semio_framework_plugin_host_test_component_refusal as refusal;
 
 /// 🛑️ A declared fixture subset owns one explicit typed refusal authority.
 pub trait RefusalOwner:Default+Send+Sync+'static{const SUBSET:&'static str;const EDITOR_ID:&'static str;const VIEWER_ID:&'static str;}
@@ -105,16 +104,9 @@ where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>+From<VcsArtifactApp<
  definition.io.artifact_schema=refusal::KIND.into();
  SurfaceDeclaration{definition,factory:if VIEWER{viewer::<C>}else{editor::<C>},app_schema:||None,document_schema:refusal::KIND,codec:semio_framework_plugin::app::artifact_codec_table::<RefusalApp<C,VIEWER>>(),mutation_roster:None,rights:if VIEWER{Rights::Read}else{Rights::Write}}
 }
-fn refusal_facet(role:&str,json_schema:&'static str)->FacetLeaves{
- let(rust,typescript,graphql,proto)=match role{
-  "diff"=>(include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/🔺️diff/🦀️.rs"),include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/🔺️diff/🟦️.ts"),"",""),
-  "mutations"=>(include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/🧬️mutations/🦀️.rs"),include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/🧬️mutations/🟦️.ts"),"",""),
-  _=>(include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/📸️snapshot/🦀️.rs"),include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/📸️snapshot/🟦️.ts"),include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/📸️snapshot/🔗️.graphql"),include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/📸️snapshot/🛰️.proto"))
- };FacetLeaves{rust,typescript,graphql,proto,json_schema}
-}
 fn refusal_subset<C:RefusalOwner>()->SubsetDeclaration<FixtureApps>
 where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>+From<VcsArtifactApp<RefusalApp<C,true>>>{
- let descriptor=ArtifactSchemaDescriptor{id:refusal::KIND,artifact:refusal_facet("artifact",include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/🔣️.json")),snapshot:refusal_facet("snapshot",include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/📸️snapshot/🔣️.json")),diff:refusal_facet("diff",include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/🔺️diff/🔣️.json")),mutations:refusal_facet("mutations",include_str!("🗿️artifacts/🚫️snapshot-refusal/🧬️schema/🧬️mutations/🔣️.json"))};
+ let descriptor=refusal::schema_descriptor();
  let pair=LanguagePair{text:None,binary:None};
  SubsetDeclaration{dialect:<RefusalApp<C,false> as ArtifactApp>::DIALECT,schema:SchemaDeclaration{descriptor,inferences:&[],inference_services:Vec::new()},io:IoDeclaration{native:NativeCodecs{snapshot:pair,diff:pair,mutations:pair,inferences:None,codec:store::bare_artifact_codec::<refusal::Snapshot,refusal::Mutation>(refusal::KIND)},entries:&[]},editor:refusal_surface::<C,false>(),viewer:refusal_surface::<C,true>(),examples:&[]}
 }

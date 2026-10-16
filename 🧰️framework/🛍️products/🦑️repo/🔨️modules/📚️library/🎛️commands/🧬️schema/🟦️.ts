@@ -1,4 +1,4 @@
-/** 🎯️ `schema` command family: generate, check, compile, docs, entries, oracle, test, verify and audit.
+/** 🧾️ `schema` command family: generate, check, compile, docs, entries, oracle, test, verify and audit.
  * @see 📜️script.ts
  */
 import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -78,7 +78,7 @@ export class SchemaScript extends Script {
   /**
    * 🧭️ Where the test domain lives is taxonomy vocabulary, so the root router never spells it out; the
    * `Taxonomy` interface does not yet surface the key, which is why the read is narrowed here.
-   * @see the `🧩️ open/closed` suite under the test domain's own `🧪️tests/🧪️test-platform`
+   * @see the `🧩️ open/closed` suite under the test domain's own `🧪️tests/🔍️discovery-contract`
    */
   private testDomainPath(): string {
     const declared = (loadCatalogTaxonomy() as unknown as { testDomainPath?: unknown }).testDomainPath;

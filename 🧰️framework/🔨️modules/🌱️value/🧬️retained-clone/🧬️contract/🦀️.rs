@@ -1130,10 +1130,7 @@ mod scalar_authority_tests;
 #[path="../🚚️bulk-vec/🧪️tests/🦀️.rs"]
 mod bulk_vec_tests;
 #[cfg(test)]
-#[path="../🔗️source/🧪️testing/🦀️.rs"]
-mod original_source_fixture;
-#[cfg(test)]
-pub(crate) use original_source_fixture::{FixtureSource,FixtureSourceBirth};
+pub(crate) use semio_framework_value_clone_source_testing::{FixtureSource,FixtureSourceBirth};
 
 #[cfg(test)]
 #[path="🧪️tests/♻️close/🦀️.rs"]

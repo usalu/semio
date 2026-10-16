@@ -1,4 +1,4 @@
 /** 🧾️ SDK entry `@semio-tech/framework/value/dictionary`: explicit public surface of the framework module that plugins build on. */
-export { default as valueDictionarySchema } from "../../../../🔨️modules/🌱️value/🧾️dictionary/🔣️.json";
-export { parseQuestionDictionary } from "../../../../🔨️modules/🌱️value/🧾️dictionary/🟦️.ts";
-export type { QuestionDictionary } from "../../../../🔨️modules/🌱️value/🧾️dictionary/🟦️.ts";
+export { dictionarySchema as valueDictionarySchema } from "@semio-tech/value-ts/dictionary";
+export { parseQuestionDictionary } from "@semio-tech/value-ts/dictionary";
+export type { QuestionDictionary } from "@semio-tech/value-ts/dictionary";

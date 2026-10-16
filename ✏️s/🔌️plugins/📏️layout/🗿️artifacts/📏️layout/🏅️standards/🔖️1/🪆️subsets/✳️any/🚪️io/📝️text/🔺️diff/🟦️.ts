@@ -49,5 +49,5 @@ export const layoutLayoutDiffTextGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseLayoutDiffText(value: unknown, at = "$"): LayoutDiffText {
-  return layoutLayoutDiffTextGuardObject(value, `${at}`);
+  return layoutLayoutDiffTextGuardString(value, `${at}`);
 }

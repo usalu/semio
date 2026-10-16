@@ -13,8 +13,8 @@ fn chrome_state() -> ShellChromeBuildState {
 fn chrome_build_state_moves_across_threads_without_losing_state() {
     assert_shell_chrome_build_state_is_send();
     let mut chrome = chrome_state();
-    let mut focus_arena = ui_wgpu::wgpu::Arena::<u8>::default();
-    chrome.content_focus.insert("main".to_string(), Some(RetainedContentFocus { node: focus_arena.insert(0), key: ui_wgpu::wgpu::NodeKey::Explicit("tour-focus".into()), kind: RetainedNodeFocusKind::Button }));
+    let mut focus_arena = semio_framework_ui_arena::Arena::<u8>::default();
+    chrome.content_focus.insert("main".to_string(), Some(RetainedContentFocus { node: focus_arena.insert(0), key: semio_framework_ui_retained_tree::tree::NodeKey::Explicit("tour-focus".into()), kind: RetainedNodeFocusKind::Button }));
     chrome.register_tooltip("nav.help", "Help");
     chrome.preferences.theme_id = "mono".to_string();
     let chrome = std::thread::spawn(move || {
@@ -680,15 +680,15 @@ fn placement_explicit_side_is_honored_and_clamped_to_the_viewport() {
 #[test]
 fn utility_subtree_has_active_path_finds_a_pressed_toggle_at_the_top_level() {
     let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-    let nodes = vec![ui_wgpu::wgpu::utility_toggle("a", "circle".into(), "A", true, action)];
+    let nodes = vec![semio_framework_ui_layout::utilities::utility_toggle("a", "circle".into(), "A", true, action)];
     assert!(utility_subtree_has_active_path(&nodes));
 }
 
 #[test]
 fn utility_subtree_has_active_path_recurses_into_nested_collections() {
     let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-    let inner = vec![ui_wgpu::wgpu::utility_toggle("b", "circle".into(), "B", true, action.clone())];
-    let nested = ui_wgpu::wgpu::utility_collection("group-2", "circle".into(), "Group 2", vec![ui_wgpu::wgpu::utility_collection("group-1", "circle".into(), "Group 1", inner)]);
+    let inner = vec![semio_framework_ui_layout::utilities::utility_toggle("b", "circle".into(), "B", true, action.clone())];
+    let nested = semio_framework_ui_layout::utilities::utility_collection("group-2", "circle".into(), "Group 2", vec![semio_framework_ui_layout::utilities::utility_collection("group-1", "circle".into(), "Group 1", inner)]);
     assert!(utility_subtree_has_active_path(std::slice::from_ref(&nested)));
 }
 
@@ -696,7 +696,7 @@ fn utility_subtree_has_active_path_recurses_into_nested_collections() {
 fn utility_subtree_has_active_path_false_when_nothing_pressed() {
     let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
     let nodes =
-        vec![ui_wgpu::wgpu::utility_toggle("a", "circle".into(), "A", false, action.clone()), ui_wgpu::wgpu::utility_collection("group", "circle".into(), "Group", vec![ui_wgpu::wgpu::utility_toggle("b", "circle".into(), "B", false, action)])];
+        vec![semio_framework_ui_layout::utilities::utility_toggle("a", "circle".into(), "A", false, action.clone()), semio_framework_ui_layout::utilities::utility_collection("group", "circle".into(), "Group", vec![semio_framework_ui_layout::utilities::utility_toggle("b", "circle".into(), "B", false, action)])];
     assert!(!utility_subtree_has_active_path(&nodes));
 }
 
@@ -707,9 +707,9 @@ fn utility_subtree_has_active_path_false_when_nothing_pressed() {
 #[test]
 fn render_utility_nodes_recurses_at_least_two_levels_deep() {
     let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-    let leaf_toggle = ui_wgpu::wgpu::utility_toggle("leaf", "circle".into(), "Leaf", false, action.clone());
-    let inner_collection = ui_wgpu::wgpu::utility_collection("inner", "circle".into(), "Inner", vec![leaf_toggle]);
-    let outer_collection = ui_wgpu::wgpu::utility_collection("outer", "circle".into(), "Outer", vec![inner_collection]);
+    let leaf_toggle = semio_framework_ui_layout::utilities::utility_toggle("leaf", "circle".into(), "Leaf", false, action.clone());
+    let inner_collection = semio_framework_ui_layout::utilities::utility_collection("inner", "circle".into(), "Inner", vec![leaf_toggle]);
+    let outer_collection = semio_framework_ui_layout::utilities::utility_collection("outer", "circle".into(), "Outer", vec![inner_collection]);
     let utilities = vec![outer_collection];
 
     let mut collection_expanded = HashMap::new();
@@ -730,7 +730,7 @@ fn render_utility_nodes_recurses_at_least_two_levels_deep() {
 //#region GhostText
 #[test]
 fn engagement_completion_suffix_matches_label_prefix() {
-    let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+    let possibles = vec![semio_framework_ui_layout::layout::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
     assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "x");
     assert_eq!(engagement_completion_suffix("bo", Some(&possibles)), "x");
 }
@@ -738,7 +738,7 @@ fn engagement_completion_suffix_matches_label_prefix() {
 /// 🔚️ Fully typed: no suffix left
 #[test]
 fn engagement_completion_suffix_empty_when_query_is_empty_or_unmatched() {
-    let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+    let possibles = vec![semio_framework_ui_layout::layout::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
     assert_eq!(engagement_completion_suffix("", Some(&possibles)), "");
     assert_eq!(engagement_completion_suffix("zz", Some(&possibles)), "");
     assert_eq!(engagement_completion_suffix("Box", Some(&possibles)), "");
@@ -747,14 +747,14 @@ fn engagement_completion_suffix_empty_when_query_is_empty_or_unmatched() {
 
 #[test]
 fn engagement_completion_suffix_picks_first_matching_possible_in_order() {
-    let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None }, ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+    let possibles = vec![semio_framework_ui_layout::layout::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None }, semio_framework_ui_layout::layout::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
     assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "at");
 }
 
 /// 🧪️ Char-boundary safety: a multi-byte label prefix-matched by a query must not panic on slicing.
 #[test]
 fn engagement_completion_suffix_is_multibyte_safe() {
-    let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
+    let possibles = vec![semio_framework_ui_layout::layout::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
     assert_eq!(engagement_completion_suffix("M", Some(&possibles)), "ünster");
 }
 

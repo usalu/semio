@@ -66,3 +66,6 @@ semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍
 semio-framework-ui-scene = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-test-transient-preparation-law = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️transient-preparation-law/📦️packages/🦀️rust" }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-framework-test-typed-input-law = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust" }

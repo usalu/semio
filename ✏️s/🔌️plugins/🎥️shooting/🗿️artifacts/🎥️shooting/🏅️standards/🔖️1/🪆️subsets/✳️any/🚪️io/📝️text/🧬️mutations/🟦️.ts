@@ -49,5 +49,5 @@ export const shootingShootingMutationsTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseShootingMutationsText(value: unknown, at = "$"): ShootingMutationsText {
-  return shootingShootingMutationsTextGuardObject(value, `${at}`);
+  return shootingShootingMutationsTextGuardString(value, `${at}`);
 }

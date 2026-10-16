@@ -1,3 +1,4 @@
+import { loadWorld3dSceneLanesFixture, loadCanvas2dSceneLanesFixture, loadBoard2dSceneLanesFixture, loadPaint2dSceneLanesFixture, loadSceneTableLanesFixture, loadTextEditorLanesFixture, loadGraphSceneLanesFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 type TestSource = { readonly url: string };
 
 /** 🚚️ The React half of the world-3d paged scene carrier's laws, read from the SAME language-neutral
@@ -8,12 +9,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { describe, expect, it } = vitest;
   void source;
 
-  const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
-  const { default: canvas2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json");
-  const { default: board2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
-  const { default: paint2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json");
-  const { default: tableContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️table-lanes/🔣️.json");
-  const { default: textEditorContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️text-editor-lanes/🔣️.json");
+  const contract = await loadWorld3dSceneLanesFixture();
+  const canvas2dContract = await loadCanvas2dSceneLanesFixture();
+  const board2dContract = await loadBoard2dSceneLanesFixture();
+  const paint2dContract = await loadPaint2dSceneLanesFixture();
+  const tableContract = await loadSceneTableLanesFixture();
+  const textEditorContract = await loadTextEditorLanesFixture();
 
   type AnyRecord = Record<string, any>;
 
@@ -359,7 +360,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("node graph retained carriers", () => {
     it("restores oversized typed nodes and a Unicode host snapshot before host projection", async () => {
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json");
+      const fixture = await loadGraphSceneLanesFixture();
       const nodes = Array.from({ length: fixture.nodeCount }, (_, index) => ({ ...fixture.node, id: String(index) }));
       const snapshot = JSON.stringify({ label: fixture.hostSnapshotLabel.repeat(fixture.repeatCount) });
       const laneTexts = { "framework.scene.nodeGraph.nodes": JSON.stringify(nodes), "framework.scene.nodeGraph.hostSnapshot": snapshot };

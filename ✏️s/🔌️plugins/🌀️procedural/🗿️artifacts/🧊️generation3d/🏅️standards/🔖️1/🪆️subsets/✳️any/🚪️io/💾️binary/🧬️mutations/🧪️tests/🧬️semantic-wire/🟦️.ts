@@ -86,10 +86,11 @@ export function assertGeneration3dSemanticWire(): number {
     const validate = projectionAjv.compile(projectionSchemas[row.kind as keyof typeof projectionSchemas]);
     const independent = JSON.parse(JSON.stringify(row.input));
     assert.equal(validate(independent), !row.reject, `${row.kind}/${row.name}: independent admission`);
-    if (row.reject) assert.throws(() => projectionParsers[row.kind](row.input), `${row.kind}/${row.name}: native admission`);
+    const parser=projectionParsers[row.kind];assert(parser,"Declared semantic projection parser required");
+    if (row.reject) assert.throws(() => parser(row.input), `${row.kind}/${row.name}: native admission`);
     else {
       assert.deepEqual(independent, row.output, `${row.kind}/${row.name}: independent output`);
-      assert.deepEqual(projectionParsers[row.kind](row.input), independent, `${row.kind}/${row.name}: native output`);
+      assert.deepEqual(parser(row.input), independent, `${row.kind}/${row.name}: native output`);
     }
     checks += row.reject ? 2 : 3;
   }

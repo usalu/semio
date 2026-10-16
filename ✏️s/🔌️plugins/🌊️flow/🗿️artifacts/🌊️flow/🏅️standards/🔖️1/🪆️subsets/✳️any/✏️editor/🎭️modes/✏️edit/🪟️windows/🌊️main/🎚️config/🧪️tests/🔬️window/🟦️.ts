@@ -72,7 +72,8 @@ export function testFlowWindowOwnershipOracle(): void {
   }
   assert.deepEqual(configs, fixture.expectedConfig);
   assert.deepEqual(configs, configOracle);
-  assert.notDeepEqual(configs["flow-main-left"].camera, configs["flow-main-right"].camera);
+  const left=configs["flow-main-left"],right=configs["flow-main-right"];assert(left&&right,"Both declared window configs required");
+  assert.notDeepEqual(left.camera,right.camera);
 
   const transients: Record<string, FlowWindowTransient> = {};
   const transientOracle: Record<string, FlowWindowTransient> = {};

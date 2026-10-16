@@ -1,4 +1,4 @@
-import type{AdapterContext}from"./../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import type{AdapterContext}from"@semio-tech/framework/test/adapter";
 import{withPrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
 import{compileVizProbe,type ProbeRecord}from"../../🔨️modules/🧪️viz-probe/🟦️.ts";
 /** 🧪️ Carries the real host context into one retained compiler scope without inventing authority from paths. */

@@ -1,5 +1,5 @@
 import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
-import { rendererOriginalWorkStock } from "../../../🧵️work/🟦️.ts";
+import { rendererOriginalWorkStock } from "../../../../../../../../🔨️modules/🖼️canvas/🧵️renderer-work/🟦️.ts";
 import { admitPluginCatalogV1, type PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 /** 🪆️ Owns one independently rooted browser renderer and its frame Worker lifetime. */
 export type WgpuBrowserHostOptions = {

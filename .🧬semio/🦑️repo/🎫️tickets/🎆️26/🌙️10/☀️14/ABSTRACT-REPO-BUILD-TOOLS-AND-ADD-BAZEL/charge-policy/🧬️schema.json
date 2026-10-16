@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "receiptBytes",
+    "expectedContinuation"
+  ],
+  "properties": {
+    "id": {
+      "enum": [
+        "tools",
+        "products"
+      ]
+    },
+    "receiptBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expectedContinuation": {
+      "const": true
+    }
+  }
+}

@@ -1,7 +1,7 @@
 //! 🧪️ Original PNG ownership matches independent decoding and actual allocator receipts.
 use super::*;
 use crate::retirement::tests::{drain,observed};
-fn rows()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn rows()->serde_json::Value{serde_json::from_str(crate::text("📷️png/📥️decode/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn input(row:&serde_json::Value)->PngDecodeInput{PngDecodeInput{data:serde_json::from_value(row["data"].clone()).unwrap(),max_pixels:row["maxPixels"].as_u64().unwrap()as usize,max_bytes:row["maxBytes"].as_u64().unwrap()as usize,max_chunks:row["maxChunks"].as_u64().unwrap()as usize}}
 fn job(input:PngDecodeInput)->PngDecodeJob{PngDecodeJob::new(input).unwrap()}
 fn grant(job:&PngDecodeJob)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:job.next_copy_byte_demand().unwrap(),maximum_capacity_bytes:job.next_capacity_byte_demand().unwrap(),maximum_release_bytes:0,maximum_depth:1}}
@@ -15,12 +15,12 @@ fn png_decode_shared_all_depths_filters_interlace_and_huffman_under_grants(){
 }
 #[test]
 fn png_decode_malformed_originals_refuse_private_output(){
- let rows:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/⚠️invalid/🔣️.json")).unwrap();for row in rows.as_array().unwrap(){match PngDecodeJob::new(input(&row["input"])){Ok(mut job)=>{assert!(finish(&mut job,7).is_err(),"{}",row["name"]);assert!(job.result().is_err());drain(job);},Err((_,original))=>{drain(original);}}}
+ let rows:serde_json::Value=serde_json::from_str(crate::text("📷️png/📥️decode/🧪️tests/🧫️fixtures/⚠️invalid/🔣️.json")).unwrap();for row in rows.as_array().unwrap(){match PngDecodeJob::new(input(&row["input"])){Ok(mut job)=>{assert!(finish(&mut job,7).is_err(),"{}",row["name"]);assert!(job.result().is_err());drain(job);},Err((_,original))=>{drain(original);}}}
  eprintln!("[DEBUG] Native malformed PNG sources retained their real source and private child owners");
 }
 #[test]
 fn png_decode_original_funding_and_cancellation_match_actual_allocator(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎟️funding.json")).unwrap();let rows=rows();let row=&rows[fixture["fixtureCase"].as_u64().unwrap()as usize];let original=input(&row["input"]);let reference=oracle(&original.data);let mut decoder=job(original);let pointer=decoder.source().as_ptr();let original_capacity=decoder.source.capacity();let mut born=0;let mut turns=0;
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("📷️png/📥️decode/🧪️tests/🧫️fixtures/🎟️funding.json")).unwrap();let rows=rows();let row=&rows[fixture["fixtureCase"].as_u64().unwrap()as usize];let original=input(&row["input"]);let reference=oracle(&original.data);let mut decoder=job(original);let pointer=decoder.source().as_ptr();let original_capacity=decoder.source.capacity();let mut born=0;let mut turns=0;
  while !decoder.progress().done{let funded=grant(&decoder);let before=decoder.progress();for row in fixture["cases"].as_array().unwrap(){let mut denied=funded;let demand=match row["axis"].as_str().unwrap(){"maximumItems"=>{denied.maximum_items=0;1},"maximumCopyBytes"=>{denied.maximum_copy_bytes=funded.maximum_copy_bytes.saturating_sub(1);funded.maximum_copy_bytes},"maximumCapacityBytes"=>{denied.maximum_capacity_bytes=funded.maximum_capacity_bytes.saturating_sub(1);funded.maximum_capacity_bytes},"releaseForCapacity"=>{denied.maximum_capacity_bytes=0;denied.maximum_release_bytes=4096;funded.maximum_capacity_bytes},"maximumDepth"=>{denied.maximum_depth=0;1},"exact"=>continue,_=>unreachable!()};if demand==0{continue;}let(result,physical)=observed(||decoder.advance(denied).unwrap());assert_eq!(physical,(0,0));assert_eq!(result,(before,Default::default()));assert_eq!(decoder.source().as_ptr(),pointer);}
   let((_,receipt),physical)=observed(||decoder.advance(funded).unwrap());assert!(receipt.fits(funded));assert_eq!(physical,(receipt.retained_capacity_bytes,0));born+=physical.0;turns+=1;assert!(turns<2000000);
  }

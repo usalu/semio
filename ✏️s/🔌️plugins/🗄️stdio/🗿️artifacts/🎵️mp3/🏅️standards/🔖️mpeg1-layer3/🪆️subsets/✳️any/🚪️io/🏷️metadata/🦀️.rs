@@ -1,5 +1,5 @@
 //! 🏷️ Native ID3 framing and text encoding admission for semantic metadata.
-use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Content,Id3Frame,Id3v1Tag,Id3v2Tag,validate_id3_frame,validate_id3v1_tag};
+use semio_s_artifact_stdio_mp3_metadata::standards::mpeg1_layer3::subsets::any::schema::snapshot::metadata::{Id3Content,Id3Frame,Id3v1Tag,Id3v2Tag,validate_id3_frame,validate_id3v1_tag};
 
 fn latin(bytes:&[u8])->String{bytes.iter().map(|&b|char::from(b)).collect()}
 fn latin_bytes(text:&str)->Result<Vec<u8>,String>{text.chars().map(|c|u8::try_from(c as u32).map_err(|_|"id3.latin1".into())).collect()}
@@ -29,7 +29,7 @@ fn decode_values(bytes:&[u8],encoding:u8,order:&mut Option<bool>)->Result<Vec<St
 }
 pub fn decode_id3_frame(id:String,bytes:&[u8])->Result<Id3Frame,String>{
     use Id3Content::*;let mut order=None;
-    let content=match crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::id3_content_kind(&id){
+    let content=match semio_s_artifact_stdio_mp3_metadata::standards::mpeg1_layer3::subsets::any::schema::snapshot::metadata::id3_content_kind(&id){
         "opaque"=>Opaque{bytes:bytes.to_vec()},"url"=>Url{url:latin(bytes).trim_end_matches('\0').into()},
         "text"=>{let(&encoding,body)=bytes.split_first().ok_or("id3.text.empty")?;Text{values:decode_values(body,encoding,&mut order)?}},
         "userText"|"userUrl"=>{let(&encoding,body)=bytes.split_first().ok_or("id3.text.empty")?;let(description,tail)=terminated(body,encoding)?;let description=decode_text(description,encoding,&mut order)?;if id=="TXXX"{UserText{description,values:decode_values(tail,encoding,&mut order)?}}else{UserUrl{description,url:latin(tail).trim_end_matches('\0').into()}}},
@@ -62,7 +62,7 @@ pub fn decode_id3v2(bytes:&[u8])->Result<(Id3v2Tag,usize),String>{
     while pos<end{
         if bytes[pos..end].iter().all(|&b|b==0){break;}if end-pos<10{return Err("id3.frame.truncated".into());}
         let id=String::from_utf8(bytes[pos..pos+4].to_vec()).map_err(|e|e.to_string())?;let size=if version==4{syncsafe(&bytes[pos+4..pos+8])?}else{u32::from_be_bytes(bytes[pos+4..pos+8].try_into().map_err(|_|"id3.frame.size")?)}as usize;
-        if bytes[pos+8]!=0||bytes[pos+9]!=0{return Err("id3.frame.flags.unsupported".into());}let stop=pos.checked_add(10).and_then(|p|p.checked_add(size)).ok_or("id3.frame.size")?;if stop>end{return Err("id3.frame.truncated".into());}if version==3&&matches!(crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::id3_content_kind(&id),"text"|"userText"|"comment"|"lyrics"|"userUrl"|"picture")&&bytes.get(pos+10).is_some_and(|&b|b>1){return Err("id3v2.3.encoding.unsupported".into());}frames.push(decode_id3_frame(id,&bytes[pos+10..stop])?);pos=stop;
+        if bytes[pos+8]!=0||bytes[pos+9]!=0{return Err("id3.frame.flags.unsupported".into());}let stop=pos.checked_add(10).and_then(|p|p.checked_add(size)).ok_or("id3.frame.size")?;if stop>end{return Err("id3.frame.truncated".into());}if version==3&&matches!(semio_s_artifact_stdio_mp3_metadata::standards::mpeg1_layer3::subsets::any::schema::snapshot::metadata::id3_content_kind(&id),"text"|"userText"|"comment"|"lyrics"|"userUrl"|"picture")&&bytes.get(pos+10).is_some_and(|&b|b>1){return Err("id3v2.3.encoding.unsupported".into());}frames.push(decode_id3_frame(id,&bytes[pos+10..stop])?);pos=stop;
     }Ok((Id3v2Tag{frames},end))
 }
 pub fn encode_id3v2(tag:&Id3v2Tag)->Result<Vec<u8>,String>{
@@ -74,3 +74,7 @@ pub fn decode_id3v1(bytes:&[u8])->Result<Id3v1Tag,String>{
 pub fn encode_id3v1(tag:&Id3v1Tag)->Result<[u8;128],String>{
     validate_id3v1_tag(tag)?;let mut out=[0;128];out[..3].copy_from_slice(b"TAG");for(text,start)in [(&tag.title,3),(&tag.artist,33),(&tag.album,63),(&tag.year,93),(&tag.comment,97)]{let bytes=latin_bytes(text)?;out[start..start+bytes.len()].copy_from_slice(&bytes);}if let Some(track)=tag.track{out[126]=track;}out[127]=tag.genre.unwrap_or(255);Ok(out)
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod laws;

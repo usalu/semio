@@ -4,6 +4,7 @@ import { WORKSPACE_ROOT } from "../../../../../../../../../../../../../🧰️fr
 import { toolJobRustBlock } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
 import { toolJobImmutableOperationRootsExact, toolJobPeerCommitAuthorityExact, toolJobPeerInteractionRootsExact } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
+import { readModuleTreeSource } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 /** 🧱️ One retirement unit a CAD presence lane contributes, or `null` when the lane is absent. */
 type CadPresenceRetirementPart = { readonly unit: string; readonly repeat: number } | null;
@@ -255,7 +256,7 @@ export function cadPresenceRetirementSelfTests(): number {
     [storeSource, rejectionSource.replace('self.factory.take().expect("rejected admission retains its minting publication factory")', "foreign_factory"), pluginSource],
   ];
   for (const [store, rejection, plugin] of rejectedHostiles) if (exactRejectedActor(store, rejection, plugin)) throw new Error("peer rejection guard accepted dropped identity, false byte credit or missing mounted owner");
-  const channelSource = readFileSync(join(storeBase, "../../📡️spr/🧵️channel/🦀️.rs"), "utf8");
+  const channelSource = readModuleTreeSource(join(storeBase, "../../📡️spr/🧵️channel/🦀️.rs"));
   const pluginLawSource = readFileSync(join(storeBase, "../../🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
   if (!pluginLawSource.includes("peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root") || !pluginLawSource.includes("peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority")) throw new Error("peer capture native laws are missing");
   const contextFixture = JSON.parse(readFileSync(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧫️fixtures/🧬️request-context.json"), "utf8"));

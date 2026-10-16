@@ -1,5 +1,5 @@
-import{validateJsonSchemaSubset}from"../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 const policy=schema.definitions.Policy.const;
 /** 🌐️ Resolves bounded HTTPS DATA without allowing credentials, fragments or protocol changes. */

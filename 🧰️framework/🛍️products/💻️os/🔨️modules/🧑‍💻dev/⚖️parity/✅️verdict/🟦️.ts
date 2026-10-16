@@ -1,5 +1,5 @@
 /** 🧾️ Acceptance requires executed evidence on every renderer parity axis. */
-import type { ParityPlaygroundReport } from "../🏗️structure/🟦️.ts";
+import type { ParityPlaygroundReport } from "../📋️playground-report/🟦️.ts";
 
 export type ParityVerdict = "PASS" | "FAIL" | "INCOMPLETE" | "STALE-BRIDGE";
 

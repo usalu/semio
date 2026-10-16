@@ -10,7 +10,7 @@
     "project",
     "owner",
     "timeoutMs",
-    "leaseDirectory"
+    "mode"
   ],
   "properties": {
     "workspace": {
@@ -44,21 +44,38 @@
       "maximum": 9007199254740991
     },
     "args": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "$ref": "#/definitions/Arguments"
     },
     "mode": {
       "enum": [
         "prototype",
         "release"
       ]
+    }
+  },
+  "definitions": {
+    "Arguments": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "--extendedDiagnostics",
+          "--diagnostics",
+          "--pretty",
+          "--listFiles",
+          "--listFilesOnly",
+          "--explainFiles",
+          "--traceResolution",
+          "--noErrorTruncation"
+        ]
+      }
     },
-    "leaseDirectory": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 256
+    "CompilerEnvironment": {
+      "const": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1"
+      }
     }
   }
 }

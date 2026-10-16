@@ -1,4 +1,4 @@
-/** 🧭️ Tool-job coverage: live fixed replay, mounted sessions, retained ownership and the FEM numerical microcursor.
+/** 🔂️ Tool-job coverage: live fixed replay, mounted sessions, retained ownership and the FEM numerical microcursor.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { toolJobProductionProtocolSource, toolJobRustBlock } from "../📋️inventory/🟦️.ts";

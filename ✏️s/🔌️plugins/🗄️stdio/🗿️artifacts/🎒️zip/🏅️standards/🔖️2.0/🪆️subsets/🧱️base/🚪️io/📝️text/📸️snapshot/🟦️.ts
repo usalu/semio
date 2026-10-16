@@ -49,5 +49,5 @@ export const stdioZip20BaseSnapshotTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseZipSnapshotText(value: unknown, at = "$"): ZipSnapshotText {
-  return stdioZip20BaseSnapshotTextGuardObject(value, `${at}`);
+  return stdioZip20BaseSnapshotTextGuardString(value, `${at}`);
 }

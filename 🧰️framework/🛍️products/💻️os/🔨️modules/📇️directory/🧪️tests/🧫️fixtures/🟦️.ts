@@ -1,0 +1,14 @@
+/** 🧫 The directory module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
+export { default as directoryLocalSessionDocument } from "../../🎫️local-session/🔣️.json" with { type: "json" };
+export { default as localSessionBrokerSchema } from "../../🎫️local-session/🗄️broker/🧬️schema/🔣️.json" with { type: "json" };
+export const localSessionBrokerSchemaUrl = new URL("../../🎫️local-session/🗄️broker/🧬️schema/🔣️.json", import.meta.url);
+export { default as directoryLocalSessionSchema } from "../../🎫️local-session/🧬️.schema.json" with { type: "json" };
+export { default as agentDelegationListFixture } from "../../🤖️delegations/🧪️tests/🧫️fixtures/📋️agent-delegation-list.json" with { type: "json" };
+export { default as mcpClientConfigFixture } from "../../🤖️delegations/🧪️tests/🧫️fixtures/🔌️mcp-client-config.json" with { type: "json" };
+export { default as userPreferenceRecordFixture } from "./🎚️user-preference-record/🔣️.json" with { type: "json" };
+export { default as directorySpacesFixture } from "./🏘️spaces/🔣️.json" with { type: "json" };
+export { default as administrationCommandAdmissionFixture } from "./🏛️administration/🛂️command-admission/🔣️.json" with { type: "json" };
+export { default as directorySignInFixture } from "./🔐️sign-in/🔣️.json" with { type: "json" };
+export { default as directorySessionRefreshFixture } from "./🪪️session-refresh/🔣️.json" with { type: "json" };
+export { default as directorySchema } from "../../🧬️schema/🔣️.json" with { type: "json" };
+export const targetLeaseV1FixtureUrl = new URL("./🔏️document-execution-target-lease-v1/🔣️.json", import.meta.url);

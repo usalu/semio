@@ -4,7 +4,7 @@
  * @see ../../🔨️modules/🧗️climbing/🟦️.ts
  * @see ../../🔨️modules/🪢️swing/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { HOOK_INSET, HOOK_LIFT, HOOK_RETURN, HOOK_SPEED, type Haul, MUZZLE_FORWARD, MUZZLE_HEIGHT, ROPE_AIM_TICKS, ROPE_DETOUR, ROPE_ELEVATION, ROPE_FOLLOW, ROPE_HOIST_TICKS, ROPE_LONG, ROPE_MARGIN, ROPE_MISS_CHANCE, ROPE_MISS_OVERSHOOT, ROPE_RECOIL_TICKS, ROPE_REST, ROPE_RISE, ROPE_SHORT, ROPE_SHRUG_TICKS, ROPE_SULK, ROPE_TUG_TICKS, ZIP_RAMP, ZIP_SLANT, ZIP_SPEED, haulOf, hookStep, hookTicks, type ladderFor, landingFor, missOf, routeOf, shotFor, shotHolds, swayStep, zipStep } from "../../🔨️modules/🧗️climbing/🟦️.ts";
 import { REEL_LEAST } from "../../🔨️modules/🪢️swing/🟦️.ts";
 import type { Gear, Perch, Pitch, Point, Rect, Size } from "../../🧬️schema/🟦️.ts";

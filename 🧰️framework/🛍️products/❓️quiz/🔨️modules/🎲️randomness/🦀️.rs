@@ -91,6 +91,3 @@ pub fn shuffle<T: Clone>(random: &mut Mt19937, items: &[T]) -> Vec<T> {
     copy
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

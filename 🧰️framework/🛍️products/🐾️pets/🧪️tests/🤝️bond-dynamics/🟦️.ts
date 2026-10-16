@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🧠️behavior/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { ACTIVITIES, type Activity, type Bond, type Menagerie, type Needs, type Rapport, type Slug, type Temperament } from "../../🧬️schema/🟦️.ts";
 import { affinityOf, needsAfter, needsOf, rapportAfter, rapportFaded } from "../../🔨️modules/🧠️behavior/🟦️.ts";
 

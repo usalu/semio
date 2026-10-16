@@ -316,7 +316,7 @@ async fn cmd_verify(rest: &[String], context: &control::CommandContext) -> i32 {
 
 //#region 🔖️Hash
 /// #⃣ `pack hash <file>` — prints the footer's `content_hash` hex, reading only the
-/// trailing footer bytes via `crate::os_pack::content_hash`.
+/// trailing footer bytes via `crate::os_pack::stored_content_hash`.
 async fn cmd_hash(rest: &[String], context: &control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
@@ -330,7 +330,7 @@ async fn cmd_hash(rest: &[String], context: &control::CommandContext) -> i32 {
             return 1;
         }
     };
-    match semio_framework_os_pack::content_hash(&bytes) {
+    match semio_framework_os_pack::stored_content_hash(&bytes) {
         Ok(hash) => {
             println!("{hash}");
             0
@@ -520,8 +520,8 @@ async fn cmd_diff(rest: &[String], context: &control::CommandContext) -> i32 {
             1
         }
     } else {
-        let hash_a = semio_framework_os_pack::content_hash(&bytes_a);
-        let hash_b = semio_framework_os_pack::content_hash(&bytes_b);
+        let hash_a = semio_framework_os_pack::stored_content_hash(&bytes_a);
+        let hash_b = semio_framework_os_pack::stored_content_hash(&bytes_b);
         if let (Ok(hash_a), Ok(hash_b)) = (hash_a, hash_b) {
             if hash_a == hash_b && bytes_a.len() == bytes_b.len() {
                 println!("identical (content_hash {hash_a}, {} bytes)", bytes_a.len());

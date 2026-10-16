@@ -1,4 +1,4 @@
-import { validateJsonSchemaSubset } from "../../../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { runMutationInventoryProcess,readMutationInventoryCapture,readMutationInventoryExecutionPolicy,MutationInventoryProcessWorkspace,admitMutationInventoryProducerArguments } from "../🟦️.ts";
 import type { MutationInventoryExecutionPolicy,MutationInventoryProcessOperation,MutationInventoryProcessResult } from "../🟦️.ts";
 import requestSchema from "./🧬️schema/🔣️.json" with {type:"json"};

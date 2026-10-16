@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {verifyProducedWasmPackageV1} from "../../../🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import {verifyProducedWasmPackageV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import {executeCargoRequestV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';

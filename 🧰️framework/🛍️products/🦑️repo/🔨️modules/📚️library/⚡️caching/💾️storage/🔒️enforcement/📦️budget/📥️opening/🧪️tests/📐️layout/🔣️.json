@@ -1,0 +1,47 @@
+[
+  {
+    "fault": "none",
+    "committed": true
+  },
+  {
+    "fault": "before-append",
+    "committed": false
+  },
+  {
+    "fault": "after-append",
+    "committed": true
+  },
+  {
+    "fault": "before-rename",
+    "committed": true
+  },
+  {
+    "fault": "after-rename",
+    "committed": true
+  },
+  {
+    "fault": "busy",
+    "committed": false,
+    "reason": "Products reconciliation requires quiescent whole image custody"
+  },
+  {
+    "fault": "orphan",
+    "committed": false,
+    "reason": "Unresolved persistent state prevents products reconciliation"
+  },
+  {
+    "fault": "extra-ledger",
+    "committed": false,
+    "reason": "Current products ledger cannot admit disjoint layout"
+  },
+  {
+    "fault": "physical-usage",
+    "committed": false,
+    "reason": "Actual products filesystem cannot admit disjoint layout"
+  },
+  {
+    "fault": "available-state",
+    "committed": false,
+    "reason": "Actual products filesystem cannot admit disjoint layout"
+  }
+]

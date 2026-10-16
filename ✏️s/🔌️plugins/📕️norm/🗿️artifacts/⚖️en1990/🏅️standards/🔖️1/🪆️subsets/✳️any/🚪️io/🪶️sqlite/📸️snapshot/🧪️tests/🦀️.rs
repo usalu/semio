@@ -1,6 +1,5 @@
 //! ⚖️ The exact EN1990 factory must expose its owned relational snapshot provider.
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 
 #[test]
 fn sqlite_snapshot_en1990_actual_bare_factory_exposes_owned_relational_capability() {

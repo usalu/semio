@@ -6,18 +6,24 @@
 import { mediaTransportPort } from "../../../🎬️media/📡️channel/🟦️.ts";
 import { type Effect, type HistoryPatch, type InvocationResponse } from "@semio-tech/framework";
 import {
+  decodePackValue
+} from "@semio-tech/framework/packs";
+import {
   AppChannelClient,
   AppChannelRequestSequence,
-  type AppFrameValue,
   decodeConflictsFromWire,
   decodeMergeReportFromWire,
-  decodeMutationEnvelopesPack,
-  decodePackValue,
-  decodePackWire,
   faultDisplayMessage
-} from "@semio-tech/framework-os";
-import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals } from "@semio-tech/framework-replication";
-import { type PluginWasmHandle as KernelPluginWasmHandle } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
+} from "@semio-tech/framework/app-channel";
+import {
+  type AppFrameValue
+} from "@semio-tech/framework/wire-contracts";
+import {
+  decodeMutationEnvelopesPack,
+  decodePackWire
+} from "@semio-tech/framework/packs";
+import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals } from "@semio-tech/framework/replication";
+import { type PluginWasmHandle as KernelPluginWasmHandle } from "@semio-tech/framework";
 import { type PluginManifest, type PluginOperationCompletion, type PluginWasmHandle } from "../🧷️handle-contract/🟦️.ts";
 import { wireEffectToFriendly } from "../🪟️retained-ui-patch/🟦️.ts";
 import { TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN } from "../📬️typed-result/🟦️.ts";

@@ -386,7 +386,7 @@ function applyCommand(next: ShellState, original: ShellState, command: ShellComm
         const wasExtra = original.extraWindows.some((w: ExtraWindowInstance) => w.windowId === active);
         const stillPresent = next.extraWindows.some((w: ExtraWindowInstance) => w.windowId === active);
         if (wasExtra && !stillPresent) {
-          const fallback = next.extraWindows.length > 0 ? next.extraWindows[next.extraWindows.length - 1].windowId : null;
+          const fallback=next.extraWindows.at(-1)?.windowId??null;
           next.activeWindowId = fallback;
           events.push({ type: "windowFocusChanged", previous: active, current: fallback });
         }
@@ -555,10 +555,3 @@ function applyCommand(next: ShellState, original: ShellState, command: ShellComm
   }
 }
 //#endregion 🧮️reduce
-
-//#region 🧪️tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts");
-  await registerTests1(import.meta.vitest, { reduce, defaultShellState }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️tests

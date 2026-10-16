@@ -426,7 +426,7 @@
       }
     },
     "DevHubCatalogHeaderV1": {
-      "description": "The part of a development hub's current trusted-catalog generation (`trusted-catalog/generations/<id>/trusted-catalog.json`) the dev hub owner reads before it boots the hub: the catalog format version the hub loads and the package record keys that format requires. A generation outside it was written by an older publisher and is republished instead of crashing the hub (`ArtifactAuthority(Catalog(\"missing field pluginModule\"))`, 26/09/23). Twins: `🌎️hub/📦️packages/🦀️rust/📜️script.ts` `materializeTrustedCatalogBundle`, `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs` schema version check.",
+      "description": "The part of a development hub's current trusted-catalog generation (`trusted-catalog/generations/<id>/trusted-catalog.json`) the dev hub owner reads before it boots the hub: the catalog format version the hub loads and the package record keys that format requires. A generation outside it was written by an older publisher and is republished instead of crashing the hub (`ArtifactAuthority(Catalog(\"missing field pluginModule\"))`, 26/09/23). Twins: `🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts` `materializeTrustedCatalogBundle`, `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs` schema version check.",
       "type": "object",
       "required": [
         "schemaVersion",

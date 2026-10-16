@@ -1,3 +1,4 @@
+import {testRecordV1} from "../📋️values/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -110,7 +111,7 @@ export async function testNativeDependencies(workspace: string, output: string):
       assert.ok(!log.includes("[local cache]")); assert.match(log, /Successfully ran target deps-cargo/);
       const currentLock=readFileSync(join(root,"Cargo.lock"),"utf8"), parsed=Bun.TOML.parse(currentLock);
       assert.deepEqual(parsed,require("smol-toml").parse(currentLock));
-      assert.deepEqual((parsed.package as {name:string}[]).map(value=>value.name).sort(),fixture.cargo.preparedPackages);
+      const packages=testRecordV1(parsed).package;assert(Array.isArray(packages));assert.deepEqual(packages.map(value=>{const name=testRecordV1(value).name;assert.equal(typeof name,"string");return name;}).sort(),fixture.cargo.preparedPackages);
       if(preparedLock!==undefined)assert.equal(currentLock,preparedLock);preparedLock=currentLock;
       const actual=JSON.parse(await run("cargo",["metadata","--locked","--offline","--no-deps","--format-version=1"]));
       assert.deepEqual(actual.packages.map((value:any)=>value.name).sort(),fixture.cargo.preparedPackages);
@@ -130,7 +131,7 @@ export async function testNativeDependencies(workspace: string, output: string):
     const {inventorySchemaScopes}=await import("../../../🔍️discovery/🟦️.ts");
     const inventory=inventorySchemaScopes(workspace,JSON.parse(readFileSync(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),"utf8"))),scope=inventory.modules.find(module=>module.modulePath===dirname(custodySchemaPath));
     writeFileSync(join(output,"cargo-custody-inventory.json"),JSON.stringify({scope,diagnostics:inventory.diagnostics},null,2)+"\n");
-    assert.ok(scope?.level);assert.equal(scope.scopeId,"repo.library.workspaces.cargo.preparation.custody");assert.deepEqual(scope.documents[0].exports.sort(),Object.keys(schema.$defs).sort());
+    assert.ok(scope?.level);assert.equal(scope.scopeId,"repo.library.workspaces.cargo.preparation.custody");assert.deepEqual([...scope.documents[0].exports].sort(),Object.keys(schema.$defs).sort());
     assert.equal(scope.hashes["🔣️.json"],new Bun.CryptoHasher("sha256").update(readFileSync(join(workspace,custodySchemaPath))).digest("hex"));
     assert.deepEqual(inventory.diagnostics.filter(row=>row.path.startsWith(dirname(custodySchemaPath))),[]);
     const {cargoPreparationProgramSourcesV1}=await import(pathToFileURL(join(workspace,custodySchemaPath.replace("/🧬️schema/🔣️.json","/🟦️.ts"))).href),ts=require("typescript");

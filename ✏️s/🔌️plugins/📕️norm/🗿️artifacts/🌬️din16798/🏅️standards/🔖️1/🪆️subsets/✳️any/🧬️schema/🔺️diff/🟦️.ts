@@ -1,7 +1,7 @@
 /** 🔺️ `Din16798Diff` wire twin: the sparse delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireDefault, normWireInteger, normWireLiteral, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireDefault, normWireInteger, normWireLiteral, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 import { type Din16798VentSystem, type Din16798Zone, parseDin16798VentSystem, parseDin16798Zone } from "../📸️snapshot/🟦️.ts";
 
 export interface Din16798ZonePatch { name: (string) | null; usageType: (string) | null; floorAreaM2: (number) | null; occupants: (number) | null; comfortCategory: (string) | null; pollutionClass: (string) | null; comfortModel: (string) | null; tOpWinterC: (number) | null; tOpSummerC: (number) | null; airSpeedMS: (number) | null; clothingClo: (number) | null; metabolicRateMet: (number) | null; rhPercent: (number) | null; outdoorAirSuppliedM3H: (number) | null; co2Ppm: (number) | null; illuminanceLx: (number) | null; noiseDb: (number) | null; turbulenceIntensityPercent: (number) | null; ventMethod: (string) | null; ventSystemId: (string) | null; }

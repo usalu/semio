@@ -84,13 +84,13 @@ value_field!(DurableOwnedGroupMemberV1);
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "store.durable-owned-three-member-decision")]
 pub struct DurableOwnedThreeMemberDecisionV1 {
-    pub(crate) schema: String,
-    pub(crate) anchor: DurableOwnedGroupAnchorV1,
-    pub(crate) anchor_sha256: String,
-    pub(crate) decision_sha256: String,
-    pub(crate) parent: DurableOwnedGroupMemberV1,
-    pub(crate) drawing: DurableOwnedGroupMemberV1,
-    pub(crate) value: DurableOwnedGroupMemberV1,
+    pub schema: String,
+    pub anchor: DurableOwnedGroupAnchorV1,
+    pub anchor_sha256: String,
+    pub decision_sha256: String,
+    pub parent: DurableOwnedGroupMemberV1,
+    pub drawing: DurableOwnedGroupMemberV1,
+    pub value: DurableOwnedGroupMemberV1,
 }
 
 
@@ -137,11 +137,11 @@ pub enum DurableOwnedThreeStoreRecoveryV1<ParentP, ParentMutation, DrawingP, Dra
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DurableOwnedGroupJournalRecordV1 {
     canonical_pack: Vec<u8>,
-    decision_sha256: String,
-    anchor_sha256: String,
-    document: semio_framework_artifact_reference::ArtifactRef,
-    parent_edit_id: String,
-    parent_post_revision: [u8; 32],
+    pub decision_sha256: String,
+    pub anchor_sha256: String,
+    pub document: semio_framework_artifact_reference::ArtifactRef,
+    pub parent_edit_id: String,
+    pub parent_post_revision: [u8; 32],
 }
 
 
@@ -1933,7 +1933,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
         if manifest.doc_frame_count != 1 || manifest.chunk_count != 0 || file.chunk_count() != 0 || manifest.field_count != 7 {
             return Err(DurableOwnedGroupDecisionError::NonCanonical);
         }
-        if manifest.schema_hash != semio_framework_os_pack::schema_hash(&Self::__dsl_spec()) {
+        if manifest.schema_hash != pack::record::schema_hash(&Self::__dsl_spec()) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
         let decision = <Self as ArtifactPack>::decode_pack_with(bytes, &options).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;

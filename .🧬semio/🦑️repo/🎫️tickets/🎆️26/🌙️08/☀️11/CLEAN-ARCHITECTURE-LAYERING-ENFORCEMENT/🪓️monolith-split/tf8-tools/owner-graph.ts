@@ -1,0 +1,10 @@
+import ts from "typescript";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+const root = "/Users/ueli/Documents/semio";
+const fixture = JSON.parse(readFileSync(resolve(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧱️command-composition-source/🔣️.json"), "utf8"));
+const paths: string[] = fixture.owners.map((o: { path: string }) => resolve(root, o.path));
+const t0 = Date.now();
+const program = ts.createProgram(paths, { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, noUncheckedIndexedAccess: true, allowImportingTsExtensions: true, allowJs: true, skipLibCheck: true, noEmit: true, types: ["node", "bun"] });
+const diags = paths.flatMap((p) => [...program.getSyntacticDiagnostics(program.getSourceFile(p)), ...program.getSemanticDiagnostics(program.getSourceFile(p))]).map((d) => `${d.file?.fileName.slice(-70)}: ${ts.flattenDiagnosticMessageText(d.messageText, "\n").slice(0, 160)}`);
+console.log(JSON.stringify({ owners: paths.length, diagnostics: diags.length, sample: diags.slice(0, 5), ms: Date.now() - t0 }, null, 1));

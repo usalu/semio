@@ -7,14 +7,10 @@
 
 import { reactHostPort, uiDataLabel, WINDOW_SEARCH_USER } from "@semio-tech/framework/ui/targets/react";
 import { emptyMeshTransfer, kernelGeometry, solidRef } from "../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import {
-  defaultModelDefinitionId,
-  listStatDefinitionsForModelDefinition,
-  statDefinitionAppliesToScope,
-  Model,
-  resolveTypologyStyle,
-  typologyStyleCacheKey
-} from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { resolveTypologyStyle, typologyStyleCacheKey } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎨️typology/🟦️.ts";
+import { listStatDefinitionsForModelDefinition, statDefinitionAppliesToScope } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📊️stats/🟦️.ts";
+import { defaultModelDefinitionId } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
+import { Model } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
 import { ensureTypologyObjectFromCreateDiff } from "../🧬️typology/🟦️.ts";
 import { applyModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { mergeInteractionSpatial } from "../🎬️actions/🟦️.ts";

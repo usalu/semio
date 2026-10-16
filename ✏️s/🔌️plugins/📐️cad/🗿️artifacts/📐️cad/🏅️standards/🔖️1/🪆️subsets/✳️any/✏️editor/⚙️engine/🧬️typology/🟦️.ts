@@ -6,7 +6,10 @@ import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/framewo
 // #endregion 🧲️Header
 
 
-import { Model, ObjectRef, TypologyPrimitiveKind, TypologyRef, TypologySpec, listModelDefinitionTypologies, listTypologiesForModelDefinition, loadTypology, typologyForInteraction } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { ObjectRef, TypologyPrimitiveKind, TypologyRef } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { TypologySpec, listModelDefinitionTypologies, loadTypology, typologyForInteraction } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎨️typology/🟦️.ts";
+import { Model } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { listTypologiesForModelDefinition } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
 import type { ModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import type { ActionSpec } from "../🎬️actions/🟦️.ts";
 import { loadSpatialInteraction } from "../🗿️artifact/🟦️.ts";

@@ -152,12 +152,12 @@ pub struct GroupUndoReport {
 /// `&self`/`&mut self`, none require a live `CompositionCoordinator`.
 #[derive(Debug)]
 pub struct CompositionGraph {
-    pub(crate) owns: crate::composition_group::OwnsRoot,
+    pub owns: crate::composition_group::OwnsRoot,
     pub(crate) owns_group: Option<usize>,
     pub(crate) owns_retiring: Option<(String, (String, String))>,
-    pub(crate) links: crate::composition_links::LinkRoot,
-    pub(crate) owns_authority: Option<Arc<()>>,
-    pub(crate) owns_generation: u64,
+    pub links: crate::composition_links::LinkRoot,
+    pub owns_authority: Option<Arc<()>>,
+    pub owns_generation: u64,
 }
 
 impl Default for CompositionGraph {
@@ -518,7 +518,7 @@ pub enum MemberRelation {
 /// behaving identically unchanged. Prefer the new name in code this ticket authors.
 #[derive(Debug, Default)]
 pub struct TransactionCoordinator {
-    graph: CompositionGraph,
+    pub graph: CompositionGraph,
 }
 
 /// 🪪️ Source-compatible alias — see `TransactionCoordinator`'s own doc comment for why this

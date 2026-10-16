@@ -33,17 +33,13 @@ import {
   type WorldReferenceRelocatePayload
 } from "@semio-tech/infinite-world-r3f";
 import { type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import {
-  defaultModelDefinitionId,
-  Model,
-  type InteractionEvent,
-  type InteractionSpec,
-  type ResolvedInteractionEngagementControl,
-  type TransformationSpec,
-  type SelectionTarget,
-  type SpatialInteraction,
-  type ModelEntityKind
-} from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type ModelEntityKind } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type InteractionSpec, type ResolvedInteractionEngagementControl } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎰️interaction-spec/🟦️.ts";
+import { defaultModelDefinitionId } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
+import { type TransformationSpec } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🔄️transformation-spec/🟦️.ts";
+import { Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { type SpatialInteraction } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
+import { type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import { type ModelDiff } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { listKeyedInteractionTransitions, parseNumericCommandLine, type InteractionKeybindRow, type CadGumballConfig } from "../../🎬️actions/🟦️.ts";
 import {

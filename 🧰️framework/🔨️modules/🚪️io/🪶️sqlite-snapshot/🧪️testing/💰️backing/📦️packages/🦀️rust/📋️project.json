@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/io-sqlite-snapshot-testing-backing-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

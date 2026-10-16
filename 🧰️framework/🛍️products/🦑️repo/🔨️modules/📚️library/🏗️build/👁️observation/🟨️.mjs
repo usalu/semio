@@ -459,11 +459,11 @@ export async function settleObservedComputationV1(compute,{signal,limit=64,onRou
  const parent=scopes.getStore(),capture=sourceCaptures.getStore(),accept=(rows,captured)=>{retainObservationsV1(parent,rows);retainObservationsV1(capture,captured);};
  for(let round=0;;round++){
   signal?.throwIfAborted();
-  const nested=new Map(),captured=new Map(),started=Date.now();let value,failure;
-  try{value=await sourceCaptures.run(captured,()=>inferenceValidationScopes.run(nested,()=>scopes.run(nested,compute)));}catch(error){failure=error;}
+  const nested=new Map(),captured=new Map(),started=Date.now();let value,failure,failed=false;
+  try{value=await sourceCaptures.run(captured,()=>inferenceValidationScopes.run(nested,()=>scopes.run(nested,compute)));}catch(error){failed=true;failure=error;}
   signal?.throwIfAborted();
   const rows=[...nested.values()],consistent=consistentObservationsV1(rows);
-  if(consistent&&failure===undefined){accept(rows,captured.values());return value;}
+  if(consistent&&!failed){accept(rows,captured.values());return value;}
   if(consistent&&await observationsHold(rows,64,new Set(),new Set(),signal)){
    signal?.throwIfAborted();
    const youngest=Math.max(0,...rows.map(({kind,fact})=>{const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source?Math.max(source.mtimeMs??0,source.ctimeMs??0):0;}));
@@ -471,9 +471,9 @@ export async function settleObservedComputationV1(compute,{signal,limit=64,onRou
    await new Promise((resolve,reject)=>{const timer=setTimeout(resolve,Math.max(0,youngest+RACY_MS-Date.now()));signal?.addEventListener("abort",()=>{clearTimeout(timer);reject(signal.reason);},{once:true});});
   }
   signal?.throwIfAborted();
-  await onRound?.({round,...(consistent?{}:{conflict:conflictingInferenceErrorV1(rows).path}),...(failure===undefined?{}:{failure})});
+  await onRound?.({round,...(consistent?{}:{conflict:conflictingInferenceErrorV1(rows).path}),...(failed?{failure}:{})});
   signal?.throwIfAborted();
-  if(round+1>=limit){accept(rows,captured.values());throw failure??conflictingInferenceErrorV1(rows);}
+  if(round+1>=limit){accept(rows,captured.values());throw failed?failure:conflictingInferenceErrorV1(rows);}
  }
 }
 

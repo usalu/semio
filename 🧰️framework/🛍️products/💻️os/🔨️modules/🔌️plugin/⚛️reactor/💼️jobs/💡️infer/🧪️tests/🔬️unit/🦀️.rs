@@ -1,6 +1,15 @@
-use super::super::*;
-use super::*;
-use crate::artifact_inference::{ArtifactInferenceExecution, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest};
+use crate::BoundedJob;
+use semio_framework_value_derive::ToValue;
+use semio_framework_value_derive::FromValue;
+use std::future::Future;
+use semio_framework_value::ValueError;
+use crate::infer::{DIAGNOSTIC_MAX_BYTES, DIAGNOSTIC_MAX_ITEMS, InferenceBridge, InferenceBridgeError, LOSSLESS_MAX_BYTES, OriginalInferenceJob, PREVIEW_MAX_BYTES, decode_request, encode_result, job_infer};
+use semio_framework_job::{Generation, Operation, OperationId, RevisionId};
+#[cfg(test)]
+use crate::infer::LosslessInferenceItem;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_plugin_decl_registry::{ArtifactInferenceExecution, ArtifactInferenceExecutionRequest, ArtifactInferenceServiceMetadata, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+use semio_framework_plugin_plugin_program::WireArtifactInferenceRequest;
 
 const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceServiceMetadata {
     owner: "s.jobtest",
@@ -14,15 +23,16 @@ const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceService
     payload: None,
 };
 
-fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut crate::ArtifactInferenceStepContext<'_>) -> Result<crate::artifact_inference::ArtifactInferenceExecutionStep, crate::artifact_inference::ArtifactInferenceExecutionError> {
+fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin_decl_registry::ArtifactInferenceStepContext<'_>) -> Result<semio_framework_plugin_decl_registry::ArtifactInferenceExecutionStep, semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError> {
     Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: Some(request.canonical_payload.to_vec()), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
 }
 
 /// 🪪️ Every fixture request carries its OWN `cancellation_id`: the in-flight inference registry is
 /// process-global, so two tests reusing one id race each other for the same slot.
-fn request_bytes(cancellation_id: &str) -> Vec<u8> {
+#[doc(hidden)]
+pub fn request_bytes(cancellation_id: &str) -> Vec<u8> {
     let request = WireArtifactInferenceRequest {
-        wire_version: crate::artifact_inference::ARTIFACT_INFERENCE_WIRE_VERSION,
+        wire_version: semio_framework_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION,
         owner: TEST_METADATA.owner.into(),
         artifact_kind: TEST_METADATA.artifact_kind.into(),
         artifact_schema: TEST_METADATA.artifact_schema.into(),
@@ -95,7 +105,7 @@ fn interactive_bridge_diagnostic_ring_is_item_and_byte_bounded() {
 #[test]
 fn an_interactive_result_forwards_the_jobs_resume_state_and_claims_no_fidelity_it_was_not_told() {
     let request = decode_request(&request_bytes("jobtest-cancel-encode")).expect("the fixture request decodes");
-    let decoded = |bytes: Vec<u8>| -> crate::artifact_inference::WireArtifactInferenceResult { semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes") };
+    let decoded = |bytes: Vec<u8>| -> semio_framework_plugin_plugin_program::WireArtifactInferenceResult { semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes") };
 
     let resumable = decoded(encode_result(request.clone(), vec![1, 2, 3], Some(vec![4, 5]),RetainedCloneProgress{copied_items:7,copied_bytes:23,retained_capacity_bytes:0,released_bytes:65536}).expect("encodes"));
     assert_eq!((resumable.canonical_payload, resumable.previous_state, resumable.complete), (Some(vec![1, 2, 3]), Some(vec![4, 5]), true));
@@ -109,7 +119,8 @@ fn an_interactive_result_forwards_the_jobs_resume_state_and_claims_no_fidelity_i
     assert_eq!(stateless.previous_state, None, "the request's own previous state is not the job's resume state");
 }
 
-fn completed_child_demands(_request:&ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
+#[doc(hidden)]
+pub fn completed_child_demands(_request:&ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
 
 /// ♻️ Every unchanged copy grant closes the original raw loan and checkpoint without recomputation.
 #[test]

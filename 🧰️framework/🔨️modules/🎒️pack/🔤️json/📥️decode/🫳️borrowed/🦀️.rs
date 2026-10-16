@@ -6,7 +6,7 @@ pub type JsonBorrowedParseCursor<'source,S> = JsonBorrowedCursor<'source,S,super
 pub type JsonBorrowedDslCursor<'source,S> = JsonBorrowedCursor<'source,S,semio_framework_value::DslValue>;
 pub type JsonBorrowedCursor<'source,S,V>=JsonSourceCursor<&'source S,V>;
 /// 🪟️ Retains an immutable first-party source view by value alongside its original grammar owner.
-pub struct JsonSourceCursor<S:JsonReadSource+Copy,V:JsonParsedValue>{source:S,parser:super::JsonGrammarCursor<V>}
+pub struct JsonSourceCursor<S:JsonReadSource+Copy,V:JsonParsedValue>{#[doc(hidden)] pub source:S,parser:super::JsonGrammarCursor<V>}
 impl<S:JsonReadSource+Copy,V:JsonParsedValue> JsonSourceCursor<S,V>{
     /// 🛂️ Captures the complete original caller limits before any source read or destination allocation.
     pub fn new(source:S,policy:super::JsonMemberPolicy,limits:JsonReadLimits)->Result<Self,semio_framework_value::ValueError>{
@@ -98,7 +98,7 @@ pub(super) fn json_character<S:JsonReadSource+?Sized>(source:&S,position:&mut us
         next=>{*position+=next.len_utf8();Ok(Some(next))},
     }
 }
-pub(super) struct NumberText {bytes:[u8;1200],length:usize}
+pub(super) struct NumberText {pub bytes:[u8;1200],pub length:usize}
 impl NumberText{
     pub(super) fn new()->Self{Self{bytes:[0;1200],length:0}}
     pub(super) fn push(&mut self,byte:u8)->Result<(),JsonError>{

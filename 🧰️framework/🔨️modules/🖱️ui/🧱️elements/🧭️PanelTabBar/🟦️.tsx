@@ -162,6 +162,7 @@ export function progressPanelTabSelection(tabs: readonly PanelTabNode[], current
   const d = validatedSelected.length - 1;
   if (d < 0) return { path: currentPath, memory, fold: false };
   const pressed = validatedSelected[d];
+  if(pressed===undefined)return{path:currentPath,memory,fold:false};
 
   const clearSubtreeMemory = (node: PanelTabNode | undefined, fallbackId: string): Readonly<Record<string, string>> => {
     const clearedIds = new Set(node ? panelTabSubtreeIds(node) : [fallbackId]);
@@ -190,7 +191,7 @@ export function progressPanelTabSelection(tabs: readonly PanelTabNode[], current
     path = [...path, child.id];
     tailNode = child;
   }
-  for (let i = 0; i < path.length - 1; i++) nextMemory[path[i]] = path[i + 1];
+  for (let i = 0; i < path.length - 1; i++){const parent=path[i],child=path[i+1];if(parent!==undefined&&child!==undefined)nextMemory[parent]=child;}
   return { path, memory: nextMemory, fold: false };
 }
 

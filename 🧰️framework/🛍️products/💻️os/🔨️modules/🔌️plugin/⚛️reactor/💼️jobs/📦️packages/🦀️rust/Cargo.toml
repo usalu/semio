@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
@@ -47,3 +47,6 @@ semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️a
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+semio-framework-trace = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

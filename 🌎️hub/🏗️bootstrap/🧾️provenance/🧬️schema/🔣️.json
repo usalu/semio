@@ -145,8 +145,9 @@
         "cargoInvocations": {
           "type": "array",
           "minItems": 2,
+          "maxItems": 33,
           "items": {
-            "$ref": "#/$defs/ObservationClaimV1"
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/receipt/retention/reference/component.json"
           }
         },
         "browserActor": {
@@ -197,7 +198,8 @@
           "minItems": 1,
           "items": {
             "$ref": "#/$defs/PackageProducerV1"
-          }
+          },
+          "maxItems": 128
         }
       },
       "required": [

@@ -7,7 +7,8 @@
 
 use super::*;
 use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, SetCount, SetLabel, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
-use crate::{RequestId, ViewWindowInstance};
+use semio_framework::RequestId;
+use semio_framework::ViewWindowInstance;
 use semio_framework_tool_run::{
     JobKindId, ToolRunId, ToolRunCounter, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepRing, ToolRunTick,
     ToolRunTickWriter, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict,

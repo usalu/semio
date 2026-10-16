@@ -4,7 +4,7 @@ use super::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, Sqlit
 pub mod receiving;
 
 /// 📏️ Accumulates an owner's explicit native allocation and encoded output upper bounds.
-pub struct NativeEncodingBound<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, bytes: usize, units: usize, semantic:bool }
+#[doc(hidden)] pub struct NativeEncodingBound<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, #[doc(hidden)] pub bytes: usize, units: usize, semantic:bool }
 
 impl<'c, 'p> NativeEncodingBound<'c, 'p> {
 
@@ -58,9 +58,18 @@ pub use projection::{ProjectionStorage,project_owned,owned_workspace};
 #[path="🧵️paged-text/🦀️.rs"]
 mod paged_text;
 
+/// 🪝️ Test hook: the private row writer, public only behind the `testkit` feature.
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub mod row_writer {
+        pub use super::super::row_writer::*;
+    }
+}
+
 impl Cell<'_> {
     fn bytes(self) -> usize { match self { Self::Null => 0, Self::Integer(_) | Self::Real(_) | Self::Float32(_) => 8, Self::Text(value) => value.len(), Self::PagedText(value) => value.text_bytes(), Self::Blob(value) => value.len() } }
-    fn owned(self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteValue, ValueError> { Ok(match self { Self::Null => SqliteValue::Null, Self::Integer(value) => SqliteValue::Integer(value), Self::Real(value) => SqliteValue::Real(value), Self::Float32(value) => SqliteValue::Real(f64::from(value)), Self::Text(value) => SqliteValue::Text(copy_text(value, control, SqliteSnapshotPhase::ProjectSnapshot)?), Self::PagedText(value) => SqliteValue::Text(paged_text::copy_text(value, control, SqliteSnapshotPhase::ProjectSnapshot)?), Self::Blob(value) => SqliteValue::Blob(copy_blob(value, control, SqliteSnapshotPhase::ProjectSnapshot)?) }) }
+    #[doc(hidden)] pub fn owned(self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteValue, ValueError> { Ok(match self { Self::Null => SqliteValue::Null, Self::Integer(value) => SqliteValue::Integer(value), Self::Real(value) => SqliteValue::Real(value), Self::Float32(value) => SqliteValue::Real(f64::from(value)), Self::Text(value) => SqliteValue::Text(copy_text(value, control, SqliteSnapshotPhase::ProjectSnapshot)?), Self::PagedText(value) => SqliteValue::Text(paged_text::copy_text(value, control, SqliteSnapshotPhase::ProjectSnapshot)?), Self::Blob(value) => SqliteValue::Blob(copy_blob(value, control, SqliteSnapshotPhase::ProjectSnapshot)?) }) }
 }
 
 fn copy_text(text:&str,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<String,ValueError>{
@@ -78,7 +87,7 @@ fn copy_blob(blob:&[u8],control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnaps
 pub fn project_text(control: &mut SqliteSnapshotControl<'_>, text: &str) -> Result<String, ValueError> { control.check_value_bytes(text.len())?; copy_text(text, control, SqliteSnapshotPhase::ProjectSnapshot) }
 
 /// 🏗️ Inserts only the domain rows explicitly supplied by an artifact implementation.
-pub struct Projection<'c, 'p> { database: SqliteDatabase, control: &'c mut SqliteSnapshotControl<'p>, rows: usize, bytes: usize }
+#[doc(hidden)] pub struct Projection<'c, 'p> { #[doc(hidden)] pub database: SqliteDatabase, #[doc(hidden)] pub control: &'c mut SqliteSnapshotControl<'p>, rows: usize, bytes: usize }
 
 impl<'c, 'p> Projection<'c, 'p> {
 
@@ -328,7 +337,7 @@ impl<'a> RowIndex<'a>{
 }
 
 /// 🫴️ Bounds explicitly restored native fields before creating owned copies.
-pub struct Reconstruction<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, bytes: usize, units: usize }
+#[doc(hidden)] pub struct Reconstruction<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, #[doc(hidden)] pub bytes: usize, units: usize }
 
 /// 🔤️ Copies one explicitly selected native text field within the transfer's ownership budget.
 pub fn reconstruct_text(control: &mut SqliteSnapshotControl<'_>, text: &str) -> Result<String, ValueError> {
@@ -395,171 +404,3 @@ impl<'c, 'p> Reconstruction<'c, 'p> {
     /// ⏱️ Checks cancellation around relationship traversal and prior to returning native ownership.
     pub fn checkpoint(&mut self) -> Result<(), ValueError> { self.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, self.units, 0) }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn paid_row_index_neutral_explicit_signed_identity_preserves_sqlite_zero_and_negative_surrogates(){
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();
-        let mut db=neutral_paid_row_index_database();db.tables[0].rows=fixture["signedIdentity"]["rows"].as_array().unwrap().iter().map(|row|SqliteRow{rowid:row["id"].as_i64().unwrap(),values:vec![SqliteValue::Integer(row["id"].as_i64().unwrap()),SqliteValue::Integer(row["owner"].as_i64().unwrap()),SqliteValue::Integer(row["ordinal"].as_i64().unwrap()),SqliteValue::Text(row["literal"].as_str().unwrap().into()),row["parent"].as_i64().map(SqliteValue::Integer).unwrap_or(SqliteValue::Null)]}).collect();
-        let mut callback=|_|true;let limits=super::super::SqliteDatabaseLimits::default();let mut control=SqliteSnapshotControl::new(&mut callback,limits);
-        assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"positive row required").is_err());assert!(RowIndex::new_with_identity(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],RowIdentity::Positive,&mut control,"positive row required").is_err());
-        let mut storage=RowIndexStorage::empty();let mut rows=RowIndex::new_with_identity(&mut storage,&db,"neutral_row",5,&[],RowIdentity::Signed,&mut control,"invalid signed row").unwrap();
-        assert_eq!(rows.indices().iter().map(|index|rows.row(*index).unwrap().rowid).collect::<Vec<_>>(),vec![-7,-3,0,4]);let mut order=Vec::new();rows.grouped_by_into(&mut order,2,&mut control,"invalid signed ordinal",|row|Ok((0,Some(row.integer(1)?)))).unwrap();assert_eq!(order.iter().map(|index|rows.row(*index).unwrap().rowid).collect::<Vec<_>>(),vec![0,-3,-7,4]);
-        assert_eq!(rows.get(0,&mut control).unwrap().unwrap().text(3).unwrap(),"alpha");assert!(!rows.row(0).unwrap().is_null(4).unwrap());let mut parents=Vec::new();rows.parent_positions_into(&mut parents,4,&mut control,"dangling signed parent").unwrap();assert_eq!(parents,vec![(Some(1),0),(None,0),(Some(3),0),(None,0)]);RowIndex::cycles(&mut parents,&mut control,"cyclic signed parent").unwrap();
-        assert_eq!(rows.take(0,&mut control).unwrap().unwrap().rowid,0);assert!(rows.take(0,&mut control).unwrap().is_none());assert_eq!(rows.remaining(),3);drop(rows);
-        db.tables[0].rows[0].rowid=0;db.tables[0].rows[0].values[0]=SqliteValue::Integer(0);assert!(RowIndex::new_with_identity(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],RowIdentity::Signed,&mut control,"duplicate signed row").is_err());
-        println!("[DEBUG] paid row index explicit signed identities=-7,-3,0,4 groups=2 zeroParent=present positive=refused");
-    }
-
-    fn neutral_paid_row_index_database()->SqliteDatabase{
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🗂️paid-row-index/🔣️.json")).unwrap();
-        let rows=fixture["rows"].as_array().unwrap().iter().map(|row|SqliteRow{rowid:row["id"].as_i64().unwrap(),values:vec![SqliteValue::Integer(row["id"].as_i64().unwrap()),SqliteValue::Integer(row["owner"].as_i64().unwrap()),SqliteValue::Integer(row["ordinal"].as_i64().unwrap()),SqliteValue::Text(row["literal"].as_str().unwrap().into()),row["parent"].as_i64().map(SqliteValue::Integer).unwrap_or(SqliteValue::Null)]}).collect();
-        SqliteDatabase{tables:vec![super::super::SqliteTable{name:fixture["table"].as_str().unwrap().into(),sql:fixture["schema"].as_str().unwrap().into(),rows}]}
-    }
-    fn complete_neutral_paid_row_index(control:&mut SqliteSnapshotControl<'_>)->usize{
-        let db=neutral_paid_row_index_database();let mut storage=RowIndexStorage::empty();let mut rows=RowIndex::new(&mut storage,&db,"neutral_row",5,&[],control,"invalid neutral row").unwrap();
-        let mut grouped=Vec::new();rows.grouped_by_into(&mut grouped,2,control,"invalid neutral ordinal",|row|Ok((0,Some(row.integer(1)?)))).unwrap();
-        assert_eq!(grouped.iter().map(|index|rows.row(*index).unwrap().rowid).collect::<Vec<_>>(),vec![1,3,2,4]);
-        let range=rows.range_by(&grouped,(0,Some(20)),control,|row|Ok((0,Some(row.integer(1)?)))).unwrap();assert_eq!(range,0..2);
-        rows.unique_text(&mut Vec::new(),rows.indices(),3,control,"duplicate neutral literal").unwrap();let mut parents=Vec::new();rows.parent_positions_into(&mut parents,4,control,"dangling neutral parent").unwrap();assert_eq!(parents,vec![(Some(1),0),(None,0),(Some(3),0),(None,0)]);RowIndex::cycles(&mut parents,control,"cyclic neutral parent").unwrap();
-        assert!(std::ptr::eq(rows.get(3,control).unwrap().unwrap().values.as_ptr(),db.tables[0].rows[0].values.as_ptr()));
-        assert_eq!(rows.position(999,control).unwrap(),None);assert_eq!(rows.take(3,control).unwrap().unwrap().rowid,3);assert!(rows.take(3,control).unwrap().is_none());assert_eq!(rows.remaining(),3);
-        for index in 0..rows.len(){rows.take_index(index,control).unwrap();}assert_eq!(rows.remaining(),0);rows.len()
-    }
-    #[test]
-    fn paid_row_index_neutral_complete_positions_groups_and_single_consumption(){
-        let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,super::super::SqliteDatabaseLimits::default());assert_eq!(complete_neutral_paid_row_index(&mut control),4);assert!(control.allocation_remaining_bytes()<control.limits().max_allocation_bytes);println!("[DEBUG] paid row index neutral rows=4 grouped=4 consumed=4 parents=4");
-    }
-    #[test]
-    fn paid_row_index_neutral_identity_ordinal_text_foreign_key_and_cycle_refusals(){
-        let mut callback=|_|true;let limits=super::super::SqliteDatabaseLimits::default();
-        for role in 0..3{let mut db=neutral_paid_row_index_database();match role{0=>db.tables[0].rows[0].values[0]=SqliteValue::Integer(9),1=>{db.tables[0].rows[0].rowid=1;db.tables[0].rows[0].values[0]=SqliteValue::Integer(1)},_=>{db.tables[0].rows[0].values.pop();}}let mut control=SqliteSnapshotControl::new(&mut callback,limits);assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"invalid neutral row").is_err());}
-        let mut db=neutral_paid_row_index_database();db.tables[0].rows[0].values[2]=SqliteValue::Integer(3);let mut control=SqliteSnapshotControl::new(&mut callback,limits);let mut storage=RowIndexStorage::empty();let rows=RowIndex::new(&mut storage,&db,"neutral_row",5,&[],&mut control,"invalid neutral row").unwrap();assert!(rows.grouped_by_into(&mut Vec::new(),2,&mut control,"invalid neutral ordinal",|row|Ok((0,Some(row.integer(1)?)))).is_err());
-        let mut db=neutral_paid_row_index_database();db.tables[0].rows[0].values[3]=SqliteValue::Text("alpha".into());let mut control=SqliteSnapshotControl::new(&mut callback,limits);let mut storage=RowIndexStorage::empty();let rows=RowIndex::new(&mut storage,&db,"neutral_row",5,&[],&mut control,"invalid neutral row").unwrap();assert!(rows.unique_text(&mut Vec::new(),rows.indices(),3,&mut control,"duplicate neutral literal").is_err());
-        let mut db=neutral_paid_row_index_database();db.tables[0].rows[0].values[4]=SqliteValue::Integer(999);let mut control=SqliteSnapshotControl::new(&mut callback,limits);let mut storage=RowIndexStorage::empty();let rows=RowIndex::new(&mut storage,&db,"neutral_row",5,&[],&mut control,"invalid neutral row").unwrap();assert!(rows.parent_positions_into(&mut Vec::new(),4,&mut control,"dangling neutral parent").is_err());
-        let db=neutral_paid_row_index_database();let mut control=SqliteSnapshotControl::new(&mut callback,limits);let mut storage=RowIndexStorage::empty();let rows=RowIndex::new(&mut storage,&db,"neutral_row",5,&[],&mut control,"invalid neutral row").unwrap();assert!(rows.ordered_into(&mut Vec::new(),2,&mut control,"invalid neutral ordinal").is_err());let mut parents=Vec::new();rows.parent_positions_into(&mut parents,4,&mut control,"dangling neutral parent").unwrap();parents[1].0=Some(0);assert!(RowIndex::cycles(&mut parents,&mut control,"cyclic neutral parent").is_err());
-        println!("[DEBUG] paid row index neutral refusals identity=3 ordinal=2 text=1 foreign=1 cycle=1");
-    }
-    #[test]
-    fn paid_row_index_neutral_exact_short_cumulative_and_cancellation_controls(){
-        let limits=super::super::SqliteDatabaseLimits::default();let db=neutral_paid_row_index_database();let mut callback=|_|true;let mut probe=SqliteSnapshotControl::new(&mut callback,limits);complete_neutral_paid_row_index(&mut probe);let paid=limits.max_allocation_bytes-probe.allocation_remaining_bytes();assert!(paid>0);
-        let exact=super::super::SqliteDatabaseLimits{max_allocation_bytes:paid,..limits};let mut control=SqliteSnapshotControl::new(&mut callback,exact);complete_neutral_paid_row_index(&mut control);assert_eq!(control.allocation_remaining_bytes(),0);assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"invalid neutral row").is_err());
-        let mut control=SqliteSnapshotControl::new(&mut callback,super::super::SqliteDatabaseLimits{max_allocation_bytes:4*(std::mem::size_of::<usize>()+1)-1,..limits});assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"invalid neutral row").is_err());
-        let mut callback=|_|false;let mut control=SqliteSnapshotControl::new(&mut callback,limits);assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"invalid neutral row").is_err());assert_eq!(control.allocation_remaining_bytes(),limits.max_allocation_bytes);
-        let mut reached=false;let mut callback=|event:super::super::SqliteSnapshotProgress|{if event.phase==SqliteSnapshotPhase::ReconstructSnapshot&&event.completed==1&&event.total==4{reached=true;false}else{true}};let mut control=SqliteSnapshotControl::new(&mut callback,limits);assert!(RowIndex::new(&mut RowIndexStorage::empty(),&db,"neutral_row",5,&[],&mut control,"invalid neutral row").is_err());let admitted=limits.max_allocation_bytes-control.allocation_remaining_bytes();drop(control);assert!(reached);assert_eq!(admitted,4*(std::mem::size_of::<usize>()+1));
-        println!("[DEBUG] paid row index neutral paid={paid} exact=0 constructorInterior={admitted}");
-    }
-
-    #[test]
-    fn native_encoding_bounds_reject_overflow_and_cancel_before_large_admission() {
-        let mut limits = super::super::SqliteDatabaseLimits::default(); limits.max_value_bytes = 32;
-        let mut callback = |_| true; let mut control = SqliteSnapshotControl::new(&mut callback, limits);
-        let mut bound = NativeEncodingBound::new(&mut control).unwrap();
-        bound.repeated(4, 8).unwrap(); assert!(bound.add(1).is_err()); assert_eq!(bound.bytes, 32);
-        assert!(bound.repeated(usize::MAX, 2).is_err());
-        let mut calls = 0; let mut callback = |_| { calls += 1; calls == 1 };
-        let mut control = SqliteSnapshotControl::new(&mut callback, super::super::SqliteDatabaseLimits::default());
-        let mut bound = NativeEncodingBound::new(&mut control).unwrap();
-        assert!(bound.add(65_537).is_err()); assert_eq!(bound.bytes, 0);
-        let mut limits = super::super::SqliteDatabaseLimits::default(); limits.max_file_bytes = 16;
-        let mut callback = |_| true; let mut control = SqliteSnapshotControl::new(&mut callback, limits);
-        assert!(NativeEncodingBound::new(&mut control).unwrap().add(17).is_err());
-    }
-    #[test]
-    fn native_file_forecast_separates_exact_semantic_cells_and_preserves_file_refusals(){
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/📏️file-bound/🔣️.json")).unwrap();
-        let limits=super::super::SqliteDatabaseLimits{max_value_bytes:fixture["maxSemanticBytes"].as_u64().unwrap()as usize,max_file_bytes:fixture["maxFileBytes"].as_u64().unwrap()as usize,..super::super::SqliteDatabaseLimits::default()};
-        let mut accepted=|_|true;let mut control=SqliteSnapshotControl::new(&mut accepted,limits);let mut bound=NativeEncodingBound::file_only(&mut control).unwrap();
-        for chunk in fixture["chunks"].as_array().unwrap(){bound.add(chunk.as_u64().unwrap()as usize).unwrap();}
-        assert_eq!(bound.bytes,fixture["expectedBytes"].as_u64().unwrap()as usize);assert_eq!(bound.add(1).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(bound.bytes,limits.max_file_bytes);assert!(bound.repeated(usize::MAX,2).is_err());bound.finish().unwrap();
-        let mut control=SqliteSnapshotControl::new(&mut accepted,super::super::SqliteDatabaseLimits{max_file_bytes:limits.max_file_bytes-1,..limits});let mut short=NativeEncodingBound::file_only(&mut control).unwrap();assert!(short.add(limits.max_file_bytes).is_err());assert_eq!(short.bytes,0);
-        let mut denied=|_|false;let mut control=SqliteSnapshotControl::new(&mut denied,limits);assert!(NativeEncodingBound::file_only(&mut control).is_err());
-        let mut calls=0;let mut cancellation=|_|{calls+=1;calls==1};let mut control=SqliteSnapshotControl::new(&mut cancellation,super::super::SqliteDatabaseLimits::default());let mut canceled=NativeEncodingBound::file_only(&mut control).unwrap();assert!(canceled.add(65_537).is_err());assert_eq!(canceled.bytes,0);
-    }
-    #[test]
-    fn reconstruction_bounds_repeated_foreign_key_copies_and_large_copy_cancellation() {
-        let mut limits = super::super::SqliteDatabaseLimits::default(); limits.max_value_bytes = 8;
-        let mut callback = |_| true;
-        let mut control = SqliteSnapshotControl::new(&mut callback, limits);
-        let mut restore = Reconstruction::new(&mut control).unwrap();
-        assert_eq!(restore.text("same").unwrap(), "same");
-        assert_eq!(restore.text("same").unwrap(), "same");
-        assert!(restore.text("same").is_err());
-        let bytes = vec![0; 100_000]; let mut first = true;
-        let mut callback = |_| { let result = first; first = false; result };
-        let mut control = SqliteSnapshotControl::new(&mut callback, super::super::SqliteDatabaseLimits::default());
-        let mut restore = Reconstruction::new(&mut control).unwrap();
-        assert!(restore.blob(&bytes).is_err()); assert_eq!(restore.bytes, 0);
-    }
-    #[test]
-    fn borrowed_projection_bounds_values_before_copy_and_checks_cancellation() {
-        let sql = "CREATE TABLE explicit_entity (id INTEGER PRIMARY KEY, label TEXT NOT NULL)";
-        let mut limits = super::super::SqliteDatabaseLimits::default(); limits.max_value_bytes = 9;
-        let mut callback = |_| true;
-        let mut control = SqliteSnapshotControl::new(&mut callback, limits);
-        let mut projection = Projection::new(sql, &mut control).unwrap();
-        assert!(projection.insert("explicit_entity", &[Cell::Text("too long")]).is_err());
-        let mut control = SqliteSnapshotControl::new(&mut callback, super::super::SqliteDatabaseLimits::default());
-        let mut projection = Projection::new(sql, &mut control).unwrap();
-        projection.insert("explicit_entity", &[Cell::Text("a")]).unwrap();
-        let db = projection.finish().unwrap(); assert_eq!(db.table("explicit_entity").unwrap().single_row().unwrap().text(1).unwrap(), "a");
-        let payload = "a".repeat(100_000);
-        let armed = std::cell::Cell::new(false);
-        let mut progress = |_| !armed.get();
-        let mut control = SqliteSnapshotControl::new(&mut progress, super::super::SqliteDatabaseLimits::default());
-        let mut projection = Projection::new(sql, &mut control).unwrap();
-        armed.set(true);
-        assert_eq!(projection.insert("explicit_entity", &[Cell::Text(&payload)]).unwrap_err().kind, ValueRefusalKind::Canceled);
-        assert!(projection.database.table("explicit_entity").unwrap().rows.is_empty());
-        assert!(Projection::new(sql, &mut SqliteSnapshotControl::new(&mut |_| false, super::super::SqliteDatabaseLimits::default())).is_err());
-    }
-}
-
-#[cfg(test)]
-mod ieee_tests {
-    use super::*;
-    use super::super::{SqliteDatabaseLimits,export_sqlite_database,import_sqlite_database};
-    const SQL:&str="CREATE TABLE typed_scalar (id INTEGER PRIMARY KEY, value64 REAL, value32 REAL, value64_ieee754_bits INTEGER, value64_numeric_class TEXT, value32_ieee754_bits INTEGER, value32_numeric_class TEXT)";
-    const COLUMNS:&[FloatColumn]=&[FloatColumn::Binary64(1),FloatColumn::Binary32(2)];
-    fn bits()->(Vec<u64>,Vec<u32>){(vec![0,0x8000000000000000,1,0x000fffffffffffff,0x7ff0000000000000,0xfff0000000000000,0x7ff8000000000011,0x7ff0000000000007],vec![0,0x80000000,1,0x007fffff,0x7f800000,0xff800000,0x7fc00011,0x7f800007])}
-    fn fixture()->SqliteDatabase{let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());let mut projection=Projection::new(SQL,&mut control).unwrap();let(a,b)=bits();for(a,b)in a.into_iter().zip(b){insert_ieee754(&mut projection,"typed_scalar",&[Cell::Real(f64::from_bits(a)),Cell::Float32(f32::from_bits(b))],COLUMNS).unwrap();}insert_ieee754(&mut projection,"typed_scalar",&[Cell::Null,Cell::Null],COLUMNS).unwrap();projection.finish().unwrap()}
-    fn law(db:&SqliteDatabase){let(a,b)=bits();for(row,(a,b))in db.table("typed_scalar").unwrap().rows.iter().zip(a.into_iter().zip(b)){let row=FloatRow::new(row,COLUMNS).unwrap();assert_eq!(row.real(1).unwrap().to_bits(),a);assert_eq!(row.binary32(2).unwrap().to_bits(),b);assert!(!row.is_null(1).unwrap());assert!(!row.is_null(2).unwrap());}let row=FloatRow::new(db.table("typed_scalar").unwrap().rows.last().unwrap(),COLUMNS).unwrap();assert!(row.is_null(1).unwrap());assert!(row.is_null(2).unwrap());}
-    #[test]
-    fn authored_ieee_fields_preserve_signed_zero_infinities_subnormals_and_nan_payloads(){let db=fixture();law(&db);let bytes=export_sqlite_database(&db,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();law(&import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap());}
-    #[test]
-    fn authored_ieee_fields_reject_inconsistent_class_bits_query_and_optional_presence(){let original=fixture();for change in 0..4{let mut db=original.clone();let row=&mut db.table_mut("typed_scalar").unwrap().rows[0];match change{0=>row.values[1]=SqliteValue::Real(1.0),1=>row.values[4]=SqliteValue::Text("nan".into()),2=>row.values[5]=SqliteValue::Integer(i64::MAX),_=>row.values[3]=SqliteValue::Null}assert!(FloatRow::new(row,COLUMNS).is_err());}}
-    #[test]
-    fn authored_ieee_integer_queries_reject_rounding_against_independent_sqlite(){
-        use std::io::Write;
-        use std::process::{Command,Stdio};
-        let input=include_str!("../🔢️ieee754/🧪️tests/🧫️fixtures/🎯️integer-query.json");
-        let script="import{Database}from'bun:sqlite';const{cases}=await Bun.stdin.json(),db=new Database(':memory:',{safeIntegers:true}),view=new DataView(new ArrayBuffer(8));db.run('CREATE TABLE exact_integer(id INTEGER PRIMARY KEY,value)');for(const[i,c]of cases.entries()){const value=BigInt(c.integer);db.run('INSERT INTO exact_integer VALUES(?,?)',[i+1,value]);if(db.query('SELECT value FROM exact_integer WHERE id=?').get(i+1).value!==value)throw Error('integer identity');view.setBigUint64(0,BigInt('0x'+c.binary64Bits));if((BigInt(view.getFloat64(0))===value)!==c.accept64)throw Error('binary64 oracle');view.setUint32(0,parseInt(c.binary32Bits,16));if((BigInt(view.getFloat32(0))===value)!==c.accept32)throw Error('binary32 oracle');}db.close();await Bun.write(Bun.stdout,String(cases.length));";
-        let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
-        child.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();
-        let output=child.wait_with_output().unwrap();
-        assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
-        assert_eq!(String::from_utf8_lossy(&output.stdout).trim(),"8");
-        eprintln!("[DEBUG] Independent SQLite and DataView validated eight exact integer query cases");
-        let fixture:serde_json::Value=serde_json::from_str(input).unwrap();
-        for case in fixture["cases"].as_array().unwrap(){
-            let integer=case["integer"].as_str().unwrap().parse::<i64>().unwrap();
-            let word64=u64::from_str_radix(case["binary64Bits"].as_str().unwrap(),16).unwrap();
-            let word32=u32::from_str_radix(case["binary32Bits"].as_str().unwrap(),16).unwrap();
-            let row=SqliteRow{rowid:1,values:vec![SqliteValue::Integer(1),SqliteValue::Integer(integer),SqliteValue::Integer(integer),SqliteValue::Integer(word64 as i64),SqliteValue::Text("finite".into()),SqliteValue::Integer(i64::from(word32)),SqliteValue::Text("finite".into())]};
-            assert_eq!(read_binary64(&row,1,COLUMNS).is_ok(),case["accept64"].as_bool().unwrap(),"binary64 query {integer}");
-            assert_eq!(read_binary32(&row,2,COLUMNS).is_ok(),case["accept32"].as_bool().unwrap(),"binary32 query {integer}");
-        }
-    }
-    #[test]
-    fn authored_ieee_fields_are_independently_queryable_sqlite_scalars(){use std::io::Write;use std::process::{Command,Stdio};let bytes=export_sqlite_database(&fixture(),SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let script="import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');if(db.query(\"SELECT count(*) AS n FROM typed_scalar WHERE value64_numeric_class='nan' AND value64 IS NULL AND typeof(value64_ieee754_bits)='integer'\").get().n!==2)throw Error('NaN scalar fields');if(db.query(\"SELECT count(*) AS n FROM typed_scalar WHERE value32_numeric_class='finite' AND typeof(value32)='real'\").get().n!==4)throw Error('finite scalars');await Bun.write(Bun.stdout,db.serialize());db.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));law(&import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap());}
-}
-
-#[cfg(test)]
-#[path="🧪️tests/🫳️reconstruction/🦀️.rs"]
-mod reconstruction_copy_tests;
-
-#[cfg(test)]
-#[path="🧪️tests/🧮️allocation/🦀️.rs"]
-mod shared_provider_allocation_tests;

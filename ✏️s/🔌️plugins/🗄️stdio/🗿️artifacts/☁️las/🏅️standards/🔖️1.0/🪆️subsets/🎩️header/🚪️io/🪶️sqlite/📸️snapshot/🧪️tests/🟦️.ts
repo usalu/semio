@@ -9,7 +9,7 @@ import {LAS_SQLITE_SCHEMA,lasSnapshotToSqliteDatabase,lasSnapshotFromSqliteDatab
 import {binary64} from "@semio-tech/framework/value/ieee754";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 
-import {lasSnapshotFixture as snapshot} from "🧰️support/🟦️.ts";
+import {lasSnapshotFixture as snapshot} from "./🧰️support/🟦️.ts";
 const f=(index:number)=>({bits:BigInt("0x"+fixture.float64Bits[index%fixture.float64Bits.length]!)});
 
 test("LAS all owned header/VLR/point fields and exact IEEE/presence states survive independent SQLite",async()=>{

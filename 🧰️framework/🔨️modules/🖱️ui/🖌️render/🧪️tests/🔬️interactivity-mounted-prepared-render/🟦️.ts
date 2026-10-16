@@ -1,6 +1,6 @@
 import { INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts";
 import { policyReadRustPolicySource } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
-import { interactivityMountedPreparedRenderFailures } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🟦️.ts";
+import { interactivityMountedPreparedRenderFailures } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🖼️mounted-surface/🟦️.ts";
 
 /** 📚️ One policy source per audited file, arity-preserving so the failure checkers keep their positional parameters. */
 type PreparedRenderPolicySources = [string, string, string, string, string, string];

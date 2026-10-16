@@ -3,7 +3,7 @@
 pub enum ArtifactRetainedAdmissionRefusal{CapacityIsZero,RawCapacityRejected}
 impl ArtifactRetainedAdmissionRefusal{
  pub fn id(self)->&'static str{match self{Self::CapacityIsZero=>"capacity-is-zero",Self::RawCapacityRejected=>"raw-capacity-rejected"}}
- pub(super) fn detail(self)->&'static [u8]{match self{Self::CapacityIsZero=>b"retained command capacity is zero",Self::RawCapacityRejected=>b"retained command raw capacity was rejected"}}
+ pub fn detail(self)->&'static [u8]{match self{Self::CapacityIsZero=>b"retained command capacity is zero",Self::RawCapacityRejected=>b"retained command raw capacity was rejected"}}
 }
 /// 🎟️ Refuses a command whose declared ceilings are zero before any raw bytes are owned.
 pub(super) fn admit_limits(maximum_raw_bytes:usize,maximum_work_items:usize)->Option<ArtifactRetainedAdmissionRefusal>{
@@ -15,6 +15,7 @@ pub(super) fn admit_raw(declared_bytes:usize,maximum_raw_bytes:usize)->(Vec<u8>,
  if declared_bytes>maximum_raw_bytes||raw.try_reserve_exact(declared_bytes).is_err(){return(raw,Some(ArtifactRetainedAdmissionRefusal::RawCapacityRejected));}
  (raw,None)
 }
+#[doc(hidden)]
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
-mod tests;
+pub mod tests;

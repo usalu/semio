@@ -7,10 +7,11 @@
 //! read off React's `Pane`/`Window`/`World3dHost` sources and its measured DOM geometry, derived
 //! independently of this implementation.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::{actions_shell, engaged_pane_shell, split_pane_app, split_pane_shell};
 use super::*;
 use semio_framework::UtilityDefinition;
+use semio_framework_ui_layout::layout::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 use ui_wgpu::wgpu::InputState;
-use ui_wgpu::wgpu::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 fn pane_fixture() -> Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🪟️window-pane-chrome/🔣️.json")).expect("window pane chrome fixture")
@@ -55,57 +56,6 @@ fn chip_of(name: &str) -> WindowPaneChip {
         "projection" => WindowPaneChip::Projection,
         other => panic!("🪟️ the fixture names a chip this renderer has no variant for: {other}"),
     }
-}
-
-/// 🪟️ An app whose default layout is puzzle3d's own two-pane row split — one window KIND opened
-/// twice, each pane carrying the authored instance title React reads its cap from.
-fn split_pane_app() -> AppDefinition {
-    let mut app = super::command_registry_tests::test_app(Vec::new(), Vec::new());
-    app.id = "pane-fixture".into();
-    app.controller_id = "pane.controller".into();
-    app.utilities = vec![
-        UtilityDefinition { id: "pane.transform".into(), label: LocalizedLabel::data("Transform"), icon_id: "move".into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: true, run: None },
-        UtilityDefinition { id: "pane.brush".into(), label: LocalizedLabel::data("Brush"), icon_id: "brush".into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: true, run: None },
-    ];
-    let window = |instance: &str, title: &str, size: f64| {
-        WindowLayoutChild::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: Some(size),
-            active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some(title.into()), instance_id: Some(instance.into()), template_id: None, corner: None }],
-        })
-    };
-    app.default_layout = Some(WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![window("pane-top", "Top", 33.333), window("pane-perspective", "Perspective", 66.667)] }) });
-    app
-}
-
-pub(super) fn split_pane_shell() -> ShellState {
-    let app = split_pane_app();
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.docs.session = Some(ActiveSession { plugin_id: "pane".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    SessionCtx::of(&mut shell).sync_dock();
-    shell.windows.active_window_id = Some("pane-top".into());
-    shell
-}
-
-/// 🗣️ The split-pane fixture with ONE engagement payload on `pane-top` — a status line (React's
-/// `engagement` prop) and a typed line (React's `search` prop), which is the minimum that mounts the
-/// two top panes at all.
-pub(super) fn engaged_pane_shell() -> ShellState {
-    let mut shell = split_pane_shell();
-    shell.windows.window_engagements.insert(
-        "pane-top".into(),
-        WindowEngagement {
-            session_active: None,
-            options: None,
-            input: Some(ui_wgpu::wgpu::WindowEngagementInput { id: Some("pane-engagement".into()), value: Some(String::new()), placeholder: None, disabled: None, on_change: None, on_submit: None, on_repeat_last: None, on_abort: None }),
-            control: None,
-            controls: None,
-            status: Some(vec![ui_wgpu::wgpu::WindowEngagementStatus { id: "pane.status".into(), text: "Ready".into() }]),
-            possible_engagements: None,
-        },
-    );
-    shell
 }
 
 /// 📐️ The two pane bodies this frame's dock plans at the React reference viewport.
@@ -216,7 +166,7 @@ fn pane_chips_mount_exactly_where_react_mounts_them() {
             _ => assert!(entry.is_none(), "🪟️ a pane with no world surface mounts no projection chip"),
         }
     }
-    let mut action_only = super::window_actions_search_pane_tests::actions_shell();
+    let mut action_only = actions_shell();
     let action_chips = SessionCtx::of(&mut action_only).window_pane_chips("pane-top");
     assert!(action_chips.iter().any(|(chip, _, _)| *chip == WindowPaneChip::Actions), "🧰️ `actionPane` alone mounts the Actions pane");
     assert!(!action_chips.iter().any(|(chip, _, _)| *chip == WindowPaneChip::Search), "🔎️ and it never mounts the Search pane, which React drives from the engagement's own spec");
@@ -352,7 +302,7 @@ fn a_pane_chips_hit_row_is_flushed_after_its_window_body_and_before_the_panels_t
     let mut frame = ShellChromeFrameCursor { phase: ShellChromeFramePhase::PaneOverlayHits, setup: 0, child: ShellChromeChildCursor::default(), ..ShellChromeFrameCursor::default() };
     let mut overlay = DrawList::default();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     for _ in 0..4096 {
         caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_chrome_step(&mut frame,&mut draw,&mut overlay,&mut atlas,&icons,&mut input,&theme,&mut world_resources,cx)).expect("original fixture chrome caller");
         if !matches!(frame.phase, ShellChromeFramePhase::PaneOverlayHits) {
@@ -492,7 +442,7 @@ fn projection_template_creation_names_each_new_window_and_moving_keeps_its_chrom
             let window_id = shell.dock.allocate_window_instance_id("main");
             if physical {
                 let payload = DockDragPayload { kind: DockDragKind::NewWindow, window_id: window_id.clone(), window_kind_id: "main".into(), template_id: Some(template.clone()), source_path: Vec::new(), tab_index: 0, ghost_label: String::new() };
-                shell.dock.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(DockDropZone::RootSplit { side: crate::dock::DockSide::Right }) });
+                shell.dock.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(DockDropZone::RootSplit { side: semio_framework_os_renderer_wgpu_dock::DockSide::Right }) });
                 semio_framework_async::block_on(PointerCtx::of(&mut shell).finish_dock_drag(10.0, 10.0, &InputState::default())).unwrap();
             } else {
                 assert!(shell.dock.open_display_window("main", Some(&template), &mut shell.settle, &shell.docs, &mut shell.windows));
@@ -507,7 +457,7 @@ fn projection_template_creation_names_each_new_window_and_moving_keeps_its_chrom
             assert!(shell.dock.apply_window_icon_host_command(&window_id, "projection-isometric", &shell.docs, &mut shell.windows));
             let source_path = shell.dock.dock_stack_path_for(&window_id).unwrap();
             let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.clone(), window_kind_id: "main".into(), template_id: Some(template), source_path, tab_index: 0, ghost_label: "Custom view".into() };
-            shell.dock.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(DockDropZone::RootSplit { side: crate::dock::DockSide::Left }) });
+            shell.dock.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(DockDropZone::RootSplit { side: semio_framework_os_renderer_wgpu_dock::DockSide::Left }) });
             semio_framework_async::block_on(PointerCtx::of(&mut shell).finish_dock_drag(10.0, 10.0, &InputState::default())).unwrap();
             SessionCtx::of(&mut shell).sync_dock();
             let (titles, icons) = shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows);

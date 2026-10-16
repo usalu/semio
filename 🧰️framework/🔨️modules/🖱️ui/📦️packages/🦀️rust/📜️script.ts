@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runRepositoryCargoCommandV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -17,14 +19,15 @@ import { CheckAxesScript, GenerateAxesScript, PreviewGeneratedScript } from "../
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     if(segments[0]==="original-presented-source-native"){
       if(segments.length!==1)throw Error("original presented source accepts no arguments");
-      await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-ui"],cwd:this.root,signal:this.invocation.control.signal,remainingMilliseconds:()=>scriptInvocationBudget(this.invocation,0),extraArgs:["--offline","--features","wgpu-engine","--lib","-E","test(original_presented_tree_alias_same_caller_denials_no_owner_copy_and_paid_return)","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);return;
+      await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-ui"],cwd:this.root,signal:this.invocation.control.signal,remainingMilliseconds:()=>scriptInvocationBudget(this.invocation,0),extraArgs:["--offline","--features","wgpu-engine","--lib","-E","test(original_presented_tree_alias_same_caller_denials_no_owner_copy_and_paid_return)","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);return;
     }
     if (segments[0] === "mounted-admission-native") {
       if (segments.length !== 1) throw Error("Expected test mounted-admission-native");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "wgpu-engine", "--lib", "--offline", "-E", "test(original_layout_admission_params_cancel_and_full_error_close_with_system_receipts) | test(original_ui_worker_close_)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "wgpu-engine", "--lib", "--offline", "-E", "test(original_layout_admission_params_cancel_and_full_error_close_with_system_receipts) | test(original_ui_worker_close_)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
       return;
     }
     if (segments[0] === "crate-boundaries") {
@@ -69,7 +72,7 @@ class TestScript extends BundleScript {
     if (segments[0] === "physical-close-native") {
       if (segments.length !== 1) throw Error("Expected test physical-close-native");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "wgpu-engine", "--lib", "--offline", "-E", "test(physical_job_close)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "wgpu-engine", "--lib", "--offline", "-E", "test(physical_job_close)", "--success-output", "immediate"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
       return;
     }
     if (segments[0] === "prepared-close") {
@@ -85,7 +88,7 @@ class TestScript extends BundleScript {
       return;
     }
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "tui-terminal,wgpu", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "tui-terminal,wgpu", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 
@@ -97,14 +100,15 @@ class TestScript extends BundleScript {
  */
 class TestWgpuEngineScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "wgpu-engine", "--lib", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--features", "wgpu-engine", "--lib", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 
 class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
-    const check = (args: string[]) => runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui", ...args],this.root,process.env,buildBudgetMs());
+    const check = (args: string[]) => runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui", ...args],this.root,process.env,buildBudgetMs());
     await check(["--target", "wasm32-unknown-unknown", "--features", "tui"]);
     await check(["--target", "wasm32-unknown-unknown", "--features", "tui-bindgen"]);
     await check(["--target", "wasm32-wasip2", "--features", "wgpu"]);
@@ -113,7 +117,7 @@ class CheckWasmScript extends BundleScript {
 
 class CheckWgpuEngineWasmScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui", "--target", "wasm32-unknown-unknown", "--features", "wgpu-engine"],this.root,process.env,buildBudgetMs());
+    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui", "--target", "wasm32-unknown-unknown", "--features", "wgpu-engine"],this.root,process.env,buildBudgetMs());
   }
 }
 

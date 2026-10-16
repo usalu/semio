@@ -4,7 +4,7 @@ import { workerLawFakesV1 } from "../../../../🧪️tests/🧰️worker-law-fak
 import type { TestSource } from "../../../../🧪️tests/🧰️worker-law-fakes/🟦️.ts";
 
 type BackboneWorkerResponse = import("../../../../🟦️.ts").BackboneWorkerResponse;
-type DirectoryCommand = import("../../🧬️schema/🟦️.ts").DirectoryCommand;
+type DirectoryCommand = import("@semio-tech/framework/directory/schema").DirectoryCommand;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerSpaceAdministrationTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, source: TestSource): Promise<void> {

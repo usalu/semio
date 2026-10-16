@@ -3,8 +3,7 @@
 #[global_allocator]
 static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
-#[path = "../../../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/🦀️.rs"]
-mod typed_input_law;
+use semio_framework_test_typed_input_law as typed_input_law;
 
 use semio_framework_artifact_space_collection::{empty_collection_snapshot, CollectionFolder, CollectionMutation, CollectionSnapshot, S_COLLECTION_SCHEMA};
 use semio_framework_os_kernel::{self as store, os_store::test_support::{close_plain_test_store, dispatch_test_command}};

@@ -95,11 +95,11 @@ fn icon_export_effect_publishes_an_accessible_cancel_control_and_drains_on_activ
     WindowActionsCtx::of(&mut shell).queue_host_effects("export-law", vec![semio_framework::kernel::Effect::IconRenderExport { items: requests(&fixture) }]);
     assert!(PointerCtx::of(&mut shell).settle_pump_pending());
     let mut cursor = super::ShellChromeChildCursor::default();
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::default();
     for _ in 0..1024 {
-        if PanelsViewCtx::of(&mut shell).render_icon_export_step(&mut cursor, &mut draw, &mut atlas, &mut input, &ui_wgpu::wgpu::Theme::default(), 1280.0) { break; }
+        if PanelsViewCtx::of(&mut shell).render_icon_export_step(&mut cursor, &mut draw, &mut atlas, &mut input, &semio_framework_ui_theme::Theme::default(), 1280.0) { break; }
     }
     input.publish_hits();
     let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits());

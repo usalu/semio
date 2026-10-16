@@ -1,7 +1,8 @@
 mod opening_command_relay_tests {
     use super::*;
 
-    async fn replay(effect: Effect) -> (String, Value) {
+    #[doc(hidden)]
+pub async fn replay(effect: Effect) -> (String, Value) {
         let Effect::ReplayShellCommand { action_id, args: Some(args) } = effect else { panic!("expected a shell command relay") };
         (action_id, Value::from(args))
     }

@@ -49,5 +49,5 @@ export const remodelRemodelingSnapshotTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseRemodelingSnapshotText(value: unknown, at = "$"): RemodelingSnapshotText {
-  return remodelRemodelingSnapshotTextGuardObject(value, `${at}`);
+  return remodelRemodelingSnapshotTextGuardString(value, `${at}`);
 }

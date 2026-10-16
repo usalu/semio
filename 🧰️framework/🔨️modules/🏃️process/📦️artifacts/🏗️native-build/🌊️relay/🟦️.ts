@@ -7,7 +7,7 @@ import {copyFileSync,mkdirSync,mkdtempSync,rmSync} from "node:fs";
 import {join,resolve,isAbsolute} from "node:path";
 import {randomUUID} from "node:crypto";
 import {homedir} from "node:os";
-import {CurrentPhysicalOwnerV1} from "../../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
+import {CurrentPhysicalOwnerV1} from "@semio-tech/framework/filesystem/observation/current";
 import {checkScriptInvocation} from "../../../🧭️routing/📥️invocation/🟦️.ts";
 import {captureOwnedProcess} from "../../../📥️capture/🟦️.ts";
 import {acquireCargoBuildLeaseV1} from "../🔒️lease/🟦️.ts";

@@ -69,7 +69,8 @@
             "compiler-workspace",
             "compiler-state",
             "artifact-publication",
-            "artifact-restore"
+            "artifact-restore",
+            "persistent-state"
           ]
         },
         "bytes": {
@@ -83,6 +84,9 @@
             "committed",
             "retiring"
           ]
+        },
+        "child": {
+          "$ref": "#/definitions/ChildRequest"
         }
       }
     },
@@ -126,6 +130,34 @@
             },
             "allocation": {
               "$ref": "#/definitions/Allocation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "expectedSequence",
+            "allocation",
+            "bytes"
+          ],
+          "properties": {
+            "type": {
+              "const": "rebudgeted"
+            },
+            "expectedSequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "allocation": {
+              "$ref": "#/definitions/Allocation"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
             }
           }
         },
@@ -247,7 +279,8 @@
         "journalCheckpointFile": "storage-checkpoint.jsonl",
         "journalProjectionCacheEntries": 8,
         "informationMaximumBytes": 1048576,
-        "informationMaximumLines": 32768
+        "informationMaximumLines": 32768,
+        "publicationDirectory": ".publication"
       }
     },
     "ImageReceipt": {
@@ -259,7 +292,8 @@
         "maximumPhysicalBytes",
         "dev",
         "ino",
-        "size"
+        "size",
+        "mountDirectory"
       ],
       "properties": {
         "version": {
@@ -289,6 +323,9 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 9007199254740991
+        },
+        "mountDirectory": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/platform/contract/mount/component.json"
         }
       }
     },
@@ -379,6 +416,304 @@
         },
         "expectedImage": {
           "$ref": "#/definitions/ImageRetirementExpectation"
+        }
+      }
+    },
+    "RebudgetRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "expectedSequence",
+        "allocation",
+        "bytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "expectedSequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "allocation": {
+          "$ref": "#/definitions/Allocation"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "CleanupProtocol": {
+      "const": {
+        "version": 1,
+        "maximumPending": 32,
+        "journalMaximumBytes": 1048576,
+        "chunkBytes": 65536,
+        "maximumReadWork": 32
+      }
+    },
+    "ParentFactoryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "mode",
+        "parent",
+        "custody",
+        "stopped",
+        "accepted",
+        "mutate"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "mode": {
+          "enum": [
+            "body",
+            "maintenance"
+          ]
+        },
+        "parent": {
+          "enum": [
+            "actual",
+            "copy"
+          ]
+        },
+        "custody": {
+          "enum": [
+            "actual",
+            "copy",
+            "none"
+          ]
+        },
+        "stopped": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "mutate": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ParentLifetimeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "body",
+        "close",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "body": {
+          "enum": [
+            "value",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "close": {
+          "enum": [
+            "ok",
+            "frozen"
+          ]
+        },
+        "expected": {
+          "enum": [
+            "value",
+            "undefined",
+            "frozen",
+            "close"
+          ]
+        }
+      }
+    },
+    "DisposableChildCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "body",
+        "terminal",
+        "binding",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "body": {
+          "enum": [
+            "value",
+            "undefined",
+            "frozen",
+            "cancel",
+            "accepted-failure",
+            "cancel-ex",
+            "cancel-ready",
+            "cancel-sh",
+            "cancel-prebody"
+          ]
+        },
+        "terminal": {
+          "enum": [
+            "ok",
+            "busy",
+            "parent-changed",
+            "failure",
+            "deadline",
+            "loan-copy",
+            "lease-substitution",
+            "loan-replay"
+          ]
+        },
+        "binding": {
+          "enum": [
+            "actual",
+            "none",
+            "foreign",
+            "duplicate",
+            "extra"
+          ]
+        },
+        "expected": {
+          "enum": [
+            "value",
+            "undefined",
+            "frozen",
+            "cancel",
+            "accepted-failure",
+            "cleanup",
+            "aggregate"
+          ]
+        }
+      }
+    },
+    "DisposableTransitionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "states",
+        "fault",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "states": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "mounted",
+              "underlying",
+              "foreign"
+            ]
+          }
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "backing",
+            "receipt",
+            "parent",
+            "underlying"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ChildRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "allocation",
+        "parentIdentity",
+        "directory",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "policySha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "allocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "parentIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "ChildDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "policySha256"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         }
       }
     }

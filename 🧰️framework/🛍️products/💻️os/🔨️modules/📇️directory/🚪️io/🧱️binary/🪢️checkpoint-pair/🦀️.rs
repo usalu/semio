@@ -177,10 +177,6 @@ pub fn decode_canonical_checkpoint_pair_v1(input: &[u8]) -> Result<CanonicalChec
     Ok(CanonicalCheckpointPairV1 { scope, descriptor_digest_v1, active_checkpoint_id, baseline_frontier, pack, spr, aggregate_sha256, pack_bytes, spr_bytes })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
 /// 🎫️ Admits checkpoint transport hashes before the pure pair identity gate.
 pub fn admit_checkpoint_selection_v1(expected: &crate::schema::DocumentOpenCheckpointV1) -> Result<crate::schema::AdmittedCheckpointSelectionV1, CanonicalCheckpointPairRefusalV1> {
     use super::artifact_hash::parse_artifact_hash_hex;

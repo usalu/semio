@@ -9,8 +9,8 @@ import{withPrintScratchV1,withPrintStorageTaskV1,type PrintExecutionV1}from"../.
 import{readPrintMaterialFileV1}from"../../../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
 import{printArtifactLayoutV1}from"../../../../📦️artifacts/🟦️.ts";
 import{withRepositoryArtifactDestinationV1,stageRepositoryArtifacts}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import{checkResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import{measurePrintPdfV1}from"./📥️pdf/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import intentSchema from"../../../🖨️tectonic-template-compilation/📋️intent/🧬️schema/🔣️.json"with{type:"json"};

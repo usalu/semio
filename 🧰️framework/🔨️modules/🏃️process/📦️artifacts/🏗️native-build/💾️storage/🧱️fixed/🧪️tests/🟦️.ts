@@ -1,4 +1,8 @@
+import "../📥️allocation/🧪️tests/🟦️.ts";
 import {expect,test} from "bun:test";
+import "../📦️vhd/🧪️tests/🟦️.ts";
+import "../🗂️system/🧪️tests/🟦️.ts";
+import "../📥️receipt/🧪️tests/🟦️.ts";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import fixture from "./🔣️.json" with {type:"json"};

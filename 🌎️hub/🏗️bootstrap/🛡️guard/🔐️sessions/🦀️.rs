@@ -9,6 +9,7 @@ use semio_hub_state::HubState;
 use std::net::SocketAddr;
 use directory::os_directory::io::text::access_policy::directory_access_permits;
 use semio_hub_runtime::support::now_ms;
+use semio_hub_directory::{AuthSessionDirectory, PrincipalAuthority, ShareTokenDirectory, SpaceDirectory};
 
 //#region 🔖️Auth
 /// 🔐️ Tries the bearer as an `AuthSessionRecord` (session id -> user -> space role) first;

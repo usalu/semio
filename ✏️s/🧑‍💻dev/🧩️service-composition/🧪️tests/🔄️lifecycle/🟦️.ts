@@ -7,12 +7,13 @@ import { concat, map, reverse, take, takeWhile } from "lodash";
 /** 🧪 Matches caller-owned composition lifecycles against portable vectors and Ajv. */
 export async function sDevCompositionLawsV1(): Promise<void> {
   assert(!existsSync(new URL("../../🧬️schema/🔣️.json", import.meta.url)), "service-composition examples must not own a corpus schema");
-  const require = createRequire(import.meta.url), lock = readFileSync(new URL("../../../../../bun.lock", import.meta.url), "utf8");
+  const require = createRequire(import.meta.url), serialized = readFileSync(new URL("../../../../../bun.lock", import.meta.url), "utf8"), lock:unknown=Bun.JSONC.parse(serialized);
+  assert(lock&&typeof lock==="object");const packages:unknown=Reflect.get(lock,"packages");assert(packages&&typeof packages==="object");
   for (const name of ["ajv", "lodash"]) {
-    const { version } = JSON.parse(readFileSync(require.resolve(`${name}/package.json`), "utf8"));
-    assert(lock.includes(`"${name}": ["${name}@${version}",`), `${name} must match the actual lockfile`);
+    const manifest:unknown=JSON.parse(readFileSync(require.resolve(`${name}/package.json`), "utf8"));assert(manifest&&typeof manifest==="object");const version:unknown=Reflect.get(manifest,"version"),entry:unknown=Reflect.get(packages,name);
+    assert(typeof version==="string"&&Array.isArray(entry)&&entry[0]===`${name}@${version}`, `${name} must match the actual lockfile`);
   }
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../../🚀️entry/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const { mountSDevInventoryV1 } = await import("../../🟦️.ts");
   for (const row of fixture.cases) {

@@ -1,0 +1,45 @@
+{
+ "moves": [
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/💡️inference/🔌️service/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧪️tests/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🔣️.json",
+   "to": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧬️schema/🔣️.json"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧪️tests/🧱️io-boundary/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧪️tests/🧱️io-boundary/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧪️tests/🧫️fixtures/🔣️.json",
+   "to": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧪️tests/🧫️fixtures/🔣️.json"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧪️tests/🧫️fixtures/🧱️source-ownership.json",
+   "to": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧪️tests/🧫️fixtures/🧱️source-ownership.json"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧪️tests/🧫️fixtures/🧱️io-boundary.json",
+   "to": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧪️tests/🧫️fixtures/🧱️io-boundary.json"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧬️schema/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/💡️inference/🔌️service/🌐️document-http/🧬️schema/🟦️.ts"
+  }
+ ],
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/dlo-snap-service.json"
+}

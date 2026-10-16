@@ -50,12 +50,12 @@ it("mutation blend vocabulary is strict while owned layer blend identifiers are 
     expect(validateMutation({layerId:"shape",blendMode:patch.value})).toBe(false);
     expect(validatePatch({blendMode:patch.value})).toBe(accepted);
     expect(validateDocument({schema:document.schema,id:document.id,assets:{},layers:[{kind:"group",children:[{kind:"shape",blendMode:patch.value}]}]})).toBe(typeof patch.value==="string");
-    if(typeof patch.value==="string")expect(parseDrawingLayerNode(root)).toEqual(root);
+    if(typeof patch.value==="string")expect<unknown>(parseDrawingLayerNode(root)).toEqual(root);
     else expect(()=>parseDrawingLayerNode(root)).toThrow();
     if (accepted) {
-      expect(parseDrawingLayerNode(root)).toEqual(root);
-      expect(parseDrawingLayerPatch({blendMode:patch.value}).blendMode).toBe(patch.value);
-      expect(blendDiff(mutation as never).layers.modified[0]!.patch.blendMode).toBe(patch.value);
+      expect<unknown>(parseDrawingLayerNode(root)).toEqual(root);
+      expect<unknown>(parseDrawingLayerPatch({blendMode:patch.value}).blendMode).toBe(patch.value);
+      expect<unknown>(blendDiff(mutation as never).layers.modified[0]!.patch.blendMode).toBe(patch.value);
     } else {
       expect(() => parseDrawingLayerPatch({blendMode:patch.value})).toThrow();
       expect(() => blendDiff(mutation as never)).toThrow();

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import law from "../../../../../🧪️tests/🧫️fixtures/⌨️input-publication-receipt.json" with { type: "json" };
 import actorFixture from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
-import { BrowserActorActionMailboxV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
+import { BrowserActorActionMailboxV1 } from "../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
 import { inputAppliedV1, inputCommitReceiptMatchesPublicationV1, inputCommitReceiptV1 } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 
 describe("causal input publication receipt", () => {

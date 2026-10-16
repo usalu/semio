@@ -1,0 +1,3 @@
+/** 📤️ SDK entry `@semio-tech/framework/browser-bundle/action-handoff/publication`: explicit public surface of the framework module that plugins build on. */
+export { decodeBrowserActorCommandPublicationV1, decodeBrowserActorHostEffectsV1, decodeBrowserActorIntentPublicationV1, decodeBrowserActorUnsolicitedPublicationV1, encodeBrowserActorHostEffectV1, publishBrowserActorHostEffectsV1, requireBrowserActorCommandBackboneProjectionV1 } from "../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
+export type { BrowserActorCommandBackboneEnvelopeV1, BrowserActorCommandPublicationV1, BrowserActorEphemeralSnapshotV1 } from "../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";

@@ -1,4 +1,4 @@
-/** 🧭️ Single-rule stdio-artifact policy gates behind `verify policy-breach <rule>`.
+/** 🚨️ Single-rule stdio-artifact policy gates behind `verify policy-breach <rule>`.
  * @see 📜️script.ts
  */
 import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";

@@ -1,4 +1,4 @@
-import { parseJobReconcileResultV1, type JobReconcileResultV1 } from "../../../🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🟦️.ts";
+import { parseJobReconcileResultV1, type JobReconcileResultV1 } from "@semio-tech/framework/job/reconcile/schema";
 
 /** 💡️ Scope `hub.inference` — the closed GIS inference wire contracts hub decodes and enforces.
  *

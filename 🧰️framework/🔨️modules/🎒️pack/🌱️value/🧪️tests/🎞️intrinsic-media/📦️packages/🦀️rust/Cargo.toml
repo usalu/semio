@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-pack-intrinsic-media-laws"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Neutral full-value wire laws as one template: the same law runs against the framework pack and the OS pack."
+
+[package.metadata.semio]
+role = "test"
+id = "pack-intrinsic-media-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]

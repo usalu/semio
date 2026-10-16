@@ -5,8 +5,10 @@ use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementD
 type Witness=(usize,usize,Option<(u64,u64)>,(usize,usize));
 type Receipt=Option<(RetainedCloneGrant,RetainedCloneProgress)>;
 #[derive(Clone,Copy,PartialEq,Eq)]
-enum Phase{Field,Tag,Length,Bytes,Commit,Complete,Closed}
-pub struct ToolRunEntityColumnReceiving{source:Witness,frame:usize,phase:Phase,remaining:usize,entities:usize,scalar:[u8;8],at:usize,receipt:Receipt,closing:bool}
+pub enum Phase{Field,Tag,Length,Bytes,Commit,Complete,Closed}
+pub struct ToolRunEntityColumnReceiving{source:Witness,frame:usize,
+    #[cfg(feature = "testkit")] #[doc(hidden)] pub phase:Phase,
+    #[cfg(not(feature = "testkit"))] phase:Phase,remaining:usize,entities:usize,scalar:[u8;8],at:usize,receipt:Receipt,closing:bool}
 fn witness(source:&RetainedRecordBodySourceDecode)->Witness{let s=source.source_identity();(s.address,s.extent,s.authority,source.original_range())}
 fn fault()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"original entity column source or token is invalid")}
 fn limit()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"original entity column exceeds captured receiving allocation or item ceiling")}
@@ -58,6 +60,3 @@ impl ToolRunEntityColumnReceiving{
  pub fn terminal_is_empty(&self)->bool{self.phase==Phase::Closed&&self.at==0&&self.remaining==0&&self.receipt.is_none()}
 }
 impl Drop for ToolRunEntityColumnReceiving{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original entity issuer abandoned its final native column or receipt")}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

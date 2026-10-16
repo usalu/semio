@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { runRepositoryCargoTests } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -36,7 +37,7 @@ class TestScript extends BundleScript {
 /** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
-    const check = (args: string[]) => runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-scene", ...args],packageRoot,process.env,buildBudgetMs());
+    const check = (args: string[]) => runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-scene", ...args],packageRoot,process.env,buildBudgetMs());
     await check(["--target", "wasm32-wasip2"]);
     await check(["--target", "wasm32-unknown-unknown"]);
   }

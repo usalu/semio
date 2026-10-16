@@ -1,14 +1,14 @@
 //! ✂️ Neutral severity selection and bounded edit-settlement laws.
 use super::*;
-use super::tests::DemoSnapshot;
-use super::fixture_mutations::demo::{AddN, DemoMutation};
+use semio_framework_os_store_testing_fixtures::DemoSnapshot;
+use semio_framework_os_store_testing_fixtures::demo::AddN; use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("neutral clamping fixture")
 }
 
-fn messages(row: &serde_json::Value) -> Vec<crate::os_spr::MutationMessage> {
-    (0..row["messageRepeat"].as_u64().unwrap_or(1)).flat_map(|_| row["messages"].as_array().unwrap().iter()).map(|message| crate::os_spr::MutationMessage {
+fn messages(row: &serde_json::Value) -> Vec<semio_framework_os_spr::MutationMessage> {
+    (0..row["messageRepeat"].as_u64().unwrap_or(1)).flat_map(|_| row["messages"].as_array().unwrap().iter()).map(|message| semio_framework_os_spr::MutationMessage {
         level: match message["level"].as_str().unwrap() {
             "info" => semio_framework_diagnostic::Severity::Info,
             "warning" => semio_framework_diagnostic::Severity::Warning,
@@ -36,7 +36,7 @@ fn edit_message_clamp_existing_selection_matches_neutral_corpus() {
         }
         let dropped = row["expected"]["dropped"].as_u64().unwrap();
         if dropped > 0 {
-            let mut summary = crate::os_spr::MutationMessage::info("mutation.cascade", format!("{dropped} more messages"));
+            let mut summary = semio_framework_os_spr::MutationMessage::info("mutation.cascade", format!("{dropped} more messages"));
             summary.op_index = row["expected"]["summaryOp"].as_u64().map(|index| index as u32);
             expected.push(summary);
         }
@@ -67,12 +67,12 @@ fn edit_replay_checks_deadline_during_message_settlement() {
     assert!(asked > 0, "the edit settlement asks its deadline before completing");
     assert!(matches!(step, ReplayStep::Pending(_)), "settlement returns control before scanning the complete edit");
     replay.cancel();
-    super::raw_replay_retirement_tests::close(&mut replay);
+    semio_framework_os_store_testing_doubles::close(&mut replay);
 }
 
 #[test]
 fn edit_replay_clamping_preserves_every_fatal_mutation_status() {
-    use super::fixture_mutations::severity::{SetFatalN, SeverityMutation};
+    use semio_framework_os_store_testing_fixtures::severity::SetFatalN; use semio_framework_os_store_testing_fixtures::severity::SeverityMutation;
     let law = fixture();
     let count = law["settlement"]["operations"].as_u64().unwrap() as usize;
     let edit = Edit {
@@ -92,7 +92,7 @@ fn edit_replay_clamping_preserves_every_fatal_mutation_status() {
     assert!(result.report().outcomes.iter().all(|outcome| outcome.worst == Some(semio_framework_diagnostic::Severity::Fatal)));
     assert!(result.report().outcomes.iter().any(|outcome| outcome.messages.is_empty()));
     result.begin_retirement();
-    super::raw_replay_retirement_tests::close(&mut result);
+    semio_framework_os_store_testing_doubles::close(&mut result);
     eprintln!("[DEBUG] all {count} fatal mutation statuses preserved after cooperative message settlement");
 }
 /// 🧾️ Each original owner pays its complete advertised physical release.
@@ -106,19 +106,19 @@ fn retire_bounded(mut child: Box<dyn ErasedSnapshotRetirement>, bytes: usize) {
     }
     panic!("message retirement did not terminate");
 }
-fn paged_rows(rows: Vec<crate::os_spr::MutationMessage>) -> crate::os_spr::command::ReplayMessageAccumulator {
+fn paged_rows(rows: Vec<semio_framework_os_spr::MutationMessage>) -> semio_framework_os_spr::command::ReplayMessageAccumulator {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
-    let mut owner = crate::os_spr::command::ReplayMessageAccumulator::default();
-    for row in rows { let mut pending = Some(row); while pending.is_some() { let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: if owner.rows().has_reserved_slot() { std::mem::size_of::<crate::os_spr::MutationMessage>() } else { 0 }, maximum_capacity_bytes: owner.next_capacity_byte_demand().unwrap(), maximum_release_bytes: 0, maximum_depth: 1 }; assert!(owner.append(&mut pending, grant).unwrap().fits(grant)); } }
+    let mut owner = semio_framework_os_spr::command::ReplayMessageAccumulator::default();
+    for row in rows { let mut pending = Some(row); while pending.is_some() { let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: if owner.rows().has_reserved_slot() { std::mem::size_of::<semio_framework_os_spr::MutationMessage>() } else { 0 }, maximum_capacity_bytes: owner.next_capacity_byte_demand().unwrap(), maximum_release_bytes: 0, maximum_depth: 1 }; assert!(owner.append(&mut pending, grant).unwrap().fits(grant)); } }
     owner
 }
-fn close_pages(owner: &mut crate::os_spr::command::ReplayMessageAccumulator) {
+fn close_pages(owner: &mut semio_framework_os_spr::command::ReplayMessageAccumulator) {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     while !owner.terminal_is_empty() { let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: owner.next_close_copy_byte_demand(), maximum_capacity_bytes: 0, maximum_release_bytes: owner.next_close_release_byte_demand().unwrap(), maximum_depth: 1 }; assert!(owner.close_step(grant).unwrap().fits(grant)); }
 }
 #[test]
 fn edit_message_clamp_cursor_matches_neutral_rows_and_cancels_bounded() {
-    use crate::os_spr::command::FinalMessageSelection;
+    use semio_framework_os_spr::command::FinalMessageSelection;
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let law = fixture();
     let baseline = DemoSnapshot { n: Some(71) };

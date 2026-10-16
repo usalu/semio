@@ -1,19 +1,19 @@
 use super::*;
 use std::collections::BTreeMap;
 
-#[path = "../../../🧪️tests/🧰️oracle-support/🦀️.rs"]
-mod support;
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_geometry_oracle_support as support;
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/➡️math-vector/🔣️.json");
 
 #[test]
 fn the_compute_table_and_the_fixture_cover_exactly_the_catalogue_kinds() {
-    support::assert_category("math.vector", COMPUTES, FIXTURE);
+    support::assert_category(catalogue(), "math.vector", COMPUTES, FIXTURE);
 }
 
 #[test]
 fn every_fixture_case_holds_at_fuel_one_and_at_unbounded_fuel() {
-    assert!(support::run_fixture(FIXTURE, COMPUTES) >= 38);
+    assert!(support::run_fixture(catalogue(), FIXTURE, COMPUTES) >= 38);
 }
 
 fn samples() -> Vec<Triple> {
@@ -54,7 +54,7 @@ fn the_angle_is_symmetric_scale_free_and_inside_zero_to_pi() {
 
 #[test]
 fn a_plane_through_three_points_contains_them_and_has_a_unit_normal() {
-    let kind = support::kind_of("math.planeFromPoints");
+    let kind = support::kind_of(catalogue(), "math.planeFromPoints");
     let start = COMPUTES.iter().find(|entry| entry.id == kind.id).expect("registered").start;
     let samples = samples();
     for triple in samples.chunks_exact(3) {

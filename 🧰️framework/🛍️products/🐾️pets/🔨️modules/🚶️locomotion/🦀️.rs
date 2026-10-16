@@ -4,7 +4,7 @@
 //! A part of the stage, not of the crate: everything is `pub(crate)` at most.
 //!
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
-//! @see ../🚶️locomotion/🟦️.ts — the TypeScript twin
+//! @see ./⚓️footing/🟦️.ts — the TypeScript twin, split into the child folders `📐️constants`, `⚓️footing`, `🛬️courses`, `🛫️departure`, `🏃️motion`, `✋️hand`, `🪜️outings`, `🧳️trips`, `🪄️mischief` and `🚪️leaving` next to this file
 
 use crate::draft::{beat_of, clip_at, clip_of, hover_of, release, remove, settle, shift, shoulders, Draft, Launch, ORIGIN, RATE};
 use crate::spacing::{clearway, hindered, soars, vacancy, COMFORT_GAP, MEET_GAP};

@@ -1,7 +1,8 @@
-import { aabbVolume } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import { aabbVolume } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/📦️aabb/🟦️.ts";
 import type { BrepjsTestDependencies } from "../../🟦️.ts";
-import type { Model, ModelSpaceJson } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import type { EdgeRef, FaceRef, MutableSolidRecord, ShellRef, SolidRef, VertexRef, WireRef } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import type { ModelSpaceJson } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🌌️model-space/🟦️.ts";
+import type { Model } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import type { EdgeRef, FaceRef, MutableSolidRecord, ShellRef, SolidRef, VertexRef, WireRef } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🔷️brep-records/🟦️.ts";
 import type { Vec3 } from "@semio-tech/framework-3d-js";
 
 type TestSource = { readonly url: string };

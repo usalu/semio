@@ -3,10 +3,8 @@
 #[global_allocator]
 static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
-#[path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/🦀️.rs"]
-mod typed_input_law;
-#[path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️transient-preparation-law/🦀️.rs"]
-mod transient_preparation_law;
+use semio_framework_test_typed_input_law as typed_input_law;
+use semio_framework_test_transient_preparation_law as transient_preparation_law;
 
 use semio_framework_value::{DslValue, FromValue};
 use semio_s_artifact_forms_forms::editor::forms::modes::blueprint::windows::try_wizard::transient::{FormsTryValues, FormsTryWindowTransient, FormsTryWindowTransientMutation, FormsTryWindowTransientOwner};

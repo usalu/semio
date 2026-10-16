@@ -53,4 +53,3 @@ ui_gpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯�
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }

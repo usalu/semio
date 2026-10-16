@@ -8,7 +8,7 @@ import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚
 
 const repoRoot = getWorkspaceRoot();
 
-import { ParityPlaygroundReport } from "../🏗️structure/🟦️.ts";
+import type { ParityPlaygroundReport } from "../📋️playground-report/🟦️.ts";
 import { parityVerdict } from "../✅️verdict/🟦️.ts";
 
 

@@ -5,28 +5,36 @@
 
 import { shellDialogSessionIsCurrentV1 } from "../🗨️dialog-origin/🟦️.ts";
 import { browserDocumentMountIsCurrentV1 } from "../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
-import { isTerminalDocumentCheckInPhaseV1 } from "../../../../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
-import { directorySessionAuthorityIsCurrentV1 } from "../../../../../📇️directory/🪪️session-refresh/🟦️.ts";
+import { isTerminalDocumentCheckInPhaseV1 } from "@semio-tech/framework/document/check-in";
+import { directorySessionAuthorityIsCurrentV1 } from "@semio-tech/framework/directory/session-refresh";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type PluginModuleAcquisitionProgress } from "@semio-tech/framework";
 // #region 🔌️Adapters
 import {
+  decodePackValue
+} from "@semio-tech/framework/packs";
+import {
+  decodeDocumentArchiveBytes,
+  type DocumentArchivePack
+} from "@semio-tech/framework/wire-contracts";
+import {
+  DocumentArchiveFaultError
+} from "@semio-tech/framework/app-channel";
+import {
   type BackboneWorkerResponse,
   decodeBackboneWorkerResponse,
-  decodeDocumentArchiveBytes,
-  DocumentArchiveFaultError,
-  decodePackValue,
   encodeBackboneWorkerRequest,
-  parseDirectorySpaceAdministrationPageV1,
-  type DocumentArchivePack,
   documentRuntimeKeyV1
-} from "@semio-tech/framework-os";
+} from "@semio-tech/framework/backbone";
+import {
+  parseDirectorySpaceAdministrationPageV1
+} from "@semio-tech/framework/directory/io/text";
 import { scopedPresencePeersV1, type ScopedPresencePeerV1 } from "../👥️presence-scope/🟦️.ts";
 import { publishArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../../👕️canvas-presence/🟦️.ts";
 import { programHistoryKeyV1, programHistoryProjectionV1 } from "../🪟️spawned-program/🟦️.ts";
-import { IDENTITY_CONFIG_SCHEMA, foldIdentityEvent } from "../../../../../🏪️store/👷️worker/🟦️.ts";
+import { IDENTITY_CONFIG_SCHEMA, foldIdentityEvent } from "@semio-tech/framework/backbone/config-lane";
 import { decodeLocalCatalogArchiveV1, decodeLocalCatalogPayloadV1 } from "../🗂️local-catalog/🟦️.ts";
-import { LOCAL_CATALOG_CONFIG_SCHEMA, type LocalCatalog } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { LOCAL_CATALOG_CONFIG_SCHEMA, type LocalCatalog } from "@semio-tech/framework/config/mutations";
 import { type ActiveSession, type LoadedProgramState, type PluginSupervisorState } from "../../🐚️Shell/🟦️.tsx";
 import {
   documentTransferNoticeTextV1,
@@ -44,8 +52,8 @@ import {
 } from "../../🛠️ShellHelpers/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { isPluginInstanceRetiredV1 } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { BrowserActorActionMailboxV1 } from "../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
-import { StreamMuxChannelV1 } from "../../../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
+import { BrowserActorActionMailboxV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
+import { StreamMuxChannelV1 } from "@semio-tech/framework/io/stream-mux";
 import { liveInstanceWindowFaultV1 } from "../🩺️fault/🟦️.ts";
 import {
   inferencePortStatusRuntimeKeyV1,

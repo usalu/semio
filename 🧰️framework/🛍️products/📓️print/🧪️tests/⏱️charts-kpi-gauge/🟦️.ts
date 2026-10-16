@@ -6,7 +6,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 
 // #region 🔌️Adapters
 import { arc as d3Arc } from "d3-shape";
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { roundProbeNumbers, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 

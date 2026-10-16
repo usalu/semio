@@ -1612,7 +1612,7 @@ interface codec {
     spr: list<u8>,
   }
 
-  /// 🧬️ Structural fingerprint of `artifact-kind`'s snapshot record shape — `os_pack::schema_hash`
+  /// 🧬️ Structural fingerprint of `artifact-kind`'s snapshot record shape — `pack::record::schema_hash`
   /// over the editor snapshot's `RecordSpec`, exactly the 32 bytes `ArtifactCodec::pack_schema_hash`
   /// carries natively. A catalog row's `packSchemaHash` is pinned against this, so a bundle cannot
   /// name a schema identity the component itself does not own.

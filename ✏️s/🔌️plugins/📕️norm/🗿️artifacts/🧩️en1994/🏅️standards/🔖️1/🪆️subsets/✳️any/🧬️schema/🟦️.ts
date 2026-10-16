@@ -1,7 +1,7 @@
 /** 🧬️ `En1994Artifact` wire twin: the artifact document across its state lanes, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1994Artifact {
   /** @state artifact */

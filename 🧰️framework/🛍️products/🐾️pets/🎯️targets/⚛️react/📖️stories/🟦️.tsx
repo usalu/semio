@@ -36,7 +36,7 @@ import { CHUTE_DOME, CHUTE_RISE, CHUTE_SPAN, PetLayer, canopyRim, depict, paint,
 import { AIM_RISE, CARRY_LEAN, CARRY_LENGTH } from "../../../🔨️modules/🎥️projection/🟦️.ts";
 import { WALL_LEAN } from "../../../🔨️modules/📏️spacing/🟦️.ts";
 import { PURR_TICKS, hail, shrug } from "../../../🔨️modules/👀️attention/🟦️.ts";
-import { PUFF_TICKS } from "../../../🔨️modules/🚶️locomotion/🟦️.ts";
+import { PUFF_TICKS } from "../../../🔨️modules/🚶️locomotion/📐️constants/🟦️.ts";
 import { clipAt, clipOf, draftOf, enter, indexOf, perform, purr, release, sealed, settle, shift, trickOf, type Draft } from "../../../🔨️modules/📝️draft/🟦️.ts";
 import "./🎨️.css";
 

@@ -1,0 +1,17 @@
+# Public Workspace Owned Capture Observation
+
+Fresh public session49768 launched10:31:36UTC with eleven overrides absent and SEMIO_BUILD_PROFILE_INPUTS=1. Actual CLI/dispatcher birth observed10:31:40UTC. Ordinary repository:build0, no ALL pin, unchanged authored300000ms Bun child. No terminal or Bun aggregate at10:33:22UTC.
+
+Exact-log lsof identified CLI30152 and dispatcher30153 with log inode359765588, device1,16. A subsequent read-only ps matched actual command/parent/birth: CLI parent76782, dispatcher parent30152, elapsed1:42, dispatcher CPU1:51.29/stateR. No PID signal, generic process attribution or performance cause inference. Log observed3,547,370bytes before ps; Source selected compilation progress continues, only lease retirement DEBUG sofar.
+
+Owned source inventory review6122 actual0:2380paths/1893Source/487ticket,134retained removed locations, zero overlength or scoped whitespace findings. This is scoped read-only Git validation, no modifying Git. SDK/source acceptance is recorded separately in [proof](public-sdk-owned-capture-proof.md).
+
+At10:34:20UTC the live log emitted workspace-catalog-lookup142424.434792ms for10,211files, then membership hash89.893458ms and parser bootstrap0.003125ms. This is one actual selected catalogue phase; it does not prove the prior attempt’s cost or subsequent completion. Log3,919,912bytes at observation.
+
+Subsequent completed graph-original-inference38495.876125ms with42206observations. At10:36:12 log7,711,982bytes and next selected inventory still active. The catalog duration covers capture/settlement/closure, not one directory scan. [Source timing interpretation](selected-profile-await-map-low.md) distinguishes repeated inventory and silent settlement rounds.
+
+At10:37:52UTC final catalogue/revalidation completed137678.039125ms/files10213, hash123.800084ms. Exact log then contained one actual build:refresh running event atline82227 and resumed selected compilation. Initial/final file counts differ10211→10213; no author or exact cause attributed. Current loader retains authored nine total attempts; no retry/counter/control was changed. Optional graph image retirement emitted beforeBytes116639996/retainedBytes102371302/availableBytes1074499584. This is the actual owner’s custody action, not manual cache deletion.
+
+At10:51:45UTC read-only exact-log lsof again matched both owned PIDs30152/30153 and unchanged log inode359765588. The retained ps observation matches prior birth/commands/parent: elapsed20:05, dispatcherCPU20:17.54/stateR; log32,789,786bytes. This establishes live owned CPU activity, not exact hot-path attribution or a deadlock diagnosis. Raw bounded single observations are retained in generated public-workspace-owned-capture-holders-1051.log and process-1051.log; no signal sent.
+
+Closed session49768 actualterminal1 confirmed11:10:10UTC. No Bun aggregate/test acceptance. Exact final error: Cannot find module framework/🧬schema/✅validator/📦packages/🟦typescript/🟦ts from PROCESS/state/recovery. CurrentSourceread11:07:34 had already shown corrected three-levelrelativeimport; no writer/time-of-fix or exacterror-emissiontime inference is made. Final log43,541,412bytes/SHA256e38932c92cad263d4460741c7b937af44ba8378c8e62c4d885179588b10bd9f8. Observed actualprocessbirth10:31:40 and finalconfirmation11:10:10 bound the observation; this is not an exact task duration or Bun300000ms runtime. One actual build:refresh is retained.

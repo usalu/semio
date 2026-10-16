@@ -1,0 +1,225 @@
+{
+  "version": 1,
+  "parameters": [
+    "request",
+    "policy",
+    "workspace",
+    "invocation",
+    "phaseControl"
+  ],
+  "cases": [
+    {
+      "name": "tests-issued-phase",
+      "phase": "issued",
+      "lint": false,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": true,
+      "stores": 1,
+      "runs": 1
+    },
+    {
+      "name": "lint-issued-phase",
+      "phase": "issued",
+      "lint": true,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": true,
+      "stores": 1,
+      "runs": 1
+    },
+    {
+      "name": "tests-cancelled",
+      "phase": "cancelled",
+      "lint": false,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 0,
+      "runs": 0
+    },
+    {
+      "name": "lint-cancelled",
+      "phase": "cancelled",
+      "lint": true,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 0,
+      "runs": 0
+    },
+    {
+      "name": "tests-copied",
+      "phase": "copied",
+      "lint": false,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 0,
+      "runs": 0
+    },
+    {
+      "name": "lint-copied",
+      "phase": "copied",
+      "lint": true,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 0,
+      "runs": 0
+    },
+    {
+      "name": "tests-foreign",
+      "phase": "foreign",
+      "lint": false,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 0,
+      "runs": 0
+    },
+    {
+      "name": "lint-foreign",
+      "phase": "foreign",
+      "lint": true,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 0,
+      "runs": 0
+    },
+    {
+      "name": "tests-expired",
+      "phase": "expired",
+      "lint": false,
+      "grant": 1,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 0,
+      "runs": 0
+    },
+    {
+      "name": "lint-expired",
+      "phase": "expired",
+      "lint": true,
+      "grant": 1,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 0,
+      "runs": 0
+    },
+    {
+      "name": "tests-after-store",
+      "phase": "after-store",
+      "lint": false,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 1,
+      "runs": 0
+    },
+    {
+      "name": "lint-after-store",
+      "phase": "after-store",
+      "lint": true,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 1,
+      "runs": 0
+    },
+    {
+      "name": "tests-after-run",
+      "phase": "after-run",
+      "lint": false,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 1,
+      "runs": 1
+    },
+    {
+      "name": "lint-after-run",
+      "phase": "after-run",
+      "lint": true,
+      "grant": 1000,
+      "cap": 5000,
+      "accepted": false,
+      "stores": 1,
+      "runs": 1
+    },
+    {
+      "name": "tests-policy-cap",
+      "phase": "issued",
+      "lint": false,
+      "grant": 4000,
+      "cap": 1000,
+      "accepted": true,
+      "stores": 1,
+      "runs": 1
+    },
+    {
+      "name": "lint-policy-cap",
+      "phase": "issued",
+      "lint": true,
+      "grant": 4000,
+      "cap": 1000,
+      "accepted": true,
+      "stores": 1,
+      "runs": 1
+    }
+  ],
+  "receiverCallbacks": 3,
+  "commandCases": [
+    {
+      "phase": "issued",
+      "accepted": true,
+      "dispatches": 1
+    },
+    {
+      "phase": "copied",
+      "accepted": false,
+      "dispatches": 0
+    },
+    {
+      "phase": "foreign",
+      "accepted": false,
+      "dispatches": 0
+    },
+    {
+      "phase": "cancelled",
+      "accepted": false,
+      "dispatches": 0
+    },
+    {
+      "phase": "expired",
+      "accepted": false,
+      "dispatches": 0
+    },
+    {
+      "phase": "missing",
+      "accepted": false,
+      "dispatches": 0
+    },
+    {
+      "phase": "after-import",
+      "accepted": false,
+      "dispatches": 0
+    },
+    {
+      "phase": "mutable",
+      "accepted": true,
+      "dispatches": 1
+    },
+    {
+      "phase": "undefined",
+      "accepted": false,
+      "dispatches": 1
+    },
+    {
+      "phase": "frozen",
+      "accepted": false,
+      "dispatches": 1
+    }
+  ]
+}

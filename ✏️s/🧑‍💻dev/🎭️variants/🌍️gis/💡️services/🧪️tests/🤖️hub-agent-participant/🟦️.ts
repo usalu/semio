@@ -1,4 +1,7 @@
-import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+import{mcpJsonPathV1,mcpJsonArrayV1}from"../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📋️data/🟦️.ts";
+import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{withDelegatedMcpClientSessionV1,withMcpDelegationCleanupV1}from"../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📦️published/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
 /** 🤖️ The hub-agent-participant gate: is an MCP agent a REAL third participant in a hub space?
  *
@@ -30,14 +33,16 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "no
 import { randomBytes } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { AcceptancePreconditionMissing, hubCredentialFromEnv, McpClientSession, mcpServerEntries, minimalInputForSchema, requireMcpBinary } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { AcceptancePreconditionMissing, hubCredentialFromEnv, mcpServerEntries, minimalInputForSchema, requireMcpBinary } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 
-import { createSpaceCommandV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
+import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
 
 // 📁️ `new URL(x, import.meta.url).pathname` percent-encodes emoji path segments, and a counted
 // `..` chain silently walks past the root when a file moves — so the root is LOCATED, not counted.
+await receiveScriptProcessInvocation(process.env,async original=>{
+const phaseControl=createIssuedResourceControlV1(original,"mcp:hub-agent-participant",120000);
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 function findWorkspaceRoot(start: string): string {
   let current = start;
@@ -59,17 +64,18 @@ const startedAt = new Date();
 type Row = { readonly step: string; readonly ok: boolean; readonly detail: string };
 const rows: Row[] = [];
 const outDir = process.env.S_OS_MCP_PARTICIPANT_OUT ?? join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️generated/🤖️hub-agent-participant");
-const gateways: Array<{ readonly name: string; readonly session: McpClientSession }> = [];
+const gateways: Array<{readonly name:string;readonly diagnostics:readonly string[]}> = [];
 function row(step: string, ok: boolean, detail: string): void {
   rows.push({ step, ok, detail });
   console.log(`${ok ? "PASS" : "FAIL"}  ${step} — ${detail}`);
 }
 
 async function hub(method: string, path: string, options: { token?: string; body?: string } = {}): Promise<{ status: number; text: string; json: any }> {
+  return withRequestedIssuedResourceControlV1(phaseControl,0,async actual=>{
   const headers: Record<string, string> = {};
   if (options.body !== undefined) headers["content-type"] = "application/json";
   if (options.token !== undefined) headers.authorization = `Bearer ${options.token}`;
-  const response = await fetch(`${ORIGIN}${path}`, { method, headers, ...(options.body === undefined ? {} : { body: options.body }) });
+  const response = await fetch(`${ORIGIN}${path}`, { method, headers, ...(options.body === undefined ? {} : { body: options.body }),signal:actual.signal });
   const text = await response.text();
   let json: any;
   try {
@@ -78,14 +84,15 @@ async function hub(method: string, path: string, options: { token?: string; body
     json = undefined;
   }
   return { status: response.status, text, json };
+  });
 }
 
-function finish(blocked?: string): never {
+function finish(blocked?: string): void {
   const red = rows.filter((entry) => !entry.ok);
   mkdirSync(outDir, { recursive: true });
-  const evidence = gateways.map(({ name, session }) => {
+  const evidence = gateways.map(({ name, diagnostics }) => {
     const path = join(outDir, `gateway-stderr-${name}.txt`);
-    writeFileSync(path, `${session.stderrLines().join("\n")}\n`);
+    writeFileSync(path, `${diagnostics.join("\n")}\n`);
     return path;
   });
   console.log(`hub-agent-participant-check: ${rows.length - red.length}/${rows.length} rows green against ${ORIGIN}`);
@@ -102,14 +109,14 @@ function finish(blocked?: string): never {
         : { en: `${rows.length - red.length}/${rows.length} agent-participant rows green against ${ORIGIN}${red.length ? `; red: ${red.map((entry) => entry.step.split(" ")[0]).join(",")}` : ""}`, de: `${rows.length - red.length}/${rows.length} Zeilen des Agenten als Teilnehmer grün gegen ${ORIGIN}${red.length ? `; rot: ${red.map((entry) => entry.step.split(" ")[0]).join(",")}` : ""}` },
     }),
   );
-  if (blocked) process.exit(1);
+  if (blocked) throw new AcceptancePreconditionMissing(blocked);
   if (red.length > 0) throw new Error(`hub-agent-participant-check: ${red.length} red row(s): ${red.map((entry) => entry.step).join(", ")}`);
-  process.exit(0);
+
 }
 
 const readiness = await hub("GET", "/readyz").catch((error: Error) => ({ status: 0, text: error.message, json: undefined }));
 row("0 a hub answers /readyz", readiness.status === 200 || readiness.status === 503, `HTTP ${readiness.status} at ${ORIGIN} — start one with 📜️ds1-hub-hold.ts or set OS_MCP_HUB_ORIGIN`);
-if (readiness.status === 0) finish(`no hub answers at ${ORIGIN} (OS_MCP_HUB_ORIGIN)`);
+if (readiness.status === 0) return finish(`no hub answers at ${ORIGIN} (OS_MCP_HUB_ORIGIN)`);
 row("0b the hub declares features.mcpWorkspace", typeof readiness.json?.features?.mcpWorkspace === "boolean", `features=${JSON.stringify(readiness.json?.features)}`);
 row("0c features.mcpWorkspace is true — this hub can serve a delegated MCP workspace", readiness.json?.features?.mcpWorkspace === true, `mcpWorkspace=${readiness.json?.features?.mcpWorkspace} openPlan=${readiness.json?.features?.openPlan}`);
 
@@ -123,7 +130,7 @@ const credential = (() => {
 })();
 const signIn = await hub("POST", "/auth/sessions", { body: JSON.stringify({ schema: "semio.hub.auth.credential-sign-in/v1", email: credential.email, password: credential.password, deviceInstanceId: "mcphubparticipantgate0000000000".slice(0, 32), clientClass: "browser" }) });
 row("1 the human signs in", signIn.status === 200 && typeof signIn.json?.token === "string", `HTTP ${signIn.status} ${signIn.status === 200 ? "session capability minted" : signIn.text.slice(0, 200)}`);
-if (signIn.status !== 200) finish();
+if (signIn.status !== 200) return finish();
 const token: string = signIn.json.token;
 
 /** 🏘️ A fresh space and a fresh note in it, both through the hub's own authorities, so the gate
@@ -149,11 +156,12 @@ async function freshSpaceWithNote(): Promise<{ spaceId: string; detail: string }
 const chosen = process.env.OS_MCP_HUB_SPACE ? { spaceId: process.env.OS_MCP_HUB_SPACE, detail: `OS_MCP_HUB_SPACE=${process.env.OS_MCP_HUB_SPACE}` } : await freshSpaceWithNote();
 const spaceId = chosen.spaceId;
 row("2 the human authors a space holding a note", spaceId.length > 0, chosen.detail);
-if (!spaceId) finish();
+if (!spaceId) return finish();
 
 const delegation = await hub("POST", "/auth/agent-delegations", { token, body: JSON.stringify({ schema: "semio.hub.auth.agent-delegation-create/v1", spaceId, agentLabel: "Participant gate agent", audience: "edit", ttlSecs: 900 }) });
-row("3 POST /auth/agent-delegations mints a scoped credential", delegation.status === 201 && typeof delegation.json?.token === "string", `HTTP ${delegation.status} ${delegation.status === 201 ? `agentPrincipalId=${delegation.json?.agentPrincipalId}` : delegation.text.slice(0, 240)}`);
-if (delegation.status !== 201) finish();
+if(delegation.status!==201){row("3 POST /auth/agent-delegations mints a scoped credential",false,`HTTP ${delegation.status} ${delegation.text.slice(0,240)}`);return finish();}
+await withMcpDelegationCleanupV1(async()=>{
+row("3 POST /auth/agent-delegations mints a scoped credential",typeof delegation.json?.token==="string",`HTTP ${delegation.status} agentPrincipalId=${delegation.json?.agentPrincipalId}`);
 const delegationId: string = delegation.json.delegationId;
 row("3b the agent principal is NOT the delegating human", delegation.json?.agentPrincipalId === `agent:${delegationId}`, `agentPrincipalId=${delegation.json?.agentPrincipalId}`);
 
@@ -164,54 +172,46 @@ row("3b the agent principal is NOT the delegating human", delegation.json?.agent
  * 26/09/27). */
 async function freshSessionContinuesFromTheHead(documentId: string, capabilityId: string, input: unknown, firstCursor: number): Promise<void> {
   const head = async (): Promise<number> => Number((await hub("GET", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}`, { token })).json?.head_seq ?? -1);
-  const second = new McpClientSession(entry, ["--hub", ORIGIN, "--space", spaceId, "--credential-file", credentialPath, "--no-bridge"], repoRoot);
-  gateways.push({ name: "second", session: second });
+  return withDelegatedMcpClientSessionV1(original,phaseControl,{hubOrigin:ORIGIN,spaceId,token:String(delegation.json.token),scopes},async second=>{
   try {
     const initialized = await second.request("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "semio-hub-agent-participant-second", title: "hub agent participant gate, second session", version: "1" } });
     if (initialized.error) {
       row("12b a fresh agent session starts from the hub's head, not its last checkpoint", false, JSON.stringify(initialized.error).slice(0, 300));
       return;
     }
-    second.notify("notifications/initialized", {});
+    await second.notify("notifications/initialized", {});
     await second.call("artifact_open", { artifactId: documentId });
     const prepared = await second.call("action_prepare", { capabilityId, input });
-    const cursor = Number(prepared.structuredContent?.expectedRevision?.cursor ?? -1);
+    const cursor = Number(mcpJsonPathV1(prepared.structuredContent,["expectedRevision","cursor"]) ?? -1);
     row("12b a fresh agent session starts from the hub's head, not its last checkpoint", prepared.isError !== true && cursor >= firstCursor && firstCursor > 0, prepared.isError === true ? JSON.stringify(prepared.structuredContent).slice(0, 300) : `second session's first revision cursor ${cursor}, first session committed at cursor ${firstCursor}`);
     const handle = prepared.structuredContent?.preparedHandle as string | undefined;
     const before = await head();
     const invoked = handle ? await second.call("action_invoke", { preparedActionHandle: handle }) : undefined;
     const after = await head();
     row("12c the fresh session's edit lands on the hub as a new edit", invoked?.structuredContent?.status === "SUCCEEDED" && after === before + 1, `status=${invoked?.structuredContent?.status ?? "<no handle>"} hub head ${before}→${after}`);
-  } finally {
-    second.stop();
-  }
+  } finally {gateways.push({name:"second",diagnostics:second.stderrLines()});}
+  });
 }
-
-const credentialPath = join(mkdtempSync(join(serviceMcpTestArtifactRoot(), "semio-mcp-hub-agent-")), "agent-credential.json");
-writeFileSync(credentialPath, `${JSON.stringify({ schema: "semio.hub.agent-credential/v1", hubOrigin: ORIGIN, spaceId, audience: "edit", token: delegation.json.token })}\n`, { mode: 0o600 });
-chmodSync(credentialPath, 0o600);
-row("4 the credential file is written at mode 0600", true, credentialPath);
 
 const declared = mcpServerEntries(repoRoot).semio;
 const scopes = declared?.args.includes("--scopes") ? String(declared.args[declared.args.indexOf("--scopes") + 1]) : "workspace.read,artifact.write,inference.execute,ui.observe,ui.control";
 // 🚧️ `.mcp.json`'s `semio` entry binds a `--folder`, and `--folder`/`--hub` are mutually
 // exclusive, so a hub-bound agent is a DIFFERENT argv, not an extension of that one. This gate
 // spawns the identical binary the wrapper execs, with the hub selector in its place.
-const entry = { command: requireMcpBinary(repoRoot), args: ["stdio", "--scopes", scopes] };
-const session = new McpClientSession(entry, ["--hub", ORIGIN, "--space", spaceId, "--credential-file", credentialPath, "--no-bridge"], repoRoot);
-gateways.push({ name: "first", session });
+await withDelegatedMcpClientSessionV1(original,phaseControl,{hubOrigin:ORIGIN,spaceId,token:String(delegation.json.token),scopes},async session=>{
+row("4 the credential file is written at mode 0600",true,"owned Diagnostics credential retained through session");
 try {
-  const initialized = await session.request("initialize", { protocolVersion: "2025-06-18", capabilities: { roots: { listChanged: true }, sampling: {}, elicitation: {} }, clientInfo: { name: "semio-hub-agent-participant", title: "hub agent participant gate", version: "1" } });
-  row("5 the gateway serves over the delegated hub session", !initialized.error, initialized.error ? JSON.stringify(initialized.error).slice(0, 300) : `server=${initialized.result?.serverInfo?.name}@${initialized.result?.serverInfo?.version}`);
-  if (initialized.error) finish();
-  session.notify("notifications/initialized", {});
+  const initialized = await session.request("initialize", { protocolVersion: "2025-06-18", capabilities: { roots: { listChanged: false } }, clientInfo: { name: "semio-hub-agent-participant", title: "hub agent participant gate", version: "1" } });
+  row("5 the gateway serves over the delegated hub session", !initialized.error, initialized.error ? JSON.stringify(initialized.error).slice(0, 300) : `server=${mcpJsonPathV1(initialized.result,["serverInfo","name"])}@${mcpJsonPathV1(initialized.result,["serverInfo","version"])}`);
+  if (initialized.error) return;
+  await session.notify("notifications/initialized", {});
 
   const context = await session.call("context_resolve", {});
   const principal = String(context.structuredContent?.principal ?? "");
   row("6 context_resolve names the agent's own principal", principal === `agent:${delegationId}`, `principal=${principal} channel=${context.structuredContent?.channel}`);
 
   const listed = await session.request("resources/read", { uri: "semio://workspace/artifacts" });
-  const listedText = String((listed.result?.contents ?? [])[0]?.text ?? "");
+  const listedText = String(mcpJsonPathV1(listed.result,["contents",0,"text"]) ?? "");
   let parsed: any;
   try {
     parsed = JSON.parse(listedText);
@@ -220,10 +220,10 @@ try {
   }
   const documentId = String((parsed?.artifacts ?? [])[0]?.scope?.documentId ?? "");
   row("7 the agent sees the space's own documents", documentId.length > 0, documentId.length > 0 ? `documentId=${documentId}` : `no document in ${listedText.slice(0, 240)} — this space holds none, or the binding is unauthorized`);
-  if (!documentId) finish();
+  if (!documentId) return;
 
   const opened = await session.call("artifact_open", { artifactId: documentId });
-  row("8 artifact_open of a HUB document answers", opened.isError !== true, opened.isError === true ? JSON.stringify(opened.structuredContent).slice(0, 300) : `kind=${opened.structuredContent?.kind} sizeBytes=${opened.structuredContent?.sizeBytes} link=${JSON.stringify(opened.structuredContent?.sessionDocument?.sync ?? null)}`);
+  row("8 artifact_open of a HUB document answers", opened.isError !== true, opened.isError === true ? JSON.stringify(opened.structuredContent).slice(0, 300) : `kind=${opened.structuredContent?.kind} sizeBytes=${opened.structuredContent?.sizeBytes} link=${JSON.stringify(mcpJsonPathV1(opened.structuredContent,["sessionDocument","sync"]) ?? null)}`);
 
   const snapshot = await session.call("artifact_snapshot", { artifactId: documentId });
   row("9 artifact_snapshot of a HUB document answers real bytes", snapshot.isError !== true && Number(snapshot.structuredContent?.packBytes ?? 0) > 0, snapshot.isError === true ? JSON.stringify(snapshot.structuredContent).slice(0, 300) : `packBytes=${snapshot.structuredContent?.packBytes} sprBytes=${snapshot.structuredContent?.sprBytes}`);
@@ -237,14 +237,14 @@ try {
 
   if (capabilityId) {
     const described = await session.call("capabilities_describe", { capabilityId });
-    const input = minimalInputForSchema(described.structuredContent?.inputSchema ?? described.structuredContent?.capability?.inputSchema);
+    const input = minimalInputForSchema(described.structuredContent?.inputSchema ?? mcpJsonPathV1(described.structuredContent,["capability","inputSchema"]));
     const prepared = await session.call("action_prepare", { capabilityId, input });
     row("11 action_prepare reaches a guest the HUB authorized", prepared.isError !== true, prepared.isError === true ? `${capabilityId} input=${JSON.stringify(input)}: ${JSON.stringify(prepared.structuredContent).slice(0, 300)}` : `${capabilityId} input=${JSON.stringify(input)} handle=${prepared.structuredContent?.preparedHandle}`);
     const handle = prepared.structuredContent?.preparedHandle as string | undefined;
     if (handle) {
       const invoked = await session.call("action_invoke", { preparedActionHandle: handle });
       row("12 action_invoke commits the agent's edit", invoked.isError !== true && invoked.structuredContent?.status === "SUCCEEDED", invoked.isError === true ? JSON.stringify(invoked.structuredContent).slice(0, 300) : `status=${invoked.structuredContent?.status}`);
-      await freshSessionContinuesFromTheHead(documentId, capabilityId, input, Number(invoked.structuredContent?.revisionAfter?.cursor ?? 0));
+      await freshSessionContinuesFromTheHead(documentId, capabilityId, input, Number(mcpJsonPathV1(invoked.structuredContent,["revisionAfter","cursor"]) ?? 0));
     } else {
       row("12 action_invoke commits the agent's edit", false, "action_prepare minted no handle");
     }
@@ -252,10 +252,10 @@ try {
     row("11 action_prepare reaches a guest the HUB authorized", false, "capabilities_search returned no mutation to dispatch");
     row("12 action_invoke commits the agent's edit", false, "no capability to prepare");
   }
-} finally {
-  session.stop();
-}
+} finally {gateways.push({name:"first",diagnostics:session.stderrLines()});}
+});
 
-const revoked = await hub("POST", `/auth/agent-delegations/${encodeURIComponent(delegationId)}/revoke`, { token });
-row("13 the human revokes the delegation", revoked.status === 204, `HTTP ${revoked.status}`);
+},async()=>{const revoked=await hub("POST", `/auth/agent-delegations/${encodeURIComponent(String(delegation.json.delegationId))}/revoke`, {token});row("13 the human revokes the delegation",revoked.status===204,`HTTP ${revoked.status}`);if(revoked.status!==204)throw Error("MCP participant delegation revocation refused: "+revoked.status);});
 finish();
+
+});

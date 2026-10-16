@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "metadata",
+    "commands",
+    "reads"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fault",
+          "pending",
+          "released",
+          "reject",
+          "initialState"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "accepted",
+              "observed",
+              "witnessed",
+              "detached",
+              "underlying",
+              "staged",
+              "published",
+              "attached",
+              "verified",
+              "settled",
+              "cancel-detached",
+              "undefined-detached",
+              "cleanup-attach",
+              "cleanup-observe",
+              "release-success",
+              "release-primary",
+              "mutable-options",
+              "descriptor-before-effect",
+              "inactive-association",
+              "inactive-underlying",
+              "inactive-attach",
+              "inactive-witness"
+            ]
+          },
+          "pending": {
+            "type": "boolean"
+          },
+          "released": {
+            "type": "boolean"
+          },
+          "reject": {
+            "type": "boolean"
+          },
+          "initialState": {
+            "enum": [
+              "mounted",
+              "inactive"
+            ]
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "file",
+          "symlink",
+          "sameDevice",
+          "links",
+          "mode",
+          "bytes",
+          "admit"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "file": {
+            "type": "boolean"
+          },
+          "symlink": {
+            "type": "boolean"
+          },
+          "sameDevice": {
+            "type": "boolean"
+          },
+          "links": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "integer"
+          },
+          "bytes": {
+            "type": "integer"
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "platform",
+          "initialState",
+          "fault",
+          "admit"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "darwin",
+              "linux"
+            ]
+          },
+          "initialState": {
+            "enum": [
+              "mounted",
+              "inactive"
+            ]
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "not-durable",
+              "no-witness",
+              "no-mapping",
+              "duplicate"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "reads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fault",
+          "admit",
+          "unresolved"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "short",
+              "growth",
+              "changed",
+              "close",
+              "undefined-close",
+              "frozen-close"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          },
+          "unresolved": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

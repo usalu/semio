@@ -1,5 +1,5 @@
 /** 🧾️ Cooperative MIME-qualified encoded bytes with private publication. */
-import type {RetainedCloneGrant,RetainedCloneProgress} from "../../../🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts";
+import type {RetainedCloneGrant,RetainedCloneProgress} from "@semio-tech/value-ts/retained-clone/contract";
 import {decodeBase64Quad} from "../../🔤️base64/🟦️.ts";
 export type BinarySourceInput={mime:string;data:string;minBytes:number;maxBytes:number;maxSourceBytes:number;maxWork:number};
 export type BinarySourceProgress={phase:"header"|"validate"|"decode"|"complete"|"transferred";sourceCompleted:number;sourceTotal:number;bytes:number;totalBytes:number;work:number;done:boolean};

@@ -33,12 +33,6 @@ pub use native_scalar::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonScalarBy
 mod native_tree;
 pub use native_tree::{ArtifactCanonicalDecimalI64, ArtifactCanonicalDecimalU64, ArtifactCanonicalHexWordArray, ArtifactCanonicalHexWordF32, ArtifactCanonicalHexWordList, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonTreeWireCursor, ArtifactCanonicalJsonTreeWireStep};
 
-#[cfg(test)]
-pub(crate) use semio_framework_trace_memory_testing as test_allocation;
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
-
 use semio_framework_value::{DslValue, FromValue, ValueError, ValueRefusalKind};
 pub use semio_framework_value::ToValue;
 
@@ -686,7 +680,7 @@ pub struct Lexer<'a> {
 
 #[derive(Clone,Copy)]
 struct NumberScan {
-    start:usize,position:usize,state:u8,negative:bool,floating:bool,unsigned:Option<u64>,
+    pub start:usize,pub position:usize,pub state:u8,negative:bool,floating:bool,unsigned:Option<u64>,
     integer_digits:i64,leading:i64,significant:usize,significant_start:usize,significant_end:usize,sticky:bool,
     exponent:i64,exponent_negative:bool,
 }
@@ -891,11 +885,11 @@ fn normal_remaining(grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Re
 
 type JsonCandidates<T> = semio_framework_value::list::PagedList<T,{usize::MAX}>;
 struct JsonFrame<V:JsonParsedValue> {
-    object: bool, state: u8, item_count:u64, values: JsonCandidates<V>, entries: JsonCandidates<(String,V)>,
-    key: Option<String>, key_offset: usize, probe: usize, compare: usize, duplicate: Option<usize>,
-    array:Vec<V>, members:Vec<(String,V)>, admitted:bool, reverse:usize,
+    pub object: bool, pub state: u8, item_count:u64, pub values: JsonCandidates<V>, pub entries: JsonCandidates<(String,V)>,
+    pub key: Option<String>, key_offset: usize, probe: usize, pub compare: usize, duplicate: Option<usize>,
+    pub array:Vec<V>, members:Vec<(String,V)>, admitted:bool, reverse:usize,
 }
-struct JsonStringScan {start:usize,position:usize,bytes:usize,output:Vec<u8>,pending_scalar:u32,pending_width:u8,pending_index:u8,writing:bool,admitted:bool}
+struct JsonStringScan {pub start:usize,pub position:usize,pub bytes:usize,pub output:Vec<u8>,pending_scalar:u32,pending_width:u8,pending_index:u8,writing:bool,admitted:bool}
 impl JsonStringScan{
     fn next_byte(&self)->u8{let scalar=self.pending_scalar;let width=self.pending_width;let index=self.pending_index;if width==1{return scalar as u8}if index==0{return match width{2=>0xc0|(scalar>>6)as u8,3=>0xe0|(scalar>>12)as u8,_=>0xf0|(scalar>>18)as u8}}0x80|((scalar>>(6*u32::from(width-index-1)))&63)as u8}
     fn write_byte(&mut self,receipt:&mut RetainedCloneProgress)->Result<(),JsonError>{if self.output.len()>=self.bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON string changed after admission").into())}self.output.push(self.next_byte());self.pending_index+=1;receipt.copied_bytes=1;Ok(())}
@@ -919,8 +913,8 @@ pub type JsonParseCursor=JsonGrammarCursor<Value>;
 
 /// 🌳️ One retained grammar moves admitted semantic cells directly into its declared first-party output.
 pub struct JsonGrammarCursor<V:JsonParsedValue> {
-    position: usize, validated_position:usize, limits:JsonReadLimits, policy: JsonMemberPolicy, frames: Vec<JsonFrame<V>>, lexeme: Option<JsonLexeme>,
-    pending: Option<V>, result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, complete: bool, normal_step_progress:RetainedCloneProgress,
+    #[doc(hidden)] pub position: usize, validated_position:usize, #[doc(hidden)] pub limits:JsonReadLimits, #[doc(hidden)] pub policy: JsonMemberPolicy, #[doc(hidden)] pub frames: Vec<JsonFrame<V>>, #[doc(hidden)] pub lexeme: Option<JsonLexeme>,
+    #[doc(hidden)] pub pending: Option<V>, #[doc(hidden)] pub result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, complete: bool, normal_step_progress:RetainedCloneProgress,
 }
 impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     /// 🌱️ Starts parsing without copying, scanning, or allocating for the source.
@@ -1126,7 +1120,7 @@ impl<V:JsonParsedValue> semio_framework_value::retirement::RetireOwned for JsonG
     fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }
 
-struct JsonMemberOrder {phase:u8,build:usize,end:usize,root:usize,child:usize,offset:usize,continuation:u8}
+struct JsonMemberOrder {pub phase:u8,build:usize,end:usize,root:usize,child:usize,offset:usize,continuation:u8}
 impl JsonMemberOrder {
     fn new(length:usize)->Self {Self {phase:0,build:length/2,end:length,root:0,child:0,offset:0,continuation:1}}
     fn compare(&mut self,entries:&[(String,DslValue)],left:usize,right:usize)->Option<std::cmp::Ordering> {let left=entries[left].0.as_bytes().get(self.offset);let right=entries[right].0.as_bytes().get(self.offset);if left!=right || left.is_none() {self.offset=0;Some(left.cmp(&right))}else {self.offset+=1;None}}
@@ -1142,9 +1136,9 @@ impl JsonMemberOrder {
         false
     }
 }
-struct JsonProjectionIterator<T> {values:std::vec::IntoIter<T>,allocation:usize}
+struct JsonProjectionIterator<T> {pub values:std::vec::IntoIter<T>,pub allocation:usize}
 impl<T> JsonProjectionIterator<T> {fn new(values:Vec<T>)->Self {let allocation=values.capacity().saturating_mul(size_of::<T>());Self {values:values.into_iter(),allocation}}fn next(&mut self)->Option<T>{self.values.next()}fn len(&self)->usize{self.values.len()}}
-struct JsonProjectionIteratorRetirement<T:semio_framework_value::retirement::RetireOwned> {values:std::mem::ManuallyDrop<std::vec::IntoIter<T>>,remaining:usize,released:bool}
+struct JsonProjectionIteratorRetirement<T:semio_framework_value::retirement::RetireOwned> {pub values:std::mem::ManuallyDrop<std::vec::IntoIter<T>>,pub remaining:usize,pub released:bool}
 impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetirementCursor for JsonProjectionIteratorRetirement<T> {
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
@@ -1164,8 +1158,8 @@ impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::re
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<JsonProjectionIteratorRetirement<T>>())}
     fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
 }
-struct JsonProjectionFrame {values:JsonProjectionIterator<Value>,entries:JsonProjectionIterator<(String,Value)>,array:Vec<DslValue>,object:Vec<(String,DslValue)>,key:Option<String>,is_object:bool,order:Option<JsonMemberOrder>,admitted:bool}
-struct JsonCompletedFrameRetirement {frame:std::mem::ManuallyDrop<JsonProjectionFrame>,phase:u8}
+struct JsonProjectionFrame {pub values:JsonProjectionIterator<Value>,pub entries:JsonProjectionIterator<(String,Value)>,pub array:Vec<DslValue>,pub object:Vec<(String,DslValue)>,pub key:Option<String>,is_object:bool,order:Option<JsonMemberOrder>,admitted:bool}
+struct JsonCompletedFrameRetirement {pub frame:std::mem::ManuallyDrop<JsonProjectionFrame>,pub phase:u8}
 impl JsonCompletedFrameRetirement {
     fn new(frame:JsonProjectionFrame)->Result<Self,(ValueError,JsonProjectionFrame)>{if frame.values.len()!=0||frame.entries.len()!=0||!frame.array.is_empty()||!frame.object.is_empty()||frame.key.is_some(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"completed JSON input frame still owns an untransferred value"),frame));}Ok(Self{frame:std::mem::ManuallyDrop::new(frame),phase:0})}
     fn release_demand(&self)->usize{match self.phase{0=>self.frame.values.allocation,1=>self.frame.entries.allocation,2=>self.frame.array.capacity()*size_of::<DslValue>(),3=>self.frame.object.capacity()*size_of::<(String,DslValue)>(),_=>0}}
@@ -1184,7 +1178,7 @@ impl semio_framework_value::retirement::RetireOwned for JsonCompletedFrameRetire
     fn controlled_retirement_supported()->bool{true}
 }
 /// 🎒️ Moves a parsed JSON candidate into admitted canonical values without payload clones.
-pub struct JsonValueProjection {pending:Option<Value>,output:Option<DslValue>,frames:Vec<JsonProjectionFrame>,ordered:bool,retirement:Option<JsonCompletedFrameRetirement>,normal_step_progress:RetainedCloneProgress}
+pub struct JsonValueProjection {#[doc(hidden)] pub pending:Option<Value>,#[doc(hidden)] pub output:Option<DslValue>,#[doc(hidden)] pub frames:Vec<JsonProjectionFrame>,ordered:bool,#[doc(hidden)] pub retirement:Option<JsonCompletedFrameRetirement>,normal_step_progress:RetainedCloneProgress}
 impl JsonValueProjection {
     /// 🌱️ Takes ownership of the existing parsed candidate.
     pub fn new(value:Value)->Self {Self {pending:Some(value),output:None,frames:Vec::new(),ordered:false,retirement:None,normal_step_progress:Default::default()}}
@@ -1196,7 +1190,6 @@ impl JsonValueProjection {
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
     /// 📏️ Reads actual admitted output birth and original input backing release independently.
     pub fn normal_step_demands(&self)->Result<RetirementDemand,ValueError>{
-        #[cfg(test)] use semio_framework_value::retirement::RetirementCursor;
         if let Some(retirement)=&self.retirement{return Ok(RetirementDemand{copy_bytes:if semio_framework_value::retirement::RetirementCursor::terminal_is_empty(retirement){size_of::<u8>()}else{0},release_bytes:retirement.release_demand(),depth:1,..Default::default()});}
         let mut demand=RetirementDemand{depth:self.frames.len()+1,..Default::default()};
         if let Some(frame)=self.frames.last().filter(|frame|!frame.admitted){demand.capacity_bytes=if frame.is_object{frame.entries.len()*size_of::<(String,DslValue)>()}else{frame.values.len()*size_of::<DslValue>()};}
@@ -1408,7 +1401,7 @@ fn write_float(value: f64, out: &mut String) {
     write_float_to(value, out).expect("String accepts formatted JSON floats");
 }
 
-struct ScalarText { bytes: [u8; 128], length: usize }
+struct ScalarText { pub bytes: [u8; 128], pub length: usize }
 impl ScalarText {
     fn new() -> Self { Self { bytes: [0; 128], length: 0 } }
     fn text(&self) -> &str { std::str::from_utf8(&self.bytes[..self.length]).expect("formatted scalar UTF-8") }
@@ -1523,7 +1516,7 @@ pub fn format_f64(value: f64) -> String {
 /// small first-party big unsigned integer (no external bignum crate).
 mod float_format {
     #[derive(Clone, Debug, PartialEq, Eq)]
-    struct Limbs { values: [u32; 80], length: usize }
+    struct Limbs { pub values: [u32; 80], pub length: usize }
     impl Limbs {
         fn zeroes(length: usize) -> Self { assert!(length <= 80); Self { values: [0; 80], length } }
         fn push(&mut self, value: u32) { assert!(self.length < self.values.len()); self.values[self.length] = value; self.length += 1; }
@@ -1531,7 +1524,7 @@ mod float_format {
     }
     impl std::ops::Deref for Limbs { type Target = [u32]; fn deref(&self) -> &[u32] { &self.values[..self.length] } }
     impl std::ops::DerefMut for Limbs { fn deref_mut(&mut self) -> &mut [u32] { &mut self.values[..self.length] } }
-    pub(super) struct Digits { values: [u8; 32], length: usize }
+    pub(super) struct Digits { pub values: [u8; 32], pub length: usize }
     impl Digits {
         fn new() -> Self { Self { values: [0; 32], length: 0 } }
         fn push(&mut self, value: u8) { assert!(self.length < self.values.len()); self.values[self.length] = value; self.length += 1; }
@@ -1849,7 +1842,7 @@ pub fn to_json_string_controlled<T: ToValue>(value: &T, control: &mut semio_fram
 }
 
 #[derive(Clone, Copy)]
-struct JsonWriteFrame { state: u8, index: usize, position: usize }
+struct JsonWriteFrame { pub state: u8, index: usize, pub position: usize }
 
 enum JsonNativeNode<'a> { Value(&'a DslValue), Byte(u8) }
 
@@ -1888,7 +1881,7 @@ pub use borrowed_source_sink::write_json_source_into;
 
 /// 🧵️ Retains physical writer state while borrowing the unchanged semantic owner per grant.
 pub struct JsonBorrowedWriteCursor {
-    frames: Vec<JsonWriteFrame>, path: Vec<usize>, writer: ControlledWriter, phase: u8, normal_step_progress:RetainedCloneProgress,
+    #[doc(hidden)] pub frames: Vec<JsonWriteFrame>, #[doc(hidden)] pub path: Vec<usize>, writer: ControlledWriter, #[doc(hidden)] pub phase: u8, normal_step_progress:RetainedCloneProgress,
 }
 
 impl JsonBorrowedWriteCursor {
@@ -2013,7 +2006,7 @@ impl JsonBorrowedWriteCursor {
 }
 
 /// 🌳️ Owns its semantic source and the canonical borrowed writer state.
-pub struct JsonWriteCursor<S:JsonWriteSource>{source:Option<S>,state:JsonBorrowedWriteCursor}
+pub struct JsonWriteCursor<S:JsonWriteSource>{#[doc(hidden)] pub source:Option<S>,#[doc(hidden)] pub state:JsonBorrowedWriteCursor}
 impl<S:JsonWriteSource> JsonWriteCursor<S>{
     pub fn new(value:S)->Self{Self{source:Some(value),state:JsonBorrowedWriteCursor::new()}}
     pub fn progress(&self)->(usize,bool){self.state.progress()}
@@ -2042,7 +2035,7 @@ impl<S:JsonWriteSource+semio_framework_value::retirement::RetireOwned+'static> s
     fn controlled_retirement_supported()->bool{S::controlled_retirement_supported()}
 }
 
-struct ControlledWriter { bytes: usize, output: Option<String> }
+struct ControlledWriter { pub bytes: usize, pub output: Option<String> }
 impl ControlledWriter {
     fn character(&mut self, character: char, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), ValueError> {
         match character {
@@ -2077,7 +2070,7 @@ impl ControlledWriter {
     }
 }
 
-struct ControlledReader<'text, 'control, 'progress> { lexer: Lexer<'text>, policy: JsonMemberPolicy, control: &'control mut semio_framework_value::NativeDecodeControl<'progress> }
+struct ControlledReader<'text, 'control, 'progress> { lexer: Lexer<'text>, pub policy: JsonMemberPolicy, pub control: &'control mut semio_framework_value::NativeDecodeControl<'progress> }
 impl ControlledReader<'_, '_, '_> {
     fn error(&self) -> ValueError { JsonError::UnexpectedByte { found: self.lexer.peek_byte().unwrap_or(0), offset: self.lexer.pos }.into_value_error() }
     fn advance(&mut self, count: usize) -> Result<(), ValueError> { self.lexer.pos += count; self.control.advance(count) }
@@ -2214,49 +2207,9 @@ macro_rules! json_object_internal {
 }
 //#endregion 🔖️Macro
 
-#[cfg(test)]
-//#region 🔖️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-#[cfg(test)]
-#[path = "🧪️tests/🧩️members/🦀️.rs"]
-mod member_tests;
-//#endregion 🔖️Tests
-
-
-#[cfg(test)]
-#[path = "🧪️tests/⚠️refusal/🦀️.rs"]
-mod refusal_tests;
-
-#[cfg(test)]
-#[path = "📥️decode/🛂️policy/🧪️tests/🦀️.rs"]
-mod read_policy_tests;
-
-#[cfg(test)]
-#[path="📥️decode/🧾️receipt/🧪️tests/🦀️.rs"]
-mod normal_refusal_receipt_tests;
-#[cfg(test)]
-#[path="📥️decode/🔣️string/📦️bytes/🧪️tests/🦀️.rs"]
-mod original_string_byte_tests;
-
-#[cfg(test)]
-#[test]
-fn owned_json_member_transfer_keeps_independent_key_value_and_backing_custody() {
-    let mut key = String::with_capacity(128);
-    key.push_str("second");
-    let key_pointer = key.as_ptr();
-    let mut object = Object::new();
-    object.insert("first", Value::Bool(true));
-    object.insert(key, Value::String("payload".into()));
-    let independent: serde_json::Value = serde_json::from_str(r#"{"first":true,"second":"payload"}"#).expect("independent object");
-    assert_eq!(object.last_member().expect("member").0.capacity(), 128);
-    let backing = object.member_storage_bytes();
-    let (key, value) = object.pop_member().expect("owned member");
-    assert_eq!(key.as_ptr(), key_pointer);
-    assert_eq!(value.as_str(), independent[&key].as_str());
-    assert_eq!(object.member_storage_bytes(), backing);
-    assert_eq!(object.pop_member().expect("first member").1.as_bool(), independent["first"].as_bool());
-    assert!(object.last_member().is_none());
-    assert_eq!(object.member_storage_bytes(), backing);
-    eprintln!("[DEBUG] PackJSON owned member transfer keeps actual key pointer, independent value and terminal vector backing");
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub use super::native_tree::testkit as tree;
+    pub type JsonLexeme = super::JsonLexeme;
 }

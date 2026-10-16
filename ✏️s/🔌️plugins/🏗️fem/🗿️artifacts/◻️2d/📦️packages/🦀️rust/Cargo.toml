@@ -31,3 +31,4 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-value = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

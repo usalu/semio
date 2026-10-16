@@ -15,12 +15,12 @@ export async function proveArtifactControlRefinementV1(original: import("../../.
   const vite=await import("../../../../../🌐️vite/🟦️.ts"),authority=(await import("../../../../📋️native-orchestration/📥️invocation/🟦️.ts")).readNativeCallerAuthorityV1(original.capabilities),mode=authority.original.buildMode==="prototype"?"release":"prototype",root=authority.repositoryRoot;
   await expect(vite.buildViteArtifact({control:base,invocation:original,root,workspace:root,config:root+"/no-config",owner:"fixture:wrong-intent",mode})).rejects.toThrow("Original mode");
   await expect(vite.serveVite({control:base,invocation:original,root,config:root+"/no-config",host:"127.0.0.1",port:0,signal:original.control.signal,mode,ready:()=>{throw Error("Wrong intent reached listener");}})).rejects.toThrow("Original mode");
-  await expect(vite.serveViteCommandV1({control:base,invocation:original,root,config:root+"/no-config",host:"127.0.0.1",port:5000,signal:original.control.signal,mode,environment:{}})).rejects.toThrow("Original mode");
+  await expect(vite.serveViteCommandV1({runtimeChannels:[],control:base,invocation:original,root,config:root+"/no-config",host:"127.0.0.1",port:5000,signal:original.control.signal,mode,environment:{}})).rejects.toThrow("Original mode");
   for(const forged of[{...base},undefined]){
     const control=forged as typeof base,mode=authority.original.buildMode;
     await expect(vite.buildViteArtifact({control,invocation:original,root,workspace:root,config:root+"/must-not-open",owner:"fixture:forged-control",mode})).rejects.toThrow("Original resource control issuance");
     await expect(vite.serveVite({control,invocation:original,root,config:root+"/must-not-open",host:"127.0.0.1",port:0,signal:original.control.signal,mode,ready:()=>{throw Error("Forged control reached listener");}})).rejects.toThrow("Original resource control issuance");
-    await expect(vite.serveViteCommandV1({control,invocation:original,root,config:root+"/must-not-open",host:"127.0.0.1",port:5000,signal:original.control.signal,mode,environment:{}})).rejects.toThrow("Original resource control issuance");
+    await expect(vite.serveViteCommandV1({runtimeChannels:[],control,invocation:original,root,config:root+"/must-not-open",host:"127.0.0.1",port:5000,signal:original.control.signal,mode,environment:{}})).rejects.toThrow("Original resource control issuance");
   }
   console.log("[DEBUG] Actual Original rejects copied and absent controls at all three Vite entries before effects");
   console.log("[DEBUG] Actual Original rejects all three foreign-intent Vite entries before any cache/config/listener effect");

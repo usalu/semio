@@ -3,7 +3,9 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from "node:os";
 import { dirname, join, posix, resolve } from "node:path";
 import Parser from "web-tree-sitter";
-import { type MutationLabelSite, type MutationLeafEditability, mutationEditabilityReport, mutationHandwrittenReason, mutationLabelReport, mutationLeafCrateManifest, mutationLeafUnpublishedReferences, mutationManifestPathDependencies, mutationSchemaDocumentIndex, mutationSchemaSearchRoot, mutationSchemaSearchRoots, rustMutationLabelSites, wordOnlyFloatPointers, wordOnlyFloatTwinLines, composedLeafChildReads, composedSnapshot } from "../../🧬️schema/📋️orchestration/🟦️.ts";
+import { type MutationLabelSite, mutationLabelReport, rustMutationLabelSites } from "../../🧬️schema/📋️orchestration/🏷️mutation-labels/🟦️.ts";
+import { type MutationLeafEditability, mutationEditabilityReport, mutationHandwrittenReason, mutationLeafCrateManifest, mutationLeafUnpublishedReferences, mutationManifestPathDependencies, mutationSchemaDocumentIndex, mutationSchemaSearchRoot, mutationSchemaSearchRoots, composedLeafChildReads, composedSnapshot } from "../../🧬️schema/📋️orchestration/✏️mutation-editability/🟦️.ts";
+import { wordOnlyFloatPointers, wordOnlyFloatTwinLines } from "../../🧬️schema/📋️orchestration/🎛️mutation-input-ui/🟦️.ts";
 
 type Site = Pick<MutationLabelSite, "trait" | "implementor" | "verdict" | "texts">;
 type LabelCase = { readonly id: string; readonly rust: string; readonly sites: readonly Site[] };

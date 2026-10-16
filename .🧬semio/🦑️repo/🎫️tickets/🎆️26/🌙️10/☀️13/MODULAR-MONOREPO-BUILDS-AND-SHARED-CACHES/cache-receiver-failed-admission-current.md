@@ -1,0 +1,34 @@
+# Compiler Cache Receiver Failed Admission Source Correction
+
+The actual Core cache receiver ledger previously recorded an accepted rejection and settled its counter while leaving admission open. The new schema-first four-case test genuinely reproduced a late read callback running after an earlier read failed (red1 terminal1, expected0 effects versus actual1). This is the pure finite ledger consumed by the real cache volume; it creates no Native/control authority.
+
+The ledger now applies its already authored close transition immediately upon accepted rejection, before settling that work. It refuses both later read and replacement callbacks. It still drains all previously accepted siblings, keeps same-owner close refusal, and preserves ordered Error or undefined failures. The surrounding actual Original independently enforces its own admission; no body clock, control, Native port, cache capacity or production effect was changed.
+
+Neutral cases cover read/replacement times Error/undefined. Ajv independently validates the closed corpus. SQLite independently folds failure-before-read/replacement event order through a correlated event query and derives rejection/effect counts; the actual sibling completion count also agrees with its selected kind. The actual received parent runs ordinary finite DATA tests only, with no fake Native provider.
+
+Final green5 prototype/release BOTH terminal0: new1/33 plus existing Core cache11/150 =12tests/183assertions each, isolated into two real Bun files. Expanded narrow strict/noUncheckedIndexedAccess types5 BOTH terminal0. All handles collected. Existing policy, slot pressure, own-frame closure, detached Error/undefined, complete descriptor parsing and actual Python/SQLite descriptor oracle laws remain green.
+
+Earlier green2/3 used constant SQL expected gate outcomes; green3 already passed12/183 and strict0. Replacing that with an independent event query exposed a test SQL omission in green4: missing FROM attempts, terminal1 Source while existing11/150 and strict BOTH remained0. The query was corrected; final green5 is the qualifying epoch. Retained failures are not hidden as successful runs.
+
+No Native cache image/compiler/OS teardown or all-core/shared runtime qualification is claimed. Whole-cache retirement, actual initial Rust capacity and default publication remain open. The added wrapper selector is internal to the existing ticket validation command; no new human launch command was introduced.
+
+## Exact Source And Evidence
+
+`🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/📨️receiver/🟦️.ts` SHA-256 `70c8368e2ee9792a36ad41942c62b7cc8e8d6b67f9dbc2d9b5b5bb9e21a0a9ba`, UTF16 absolute path units 112, bytes 2275  
+`🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/📨️receiver/🧬️schema/🔣️.json` SHA-256 `d4c9669bbe53c3da65e6d356c3696566bf78bfb240ff03f4266f74146a1a36bb`, UTF16 absolute path units 124, bytes 781  
+`🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/📨️receiver/🧪️tests/🔣️.json` SHA-256 `0e8f3397685c77ca44f54cd08314c24b8b3b6993cd4997e0dd6cb577aa0a491f`, UTF16 absolute path units 123, bytes 542  
+`🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/📨️receiver/🧪️tests/🟦️.ts` SHA-256 `557eac64f2be9580a1e30377a494b717c7aa1c90c8d642c1ea276e988ca020c5`, UTF16 absolute path units 121, bytes 2846  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/typescript-artifact/📜️script.ts` SHA-256 `f3f171d37ef90cdaa0aed0dcaf7809fdc47e9e9ce19c31e5694c71c62afbfacb`, UTF16 absolute path units 147, bytes 61731  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-red1-prototype.log` SHA-256 `e6cbca7e3e7cbea2eb45f8e9370f2673d97b3cbc9588082b29318c86fbd2edcd`, UTF16 absolute path units 171, bytes 6963  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-green3-prototype.log` SHA-256 `342b6c34490be6058d3d34b7a450c8e5e94b51fb35e898997ebcc35dc5a05f49`, UTF16 absolute path units 173, bytes 2189  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-types3-prototype.log` SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, UTF16 absolute path units 173, bytes 0  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-green3-release.log` SHA-256 `9b98528ede43dc476a6ace4a493dd42b6bd3bb0d6c7b9331ff0a7ac8e228c677`, UTF16 absolute path units 171, bytes 2189  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-types3-release.log` SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, UTF16 absolute path units 171, bytes 0  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-green4-prototype.log` SHA-256 `58633cf3c22ac60124f7429f6e3a4671e1aef34abc8897197f99f7df2e737c6c`, UTF16 absolute path units 173, bytes 8725  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-types4-prototype.log` SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, UTF16 absolute path units 173, bytes 0  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-green4-release.log` SHA-256 `6b97d72aa55151c9b382873455fd92ea2a293e5042f085fbb13900c137af36c4`, UTF16 absolute path units 171, bytes 8725  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-types4-release.log` SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, UTF16 absolute path units 171, bytes 0  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-green5-prototype.log` SHA-256 `acc6043d916f3ae86bf4842067f1e023bbe1353f8d5e8fce0b4da64a0c19d06c`, UTF16 absolute path units 173, bytes 2188  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-types5-prototype.log` SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, UTF16 absolute path units 173, bytes 0  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-green5-release.log` SHA-256 `994543f61f5611cbd5f2a81562970917e9e8f4b6c56cf7a2983decf0bf6d91ec`, UTF16 absolute path units 171, bytes 2189  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/cache-receiver-admission-types5-release.log` SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, UTF16 absolute path units 171, bytes 0  

@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "complete",
+      "change": "none",
+      "value": null,
+      "accepted": true
+    },
+    {
+      "id": "unclosed",
+      "change": "closed",
+      "value": false,
+      "accepted": false
+    },
+    {
+      "id": "sparse",
+      "change": "allocation",
+      "value": 4096,
+      "accepted": false
+    },
+    {
+      "id": "oversized",
+      "change": "allocation",
+      "value": 34603009,
+      "accepted": false
+    },
+    {
+      "id": "short",
+      "change": "eof",
+      "value": 33554432,
+      "accepted": false
+    },
+    {
+      "id": "hardlink",
+      "change": "links",
+      "value": 2,
+      "accepted": false
+    },
+    {
+      "id": "sparse-attribute",
+      "change": "attributes",
+      "value": 512,
+      "accepted": false
+    },
+    {
+      "id": "compressed",
+      "change": "attributes",
+      "value": 2048,
+      "accepted": false
+    },
+    {
+      "id": "encrypted",
+      "change": "attributes",
+      "value": 16384,
+      "accepted": false
+    },
+    {
+      "id": "reparse",
+      "change": "attributes",
+      "value": 1024,
+      "accepted": false
+    },
+    {
+      "id": "directory",
+      "change": "attributes",
+      "value": 16,
+      "accepted": false
+    },
+    {
+      "id": "index-replaced",
+      "change": "index",
+      "value": "9",
+      "accepted": false
+    },
+    {
+      "id": "id-replaced",
+      "change": "fileId",
+      "value": "ffffffffffffffffffffffffffffffff",
+      "accepted": false
+    },
+    {
+      "id": "volume-replaced",
+      "change": "volume",
+      "value": "9",
+      "accepted": false
+    },
+    {
+      "id": "short-writes",
+      "change": "written",
+      "value": 33554432,
+      "accepted": false
+    },
+    {
+      "id": "wrong-footer",
+      "change": "sha",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000",
+      "accepted": false
+    },
+    {
+      "id": "foreign",
+      "change": "extra",
+      "value": true,
+      "accepted": false
+    },
+    {
+      "id": "offline",
+      "change": "attributes",
+      "value": 4096,
+      "accepted": false
+    },
+    {
+      "id": "unknown-attribute",
+      "change": "attributes",
+      "value": 2147483648,
+      "accepted": false
+    },
+    {
+      "id": "full-volume-id-replaced",
+      "change": "volumeId",
+      "value": "9",
+      "accepted": false
+    }
+  ],
+  "faults": [
+    "success",
+    "missing-receipt",
+    "partial-output",
+    "short-footer",
+    "body-undefined",
+    "body-frozen",
+    "close-fault",
+    "undefined-and-close",
+    "frozen-and-close",
+    "swap-after-close"
+  ]
+}

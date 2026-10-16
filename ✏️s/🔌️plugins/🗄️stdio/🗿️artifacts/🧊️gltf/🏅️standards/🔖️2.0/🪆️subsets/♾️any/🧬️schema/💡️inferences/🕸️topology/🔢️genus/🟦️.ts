@@ -7,7 +7,7 @@ export const gltfGenusInference = {
 } as const;
 export type GltfGenusInference = typeof gltfGenusInference;
 
-import { exact, unavailable, type GltfTsGeometryContext, type GltfTsMeasure } from '../../🔨️geometry-core/🟦️.ts';
+import { exact, unavailable, type GltfTsGeometryContext, type GltfTsMeasure } from '../../🔨️geometry-kernel/🟦️.ts';
 
 export const inferGltfGenus = (context: GltfTsGeometryContext): GltfTsMeasure<number> => {
   if (!context.valid) return unavailable(context, 'unitless');

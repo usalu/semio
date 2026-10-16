@@ -48,18 +48,19 @@ fn refuses_every_non_canonical_encoding_of_a_valid_receipt() {
 }
 
 #[test]
-fn binds_only_shipped_bytes_of_the_named_package_and_descriptor() {
+fn binds_only_the_selected_profile_package_and_descriptor() {
     let (_, _, shipped) = rows().into_iter().find(|(id, _, _)| id == "shipped-release").expect("shipped-release row");
     let (_, _, iterate) = rows().into_iter().find(|(id, _, _)| id == "local-iterate").expect("local-iterate row");
     let shipped: ComponentReceiptV1 = serde_json::from_value(shipped).expect("shipped receipt");
     let iterate: ComponentReceiptV1 = serde_json::from_value(iterate).expect("iterate receipt");
     let (wasm, descriptor) = ("1".repeat(64), "2".repeat(64));
-    assert!(shipped.binds("note", "semio:note", &wasm, &descriptor).is_ok());
-    assert!(shipped.binds("draw", "semio:note", &wasm, &descriptor).is_err());
-    assert!(shipped.binds("note", "semio:draw", &wasm, &descriptor).is_err());
-    assert!(shipped.binds("note", "semio:note", &"3".repeat(64), &descriptor).is_err());
-    assert!(shipped.binds("note", "semio:note", &wasm, &"3".repeat(64)).is_err());
-    assert!(iterate.binds("note", "semio:note", &wasm, &descriptor).is_err());
+    assert!(shipped.binds(ComponentProfileV1::Release, "note", "semio:note", &wasm, &descriptor).is_ok());
+    assert!(shipped.binds(ComponentProfileV1::Release, "draw", "semio:note", &wasm, &descriptor).is_err());
+    assert!(shipped.binds(ComponentProfileV1::Release, "note", "semio:draw", &wasm, &descriptor).is_err());
+    assert!(shipped.binds(ComponentProfileV1::Release, "note", "semio:note", &"3".repeat(64), &descriptor).is_err());
+    assert!(shipped.binds(ComponentProfileV1::Release, "note", "semio:note", &wasm, &"3".repeat(64)).is_err());
+    assert!(iterate.binds(ComponentProfileV1::Release, "note", "semio:note", &wasm, &descriptor).is_err());
+    assert!(iterate.binds(ComponentProfileV1::Prototype, "note", "semio:note", &wasm, &descriptor).is_ok());
 }
 
 #[test]
@@ -82,5 +83,26 @@ fn admits_two_intent_corpus_with_exact_size_and_shipping() {
         let valid = profile.as_ref().is_ok_and(|profile| (8..=profile.maximum_bytes()).contains(&row["bytes"].as_u64().expect("bytes")));
         assert_eq!(valid, row["valid"].as_bool().expect("valid"));
         assert_eq!(valid && profile.is_ok_and(|profile| profile.shipped()), row["shipped"].as_bool().expect("shipped"));
+    }
+}
+
+#[test]
+fn binds_the_shared_explicit_profile_and_content_corpus() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🔗️binding/🔣️.json")).expect("binding corpus");
+    let (_, _, base) = rows().into_iter().find(|(id, _, _)| id == "shipped-release").expect("canonical receipt");
+    for row in corpus["cases"].as_array().expect("binding cases") {
+        let mut receipt: ComponentReceiptV1 = serde_json::from_value(base.clone()).expect("valid receipt");
+        receipt.profile = serde_json::from_value(row["receipt"].clone()).expect("receipt profile");
+        let profile: ComponentProfileV1 = serde_json::from_value(row["expected"].clone()).expect("selected profile");
+        let (mut plugin, mut package, mut wasm, mut descriptor) = (receipt.plugin_id.clone(), receipt.package_id.clone(), receipt.wasm_sha256.clone(), receipt.semantic_descriptor_sha256.clone());
+        match row["changed"].as_str().expect("changed binding field") {
+            "none" => (),
+            "pluginId" => plugin.push_str("-different"),
+            "packageId" => package.push_str("-different"),
+            "wasmSha256" => wasm = "ff".repeat(32),
+            "semanticDescriptorSha256" => descriptor = "ff".repeat(32),
+            _ => panic!("closed binding field required"),
+        }
+        assert_eq!(receipt.binds(profile, &plugin, &package, &wasm, &descriptor).is_ok(), row["accept"].as_bool().expect("binding outcome"), "{row}");
     }
 }

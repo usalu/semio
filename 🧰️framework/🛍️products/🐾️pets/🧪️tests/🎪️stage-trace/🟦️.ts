@@ -18,7 +18,7 @@
  * @see ../../🔨️modules/🧠️behavior/🟦️.ts — `MODE_LIMITS`, `followersOf`
  */
 import { AssertionError } from "node:assert";
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { ACTIVITIES, FOOTINGS, MOODS, type Activity, type Extent, type Footing, type Frame, type Menagerie, type Slug, type Stage, type StageEvent, type ToolFrame } from "../../🧬️schema/🟦️.ts";
 import { overlaps } from "../../🔨️modules/🚧️clearance/🟦️.ts";
 import { bodiesOf, extentOf } from "../../🔨️modules/📏️spacing/🟦️.ts";

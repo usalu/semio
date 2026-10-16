@@ -1,5 +1,5 @@
 //! ⬇️ The `Effect::DownloadMediaExport` encoding law, driven by the language-agnostic fixture
-//! `🧫️fixtures/⬇️media-export-encoding/🔣️.json` that `🎠️kernel/🟦️.ts`'s TypeScript twin drives too.
+//! `🧫️fixtures/⬇️media-export-encoding/🔣️.json` that `🎠️kernel/🎬️media-export/🟦️.ts`'s TypeScript twin drives too.
 //!
 //! The defect this pins: every binary export in the repo reached disk as base64 TEXT under a binary
 //! file name, because the renderer dropped `encoding` on the guest→shell hop

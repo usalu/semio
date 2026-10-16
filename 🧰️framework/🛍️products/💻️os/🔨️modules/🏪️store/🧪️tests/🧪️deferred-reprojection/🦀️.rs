@@ -17,11 +17,11 @@ fn add(delta: i32) -> DemoMutation {
 }
 
 async fn store_named(id: &str, n: Option<i32>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await
 }
 
 /// 🌱️ The author of `edits` and a replica holding its whole log.
-async fn authored(id: &str, n: Option<i32>, edits: Vec<Vec<DemoMutation>>, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ArtifactStore<DemoSnapshot, DemoMutation>, Vec<crate::os_spr::MutationEnvelope>) {
+async fn authored(id: &str, n: Option<i32>, edits: Vec<Vec<DemoMutation>>, _identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ArtifactStore<DemoSnapshot, DemoMutation>, Vec<semio_framework_os_spr::MutationEnvelope>) {
     let mut author = store_named(id, n).await;
     for mutations in edits {
         test_support::dispatch_test_command(&mut author, ArtifactCommand::Apply { mutations, transaction: None }).await.expect("a clean edit applies");
@@ -30,8 +30,8 @@ async fn authored(id: &str, n: Option<i32>, edits: Vec<Vec<DemoMutation>>, _iden
     (author, log)
 }
 
-async fn replica(id: &str, n: Option<i32>, log: &[crate::os_spr::MutationEnvelope], budget: Option<usize>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    let mut store = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", id, DemoSnapshot { n }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("deferred".into()), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+async fn replica(id: &str, n: Option<i32>, log: &[semio_framework_os_spr::MutationEnvelope], budget: Option<usize>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
+    let mut store = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", id, DemoSnapshot { n }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("deferred".into()), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     for event in log {
         store.ingest_remote(event.clone()).await.expect("the replica takes the log");
     }
@@ -40,10 +40,10 @@ async fn replica(id: &str, n: Option<i32>, log: &[crate::os_spr::MutationEnvelop
 }
 
 /// ✏️ One remote `Supersede` of `inputs`, authored by another replica far after every edit.
-fn remote_supersede(id: &str, inputs: Vec<protocol::SupersededInput>, logical: u64) -> crate::os_spr::MutationEnvelope {
+fn remote_supersede(id: &str, inputs: Vec<protocol::SupersededInput>, logical: u64) -> semio_framework_os_spr::MutationEnvelope {
     let dependencies = inputs.iter().map(|input| input.target.clone()).collect();
-    let transition = crate::os_spr::HistoryTransition::Supersede(protocol::TransitionSupersede { scope: None, inputs });
-    crate::os_spr::history_transition_envelope(&transition, &ArtifactId(id.to_string()), &ActorId("editor".into()), dependencies, HybridLogicalTimestamp { actor: 9, physical_ms: u64::MAX / 2, logical })
+    let transition = semio_framework_os_spr::HistoryTransition::Supersede(protocol::TransitionSupersede { scope: None, inputs });
+    semio_framework_os_spr::history_transition_envelope(&transition, &ArtifactId(id.to_string()), &ActorId("editor".into()), dependencies, HybridLogicalTimestamp { actor: 9, physical_ms: u64::MAX / 2, logical })
 }
 
 fn replaced(target: &MutationId, operation: DemoMutation) -> protocol::SupersededInput {
@@ -94,7 +94,7 @@ fn replay_owner_work<M: super::Mutation<DemoSnapshot> + OpBinary>(store: &Artifa
 async fn a_deferred_remote_supersession_adopts_what_an_undeferred_one_adopts() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️supersede-replay/🔣️.json")).expect("corpus parses");
     let hex = |text: &str| text.as_bytes().chunks(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("ascii hex"), 16).expect("hex pair")).collect::<Vec<u8>>();
     let mut deferred_cases = 0;
@@ -146,7 +146,7 @@ async fn a_deferred_remote_supersession_adopts_what_an_undeferred_one_adopts() {
 async fn cancelling_a_deferred_replay_at_any_step_leaves_the_store_untouched() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let edits: Vec<Vec<DemoMutation>> = std::iter::once(vec![set(1)]).chain((1..12).map(add).map(|operation| vec![operation])).collect();
     let (author, log) = authored("deferred-cancel", Some(0), edits, &mut identity).await;
     let target = author.mutation_ops().expect("operations")[0].mutation_id.clone();
@@ -185,7 +185,7 @@ async fn cancelling_a_deferred_replay_at_any_step_leaves_the_store_untouched() {
 async fn a_local_edit_or_a_further_remote_change_restarts_the_deferred_replay() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let edits: Vec<Vec<DemoMutation>> = std::iter::once(vec![set(1)]).chain((1..8).map(add).map(|operation| vec![operation])).collect();
     let (author, log) = authored("deferred-restart", Some(0), edits, &mut identity).await;
     let ids: Vec<MutationId> = author.mutation_ops().expect("operations").into_iter().map(|operation| operation.mutation_id).collect();
@@ -216,11 +216,11 @@ async fn a_local_edit_or_a_further_remote_change_restarts_the_deferred_replay() 
 async fn the_prefix_ring_grows_with_the_square_root_of_the_history() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let edits: Vec<Vec<DemoMutation>> = std::iter::once(vec![set(1)]).chain((1..100).map(|_| vec![add(1)])).collect();
     let (author, log) = authored("deferred-ring", Some(0), edits, &mut identity).await;
     let first = author.mutation_ops().expect("operations")[0].mutation_id.clone();
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "deferred-ring", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "deferred-ring", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners());
     store.closes_on_drop();
     for event in &log {
@@ -275,11 +275,11 @@ impl FromValue for CountedOp {
 }
 
 impl OpBinary for CountedOp {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> {
         self.0.encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> {
         DemoMutation::decode_op(bytes).map(|operation| Self(operation, None))
     }
 }
@@ -296,13 +296,13 @@ impl OpText for CountedOp {
 
 impl Mutation<DemoSnapshot> for CountedOp {
     type Diff = <DemoMutation as Mutation<DemoSnapshot>>::Diff;
-    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = <DemoMutation as Mutation<DemoSnapshot>>::DESCRIPTORS;
+    const DESCRIPTORS: &'static [semio_framework_os_spr::MutationLeafDescriptor] = <DemoMutation as Mutation<DemoSnapshot>>::DESCRIPTORS;
 
-    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
+    fn descriptor(&self) -> &'static semio_framework_os_spr::MutationLeafDescriptor {
         self.0.descriptor()
     }
 
-    fn diff(&self, base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::Diff> {
         COUNTED_FOLDS.with(|folds| folds.set(folds.get() + 1));
         self.0.diff(base)
     }
@@ -327,14 +327,14 @@ impl Mutation<DemoSnapshot> for CountedOp {
     }
 }
 
-impl MemberStoreProducer<DemoSnapshot,CountedOp> for crate::os_store::tests::DemoMemberStoreProducer<CountedOp> {
+impl MemberStoreProducer<DemoSnapshot,CountedOp> for semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<CountedOp> {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<CountedOp>()
     }
 
-    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, CountedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, CountedOp>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, CountedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, CountedOp>> {
         super::fixture_authoring_member_owners::<CountedOp>(grant)
     }
 }
@@ -370,8 +370,8 @@ fn settle(store: &mut ArtifactStore<DemoSnapshot, CountedOp>) {
 /// 🌱️ A store with a long production-shaped history (owners installed, prefix ring live): `set(1)` authored by `early`,
 /// then `add(1)` × 239 authored by `later`, so `early`'s undo is an interior revert at position 0 that replays every later
 /// edit. The store authors as `early` afterwards and defers local replays by `budget`.
-async fn long_history(id: &str, budget: Option<ReplayTurnBudget>, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ArtifactStore<DemoSnapshot, CountedOp> {
-    let mut store = ArtifactStore::new_with_actor(create_document_envelope::<DemoSnapshot, CountedOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("early".into()), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+async fn long_history(id: &str, budget: Option<ReplayTurnBudget>, _identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ArtifactStore<DemoSnapshot, CountedOp> {
+    let mut store = ArtifactStore::new_with_actor(create_document_envelope::<DemoSnapshot, CountedOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("early".into()), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     store.enable_convergence_early_exit();
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![CountedOp(set(1), Some("early"))], transaction: None }).await.expect("the early edit");
     for _ in 1..LONG_HISTORY {
@@ -416,7 +416,7 @@ async fn drive_local(store: &mut ArtifactStore<DemoSnapshot, CountedOp>) -> (usi
 async fn long_local_history_steps_replay_across_turns_and_adopt_what_an_undeferred_dispatch_adopts() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut deferred = long_history("local-deferred", Some(ReplayTurnBudget::operations(LOCAL_BUDGET)), &mut identity).await;
     let mut undeferred = long_history("local-undeferred", None, &mut identity).await;
     let first = |store: &ArtifactStore<DemoSnapshot, CountedOp>| store.mutation_ops().expect("operations")[0].mutation_id.clone();
@@ -468,7 +468,7 @@ async fn long_local_history_steps_replay_across_turns_and_adopt_what_an_undeferr
 async fn a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_it() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut store = long_history("local-discard", Some(ReplayTurnBudget::operations(LOCAL_BUDGET)), &mut identity).await;
     let first = store.mutation_ops().expect("operations")[0].mutation_id.clone();
     let before = counted_view(&store);
@@ -499,7 +499,7 @@ async fn a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_
 async fn a_deferred_finalize_whose_report_blocks_is_refused_with_nothing_recorded() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut deferred = long_history("local-blocked", Some(ReplayTurnBudget::operations(LOCAL_BUDGET)), &mut identity).await;
     let mut undeferred = long_history("local-blocked-undeferred", None, &mut identity).await;
     let withdraw_n = |store: &ArtifactStore<DemoSnapshot, CountedOp>| ArtifactCommand::Supersede {
@@ -513,7 +513,7 @@ async fn a_deferred_finalize_whose_report_blocks_is_refused_with_nothing_recorde
     test_support::dispatch_test_command(&mut deferred, next).await.expect("the deferred finalize waits");
     let (_, verdict) = drive_local(&mut deferred).await;
     let verdict = verdict.err().expect("the blocking finalize is refused once replayed");
-    assert!(matches!(&verdict, VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages } if !messages.is_empty()), "{verdict:?}");
+    assert!(matches!(&verdict, VcsError::Rejected { policy: semio_framework_os_spr::MergePolicy::Normal, messages } if !messages.is_empty()), "{verdict:?}");
     assert_eq!(verdict, refused, "the same refusal as the undeferred dispatch");
     assert!(!deferred.local_step_pending() && deferred.reprojection_progress().is_none());
     assert_eq!(counted_view(&deferred), before, "nothing of the refused finalize is recorded");
@@ -533,7 +533,7 @@ fn fold_clock_us() -> Option<u64> {
 async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_cap() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     const WALL_US: u64 = 4_000;
     let budget = ReplayTurnBudget { wall_us: WALL_US, operations: 256, now_us: fold_clock_us };
     let mut deferred = long_history("local-wall", Some(budget), &mut identity).await;
@@ -580,7 +580,7 @@ async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_
 async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_mutation_limit() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️reprojection-operation-authority.json")).unwrap();
     let count = law["mutationCount"].as_u64().unwrap() as usize;
     let (author, _) = authored("operation-authority", Some(0), (0..count).map(|_| vec![add(1)]).collect(), &mut identity).await;

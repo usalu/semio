@@ -2,9 +2,9 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync,readdirSync} from "node:fs";
-import {semioSchemaAjvV1} from "../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
 import * as owner from "../../../🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🟦️.ts";
-import artifactReferenceSchema from "../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema } from "@semio-tech/schema-ts/artifact-reference";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 const trinityTests=new URL("../../../🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",import.meta.url);
 const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",trinityTests),"utf8"));
@@ -178,7 +178,7 @@ test("Rewriting actual Semio child public JSON codec preserves all words and int
  const invalid=structuredClone(vector.childSnapshot);invalid.nodes[0].width={bits:"INVALID"};expect(()=>api.parseSemioGraphJsonValue(invalid)).toThrow();invalid.nodes[0].width={bits:"0000000000000000",extra:true};expect(()=>api.parseSemioGraphJsonValue(invalid)).toThrow();
 });
 test("Rewriting all twenty-eight scenario owners declare complete before after and replacement child inputs",async()=>{
- const {parseFeature}=await import("../../../../🧰️framework/🔨️modules/🧪️test/🥒️gherkin/🟦️.ts");
+ const {parseFeature}=await import("@semio-tech/framework/test/gherkin");
  const feature=parseFeature(readFileSync(new URL("../../../../🧪️tests/♻️mutate-rewrite-1/🥒️.feature",trinityTests),"utf8"));
  expect(feature.errors).toEqual([]);expect(feature.scenarios.length).toBe(28);
  const read=(relative:string)=>JSON.parse(readFileSync(new URL(relative,trinityTests),"utf8")),ajv=semioSchemaAjvV1({allErrors:true});

@@ -18,7 +18,7 @@ use semio_hub_artifact_authority::AuthorityOperationControl;
 use semio_hub_auth::rate_limit::{RateLimitClassV1, RateLimitDecisionV1, RateLimitSubjectV1};
 use directory::os_directory::access_policy::DirectoryAccessActionV1;
 use directory::os_directory::DocumentScope;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{DocumentDirectory, EventLog, SpaceDirectory, SyncSessionDirectory, UserDirectory};
 use semio_hub_directory_contract::{IdentityVerificationControl, LocalBootstrapTransport, AUTH_TEXT_MAX_BYTES};
 use semio_hub_inference_runtime_contract::{GisMapApprovalCheckpointPublisherV1, GisMapApprovalIngressAuthorityV1};
 use semio_hub_lag_rebootstrap::{RebootstrapContext, RebootstrapTransferControl, REBOOTSTRAP_DEADLINE_MS};

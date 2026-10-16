@@ -1,4 +1,4 @@
-import grantSchema from"../../../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";import{semioSchemaAjvV1}from"../../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";import{semioSchemaAjvV1}from"@semio-tech/schema-ts/oracles/validator";
 import {expect, test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync, existsSync} from "node:fs";

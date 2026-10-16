@@ -23,7 +23,7 @@ export {
   type StylingAppearanceName,
   type StylingTokenKey,
 } from "../🤖️generated/🔤️tokens/🟦️.ts";
-import { ephemeralMap, ephemeralBox, ephemeralSet } from "../../../🫧️transient/🟦️.ts";
+import { ephemeralMap, ephemeralBox, ephemeralSet } from "@semio-tech/framework/transient";
 import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_TOKENS, type StylingAppearanceName, type StylingTokenKey } from "../🤖️generated/🔤️tokens/🟦️.ts";
 
 //#region 🔖️ThemeModel

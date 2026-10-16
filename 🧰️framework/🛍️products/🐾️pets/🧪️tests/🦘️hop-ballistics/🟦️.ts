@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🏞️terrain/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { FALL_SPEED, GRAVITY, HOP_CLEARANCE, HOP_DISTANCE, HOP_HEIGHT, HOP_STEEPNESS, HOP_TICKS, fallStep, hopLanding, hopOf, hopStep, landingOf } from "../../🔨️modules/🏞️terrain/🟦️.ts";
 import type { Perch, Point } from "../../🧬️schema/🟦️.ts";
 

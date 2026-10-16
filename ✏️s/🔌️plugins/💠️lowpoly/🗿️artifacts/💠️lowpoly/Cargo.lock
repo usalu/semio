@@ -1478,6 +1478,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-native-build-compiler-resources"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+]
+
+[[package]]
 name = "semio-framework-number"
 version = "0.1.0"
 
@@ -1795,6 +1802,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -1817,13 +1825,10 @@ name = "semio-framework-os-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
- "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-pack-record-token",
  "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
@@ -2539,15 +2544,16 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
+ "semio-framework-pack-schema-index",
  "semio-framework-replication-codec",
  "semio-framework-value",
 ]
 
 [[package]]
-name = "semio-framework-pack-record-token"
+name = "semio-framework-pack-schema-index"
 version = "0.1.0"
 dependencies = [
- "semio-framework-pack",
+ "semio-framework-dsl-record",
  "semio-framework-value",
 ]
 
@@ -2937,6 +2943,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-app-builder",
  "semio-framework-plugin-decl-app",
@@ -4324,6 +4331,14 @@ name = "semio-framework-source-projection"
 version = "0.1.0"
 
 [[package]]
+name = "semio-framework-test-original-snapshot-owners"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-time-travel"
 version = "0.1.0"
 dependencies = [
@@ -4912,6 +4927,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "syn",
 ]
 
@@ -5218,21 +5234,27 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema-registry",
  "semio-framework-tool-machine",
+ "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-s-artifact-lowpoly-lowpoly-commands",
  "semio-s-artifact-lowpoly-lowpoly-config",
  "semio-s-artifact-lowpoly-lowpoly-engine",
  "semio-s-artifact-lowpoly-lowpoly-examples",
+ "semio-s-artifact-lowpoly-lowpoly-io",
+ "semio-s-artifact-lowpoly-lowpoly-kit",
  "semio-s-artifact-lowpoly-lowpoly-model",
  "semio-s-artifact-lowpoly-lowpoly-model-diff",
  "semio-s-artifact-lowpoly-lowpoly-modes",
+ "semio-s-artifact-lowpoly-lowpoly-mut-geometry",
+ "semio-s-artifact-lowpoly-lowpoly-mut-objects",
  "semio-s-artifact-lowpoly-lowpoly-mut-paint",
  "semio-s-artifact-lowpoly-lowpoly-mutations",
  "semio-s-artifact-lowpoly-lowpoly-options",
  "semio-s-artifact-lowpoly-lowpoly-panels",
  "semio-s-artifact-lowpoly-lowpoly-presence",
  "semio-s-artifact-lowpoly-lowpoly-view",
+ "serde",
  "serde_json",
 ]
 
@@ -5347,6 +5369,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-schema-registry",
+ "semio-framework-test-original-snapshot-owners",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -5422,9 +5445,22 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-artifact-lowpoly-lowpoly-model",
  "semio-s-artifact-lowpoly-lowpoly-model-diff",
+ "semio-s-artifact-lowpoly-lowpoly-mut-laws",
  "semio-s-artifact-lowpoly-lowpoly-mutations",
  "semio-s-artifact-stdio-semio-mesh",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-lowpoly-lowpoly-mut-laws"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-value",
+ "semio-s-artifact-lowpoly-lowpoly-model",
+ "semio-s-artifact-lowpoly-lowpoly-model-diff",
+ "semio-s-artifact-lowpoly-lowpoly-mutations",
  "serde_json",
 ]
 
@@ -5440,6 +5476,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-artifact-lowpoly-lowpoly-model",
  "semio-s-artifact-lowpoly-lowpoly-model-diff",
+ "semio-s-artifact-lowpoly-lowpoly-mut-laws",
  "semio-s-artifact-lowpoly-lowpoly-mutations",
  "serde",
  "serde_json",
@@ -5457,6 +5494,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-artifact-lowpoly-lowpoly-model",
  "semio-s-artifact-lowpoly-lowpoly-model-diff",
+ "semio-s-artifact-lowpoly-lowpoly-mut-laws",
  "semio-s-artifact-lowpoly-lowpoly-mutations",
  "serde",
  "serde_json",

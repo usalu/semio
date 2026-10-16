@@ -49,5 +49,5 @@ export const stdioTsvIanaAnyInferenceTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseTsvInferenceText(value: unknown, at = "$"): TsvInferenceText {
-  return stdioTsvIanaAnyInferenceTextGuardObject(value, `${at}`);
+  return stdioTsvIanaAnyInferenceTextGuardString(value, `${at}`);
 }

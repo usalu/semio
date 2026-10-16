@@ -5,7 +5,7 @@
  */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import {
   type Answer,
   type Catalog,

@@ -1,5 +1,5 @@
 /** 🎯️ Cross-plugin app addresses belong to the manifest contract. */
-import { type ArtifactDialect } from "../../🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
 import { dialectCoordinate, parseDialectCoordinate } from "../../🚪️io/🧬️schema/🟦️.ts";
 export type AppRole = "viewer" | "editor";
 export interface AppRef { pluginId: string; appId: string }

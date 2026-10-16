@@ -49,5 +49,5 @@ export const stdioDwgAc1018AnySnapshotTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseDwgSnapshotText(value: unknown, at = "$"): DwgSnapshotText {
-  return stdioDwgAc1018AnySnapshotTextGuardObject(value, `${at}`);
+  return stdioDwgAc1018AnySnapshotTextGuardString(value, `${at}`);
 }

@@ -15,6 +15,9 @@
 //! `prepared render revision is stale: live=35, packet=27` → `worker-present-failed`.
 
 use super::*;
+use semio_framework_os_renderer_wgpu_runtime_mailbox::{RuntimePresentationAuthority, RuntimePresentationWitness};
+use serde::Deserialize;
+
 use ui_render::{PointerId, PointerInfo, PointerKind};
 
 #[derive(serde::Deserialize)]
@@ -68,10 +71,10 @@ fn replay(row: &RowFixture) -> (u64, Tally) {
     let mut scheduler = ui_render::FrameScheduler::new();
     let token = ui_host::UiThreadToken::mint_for_host();
     let pointer = PointerInfo { id: PointerId(1), kind: PointerKind::Mouse, pressure: None, tilt: None };
-    let authority = crate::RuntimePresentationAuthority::new();
+    let authority = semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimePresentationAuthority::new();
     let mut generation = 0u64;
-    let mut live_build: Option<(crate::RuntimePresentationWitness, u64)> = None;
-    let mut pending_packet: Option<crate::RuntimePresentationWitness> = None;
+    let mut live_build: Option<(semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimePresentationWitness, u64)> = None;
+    let mut pending_packet: Option<semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimePresentationWitness> = None;
     let mut tally = Tally::default();
     for step in &row.steps {
         for index in 0..step.repeat.unwrap_or(1) {

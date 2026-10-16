@@ -1,5 +1,5 @@
 /** 🎨️ Platform canvas painting for typed scene geometry and authored appearance. */
-import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, constantGradientColor, type PathSegment } from "../../../../../../../../🔨️modules/◻️2d/🟦️.ts";
+import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, constantGradientColor, type PathSegment } from "@semio-tech/framework/2d";
 
 type CanvasGradientStop = { readonly offset?: number; readonly color?: readonly number[] };
 

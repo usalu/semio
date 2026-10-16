@@ -111,7 +111,7 @@ fn close(session: &mut Process3dMountedPackSession) {
 fn derived_pack_identity_and_text_pack_equivalence() {
     let snapshot = complete_snapshot();
     let hash = store::os_store::test_support::assert_pack_schema_identity(&snapshot);
-    assert_eq!(hash, store::os_pack::schema_hash(&Process3dSnapshot::__dsl_spec()));
+    assert_eq!(hash, pack::record::schema_hash(&Process3dSnapshot::__dsl_spec()));
     store::os_store::test_support::assert_dsl_pack_equivalence(&snapshot);
     store::os_store::test_support::assert_dsl_pack_equivalence(&crate::snapshot::empty_process3d_snapshot());
 }

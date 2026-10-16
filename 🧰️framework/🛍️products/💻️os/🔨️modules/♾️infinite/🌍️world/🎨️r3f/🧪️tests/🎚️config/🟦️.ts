@@ -10,6 +10,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 const configDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(configDir, "../../../../../../../../..");
 const componentSource = "../../🟦️.tsx";
+const chunkKeyTest = "../../🧪️tests/🧪️chunkkey/🟦️.tsx";
 const reactRoot = resolve(repoRoot, "node_modules/react");
 const reactDomRoot = resolve(repoRoot, "node_modules/react-dom");
 const threeModule = resolve(repoRoot, "node_modules/three/build/three.module.js");
@@ -17,7 +18,7 @@ const threePackageRoot = resolve(repoRoot, "node_modules/three");
 
 const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
-/** 🧪️ Vitest for `@semio-tech/infinite-world-r3f` — in-source `import.meta.vitest` on `🟦️.tsx`. */
+/** 🧪️ Vitest for `@semio-tech/infinite-world-r3f` — the chunk-key suite imports `🟦️.tsx` and registers itself. */
 export default defineOwnedTestConfig({
   root: testRoot,
   plugins: [uiReactBuildPlugin()],
@@ -42,8 +43,7 @@ export default defineOwnedTestConfig({
     name: "@semio-tech/infinite-world-r3f",
     mode: "test",
     environment: "jsdom",
-    include: [],
-    includeSource: [componentSource],
+    include: [chunkKeyTest],
     coverage: { include: [componentSource] },
     passWithNoTests: false,
     server: {

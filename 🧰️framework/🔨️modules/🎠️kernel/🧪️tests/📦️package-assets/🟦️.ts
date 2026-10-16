@@ -14,17 +14,19 @@ import {
   type PackageAssetDeclaration
 } from "../../📦️package-assets/🟦️.ts";
 import { descriptorPackageAssets, fetchDescriptorManifest } from "../../🛂️descriptor-admission/🟦️.ts";
-import { OwnedResidentLedger } from "../../../🌱️value/💾️resident/🟦️.ts";
+import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 import { ShardClient, type ShardBudget } from "../../../🎭️actor/📮️shard-client/🟦️.ts";
 import { fixtureOriginalWorkStock } from "../../../🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { renderTextFontsFixtureUrl } from "../../../🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { canvasRuntimeAssetsFixtureUrl } from "../../../🖼️canvas/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../../../../..");
 const BASE = "http://page.test/";
 const BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16, maxFrames: 8 };
-const FONT_FIXTURE = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🔤️text-fonts/🔣️.json"), "utf8")) as { fonts: { assetPath: string; byteLength: number; sha256: string }[] };
+const FONT_FIXTURE = JSON.parse(readFileSync(renderTextFontsFixtureUrl, "utf8")) as { fonts: { assetPath: string; byteLength: number; sha256: string }[] };
 const FONT_ROOT = PACKAGE_ASSET_DIRECTORIES[0]!;
-const CANVAS_FIXTURE = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as { channels: { id: string; directory: string }[]; assets: { role: string; channel: string; file: string; bytes?: number; sha256?: string }[]; guestAssets: string[]; iconPackDigestFile: string };
+const CANVAS_FIXTURE = JSON.parse(readFileSync(canvasRuntimeAssetsFixtureUrl, "utf8")) as { channels: { id: string; directory: string }[]; assets: { role: string; channel: string; file: string; bytes?: number; sha256?: string }[]; guestAssets: string[]; iconPackDigestFile: string };
 
 const nodeDigest = async (bytes: ArrayBuffer): Promise<string> => createHash("sha256").update(new Uint8Array(bytes)).digest("hex");
 const declared: PackageAssetDeclaration[] = FONT_FIXTURE.fonts.map(font => ({ name: `${FONT_ROOT}/${font.assetPath}`, sizeBytes: font.byteLength, sha256: font.sha256 }));

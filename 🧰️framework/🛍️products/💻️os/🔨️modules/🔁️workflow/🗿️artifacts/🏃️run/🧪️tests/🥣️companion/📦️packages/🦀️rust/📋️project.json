@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-workflow-run-tests-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

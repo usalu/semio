@@ -3,7 +3,7 @@
 use semio_repo_test_host::Json;
 
 #[path = "🧰️support/🦀️.rs"]
-mod reference_support;
+pub mod reference_support;
 
 mod reader {
     use super::Json;

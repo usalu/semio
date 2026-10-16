@@ -167,3 +167,8 @@ Current scoped Source hash roster (not a whole-workspace immutable snapshot):
 | `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/sdk-derivative/📜️script.ts` | `05c3d7dad7701017b87c471f33178260d872214aef305dc51ebc70e9e1664b7a` |
 
 All own handles are terminal and collected. Parent owns ticket lifecycle; generated evidence remains while this shared ticket is active. No peer processes/resources were stopped, no system or cache caps changed, and no failed ledger was cleared.
+
+
+## Follow-Up Shell Setup Finding
+
+Independent audit subsequently found a genuine post-spawn/pre-observer setup gap. The narrow Source correction, pre-implementation RED, current Source hashes, successful Source successors and precise runtime limits are recorded in `browser-shell-birth-current.md`. Earlier freeze hashes and gates remain historical; they are not silently relabeled as the corrected epoch.

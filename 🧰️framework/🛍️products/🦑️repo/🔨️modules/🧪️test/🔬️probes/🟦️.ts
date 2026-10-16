@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type PlatformId, type EngineFamily } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type PlatformId, type EngineFamily } from "@semio-tech/framework/test/adapter";
 import { isPlainObject } from "../🟰️comparison/🟦️.ts";
 import { type OracleLinkedPackage } from "../🗃️oracle-registry/🟦️.ts";
 //#endregion 🔌️Adapters

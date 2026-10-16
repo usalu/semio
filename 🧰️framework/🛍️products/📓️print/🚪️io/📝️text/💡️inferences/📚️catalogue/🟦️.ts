@@ -2,7 +2,7 @@
 import { vizParseColor } from "../../../../🧬️schema/💡️inferences/🎨theme/🟦️.ts";
 import catalog from "../../../../🖼️assets/🔣️viz-catalog.json";
 import schema from "../../../../🧬️schema/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import type { VizSchemaDocument, VizOptionSyntaxDescriptor } from "../../../../🧬️schema/🟦️.ts";
 import type { VizChartSpecification, VizOptionValue, VizTable, VizRow } from "../../../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 

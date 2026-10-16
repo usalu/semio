@@ -49,5 +49,5 @@ export const stdioIfc4AnyDiffTextGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseIfcDiffText(value: unknown, at = "$"): IfcDiffText {
-  return stdioIfc4AnyDiffTextGuardObject(value, `${at}`);
+  return stdioIfc4AnyDiffTextGuardString(value, `${at}`);
 }

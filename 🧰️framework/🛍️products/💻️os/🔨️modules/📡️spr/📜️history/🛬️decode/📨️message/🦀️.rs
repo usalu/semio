@@ -71,6 +71,3 @@ impl RetainedHistoryMessageDecode{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.receipt.is_none()&&self.partial.is_none()&&self.id.is_none()&&self.field.is_none()&&self.targets.is_none()}
 }
 impl Drop for RetainedHistoryMessageDecode{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original History message abandoned native receiving custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.partial);ManuallyDrop::drop(&mut self.id);ManuallyDrop::drop(&mut self.field);ManuallyDrop::drop(&mut self.targets)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

@@ -2,7 +2,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {parse} from "graphql";
-import {childSlotAcceptsArtifactKind,GRAPHQL_COMPOSITION_PREAMBLE,type ChildSlotSelection} from "../../../🟦️.ts";
+import {childSlotAcceptsArtifactKind,GRAPHQL_COMPOSITION_PREAMBLE,type ChildSlotSelection} from "@semio-tech/schema-ts";
 import corpus from "../🧫️fixtures/🪆️selection/🔣️.json";
 
 test("explicit child selection matches independent SQL without deciding a capability's serialization",()=>{

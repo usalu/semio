@@ -1,6 +1,6 @@
 use super::*;
 use crate::interpreter::framework_widget_context;
-use ui_wgpu::wgpu::UiPresence;
+use semio_framework_ui_layout::layout::UiPresence;
 
 fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
@@ -30,8 +30,8 @@ fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
     }
 }
 
-fn text_editor_scene_payload(buffer: &str, completions_json: Option<&str>, rename_json: Option<&str>) -> ui_wgpu::wgpu::TextEditorScene {
-    ui_wgpu::wgpu::TextEditorScene {
+fn text_editor_scene_payload(buffer: &str, completions_json: Option<&str>, rename_json: Option<&str>) -> semio_framework_ui_scene_views::TextEditorScene {
+    semio_framework_ui_scene_views::TextEditorScene {
         buffer: buffer.to_string(),
         lanes: Vec::new(),
         language: None,
@@ -61,8 +61,8 @@ pub fn text_editor_scene(surface_id: &str, buffer: &str, completions_json: Optio
 /// 🧰️ GPU-free `FrameworkWidgetContext` fixture, same construction as `render_entry_tests::Fixture`
 /// (private to that module, so duplicated here rather than reused).
 pub struct Fixture {
-    draw: ui_wgpu::wgpu::DrawList,
-    atlas: ui_wgpu::wgpu::FontAtlas,
+    draw: semio_framework_ui_draw_contract::DrawList,
+    atlas: semio_framework_ui_text::FontAtlas,
     theme: Theme,
     input: ui_wgpu::wgpu::InputState<ActionDescriptor>,
     scroll_offsets: HashMap<String, f32>,
@@ -73,8 +73,8 @@ pub struct Fixture {
 impl Fixture {
     fn new() -> Self {
         Self {
-            draw: ui_wgpu::wgpu::DrawList::default(),
-            atlas: ui_wgpu::wgpu::FontAtlas::builtin(),
+            draw: semio_framework_ui_draw_contract::DrawList::default(),
+            atlas: semio_framework_ui_text::FontAtlas::builtin(),
             theme: Theme::default(),
             input: ui_wgpu::wgpu::InputState::<ActionDescriptor>::default(),
             scroll_offsets: HashMap::new(),

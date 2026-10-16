@@ -49,5 +49,5 @@ export const stdioXml10BaseInferenceTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseXmlInferenceText(value: unknown, at = "$"): XmlInferenceText {
-  return stdioXml10BaseInferenceTextGuardObject(value, `${at}`);
+  return stdioXml10BaseInferenceTextGuardString(value, `${at}`);
 }

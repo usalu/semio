@@ -22,20 +22,22 @@ semio-framework-actor = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-job-fault-publication = { path = "../../../../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin-abi = { path = "../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-async = { workspace = true }
+semio-framework-trace = { workspace = true, optional = true }
+
+[features]
+original-actor-context-testing = ["dep:semio-framework-trace"]
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { workspace = true }
-
-[[test]]
-name = "original_native_frame_caller"
-path = "../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎟️native-caller/🧪️tests/🦀️.rs"
 
 [[test]]
 name = "original_actor_poll_input"

@@ -1,10 +1,7 @@
 //! 📖️ Actor vocabulary and wire frames own nominal identities and original retained turn boundaries.
 use std::collections::VecDeque;
 use semio_framework_value_derive::{FromValue,ToValue};
-pub use semio_framework_actor_pack as pack;
-pub use semio_framework_job as job;
-pub use semio_framework_actor_retained_turn as retained_turn;
-use retained_turn::RetainedTurnReceipt;
+use semio_framework_actor_retained_turn::RetainedTurnReceipt;
 #[path="../🚪️lifetime/🦀️.rs"]
 pub mod instance_lifetime;
 #[path="../📃️page/🦀️.rs"]
@@ -31,20 +28,20 @@ impl JobReplayRequest {
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_hash32(out, &self.controller).await;
-        pack::write_hash32(out, &self.tool).await;
-        pack::write_hash32(out, &self.schema).await;
-        pack::write_u16(out, self.version).await;
-        pack::write_hash32(out, &self.digest).await;
+        semio_framework_actor_pack::write_hash32(out, &self.controller).await;
+        semio_framework_actor_pack::write_hash32(out, &self.tool).await;
+        semio_framework_actor_pack::write_hash32(out, &self.schema).await;
+        semio_framework_actor_pack::write_u16(out, self.version).await;
+        semio_framework_actor_pack::write_hash32(out, &self.digest).await;
     }
 
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
         Ok(Self {
-            controller: pack::read_hash32(bytes, pos, "JobReplayRequest::controller").await?,
-            tool: pack::read_hash32(bytes, pos, "JobReplayRequest::tool").await?,
-            schema: pack::read_hash32(bytes, pos, "JobReplayRequest::schema").await?,
-            version: pack::read_u16(bytes, pos, "JobReplayRequest::version").await?,
-            digest: pack::read_hash32(bytes, pos, "JobReplayRequest::digest").await?,
+            controller: semio_framework_actor_pack::read_hash32(bytes, pos, "JobReplayRequest::controller").await?,
+            tool: semio_framework_actor_pack::read_hash32(bytes, pos, "JobReplayRequest::tool").await?,
+            schema: semio_framework_actor_pack::read_hash32(bytes, pos, "JobReplayRequest::schema").await?,
+            version: semio_framework_actor_pack::read_u16(bytes, pos, "JobReplayRequest::version").await?,
+            digest: semio_framework_actor_pack::read_hash32(bytes, pos, "JobReplayRequest::digest").await?,
         })
     }
 }
@@ -79,10 +76,10 @@ pub struct PackageId(pub String);
 
 impl PackageId {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_str(out, &self.0).await;
+        semio_framework_actor_pack::write_str(out, &self.0).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_str(bytes, pos, "PackageId").await?))
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self(semio_framework_actor_pack::read_str(bytes, pos, "PackageId").await?))
     }
 }
 
@@ -103,10 +100,10 @@ impl std::fmt::Debug for PackageHash {
 
 impl PackageHash {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_hash32(out, &self.0).await;
+        semio_framework_actor_pack::write_hash32(out, &self.0).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_hash32(bytes, pos, "PackageHash").await?))
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self(semio_framework_actor_pack::read_hash32(bytes, pos, "PackageHash").await?))
     }
 }
 //#endregion 📦️PackageId
@@ -162,10 +159,10 @@ impl ActorId {
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.0).await;
+        semio_framework_actor_pack::write_u64(out, self.0).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_u64(bytes, pos, "ActorId").await?))
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self(semio_framework_actor_pack::read_u64(bytes, pos, "ActorId").await?))
     }
 }
 
@@ -200,31 +197,31 @@ impl ActorKind {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
             ActorKind::PluginApp { plugin, app_id, instance_id } => {
-                pack::write_u8(out, 0).await;
+                semio_framework_actor_pack::write_u8(out, 0).await;
                 plugin.pack_encode(out).await;
-                pack::write_str(out, app_id).await;
-                pack::write_u32(out, *instance_id).await;
+                semio_framework_actor_pack::write_str(out, app_id).await;
+                semio_framework_actor_pack::write_u32(out, *instance_id).await;
             }
             ActorKind::Extension { plugin, extension_id } => {
-                pack::write_u8(out, 1).await;
+                semio_framework_actor_pack::write_u8(out, 1).await;
                 plugin.pack_encode(out).await;
-                pack::write_str(out, extension_id).await;
+                semio_framework_actor_pack::write_str(out, extension_id).await;
             }
             ActorKind::Job { owner, job_id } => {
-                pack::write_u8(out, 2).await;
+                semio_framework_actor_pack::write_u8(out, 2).await;
                 owner.pack_encode(out).await;
-                pack::write_u64(out, *job_id).await;
+                semio_framework_actor_pack::write_u64(out, *job_id).await;
             }
         }
     }
 
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "ActorKind").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let tag = semio_framework_actor_pack::read_u8(bytes, pos, "ActorKind").await?;
         match tag {
-            0 => Ok(ActorKind::PluginApp { plugin: PackageId::pack_decode(bytes, pos).await?, app_id: pack::read_str(bytes, pos, "ActorKind::app_id").await?, instance_id: pack::read_u32(bytes, pos, "ActorKind::instance_id").await? }),
-            1 => Ok(ActorKind::Extension { plugin: PackageId::pack_decode(bytes, pos).await?, extension_id: pack::read_str(bytes, pos, "ActorKind::extension_id").await? }),
-            2 => Ok(ActorKind::Job { owner: ActorId::pack_decode(bytes, pos).await?, job_id: pack::read_u64(bytes, pos, "ActorKind::job_id").await? }),
-            other => Err(pack::PackError::InvalidTag { what: "ActorKind", tag: other, offset: *pos }),
+            0 => Ok(ActorKind::PluginApp { plugin: PackageId::pack_decode(bytes, pos).await?, app_id: semio_framework_actor_pack::read_str(bytes, pos, "ActorKind::app_id").await?, instance_id: semio_framework_actor_pack::read_u32(bytes, pos, "ActorKind::instance_id").await? }),
+            1 => Ok(ActorKind::Extension { plugin: PackageId::pack_decode(bytes, pos).await?, extension_id: semio_framework_actor_pack::read_str(bytes, pos, "ActorKind::extension_id").await? }),
+            2 => Ok(ActorKind::Job { owner: ActorId::pack_decode(bytes, pos).await?, job_id: semio_framework_actor_pack::read_u64(bytes, pos, "ActorKind::job_id").await? }),
+            other => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "ActorKind", tag: other, offset: *pos }),
         }
     }
 }
@@ -271,21 +268,21 @@ impl Lane {
         self.priority_rank().await as u8
     }
 
-    async fn from_tag(tag: u8) -> Result<Self, pack::PackError> {
+    async fn from_tag(tag: u8) -> Result<Self, semio_framework_actor_pack::PackError> {
         match tag {
             0 => Ok(Lane::Interactive),
             1 => Ok(Lane::UserVisible),
             2 => Ok(Lane::Background),
             3 => Ok(Lane::Maintenance),
-            other => Err(pack::PackError::InvalidTag { what: "Lane", tag: other, offset: 0 }),
+            other => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "Lane", tag: other, offset: 0 }),
         }
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u8(out, self.tag().await).await;
+        semio_framework_actor_pack::write_u8(out, self.tag().await).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "Lane").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let tag = semio_framework_actor_pack::read_u8(bytes, pos, "Lane").await?;
         Self::from_tag(tag).await
     }
 }
@@ -324,27 +321,27 @@ impl Budget {
         }
     }
 
-    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), pack::PackError> {
-        pack::write_u64(out, self.fuel).await;
-        pack::write_u32(out, self.wall_ms).await;
-        pack::write_u64(out, self.memory_bytes).await;
-        pack::write_u32(out, self.ui_nodes).await;
-        pack::write_u16(out, self.mailbox_len).await;
-        pack::write_u32(out, self.max_effects).await;
-        pack::write_u32(out, self.max_patch_bytes).await;
-        pack::write_u32(out,self.max_frames).await;
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), semio_framework_actor_pack::PackError> {
+        semio_framework_actor_pack::write_u64(out, self.fuel).await;
+        semio_framework_actor_pack::write_u32(out, self.wall_ms).await;
+        semio_framework_actor_pack::write_u64(out, self.memory_bytes).await;
+        semio_framework_actor_pack::write_u32(out, self.ui_nodes).await;
+        semio_framework_actor_pack::write_u16(out, self.mailbox_len).await;
+        semio_framework_actor_pack::write_u32(out, self.max_effects).await;
+        semio_framework_actor_pack::write_u32(out, self.max_patch_bytes).await;
+        semio_framework_actor_pack::write_u32(out,self.max_frames).await;
         Ok(())
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
         Ok(Self {
-            fuel: pack::read_u64(bytes, pos, "Budget::fuel").await?,
-            wall_ms: pack::read_u32(bytes, pos, "Budget::wall_ms").await?,
-            memory_bytes: pack::read_u64(bytes, pos, "Budget::memory_bytes").await?,
-            ui_nodes: pack::read_u32(bytes, pos, "Budget::ui_nodes").await?,
-            mailbox_len: pack::read_u16(bytes, pos, "Budget::mailbox_len").await?,
-            max_effects: pack::read_u32(bytes, pos, "Budget::max_effects").await?,
-            max_patch_bytes: pack::read_u32(bytes, pos, "Budget::max_patch_bytes").await?,
-            max_frames:pack::read_u32(bytes,pos,"Budget::max_frames").await?,
+            fuel: semio_framework_actor_pack::read_u64(bytes, pos, "Budget::fuel").await?,
+            wall_ms: semio_framework_actor_pack::read_u32(bytes, pos, "Budget::wall_ms").await?,
+            memory_bytes: semio_framework_actor_pack::read_u64(bytes, pos, "Budget::memory_bytes").await?,
+            ui_nodes: semio_framework_actor_pack::read_u32(bytes, pos, "Budget::ui_nodes").await?,
+            mailbox_len: semio_framework_actor_pack::read_u16(bytes, pos, "Budget::mailbox_len").await?,
+            max_effects: semio_framework_actor_pack::read_u32(bytes, pos, "Budget::max_effects").await?,
+            max_patch_bytes: semio_framework_actor_pack::read_u32(bytes, pos, "Budget::max_patch_bytes").await?,
+            max_frames:semio_framework_actor_pack::read_u32(bytes,pos,"Budget::max_frames").await?,
         })
     }
 }
@@ -382,29 +379,29 @@ pub struct JobOperation {
 }
 
 impl JobOperation {
-    pub fn from_job(operation: job::Operation) -> Self {
+    pub fn from_job(operation: semio_framework_job::Operation) -> Self {
         Self { operation: operation.operation.0, base_revision: operation.base_revision.0, generation: operation.generation.0, preview_sequence: operation.preview_sequence, seed: operation.seed }
     }
 
-    pub fn into_job(self) -> job::Operation {
-        job::Operation { operation: job::OperationId(self.operation), base_revision: job::RevisionId(self.base_revision), generation: job::Generation(self.generation), preview_sequence: self.preview_sequence, seed: self.seed }
+    pub fn into_job(self) -> semio_framework_job::Operation {
+        semio_framework_job::Operation { operation: semio_framework_job::OperationId(self.operation), base_revision: semio_framework_job::RevisionId(self.base_revision), generation: semio_framework_job::Generation(self.generation), preview_sequence: self.preview_sequence, seed: self.seed }
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.operation).await;
-        pack::write_u64(out, self.base_revision).await;
-        pack::write_u64(out, self.generation).await;
-        pack::write_u64(out, self.preview_sequence).await;
-        pack::write_u64(out, self.seed).await;
+        semio_framework_actor_pack::write_u64(out, self.operation).await;
+        semio_framework_actor_pack::write_u64(out, self.base_revision).await;
+        semio_framework_actor_pack::write_u64(out, self.generation).await;
+        semio_framework_actor_pack::write_u64(out, self.preview_sequence).await;
+        semio_framework_actor_pack::write_u64(out, self.seed).await;
     }
 
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
         Ok(Self {
-            operation: pack::read_u64(bytes, pos, "JobOperation::operation").await?,
-            base_revision: pack::read_u64(bytes, pos, "JobOperation::base_revision").await?,
-            generation: pack::read_u64(bytes, pos, "JobOperation::generation").await?,
-            preview_sequence: pack::read_u64(bytes, pos, "JobOperation::preview_sequence").await?,
-            seed: pack::read_u64(bytes, pos, "JobOperation::seed").await?,
+            operation: semio_framework_actor_pack::read_u64(bytes, pos, "JobOperation::operation").await?,
+            base_revision: semio_framework_actor_pack::read_u64(bytes, pos, "JobOperation::base_revision").await?,
+            generation: semio_framework_actor_pack::read_u64(bytes, pos, "JobOperation::generation").await?,
+            preview_sequence: semio_framework_actor_pack::read_u64(bytes, pos, "JobOperation::preview_sequence").await?,
+            seed: semio_framework_actor_pack::read_u64(bytes, pos, "JobOperation::seed").await?,
         })
     }
 }
@@ -419,12 +416,12 @@ pub struct JobCheckpoint {
 
 impl JobCheckpoint {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_bytes(out, &self.state).await;
-        pack::write_u64(out, self.applied_progress).await;
+        semio_framework_actor_pack::write_bytes(out, &self.state).await;
+        semio_framework_actor_pack::write_u64(out, self.applied_progress).await;
     }
 
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { state: pack::read_bytes(bytes, pos, "JobCheckpoint::state").await?, applied_progress: pack::read_u64(bytes, pos, "JobCheckpoint::applied_progress").await? })
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self { state: semio_framework_actor_pack::read_bytes(bytes, pos, "JobCheckpoint::state").await?, applied_progress: semio_framework_actor_pack::read_u64(bytes, pos, "JobCheckpoint::applied_progress").await? })
     }
 }
 
@@ -438,12 +435,12 @@ pub struct JobCommitCandidate {
 
 impl JobCommitCandidate {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_bytes(out, &self.state).await;
-        pack::write_bytes(out, &self.output).await;
+        semio_framework_actor_pack::write_bytes(out, &self.state).await;
+        semio_framework_actor_pack::write_bytes(out, &self.output).await;
     }
 
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { state: pack::read_bytes(bytes, pos, "JobCommitCandidate::state").await?, output: pack::read_bytes(bytes, pos, "JobCommitCandidate::output").await? })
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self { state: semio_framework_actor_pack::read_bytes(bytes, pos, "JobCommitCandidate::state").await?, output: semio_framework_actor_pack::read_bytes(bytes, pos, "JobCommitCandidate::output").await? })
     }
 }
 
@@ -463,36 +460,36 @@ pub enum JobStepOutcome {
 impl JobStepOutcome {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            Self::Yield => pack::write_u8(out, 0).await,
+            Self::Yield => semio_framework_actor_pack::write_u8(out, 0).await,
             Self::PreviewReady { preview } => {
-                pack::write_u8(out, 1).await;
-                pack::write_bytes(out, preview).await;
+                semio_framework_actor_pack::write_u8(out, 1).await;
+                semio_framework_actor_pack::write_bytes(out, preview).await;
             }
             Self::CheckpointReady { checkpoint } => {
-                pack::write_u8(out, 2).await;
+                semio_framework_actor_pack::write_u8(out, 2).await;
                 checkpoint.pack_encode(out).await;
             }
             Self::Complete { candidate } => {
-                pack::write_u8(out, 3).await;
+                semio_framework_actor_pack::write_u8(out, 3).await;
                 candidate.pack_encode(out).await;
             }
-            Self::Cancelled => pack::write_u8(out, 4).await,
+            Self::Cancelled => semio_framework_actor_pack::write_u8(out, 4).await,
             Self::Fault { detail } => {
-                pack::write_u8(out, 5).await;
-                pack::write_bytes(out, detail).await;
+                semio_framework_actor_pack::write_u8(out, 5).await;
+                semio_framework_actor_pack::write_bytes(out, detail).await;
             }
         }
     }
 
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        match pack::read_u8(bytes, pos, "JobStepOutcome").await? {
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        match semio_framework_actor_pack::read_u8(bytes, pos, "JobStepOutcome").await? {
             0 => Ok(Self::Yield),
-            1 => Ok(Self::PreviewReady { preview: pack::read_bytes(bytes, pos, "JobStepOutcome::PreviewReady").await? }),
+            1 => Ok(Self::PreviewReady { preview: semio_framework_actor_pack::read_bytes(bytes, pos, "JobStepOutcome::PreviewReady").await? }),
             2 => Ok(Self::CheckpointReady { checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
             3 => Ok(Self::Complete { candidate: JobCommitCandidate::pack_decode(bytes, pos).await? }),
             4 => Ok(Self::Cancelled),
-            5 => Ok(Self::Fault { detail: pack::read_bytes(bytes, pos, "JobStepOutcome::Fault").await? }),
-            tag => Err(pack::PackError::InvalidTag { what: "JobStepOutcome", tag, offset: *pos }),
+            5 => Ok(Self::Fault { detail: semio_framework_actor_pack::read_bytes(bytes, pos, "JobStepOutcome::Fault").await? }),
+            tag => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "JobStepOutcome", tag, offset: *pos }),
         }
     }
 }
@@ -508,13 +505,13 @@ pub struct JobTurn {
 
 impl JobTurn {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.job).await;
+        semio_framework_actor_pack::write_u64(out, self.job).await;
         self.operation.pack_encode(out).await;
-        pack::write_u64(out, self.step_sequence).await;
+        semio_framework_actor_pack::write_u64(out, self.step_sequence).await;
     }
 
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { job: pack::read_u64(bytes, pos, "JobTurn::job").await?, operation: JobOperation::pack_decode(bytes, pos).await?, step_sequence: pack::read_u64(bytes, pos, "JobTurn::step_sequence").await? })
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self { job: semio_framework_actor_pack::read_u64(bytes, pos, "JobTurn::job").await?, operation: JobOperation::pack_decode(bytes, pos).await?, step_sequence: semio_framework_actor_pack::read_u64(bytes, pos, "JobTurn::step_sequence").await? })
     }
 }
 
@@ -543,7 +540,7 @@ impl JobPublication {
         self.outcome.pack_encode(out).await;
     }
 
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
         Ok(Self { turn: JobTurn::pack_decode(bytes, pos).await?, outcome: JobStepOutcome::pack_decode(bytes, pos).await? })
     }
 }
@@ -558,10 +555,10 @@ pub struct WindowId(pub u32);
 
 impl WindowId {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u32(out, self.0).await;
+        semio_framework_actor_pack::write_u32(out, self.0).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_u32(bytes, pos, "WindowId").await?))
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self(semio_framework_actor_pack::read_u32(bytes, pos, "WindowId").await?))
     }
 }
 
@@ -592,28 +589,28 @@ impl Origin {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
             Origin::Ui { window } => {
-                pack::write_u8(out, 0).await;
+                semio_framework_actor_pack::write_u8(out, 0).await;
                 window.pack_encode(out).await;
             }
             Origin::Actor { id } => {
-                pack::write_u8(out, 1).await;
+                semio_framework_actor_pack::write_u8(out, 1).await;
                 id.pack_encode(out).await;
             }
-            Origin::Kernel => pack::write_u8(out, 2).await,
+            Origin::Kernel => semio_framework_actor_pack::write_u8(out, 2).await,
             Origin::Bus { topic } => {
-                pack::write_u8(out, 3).await;
-                pack::write_str(out, topic).await;
+                semio_framework_actor_pack::write_u8(out, 3).await;
+                semio_framework_actor_pack::write_str(out, topic).await;
             }
         }
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "Origin").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let tag = semio_framework_actor_pack::read_u8(bytes, pos, "Origin").await?;
         match tag {
             0 => Ok(Origin::Ui { window: WindowId::pack_decode(bytes, pos).await? }),
             1 => Ok(Origin::Actor { id: ActorId::pack_decode(bytes, pos).await? }),
             2 => Ok(Origin::Kernel),
-            3 => Ok(Origin::Bus { topic: pack::read_str(bytes, pos, "Origin::topic").await? }),
-            other => Err(pack::PackError::InvalidTag { what: "Origin", tag: other, offset: *pos }),
+            3 => Ok(Origin::Bus { topic: semio_framework_actor_pack::read_str(bytes, pos, "Origin::topic").await? }),
+            other => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "Origin", tag: other, offset: *pos }),
         }
     }
 }
@@ -663,54 +660,54 @@ pub enum Payload {
 impl Payload {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            Payload::ContinueOriginalCall=>pack::write_u8(out,6).await,
+            Payload::ContinueOriginalCall=>semio_framework_actor_pack::write_u8(out,6).await,
             Payload::Event { bytes } => {
-                pack::write_u8(out, 0).await;
-                pack::write_bytes(out, bytes).await;
+                semio_framework_actor_pack::write_u8(out, 0).await;
+                semio_framework_actor_pack::write_bytes(out, bytes).await;
             }
             Payload::Suspend { operation, applied_progress } => {
-                pack::write_u8(out, 1).await;
+                semio_framework_actor_pack::write_u8(out, 1).await;
                 operation.pack_encode(out).await;
-                pack::write_u64(out, *applied_progress).await;
+                semio_framework_actor_pack::write_u64(out, *applied_progress).await;
             }
             Payload::Resume { operation, checkpoint } => {
-                pack::write_u8(out, 2).await;
+                semio_framework_actor_pack::write_u8(out, 2).await;
                 operation.pack_encode(out).await;
                 checkpoint.pack_encode(out).await;
             }
             Payload::Cancel { seq } => {
-                pack::write_u8(out, 3).await;
-                pack::write_u64(out, *seq).await;
+                semio_framework_actor_pack::write_u8(out, 3).await;
+                semio_framework_actor_pack::write_u64(out, *seq).await;
             }
             Payload::JobStep { turn } => {
-                pack::write_u8(out, 4).await;
+                semio_framework_actor_pack::write_u8(out, 4).await;
                 turn.pack_encode(out).await;
             }
             Payload::JobReplay { turn, request, worker_count, worker_slot } => {
-                pack::write_u8(out, 5).await;
+                semio_framework_actor_pack::write_u8(out, 5).await;
                 turn.pack_encode(out).await;
                 request.pack_encode(out).await;
-                pack::write_u16(out, *worker_count).await;
-                pack::write_u16(out, *worker_slot).await;
+                semio_framework_actor_pack::write_u16(out, *worker_count).await;
+                semio_framework_actor_pack::write_u16(out, *worker_slot).await;
             }
         }
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "Payload").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let tag = semio_framework_actor_pack::read_u8(bytes, pos, "Payload").await?;
         match tag {
             6 => Ok(Payload::ContinueOriginalCall),
-            0 => Ok(Payload::Event { bytes: pack::read_bytes(bytes, pos, "Payload::Event").await? }),
-            1 => Ok(Payload::Suspend { operation: JobOperation::pack_decode(bytes, pos).await?, applied_progress: pack::read_u64(bytes, pos, "Payload::Suspend::applied_progress").await? }),
+            0 => Ok(Payload::Event { bytes: semio_framework_actor_pack::read_bytes(bytes, pos, "Payload::Event").await? }),
+            1 => Ok(Payload::Suspend { operation: JobOperation::pack_decode(bytes, pos).await?, applied_progress: semio_framework_actor_pack::read_u64(bytes, pos, "Payload::Suspend::applied_progress").await? }),
             2 => Ok(Payload::Resume { operation: JobOperation::pack_decode(bytes, pos).await?, checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
-            3 => Ok(Payload::Cancel { seq: pack::read_u64(bytes, pos, "Payload::Cancel").await? }),
+            3 => Ok(Payload::Cancel { seq: semio_framework_actor_pack::read_u64(bytes, pos, "Payload::Cancel").await? }),
             4 => Ok(Payload::JobStep { turn: JobTurn::pack_decode(bytes, pos).await? }),
             5 => Ok(Payload::JobReplay {
                 turn: JobTurn::pack_decode(bytes, pos).await?,
                 request: JobReplayRequest::pack_decode(bytes, pos).await?,
-                worker_count: pack::read_u16(bytes, pos, "Payload::JobReplay::worker_count").await?,
-                worker_slot: pack::read_u16(bytes, pos, "Payload::JobReplay::worker_slot").await?,
+                worker_count: semio_framework_actor_pack::read_u16(bytes, pos, "Payload::JobReplay::worker_count").await?,
+                worker_slot: semio_framework_actor_pack::read_u16(bytes, pos, "Payload::JobReplay::worker_slot").await?,
             }),
-            other => Err(pack::PackError::InvalidTag { what: "Payload", tag: other, offset: *pos }),
+            other => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "Payload", tag: other, offset: *pos }),
         }
     }
 }
@@ -724,10 +721,10 @@ pub struct CoalesceKey(pub String);
 
 impl CoalesceKey {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_str(out, &self.0).await;
+        semio_framework_actor_pack::write_str(out, &self.0).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_str(bytes, pos, "CoalesceKey").await?))
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self(semio_framework_actor_pack::read_str(bytes, pos, "CoalesceKey").await?))
     }
 }
 //#endregion 🔑️CoalesceKey
@@ -753,23 +750,23 @@ impl Envelope {
         self.to.pack_encode(out).await;
         self.from.pack_encode(out).await;
         self.lane.pack_encode(out).await;
-        pack::write_u64(out, self.seq).await;
-        pack::write_opt_u64(out, &self.deadline_ms).await;
-        pack::write_bool(out, self.coalesce.is_some()).await;
+        semio_framework_actor_pack::write_u64(out, self.seq).await;
+        semio_framework_actor_pack::write_opt_u64(out, &self.deadline_ms).await;
+        semio_framework_actor_pack::write_bool(out, self.coalesce.is_some()).await;
         if let Some(key) = &self.coalesce {
             key.pack_encode(out).await;
         }
-        pack::write_opt_u64(out, &self.cancel_of).await;
+        semio_framework_actor_pack::write_opt_u64(out, &self.cancel_of).await;
         self.payload.pack_encode(out).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
         let to = ActorId::pack_decode(bytes, pos).await?;
         let from = Origin::pack_decode(bytes, pos).await?;
         let lane = Lane::pack_decode(bytes, pos).await?;
-        let seq = pack::read_u64(bytes, pos, "Envelope::seq").await?;
-        let deadline_ms = pack::read_opt_u64(bytes, pos, "Envelope::deadline_ms").await?;
-        let coalesce = if pack::read_bool(bytes, pos, "Envelope::coalesce").await? { Some(CoalesceKey::pack_decode(bytes, pos).await?) } else { None };
-        let cancel_of = pack::read_opt_u64(bytes, pos, "Envelope::cancel_of").await?;
+        let seq = semio_framework_actor_pack::read_u64(bytes, pos, "Envelope::seq").await?;
+        let deadline_ms = semio_framework_actor_pack::read_opt_u64(bytes, pos, "Envelope::deadline_ms").await?;
+        let coalesce = if semio_framework_actor_pack::read_bool(bytes, pos, "Envelope::coalesce").await? { Some(CoalesceKey::pack_decode(bytes, pos).await?) } else { None };
+        let cancel_of = semio_framework_actor_pack::read_opt_u64(bytes, pos, "Envelope::cancel_of").await?;
         let payload = Payload::pack_decode(bytes, pos).await?;
         Ok(Self { to, from, lane, seq, deadline_ms, coalesce, cancel_of, payload })
     }
@@ -805,39 +802,39 @@ pub enum TurnStatus {
 impl TurnStatus {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            TurnStatus::Idle => pack::write_u8(out, 0).await,
-            TurnStatus::MoreWork => pack::write_u8(out, 1).await,
+            TurnStatus::Idle => semio_framework_actor_pack::write_u8(out, 0).await,
+            TurnStatus::MoreWork => semio_framework_actor_pack::write_u8(out, 1).await,
             TurnStatus::CheckpointReady { checkpoint } => {
-                pack::write_u8(out, 2).await;
+                semio_framework_actor_pack::write_u8(out, 2).await;
                 checkpoint.pack_encode(out).await;
             }
             TurnStatus::Faulted { detail } => {
-                pack::write_u8(out, 3).await;
-                pack::write_bytes(out, detail).await;
+                semio_framework_actor_pack::write_u8(out, 3).await;
+                semio_framework_actor_pack::write_bytes(out, detail).await;
             }
             TurnStatus::PreviewReady { preview, sequence } => {
-                pack::write_u8(out, 4).await;
-                pack::write_bytes(out, preview).await;
-                pack::write_u64(out, *sequence).await;
+                semio_framework_actor_pack::write_u8(out, 4).await;
+                semio_framework_actor_pack::write_bytes(out, preview).await;
+                semio_framework_actor_pack::write_u64(out, *sequence).await;
             }
             TurnStatus::CommitReady { candidate } => {
-                pack::write_u8(out, 5).await;
+                semio_framework_actor_pack::write_u8(out, 5).await;
                 candidate.pack_encode(out).await;
             }
-            TurnStatus::Cancelled => pack::write_u8(out, 6).await,
+            TurnStatus::Cancelled => semio_framework_actor_pack::write_u8(out, 6).await,
         }
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "TurnStatus").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let tag = semio_framework_actor_pack::read_u8(bytes, pos, "TurnStatus").await?;
         match tag {
             0 => Ok(TurnStatus::Idle),
             1 => Ok(TurnStatus::MoreWork),
             2 => Ok(TurnStatus::CheckpointReady { checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
-            3 => Ok(TurnStatus::Faulted { detail: pack::read_bytes(bytes, pos, "TurnStatus::Faulted").await? }),
-            4 => Ok(TurnStatus::PreviewReady { preview: pack::read_bytes(bytes, pos, "TurnStatus::PreviewReady::preview").await?, sequence: pack::read_u64(bytes, pos, "TurnStatus::PreviewReady::sequence").await? }),
+            3 => Ok(TurnStatus::Faulted { detail: semio_framework_actor_pack::read_bytes(bytes, pos, "TurnStatus::Faulted").await? }),
+            4 => Ok(TurnStatus::PreviewReady { preview: semio_framework_actor_pack::read_bytes(bytes, pos, "TurnStatus::PreviewReady::preview").await?, sequence: semio_framework_actor_pack::read_u64(bytes, pos, "TurnStatus::PreviewReady::sequence").await? }),
             5 => Ok(TurnStatus::CommitReady { candidate: JobCommitCandidate::pack_decode(bytes, pos).await? }),
             6 => Ok(TurnStatus::Cancelled),
-            other => Err(pack::PackError::InvalidTag { what: "TurnStatus", tag: other, offset: *pos }),
+            other => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "TurnStatus", tag: other, offset: *pos }),
         }
     }
 }
@@ -853,12 +850,12 @@ pub struct Usage {
 
 impl Usage {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.fuel).await;
-        pack::write_u64(out, self.wall_us).await;
-        pack::write_u64(out, self.memory_bytes).await;
+        semio_framework_actor_pack::write_u64(out, self.fuel).await;
+        semio_framework_actor_pack::write_u64(out, self.wall_us).await;
+        semio_framework_actor_pack::write_u64(out, self.memory_bytes).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { fuel: pack::read_u64(bytes, pos, "Usage::fuel").await?, wall_us: pack::read_u64(bytes, pos, "Usage::wall_us").await?, memory_bytes: pack::read_u64(bytes, pos, "Usage::memory_bytes").await? })
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self { fuel: semio_framework_actor_pack::read_u64(bytes, pos, "Usage::fuel").await?, wall_us: semio_framework_actor_pack::read_u64(bytes, pos, "Usage::wall_us").await?, memory_bytes: semio_framework_actor_pack::read_u64(bytes, pos, "Usage::memory_bytes").await? })
     }
 }
 
@@ -880,74 +877,74 @@ pub struct TurnResult {
 }
 
 impl TurnResult {
-    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), pack::PackError> {
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), semio_framework_actor_pack::PackError> {
         let mut receipt = [0; instance_lifetime::ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES];
         let length = match self.lifecycle_receipt {
-            Some(value) => instance_lifetime::ActorInstanceLifecycleWire::Receipt(value).encode(&mut receipt).map_err(pack::PackError::InvalidLifecycle)?,
+            Some(value) => instance_lifetime::ActorInstanceLifecycleWire::Receipt(value).encode(&mut receipt).map_err(semio_framework_actor_pack::PackError::InvalidLifecycle)?,
             None => 0,
         };
-        self.cold_pair_ingress.validate().map_err(pack::PackError::InvalidColdPair)?;
-        instance_lifetime::ActorUiPatchReceipt::validate_pairing(self.ui_patch_receipt, usize::from(!self.ui_patches.is_empty())).map_err(pack::PackError::InvalidUiPatchReceipt)?;
+        self.cold_pair_ingress.validate().map_err(semio_framework_actor_pack::PackError::InvalidColdPair)?;
+        instance_lifetime::ActorUiPatchReceipt::validate_pairing(self.ui_patch_receipt, usize::from(!self.ui_patches.is_empty())).map_err(semio_framework_actor_pack::PackError::InvalidUiPatchReceipt)?;
         let mut patch_receipt = [0; instance_lifetime::ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES];
         let patch_length = match self.ui_patch_receipt {
-            Some(value) => value.encode(&mut patch_receipt).map_err(pack::PackError::InvalidUiPatchReceipt)?,
+            Some(value) => value.encode(&mut patch_receipt).map_err(semio_framework_actor_pack::PackError::InvalidUiPatchReceipt)?,
             None => 0,
         };
         self.retained_receipt.pack_encode(out).await?;
-        pack::write_bytes(out, &self.ui_patches).await;
-        pack::write_bytes(out, &self.effects).await;
-        pack::write_bytes(out, &self.command_ingress).await;
+        semio_framework_actor_pack::write_bytes(out, &self.ui_patches).await;
+        semio_framework_actor_pack::write_bytes(out, &self.effects).await;
+        semio_framework_actor_pack::write_bytes(out, &self.command_ingress).await;
         self.cold_pair_ingress.pack_encode(out).await?;
-        pack::write_bytes(out, &receipt[..length]).await;
-        pack::write_bytes(out, &patch_receipt[..patch_length]).await;
-        pack::write_opt_u64(out, &self.next_wake).await;
+        semio_framework_actor_pack::write_bytes(out, &receipt[..length]).await;
+        semio_framework_actor_pack::write_bytes(out, &patch_receipt[..patch_length]).await;
+        semio_framework_actor_pack::write_opt_u64(out, &self.next_wake).await;
         self.status.pack_encode(out).await;
         self.usage.pack_encode(out).await;
         Ok(())
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
         let result = Self {
             retained_receipt: RetainedTurnReceipt::pack_decode(bytes,pos).await?,
-            ui_patches: pack::read_bytes(bytes, pos, "TurnResult::ui_patches").await?,
-            effects: pack::read_bytes(bytes, pos, "TurnResult::effects").await?,
-            command_ingress: pack::read_bytes(bytes, pos, "TurnResult::command_ingress").await?,
+            ui_patches: semio_framework_actor_pack::read_bytes(bytes, pos, "TurnResult::ui_patches").await?,
+            effects: semio_framework_actor_pack::read_bytes(bytes, pos, "TurnResult::effects").await?,
+            command_ingress: semio_framework_actor_pack::read_bytes(bytes, pos, "TurnResult::command_ingress").await?,
             cold_pair_ingress: cold_pair::ColdPairIngressStatus::pack_decode(bytes, pos).await?,
             lifecycle_receipt: Self::read_lifecycle_receipt(bytes, pos).await?,
             ui_patch_receipt: Self::read_ui_patch_receipt(bytes, pos).await?,
-            next_wake: pack::read_opt_u64(bytes, pos, "TurnResult::next_wake").await?,
+            next_wake: semio_framework_actor_pack::read_opt_u64(bytes, pos, "TurnResult::next_wake").await?,
             status: TurnStatus::pack_decode(bytes, pos).await?,
             usage: Usage::pack_decode(bytes, pos).await?,
         };
-        instance_lifetime::ActorUiPatchReceipt::validate_pairing(result.ui_patch_receipt, usize::from(!result.ui_patches.is_empty())).map_err(pack::PackError::InvalidUiPatchReceipt)?;
+        instance_lifetime::ActorUiPatchReceipt::validate_pairing(result.ui_patch_receipt, usize::from(!result.ui_patches.is_empty())).map_err(semio_framework_actor_pack::PackError::InvalidUiPatchReceipt)?;
         Ok(result)
     }
 
-    async fn read_ui_patch_receipt(bytes: &[u8], pos: &mut usize) -> Result<Option<instance_lifetime::ActorUiPatchReceipt>, pack::PackError> {
-        let length = pack::read_u8(bytes, pos, "TurnResult::ui_patch_receipt.length").await? as usize;
+    async fn read_ui_patch_receipt(bytes: &[u8], pos: &mut usize) -> Result<Option<instance_lifetime::ActorUiPatchReceipt>, semio_framework_actor_pack::PackError> {
+        let length = semio_framework_actor_pack::read_u8(bytes, pos, "TurnResult::ui_patch_receipt.length").await? as usize;
         if length > instance_lifetime::ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES {
-            return Err(pack::PackError::InvalidUiPatchReceipt("receipt length exceeds fixed authority"));
+            return Err(semio_framework_actor_pack::PackError::InvalidUiPatchReceipt("receipt length exceeds fixed authority"));
         }
         if length == 0 {
             return Ok(None);
         }
-        let end = pos.checked_add(length).ok_or(pack::PackError::InvalidUiPatchReceipt("receipt offset overflow"))?;
-        let receipt = instance_lifetime::ActorUiPatchReceipt::decode(bytes.get(*pos..end).ok_or(pack::PackError::Truncated(*pos, "TurnResult::ui_patch_receipt"))?).map_err(pack::PackError::InvalidUiPatchReceipt)?;
+        let end = pos.checked_add(length).ok_or(semio_framework_actor_pack::PackError::InvalidUiPatchReceipt("receipt offset overflow"))?;
+        let receipt = instance_lifetime::ActorUiPatchReceipt::decode(bytes.get(*pos..end).ok_or(semio_framework_actor_pack::PackError::Truncated(*pos, "TurnResult::ui_patch_receipt"))?).map_err(semio_framework_actor_pack::PackError::InvalidUiPatchReceipt)?;
         *pos = end;
         Ok(Some(receipt))
     }
 
-    async fn read_lifecycle_receipt(bytes: &[u8], pos: &mut usize) -> Result<Option<instance_lifetime::ActorInstanceLifecycleReceipt>, pack::PackError> {
-        let length = pack::read_u8(bytes, pos, "TurnResult::lifecycle_receipt.length").await? as usize;
+    async fn read_lifecycle_receipt(bytes: &[u8], pos: &mut usize) -> Result<Option<instance_lifetime::ActorInstanceLifecycleReceipt>, semio_framework_actor_pack::PackError> {
+        let length = semio_framework_actor_pack::read_u8(bytes, pos, "TurnResult::lifecycle_receipt.length").await? as usize;
         if length > instance_lifetime::ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES {
-            return Err(pack::PackError::InvalidLifecycle("receipt length exceeds fixed authority"));
+            return Err(semio_framework_actor_pack::PackError::InvalidLifecycle("receipt length exceeds fixed authority"));
         }
         if length == 0 {
             return Ok(None);
         }
-        let end = pos.checked_add(length).ok_or(pack::PackError::InvalidLifecycle("receipt offset overflow"))?;
-        let receipt = bytes.get(*pos..end).ok_or(pack::PackError::Truncated(*pos, "TurnResult::lifecycle_receipt"))?;
-        let instance_lifetime::ActorInstanceLifecycleWire::Receipt(receipt) = instance_lifetime::ActorInstanceLifecycleWire::decode(receipt).map_err(pack::PackError::InvalidLifecycle)? else {
-            return Err(pack::PackError::InvalidLifecycle("turn result requires a receipt"));
+        let end = pos.checked_add(length).ok_or(semio_framework_actor_pack::PackError::InvalidLifecycle("receipt offset overflow"))?;
+        let receipt = bytes.get(*pos..end).ok_or(semio_framework_actor_pack::PackError::Truncated(*pos, "TurnResult::lifecycle_receipt"))?;
+        let instance_lifetime::ActorInstanceLifecycleWire::Receipt(receipt) = instance_lifetime::ActorInstanceLifecycleWire::decode(receipt).map_err(semio_framework_actor_pack::PackError::InvalidLifecycle)? else {
+            return Err(semio_framework_actor_pack::PackError::InvalidLifecycle("turn result requires a receipt"));
         };
         *pos = end;
         Ok(Some(receipt))
@@ -978,23 +975,23 @@ pub enum Backpressure {
 impl Backpressure {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            Backpressure::Accept => pack::write_u8(out, 0).await,
-            Backpressure::Coalesced => pack::write_u8(out, 1).await,
+            Backpressure::Accept => semio_framework_actor_pack::write_u8(out, 0).await,
+            Backpressure::Coalesced => semio_framework_actor_pack::write_u8(out, 1).await,
             Backpressure::Dropped { lane } => {
-                pack::write_u8(out, 2).await;
+                semio_framework_actor_pack::write_u8(out, 2).await;
                 lane.pack_encode(out).await;
             }
-            Backpressure::Rejected => pack::write_u8(out, 3).await,
+            Backpressure::Rejected => semio_framework_actor_pack::write_u8(out, 3).await,
         }
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "Backpressure").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let tag = semio_framework_actor_pack::read_u8(bytes, pos, "Backpressure").await?;
         match tag {
             0 => Ok(Backpressure::Accept),
             1 => Ok(Backpressure::Coalesced),
             2 => Ok(Backpressure::Dropped { lane: Lane::pack_decode(bytes, pos).await? }),
             3 => Ok(Backpressure::Rejected),
-            other => Err(pack::PackError::InvalidTag { what: "Backpressure", tag: other, offset: *pos }),
+            other => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "Backpressure", tag: other, offset: *pos }),
         }
     }
 }
@@ -1090,21 +1087,21 @@ impl Mailbox {
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u16(out, self.capacity).await;
-        pack::write_u16(out, self.len).await;
+        semio_framework_actor_pack::write_u16(out, self.capacity).await;
+        semio_framework_actor_pack::write_u16(out, self.len).await;
         for lane in &self.lanes {
-            pack::write_varint_u64(out, lane.len() as u64).await;
+            semio_framework_actor_pack::write_varint_u64(out, lane.len() as u64).await;
             for envelope in lane.iter() {
                 envelope.pack_encode(out).await;
             }
         }
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let capacity = pack::read_u16(bytes, pos, "Mailbox::capacity").await?;
-        let len = pack::read_u16(bytes, pos, "Mailbox::len").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let capacity = semio_framework_actor_pack::read_u16(bytes, pos, "Mailbox::capacity").await?;
+        let len = semio_framework_actor_pack::read_u16(bytes, pos, "Mailbox::len").await?;
         let mut lanes: [VecDeque<Envelope>; 4] = Default::default();
         for lane in lanes.iter_mut() {
-            *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await?.into();
+            *lane = semio_framework_actor_pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await?.into();
         }
         Ok(Self { capacity, lanes, len })
     }
@@ -1122,11 +1119,11 @@ pub struct CapabilityGrant {
 
 impl CapabilityGrant {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_str(out, &self.capability).await;
-        pack::write_opt_bytes(out, &self.scope).await;
+        semio_framework_actor_pack::write_str(out, &self.capability).await;
+        semio_framework_actor_pack::write_opt_bytes(out, &self.scope).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { capability: pack::read_str(bytes, pos, "CapabilityGrant::capability").await?, scope: pack::read_opt_bytes(bytes, pos, "CapabilityGrant::scope").await? })
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self { capability: semio_framework_actor_pack::read_str(bytes, pos, "CapabilityGrant::capability").await?, scope: semio_framework_actor_pack::read_opt_bytes(bytes, pos, "CapabilityGrant::scope").await? })
     }
 }
 /// 🔐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the security property of
@@ -1176,36 +1173,36 @@ impl FailureSignal {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
             FailureSignal::DeadlineOverrun { ratio } => {
-                pack::write_u8(out, 0).await;
-                pack::write_f32(out, *ratio).await;
+                semio_framework_actor_pack::write_u8(out, 0).await;
+                semio_framework_actor_pack::write_f32(out, *ratio).await;
             }
-            FailureSignal::FuelExhausted => pack::write_u8(out, 1).await,
-            FailureSignal::MemoryLimit => pack::write_u8(out, 2).await,
-            FailureSignal::MailboxOverflow => pack::write_u8(out, 3).await,
-            FailureSignal::UiQuota => pack::write_u8(out, 4).await,
+            FailureSignal::FuelExhausted => semio_framework_actor_pack::write_u8(out, 1).await,
+            FailureSignal::MemoryLimit => semio_framework_actor_pack::write_u8(out, 2).await,
+            FailureSignal::MailboxOverflow => semio_framework_actor_pack::write_u8(out, 3).await,
+            FailureSignal::UiQuota => semio_framework_actor_pack::write_u8(out, 4).await,
             FailureSignal::Trap { detail } => {
-                pack::write_u8(out, 5).await;
-                pack::write_str(out, detail).await;
+                semio_framework_actor_pack::write_u8(out, 5).await;
+                semio_framework_actor_pack::write_str(out, detail).await;
             }
             FailureSignal::HeartbeatMissed { count } => {
-                pack::write_u8(out, 6).await;
-                pack::write_u32(out, *count).await;
+                semio_framework_actor_pack::write_u8(out, 6).await;
+                semio_framework_actor_pack::write_u32(out, *count).await;
             }
-            FailureSignal::ManualReset => pack::write_u8(out, 7).await,
+            FailureSignal::ManualReset => semio_framework_actor_pack::write_u8(out, 7).await,
         }
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "FailureSignal").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let tag = semio_framework_actor_pack::read_u8(bytes, pos, "FailureSignal").await?;
         match tag {
-            0 => Ok(FailureSignal::DeadlineOverrun { ratio: pack::read_f32(bytes, pos, "FailureSignal::ratio").await? }),
+            0 => Ok(FailureSignal::DeadlineOverrun { ratio: semio_framework_actor_pack::read_f32(bytes, pos, "FailureSignal::ratio").await? }),
             1 => Ok(FailureSignal::FuelExhausted),
             2 => Ok(FailureSignal::MemoryLimit),
             3 => Ok(FailureSignal::MailboxOverflow),
             4 => Ok(FailureSignal::UiQuota),
-            5 => Ok(FailureSignal::Trap { detail: pack::read_str(bytes, pos, "FailureSignal::Trap").await? }),
-            6 => Ok(FailureSignal::HeartbeatMissed { count: pack::read_u32(bytes, pos, "FailureSignal::count").await? }),
+            5 => Ok(FailureSignal::Trap { detail: semio_framework_actor_pack::read_str(bytes, pos, "FailureSignal::Trap").await? }),
+            6 => Ok(FailureSignal::HeartbeatMissed { count: semio_framework_actor_pack::read_u32(bytes, pos, "FailureSignal::count").await? }),
             7 => Ok(FailureSignal::ManualReset),
-            other => Err(pack::PackError::InvalidTag { what: "FailureSignal", tag: other, offset: *pos }),
+            other => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "FailureSignal", tag: other, offset: *pos }),
         }
     }
 }
@@ -1228,40 +1225,40 @@ pub enum FailureStage {
 impl FailureStage {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            FailureStage::Healthy => pack::write_u8(out, 0).await,
-            FailureStage::Warned => pack::write_u8(out, 1).await,
+            FailureStage::Healthy => semio_framework_actor_pack::write_u8(out, 0).await,
+            FailureStage::Warned => semio_framework_actor_pack::write_u8(out, 1).await,
             FailureStage::Throttled { factor } => {
-                pack::write_u8(out, 2).await;
-                pack::write_f32(out, *factor).await;
+                semio_framework_actor_pack::write_u8(out, 2).await;
+                semio_framework_actor_pack::write_f32(out, *factor).await;
             }
             FailureStage::Suspended { until } => {
-                pack::write_u8(out, 3).await;
-                pack::write_u64(out, *until).await;
+                semio_framework_actor_pack::write_u8(out, 3).await;
+                semio_framework_actor_pack::write_u64(out, *until).await;
             }
-            FailureStage::Cancelled => pack::write_u8(out, 4).await,
+            FailureStage::Cancelled => semio_framework_actor_pack::write_u8(out, 4).await,
             FailureStage::Trapped { restarts } => {
-                pack::write_u8(out, 5).await;
-                pack::write_u32(out, *restarts).await;
+                semio_framework_actor_pack::write_u8(out, 5).await;
+                semio_framework_actor_pack::write_u32(out, *restarts).await;
             }
             FailureStage::Quarantined { until } => {
-                pack::write_u8(out, 6).await;
-                pack::write_u64(out, *until).await;
+                semio_framework_actor_pack::write_u8(out, 6).await;
+                semio_framework_actor_pack::write_u64(out, *until).await;
             }
-            FailureStage::Disabled => pack::write_u8(out, 7).await,
+            FailureStage::Disabled => semio_framework_actor_pack::write_u8(out, 7).await,
         }
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "FailureStage").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let tag = semio_framework_actor_pack::read_u8(bytes, pos, "FailureStage").await?;
         match tag {
             0 => Ok(FailureStage::Healthy),
             1 => Ok(FailureStage::Warned),
-            2 => Ok(FailureStage::Throttled { factor: pack::read_f32(bytes, pos, "FailureStage::factor").await? }),
-            3 => Ok(FailureStage::Suspended { until: pack::read_u64(bytes, pos, "FailureStage::until").await? }),
+            2 => Ok(FailureStage::Throttled { factor: semio_framework_actor_pack::read_f32(bytes, pos, "FailureStage::factor").await? }),
+            3 => Ok(FailureStage::Suspended { until: semio_framework_actor_pack::read_u64(bytes, pos, "FailureStage::until").await? }),
             4 => Ok(FailureStage::Cancelled),
-            5 => Ok(FailureStage::Trapped { restarts: pack::read_u32(bytes, pos, "FailureStage::restarts").await? }),
-            6 => Ok(FailureStage::Quarantined { until: pack::read_u64(bytes, pos, "FailureStage::until").await? }),
+            5 => Ok(FailureStage::Trapped { restarts: semio_framework_actor_pack::read_u32(bytes, pos, "FailureStage::restarts").await? }),
+            6 => Ok(FailureStage::Quarantined { until: semio_framework_actor_pack::read_u64(bytes, pos, "FailureStage::until").await? }),
             7 => Ok(FailureStage::Disabled),
-            other => Err(pack::PackError::InvalidTag { what: "FailureStage", tag: other, offset: *pos }),
+            other => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "FailureStage", tag: other, offset: *pos }),
         }
     }
 }
@@ -1409,18 +1406,18 @@ impl FailureState {
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         self.stage.pack_encode(out).await;
-        pack::write_u32(out, self.clean_turns).await;
-        pack::write_u32(out, self.warn_count).await;
-        pack::write_u32(out, self.restart_count).await;
-        pack::write_u64(out, self.last_signal_ms).await;
+        semio_framework_actor_pack::write_u32(out, self.clean_turns).await;
+        semio_framework_actor_pack::write_u32(out, self.warn_count).await;
+        semio_framework_actor_pack::write_u32(out, self.restart_count).await;
+        semio_framework_actor_pack::write_u64(out, self.last_signal_ms).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
         Ok(Self {
             stage: FailureStage::pack_decode(bytes, pos).await?,
-            clean_turns: pack::read_u32(bytes, pos, "FailureState::clean_turns").await?,
-            warn_count: pack::read_u32(bytes, pos, "FailureState::warn_count").await?,
-            restart_count: pack::read_u32(bytes, pos, "FailureState::restart_count").await?,
-            last_signal_ms: pack::read_u64(bytes, pos, "FailureState::last_signal_ms").await?,
+            clean_turns: semio_framework_actor_pack::read_u32(bytes, pos, "FailureState::clean_turns").await?,
+            warn_count: semio_framework_actor_pack::read_u32(bytes, pos, "FailureState::warn_count").await?,
+            restart_count: semio_framework_actor_pack::read_u32(bytes, pos, "FailureState::restart_count").await?,
+            last_signal_ms: semio_framework_actor_pack::read_u64(bytes, pos, "FailureState::last_signal_ms").await?,
         })
     }
 }
@@ -1460,31 +1457,31 @@ pub enum ActorStatus {
 impl ActorStatus {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            ActorStatus::Cold => pack::write_u8(out, 0).await,
-            ActorStatus::Activating => pack::write_u8(out, 1).await,
-            ActorStatus::Active => pack::write_u8(out, 2).await,
+            ActorStatus::Cold => semio_framework_actor_pack::write_u8(out, 0).await,
+            ActorStatus::Activating => semio_framework_actor_pack::write_u8(out, 1).await,
+            ActorStatus::Active => semio_framework_actor_pack::write_u8(out, 2).await,
             ActorStatus::Suspended { checkpoint } => {
-                pack::write_u8(out, 3).await;
-                pack::write_opt_bytes(out, checkpoint).await;
+                semio_framework_actor_pack::write_u8(out, 3).await;
+                semio_framework_actor_pack::write_opt_bytes(out, checkpoint).await;
             }
-            ActorStatus::Draining => pack::write_u8(out, 4).await,
-            ActorStatus::Trapped => pack::write_u8(out, 5).await,
-            ActorStatus::Quarantined => pack::write_u8(out, 6).await,
-            ActorStatus::Disabled => pack::write_u8(out, 7).await,
+            ActorStatus::Draining => semio_framework_actor_pack::write_u8(out, 4).await,
+            ActorStatus::Trapped => semio_framework_actor_pack::write_u8(out, 5).await,
+            ActorStatus::Quarantined => semio_framework_actor_pack::write_u8(out, 6).await,
+            ActorStatus::Disabled => semio_framework_actor_pack::write_u8(out, 7).await,
         }
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "ActorStatus").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let tag = semio_framework_actor_pack::read_u8(bytes, pos, "ActorStatus").await?;
         match tag {
             0 => Ok(ActorStatus::Cold),
             1 => Ok(ActorStatus::Activating),
             2 => Ok(ActorStatus::Active),
-            3 => Ok(ActorStatus::Suspended { checkpoint: pack::read_opt_bytes(bytes, pos, "ActorStatus::Suspended").await? }),
+            3 => Ok(ActorStatus::Suspended { checkpoint: semio_framework_actor_pack::read_opt_bytes(bytes, pos, "ActorStatus::Suspended").await? }),
             4 => Ok(ActorStatus::Draining),
             5 => Ok(ActorStatus::Trapped),
             6 => Ok(ActorStatus::Quarantined),
             7 => Ok(ActorStatus::Disabled),
-            other => Err(pack::PackError::InvalidTag { what: "ActorStatus", tag: other, offset: *pos }),
+            other => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "ActorStatus", tag: other, offset: *pos }),
         }
     }
 }
@@ -1525,14 +1522,14 @@ impl ShardKind {
         }
     }
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u8(out, self.tag().await).await;
+        semio_framework_actor_pack::write_u8(out, self.tag().await).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        match pack::read_u8(bytes, pos, "ShardKind").await? {
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        match semio_framework_actor_pack::read_u8(bytes, pos, "ShardKind").await? {
             0 => Ok(ShardKind::Native),
             1 => Ok(ShardKind::WebWorker),
             2 => Ok(ShardKind::Process),
-            other => Err(pack::PackError::InvalidTag { what: "ShardKind", tag: other, offset: *pos }),
+            other => Err(semio_framework_actor_pack::PackError::InvalidTag { what: "ShardKind", tag: other, offset: *pos }),
         }
     }
 }
@@ -1543,10 +1540,10 @@ pub struct ShardId(pub u16);
 
 impl ShardId {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u16(out, self.0).await;
+        semio_framework_actor_pack::write_u16(out, self.0).await;
     }
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_u16(bytes, pos, "ShardId").await?))
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        Ok(Self(semio_framework_actor_pack::read_u16(bytes, pos, "ShardId").await?))
     }
 }
 

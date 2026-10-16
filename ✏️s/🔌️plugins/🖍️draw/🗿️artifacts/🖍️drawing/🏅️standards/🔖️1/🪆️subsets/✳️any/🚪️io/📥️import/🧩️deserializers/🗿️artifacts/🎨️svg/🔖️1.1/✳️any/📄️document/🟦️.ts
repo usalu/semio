@@ -1,7 +1,9 @@
 import {drawingFontFamilyFromCatalog} from "../../../../../../../../🧬️schema/📝️text/🔤️family/🟦️.ts";
 /** 📄️ Incrementally construct an editable SVG hierarchy with explicit unsupported-feature failures. */
 import type {DrawingSnapshot} from "../../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {DrawingLayerNode,PathGeometrySegment} from "../../../../../../../../🧬️schema/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
+import {drawingPathFromGeometry,type DrawingAttributes,type DrawingColor,type DrawingFill,type DrawingLayerNode,type PathGeometrySegment} from "../../../../../../../../🧬️schema/🟦️.ts";
+import {parseStrokeCap,parseStrokeJoin} from "../../../../../../../../🧬️schema/🖊️stroke/🟦️.ts";
 import {parseFillRule} from "../../../../../../../../🧬️schema/🎨️fill/🌀️rule/🟦️.ts";
 import {drawingMatrixToTransform,drawingTransformToMatrix} from "../../../../../../../../🧬️schema/🧮️geometry/↗️affine/🟦️.ts";
 import {multiply,segmentBounds,type Matrix,type Point} from "../../../../../../../../🧬️schema/🧮️geometry/🟦️.ts";
@@ -46,15 +48,16 @@ function isolation(value:string|undefined):boolean {
   if(value!==undefined&&value!=="auto"&&value!=="isolate")throw new Error("Invalid SVG isolation");
   return value==="isolate";
 }
-function attributes(style:Style){
-  const result:Record<string,unknown>={fillRule:parseFillRule(style["fill-rule"]??"nonzero")};
+const words=(rgba:readonly [number,number,number,number]):DrawingColor=>[binary64(rgba[0]),binary64(rgba[1]),binary64(rgba[2]),binary64(rgba[3])];
+function attributes(style:Style):DrawingAttributes{
+  const result:DrawingAttributes={fillRule:parseFillRule(style["fill-rule"]??"nonzero")};
   const resolve=(paint:string)=>paint==="currentColor"?style.color??"black":paint;
-  const fill=style.fill??"black";if(fill!=="none")result.fill={kind:"solid",color:color(resolve(fill),fraction(style["fill-opacity"]))};
+  const fill=style.fill??"black";if(fill!=="none")result.fill={kind:"solid",color:words(color(resolve(fill),fraction(style["fill-opacity"])))};
   if(style.stroke&&style.stroke!=="none"){
     const cap=style["stroke-linecap"]??"butt",join=style["stroke-linejoin"]??"miter";
     if(!["butt","round","square"].includes(cap)||!["miter","round","bevel"].includes(join))throw new Error("Invalid SVG stroke ending");
     const dash=style["stroke-dasharray"]&&style["stroke-dasharray"]!=="none"?style["stroke-dasharray"]!.trim().split(/[ ,]+/).map(v=>nonnegative(length(v))):undefined;
-    result.stroke={color:color(resolve(style.stroke),fraction(style["stroke-opacity"])),width:nonnegative(length(style["stroke-width"],1)),cap,join,...(dash?{dash}: {})};
+    result.stroke={color:words(color(resolve(style.stroke),fraction(style["stroke-opacity"]))),width:binary64(nonnegative(length(style["stroke-width"],1))),cap:parseStrokeCap(cap),join:parseStrokeJoin(join),...(dash?{dash:dash.map(binary64)}:{})};
   }
   return result;
 }
@@ -94,7 +97,7 @@ function viewport(root:Element):{width:number;height:number;matrix:Matrix}{
   if(align!=="none"){sx=sy=mode==="slice"?Math.max(sx,sy):Math.min(sx,sy);const part=(value:string)=>value==="Min"?0:value==="Mid"?.5:1;dx=(width-box[2]!*sx)*part(align.slice(1,4));dy=(height-box[3]!*sy)*part(align.slice(5));}
   return {width,height,matrix:[sx,0,0,sy,dx-box[0]!*sx,dy-box[1]!*sy]};
 }
-function gradientFill(reference:string,definitions:Map<string,Element>,segments:PathGeometrySegment[],viewport:[number,number],alpha:number){
+function gradientFill(reference:string,definitions:Map<string,Element>,segments:PathGeometrySegment[],viewport:[number,number],alpha:number):DrawingFill|undefined{
   const match=/^url\(\s*["']?#([^"'()\s]+)["']?\s*\)$/.exec(reference);if(!match)throw new Error("SVG paint needs a local gradient reference");
   let element=definitions.get(match[1]!);if(!element)throw new Error("Missing SVG gradient");
   if(element.localName!=="linearGradient")throw new Error("Radial SVG gradient import requires an authored gradient coordinate system");
@@ -116,7 +119,7 @@ function gradientFill(reference:string,definitions:Map<string,Element>,segments:
     const offset=stop.getAttribute("offset")||"0",number=offset.endsWith("%")?scalar(offset.slice(0,-1))/100:scalar(offset);last=Math.max(last,Math.min(1,Math.max(0,number)));
     return {offset:last,color:color(style["stop-color"]||stop.getAttribute("stop-color")||"black",alpha*fraction(style["stop-opacity"]||stop.getAttribute("stop-opacity")||undefined))};
   });
-  if(!stops.length)return undefined;if(stops.length===1)return {kind:"solid",color:stops[0]!.color};
+  if(!stops.length)return undefined;if(stops.length===1)return {kind:"solid",color:words(stops[0]!.color)};
   const unit=attrs.gradientUnits??"objectBoundingBox";if(!["objectBoundingBox","userSpaceOnUse"].includes(unit))throw new Error("Invalid SVG gradient units");
   let current:Point=[0,0],start:Point=[0,0],min=[Infinity,Infinity],max=[-Infinity,-Infinity];
   for(const segment of segments){
@@ -127,11 +130,11 @@ function gradientFill(reference:string,definitions:Map<string,Element>,segments:
   if(unit==="objectBoundingBox"){const w=max[0]!-min[0]!,h=max[1]!-min[1]!;if(!(w>0&&h>0))return undefined;matrix=multiply([w,0,0,h,min[0]!,min[1]!],matrix);}
   const coordinate=(name:string,fallback:string,axis:0|1)=>{const source=attrs[name]??fallback;return source.endsWith("%")?scalar(source.slice(0,-1))/100*(unit==="objectBoundingBox"?1:viewport[axis]):unit==="objectBoundingBox"?scalar(source):length(source);};
   const x=coordinate("x1","0%",0),y=coordinate("y1","0%",1),vx=coordinate("x2","100%",0)-x,vy=coordinate("y2","0%",1)-y;
-  if(vx===0&&vy===0)return {kind:"solid",color:stops.at(-1)!.color};
+  if(vx===0&&vy===0)return {kind:"solid",color:words(stops.at(-1)!.color)};
   const [a,b,c,d,e,f]=matrix,det=a*d-b*c,len=vx*vx+vy*vy;if(det===0)throw new Error("Singular SVG gradient transform");
   const nx=(d*vx-b*vy)/det/len,ny=(-c*vx+a*vy)/det/len,norm=nx*nx+ny*ny,x1=a*x+c*y+e,y1=b*x+d*y+f,x2=x1+nx/norm,y2=y1+ny/norm;
   if(![x1,y1,x2,y2].every(Number.isFinite))throw new Error("SVG gradient exceeds finite coordinates");
-  return {kind:"linearGradient",x1,y1,x2,y2,stops};
+  return {kind:"linearGradient",x1:binary64(x1),y1:binary64(y1),x2:binary64(x2),y2:binary64(y2),stops:stops.map(stop=>({offset:binary64(stop.offset),color:words(stop.color)}))};
 }
 export class SvgImportJob {
   private gradients=new Map<string,Element>();private userViewport:[number,number];
@@ -141,10 +144,10 @@ export class SvgImportJob {
     const xml=new DOMParser().parseFromString(source,"image/svg+xml"),root=xml.documentElement;
     if(!root||root.localName!=="svg"||xml.getElementsByTagName("parsererror").length)throw new Error("Invalid SVG document");
     const frame=viewport(root),title=Array.from(root.childNodes).find(n=>n.nodeType===1&&(n as Element).localName==="title")?.textContent?.trim()||"SVG";
-    this.document={schema:"drawing.document",id,title,layers:[],assets:{},artboard:{width:frame.width,height:frame.height}};
+    const snapshot:DrawingSnapshot={schema:"drawing.document",id,title,layers:[],assets:{},artboard:{width:binary64(frame.width),height:binary64(frame.height)}};this.document=snapshot;
     const box=root.getAttribute("viewBox");this.userViewport=box?box.trim().split(/[ ,\t\r\n]+/).map(scalar).slice(2) as [number,number]:[frame.width,frame.height];
     for(const node of Array.from(root.getElementsByTagName("*")))if(["linearGradient","radialGradient"].includes(node.localName)&&node.hasAttribute("id")){const id=node.getAttribute("id")!;if(this.gradients.has(id))throw new Error("Duplicate SVG gradient id");this.gradients.set(id,node);}
-    this.pending=[{element:root,id:"svg",style:{},parent:this.document.layers as Layer[]}];
+    this.pending=[{element:root,id:"svg",style:{},parent:snapshot.layers as Layer[]}];
   }
   cancel(){this.cancelled=true;this.pending=[];this.gradients.clear();this.document=undefined;}
   step(budget=64):SvgImportProgress {
@@ -161,19 +164,19 @@ export class SvgImportJob {
     const style=properties(element,work.style),name=element.getAttribute("inkscape:label")||element.getAttribute("id")||(id==="svg"?this.document!.title!:tag);
     let transform=parseEditableSvgTransform(element.getAttribute("transform")??"");
     if(id==="svg")transform=drawingMatrixToTransform(multiply(drawingTransformToMatrix(transform),viewport(element).matrix));
-    const base={id,name,visible:style.display!=="none"&&((tag==="g"||tag==="svg")||!["hidden","collapse"].includes(style.visibility??"visible")),locked:false,opacity:fraction(style.opacity),blendMode:blendMode(style["mix-blend-mode"]),transform,attributes:attributes(style.fill?.startsWith("url(")?{...style,fill:"none"}:style)};
+    const base={id,name,visible:style.display!=="none"&&((tag==="g"||tag==="svg")||!["hidden","collapse"].includes(style.visibility??"visible")),locked:false,opacity:binary64(fraction(style.opacity)),blendMode:blendMode(style["mix-blend-mode"]),transform,attributes:attributes(style.fill?.startsWith("url(")?{...style,fill:"none"}:style)};
     const isolated=isolation(style.isolation);
-    let layer:Layer;
+    let layer:Layer,numeric:PathGeometrySegment[]=[];
     if(tag==="g"||id==="svg"){
-      layer={kind:"group",...base,...(isolated?{isolation:true}:{}),children:[]};const children=Array.from(element.childNodes).filter(n=>n.nodeType===1) as Element[];
+      layer={kind:"group",...base,isolation:isolated,children:[]};const children=Array.from(element.childNodes).filter(n=>n.nodeType===1) as Element[];
       for(let i=children.length-1;i>=0;i--)this.pending.push({element:children[i]!,style,id:`${id}.${i}`,parent:layer.children!});
     }else if(tag==="text"){
       if(Array.from(element.childNodes).some(n=>n.nodeType===1))throw new Error("Positioned SVG text spans are not supported yet");
-      const size=nonnegative(length(style["font-size"],16));layer={kind:"text",fontFamily:style["font-family"]===undefined?"anta":drawingFontFamilyFromCatalog(style["font-family"]!),...base,x:length(element.hasAttribute("x")?element.getAttribute("x")!:undefined),y:length(element.hasAttribute("y")?element.getAttribute("y")!:undefined)-size,content:element.textContent??"",size};
-    }else layer={kind:"path",...base,segments:geometry(element)};
+      const size=nonnegative(length(style["font-size"],16));layer={kind:"text",fontFamily:style["font-family"]===undefined?"anta":drawingFontFamilyFromCatalog(style["font-family"]!),...base,x:binary64(length(element.hasAttribute("x")?element.getAttribute("x")!:undefined)),y:binary64(length(element.hasAttribute("y")?element.getAttribute("y")!:undefined)-size),content:element.textContent??"",size:binary64(size)};
+    }else{numeric=geometry(element);layer={kind:"path",...base,segments:numeric.map(drawingPathFromGeometry)};}
     if(style.fill?.startsWith("url(")&&layer.kind!=="group"){
       if(layer.kind!=="path")throw new Error("SVG text gradients need exact text bounds");
-      const fill=gradientFill(style.fill,this.gradients,layer.segments as PathGeometrySegment[],this.userViewport,fraction(style["fill-opacity"]));if(fill)base.attributes.fill=fill;
+      const fill=gradientFill(style.fill,this.gradients,numeric,this.userViewport,fraction(style["fill-opacity"]));if(fill)base.attributes.fill=fill;
     }
     parent.push(layer);
   }

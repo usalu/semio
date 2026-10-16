@@ -49,8 +49,8 @@ fn history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffol
 fn history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories() {
     use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactHistoryReadRetirement};
 use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
-use super::fixture_mutations::demo::DemoMutation;
-use super::tests::DemoSnapshot;
+use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
+use semio_framework_os_store_testing_fixtures::DemoSnapshot;
 use semio_framework_value::ErasedSnapshotRetirement;
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::OwnedValueRetirementFactory};
     use std::{mem::ManuallyDrop,sync::Arc,marker::PhantomData};
@@ -77,8 +77,8 @@ use semio_framework_value::ErasedSnapshotRetirement;
 fn history_completed_plan_retains_original_residue_and_transferred_results() {
     use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactDerivedReplay};
 use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
-use super::fixture_mutations::demo::DemoMutation;
-use super::tests::DemoSnapshot;
+use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
+use semio_framework_os_store_testing_fixtures::DemoSnapshot;
     use std::{sync::Arc,marker::PhantomData};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for route in law["completionRoutes"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for frontier in law["cancelAt"].as_array().unwrap(){
@@ -113,8 +113,8 @@ fn history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_
 use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
 use semio_framework_os_store_replay::{EditReplay, ReplayOwnedState};
 use semio_framework_value::ErasedSnapshotRetirement;
-use super::fixture_mutations::demo::DemoMutation;
-use super::tests::DemoSnapshot;
+use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
+use semio_framework_os_store_testing_fixtures::DemoSnapshot;
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::OwnedValueRetirementFactory};
     use std::{mem::ManuallyDrop,sync::Arc};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
@@ -139,8 +139,8 @@ fn history_preview_output_retains_original_inputs_until_granted_parent_and_proje
     use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactHistoryReadRetirement};
 use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
 use semio_framework_value::ErasedSnapshotRetirement;
-use super::fixture_mutations::demo::DemoMutation;
-use super::tests::DemoSnapshot;
+use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
+use semio_framework_os_store_testing_fixtures::DemoSnapshot;
 use semio_framework_os_vcs::VcsError;
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::{OwnedValueRetirementFactory,shared::factory::FactorySharedRetirement}};
     use std::{mem::ManuallyDrop,sync::Arc,marker::PhantomData};

@@ -1,4 +1,4 @@
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 export type ComponentStageFacetV1="model"|"browser";
 /** 🪜️ Copies the closed component delivery facet into the exact finite stage dependency graph. */

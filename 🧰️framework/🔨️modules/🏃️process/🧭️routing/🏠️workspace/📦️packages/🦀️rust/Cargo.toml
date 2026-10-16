@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-process-routing-workspace"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Build-tool-neutral workspace identity with caller-owned JSON decoding."
+
+[package.metadata.semio]
+role = "framework"
+id = "process-routing-workspace"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]

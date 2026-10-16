@@ -1,0 +1,62 @@
+{
+ "id": "os-history-record-decode",
+ "pkg": "semio_framework_os_history_record_decode",
+ "trees": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/"
+ ],
+ "inputs_units": [
+  "os-history-record-decode-lib-test-semio-framework-os-history-record-decode"
+ ],
+ "p_lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📋️record-set/🦀️.rs",
+ "p_dirs": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/"
+ ],
+ "comps": [
+  {
+   "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧪️tests/🧿️companion/🦀️.rs"
+  }
+ ],
+ "ext": [
+  "protocol",
+  "semio_framework_value",
+  "semio_framework_diagnostic",
+  "semio_framework_pack",
+  "semio_framework_pack_json",
+  "semio_framework_os_history_schema",
+  "semio_framework_os_history_codec",
+  "semio_framework_os_history_identity",
+  "semio_framework_trace_memory_testing",
+  "serde_json",
+  "semio_framework_async_macros",
+  "semio_framework_os_history_testing_retirement",
+  "pack"
+ ],
+ "base_features": [],
+ "features": [
+  "testkit"
+ ],
+ "traits": [
+  "JsonReadSource",
+  "RetireOwned"
+ ],
+ "glob_names": {
+  "semio_framework_os_history_schema": [
+   "HistoryComposition",
+   "HistoryConflict",
+   "HistoryEdit",
+   "HistoryEdits",
+   "HistoryMessage",
+   "HistoryOpMeta",
+   "HistoryTransitionRecord",
+   "OpPayload",
+   "OriginalHistoryEdits"
+  ]
+ },
+ "seed_found": {
+  "semio_framework_os_history_testing_retirement": [
+   [
+    "close_original"
+   ]
+  ]
+ }
+}

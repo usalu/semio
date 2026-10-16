@@ -2,7 +2,7 @@
 import {validateBlock3dCatalogDialect, type Block3dSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {sqliteOperation,type SqliteDatabase,type SqliteDatabaseOptions} from "@semio-tech/framework/io/sqlite-snapshot";
 import {ArtifactSqliteProjection} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
-import * as p from "../../../../../../../../../🧬️schema/🧱️shared/🪶️sqlite/🟦️.ts";
+import * as p from "../../../../../../../../../🧬️schema/🧱️document-fields/🪶️sqlite/🟦️.ts";
 import {BLOCK3D_SQLITE_SCHEMA as SQL} from "./🗄️schema/🟦️.ts";
 
 function capture(value:unknown):Block3dSnapshot{

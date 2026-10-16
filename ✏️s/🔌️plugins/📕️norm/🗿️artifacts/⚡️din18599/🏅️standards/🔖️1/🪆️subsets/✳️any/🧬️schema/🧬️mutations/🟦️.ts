@@ -1,7 +1,7 @@
 /** 🧺️ `Din18599Mutation` wire twin: the mutation aggregate, branch for branch as `./🔣️.json` spells it, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { type NormWireReader, normWireTagged } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { type NormWireReader, normWireTagged } from "@semio-tech/norm-js/registry/contract";
 import { parseUpdateRenewables, type UpdateRenewables } from "./☀️update-renewables/🧬️schema/🟦️.ts";
 import { type ChangeGegQpFactor, parseChangeGegQpFactor } from "./⚖️change-geg-qp-factor/🧬️schema/🟦️.ts";
 import { parseUpdateCooling, type UpdateCooling } from "./❄️update-cooling/🧬️schema/🟦️.ts";

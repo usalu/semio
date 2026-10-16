@@ -3,7 +3,7 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use super::{ShellState, UiDirtyScope};
+use super::UiDirtyScope;
 use std::collections::{BTreeMap, BTreeSet};
 use ui_wgpu::wgpu::tree_window::{served_requests, TreeWindowRequest, TreeWindowServedMemory};
 

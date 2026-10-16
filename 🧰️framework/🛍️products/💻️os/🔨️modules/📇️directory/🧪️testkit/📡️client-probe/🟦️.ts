@@ -1,8 +1,8 @@
-import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../🚪️io/📝️text/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 import { randomBytes } from "node:crypto";
 import { decodeServerFrame, encodeClientFrame } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
 import { parseDocumentSocketGrantReceiptV1 } from "../../../../🟦️.ts";
-import { createSpaceCommandV1 } from "../../🏘️spaces/🟦️.ts";
+import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
 
 import { sealSpaceArtifactCreateV1 } from "../../🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 

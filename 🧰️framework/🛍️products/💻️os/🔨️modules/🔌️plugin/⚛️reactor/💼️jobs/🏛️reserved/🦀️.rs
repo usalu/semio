@@ -1,4 +1,5 @@
 //! 🏛️ The framework-reserved job kind of the job table: its bounded job, admission factory and the registry driver the instance runs it through.
+use semio_framework_actor::OriginalJobStep as JobStep;
 use semio_framework::Fault;
 use semio_framework::FaultCode;
 use semio_framework::FaultOrigin;
@@ -9,18 +10,19 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use crate::reserved_jobs::FRAMEWORK_RESERVED_JOB_MAGIC;
+use semio_framework_plugin_job::reserved_jobs::FRAMEWORK_RESERVED_JOB_MAGIC;
 
 /// 🧪️ Drives one framework-reserved spawn-job through the real reactor registry: a genuine original admission under a
 /// caller context funded with at least the registry's own quoted grant, then bounded steps until its terminal output.
-pub(crate) fn drive_framework_reserved_registry_job(job: u64, input: Vec<u8>, policy: RetainedCloneGrant) -> Result<Vec<u8>,OriginalTurnFailure> {
+#[doc(hidden)]
+pub fn drive_framework_reserved_registry_job(job: u64, input: Vec<u8>, policy: RetainedCloneGrant) -> Result<Vec<u8>,OriginalTurnFailure> {
     drive_framework_reserved_registry_job_counted(job, input, policy).map(|(output, _)| output)
 }
 
 /// 🧪️ The same registry drive, also reporting how many funded `step_job` turns the job needed.
-pub(crate) fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec<u8>, policy: RetainedCloneGrant) -> Result<(Vec<u8>,u32),OriginalTurnFailure> {
-    use crate::reactor::jobs::{start_job, step_job, IoRunControl, JobStep, OriginalJobAdmission, SqliteSnapshotControl, WORK_UNITS_EXECUTE};
+#[doc(hidden)]
+pub fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec<u8>, policy: RetainedCloneGrant) -> Result<(Vec<u8>,u32),OriginalTurnFailure> {
+    use crate::{start_job, step_job, IoRunControl, JobStep, OriginalJobAdmission, SqliteSnapshotControl, WORK_UNITS_EXECUTE};
     use semio_framework_job::{Generation, OperationId, StepBudget, StepContext};
     use semio_framework_async::poll::resolve_ready;
     const TURNS: usize = 100_000;
@@ -42,7 +44,7 @@ pub(crate) fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec
             Ok(false) => {}
             Err(error) => return Err(error.into()),
         }
-        grant = widest(grant, crate::reactor::jobs::job_admission_demands(job, &cx).unwrap_or(grant));
+        grant = widest(grant, crate::job_admission_demands(job, &cx).unwrap_or(grant));
     }
     if !admitted {
         return Err(stall("framework reserved spawn-job was never admitted by the reactor registry").into());
@@ -53,7 +55,7 @@ pub(crate) fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec
             let mut sequence = 0;
             let mut receipt = RetainedCloneProgress::default();
             let cx = StepContext::new(operation, generation, StepBudget::new(1, u64::MAX, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
-            crate::reactor::jobs::job_admission_demands(job, &cx).ok()
+            crate::job_admission_demands(job, &cx).ok()
         } {
             grant = widest(grant, quote);
         }
@@ -78,27 +80,27 @@ pub(crate) fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec
     Err(stall("framework reserved spawn-job did not reach a terminal step").into())
 }
 
-pub(crate) fn framework_reserved_job_demands(_job:u64,input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>,_cx:&semio_framework_job::StepContext<'_>)->Result<RetainedCloneGrant,ValueError>{crate::reactor::jobs::original_job_admission_demands::<FrameworkReservedBoundedJob>(input,restored)}
+pub(crate) fn framework_reserved_job_demands(_job:u64,input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>,_cx:&semio_framework_job::StepContext<'_>)->Result<RetainedCloneGrant,ValueError>{crate::original_job_admission_demands::<FrameworkReservedBoundedJob>(input,restored)}
 
-pub(crate) fn framework_reserved_job_factory(_job:u64,input:&mut Option<Vec<u8>>,restored:&mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Box<dyn crate::reactor::jobs::BoundedJob>>,ValueError>{
-    crate::reactor::jobs::admit_original_job(input,restored,cx,|input,restored|FrameworkReservedBoundedJob{source:Some((input,restored)),source_close:None,output:None,output_close:None,phase:0,scan:0,prefix:0,matched:true,cancelled:false})
+pub(crate) fn framework_reserved_job_factory(_job:u64,input:&mut Option<Vec<u8>>,restored:&mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Box<dyn crate::BoundedJob>>,ValueError>{
+    crate::admit_original_job(input,restored,cx,|input,restored|FrameworkReservedBoundedJob{source:Some((input,restored)),source_close:None,output:None,output_close:None,phase:0,scan:0,prefix:0,matched:true,cancelled:false})
 }
 
 struct FrameworkReservedBoundedJob {
-    source:Option<(Vec<u8>,Option<Vec<u8>>)>,
-    source_close:Option<ControlledRetirement<(Vec<u8>,Option<Vec<u8>>)>>,
-    output:Option<Vec<u8>>,
-    output_close:Option<ControlledRetirement<Vec<u8>>>,
-    pub(crate) phase:u8,
-    scan:usize,
-    prefix:usize,
-    matched:bool,
-    cancelled:bool,
+    pub source:Option<(Vec<u8>,Option<Vec<u8>>)>,
+    pub source_close:Option<ControlledRetirement<(Vec<u8>,Option<Vec<u8>>)>>,
+    pub output:Option<Vec<u8>>,
+    pub output_close:Option<ControlledRetirement<Vec<u8>>>,
+    pub phase:u8,
+    pub scan:usize,
+    pub prefix:usize,
+    pub matched:bool,
+    pub cancelled:bool,
 }
 
-impl crate::reactor::jobs::BoundedJob for FrameworkReservedBoundedJob {
-    fn step(&mut self,_original:&mut crate::reactor::jobs::IoRunControl<'_,'_>,_snapshot:&mut crate::reactor::jobs::SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<crate::reactor::jobs::JobStep,OriginalTurnFailure>{
-        use crate::reactor::jobs::JobStep;
+impl crate::BoundedJob for FrameworkReservedBoundedJob {
+    fn step(&mut self,_original:&mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_,'_>,_snapshot:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::OriginalJobStep,OriginalTurnFailure>{
+        use semio_framework_actor::OriginalJobStep;
         if self.cancelled||cx.is_cancelled(){return Ok(JobStep::Running(None))}
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}
         match self.phase{
@@ -120,7 +122,7 @@ impl crate::reactor::jobs::BoundedJob for FrameworkReservedBoundedJob {
                 let count=remaining.min(grant.maximum_copy_bytes).min(64);if count==0{return Ok(JobStep::Running(None))}
                 self.output.as_mut().unwrap().extend_from_slice(&raw[self.prefix+self.scan..self.prefix+self.scan+count]);self.scan+=count;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;Ok(JobStep::Running(None))
             },
-            3=>{if crate::reactor::jobs::close_original(&mut self.source,&mut self.source_close,cx)?{self.phase=4}Ok(JobStep::Running(None))},
+            3=>{if crate::close_original(&mut self.source,&mut self.source_close,cx)?{self.phase=4}Ok(JobStep::Running(None))},
             4=>{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=5;Ok(JobStep::Done(self.output.take().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original reserved job has no ready output"))?))},
             _=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original reserved job is terminal").into()),
         }
@@ -128,7 +130,7 @@ impl crate::reactor::jobs::BoundedJob for FrameworkReservedBoundedJob {
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.cancelled=true;
-        Ok(crate::reactor::jobs::close_original(&mut self.source,&mut self.source_close,cx)?&&crate::reactor::jobs::close_original(&mut self.output,&mut self.output_close,cx)?)
+        Ok(crate::close_original(&mut self.source,&mut self.source_close,cx)?&&crate::close_original(&mut self.output,&mut self.output_close,cx)?)
     }
 
     fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{

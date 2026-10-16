@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🎞️animation/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { GAZE_DAMPING, GAZE_STIFFNESS, type Spring, springStep } from "../../🔨️modules/🎞️animation/🟦️.ts";
 
 const VECTORS = "shared://🪀️spring-settling/🔣️.json";

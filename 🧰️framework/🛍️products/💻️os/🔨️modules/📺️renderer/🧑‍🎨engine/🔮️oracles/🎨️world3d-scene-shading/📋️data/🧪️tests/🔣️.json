@@ -1,0 +1,100 @@
+[
+  {
+    "id": "defaults",
+    "rgba": [
+      0,
+      128,
+      255,
+      255
+    ],
+    "sampler": {},
+    "valid": true
+  },
+  {
+    "id": "mip",
+    "rgba": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "sampler": {
+      "wrapS": 10497,
+      "wrapT": 33648,
+      "magFilter": 9729,
+      "minFilter": 9987
+    },
+    "valid": true
+  },
+  {
+    "id": "short",
+    "rgba": [
+      1,
+      2,
+      3
+    ],
+    "sampler": {},
+    "valid": false
+  },
+  {
+    "id": "fraction",
+    "rgba": [
+      1,
+      2,
+      3,
+      4.5
+    ],
+    "sampler": {},
+    "valid": false
+  },
+  {
+    "id": "overflow",
+    "rgba": [
+      1,
+      2,
+      3,
+      256
+    ],
+    "sampler": {},
+    "valid": false
+  },
+  {
+    "id": "wrap",
+    "rgba": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "sampler": {
+      "wrapS": 7
+    },
+    "valid": false
+  },
+  {
+    "id": "mag-mip",
+    "rgba": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "sampler": {
+      "magFilter": 9984
+    },
+    "valid": false
+  },
+  {
+    "id": "extra",
+    "rgba": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "sampler": {
+      "other": 1
+    },
+    "valid": false
+  }
+]

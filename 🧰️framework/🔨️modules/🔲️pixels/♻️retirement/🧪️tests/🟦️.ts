@@ -5,9 +5,9 @@ import Ajv2020 from "ajv/dist/2020";
 import {applyPatch} from "fast-json-patch";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import {NumericIndex} from "../../../🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts";
-import numericFixture from "../../../🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🧪️tests/📜️fixtures/🔣️.json";
-import numericSchema from "../../../🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🧬️schema/🔣️.json";
+import {NumericIndex} from "@semio-tech/value-ts/ordered/numeric/scratch";
+import { numericScratchFixture as numericFixture } from "@semio-tech/value-ts/ordered/numeric/scratch/testing";
+import { numericScratchSchema as numericSchema } from "@semio-tech/value-ts/ordered/numeric/scratch/schema";
 const valid=new Ajv({strict:false}).compile(schema);
 for(const row of fixture.cases)test(row.name,()=>{
  expect(valid(row.input)).toBe(true);

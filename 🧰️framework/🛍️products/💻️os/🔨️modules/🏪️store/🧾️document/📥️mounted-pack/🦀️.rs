@@ -4,7 +4,8 @@
 //! value token to an artifact-owned [`RetainedTypedPackOwner`], one bounded unit of work per grant.
 
 mod mounted {
-    pub use semio_framework_os_pack::{PackLimits, RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
+    pub use semio_framework_os_pack::PackLimits;
+    pub use pack::record::{RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
             MAGIC, RETAINED_PACK_MAXIMUM_PAGES, RETAINED_PACK_PAGE_BYTES, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent,
             RetainedPackCatalogFault, RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep,

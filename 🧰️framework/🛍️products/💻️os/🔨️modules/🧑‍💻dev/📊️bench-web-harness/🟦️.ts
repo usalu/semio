@@ -27,7 +27,7 @@ import { fixtureOriginalWorkStock } from "../../../../../🔨️modules/🎭️a
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️terra-bench-web-rows-report.md
  */
 import { ShardClient, type ShardBudget, type ShardWorkerLike } from "../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { OwnedResidentLedger } from "../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
+import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 
 //#region 🟨️StubWorker
 /** 🟨️ Protocol-faithful stand-in for the real, generated `🟨️shard-worker.js` (`shardWorkerSource()`).

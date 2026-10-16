@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-io-base64-tests-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -1,3 +1,10 @@
+import type {LocalProfile} from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
+import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
+import {withBuiltLocalHubHostV1,withLocalHubHostTaskV1,stopLocalHubV1,waitForLocalHubExitV1,startLocalHub,finishLocalHub,waitForReadiness,TRUSTED_CATALOG_READINESS_STALL_BOUND_MS} from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import {withMaterializedTrustedCatalogBundleV1} from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import {trustedBootstrapSelectPackages} from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 // #region Header
 /**
  * 📈️ Document growth e2e (language-agnostic fixture `🧫️fixtures/📈️document-growth-v1`).
@@ -11,9 +18,7 @@
 // #endregion Header
 
 import Ajv from "ajv";
-import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -65,6 +70,9 @@ describe.skipIf(!HUB_E2E)("document growth e2e", () => {
   it(
     "keeps every concurrently grown document writable across a hub restart",
     async () => {
+      return receiveScriptProcessInvocation(process.env,invocation=>{const backend=process.env.HUB_E2E_BACKEND;if(backend!=="sqlite")throw Error("External backend scenarios require genuine owned claim, cleanup and writer observation");const phase=scriptCompilerAdmissionControlV1(invocation,"hub:e2e",0);return withBuiltLocalHubHostV1(invocation,phase,(host,initial)=>withMaterializedTrustedCatalogBundleV1(host,initial.control,trustedBootstrapSelectPackages("stdio,gis,note"),(_receipt,actualPhase)=>withLocalHubHostTaskV1(host,actualPhase,async context=>{
+      const dataRoot=context.dataRoot,bin=context.binaryPath;
+
       const packages = pick(hubRoot, (n) => n.includes("packages"));
       const hubRustRoot = pick(packages, (n) => n.includes("rust"));
       const execution = pick(pick(hubRoot, (n) => n.includes("local-bootstrap")), (n) => n.includes("execution"));
@@ -75,48 +83,33 @@ describe.skipIf(!HUB_E2E)("document growth e2e", () => {
       const creation = pick(schemaDir, (n) => n.includes("space-artifact-creation"));
       const replication = pick(pick(fw, (n) => n.includes("modules") && !n.includes("products")), (n) => n.includes("replication"));
 
-      const { startLocalHub, finishLocalHub, waitForReadiness, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS } = await import(join(execution, "🟦️.ts"));
       const { sealDirectoryCommandRequestV1, directoryCommandRequestJson } = await import(join(schemaDir, "🟦️.ts"));
       const { sealSpaceArtifactCreateV1 } = await import(join(creation, "🟦️.ts"));
       const { encodeClientFrame, decodeServerFrame } = await import(join(replication, "🟦️.ts"));
       const { parseDocumentSocketGrantReceiptV1 } = await import(join(osRoot, "🟦️.ts"));
 
-      const bin = process.env.OS_HUB_BINARY!;
-      if (!bin || !existsSync(bin)) throw new Error(`os-hub binary missing at ${bin}`);
-      const catalogSource = process.env.OS_HUB_TRUSTED_CATALOG_SOURCE!;
-      if (!catalogSource || !existsSync(catalogSource)) throw new Error(`trusted catalog missing: ${catalogSource}`);
-      const dataParent = process.env.HUB_E2E_DATA_PARENT ?? tmpdir();
-      mkdirSync(dataParent, { recursive: true, mode: 0o700 });
-      const dataRoot = mkdtempSync(join(realpathSync(dataParent), "document-growth-"));
-      cpSync(catalogSource, join(dataRoot, "trusted-catalog"), { recursive: true });
-
       const author = { email: "growth-author@example.org", password: "correct horse battery staple", display: "Growth Author" };
-      const provisioned = spawnSync(bin, ["credential", "set", "--email", author.email, "--display-name", author.display], { env: { ...process.env, OS_HUB_DATA: dataRoot }, input: author.password, encoding: "utf8" });
-      if (provisioned.status !== 0) throw new Error(`credential set failed status=${provisioned.status} stderr=${provisioned.stderr}`);
+      const provisioned=await captureOwnedCommandResultV1(bin,["credential","set","--email",author.email,"--display-name",author.display],context.root,{control:context.control,env:scriptInvocationEnvironment(invocation,{...context.environment,OS_HUB_DATA:dataRoot,OS_HUB_STORAGE_BACKEND:"sqlite",OS_HUB_DIRECTORY_BACKEND:"sqlite"}),input:{version:1,text:author.password},output:{maximumBytes:65536,maximumLines:128}});
+      if(provisioned.status!==0||provisioned.signal!==null)throw Error("Credential set failed: "+provisioned.stderr);
 
-      process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
-      process.env.SEMIO_TRACE_LEVEL = "info";
-      delete process.env.SEMIO_TRACE_SINK;
       const port = Number(process.env.HUB_TWO_CLIENT_PORT ?? 7712);
-      const profiles = [{ profileId: "a", subject: fixture.author, displayName: author.display, allowedClientClasses: ["native", "mcp"] }];
+      const profiles:readonly LocalProfile[] = [{ profileId: "a", subject: fixture.author, displayName: author.display, allowedClientClasses: ["native", "mcp"] }];
       const origin = `http://127.0.0.1:${port}`;
       const wsOrigin = `ws://127.0.0.1:${port}`;
-      const backend = process.env.OS_HUB_STORAGE_BACKEND ?? "fs";
       const receipt: Record<string, unknown> = { backend };
       const note = (key: string, value: unknown) => {
         receipt[key] = value;
         console.log(`[document-growth] backend=${backend} ${key}=${JSON.stringify(value)}`);
-        if (process.env.HUB_E2E_RECEIPT) writeFileSync(process.env.HUB_E2E_RECEIPT, JSON.stringify(receipt, null, 2));
       };
-      const fetchTimed = (url: string, init: RequestInit = {}, ms = 60_000) => fetch(url, { ...init, signal: AbortSignal.timeout(ms) });
+      const fetchTimed = (url: string, init: RequestInit = {}, ms = 60_000) => fetch(url, { ...init, signal: AbortSignal.any([context.control.signal,AbortSignal.timeout(ms)]) });
       const hex = () => [...crypto.getRandomValues(new Uint8Array(16))].map((x) => x.toString(16).padStart(2, "0")).join("");
 
-      let run = await startLocalHub(repoRoot, hubRustRoot, profiles, { port, dataDir: dataRoot, binaryPath: bin, capture: true });
+      let run = await startLocalHub(host, profiles, { port, capture: true,credentialSignIn:true,traceLevel:"info" });
       const waitReady = async (label: string) => {
         try {
           return await waitForReadiness(run, true, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS);
         } catch (error) {
-          throw new Error(`${label}: ${(error as Error).message}\n${run.output().slice(-12000)}`);
+          console.error(`${label}: ${run.output().slice(-12000)}`);throw error;
         }
       };
       const signIn = async (device: string) => {
@@ -283,17 +276,13 @@ describe.skipIf(!HUB_E2E)("document growth e2e", () => {
         note("ackLatencyMedians", latency);
         for (const row of latency) expect(row.lastMs, `${row.label} (${row.kindId}) ack latency grew with the document: ${JSON.stringify(row)}`).toBeLessThanOrEqual(Math.max(row.firstMs, 20) * fixture.bounds.latencyGrowthMax);
 
-        const exitOf = (ms: number) =>
-          new Promise<{ code: number | null; signal: string | null }>((resolve, reject) => {
-            if (run.child.exitCode !== null || run.child.signalCode !== null) return resolve({ code: run.child.exitCode, signal: run.child.signalCode });
-            const timer = setTimeout(() => reject(new Error(`hub did not exit within ${ms} ms\n${run.output().slice(-8000)}`)), ms);
-            run.child.once("exit", (code: number | null, signal: string | null) => {
-              clearTimeout(timer);
-              resolve({ code, signal });
-            });
-          });
+        const exitOf = async (ms: number) => {
+          const started = Date.now(), result = await waitForLocalHubExitV1(run);
+          expect(Date.now() - started, run.output().slice(-8000)).toBeLessThanOrEqual(ms);
+          return { code: result.status, signal: result.signal };
+        };
         const sigtermAt = Date.now();
-        run.child.kill("SIGTERM");
+        await stopLocalHubV1(run,"graceful");
         const exited = await exitOf(fixture.bounds.gracefulExitWithinMs);
         const exitedAt = Date.now();
         expect(exited.code, run.output().slice(-8000)).toBe(0);
@@ -301,8 +290,7 @@ describe.skipIf(!HUB_E2E)("document growth e2e", () => {
         expect(firstOutput).toContain(fixture.shutdown.databaseClosedMarker);
         note("sigtermToExitMs", exitedAt - sigtermAt);
         await finishLocalHub(run);
-        process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
-        run = await startLocalHub(repoRoot, hubRustRoot, profiles, { port, dataDir: dataRoot, binaryPath: bin, capture: true });
+          run = await startLocalHub(host, profiles, { port, capture: true,credentialSignIn:true,traceLevel:"info" });
         note("exitToRestartSpawnMs", Date.now() - exitedAt);
         expect(Date.now() - exitedAt).toBeLessThan(fixture.bounds.restartWithinMs);
         await waitReady("restart");
@@ -324,14 +312,8 @@ describe.skipIf(!HUB_E2E)("document growth e2e", () => {
         const refusals = output.split("\n").filter((line) => fixture.refusalMarkers.some((marker: string) => line.includes(marker)));
         note("refusalLines", refusals.length);
         expect(refusals, refusals.slice(0, 8).join("\n")).toEqual([]);
-      } finally {
-        try {
-          await finishLocalHub(run);
-        } catch {
-          /* stopped */
-        }
-        rmSync(dataRoot, { recursive: true, force: true });
-      }
+      } catch(error){throw error;}
+      })));});
     },
     TEST_TIMEOUT_MS,
   );

@@ -21,9 +21,9 @@ import { SHARD_LIVENESS_POLICY } from "./🫀️liveness/🟦️.ts";
 //#region 🔌️WireTypes
 /** ⚖️ `Lane`/`CoalesceKey` taken from the owned-schema mirror — real wire types, same reasoning
  * `📬️mailbox.ts`'s own header doc already gives for importing rather than redeclaring them. */
-import { hopTrace, hopTraceEpochNowMs, hopTraceEpochToTimeline } from "../../⏱️trace/🟦️.ts";
-import { GUEST_HOST_ANSWER_CEILING_BYTES } from "../../⏱️trace/🧮️memory/🟦️.ts";
-import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../🌱️value/💾️resident/🟦️.ts";
+import { hopTrace, hopTraceEpochNowMs, hopTraceEpochToTimeline } from "@semio-tech/framework/trace";
+import { GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework/trace/memory";
+import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "@semio-tech/value-ts/resident";
 import { OwnedKernelReturnContent } from "../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts";
 import { OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputAcceptance, OwnedUiPatchInputRetirement } from "../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";

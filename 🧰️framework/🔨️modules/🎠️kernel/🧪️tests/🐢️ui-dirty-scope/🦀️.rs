@@ -1,5 +1,5 @@
 //! 🐢️ The `UiDirtyScope` selection + union law, driven by the language-agnostic fixture
-//! `🧫️fixtures/🐢️ui-dirty-scope/🔣️.json` that `🎠️kernel/🟦️.ts`'s TypeScript twin drives too.
+//! `🧫️fixtures/🐢️ui-dirty-scope/🔣️.json` that `🎠️kernel/🎯️ui-dirty-scope/🟦️.ts`'s TypeScript twin drives too.
 //!
 //! The defect this pins: a shell may READ the field and a shell may THROW IT AWAY, and both boot,
 //! paint and pass every other gate. The wgpu shell's `refresh_ui` re-rendered every window and every

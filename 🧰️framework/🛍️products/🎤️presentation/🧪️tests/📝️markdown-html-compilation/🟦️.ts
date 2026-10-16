@@ -9,7 +9,7 @@ import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import { type AdapterContext, type AdapterOutcome, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, type AdapterOutcome, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { compileOwnedMarkdownToHtml } from "../../🎯️targets/⚛️react/🔨️modules/📝️markdown-html-compiler/🟦️.ts";
 // #endregion 🔌️Adapters
 

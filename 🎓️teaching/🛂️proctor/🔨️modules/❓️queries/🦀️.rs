@@ -14,7 +14,7 @@
 //! nothing.
 //!
 //! @see ../🔭️projections/🦀️.rs — where the views are kept
-//! @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️.rs — `QueryHandler`
+//! @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/📄️document-port/🦀️.rs — `QueryHandler`
 
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};

@@ -2,9 +2,10 @@
 
 import { OsShellConfig, type StoragePort } from "@semio-tech/framework";
 import { parseUiDriver, parseUiTheme, type ElementsSurfaceAppearance, type UiChromeLayout, type UiDriver, type UiLocale, type UiTheme } from "@semio-tech/ui-react";
-import { applyUiPreferencesConfigMutation, UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1, type UiPreferencesConfigMutation } from "../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
-import { USER_PREFERENCE_MUTATION_MAX_BYTES } from "../../../📇️directory/🧬️schema/🟦️.ts";
-import { parseUiPreferences, type UiDriver as CanonicalUiDriver, type UiPreferences, type UiTheme as CanonicalUiTheme, type UserNamedLayout } from "../../../../🎚️config/🧬️schema/🟦️.ts";
+import { applyUiPreferencesConfigMutation, type UiPreferencesConfigMutation } from "../../../../../../🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1 } from "../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { USER_PREFERENCE_MUTATION_MAX_BYTES } from "../../../../../../🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { parseUiPreferences, type UiDriver as CanonicalUiDriver, type UiPreferences, type UiTheme as CanonicalUiTheme, type UserNamedLayout } from "../../../../../../🔨️modules/🎚️config/🧬️schema/🟦️.ts";
 
 export const UI_PREFERENCES_CONFIG_SCHEMA = "os.config.ui-preferences";
 

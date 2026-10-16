@@ -1,4 +1,4 @@
-/** 🧭️ Tool-job coverage: importer inventory, cancellation, close and disposal laws.
+/** 🔒️ Tool-job coverage: importer inventory, cancellation, close and disposal laws.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";

@@ -23,6 +23,9 @@ path = "🦀️.rs"
 # against the identical bodies the reference in-memory ones are held against. Meant for a
 # dev-dependency entry only; no default build enables it.
 conformance = []
+# 🪝️ Compiles the gateway's `🪝️testkit` hooks (aliases and forwarders of sibling-private items) for the
+# companion crate `semio-framework-server-tests`. Meant for that dev-dependency entry only.
+testkit = []
 
 [dependencies]
 semio-framework-async = { workspace = true }
@@ -44,8 +47,6 @@ semio-framework-dispatch-macros = { path = "../../../../🔨️modules/🔀️di
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-# 🧪️ Drives the built router request by request in the gateway's own tests, without a listener.
-tower = { version = "0.5", features = ["util"] }
 
 # 🔒️ The cross-crate half of the `dyn_enum_close!` recipe: an integration test links `server` the
 # way hub does, so closing a set of any of the eight `impl Future + Send` ports is gated here.

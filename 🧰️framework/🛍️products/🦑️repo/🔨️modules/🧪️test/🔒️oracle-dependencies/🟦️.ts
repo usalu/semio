@@ -5,7 +5,7 @@
 
 //#region 🔌️Adapters
 import { testLevelBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { type Implementation } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type Implementation } from "@semio-tech/framework/test/adapter";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { getRepoMetaDir, runProbe } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";

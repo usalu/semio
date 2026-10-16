@@ -1,2 +1,2 @@
-export { setTerminology } from "../🟦️.ts";
-export type { SetTerminology } from "../🟦️.ts";
+export { setTerminology } from "@semio-tech/framework/config/mutations";
+export type { SetTerminology } from "@semio-tech/framework/config/mutations";

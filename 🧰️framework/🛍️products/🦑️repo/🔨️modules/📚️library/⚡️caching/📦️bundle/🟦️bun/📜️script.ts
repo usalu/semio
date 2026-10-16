@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { withWholeHostCompilerCapacity } from "../🟦️.ts";
+import{readNativeCallerAuthorityV1}from"../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join } from "node:path";
 import { readFileSync, lstatSync, realpathSync } from "node:fs";
@@ -89,6 +89,10 @@ async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleRes
 }
 
 if(import.meta.main){
- if(process.argv.length!==3||process.argv[2]!=="compile")throw Error("Usage: compile (bounded request stdin; output data stdout)");let size=0;const chunks:Buffer[]=[];for await(const chunk of process.stdin){size+=chunk.byteLength;if(size>16*1024*1024)throw Error("Bun compiler request bytes refused");chunks.push(chunk);}const request=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(Buffer.concat(chunks)))as BunBundleRequest;if(readBuildMode(process.env.SEMIO_BUILD_MODE)!==request.mode)throw Error("Bun compiler request contradicts the selected build mode");
- await receiveScriptProcessInvocation(process.env,async invocation=>{const workspace=findWorkspaceRoot(import.meta.dir),control=scriptCompilerAdmissionControlV1(invocation,"bun:compile",120000),result=await withWholeHostCompilerCapacity(join(workspace,".cache/b/l/m/data"),control,()=>compileBunBundle(request)),{bunBundleStreamFramesV1}=await import("./📤️stream/🟦️.ts"),{writeOwnedCommandOutputV1}=await import("../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),files=[{name:"source.js",bytes:Buffer.from(result.source)},...(result.sourceMap!==undefined?[{name:"source.js.map",bytes:Buffer.from(result.sourceMap)}]:[]),{name:"metadata.json",bytes:Buffer.from(JSON.stringify({inputs:result.inputs,physicalInputs:result.physicalInputs,loadedRuntime:result.loadedRuntime}))}];for(const frame of bunBundleStreamFramesV1(createHash("sha256").update(JSON.stringify(request)).digest("hex"),files))await writeOwnedCommandOutputV1(process.stdout,frame,control);});
+ if(process.argv.length!==3||process.argv[2]!=="compile")throw Error("Usage: compile (bounded request stdin; output data stdout)");
+ await receiveScriptProcessInvocation(process.env,async invocation=>{
+ const authority=readNativeCallerAuthorityV1(invocation.capabilities),workspace=findWorkspaceRoot(import.meta.dir),control=scriptCompilerAdmissionControlV1(invocation,"bun:compile-leaf",120000);if(workspace!==authority.repositoryRoot||process.env.SEMIO_BUILD_MODE!==authority.original.buildMode||process.env.SEMIO_COMPILER_CAPACITY_HELD!==undefined)throw Error("Exact unmarked compiler leaf Original required");
+ let size=0;const chunks:Buffer[]=[];for await(const chunk of process.stdin){control.signal.throwIfAborted();size+=chunk.byteLength;if(size>16*1024*1024)throw Error("Bun compiler request bytes refused");chunks.push(chunk);}const request=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(Buffer.concat(chunks)))as BunBundleRequest;if(readBuildMode(authority.original.buildMode)!==request.mode)throw Error("Bun compiler request contradicts the selected build mode");
+ const result=await compileBunBundle(request),{bunBundleStreamFramesV1}=await import("./📤️stream/🟦️.ts"),{writeOwnedCommandOutputV1}=await import("../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),files=[{name:"source.js",bytes:Buffer.from(result.source)},...(result.sourceMap!==undefined?[{name:"source.js.map",bytes:Buffer.from(result.sourceMap)}]:[]),{name:"metadata.json",bytes:Buffer.from(JSON.stringify({inputs:result.inputs,physicalInputs:result.physicalInputs,loadedRuntime:result.loadedRuntime}))}];for(const frame of bunBundleStreamFramesV1(createHash("sha256").update(JSON.stringify(request)).digest("hex"),files))await writeOwnedCommandOutputV1(process.stdout,frame,control);
+ });
 }

@@ -4,9 +4,9 @@ import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import fixture from "../../🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
-import valueSchema from "../../../../../🌱️value/🧬️schema/🔣️.json" with { type: "json" };
+import { valueSchema } from "@semio-tech/value-ts/schema";
 import { applyMapDelta, composeMapDelta, parseMapDelta, MapDeltaApplyError, type MapEntryDelta } from "../../🧬️schema/🟦️.ts";
-import type { DslValue } from "../../../../../🌱️value/🧬️schema/🟦️.ts";
+import type { DslValue } from "@semio-tech/value-ts/schema";
 
 function patch(entry: MapEntryDelta<DslValue>, base: Record<string, DslValue>): Record<string, DslValue> {
   const present = Object.hasOwn(base, entry.key);

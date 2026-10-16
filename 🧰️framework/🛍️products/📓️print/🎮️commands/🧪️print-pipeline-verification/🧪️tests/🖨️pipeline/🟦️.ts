@@ -25,7 +25,7 @@ import { printCompilerName, printSourceReferenceMapV1, printSourceReferenceTextV
 import { printFontDescriptors, withPrintFontsV1 } from "../../../../🔨️modules/🔤print-font-catalog/🟦️.ts";
 import {printDocuments} from "../../../../🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🟦️.ts";
 import{withPrintScratchV1,type PrintExecutionV1,type PrintScratchV1}from"../../../../📦️artifacts/🎛️operation/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import{readPrintMaterialFileV1}from"../../../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
 import{inspectPrintCompilerRefusalV1}from"../../../../🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🟦️.ts";
 import{withRepositoryArtifactTaskV1}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";

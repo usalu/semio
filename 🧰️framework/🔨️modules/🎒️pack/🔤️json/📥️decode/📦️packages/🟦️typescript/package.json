@@ -6,6 +6,10 @@
     "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/pack-json-decode-ts:test"
   },
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/schema-ts": "workspace:*",
+    "@semio-tech/schema-validator-ts": "workspace:*",
+    "@semio-tech/value-ts": "workspace:*"
   }
 }

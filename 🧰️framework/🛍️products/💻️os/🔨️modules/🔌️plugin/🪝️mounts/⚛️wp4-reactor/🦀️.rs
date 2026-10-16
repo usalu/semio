@@ -12,8 +12,38 @@ mod cooperative_pump_tests;
 mod plugin_runtime_runtime_laws;
 //#endregion 📄️DeclarationFixtureMutationMount
 //#region ⚛️ReactorFacet
-#[path = "../../⚛️reactor/🔌️app/🦀️.rs"]
-pub(crate) mod plugin_app;
-#[path = "../../⚛️reactor/🦀️.rs"]
-pub mod reactor;
+pub(crate) extern crate semio_framework_plugin_reactor_app as plugin_app;
+pub mod reactor {
+    pub use semio_framework_plugin_reactor_core::*;
+    pub use semio_framework_plugin_reactor_context as original_actor_context;
+    pub use semio_framework_plugin_reactor_jobs as jobs;
+    pub use semio_framework_plugin_reactor_turn as turn;
+    pub use semio_framework_plugin_reactor_turn::turn_close_step::*;
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    pub use semio_framework_plugin_reactor_turn::drain_task_resumes;
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    pub use semio_framework_plugin_reactor_wit_bridge::wit_bridge::{poll, stage_cold_pair_page, stage_command_page};
+    pub use semio_framework_plugin_reactor_turn::{last_turn_more_work_sources, poll_kernel, retained_command_ingress_occupancy, retained_extension_invocation_occupancy, TurnMoreWorkSources};
+}
 //#endregion ⚛️ReactorFacet
+#[cfg(test)]
+#[path = "🧪️test-hosts/⏲️reactor-tasks/🦀️.rs"]
+pub(crate) mod reactor_tasks_test_hosts;
+#[cfg(test)]
+#[path = "🧪️test-hosts/📦️runtime-instances/🦀️.rs"]
+pub(crate) mod runtime_instances_test_hosts;
+#[cfg(test)]
+#[path = "🧪️test-hosts/⚙️runtime-ops/🦀️.rs"]
+pub(crate) mod runtime_ops_test_hosts;
+#[cfg(test)]
+#[path = "../👥️wp3-owners/🧪️test-hosts/🧩️extension/🦀️.rs"]
+pub(crate) mod extension_test_hosts;
+#[cfg(test)]
+#[path = "🧪️test-hosts/🖼️reactor-surfaces/🦀️.rs"]
+pub(crate) mod reactor_surfaces_test_hosts;
+#[cfg(test)]
+#[path = "🧪️test-hosts/⚛️reactor-core/🦀️.rs"]
+pub(crate) mod reactor_core_test_hosts;
+#[cfg(test)]
+#[path = "🧪️test-hosts/🔂️reactor-turn/🦀️.rs"]
+pub(crate) mod reactor_turn_test_hosts;

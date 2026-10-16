@@ -21,17 +21,15 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot = { path = "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
+semio-framework-io-control = { path = "../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-
-[dev-dependencies]
-semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
-semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
-

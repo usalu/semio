@@ -1,0 +1,7 @@
+{
+  "file": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎞️presentation-react-deck/🟦️.tsx",
+  "out": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎞️presentation-react-deck/📍️stage.tsx",
+  "fn": "registerPresentationReactDeckTests",
+  "header": "/** 📍️ stage */",
+  "sourceExpr": { "directory": "dirname(fileURLToPath(import.meta.url))", "url": "import.meta.url" }
+}

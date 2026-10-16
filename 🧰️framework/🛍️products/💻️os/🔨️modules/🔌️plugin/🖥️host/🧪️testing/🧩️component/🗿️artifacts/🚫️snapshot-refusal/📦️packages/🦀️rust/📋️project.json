@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-plugin-host-test-component-refusal-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -643,6 +643,10 @@ impl Issues {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub fn within(ranges: &[(u32, u32)], point: u32) -> bool {
+        super::within(ranges, point)
+    }
+}

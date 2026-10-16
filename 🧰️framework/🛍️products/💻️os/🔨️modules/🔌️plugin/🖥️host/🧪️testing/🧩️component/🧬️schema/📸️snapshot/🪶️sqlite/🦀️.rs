@@ -56,7 +56,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for Snapshot {
                     }
                     store::io::IoPayload::Binary(bytes)=>{
                         let spec=Self::__dsl_spec_producer().decode(native)?;
-                        let (record,_)=pack::decode_document_controlled(bytes,&spec,&store::PackDecodeOptions::default(),native).map_err(store::PackRefusal::into_value_error)?;
+                        let (record,_)=pack::record::decode_document_controlled(bytes,&spec,&store::PackDecodeOptions::default(),native).map_err(store::PackRefusal::into_value_error)?;
                         Self::__dsl_from_record_controlled(&record,native)
                     }
                 }
@@ -82,7 +82,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for Snapshot {
                     SnapshotEncoding::Binary=>{
                         let spec=Self::__dsl_spec_producer().encode(native)?;
                         let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(self.__dsl_to_record_controlled(native)?);
-                        pack::encode_document_controlled(&spec,record.as_record(),&store::PackEncodeOptions::default(),native).map(store::io::IoPayload::Binary).map_err(store::PackRefusal::into_value_error)
+                        pack::record::encode_document_controlled(&spec,record.as_record(),&store::PackEncodeOptions::default(),native).map(store::io::IoPayload::Binary).map_err(store::PackRefusal::into_value_error)
                     }
                 }
             })));

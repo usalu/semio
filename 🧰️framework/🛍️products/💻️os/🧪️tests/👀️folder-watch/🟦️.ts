@@ -4,8 +4,8 @@ import { workerLawFakesV1 } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
-  type StreamMuxEndpointV1 = import("../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts").StreamMuxEndpointV1;
-  type StreamMuxHandlersV1 = import("../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts").StreamMuxHandlersV1;
+  type StreamMuxEndpointV1 = import("@semio-tech/framework/io/stream-mux").StreamMuxEndpointV1;
+  type StreamMuxHandlersV1 = import("@semio-tech/framework/io/stream-mux").StreamMuxHandlersV1;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerFolderWatchTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, source: TestSource): Promise<void> {

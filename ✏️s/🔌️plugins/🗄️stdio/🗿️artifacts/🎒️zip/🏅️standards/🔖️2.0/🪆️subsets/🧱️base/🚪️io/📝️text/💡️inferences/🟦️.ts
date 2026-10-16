@@ -49,5 +49,5 @@ export const stdioZip20BaseInferenceTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseZipInferenceText(value: unknown, at = "$"): ZipInferenceText {
-  return stdioZip20BaseInferenceTextGuardObject(value, `${at}`);
+  return stdioZip20BaseInferenceTextGuardString(value, `${at}`);
 }

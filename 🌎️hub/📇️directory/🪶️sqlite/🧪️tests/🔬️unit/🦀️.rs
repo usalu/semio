@@ -1,11 +1,12 @@
 
-use semio_hub_directory_contract::{ACTIVE_SYNC_SESSION_READ_MAX, AUTH_AUDIT_PAGE_MAX, HubClock, NewDirectoryEvent};
+use semio_hub_directory_contract::{ACTIVE_SYNC_SESSION_READ_MAX, AUTH_AUDIT_PAGE_MAX, HubClock, NewDirectoryEvent, now_ms};
 use semio_hub_directory_contract::model::{AuthSessionIssue, AuthSessionKind, CredentialAuditFactV1, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole};
 use rusqlite::Connection;
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner, DocumentScope, Hlc};
 use semio_hub_directory_contract::error::DirectoryError;
-use semio_hub_directory_sqlite::{SqliteDirectory, now_ms};
+use semio_hub_directory_sqlite::SqliteDirectory;
 use directory::os_identity::time_ordered_id;
+use semio_hub_directory::{AuthSessionDirectory, CredentialDirectory, EventLog, InviteDirectory, ProjectionRebuild, ShareTokenDirectory, SpaceDirectory, SyncSessionDirectory, UserDirectory};
 
 #[derive(serde::Deserialize)]
 struct ShareTokenVectors {

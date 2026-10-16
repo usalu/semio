@@ -49,5 +49,5 @@ export const playbookPlaybookSnapshotTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parsePlaybookSnapshotText(value: unknown, at = "$"): PlaybookSnapshotText {
-  return playbookPlaybookSnapshotTextGuardObject(value, `${at}`);
+  return playbookPlaybookSnapshotTextGuardString(value, `${at}`);
 }

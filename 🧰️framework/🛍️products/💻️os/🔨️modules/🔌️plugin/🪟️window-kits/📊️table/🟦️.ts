@@ -79,10 +79,4 @@ export function renderTableRows(view: TableRowsView): UiComponentSceneNode {
   return node;
 }
 
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️rendertable/🟦️.ts");
-  await registerTests1(import.meta.vitest, { renderEditableTable, renderTable, renderTableRows }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️Tests
 // #endregion 📊️TableWindowKit

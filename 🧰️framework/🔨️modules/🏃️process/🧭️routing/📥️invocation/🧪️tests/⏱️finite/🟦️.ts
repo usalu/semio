@@ -7,7 +7,7 @@ import corpus from "../🧫️fixtures/⏱️finite.json";
 import policySchema from "../../🧬️schema/🔣️.json";
 import envelopeSchema from "../../🏃️process/🧬️schema/🔣️.json";
 import { advanceScriptInvocation, checkScriptInvocation, readScriptPolicy, type ScriptProgress } from "../../🟦️.ts";
-import { compileJsonSchemaSubset, validateJsonSchemaSubset } from "../../../../../🧬️schema/✅️validator/🟦️.ts";
+import { compileJsonSchemaSubset, validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { withScriptProcessEnvelope, type ScriptProcessEnvelope } from "../../🏃️process/🟦️.ts";
 
 test("actual finite parent admission refuses null before effect and preserves explicit ordinary hosts", async () => {

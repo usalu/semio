@@ -18,7 +18,7 @@
 //! it is [`ui_render::FrameScheduler::should_render`] under a name that reads at the call site; a
 //! clean window drains no dirty mask and neither host asks for a frame.
 
-use crate::abi::{AbiBytes, AbiControl, AbiErrorCode, AbiEvent, AbiMessage, AbiOperation, AbiPage, AbiPort, AbiPortPoll, AbiReply, AbiReplyLedger, AbiRequest, AbiRequestId, AbiStatusCode, AbiWorkBudget};
+use semio_framework_abi::{AbiBytes, AbiControl, AbiErrorCode, AbiEvent, AbiMessage, AbiOperation, AbiPage, AbiPort, AbiPortPoll, AbiReply, AbiReplyLedger, AbiRequest, AbiRequestId, AbiStatusCode, AbiWorkBudget};
 use ui_render::{CursorRequest, DispatchEvent, FrameScheduler, ImeDirective, InvalidationReason, PhysicalSize};
 
 //#region 🔖️Host
@@ -119,7 +119,8 @@ pub trait ClipboardHost {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-enum NativeClipboardOperation {
+#[doc(hidden)]
+pub enum NativeClipboardOperation {
     Read,
     Write(String),
 }
@@ -1104,7 +1105,7 @@ mod browser {
             if self.outbound.is_some() {
                 return Err(BrowserHostError::Busy);
             }
-            self.outbound = Some(AbiMessage::Reply(AbiReply { request_id: event.request_id, generation: event.generation, status: crate::abi::AbiStatus::OK, bytes: AbiBytes::default() }));
+            self.outbound = Some(AbiMessage::Reply(AbiReply { request_id: event.request_id, generation: event.generation, status: semio_framework_abi::AbiStatus::OK, bytes: AbiBytes::default() }));
             self.outbound_inspected_bytes = 0;
             Ok(())
         }
@@ -1287,7 +1288,7 @@ mod browser {
         ListenerId::try_new(u32::from_le_bytes(bytes[1..5].try_into().expect("fixed")), u32::from_le_bytes(bytes[5..9].try_into().expect("fixed"))).map_err(BrowserHostError::Abi)
     }
 
-    fn validate_listener_handle(listener: ListenerId, actual: crate::abi::AbiHandle) -> Result<(), BrowserHostError> {
+    fn validate_listener_handle(listener: ListenerId, actual: semio_framework_abi::AbiHandle) -> Result<(), BrowserHostError> {
         let expected = listener.handle();
         if actual.slot() != expected.slot() {
             Err(BrowserHostError::Abi(AbiErrorCode::UnknownHandle))
@@ -1357,7 +1358,7 @@ mod browser {
     #[derive(Default)]
     pub struct LinearMemoryBrowserHostPort;
 
-    #[cfg(all(target_arch = "wasm32", not(test)))]
+    #[cfg(all(target_arch = "wasm32", not(feature = "testkit")))]
     #[link(wasm_import_module = "semio_browser_host")]
     unsafe extern "C" {
         #[link_name = "send"]
@@ -1366,39 +1367,39 @@ mod browser {
         fn browser_host_poll(message_pointer: *mut u8, message_capacity: usize) -> i32;
     }
 
-    #[cfg(test)]
+    #[cfg(feature = "testkit")]
     unsafe fn browser_host_send(message_pointer: *const u8, message_length: usize) -> i32 {
         linear_memory_test_import::send(message_pointer, message_length)
     }
 
-    #[cfg(test)]
+    #[cfg(feature = "testkit")]
     unsafe fn browser_host_poll(message_pointer: *mut u8, message_capacity: usize) -> i32 {
         linear_memory_test_import::poll(message_pointer, message_capacity)
     }
 
-    #[cfg(test)]
+    #[cfg(feature = "testkit")]
     include!("../🧪️tests/🔬️window-browser-linear-memory-test-import/🦀️.rs");
 
     impl AbiPort for LinearMemoryBrowserHostPort {
-        fn try_send(&mut self, message: AbiMessage, budget: AbiWorkBudget) -> Result<(), crate::abi::AbiPortRejection> {
+        fn try_send(&mut self, message: AbiMessage, budget: AbiWorkBudget) -> Result<(), semio_framework_abi::AbiPortRejection> {
             if let Err(error) = validate_budget(budget) {
                 let BrowserHostError::Abi(code) = error else { unreachable!() };
-                return Err(crate::abi::AbiPortRejection { code, message });
+                return Err(semio_framework_abi::AbiPortRejection { code, message });
             }
-            #[cfg(any(target_arch = "wasm32", test))]
+            #[cfg(any(target_arch = "wasm32", feature = "testkit"))]
             {
-                let bytes = crate::abi::encode_abi_message(&message);
+                let bytes = semio_framework_abi::encode_abi_message(&message);
                 if bytes.len() > BROWSER_HOST_MAX_ENCODED_EVENT_BYTES {
-                    return Err(crate::abi::AbiPortRejection { code: AbiErrorCode::LimitExceeded, message });
+                    return Err(semio_framework_abi::AbiPortRejection { code: AbiErrorCode::LimitExceeded, message });
                 }
                 if unsafe { browser_host_send(bytes.as_ptr(), bytes.len()) } == 1 {
                     Ok(())
                 } else {
-                    Err(crate::abi::AbiPortRejection { code: AbiErrorCode::Interrupted, message })
+                    Err(semio_framework_abi::AbiPortRejection { code: AbiErrorCode::Interrupted, message })
                 }
             }
-            #[cfg(all(not(target_arch = "wasm32"), not(test)))]
-            Err(crate::abi::AbiPortRejection { code: AbiErrorCode::Closed, message })
+            #[cfg(all(not(target_arch = "wasm32"), not(feature = "testkit")))]
+            Err(semio_framework_abi::AbiPortRejection { code: AbiErrorCode::Closed, message })
         }
 
         fn poll(&mut self, budget: AbiWorkBudget) -> Result<AbiPortPoll, AbiErrorCode> {
@@ -1406,7 +1407,7 @@ mod browser {
                 BrowserHostError::Abi(code) => code,
                 _ => AbiErrorCode::Interrupted,
             })?;
-            #[cfg(any(target_arch = "wasm32", test))]
+            #[cfg(any(target_arch = "wasm32", feature = "testkit"))]
             {
                 let mut bytes = vec![0; BROWSER_HOST_INITIAL_POLL_BYTES];
                 let mut length = unsafe { browser_host_poll(bytes.as_mut_ptr(), bytes.len()) };
@@ -1437,7 +1438,7 @@ mod browser {
                     }
                 }
                 bytes.truncate(length as usize);
-                let message = crate::abi::decode_abi_message(&bytes)?;
+                let message = semio_framework_abi::decode_abi_message(&bytes)?;
                 match &message {
                     AbiMessage::Event(event) if event.bytes.len() > BROWSER_HOST_MAX_EVENT_BODY_BYTES => return Err(AbiErrorCode::LimitExceeded),
                     AbiMessage::Page(page) if page.bytes.len() > BROWSER_HOST_MAX_PAGE_BODY_BYTES => return Err(AbiErrorCode::LimitExceeded),
@@ -1445,7 +1446,7 @@ mod browser {
                 }
                 Ok(AbiPortPoll::Message(message))
             }
-            #[cfg(all(not(target_arch = "wasm32"), not(test)))]
+            #[cfg(all(not(target_arch = "wasm32"), not(feature = "testkit")))]
             Ok(AbiPortPoll::Closed)
         }
     }
@@ -1456,11 +1457,3 @@ pub use browser::*;
 //#endregion 🌐️Browser
 
 //#endregion 🔖️Host
-
-//#region Tests
-
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️window-unit/🦀️.rs"]
-mod tests;
-
-//#endregion Tests

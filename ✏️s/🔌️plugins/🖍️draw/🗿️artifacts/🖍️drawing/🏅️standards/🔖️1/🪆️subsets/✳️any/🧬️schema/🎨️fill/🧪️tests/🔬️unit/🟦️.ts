@@ -14,7 +14,7 @@ test("fill editing preserves stops, geometry, alpha and source on rejection", ()
     if (entry.error) expect(() => editFill(source, entry.edit as FillEdit)).toThrow();
     else {
       const result = editFill(source, entry.edit as FillEdit);
-      expect(result).toEqual(entry.after);
+      expect<unknown>(result).toEqual(entry.after);
       if (entry.edit.kind === "addStop" && source && "stops" in source && result && "stops" in result) {
         const [left,right] = source.stops;
         const color = new Vector4(...left!.color).lerp(new Vector4(...right!.color), (entry.edit.offset!-left!.offset)/(right!.offset-left!.offset)).toArray();
@@ -34,7 +34,7 @@ test("fill editing preserves stops, geometry, alpha and source on rejection", ()
         expect(result).toEqual(oracle.fill);
       }
     }
-    expect(source).toEqual(entry.before);
+    expect<unknown>(source).toEqual(entry.before);
   }
 });
 
@@ -78,7 +78,7 @@ test("prepared fill sampling matches shared cases and independent SVG pixels",as
         compared++;
       }
     }
-    expect(fill).toEqual(entry.fill);
+    expect<unknown>(fill).toEqual(entry.fill);
   }
 });
 

@@ -1,3 +1,4 @@
+import{ownerEnvironmentV1}from"./🌱️environment/🟦️.ts";
 import{cargoProfileCompilerConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import {verifyCapturedCargoArtifactsV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1,repositoryCargoConsumptionV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
@@ -14,9 +15,7 @@ import { BundleScript, scriptInvocationBudget } from "../../../../../../../🔨�
 import { advanceScriptInvocation, scriptInvocationEnvironment } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readNativeOwnerCapabilities } from "./📥️invocation/🟦️.ts";
 import { CARGO_RELAY_BUDGET_ENV, cargoStreamingStatus, runCmdStatus } from "../../../🏃️process/🟦️.ts";
-import {repositoryProcessOwnerContextV1,repositoryVitestPolicyV1} from "../../../🏃️process/📋️context/🔣️policy/🟦️.ts";
 import {repositoryCargoTestPolicyV1} from "../../../🏃️process/🦀️cargo/🔣️policy/🟦️.ts";
-import {repositoryWasmBuildPolicyV1} from "../../../🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { repositoryCargoArtifactBuildPolicyV1, buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts";
@@ -24,17 +23,6 @@ import { artifactRustCargoArguments } from "../🎛️native-input/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import {requireRepositoryCargoExecutionV1} from "../../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts";
-
-/** 🔐️ The owner policies a native or script owner's environment carries, exactly as the Nx owner commands author them: `process` (Vitest policy and process
- * owner context), `cargo` (the repository Cargo artifact policy) and `wasm` (the repository wasm-bindgen compiler policy). `buildDirectory` redirects both
- * compiler policies into a release generation's build directory. */
-export function ownerEnvironmentV1(cwd: string, policies: readonly ("process" | "cargo" | "wasm")[], buildDirectory?: string, childEnvironment: Readonly<Record<string,string|undefined>> = process.env): Record<string, string> {
-  const environment: Record<string, string> = {};
-  if (policies.includes("process")) Object.assign(environment, { SEMIO_VITEST_POLICY: JSON.stringify(repositoryVitestPolicyV1(cwd)), SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)) });
-  if (policies.includes("cargo")) environment.SEMIO_CARGO_ARTIFACT_POLICY = JSON.stringify({ ...repositoryCargoArtifactBuildPolicyV1(cwd, undefined, childEnvironment), ...(buildDirectory ? { buildDirectory } : {}) });
-  if (policies.includes("wasm")) environment.SEMIO_WASM_BUILD_POLICY = JSON.stringify({ ...repositoryWasmBuildPolicyV1(cwd, childEnvironment), ...(buildDirectory ? { buildDirectory } : {}) });
-  return environment;
-}
 
 /** 🌊️ `bun ⚡️caching/🦀️cargo/📜️script.ts relay <cargo args…>` — the relay [[runCmd]] routes every POSIX `cargo` through
  * ([[cargoStreamingStatus]]): exits with cargo's status, 1 when cargo was stopped (budget, signal), after its forwarded output drained. */

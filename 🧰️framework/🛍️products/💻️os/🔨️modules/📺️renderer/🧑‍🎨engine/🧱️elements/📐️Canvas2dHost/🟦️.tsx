@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import { drawSceneNode, paintCompositedLayers, isDecodedImage, type CanvasSceneNode } from "./🎨️paint/🟦️.ts";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { type WasmCanvasSession, WasmCanvas, type CanvasInputModifiers } from "@semio-tech/canvas-react-renderer";
+import { type WasmCanvasSession, WasmCanvas, type CanvasInputModifiers } from "@semio-tech/framework/canvas/react-renderer";
 import { ContextMenuController, CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragData, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
 import { fitCanvasFrame, type Canvas2dFraming, applyPinchToCamera, type ComponentSceneHostProps, type PinchStep } from "@semio-tech/framework";
 import { currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
@@ -795,11 +795,11 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
         // layer's demonstration target will be off by that transform until this is extended.
         if (layer.segments && layer.segments.length > 0) {
           const polyline = sampleBezierSegments(layer.segments).map((point) => toScreen(point.x, point.y));
-          if (polyline.length > 0) return { point: polyline[Math.floor(polyline.length / 2)], polyline, visible: true };
+          const point=polyline[Math.floor(polyline.length/2)];if(point)return{point,polyline,visible:true};
         }
         if (layer.points && layer.points.length > 0) {
           const polyline = layer.points.map(([px, py]) => toScreen(px, py));
-          return { point: polyline[Math.floor(polyline.length / 2)], polyline, visible: true };
+          const point=polyline[Math.floor(polyline.length/2)];if(point)return{point,polyline,visible:true};
         }
         const bounds =
           layer.x !== undefined && layer.y !== undefined && layer.width !== undefined && layer.height !== undefined

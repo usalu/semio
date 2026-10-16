@@ -1,7 +1,7 @@
 /** 🔺️ `En1998Diff` wire twin: the sparse delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 import { type En1998Assessment, type En1998Bridge, type En1998Building, type En1998Foundation, type En1998Member, type En1998RetainingWall, type En1998Silo, type En1998Site, type En1998Storey, type En1998System, type En1998Tank, type En1998Tower, type En1998VariableAction, parseEn1998Assessment, parseEn1998Bridge, parseEn1998Building, parseEn1998Foundation, parseEn1998Member, parseEn1998RetainingWall, parseEn1998Silo, parseEn1998Site, parseEn1998Storey, parseEn1998System, parseEn1998Tank, parseEn1998Tower, parseEn1998VariableAction } from "../📸️snapshot/🟦️.ts";
 
 export interface En1998SystemPatch { direction: (string) | null; systemType: (string) | null; material: (string) | null; ductilityClass: (string) | null; q0: (number) | null; alphaUOverAlpha1: (number) | null; kW: (number) | null; baseShearResistanceN: (number) | null; }

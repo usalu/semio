@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import glob from "fast-glob";
-import { testBuiltTreeRetirementFixture } from "../../🧬️contract/♻️retirement/🌲️built/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
+import { testBuiltTreeRetirementFixture } from "../../🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 
 import { fixedListStorageSelfTests } from "../../🧬️contract/🧪️tests/🔬️fixed-list-storage/🟦️.ts";
 import { surfaceOwnershipSelfTests } from "../../🧠️runtime/🧪️tests/🔬️surface-ownership/🟦️.ts";

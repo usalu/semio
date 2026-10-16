@@ -23,7 +23,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
  * visualization capabilities, so the promise a catalogue entry makes is the specification.
  */
 // #region 🔌️Adapters
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { loadVizCatalog } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { roundProbeNumbers, type ProbeProjection, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters

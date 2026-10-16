@@ -49,5 +49,5 @@ export const stdioEpwEnergyplusAnySnapshotTextGuardConstant = <T extends string 
 //#endregion 🚪️Parsers
 
 export function parseEpwSnapshotText(value: unknown, at = "$"): EpwSnapshotText {
-  return stdioEpwEnergyplusAnySnapshotTextGuardObject(value, `${at}`);
+  return stdioEpwEnergyplusAnySnapshotTextGuardString(value, `${at}`);
 }

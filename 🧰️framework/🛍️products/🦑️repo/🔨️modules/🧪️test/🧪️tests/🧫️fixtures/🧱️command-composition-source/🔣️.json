@@ -312,7 +312,7 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️test-platform/🟦️.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔍️discovery-contract/🟦️.ts",
       "owners": [
         "🖥️host/🏗️materialization/🟦️.ts",
         "🏃️execution/🎬️scenario/🟦️.ts"

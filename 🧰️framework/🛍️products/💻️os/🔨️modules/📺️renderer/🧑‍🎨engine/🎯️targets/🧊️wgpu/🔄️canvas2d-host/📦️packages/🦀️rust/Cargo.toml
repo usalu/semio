@@ -33,4 +33,3 @@ ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦�
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }

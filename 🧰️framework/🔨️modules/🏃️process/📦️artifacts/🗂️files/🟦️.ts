@@ -1,5 +1,5 @@
 import sourceSchema from "../📤️publication/📥️sources/🧬️schema/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import { lstat, opendir } from "node:fs/promises";
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative,resolve,isAbsolute } from "node:path";

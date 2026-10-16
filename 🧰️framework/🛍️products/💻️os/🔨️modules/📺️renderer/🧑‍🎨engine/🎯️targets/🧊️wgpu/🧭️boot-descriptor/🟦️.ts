@@ -403,7 +403,7 @@ export const WGPU_READINESS_BEACON_UNKNOWN_PLUGIN = "unknown";
  *
  * 🩸️ The wgpu page set NEITHER, so `data-semio-os-ready` stayed `null` through a 45 s clean boot
  * (`📓️audit-visual-parity-puzzle3d.md` §7 item 8) and every probe and e2e runner that waits on the
- * attribute — `🌎️hub/📦️packages/🦀️rust/📜️script.ts`'s `[data-semio-os-ready]` locator included — had to
+ * attribute — `🌎️hub/🧪️tests/🕹️gis-map-process/🟦️.ts`'s `[data-semio-os-ready]` locator included — had to
  * fall back to a fixed sleep on this target while working unchanged on React's.
  *
  * 🪟️ It lives HERE, beside the page realm's other reads, for the same reason they do: the frame Worker

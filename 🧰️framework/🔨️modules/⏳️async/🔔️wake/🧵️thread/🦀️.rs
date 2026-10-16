@@ -45,6 +45,9 @@ pub fn admit_original_thread_wake(original:&Waker,grant:RetainedCloneGrant)->Res
  let copy=original_thread_wake_lease_copy_bytes();if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(None)}
  let pointer=original.data().cast::<OriginalThreadWake>();unsafe{Arc::increment_strong_count(pointer);}let source=unsafe{Arc::from_raw(pointer)};Ok(Some((source,RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})))
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod internals {
+    pub type ThreadWakeRetirement = super::ThreadWakeRetirement;
+}

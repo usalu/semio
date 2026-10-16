@@ -22,7 +22,9 @@ import { formatClock, formatInstant, formatPoints } from "../📏️quantity/�
 import { CHALLENGE_LABELS } from "../⛰️challenge/🟦️.tsx";
 import { learnerName } from "../🪪️identity/🟦️.tsx";
 import { CARD_CHIP_WRAP, CardAction, CardIcon, Missing, PageFrame, QuizCard, Records, Segments, TABLE, cn, textPresentation, type PaneView, type Segment } from "../🪟️chrome/🟦️.tsx";
-import { HOME_PAGES, shownLeaderboard, type HeldLeaderboard, type QuizSession, type QuizState, type RefreshOutcome } from "../🧭️session/🟦️.ts";
+import { HOME_PAGES, shownLeaderboard, type HeldLeaderboard, type QuizState } from "../🧭️session/🧮️state/🟦️.ts";
+import { type QuizSession } from "../🧭️session/🟦️.ts";
+import { type RefreshOutcome } from "../🧭️session/📋️session-model/🟦️.ts";
 import { OnlineMark, PRESENCE_ANCHORS, PanePeers, usePresenceView } from "../👥️presence/🟦️.tsx";
 
 /** ⏱️ How often the leaderboard is asked for while visible and the proctor answers. */

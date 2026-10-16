@@ -1,0 +1,26 @@
+{
+ "parent_manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+ "companion_dir": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🥣️companion",
+ "name": "semio-framework-value-tests",
+ "id": "value-tests",
+ "role": "framework",
+ "description": "Companion tests of value: retirement, refusal, paged and shared text, leases and cloning laws",
+ "project": "@semio-tech/framework-value-tests-rs",
+ "features": [
+  "testkit"
+ ],
+ "carry": [
+  "semio-framework-artifact-reference",
+  "encoding_rs",
+  "semio-framework-dsl-record-derive",
+  "semio-framework-dsl-record",
+  "semio-framework-diagnostic",
+  "semio-framework-value-testing-allocator",
+  "semio-framework-value-clone-source-testing",
+  "semio-framework-value-factory",
+  "serde_json",
+  "serde",
+  "semio-framework-io-base64",
+  "semio-framework-value-retirement"
+ ]
+}

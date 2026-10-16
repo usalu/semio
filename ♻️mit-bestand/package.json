@@ -221,6 +221,7 @@
     "../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust",
+    "../🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
@@ -292,6 +293,7 @@
     "nx@23.2.0": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch"
   },
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "d3-force": "3.0.0"
   }
 }

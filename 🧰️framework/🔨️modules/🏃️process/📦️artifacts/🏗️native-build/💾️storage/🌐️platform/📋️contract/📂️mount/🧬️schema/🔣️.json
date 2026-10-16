@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/platform/contract/mount/component.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dev",
+    "ino",
+    "mode"
+  ],
+  "properties": {
+    "dev": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "ino": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,19}$"
+    },
+    "mode": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    }
+  },
+  "definitions": {
+    "TeardownProtocol": {
+      "const": {
+        "version": 1,
+        "maximumEntries": 0,
+        "beforeUnlink": true,
+        "identity": [
+          "dev",
+          "ino",
+          "mode"
+        ],
+        "deletionAuthority": false
+      }
+    }
+  }
+}

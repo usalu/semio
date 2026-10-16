@@ -13,7 +13,7 @@ import { loadDevContribution, resolveDevContributionFile } from "../../🧩️co
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
 
 import localHubSchema from "../../🚀️local-hub/🧬️schema/🔣️.json";
-import brokerSchema from "../../../📇️directory/🎫️local-session/🗄️broker/🧬️schema/🔣️.json";
+import { localSessionBrokerSchema as brokerSchema } from "../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
 const ajv = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(brokerSchema).addSchema(localHubSchema);
 const validate = ajv.compile(schema), pathOracle = ajv.compile(schema.$defs.DevContributionPathV1);
 

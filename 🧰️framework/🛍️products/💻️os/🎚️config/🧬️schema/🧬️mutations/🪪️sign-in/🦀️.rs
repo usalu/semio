@@ -164,13 +164,3 @@ pub fn inverse_identity_config_mutation_steps(mutation: &IdentityConfigMutation,
     })
 }
 //#endregion 🌉️MutationCodecBridge
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🪪️replaces-the-active-session-with-a-second-account/🦀️.rs"]
-mod tests_replaces_the_active_session_with_a_second_account;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

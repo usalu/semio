@@ -1,8 +1,8 @@
 import{runtimeActorCargoArgumentsV1,type RuntimeActorCargoArgumentsRequestV1}from"./🎭️actor/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-export type { RuntimeTrunkObservationV1, RuntimeActorCargoSelectionV1, RuntimeCompilerChecksumV1 } from "../🧬️schema/🟦️.ts";
-import type { RuntimeCompilerInputV1, RuntimeCargoBuildScriptV1, RuntimeCargoUnitV1, RuntimeCargoObservationV1, RuntimeBuildResourceObservationV1, RuntimeCargoBuildResourcesV1, RuntimeCompilerResourceEntryV1, RuntimeCompilerResourceOperationV1, RuntimeCompilerResourceV1, RuntimeCargoCompilerResourcesV1, RuntimeTrunkObservationV1, RuntimeActorCargoSelectionV1, RuntimeCompilerChecksumV1 } from "../🧬️schema/🟦️.ts";
+export type { RuntimeTrunkObservationV1,  RuntimeCompilerChecksumV1 } from "../🧬️schema/🟦️.ts";
+import type { RuntimeCompilerInputV1, RuntimeCargoBuildScriptV1, RuntimeCargoUnitV1, RuntimeCargoObservationV1, RuntimeBuildResourceObservationV1, RuntimeCargoBuildResourcesV1, RuntimeCompilerResourceEntryV1, RuntimeCompilerResourceOperationV1, RuntimeCompilerResourceV1, RuntimeCargoCompilerResourcesV1, RuntimeTrunkObservationV1,  RuntimeCompilerChecksumV1 } from "../🧬️schema/🟦️.ts";
 import { observeSelectedRuntimeActorsV1, acquireSelectedRuntimeActorsV1, type SelectedRuntimeActorPublicationPortV1, type SelectedRuntimeActorsV1, parseSelectedRuntimeGraphPackageRootsV1, type SelectedRuntimeGraphPackageRootsV1 } from "../🎭️selection/🧬️schema/🟦️.ts";
 import { existsSync, readFileSync, realpathSync, writeFileSync, mkdirSync, readdirSync, statSync, lstatSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -248,14 +248,6 @@ export async function runtimeCargoObservationsForChecksV1(observations:readonly 
   for(const check of checks){const candidates:RuntimeCargoObservationV1[]=[];for(const observation of observations){const selection=runtimeCargoInvocationV1(observation,root);if(selection.workspace===check.workspace&&selection.target===check.target&&selection.defaults&&!selection.allFeatures&&JSON.stringify(selection.packages)===JSON.stringify([...check.packages].sort())&&JSON.stringify(selection.features)===JSON.stringify([...check.features].sort())&&await current(observation))candidates.push(observation);}candidates.sort((a,b)=>b.observedAtMs-a.observedAtMs);if(candidates[0])selected.push(candidates[0]);}return selected;
 }
 
-
-/** 🏅️ Binds current package cdylib selection and original-to-final component custody to one production compiler unit. */
-export function runtimeActorCargoUnitV1(observation:RuntimeCargoObservationV1,selection:RuntimeActorCargoSelectionV1,context:{root:string;expected:RuntimeActorCargoArgumentsRequestV1;read:(path:string)=>string|Uint8Array|undefined}):RuntimeCargoUnitV1|undefined{
-  let args:readonly string[];try{if(context.expected.kind!=="component"||context.expected.root!==context.root||context.expected.packageName!==selection.cargoPackage)return;args=runtimeActorCargoArgumentsV1(context.expected);}catch{return;}const manifest=join(context.root,context.expected.workspaceOwner);
-  if(observation.status!==0||observation.cancelled!==false||resolve(observation.cwd)!==resolve(context.root)||resolve(observation.manifest)!==resolve(manifest)||JSON.stringify(observation.args)!==JSON.stringify(args))return;
-  const units=observation.units.filter(unit=>{try{return resolve(unit.message.manifest_path!)===resolve(context.expected.packageManifest)&&unit.message.profile.test===false&&!unit.message.features.some(feature=>["mutation-testing","artifact-app-testing"].includes(feature))&&unit.message.target.kind.some(kind=>["lib","cdylib"].includes(kind))&&(Bun.TOML.parse(String(context.read(unit.message.manifest_path!)))as{package:{name:string}}).package.name===selection.cargoPackage&&unit.artifacts.some(artifact=>artifact.stagedPath===selection.componentPath&&artifact.sha256===selection.componentSha256&&artifact.stagedSha256===selection.componentSha256&&artifact.path.endsWith(".wasm"));}catch{return false;}});
-  return units.length===1?units[0]:undefined;
-}
 
 /** 🌱️ Requires surviving artifacts and complete current Cargo configuration before automatic reuse. */
 export async function runtimeCargoObservationCurrentV1(observation:RuntimeCargoObservationV1,context:{root:string;cwd:string;outDirectory:string;buildDirectory:string;cargoHome:string;fixtureCollections?:readonly string[];physical:CurrentPhysicalPortV1}):Promise<boolean>{

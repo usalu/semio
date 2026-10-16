@@ -1268,6 +1268,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-native-build-compiler-resources"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+]
+
+[[package]]
 name = "semio-framework-number"
 version = "0.1.0"
 
@@ -1585,6 +1592,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -1607,13 +1615,10 @@ name = "semio-framework-os-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
- "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-pack-record-token",
  "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
@@ -2329,15 +2334,16 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
+ "semio-framework-pack-schema-index",
  "semio-framework-replication-codec",
  "semio-framework-value",
 ]
 
 [[package]]
-name = "semio-framework-pack-record-token"
+name = "semio-framework-pack-schema-index"
 version = "0.1.0"
 dependencies = [
- "semio-framework-pack",
+ "semio-framework-dsl-record",
  "semio-framework-value",
 ]
 
@@ -2716,6 +2722,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-app-builder",
  "semio-framework-plugin-decl-app",
@@ -4691,6 +4698,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "syn",
 ]
 
@@ -5142,6 +5150,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-plugin-process-catalog-json-oracle"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-plugin-process-robotic"
 version = "0.1.0"
 dependencies = [
@@ -5152,6 +5168,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-process-process3d-model",
+ "semio-s-plugin-process-catalog-json-oracle",
  "serde_json",
 ]
 

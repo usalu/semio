@@ -67,3 +67,9 @@ Fleet compile mutex:
 - **Headroom refusal.** On `Insufficient physical compiler initial headroom`, release the mutex, continue with static evidence, and retry after 10 minutes.
 
 Priority while the image is tight: OS-KERNEL-ENGINE and OS-KERNEL-SQLITE-HOST first, because every plugin crate depends on the kernel, then COMPILE-PASS-2, then the flips.
+
+## Wave 6 (13:30)
+
+Every slice follows the rules above. The compile mutex applies to any `bun repo cargo` call. Headroom is currently refused, so Rust slices verify statically: the scoped patched differential, the census, the duplicate-mount scan, rustfmt and path checks. Record the exact real-check command so the compile queue can run it later.
+
+Source-file splits (not crate carves): children go in `<emoji>️<kebab>/🦀️.rs` and are wired with `#[path]` plus explicit `use`. Each child stays at or below about 1,500 lines. Prove the split lossless by line multiset, and show the differential is identical.

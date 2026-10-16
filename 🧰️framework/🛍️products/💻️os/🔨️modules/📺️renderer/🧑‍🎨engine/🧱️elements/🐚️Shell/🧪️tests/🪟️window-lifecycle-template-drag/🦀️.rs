@@ -1,7 +1,8 @@
 //! 🪟️ LAW: the Display palette is a targetable drag source and closed World3d owners retire.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::host_test_shell;
 use super::*;
-use crate::dock::DockNode;
+use semio_framework_os_renderer_wgpu_dock::DockNode;
 use serde_json::Value;
 
 fn fixture() -> Value {
@@ -10,7 +11,7 @@ fn fixture() -> Value {
 
 #[test]
 fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits() {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🪟️empty-dock-notice/🔣️.json")).unwrap();
     for locale in fixture["locales"].as_array().unwrap() {
         for viewport in fixture["viewports"].as_array().unwrap() {
@@ -30,9 +31,9 @@ fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits()
             let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
             let mut complete = false;
             for _ in 0..1_024 {
-                let before = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH).count();
+                let before = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH).count();
                 complete = caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut resources, cx));
-                let after = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH).count();
+                let after = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH).count();
                 assert!(after.saturating_sub(before) <= 1, "each grant paints at most one notice glyph");
                 if complete { break; }
             }
@@ -40,7 +41,7 @@ fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits()
             assert!(shell.dock.dock_window_plan.is_empty());
             assert!(!shell.dock.dock_drop_bodies.is_empty());
             assert!(input.staged_hits().is_empty(), "prose adds no phantom window or scroll target");
-            let glyphs: Vec<_> = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH).collect();
+            let glyphs: Vec<_> = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH).collect();
             assert!(!glyphs.is_empty(), "the empty dock paints its localized instruction");
             assert!(glyphs.iter().all(|glyph| glyph.color == [theme.text_muted.r, theme.text_muted.g, theme.text_muted.b, theme.text_muted.a]));
             let text = locale["text"].as_str().unwrap();
@@ -56,7 +57,7 @@ fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits()
             assert!(((first.y + last.y + last.h) * 0.5 - notice_bounds.y - notice_bounds.h * 0.5).abs() <= tolerance);
             let lines = atlas.wrap_lines(text, notice_bounds.w, theme.font_size_body);
             assert_eq!(lines.len() > 1, viewport["wraps"].as_bool().unwrap());
-            let glyph_count: usize = lines.iter().map(|range| text[range.clone()].trim_end_matches(ui_wgpu::wgpu::text::is_wrap_space).chars().count()).sum();
+            let glyph_count: usize = lines.iter().map(|range| text[range.clone()].trim_end_matches(semio_framework_ui_text::is_wrap_space).chars().count()).sum();
             assert_eq!(glyphs.len(), glyph_count);
             caller.retire_world(&mut resources);
         }
@@ -65,7 +66,7 @@ fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits()
 }
 
 fn shell() -> ShellState {
-    super::panel_anchor_model_tests::host_test_shell()
+    host_test_shell()
 }
 
 fn find_id<'a>(value: &'a Value, id: &str) -> Option<&'a Value> {
@@ -82,7 +83,7 @@ fn find_id<'a>(value: &'a Value, id: &str) -> Option<&'a Value> {
 #[test]
 fn display_window_and_projection_rows_publish_reacts_drag_payload_without_click_actions() {
     let mut shell = shell();
-    shell.docs.session.as_mut().unwrap().app.window_kinds.first_mut().surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
+    shell.docs.session.as_mut().unwrap().app.window_kinds.first_mut().surface_kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
     let value = serde_json::to_value(shell.docs.build_display_windows_ui(&shell.prefs)).expect("display ui json");
     let fixture = fixture();
     let mime = fixture["mime"].as_str().unwrap();
@@ -101,16 +102,16 @@ fn encoded_layout_templates_resolve_the_same_initial_top_and_three_point_looks_a
     let top_id = r#"world-projection:{"mode":{"kind":"orthographic"},"orientation":{"type":"cardinal","view":"top"}}"#;
     let top = world_projection_initial_seed(top_id).expect("React's encoded Top template decodes");
     assert_eq!(world_projection_template(top_id).id, "orthographic");
-    assert_eq!(ui_wgpu::wgpu::projection_spec_family(top), ui_wgpu::wgpu::CameraProjection3d::Orthographic);
-    let (direction, up) = ui_wgpu::wgpu::projection_spec_orientation_look(top);
+    assert_eq!(semio_framework_ui_scene_camera::projection_spec_family(top), semio_framework_ui_scene_camera::CameraProjection3d::Orthographic);
+    let (direction, up) = semio_framework_ui_scene_camera::projection_spec_orientation_look(top);
     assert_eq!(direction.to_array(), [0.0, 0.0, 1.0]);
     assert_eq!(up.to_array(), [0.0, 1.0, 0.0]);
 
     let perspective_id = r#"world-projection:{"mode":{"kind":"threePoint","fov":50},"orientation":{"type":"free"}}"#;
     let perspective = world_projection_initial_seed(perspective_id).expect("React's encoded 3-Point template decodes");
     assert_eq!(world_projection_template(perspective_id).id, "three-point");
-    assert_eq!(ui_wgpu::wgpu::projection_spec_family(perspective), ui_wgpu::wgpu::CameraProjection3d::Perspective);
-    let (direction, up) = ui_wgpu::wgpu::projection_spec_orientation_look(perspective);
+    assert_eq!(semio_framework_ui_scene_camera::projection_spec_family(perspective), semio_framework_ui_scene_camera::CameraProjection3d::Perspective);
+    let (direction, up) = semio_framework_ui_scene_camera::projection_spec_orientation_look(perspective);
     assert!((direction.length() - 1.0).abs() < 1e-6);
     assert_eq!(up.to_array(), [0.0, 0.0, 1.0]);
     assert!(world_projection_initial_seed("world-projection:not-json").is_none(), "a malformed template never silently becomes a different camera");
@@ -173,7 +174,7 @@ fn template_pointer_drag_promotes_and_escape_cancels_without_mutating_the_dock()
 fn closed_world3d_retires_every_input_and_scene_owner_before_id_reuse() {
     let mut shell = shell();
     for id in ["world", "world-2"] {
-        assert!(shell.dock.dock.split_root_with_window(id, crate::dock::DockSide::Right), "the committed dock holds {id}");
+        assert!(shell.dock.dock.split_root_with_window(id, semio_framework_os_renderer_wgpu_dock::DockSide::Right), "the committed dock holds {id}");
     }
     shell.dock.dock_window_plan = vec![("world".into(), Rect::new(0.0, 0.0, 100.0, 100.0)), ("world-2".into(), Rect::new(100.0, 0.0, 100.0, 100.0))];
     let mut retired_token = None;
@@ -234,7 +235,7 @@ fn closed_world3d_retires_every_input_and_scene_owner_before_id_reuse() {
 fn retired_owners_apply_fixed_pressure_to_new_scene_admission() {
     let fixture = fixture();
     let capacity = fixture["retirement"]["capacity"].as_u64().unwrap() as usize;
-    assert_eq!(capacity, crate::scenes::SCENE_SURFACE_CAPACITY);
+    assert_eq!(capacity, semio_framework_os_renderer_wgpu_contracts::SCENE_SURFACE_CAPACITY);
     let mut states = AdmittedSurfaceMap::<usize>::default();
     assert!(states.set_external_reservations(capacity));
     assert!(states.get_or_insert_with("blocked".into(), || 1).is_none());

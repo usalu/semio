@@ -4,7 +4,7 @@ name = "semio-hub-directory-neo4j"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "HubDirectory over Neo4j (neo4rs)"
+description = "Hub directory capabilities over Neo4j (neo4rs)"
 
 [package.metadata.semio]
 role = "hub"

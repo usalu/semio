@@ -51,9 +51,6 @@ pub enum RunMutation {
 //#endregion 🔖️Aggregate
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 

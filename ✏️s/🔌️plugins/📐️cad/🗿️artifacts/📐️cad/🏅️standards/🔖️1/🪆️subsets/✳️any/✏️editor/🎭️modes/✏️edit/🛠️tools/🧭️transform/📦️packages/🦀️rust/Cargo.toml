@@ -15,10 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[test]]
-name = "cad_transform_tool"
-path = "../../🧪️tests/🔬️unit/🦀️.rs"
-
 [dependencies]
 machine = { workspace = true }
 semio-framework = { workspace = true }

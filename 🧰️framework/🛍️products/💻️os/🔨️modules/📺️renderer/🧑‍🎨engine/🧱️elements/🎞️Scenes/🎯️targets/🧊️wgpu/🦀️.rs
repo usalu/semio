@@ -76,7 +76,9 @@ pub(crate) const SCENES_SOURCE: &str = concat!(
 #[cfg(test)]
 use serde_json::{json, Value};
 #[cfg(test)]
-use ui_wgpu::wgpu::{ActionDescriptor, Rect};
+use semio_framework_ui_layout::layout::ActionDescriptor;
+#[cfg(test)]
+use semio_framework_ui_theme::geometry::Rect;
 
 #[cfg(test)]
 include!("../../🧪️tests/🧊️wgpu-standalone/🦀️.rs");

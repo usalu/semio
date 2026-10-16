@@ -8,9 +8,10 @@
 //! own corpus) and this element's `🛑️surface-controls/🔣️.json` (also answered by the TypeScript
 //! `world3dComputeStatusV1` twin). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::{host_test_shell, retained_world_sequence_probe};
 use super::*;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ExampleDefinition,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
-use ui_wgpu::wgpu::WindowLayout;
+use semio_framework_ui_layout::layout::WindowLayout;
 
 const EXAMPLE_PICKER_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📚️example-picker.json");
 const SURFACE_SWITCH_FIXTURE: &str = include_str!("../../../🏛️ShellHost/🧪️tests/🧫️fixtures/🔀️surface-switch/🔣️.json");
@@ -18,7 +19,10 @@ const SURFACE_CONTROLS_FIXTURE: &str = include_str!("../🧫️fixtures/🛑️s
 const CHROME_PANEL_SAFE_AREA_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json");
 const BOOT_EXAMPLE_FIXTURE: &str = include_str!("../🧫️fixtures/📚️boot-example/🔣️.json");
 const WINDOW_ICON_OVERRIDE_FIXTURE: &str = include_str!("../🧫️fixtures/🪟️window-icon-overrides/🔣️.json");
-const WGPU_SHELL_SOURCE: &str = crate::shell::SHELL_SOURCE;
+#[allow(non_snake_case)]
+fn WGPU_SHELL_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::shell_source()
+}
 
 /// 🪪️ A dialect with no coordinate at all — how this target spells the fixture's `"dialect": null`
 /// rows (`AppDefinition.dialect` is not optional in Rust, and an empty coordinate matches nothing,
@@ -49,7 +53,7 @@ fn parity_window_kinds() -> WindowKinds {
         id: "main".into(),
         label: LocalizedLabel::native("Main", "Haupt"),
         body_key: "main.body".into(),
-        surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+        surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         icon_id: "app-window".into(),
         options: Default::default(),
         actions: vec![],
@@ -225,17 +229,17 @@ fn the_boot_example_is_resolved_the_way_the_shared_fixture_declares() {
 /// hook that has no native caller to drive from a test.
 #[test]
 fn the_boot_example_query_reaches_the_picker_through_the_shared_resolver() {
-    let chrome = WGPU_SHELL_SOURCE.split("fn sync_session_chrome").nth(1).expect("the shell declares sync_session_chrome");
+    let chrome = WGPU_SHELL_SOURCE().split("fn sync_session_chrome").nth(1).expect("the shell declares sync_session_chrome");
     let body = &chrome[..["\n    fn ", "\n    pub(crate) fn "].iter().filter_map(|marker| chrome.find(marker)).min().unwrap_or(chrome.len())];
     assert!(body.contains("shell_offered_examples("), "boot and role sync use the declared example offer authority");
     assert!(body.contains("resolve_boot_example_id("), "sync_session_chrome resolves through the shared predicate, never its own inline rule");
     assert!(body.contains("crate::boot_app_example()"), "`?example=` is the declared default the resolver is handed");
-    let apply = WGPU_SHELL_SOURCE.split("async fn announce_session_example").nth(1).expect("the shell declares announce_session_example");
+    let apply = WGPU_SHELL_SOURCE().split("async fn announce_session_example").nth(1).expect("the shell declares announce_session_example");
     let apply_body = apply.split("\n    /// ").next().expect("the body of announce_session_example");
     assert!(apply_body.contains("\"setActiveExample\""), "the resolved example is ANNOUNCED to the guest, not only painted on the trigger");
     assert!(!apply_body.contains("boot_app_example"), "the announcement never depends on a `?example=` query: a boot without one opens the dialect's first example as React does");
-    assert!(!WGPU_SHELL_SOURCE.contains("fn apply_boot_example"), "the boot has no example path of its own");
-    let settle = WGPU_SHELL_SOURCE.split("async fn settle_boot").nth(1).expect("the shell declares settle_boot");
+    assert!(!WGPU_SHELL_SOURCE().contains("fn apply_boot_example"), "the boot has no example path of its own");
+    let settle = WGPU_SHELL_SOURCE().split("async fn settle_boot").nth(1).expect("the shell declares settle_boot");
     let settle_body = settle.split("\n    /// ").next().expect("the body of settle_boot");
     let push = settle_body.find("push_contributions").expect("settle_boot pushes contributions");
     let example = settle_body.find("announce_session_example").expect("settle_boot announces the resolved example");
@@ -400,7 +404,7 @@ fn the_cancel_contract_is_read_the_way_the_shared_fixture_declares() {
 #[test]
 fn a_live_surface_offers_exactly_the_overlay_controls_the_shared_fixture_declares() {
     let fixture: Value = serde_json::from_str(SURFACE_CONTROLS_FIXTURE).expect("🛑️ fixture parses");
-    let theme = crate::resolve_theme("light");
+    let theme = semio_framework_os_renderer_wgpu_host_base::resolve_theme("light");
     assert!((f64::from(theme.control_height) - fixture["controlHeightPx"].as_f64().expect("fixture control height")).abs() < 1e-6, "the fixture's declared control height must stay the theme's own token");
     let mut rows = 0;
     for case in fixture["surfaceControls"].as_array().expect("fixture surface rows") {
@@ -428,7 +432,7 @@ fn the_cancel_control_dispatches_only_the_action_the_surface_itself_published() 
     let published = world3d_cancel_affordance(Some("{\"computing\":true,\"cancellable\":true,\"cancelAction\":\"stopTheThing\"}"));
     assert_eq!(published.cancel_action, "stopTheThing", "the shell learns the verb from the surface's own status contract, never from code");
     assert!(published.cancellable);
-    assert!(!WGPU_SHELL_SOURCE.contains("\"cancelPreviewEval\""), "no domain verb may be hardcoded in the shell's cancel path");
+    assert!(!WGPU_SHELL_SOURCE().contains("\"cancelPreviewEval\""), "no domain verb may be hardcoded in the shell's cancel path");
 }
 
 //#endregion 🛑️SurfaceControls
@@ -490,7 +494,7 @@ fn the_status_pill_speaks_the_readers_language_and_never_defaults_to_one() {
 /// paint on top of each other — and a surface too small to carry chrome carries neither.
 #[test]
 fn the_status_pill_leads_the_row_the_cancel_control_follows() {
-    let theme = crate::resolve_theme("light");
+    let theme = semio_framework_os_renderer_wgpu_host_base::resolve_theme("light");
     let computing =
         "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"Flächen werden vernetzt\"},\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
     let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
@@ -518,7 +522,7 @@ fn a_long_evaluation_publishes_a_monotone_run_of_non_idle_frames_and_then_settle
     let fixture: Value = serde_json::from_str(SURFACE_CONTROLS_FIXTURE).expect("⏳️ the surface-controls fixture parses");
     let timeline = &fixture["progressTimeline"];
     let minimum = timeline["minimumNonIdleFrames"].as_u64().expect("fixture minimum non-idle frames") as usize;
-    let theme = crate::resolve_theme("light");
+    let theme = semio_framework_os_renderer_wgpu_host_base::resolve_theme("light");
     let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
     for lane in ["evaluation", "cancelled"] {
         let frames = timeline[lane].as_array().unwrap_or_else(|| panic!("fixture {lane} frames"));
@@ -564,7 +568,7 @@ fn a_long_evaluation_publishes_a_monotone_run_of_non_idle_frames_and_then_settle
 /// it — while the RELEASE path, which reaches the shell, is the phase `handle_shell_hit` ignores.
 #[test]
 fn a_press_on_the_overlay_chrome_over_a_surface_belongs_to_the_shell() {
-    let theme = crate::resolve_theme("light");
+    let theme = semio_framework_os_renderer_wgpu_host_base::resolve_theme("light");
     let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
     let computing = "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"Flächen werden vernetzt\"},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
     let controls = surface_overlay_controls_for(&[], &[("procedural-preview", bounds, Some(computing))], &[], &theme, false);
@@ -579,7 +583,7 @@ fn a_press_on_the_overlay_chrome_over_a_surface_belongs_to_the_shell() {
     assert!(!pointer_press_belongs_to_shell_chrome(Some(&surface)), "a press on the surface body still orbits the scene");
     assert!(!pointer_press_belongs_to_shell_chrome(None), "a press on nothing is nobody's chrome");
 
-    super::shell_input_tests::retained_world_sequence_probe("chrome");
+    retained_world_sequence_probe("chrome");
 }
 
 //#endregion ⏳️ComputeStatusPane
@@ -601,7 +605,7 @@ fn no_user_visible_chrome_literal_bypasses_the_bilingual_paths() {
     ];
     let mut offenders = Vec::new();
     let mut allowed = 0;
-    for (index, line) in WGPU_SHELL_SOURCE.lines().enumerate() {
+    for (index, line) in WGPU_SHELL_SOURCE().lines().enumerate() {
         let mut rest = line;
         while let Some(at) = rest.find("Label::data(\"") {
             let literal_start = at + "Label::data(\"".len();
@@ -628,12 +632,12 @@ fn no_user_visible_chrome_literal_bypasses_the_bilingual_paths() {
 /// sweep had already declared itself done.
 #[test]
 fn no_capitalised_chrome_phrase_escapes_the_bilingual_tables() {
-    let table = region_of(WGPU_SHELL_SOURCE, "//#region 🗣️ChromeI18n", "//#endregion 🗣️ChromeI18n");
-    let administration = region_of(WGPU_SHELL_SOURCE, "fn shell_space_administration_label", "\n}\n");
+    let table = region_of(WGPU_SHELL_SOURCE(), "//#region 🗣️ChromeI18n", "//#endregion 🗣️ChromeI18n");
+    let administration = region_of(WGPU_SHELL_SOURCE(), "fn shell_space_administration_label", "\n}\n");
     let mut offenders = Vec::new();
     let mut exempted = 0;
     let mut offset = 0;
-    for (line_number, line) in WGPU_SHELL_SOURCE.lines().enumerate() {
+    for (line_number, line) in WGPU_SHELL_SOURCE().lines().enumerate() {
         let at = offset;
         offset += line.len() + 1;
         let trimmed = line.trim_start();
@@ -684,7 +688,7 @@ fn region_of(source: &str, start: &str, end: &str) -> std::ops::Range<usize> {
 #[test]
 fn every_chrome_key_the_shell_asks_for_answers_in_both_tongues() {
     let mut keys: Vec<&str> = Vec::new();
-    let mut rest = WGPU_SHELL_SOURCE;
+    let mut rest = WGPU_SHELL_SOURCE();
     while let Some(at) = rest.find("shell_chrome_string(\"") {
         let tail = &rest[at + "shell_chrome_string(\"".len()..];
         let key = tail.split('"').next().unwrap_or_default();
@@ -716,8 +720,8 @@ fn the_session_switch_creates_before_it_retires_and_leaks_no_instance() {
     let fixture: Value = serde_json::from_str(SURFACE_SWITCH_FIXTURE).expect("🔀️ fixture parses");
     let switched = fixture["switch"].as_array().expect("fixture switch rows").iter().find(|case| case["expected"]["status"] == "switched").expect("the fixture declares at least one completed switch");
     let declared: Vec<String> = switched["expected"]["steps"].as_array().expect("fixture steps").iter().map(|step| step.as_str().expect("fixture step").split(':').next().expect("step verb").to_string()).collect();
-    let body_start = WGPU_SHELL_SOURCE.find("async fn run_session_app_switch").expect("the shell declares the ordered session switch");
-    let body = &WGPU_SHELL_SOURCE[body_start..];
+    let body_start = WGPU_SHELL_SOURCE().find("async fn run_session_app_switch").expect("the shell declares the ordered session switch");
+    let body = &WGPU_SHELL_SOURCE()[body_start..];
     let body = &body[..body.find("\n    /// 🔁️ Steps the active mode").expect("the switch body ends before the next item")];
     let at = |needle: &str| body.find(needle).unwrap_or_else(|| panic!("the ordered switch performs {needle}"));
     let (create, seal, retire, publish, refresh) = (at("create_app("), at("retire_documents_outside("), at("destroy_app("), at("push_contributions("), at("refresh_ui("));
@@ -753,19 +757,19 @@ const WINDOW_SCOPE_FIXTURE: &str = include_str!("../../../🏛️ShellHost/🧪�
 /// 🪟️ Rebuilds a fixture layout node as the wgpu dock tree. The fixture is authored in the React
 /// shell's own layout vocabulary (`window` / `stack` + `activeId` / `row` / `column`), which is the
 /// point: ONE corpus, two renderers.
-fn window_scope_node(value: &Value) -> crate::dock::DockNode {
+fn window_scope_node(value: &Value) -> semio_framework_os_renderer_wgpu_dock::DockNode {
     match value["kind"].as_str().expect("⌨️ fixture layout node kind") {
         "window" => {
             let id = value["id"].as_str().expect("⌨️ fixture window id").to_string();
-            crate::dock::DockNode::Stack { windows: vec![DockStackTab::new(id.clone())], active: id }
+            semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new(id.clone())], active: id }
         }
         "stack" => {
             let windows: Vec<DockStackTab> = value["children"].as_array().expect("⌨️ fixture stack children").iter().map(|child| DockStackTab::new(child["id"].as_str().expect("⌨️ fixture window id"))).collect();
             let active = value["activeId"].as_str().map(str::to_string).or_else(|| windows.first().map(|tab| tab.window_id.clone())).unwrap_or_default();
-            crate::dock::DockNode::Stack { windows, active }
+            semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows, active }
         }
-        "row" => crate::dock::DockNode::Row(value["children"].as_array().expect("⌨️ fixture row children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
-        "column" => crate::dock::DockNode::Column(value["children"].as_array().expect("⌨️ fixture column children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
+        "row" => semio_framework_os_renderer_wgpu_dock::DockNode::Row(value["children"].as_array().expect("⌨️ fixture row children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
+        "column" => semio_framework_os_renderer_wgpu_dock::DockNode::Column(value["children"].as_array().expect("⌨️ fixture column children").iter().map(|child| (window_scope_node(child), 1.0)).collect()),
         other => panic!("⌨️ unknown fixture layout node kind {other}"),
     }
 }
@@ -782,7 +786,7 @@ fn window_scope_app(fixture: &Value, app_id: &str) -> AppDefinition {
             id: kind["id"].as_str().expect("⌨️ fixture kind id").into(),
             label: LocalizedLabel::native(kind["id"].as_str().expect("⌨️ fixture kind id"), kind["id"].as_str().expect("⌨️ fixture kind id")),
             body_key: format!("{}.body", kind["id"].as_str().expect("⌨️ fixture kind id")),
-            surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+            surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
             icon_id: "app-window".into(),
             options: Default::default(),
             actions: kind["actionIds"]
@@ -868,16 +872,16 @@ fn accepted_window_icon_commands_are_instance_scoped_precede_projection_and_reti
                 Some(DockStackTab::instance_template(window_id, kind_id, template_id, WindowStackCorner::TopLeft))
             })
             .collect();
-        crate::dock::DockNode::Stack { windows: tabs, active: window_ids[0].as_str().expect("🖼️ active window id").to_string() }
+        semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: tabs, active: window_ids[0].as_str().expect("🖼️ active window id").to_string() }
     };
     let full_root = layout(true);
-    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut shell = host_test_shell();
     shell.dock.layout_override = None;
     let session = shell.docs.session.as_mut().expect("🖼️ test session");
     let kind = session.app.window_kinds.first_mut();
     kind.id = kind_id.to_string();
     kind.icon_id = kind_icon_id.into();
-    session.app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&full_root) });
+    session.app.default_layout = Some(WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&full_root) });
     SessionCtx::of(&mut shell).sync_dock();
 
     let (_, initial_icons) = shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows);
@@ -898,11 +902,11 @@ fn accepted_window_icon_commands_are_instance_scoped_precede_projection_and_reti
         assert!(!shell.dock.apply_window_icon_host_command(rejected["windowId"].as_str().unwrap(), rejected["iconId"].as_str().unwrap(), &shell.docs, &mut shell.windows), "a missing instance or empty icon is refused");
     }
 
-    shell.docs.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&layout(false)) });
+    shell.docs.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&layout(false)) });
     SessionCtx::of(&mut shell).sync_dock();
     let retired_id = fixture["retireReuse"]["windowId"].as_str().expect("🖼️ retired id");
     assert!(!shell.windows.window_icon_overrides.contains_key(retired_id), "retirement erases the renderer-local owner");
-    shell.docs.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&full_root) });
+    shell.docs.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&full_root) });
     SessionCtx::of(&mut shell).sync_dock();
     let (_, reused) = shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows);
     assert_eq!(reused.get(retired_id).map(String::as_str), fixture["retireReuse"]["expectedReusedIconId"].as_str(), "an id reused by a successor starts from kind fallback");
@@ -914,16 +918,16 @@ fn dock_sync_seeds_the_authored_instance_and_publishes_its_projection_icons() {
     let rows = fixture["tabPresentation"].as_array().expect("🖼️ fixture tab-presentation rows");
     let top_template = rows[0]["templateId"].as_str().expect("🖼️ top template");
     let perspective_template = rows[1]["templateId"].as_str().expect("🖼️ perspective template");
-    let root = crate::dock::DockNode::Row(vec![
-        (crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-top", "main", Some(top_template.into()), WindowStackCorner::TopLeft)], active: "main-top".into() }, 1.0),
-        (crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-perspective", "main", Some(perspective_template.into()), WindowStackCorner::TopLeft)], active: "main-perspective".into() }, 2.0),
+    let root = semio_framework_os_renderer_wgpu_dock::DockNode::Row(vec![
+        (semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-top", "main", Some(top_template.into()), WindowStackCorner::TopLeft)], active: "main-top".into() }, 1.0),
+        (semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-perspective", "main", Some(perspective_template.into()), WindowStackCorner::TopLeft)], active: "main-perspective".into() }, 2.0),
     ]);
-    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut shell = host_test_shell();
     shell.dock.layout_override = None;
     shell.windows.active_window_id = Some("main".into());
     let session = shell.docs.session.as_mut().expect("🖼️ test session");
     session.app.window_kinds.first_mut().icon_id = "puzzle".into();
-    session.app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&root) });
+    session.app.default_layout = Some(WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&root) });
 
     SessionCtx::of(&mut shell).sync_dock();
 
@@ -1056,7 +1060,7 @@ fn a_chrome_panel_reserves_a_safe_area_for_the_surface_overlay_row() {
 /// of painting under it, and moves back the moment the panel closes.
 #[test]
 fn the_overlay_row_steps_clear_of_an_open_floating_panel() {
-    let theme = crate::resolve_theme("light");
+    let theme = semio_framework_os_renderer_wgpu_host_base::resolve_theme("light");
     let computing = "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
     let bounds = Rect::new(4.0, 44.0, 952.0, 592.0);
     let worlds = [("window:procedural-preview", bounds, Some(computing))];
@@ -1096,21 +1100,21 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
             .enumerate()
             .map(|(index, id)| {
                 let id = id.as_str().unwrap().to_string();
-                let mut windows = vec![crate::dock::DockStackTab::new(id.clone())];
+                let mut windows = vec![semio_framework_os_renderer_wgpu_dock::DockStackTab::new(id.clone())];
                 if id == "b" {
                     windows[0].template_id = change.and_then(|row| row["templateId"].as_str()).map(str::to_string);
                     if let Some(extra) = change.and_then(|row| row["extraId"].as_str()) {
-                        windows.push(crate::dock::DockStackTab::instance(extra, "b", WindowStackCorner::TopLeft));
+                        windows.push(semio_framework_os_renderer_wgpu_dock::DockStackTab::instance(extra, "b", WindowStackCorner::TopLeft));
                     }
                 }
-                let stack = crate::dock::DockNode::Stack { windows, active: id };
+                let stack = semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows, active: id };
                 (stack, weights[index].as_f64().unwrap() as f32)
             })
             .collect();
-        WindowLayout { root: crate::dock::dock_node_to_layout_root(&crate::dock::DockNode::Row(children)) }
+        WindowLayout { root: semio_framework_os_renderer_wgpu_dock::dock_node_to_layout_root(&semio_framework_os_renderer_wgpu_dock::DockNode::Row(children)) }
     };
     for case in law["cases"].as_array().unwrap() {
-        let mut shell = super::panel_anchor_model_tests::host_test_shell();
+        let mut shell = host_test_shell();
         let prototype = shell.docs.session.as_ref().unwrap().app.window_kinds.first().clone();
         let kinds = |ids: &Value, label: &str| {
             WindowKinds::try_from(
@@ -1157,7 +1161,7 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
         assert_eq!(shell.dock.dock.maximized_stack, Some(vec![law["maximized"].as_u64().unwrap() as usize]), "{}: unchanged refresh preserves a later maximize", case["id"]);
     }
     let retitle = &law["localeRetitle"];
-    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut shell = host_test_shell();
     let prototype = shell.docs.session.as_ref().unwrap().app.window_kinds.first().clone();
     shell.docs.session.as_mut().unwrap().app.window_kinds = WindowKinds::try_from(
         law["windows"]
@@ -1174,8 +1178,8 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
     )
     .unwrap();
     let mut seeded = layout(&law["initialWeights"], Some(retitle));
-    if let ui_wgpu::wgpu::WindowLayoutRoot::Axis(axis) = &mut seeded.root {
-        if let ui_wgpu::wgpu::WindowLayoutChild::Stack(stack) = &mut axis.children[1] {
+    if let semio_framework_ui_layout::layout::WindowLayoutRoot::Axis(axis) = &mut seeded.root {
+        if let semio_framework_ui_layout::layout::WindowLayoutChild::Stack(stack) = &mut axis.children[1] {
             stack.children[1].title = retitle["bakedTitle"].as_str().map(str::to_string);
         }
     }
@@ -1194,14 +1198,14 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
 
 #[test]
 fn incoming_layout_prunes_unknown_windows_against_the_react_instance_roster() {
-    fn paths(node: &crate::dock::DockNode, path: String, out: &mut Vec<String>) {
+    fn paths(node: &semio_framework_os_renderer_wgpu_dock::DockNode, path: String, out: &mut Vec<String>) {
         match node {
-            crate::dock::DockNode::Stack { windows, .. } => {
+            semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows, .. } => {
                 if !windows.is_empty() {
                     out.push(path);
                 }
             }
-            crate::dock::DockNode::Row(children) | crate::dock::DockNode::Column(children) => {
+            semio_framework_os_renderer_wgpu_dock::DockNode::Row(children) | semio_framework_os_renderer_wgpu_dock::DockNode::Column(children) => {
                 for (index, (child, _)) in children.iter().enumerate() {
                     paths(child, if path.is_empty() { index.to_string() } else { format!("{path}.{index}") }, out);
                 }
@@ -1210,7 +1214,7 @@ fn incoming_layout_prunes_unknown_windows_against_the_react_instance_roster() {
     }
     let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️maximize-resync/🔣️.json")).unwrap();
     for case in law["ingressCases"].as_array().unwrap() {
-        let mut shell = super::panel_anchor_model_tests::host_test_shell();
+        let mut shell = host_test_shell();
         let prototype = shell.docs.session.as_ref().unwrap().app.window_kinds.first().clone();
         shell.docs.session.as_mut().unwrap().app.window_kinds = WindowKinds::try_from(
             law["windows"]

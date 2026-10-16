@@ -3,7 +3,7 @@
  * through Ajv (third-party) — so the React worker, the native actor and the browser actor share one reconnect,
  * expiry and revocation rule (ticket 26/09/23 audit P2-2). The terminal texts equal React's execution-target
  * status texts, which the worker already shows. */
-import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 export async function registerDocumentLinkShortageTests(
   vitest: NonNullable<ImportMeta["vitest"]>,
   twin: {
@@ -20,7 +20,7 @@ export async function registerDocumentLinkShortageTests(
   const { describe, it, expect } = vitest;
   const { default: fixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🧫️fixtures/document-link-shortage-v1/🔣️.json");
   const { default: schema } = await import("../../🔨️modules/🏪️store/🔄️sync/🧬️schema/document-link-shortage/🔣️.json");
-  const { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1 } = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
+  const { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1 } = await import("@semio-tech/framework/directory/schema");
 
   describe("DocumentLinkShortage", () => {
     it("owns the kernel policy and admits actual event and observation payloads", async () => {

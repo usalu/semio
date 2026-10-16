@@ -80,9 +80,9 @@
     "DagSelectedJsonKind"
   ],
   "typedSources": [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🟦️.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/📤️selection/🟦️.ts",
+    "🧰️framework/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🟦️.ts",
+    "🧰️framework/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts",
+    "🧰️framework/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/📤️selection/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🧪️tests/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧰️graph-core/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx",

@@ -1,0 +1,37 @@
+{
+ "families": [
+  {
+   "id": "stdio-base-revert",
+   "old": "🧱️full",
+   "new": "🧱️base",
+   "anchors": [
+    "🪆️subsets"
+   ],
+   "dirFilter": "^✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/[^/]+/🏅️standards/[^/]+/🪆️subsets/🧱️full$",
+   "artifactPrefixDepth": 5,
+   "variableRooted": true,
+   "forceFiles": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🦠️mutation-catalogs/🟦️.ts"
+   ]
+  },
+  {
+   "id": "semio-base-revert",
+   "old": "✉️wrap",
+   "new": "✉️base",
+   "anchors": [
+    "🪆️subsets",
+    "🧿️semio"
+   ],
+   "dirFilter": "^✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/[^/]+/🏅️standards/[^/]+/🪆️subsets/✉️wrap$",
+   "artifactPrefixDepth": 5,
+   "variableRooted": true,
+   "forceFiles": [
+    "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🦠️mutation-catalogs/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧮️mutation-catalog/🟦️.ts"
+   ]
+  }
+ ]
+}

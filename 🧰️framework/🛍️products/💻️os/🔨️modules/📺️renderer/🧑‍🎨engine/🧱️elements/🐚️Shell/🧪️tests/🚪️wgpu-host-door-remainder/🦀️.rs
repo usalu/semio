@@ -17,12 +17,13 @@
 //! `WindowPaneStateStore`), `📌️ChromePanels/🟦️.tsx` (`useNamedLayoutHost`), and
 //! `🧑‍💻dev/🏷️brand/🟦️.ts` (`resolveShellBrandById`).
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::{tour_introduction, tour_shell};
 use semio_framework_os_config::io::text::mutations::{decode_ui_preferences_config_mutation_json};
 use super::*;
 
 /// 🌳️ `…/🧑‍🎨engine` — the same derivation the sibling law files use.
 fn engine_root() -> std::path::PathBuf {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root")
+    semio_framework_os_renderer_wgpu_test_support::engine_root()
 }
 
 fn read_engine(relative: &str) -> String {
@@ -63,8 +64,8 @@ fn rust_fn_body(source: &str, signature: &str) -> String {
     body[..end].to_string()
 }
 
-fn restore_boot_descriptor(descriptor: crate::WgpuBootDescriptor) {
-    crate::apply_boot_descriptor(descriptor).expect("the captured descriptor was already valid");
+fn restore_boot_descriptor(descriptor: semio_framework_os_renderer_wgpu_host_base::WgpuBootDescriptor) {
+    semio_framework_os_renderer_wgpu_host_base::apply_boot_descriptor(descriptor).expect("the captured descriptor was already valid");
 }
 
 // #region ⌨️CommandHostPlatform
@@ -85,12 +86,12 @@ fn restore_boot_descriptor(descriptor: crate::WgpuBootDescriptor) {
 /// description is the resolved chord list, so it must follow the door.
 #[test]
 fn the_shell_reads_its_platform_from_the_host_platform_door() {
-    let source = crate::shell::SHELL_SOURCE.to_string();
+    let source = semio_framework_os_renderer_wgpu_test_support::shell_source().to_string();
     let body = rust_fn_body(&source, "fn command_host_platform() -> semio_framework::manifest::Platform {");
     assert!(body.contains("crate::host_platform()"), "`command_host_platform` answers the door: {body}");
     assert!(!body.contains("web_sys::window()"), "and never re-derives the platform from a `window` the frame Worker realm does not own: {body}");
 
-    let restore = crate::boot_descriptor();
+    let restore = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();
     for (published, expected, uses_meta) in [
         ("MacIntel", semio_framework::manifest::Platform::MacOs, true),
         ("macOS", semio_framework::manifest::Platform::MacOs, true),
@@ -100,24 +101,24 @@ fn the_shell_reads_its_platform_from_the_host_platform_door() {
         ("Linux x86_64", semio_framework::manifest::Platform::Linux, false),
         ("", semio_framework::manifest::Platform::Linux, false),
     ] {
-        crate::set_host_platform(published);
-        assert_eq!(crate::host_platform(), expected, "⌨️ the door resolves {published:?} to {expected:?}");
-        assert_eq!(crate::host_platform_uses_meta(), uses_meta, "⌨️ and the `mod` rule agrees with it for {published:?}");
+        semio_framework_os_renderer_wgpu_host_base::set_host_platform(published);
+        assert_eq!(semio_framework_os_renderer_wgpu_host_base::host_platform(), expected, "⌨️ the door resolves {published:?} to {expected:?}");
+        assert_eq!(semio_framework_os_renderer_wgpu_host_base::host_platform_uses_meta(), uses_meta, "⌨️ and the `mod` rule agrees with it for {published:?}");
         assert_eq!(command_host_platform(), expected, "⌨️ and the shell's keybinding filter reads exactly that");
     }
 
     let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let fullscreen_description = |shell: &ShellState| shell.docs.command_search_items(&shell.chrome, &shell.plugins, &shell.prefs).into_iter().find(|item| item.id == "command.os.os.toggleFullscreen").and_then(|item| item.description).unwrap_or_default();
-    crate::set_host_platform("MacIntel");
+    semio_framework_os_renderer_wgpu_host_base::set_host_platform("MacIntel");
     let apple = fullscreen_description(&shell);
-    crate::set_host_platform("Win32");
+    semio_framework_os_renderer_wgpu_host_base::set_host_platform("Win32");
     let windows = fullscreen_description(&shell);
     assert_ne!(apple, windows, "⌨️ the palette describes the platform's OWN chord — {apple:?} on a Mac, {windows:?} on Windows");
     assert!(windows.to_ascii_lowercase().contains("f11"), "the non-Apple arm is F11: {windows:?}");
     assert!(!apple.to_ascii_lowercase().contains("f11"), "the Apple arm is not: {apple:?}");
 
-    crate::set_host_platform_uses_meta(cfg!(target_os = "macos"));
-    crate::set_host_platform_kind(if cfg!(target_os = "macos") {
+    semio_framework_os_renderer_wgpu_host_base::set_host_platform_uses_meta(cfg!(target_os = "macos"));
+    semio_framework_os_renderer_wgpu_host_base::set_host_platform_kind(if cfg!(target_os = "macos") {
         semio_framework::manifest::Platform::MacOs
     } else if cfg!(target_os = "windows") {
         semio_framework::manifest::Platform::Windows
@@ -214,9 +215,9 @@ fn neither_renderer_accepts_an_os_file_drop() {
 /// renderer's whole preference log.
 #[test]
 fn saved_named_layouts_are_ui_preference_events() {
-    let layout = ui_wgpu::wgpu::create_stack_layout(&["main".to_string()], None);
-    let user = ui_wgpu::wgpu::NamedLayout { id: "user-1".into(), label: "Mine".into(), icon_id: None, layout: layout.clone(), origin: "user".into(), group_path: None };
-    let builtin = ui_wgpu::wgpu::NamedLayout { id: "builtin-1".into(), label: "Theirs".into(), icon_id: None, layout: layout.clone(), origin: "builtin".into(), group_path: None };
+    let layout = semio_framework_ui_layout::layout::create_stack_layout(&["main".to_string()], None);
+    let user = semio_framework_ui_layout::layout::NamedLayout { id: "user-1".into(), label: "Mine".into(), icon_id: None, layout: layout.clone(), origin: "user".into(), group_path: None };
+    let builtin = semio_framework_ui_layout::layout::NamedLayout { id: "builtin-1".into(), label: "Theirs".into(), icon_id: None, layout: layout.clone(), origin: "builtin".into(), group_path: None };
 
     let events = named_layout_events(&UiPreferences::default(), Some("puzzle3d"), &[user.clone(), builtin]);
     assert_eq!(events.len(), 1, "🖥️ one event per saved user layout, none for a builtin: {events:?}");
@@ -274,25 +275,25 @@ fn window_panes_stay_consumer_less_on_both_renderers() {
 /// `shouldPersistIntroductionSeen` (`🧱️elements/🐚️Shell/🟦️.tsx`): `ephemeral` implies replay.
 #[test]
 fn the_introduction_seen_key_is_brand_scoped() {
-    let restore = crate::boot_descriptor();
+    let restore = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();
     let shell = appearance_tour_and_footer_pill_tests::tour_shell(Some(appearance_tour_and_footer_pill_tests::tour_introduction()));
     let app_id = shell.docs.session.as_ref().expect("the fixture opens a session").app.id.clone();
 
-    let mut unbranded = crate::boot_descriptor();
+    let mut unbranded = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();
     unbranded.brand_id = String::new();
-    unbranded.brand = crate::WgpuBootBrand::default();
-    crate::apply_boot_descriptor(unbranded).expect("an empty brand is a bounded field");
+    unbranded.brand = semio_framework_os_renderer_wgpu_host_base::WgpuBootBrand::default();
+    semio_framework_os_renderer_wgpu_host_base::apply_boot_descriptor(unbranded).expect("an empty brand is a bounded field");
     assert_eq!(shell.docs.introduction_seen_key().as_deref(), Some(app_id.as_str()), "🎓️ an unbranded shell keys the flag on the bare app id");
-    assert!(crate::boot_brand().persists_introduction_seen(), "🏷️ and persists it, React's `shouldPersistIntroductionSeen(undefined)`");
-    assert!(!crate::boot_brand().replays_introduction());
+    assert!(semio_framework_os_renderer_wgpu_host_base::boot_brand().persists_introduction_seen(), "🏷️ and persists it, React's `shouldPersistIntroductionSeen(undefined)`");
+    assert!(!semio_framework_os_renderer_wgpu_host_base::boot_brand().replays_introduction());
 
-    let mut branded = crate::boot_descriptor();
+    let mut branded = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();
     branded.brand_id = "entwerfen-mit-bestand-aggregator".into();
-    crate::apply_boot_descriptor(branded).expect("a brand id is a bounded field");
+    semio_framework_os_renderer_wgpu_host_base::apply_boot_descriptor(branded).expect("a brand id is a bounded field");
     assert_eq!(shell.docs.introduction_seen_key().as_deref(), Some(format!("entwerfen-mit-bestand-aggregator:{app_id}").as_str()), "🏷️ a branded shell carries React's `${{brand.id}}:${{app.id}}`");
 
     for (ephemeral, replay_flag, replays) in [(false, false, false), (false, true, true), (true, false, true), (true, true, true)] {
-        let brand = crate::WgpuBootBrand { window_title: String::new(), ephemeral, replay_introduction_on_load: replay_flag };
+        let brand = semio_framework_os_renderer_wgpu_host_base::WgpuBootBrand { window_title: String::new(), ephemeral, replay_introduction_on_load: replay_flag };
         assert_eq!(brand.replays_introduction(), replays, "🏷️ ephemeral={ephemeral} replayIntroductionOnLoad={replay_flag}");
         assert_eq!(brand.persists_introduction_seen(), !replays, "🏷️ and persistence is its exact negation");
     }
@@ -310,7 +311,7 @@ fn the_introduction_seen_key_is_brand_scoped() {
 /// route (a live-looking row that silently no-ops) nor a route dropped from under a listed row.
 #[test]
 fn every_palette_command_shape_has_a_live_route() {
-    let source = crate::shell::SHELL_SOURCE.to_string();
+    let source = semio_framework_os_renderer_wgpu_test_support::shell_source().to_string();
     let routes = rust_fn_body(&source, "pub async fn activate_search_item(&mut self, index: usize) -> Result<(), String> {");
     for prefix in ["os-command:", "command:", "command-form:"] {
         assert!(routes.contains(&format!("strip_prefix(\"{prefix}\")")), "🎛️ `{prefix}` is routed in `activate_search_item`");

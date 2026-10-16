@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "body",
+    "pid",
+    "outcome",
+    "cleanupRefused",
+    "checks"
+  ],
+  "properties": {
+    "body": {
+      "enum": [
+        "success",
+        "undefined",
+        "frozen"
+      ]
+    },
+    "pid": {
+      "enum": [
+        "missing",
+        "dead",
+        "live",
+        "unreadable"
+      ]
+    },
+    "outcome": {
+      "enum": [
+        "success",
+        "body",
+        "cleanup"
+      ]
+    },
+    "cleanupRefused": {
+      "type": "boolean"
+    },
+    "checks": {
+      "enum": [
+        0,
+        1
+      ]
+    }
+  }
+}

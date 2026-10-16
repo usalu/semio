@@ -1,5 +1,5 @@
 //#region 🧰️ColdPairIngressStatus
-use crate::{instance_lifetime::ActorInstanceLifetime, pack};
+use crate::instance_lifetime::ActorInstanceLifetime;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 pub const COLD_PAIR_MAXIMUM_PAGES: u32 = 64;
@@ -75,22 +75,22 @@ impl ColdDocumentPairFrontier {
     }
 
     async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_str(out, &self.document_id).await;
-        pack::write_u64(out, self.head_edit_ordinal).await;
-        pack::write_str(out, &self.head_edit_id).await;
-        pack::write_u64(out, self.last_commit_seq).await;
-        pack::write_hash32(out, &self.chain_sha256).await;
+        semio_framework_actor_pack::write_str(out, &self.document_id).await;
+        semio_framework_actor_pack::write_u64(out, self.head_edit_ordinal).await;
+        semio_framework_actor_pack::write_str(out, &self.head_edit_id).await;
+        semio_framework_actor_pack::write_u64(out, self.last_commit_seq).await;
+        semio_framework_actor_pack::write_hash32(out, &self.chain_sha256).await;
     }
 
-    async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+    async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
         let value = Self {
-            document_id: pack::read_str(bytes, pos, "ColdDocumentPairFrontier::document_id").await?,
-            head_edit_ordinal: pack::read_u64(bytes, pos, "ColdDocumentPairFrontier::head_edit_ordinal").await?,
-            head_edit_id: pack::read_str(bytes, pos, "ColdDocumentPairFrontier::head_edit_id").await?,
-            last_commit_seq: pack::read_u64(bytes, pos, "ColdDocumentPairFrontier::last_commit_seq").await?,
-            chain_sha256: pack::read_hash32(bytes, pos, "ColdDocumentPairFrontier::chain_sha256").await?,
+            document_id: semio_framework_actor_pack::read_str(bytes, pos, "ColdDocumentPairFrontier::document_id").await?,
+            head_edit_ordinal: semio_framework_actor_pack::read_u64(bytes, pos, "ColdDocumentPairFrontier::head_edit_ordinal").await?,
+            head_edit_id: semio_framework_actor_pack::read_str(bytes, pos, "ColdDocumentPairFrontier::head_edit_id").await?,
+            last_commit_seq: semio_framework_actor_pack::read_u64(bytes, pos, "ColdDocumentPairFrontier::last_commit_seq").await?,
+            chain_sha256: semio_framework_actor_pack::read_hash32(bytes, pos, "ColdDocumentPairFrontier::chain_sha256").await?,
         };
-        value.validate().map_err(pack::PackError::InvalidColdPair)?;
+        value.validate().map_err(semio_framework_actor_pack::PackError::InvalidColdPair)?;
         Ok(value)
     }
 }
@@ -104,26 +104,26 @@ impl ColdDocumentPairCursor {
     }
 
     async fn pack_encode(self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.lifetime.activation_generation).await;
-        pack::write_u32(out, self.lifetime.instance_id).await;
-        pack::write_u64(out, self.lifetime.guest_lifetime).await;
-        pack::write_u64(out, self.transfer_generation).await;
-        pack::write_u32(out, self.page_index).await;
-        pack::write_u32(out, self.page_count).await;
+        semio_framework_actor_pack::write_u64(out, self.lifetime.activation_generation).await;
+        semio_framework_actor_pack::write_u32(out, self.lifetime.instance_id).await;
+        semio_framework_actor_pack::write_u64(out, self.lifetime.guest_lifetime).await;
+        semio_framework_actor_pack::write_u64(out, self.transfer_generation).await;
+        semio_framework_actor_pack::write_u32(out, self.page_index).await;
+        semio_framework_actor_pack::write_u32(out, self.page_count).await;
     }
 
-    async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+    async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
         let value = Self {
             lifetime: ActorInstanceLifetime {
-                activation_generation: pack::read_u64(bytes, pos, "ColdDocumentPairCursor::activation_generation").await?,
-                instance_id: pack::read_u32(bytes, pos, "ColdDocumentPairCursor::instance_id").await?,
-                guest_lifetime: pack::read_u64(bytes, pos, "ColdDocumentPairCursor::guest_lifetime").await?,
+                activation_generation: semio_framework_actor_pack::read_u64(bytes, pos, "ColdDocumentPairCursor::activation_generation").await?,
+                instance_id: semio_framework_actor_pack::read_u32(bytes, pos, "ColdDocumentPairCursor::instance_id").await?,
+                guest_lifetime: semio_framework_actor_pack::read_u64(bytes, pos, "ColdDocumentPairCursor::guest_lifetime").await?,
             },
-            transfer_generation: pack::read_u64(bytes, pos, "ColdDocumentPairCursor::transfer_generation").await?,
-            page_index: pack::read_u32(bytes, pos, "ColdDocumentPairCursor::page_index").await?,
-            page_count: pack::read_u32(bytes, pos, "ColdDocumentPairCursor::page_count").await?,
+            transfer_generation: semio_framework_actor_pack::read_u64(bytes, pos, "ColdDocumentPairCursor::transfer_generation").await?,
+            page_index: semio_framework_actor_pack::read_u32(bytes, pos, "ColdDocumentPairCursor::page_index").await?,
+            page_count: semio_framework_actor_pack::read_u32(bytes, pos, "ColdDocumentPairCursor::page_count").await?,
         };
-        value.validate().map_err(pack::PackError::InvalidColdPair)?;
+        value.validate().map_err(semio_framework_actor_pack::PackError::InvalidColdPair)?;
         Ok(value)
     }
 }
@@ -137,26 +137,26 @@ impl ColdDocumentPairApplied {
     }
 
     async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.lifetime.activation_generation).await;
-        pack::write_u32(out, self.lifetime.instance_id).await;
-        pack::write_u64(out, self.lifetime.guest_lifetime).await;
-        pack::write_u64(out, self.transfer_generation).await;
+        semio_framework_actor_pack::write_u64(out, self.lifetime.activation_generation).await;
+        semio_framework_actor_pack::write_u32(out, self.lifetime.instance_id).await;
+        semio_framework_actor_pack::write_u64(out, self.lifetime.guest_lifetime).await;
+        semio_framework_actor_pack::write_u64(out, self.transfer_generation).await;
         self.baseline_frontier.pack_encode(out).await;
-        pack::write_hash32(out, &self.aggregate_sha256).await;
+        semio_framework_actor_pack::write_hash32(out, &self.aggregate_sha256).await;
     }
 
-    async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+    async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
         let value = Self {
             lifetime: ActorInstanceLifetime {
-                activation_generation: pack::read_u64(bytes, pos, "ColdDocumentPairApplied::activation_generation").await?,
-                instance_id: pack::read_u32(bytes, pos, "ColdDocumentPairApplied::instance_id").await?,
-                guest_lifetime: pack::read_u64(bytes, pos, "ColdDocumentPairApplied::guest_lifetime").await?,
+                activation_generation: semio_framework_actor_pack::read_u64(bytes, pos, "ColdDocumentPairApplied::activation_generation").await?,
+                instance_id: semio_framework_actor_pack::read_u32(bytes, pos, "ColdDocumentPairApplied::instance_id").await?,
+                guest_lifetime: semio_framework_actor_pack::read_u64(bytes, pos, "ColdDocumentPairApplied::guest_lifetime").await?,
             },
-            transfer_generation: pack::read_u64(bytes, pos, "ColdDocumentPairApplied::transfer_generation").await?,
+            transfer_generation: semio_framework_actor_pack::read_u64(bytes, pos, "ColdDocumentPairApplied::transfer_generation").await?,
             baseline_frontier: ColdDocumentPairFrontier::pack_decode(bytes, pos).await?,
-            aggregate_sha256: pack::read_hash32(bytes, pos, "ColdDocumentPairApplied::aggregate_sha256").await?,
+            aggregate_sha256: semio_framework_actor_pack::read_hash32(bytes, pos, "ColdDocumentPairApplied::aggregate_sha256").await?,
         };
-        value.validate().map_err(pack::PackError::InvalidColdPair)?;
+        value.validate().map_err(semio_framework_actor_pack::PackError::InvalidColdPair)?;
         Ok(value)
     }
 }
@@ -177,47 +177,47 @@ impl ColdPairIngressStatus {
         }
     }
 
-    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), pack::PackError> {
-        self.validate().map_err(pack::PackError::InvalidColdPair)?;
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), semio_framework_actor_pack::PackError> {
+        self.validate().map_err(semio_framework_actor_pack::PackError::InvalidColdPair)?;
         match self {
-            Self::Idle => pack::write_u8(out, 0).await,
+            Self::Idle => semio_framework_actor_pack::write_u8(out, 0).await,
             Self::PageAccepted(cursor) => {
-                pack::write_u8(out, 1).await;
+                semio_framework_actor_pack::write_u8(out, 1).await;
                 cursor.pack_encode(out).await;
             }
             Self::Backpressure(cursor) => {
-                pack::write_u8(out, 2).await;
+                semio_framework_actor_pack::write_u8(out, 2).await;
                 cursor.pack_encode(out).await;
             }
             Self::Loading(cursor) => {
-                pack::write_u8(out, 3).await;
+                semio_framework_actor_pack::write_u8(out, 3).await;
                 cursor.pack_encode(out).await;
             }
             Self::Applied(receipt) => {
-                pack::write_u8(out, 4).await;
+                semio_framework_actor_pack::write_u8(out, 4).await;
                 receipt.pack_encode(out).await;
             }
             Self::Fault { cursor, fault } => {
-                pack::write_u8(out, 5).await;
+                semio_framework_actor_pack::write_u8(out, 5).await;
                 cursor.pack_encode(out).await;
-                pack::write_bytes(out, fault).await;
+                semio_framework_actor_pack::write_bytes(out, fault).await;
             }
         }
         Ok(())
     }
 
-    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "ColdPairIngressStatus").await?;
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor_pack::PackError> {
+        let tag = semio_framework_actor_pack::read_u8(bytes, pos, "ColdPairIngressStatus").await?;
         let value = match tag {
             0 => Self::Idle,
             1 => Self::PageAccepted(ColdDocumentPairCursor::pack_decode(bytes, pos).await?),
             2 => Self::Backpressure(ColdDocumentPairCursor::pack_decode(bytes, pos).await?),
             3 => Self::Loading(ColdDocumentPairCursor::pack_decode(bytes, pos).await?),
             4 => Self::Applied(ColdDocumentPairApplied::pack_decode(bytes, pos).await?),
-            5 => Self::Fault { cursor: ColdDocumentPairCursor::pack_decode(bytes, pos).await?, fault: pack::read_bytes(bytes, pos, "ColdPairIngressStatus::fault").await? },
-            other => return Err(pack::PackError::InvalidTag { what: "ColdPairIngressStatus", tag: other, offset: *pos }),
+            5 => Self::Fault { cursor: ColdDocumentPairCursor::pack_decode(bytes, pos).await?, fault: semio_framework_actor_pack::read_bytes(bytes, pos, "ColdPairIngressStatus::fault").await? },
+            other => return Err(semio_framework_actor_pack::PackError::InvalidTag { what: "ColdPairIngressStatus", tag: other, offset: *pos }),
         };
-        value.validate().map_err(pack::PackError::InvalidColdPair)?;
+        value.validate().map_err(semio_framework_actor_pack::PackError::InvalidColdPair)?;
         Ok(value)
     }
 }

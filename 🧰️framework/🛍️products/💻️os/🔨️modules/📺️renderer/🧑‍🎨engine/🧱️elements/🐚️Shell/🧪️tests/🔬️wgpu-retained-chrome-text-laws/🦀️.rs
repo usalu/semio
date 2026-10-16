@@ -192,7 +192,7 @@ fn every_chip_lays_out_at_least_its_labels_painted_width() {
                 let baselines: Vec<f32> = wrapped.layers.iter().flat_map(|layer| layer.ui_instances.iter().map(|instance| instance.rect[1])).collect();
                 let lowest = baselines.iter().copied().fold(f32::NEG_INFINITY, f32::max);
                 let highest = baselines.iter().copied().fold(f32::INFINITY, f32::min);
-                assert!(lowest - highest < ui_wgpu::wgpu::text::line_height(theme.font_size_small), "↩️ {label:?} wrapped onto a second line inside its own chip");
+                assert!(lowest - highest < semio_framework_ui_theme::metrics::line_height(theme.font_size_small), "↩️ {label:?} wrapped onto a second line inside its own chip");
             }
         }
     }

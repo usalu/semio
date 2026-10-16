@@ -61,6 +61,7 @@
     "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
@@ -160,7 +161,16 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.50.1",
     "vitest": "^4.0.17",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@types/vscode": "^1.104.0",
+    "crc-32": "^1.2.2",
+    "d3-path": "3.1.0",
+    "fast-deep-equal": "^3.1.3",
+    "graphlib": "2.1.8",
+    "lodash": "4.18.1",
+    "three": "^0.182.0",
+    "vite": "^7.3.1",
+    "web-tree-sitter": "0.20.8"
   },
   "keywords": [
     "kit-of-parts",
@@ -194,7 +204,15 @@
     "url": "https://github.com/usalu"
   },
   "dependencies": {
-    "esbuild": "^0.27.2"
+    "@napi-rs/canvas": "^1.0.2",
+    "@react-three/drei": "^10.7.7",
+    "@tailwindcss/typography": "^0.5.19",
+    "esbuild": "^0.27.2",
+    "next": "^15.3.3",
+    "pdfjs-dist": "^5.4.296",
+    "pg-boss": "^10.3.2",
+    "sharp": "^0.34.5",
+    "three-mesh-bvh": "^0.9.14"
   },
   "overrides": {
     "@semio-tech/assets": "workspace:*",

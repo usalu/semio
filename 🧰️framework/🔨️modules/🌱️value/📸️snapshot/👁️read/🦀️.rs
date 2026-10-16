@@ -811,15 +811,13 @@ pub use snapshot_read_projection::SnapshotReadProjection;
 
 #[cfg(test)]
 extern crate self as semio_framework_value_snapshot_read;
-#[cfg(test)]
-#[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️testing/♻️retirement/🦀️.rs"]
-mod presence_test_retirement;
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧪️testing/👥️presence-retirement/🦀️.rs"]
+pub mod presence_test_retirement;
 
 #[cfg(test)]
-use semio_framework_trace_memory_testing as test_allocation;
-#[cfg(test)]
 #[global_allocator]
-static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
 
 #[cfg(test)]
 #[path="🧪️tests/👥️presence/🦀️.rs"]

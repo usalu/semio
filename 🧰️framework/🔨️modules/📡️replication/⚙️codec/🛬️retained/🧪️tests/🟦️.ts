@@ -1,10 +1,11 @@
 /** 🛬️ SQLite validates original native field payloads and independent five-axis authority. */
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import {semioSchemaAjvV1} from"../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from"@semio-tech/schema-ts/oracles/validator";
 import{readFileSync,existsSync}from"node:fs";
-import grantSchema from"../../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";
 import law from"../🧪️tests/🧫️fixtures/🔣️.json";
+import { retainedCloneWireSchemaUrl } from "../../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 test("original retained wire field keeps each actual buffer and receipt in its receiving operation",()=>{
  expect(semioSchemaAjvV1({strict:true}).compile(grantSchema)({maximumItems:law.grant.items,maximumCopyBytes:law.grant.copy,maximumCapacityBytes:law.grant.capacity,maximumReleaseBytes:law.grant.release,maximumDepth:law.grant.depth})).toBe(true);const db=new Database(":memory:");try{db.exec("CREATE TABLE fields(value TEXT,bytes INTEGER)");for(const field of law.fields){db.query("INSERT INTO fields VALUES(?,?)").run(field.value,new TextEncoder().encode(field.value).length);expect(db.query("SELECT value,bytes FROM fields ORDER BY rowid DESC LIMIT 1").get()).toEqual({value:field.value,bytes:Buffer.byteLength(field.value)});}}finally{db.close()}
  const path=new URL("../🦀️.rs",import.meta.url);expect(existsSync(path)).toBe(true);if(!existsSync(path))return;const source=readFileSync(path,"utf8");for(const proof of["original:usize","fn validate_source<S:","identity.address!=self.original||identity.extent!=self.extent||identity.authority!=self.authority","pub fn advance<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,grant:","ManuallyDrop<Option<Vec<u8>>>","pub fn demands<S:","pub fn receipt(","pub fn take_receipt(","pub fn take_into(","pub fn close_step(","maximum_release_bytes","recipient.is_some()","copied_bytes: end - start"]){expect(source.includes(proof)).toBe(true)}console.log("[DEBUG] SQLite preserves original borrowed wire bytes, independent fixed3 payload copy grant and outstanding recipient receipts");
@@ -20,7 +21,7 @@ test("original fallible wire copy retains every actual prefix receipt and no tri
  const { resolve }=await import("node:path");const repo=resolve(import.meta.dir,"../../../../../..");
  const {semioSchemaAjvV1}=await import(resolve(repo,"🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts"));
  const original=JSON.parse(readFileSync(new URL("../🧪️tests/🧫️fixtures/🛑️byte.json",import.meta.url),"utf8"));
- const grant=JSON.parse(readFileSync(resolve(repo,"🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json"),"utf8"));
+ const grant=JSON.parse(readFileSync(retainedCloneWireSchemaUrl,"utf8"));
  expect(semioSchemaAjvV1({strict:true}).compile(grant)(original.grant)).toBe(true);
  const bytes=Buffer.from(original.sourceHex,"hex"),db=new Database(":memory:");try{for(const row of original.failures){const prefix=bytes.subarray(0,row.copyOffset);expect(prefix.toString("hex")).toBe(row.prefixHex);expect(db.query("select length(?) as bytes").get(prefix)).toEqual({bytes:row.copyOffset});}}finally{db.close()}
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");

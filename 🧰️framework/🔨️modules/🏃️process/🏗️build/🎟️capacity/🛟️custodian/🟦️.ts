@@ -4,7 +4,7 @@ import {checkResourceLeaseControl} from "../../../🔒️leases/🟦️.ts";
 import {captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1} from "../../../🎛️owned-execution/📥️capture/🟦️.ts";
 import {requireIssuedScriptInvocationV1,receiveScriptProcessInvocation,scriptInvocationEnvironment,withIssuedResourceControlV1,withIssuedResourceOperationV1,createRequestedIssuedResourceControlV1} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type {ScriptInvocation} from "../../../🧭️routing/📥️invocation/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {acquireCompilerCapacityLeaseV1} from "../🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 

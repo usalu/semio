@@ -57,7 +57,8 @@ export function parseCadInferenceText(value: unknown, at = "$"): CadInferenceTex
 import { CstParser, createToken, Lexer } from "chevrotain";
 import type { CstElement, CstNode, IToken } from "chevrotain";
 import { emptyMeshTransfer, solidRef } from "@semio-tech/framework/3d";
-import { Model, type Expr, type ExprBinop, type ExprField, type ExprVar } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { Model } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { type Expr, type ExprBinop, type ExprField, type ExprVar } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧮️expressions/🟦️.ts";
 import { applyModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { modelDefinitionActionRegistry, type ConstructQueryContext, type ConstructQueryResult, type ConstructRunner } from "../../../✏️editor/⚙️engine/🎬️actions/🟦️.ts";
 import { assertConstructAst, runConstructAst, type ConstructAst, type ConstructClauseAst, type NodePatternAst, type RelPatternAst, type PatternAst, type PatternElementAst, type ReturnClauseAst, type YieldItemAst } from "../../../🧬️schema/💡️inferences/🟦️.ts";

@@ -1,3 +1,4 @@
+use semio_framework_os_store_testing_doubles::close;
 use std::sync::Arc;
 use semio_framework_os_spr::command::ArtifactReplayPrepared;
 use semio_framework_os_store_replay::{EditReplay, ReplayOwnedState};
@@ -5,8 +6,8 @@ use semio_framework_value::{ErasedSnapshotRetirement, RetirementDemand, ValueErr
 use semio_framework_os_spr::MutationId;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_os_vcs::VcsError;
-use super::tests::DemoSnapshot;
-use super::fixture_mutations::demo::{DemoMutation, SetN};
+use semio_framework_os_store_testing_fixtures::DemoSnapshot;
+use semio_framework_os_store_testing_fixtures::demo::DemoMutation; use semio_framework_os_store_testing_fixtures::demo::SetN;
 
 type Raw = EditReplay<DemoSnapshot, DemoMutation>;
 
@@ -27,39 +28,7 @@ fn original() -> Raw {
     owner.with_retirement_factories(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoMutation>::default()))
 }
 
-pub(crate) fn close(owner: &mut dyn ErasedSnapshotRetirement) -> usize {
-    let mut turns = 0;
-    while !owner.terminal_is_empty() {
-        let (demands, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetirementDemand {
-            copy_bytes: owner.next_copy_byte_demand().unwrap(),
-            capacity_bytes: owner.next_capacity_byte_demand(owner.next_copy_byte_demand().unwrap()).unwrap(),
-            release_bytes: owner.next_release_byte_demand().unwrap(), depth: owner.next_depth_demand().unwrap(),
-        });
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demands.copy_bytes, maximum_capacity_bytes: demands.capacity_bytes, maximum_release_bytes: demands.release_bytes, maximum_depth: demands.depth };
-        for axis in 0..5 {
-            let mut below = grant;
-            match axis {
-                0 => below.maximum_items = 0,
-                1 if demands.copy_bytes > 0 => below.maximum_copy_bytes -= 1,
-                2 if demands.capacity_bytes > 0 => below.maximum_capacity_bytes -= 1,
-                3 if demands.release_bytes > 0 => below.maximum_release_bytes -= 1,
-                4 if demands.depth > 0 => below.maximum_depth -= 1,
-                _ => continue,
-            }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(below).unwrap());
-            assert_eq!(step.progress(), RetainedCloneProgress::default());
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).unwrap());
-        assert!(step.progress().fits(grant));
-        assert_eq!(heap.requested_bytes, step.progress().retained_capacity_bytes);
-        assert_eq!(heap.released_bytes, step.progress().released_bytes);
-        turns += 1;
-        assert!(turns < 100000, "replay retirement stalled under its own quote {demands:?}; step {step:?}");
-    }
-    turns
-}
+
 
 #[test]
 fn raw_replay_custody_refusal_cancel_and_original_capacities_are_independently_granted() {

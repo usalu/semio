@@ -1,0 +1,183 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maximumParallelFiles",
+        "maximumFileOutputBytes",
+        "maximumFileOutputLines",
+        "maximumTotalOutputBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "maximumParallelFiles": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "maximumFileOutputBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "maximumFileOutputLines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "maximumTotalOutputBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        }
+      }
+    },
+    "Selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cwd",
+        "files",
+        "arguments"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "arguments": {
+          "type": "array",
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "^--test-name-pattern=.+$"
+          }
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "maximumBufferedOutputBytes": 67108864,
+        "maximumSourceBytes": 16777216,
+        "maximumPathCodeUnits": 256
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "policy",
+        "files",
+        "expectedFiles",
+        "policyCases",
+        "lifetimeCases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "policy": {
+          "$ref": "#/definitions/Policy"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "expectedFiles": {
+          "const": 2
+        },
+        "policyCases": {
+          "type": "array",
+          "minItems": 16,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch",
+              "remove",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "patch": {
+                "type": "object",
+                "maxProperties": 6
+              },
+              "remove": {
+                "type": "array",
+                "maxItems": 5,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "lifetimeCases": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "copied-control",
+              "closed-control",
+              "expired-control",
+              "pre-cancel-error",
+              "source-missing",
+              "output-limit",
+              "terminal-failure",
+              "cohort-limit",
+              "sibling-drain",
+              "path-code-units"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -125,6 +125,30 @@
         "prototype",
         "release"
       ]
+    },
+    "windowsSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "windows",
+        "system"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "windows": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 256
+        },
+        "system": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 256
+        }
+      }
     }
   },
   "$defs": {
@@ -139,7 +163,7 @@
       ],
       "properties": {
         "$schema": {
-          "const": "./\ud83d\udce5\ufe0finvocation/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json#/$defs/NativeOwnerExecutionPolicyV1"
+          "const": "./📥️invocation/🧬️schema/🔣️.json#/$defs/NativeOwnerExecutionPolicyV1"
         },
         "version": {
           "const": 1
@@ -177,6 +201,97 @@
               "maximum": 86400000
             }
           }
+        }
+      }
+    },
+    "WindowsSystemTransportCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "platform",
+        "authored",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "platform": {
+          "enum": [
+            "win32",
+            "linux",
+            "darwin"
+          ]
+        },
+        "authored": {
+          "enum": [
+            "none",
+            "exact",
+            "foreign",
+            "extra",
+            "version"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "NeutralCallerRoleCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value",
+        "role"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "object"
+        },
+        "role": {
+          "enum": [
+            "native-owner-command",
+            "build-orchestration"
+          ]
+        }
+      }
+    },
+    "NativeCallerPhaseCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "effect",
+        "accepted",
+        "maximumMilliseconds"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effect": {
+          "enum": [
+            "ordinary",
+            "copy",
+            "foreign",
+            "cancelled",
+            "expired"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "maximumMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
         }
       }
     }

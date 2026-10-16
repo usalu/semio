@@ -1,6 +1,6 @@
 //! 🤖️ The asking human's own agent delegations in one space — `GET /auth/agent-delegations?space=<id>` — read as the live agent
 //! principals a shell names when it asks the agent-bridge supervisor for its scoped offer (ticket 26/09/23, G12 × WG11
-//! session 14c). The Rust twin of `📇️directory/🤖️delegations/🟦️.ts` (`parseAgentDelegationListV1`, `agentPrincipalIdV1`) plus
+//! session 14c). The Rust twin of `🧰️framework/🔨️modules/📇️directory/🤖️delegations/🟦️.ts` (`parseAgentDelegationListV1`, `agentPrincipalIdV1`) plus
 //! ShellHost's offer-scope filter; both answer `🤖️delegations/🧫️fixtures/📋️agent-delegation-list.json`.
 
 use super::{encode_url_component, DirectoryClient, DirectoryClientError, DirectoryTransport, HttpMethod};

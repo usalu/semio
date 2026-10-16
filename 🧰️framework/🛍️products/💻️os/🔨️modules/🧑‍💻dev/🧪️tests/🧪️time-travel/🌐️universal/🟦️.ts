@@ -3,19 +3,19 @@ import { universalMirrorControlsV1, universalMirrorVerbsV1 } from "../🪞️inv
 import type { UniversalControlV1, UniversalVerbV1 } from "../🪞️inventory/🟦️.ts";
 import { join } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
-import { renderer, page, currentLocale, universalEditor, invalidatedBy, stamp, OUT } from "@semio-tech/framework/time-travel/testing/state";
-import { mirror, mirrorLocator, mirrorActivate, wgpuPress, mirrorFind, BAND_WORDS } from "@semio-tech/framework/time-travel/testing/wgpu-mirror";
-import { evalSafe, sleep, waitUntil } from "@semio-tech/framework/time-travel/testing/page";
-import { pressAuthored, documentEntries, allHistoryRows, pressRowAction, openHistory, newestEntrySeq, expandEntry, rowActionState, findMutationRow } from "@semio-tech/framework/time-travel/testing/history";
-import type { HistoryRow } from "@semio-tech/framework/time-travel/testing/history";
-import { pressUseSelection, editor } from "@semio-tech/framework/time-travel/testing/editor";
-import { COPY } from "@semio-tech/framework/time-travel/testing/copy";
-import { closePanels, textOfKey } from "@semio-tech/framework/time-travel/testing/chrome";
-import { band, pressBand, installBandTrace, bandTrace, finalizeDialog, dialogChoose, dialogFillName } from "@semio-tech/framework/time-travel/testing/band";
-import type { Band } from "@semio-tech/framework/time-travel/testing/band";
-import { verdict, note } from "@semio-tech/framework/time-travel/testing/report";
-import { documentRowsSince, beginEditOf, exitSession, readAlternatives, isCurrentAlternative, switchAlternative } from "@semio-tech/framework/time-travel/testing/history-session";
-import { pageErrors, hardFaults } from "@semio-tech/framework/time-travel/testing/console";
+import { renderer, page, currentLocale, universalEditor, invalidatedBy, stamp, OUT } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧠️state/🟦️.ts";
+import { mirror, mirrorLocator, mirrorActivate, wgpuPress, mirrorFind, BAND_WORDS } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧊️wgpu-mirror/🟦️.ts";
+import { evalSafe, sleep, waitUntil } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/📄️page/🟦️.ts";
+import { pressAuthored, documentEntries, allHistoryRows, pressRowAction, openHistory, newestEntrySeq, expandEntry, rowActionState, findMutationRow } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/📜️history/🟦️.ts";
+import type { HistoryRow } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/📜️history/🟦️.ts";
+import { pressUseSelection, editor } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🖊️editor/🟦️.ts";
+import { COPY } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🌍️copy/🟦️.ts";
+import { closePanels, textOfKey } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧱️chrome/🟦️.ts";
+import { band, pressBand, installBandTrace, bandTrace, finalizeDialog, dialogChoose, dialogFillName } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🎗️band/🟦️.ts";
+import type { Band } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🎗️band/🟦️.ts";
+import { verdict, note } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧾️report/🟦️.ts";
+import { documentRowsSince, beginEditOf, exitSession, readAlternatives, isCurrentAlternative, switchAlternative } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧵️history-session/🟦️.ts";
+import { pageErrors, hardFaults } from "../../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🎧️console/🟦️.ts";
 
 //#region 🔖️Steps
 
@@ -36,7 +36,7 @@ const universalControls = async (): Promise<UniversalControl[]> => renderer === 
       const out: UniversalControl[] = [];
       document.querySelectorAll("[data-probe-u]").forEach((el) => el.removeAttribute("data-probe-u"));
       rows.forEach((row, at) => {
-        const pointer = pointers[at];
+        const pointer=pointers[at];if(pointer===undefined)throw Error("Actual rendered history pointer required");
         if (/\.(useSelection|chip\.\d+)$/u.test(pointer)) return;
         const name = ((row.querySelector('[data-slot="tree-label"]') as HTMLElement | null)?.innerText ?? row.getAttribute("aria-label") ?? "").replace(/\s+/gu, " ").trim().slice(0, 80);
         const own = all.find((el) => el.id.startsWith(`${row.id}/`)) ?? row;
@@ -481,8 +481,9 @@ export const stepU = async (_ctx: object) => {
       let whileEditing = await allHistoryRows();
       const downstream = whileEditing.filter((row) => row.kind === "entry" && Number(row.key) > target!.entry && documentEntries([row]).length > 0);
       let pending = whileEditing.filter((row) => row.text.includes(copy.pending));
-      if (pending.length === 0 && downstream.length > 0 && downstream[downstream.length - 1].expandable) {
-        await expandEntry(downstream[downstream.length - 1].id);
+      const latest=downstream.at(-1);
+      if (pending.length === 0 && latest?.expandable) {
+        await expandEntry(latest.id);
         whileEditing = await allHistoryRows();
         pending = whileEditing.filter((row) => row.text.includes(copy.pending));
       }

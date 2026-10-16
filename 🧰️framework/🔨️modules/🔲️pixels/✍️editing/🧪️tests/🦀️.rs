@@ -3,7 +3,7 @@ use super::*;
 use serde_json::Value;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(crate::text("✍️editing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn bytes(value: &Value) -> Vec<u8> {

@@ -49,5 +49,5 @@ export const stdioSemioV1ObjectInferenceTextGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseSemioObjectInferenceText(value: unknown, at = "$"): SemioObjectInferenceText {
-  return stdioSemioV1ObjectInferenceTextGuardObject(value, `${at}`);
+  return stdioSemioV1ObjectInferenceTextGuardString(value, `${at}`);
 }

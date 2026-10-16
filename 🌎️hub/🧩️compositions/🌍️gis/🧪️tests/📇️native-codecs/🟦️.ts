@@ -1,10 +1,11 @@
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"@semio-tech/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { compileSchemaScopeExport } from "../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { compileSchemaScopeExport } from "@semio-tech/schema-ts/oracles/validator";
 import { proveGisControlledProposal } from "../💡️inference-control/🟦️.ts";
 
 const GIS_SCHEMA_MODULE = "🌎️hub/🧩️compositions/🌍️gis/🧬️schema/🔣️.json";
@@ -72,7 +73,7 @@ export class NativeCodecCheckScript extends BundleScript {
     await proveGisNativeCodecReceipts(this.repoRoot);
     await proveGisControlledProposal(this.repoRoot);
     if (process.argv.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.root, groups: [{ package: "semio-hub-gis", target: { kind: "test", name: "native_codecs" }, laws: ["gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_factory_substitution", "gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace"] }], progress(event) { console.log(`gis-native-codecs ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.root, groups: [{ package: "semio-hub-gis", target: { kind: "test", name: "native_codecs" }, laws: ["gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_factory_substitution", "gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace"] }], progress(event) { console.log(`gis-native-codecs ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
     for (const receipt of receipts) console.log(`gis-native-codec-receipt: ${JSON.stringify(receipt)}`);
     console.log("gis-native-codec-check: exact=2 literal-codecs=2 controlled-proposal=1; no hub catalog activation or approved inference acceptance");
   }

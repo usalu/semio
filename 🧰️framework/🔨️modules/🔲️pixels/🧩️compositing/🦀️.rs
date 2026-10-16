@@ -37,10 +37,10 @@ pub struct CompositeInput {pub width:u32,pub height:u32,pub origin:[f64;2],pub i
 
 #[derive(Clone,Debug)]
 #[derive(semio_framework_value::RetireOwned)]
-struct Mask {width:u32,height:u32,coverage:MaskLease,inverse:CompositeAffine,invert:bool}
+struct Mask {pub width:u32,pub height:u32,pub coverage:MaskLease,inverse:CompositeAffine,invert:bool}
 #[derive(Clone,Debug)]
 #[derive(semio_framework_value::RetireOwned)]
-struct Style {opacity:f64,blend:CompositeBlend,mask:Option<Mask>}
+struct Style {pub opacity:f64,pub blend:CompositeBlend,pub mask:Option<Mask>}
 #[derive(Debug)]
 #[derive(semio_framework_value::RetireOwned)]
 enum Command {Begin,Commit,Draw {image:RasterLease,inverse:CompositeAffine,style:Style},End(Style),Adjust {slope:f64,intercept:f64,style:Style}}
@@ -114,7 +114,7 @@ fn source_over(back:[f64;4],front:[f64;3],alpha:f64,mode:CompositeBlend)->[f64;4
     out[3]=out_alpha;out
 }
 
-struct Compiler<'a> {images:&'a [(String,RasterLease)],commands:Vec<Step>,nodes:usize,max_depth:usize}
+struct Compiler<'a> {pub images:&'a [(String,RasterLease)],pub commands:Vec<Step>,nodes:usize,max_depth:usize}
 impl Compiler<'_> {
     fn layers(&mut self,layers:&[CompositeLayer],parent:CompositeAffine,depth:usize,enabled:bool)->Result<(),PixelEditError> {
         if depth>32{return Err(PixelEditError::Invalid("Layer nesting exceeds compositor budget"));}
@@ -154,7 +154,7 @@ impl Compiler<'_> {
 
 /// 🧱️ Incremental tile compositor sharing immutable source assets and retaining a private candidate.
 #[derive(semio_framework_value::RetireOwned)]
-pub struct CompositeJob {images:Vec<(String,RasterLease)>,layers:Vec<CompositeLayer>,commands:Vec<Step>,buffers:Vec<Vec<[f64;4]>>,candidate:Option<RasterImage>,origin:[f64;2],width:usize,count:usize,total:usize,tile:usize,command:usize,offset:usize,completed:usize,cancelled:bool}
+pub struct CompositeJob {#[doc(hidden)] pub images:Vec<(String,RasterLease)>,#[doc(hidden)] pub layers:Vec<CompositeLayer>,#[doc(hidden)] pub commands:Vec<Step>,#[doc(hidden)] pub buffers:Vec<Vec<[f64;4]>>,#[doc(hidden)] pub candidate:Option<RasterImage>,#[doc(hidden)] pub origin:[f64;2],#[doc(hidden)] pub width:usize,#[doc(hidden)] pub count:usize,#[doc(hidden)] pub total:usize,tile:usize,command:usize,offset:usize,#[doc(hidden)] pub completed:usize,cancelled:bool}
 impl CompositeJob {
     pub fn new(input:CompositeInput)->Result<Self,PixelEditError> {
         Self::new_owned(input.width,input.height,input.origin,input.images.into_iter().map(|(key,image)|(key,RasterLease(image))).collect(),input.layers)
@@ -230,9 +230,6 @@ impl CompositeJob {
 semio_framework_value::artifact_retire_leaf!(CompositeBlend);
 physical_work_retirement!(CompositeRetirement,CompositeJob,PixelEditError,|_:&str|PixelEditError::Invalid("Compositor retirement refused its physical grant"));
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
 
 #[path="🗂️layers/🦀️.rs"]
 pub mod layers;

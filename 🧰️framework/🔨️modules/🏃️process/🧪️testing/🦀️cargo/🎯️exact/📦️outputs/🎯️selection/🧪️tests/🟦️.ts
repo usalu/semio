@@ -1,0 +1,9 @@
+import{test,expect}from"bun:test";
+import Ajv from"ajv";
+import{Database}from"bun:sqlite";
+import{readExactCargoLawOutputSelectionV1}from"../🟦️.ts";
+import{withExactCargoLawOutputV1,type ExactCargoLawOutputsV1}from"../../../🟦️.ts";
+import schema from"../🧬️schema/🔣️.json";
+import corpus from"./🔣️.json";
+test("neutral exact Cargo output selection matches Ajv and independent SQLite index bounds",()=>{const validate=new Ajv({strict:true}).compile(schema),db=new Database(":memory:");try{for(const row of corpus.cases){const admitted=validate(row.value);expect(admitted).toBe(row.accepted);if(admitted)expect((db.query("SELECT (? >= 0 AND ? < 64 AND ? = CAST(? AS INTEGER)) AS accepted").get(row.value.receiptIndex!,row.value.receiptIndex!,row.value.receiptIndex!,row.value.receiptIndex!)as{accepted:number}).accepted).toBe(1);let accepted=true;try{readExactCargoLawOutputSelectionV1(row.value);}catch{accepted=false;}expect(accepted).toBe(admitted);}let touched=false;const data={version:1,receiptIndex:0},capture=readExactCargoLawOutputSelectionV1(data);data.receiptIndex=1;expect(capture.receiptIndex).toBe(0);expect(Object.isFrozen(capture)).toBe(true);expect(()=>readExactCargoLawOutputSelectionV1(Object.defineProperty({version:1},"receiptIndex",{get(){touched=true;return 0;}}))).toThrow();expect(()=>readExactCargoLawOutputSelectionV1(new Proxy({version:1,receiptIndex:0},{ownKeys(){touched=true;return[];}}))).toThrow();expect(touched).toBe(false);}finally{db.close();}});
+test("neutral exact Cargo output refuses fabricated scope before selection or callback",async()=>{let touched=false;const selection=Object.defineProperty({version:1},"receiptIndex",{get(){touched=true;return 0;}});await expect(withExactCargoLawOutputV1({receipts:[]}as unknown as ExactCargoLawOutputsV1,selection as{version:1;receiptIndex:number},async()=>{touched=true;})).rejects.toThrow(/actual|live|Original/iu);expect(touched).toBe(false);});

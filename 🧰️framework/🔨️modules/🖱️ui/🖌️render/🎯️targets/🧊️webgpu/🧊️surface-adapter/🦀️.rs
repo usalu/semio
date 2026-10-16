@@ -1,6 +1,6 @@
 //! 🧊️ Browser WebGPU surface lifecycle over the owned A1 byte/page port.
 
-use crate::abi::{AbiBytes, AbiControl, AbiErrorCode, AbiHandle, AbiMessage, AbiPage, AbiPort, AbiPortPoll, AbiRequest, AbiRequestId, AbiWorkBudget, ABI_MAX_PAGES_PER_TRANSFER};
+use semio_framework_abi::{AbiBytes, AbiControl, AbiErrorCode, AbiHandle, AbiMessage, AbiPage, AbiPort, AbiPortPoll, AbiRequest, AbiRequestId, AbiWorkBudget, ABI_MAX_PAGES_PER_TRANSFER};
 
 //#region 🧬️Contract
 
@@ -823,19 +823,19 @@ pub struct LinearMemoryWebGpuSurfacePort;
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 impl AbiPort for LinearMemoryWebGpuSurfacePort {
-    fn try_send(&mut self, message: AbiMessage, budget: AbiWorkBudget) -> Result<(), crate::abi::AbiPortRejection> {
+    fn try_send(&mut self, message: AbiMessage, budget: AbiWorkBudget) -> Result<(), semio_framework_abi::AbiPortRejection> {
         if let Err(code) = callback_permit(budget) {
-            return Err(crate::abi::AbiPortRejection { code, message });
+            return Err(semio_framework_abi::AbiPortRejection { code, message });
         }
-        let bytes = crate::abi::encode_abi_message(&message);
+        let bytes = semio_framework_abi::encode_abi_message(&message);
         if bytes.len() > GPU_MAX_PORT_MESSAGE_BYTES {
-            return Err(crate::abi::AbiPortRejection { code: AbiErrorCode::LimitExceeded, message });
+            return Err(semio_framework_abi::AbiPortRejection { code: AbiErrorCode::LimitExceeded, message });
         }
         let status = unsafe { send(bytes.as_ptr(), bytes.len()) };
         if status == 0 {
             Ok(())
         } else {
-            Err(crate::abi::AbiPortRejection { code: decode_import_error(status), message })
+            Err(semio_framework_abi::AbiPortRejection { code: decode_import_error(status), message })
         }
     }
 
@@ -860,7 +860,7 @@ impl AbiPort for LinearMemoryWebGpuSurfacePort {
             }
         }
         bytes.truncate(length as usize);
-        crate::abi::decode_abi_message(&bytes).map(AbiPortPoll::Message)
+        semio_framework_abi::decode_abi_message(&bytes).map(AbiPortPoll::Message)
     }
 }
 

@@ -1,0 +1,69 @@
+{
+ "moves": [
+  {
+   "from": "🧰️framework/🔨️modules/🧵️backbone/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🛰️backbone/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🧵️backbone/🔗️binding/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🛰️backbone/🔗️binding/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🧵️backbone/🪪️config-lane/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🛰️backbone/🪪️config-lane/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/📦️packages/🟦️typescript/🧵️backbone/🟦️.ts",
+   "to": "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/📦️packages/🟦️typescript/🧵️backbone/🔗️binding/🟦️.ts",
+   "to": "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🔗️binding/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/📦️packages/🟦️typescript/🧵️backbone/🪪️config-lane/🟦️.ts",
+   "to": "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🪪️config-lane/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🌉️mcp/🐚️channel/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🤖️mcp/🐚️channel/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🌉️mcp/🧵️bridge/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🤖️mcp/🧵️bridge/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/📦️packages/🟦️typescript/🌉️mcp/🐚️channel/🟦️.ts",
+   "to": "🧰️framework/📦️packages/🟦️typescript/🤖️mcp/🐚️channel/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/📦️packages/🟦️typescript/🌉️mcp/🧵️bridge/🟦️.ts",
+   "to": "🧰️framework/📦️packages/🟦️typescript/🤖️mcp/🧵️bridge/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🧩️plugin-module/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🔌️plugin-module/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🧩️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🔌️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🧩️plugin-module/🌎️hub-source/🧬️schema/🔣️.json",
+   "to": "🧰️framework/🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🔣️.json"
+  },
+  {
+   "from": "🧰️framework/🔨️modules/🧩️plugin-module/🌎️hub-source/🧬️schema/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/📦️packages/🟦️typescript/🧩️plugin-module/🟦️.ts",
+   "to": "🧰️framework/📦️packages/🟦️typescript/🔌️plugin-module/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/📦️packages/🟦️typescript/🧩️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts",
+   "to": "🧰️framework/📦️packages/🟦️typescript/🔌️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts"
+  }
+ ],
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/rhu2-snap-rename.json"
+}

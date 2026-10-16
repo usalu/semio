@@ -19,6 +19,26 @@ path = "../../🦀️.rs"
 name = "process3d_editor_unit"
 path = "../../🧪️tests/🔬️unit/🦀️.rs"
 
+[[test]]
+name = "process3d_workpiece_window"
+path = "../../🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "process3d_panels_inspection"
+path = "../../📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "process3d_panels_artifact"
+path = "../../📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "process3d_panels_catalogue"
+path = "../../📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "process3d_panels_workshop"
+path = "../../📌️panels/🛠️workshop/🧪️tests/🔬️unit/🦀️.rs"
+
 [dependencies]
 semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 base64_codec = { workspace = true }
@@ -49,6 +69,7 @@ semio-s-artifact-process-process3d-presence = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-process-process3d-inferences = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

@@ -98,7 +98,7 @@ class TestScript extends BundleScript {
   }
 }
 class SharedSchemaScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{if(segments.length)throw Error("shared-schema accepts no arguments");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🧬️schema/🧱️shared/🧪️tests/🟦️.ts")],this.repoRoot,"block-shared-schema",45000,{env:process.env});}
+  async run(segments:string[]):Promise<void>{if(segments.length)throw Error("shared-schema accepts no arguments");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🧬️schema/🧱️document-fields/🧪️tests/🟦️.ts")],this.repoRoot,"block-shared-schema",45000,{env:process.env});}
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", TestScript).register("shared-schema",SharedSchemaScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

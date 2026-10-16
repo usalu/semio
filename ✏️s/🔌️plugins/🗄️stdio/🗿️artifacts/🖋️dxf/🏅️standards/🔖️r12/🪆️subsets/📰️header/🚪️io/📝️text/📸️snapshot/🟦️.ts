@@ -49,5 +49,5 @@ export const stdioDxfR12HeaderSnapshotTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseDxfSnapshotText(value: unknown, at = "$"): DxfSnapshotText {
-  return stdioDxfR12HeaderSnapshotTextGuardObject(value, `${at}`);
+  return stdioDxfR12HeaderSnapshotTextGuardString(value, `${at}`);
 }

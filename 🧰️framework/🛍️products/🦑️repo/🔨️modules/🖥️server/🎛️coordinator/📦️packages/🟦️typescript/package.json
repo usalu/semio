@@ -15,7 +15,9 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "pg": "^8.16.0",
-    "pg-boss": "^10.3.2"
+    "pg-boss": "^10.3.2",
+    "@semio-tech/schema-validator-ts": "workspace:*",
+    "@semio-tech/framework": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.19.6",

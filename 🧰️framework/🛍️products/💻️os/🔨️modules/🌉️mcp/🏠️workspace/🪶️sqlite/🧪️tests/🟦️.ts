@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import retirementContract from "../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
+import { orderedRetirementSchema as retirementContract } from "@semio-tech/value-ts/ordered/retirement/schema";
 const validateGrant=new Ajv({strict:true}).addSchema(retirementContract).compile({$ref:retirementContract.$id+"#/$defs/Grant"});
 import fixture from "./🧫️fixtures/🔣️.json";
 import {readFileSync} from "node:fs";

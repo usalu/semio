@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "methods",
+    "entrypoints"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "methods": {
+      "type": "array",
+      "minItems": 43,
+      "maxItems": 43,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][A-Za-z]+$"
+      }
+    },
+    "entrypoints": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "bare"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "source",
+              "generated"
+            ]
+          },
+          "bare": {
+            "enum": [
+              null,
+              "runtime.js"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

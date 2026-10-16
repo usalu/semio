@@ -1,1 +1,1 @@
-export * from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+export * from "@semio-tech/process/artifacts/native-build/storage";

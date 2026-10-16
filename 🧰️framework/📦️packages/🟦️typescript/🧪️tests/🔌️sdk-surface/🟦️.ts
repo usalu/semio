@@ -65,3 +65,37 @@ test("every facade loads through its package specifier in a fresh process", asyn
   expect(results.filter(r => !r.loaded)).toEqual([]);
   expect(results.length).toBe(facades.length);
 }, 300_000);
+
+/** 🪞️ Lists the value re-exports a facade declares as `[source module file, [local name, exported name][]]`, read by TypeScript's own parser. */
+function facadeValueReexports(file: string): [string, [string, string][]][] {
+  const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.ESNext, true, ts.ScriptKind.TS);
+  const by = new Map<string, [string, string][]>();
+  for (const statement of source.statements) {
+    if (!ts.isExportDeclaration(statement) || statement.isTypeOnly || !statement.moduleSpecifier || !statement.exportClause || !ts.isNamedExports(statement.exportClause)) continue;
+    const specifier = (statement.moduleSpecifier as ts.StringLiteral).text;
+    const module = specifier.startsWith(".") ? resolve(join(file, ".."), specifier) : Bun.resolveSync(specifier, join(file, ".."));
+    const rows = by.get(module) ?? [];
+    for (const element of statement.exportClause.elements) if (!element.isTypeOnly) rows.push([(element.propertyName ?? element.name).text, element.name.text]);
+    by.set(module, rows);
+  }
+  return [...by];
+}
+
+test("every facade value export is the very binding of the module it names (runtime identity in a fresh process)", async () => {
+  const queue = facades.map(([subpath, target]) => ({ subpath, file: join(packageDir, target) }));
+  const script = `const spec = JSON.parse(process.env.SEMIO_FACADE_IDENTITY); const facade = await import(spec.facade); const bad = []; for (const [module, pairs] of spec.modules) { const loaded = await import(module); for (const [local, exported] of pairs) if (!(exported in facade) || facade[exported] !== loaded[local]) bad.push(exported); } process.stdout.write(JSON.stringify(bad));`;
+  const results: { subpath: string; mismatched: string[]; stderr: string }[] = [];
+  const worker = async () => {
+    for (let job = queue.shift(); job !== undefined; job = queue.shift()) {
+      const modules = facadeValueReexports(job.file);
+      if (modules.length === 0) continue;
+      const child = Bun.spawn([process.execPath, "-e", script], { cwd: packageDir, stdout: "pipe", stderr: "pipe", env: { ...process.env, SEMIO_FACADE_IDENTITY: JSON.stringify({ facade: job.file, modules }) } });
+      const [out, err] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
+      await child.exited;
+      results.push({ subpath: job.subpath, mismatched: out ? JSON.parse(out) : ["<did not run>"], stderr: out ? "" : err.split("\n").find(line => /error|Cannot/i.test(line)) ?? "" });
+    }
+  };
+  await Promise.all(Array.from({ length: 6 }, worker));
+  expect(results.filter(r => r.mismatched.length > 0)).toEqual([]);
+  expect(results.length).toBeGreaterThan(100);
+}, 300_000);

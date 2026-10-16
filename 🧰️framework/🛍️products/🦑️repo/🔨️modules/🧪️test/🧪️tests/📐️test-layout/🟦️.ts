@@ -9,7 +9,7 @@ import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import ts from "typescript";
 import { inspectTestLayoutSources, repoRootFromHere, scanTestLayout, TEST_LAYOUT_FINDING_CODES, testTaxonomy, validateCaseContract, type DiscoveredCase, type OracleRegistry, type TestLayoutFinding, type TestLayoutSource } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import protocol from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
+import { testFixture as protocol } from "@semio-tech/framework/test/schema";
 import vectors from "../🧫️fixtures/📐️test-layout/🔣️.json";
 
 type Expected = Readonly<{ code: string; path: string; line: number | null }>;

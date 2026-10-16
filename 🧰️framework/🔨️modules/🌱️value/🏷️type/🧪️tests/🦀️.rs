@@ -4,7 +4,7 @@ use super::{ValueKind, ValueType};
 use crate::{DslValue, FromValue, ToValue};
 
 fn corpus() -> serde_json::Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(crate::text("🏷️type/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[test]

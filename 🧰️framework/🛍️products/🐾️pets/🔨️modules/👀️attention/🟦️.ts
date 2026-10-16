@@ -14,7 +14,7 @@ import { BLINK_TICKS, GAZE_DAMPING, GAZE_STIFFNESS, clipTicks, springStep } from
 import { randomWords, unitOf } from "../🎲️randomness/🟦️.ts";
 import { hoverStep, noHover, noShaking, pressStep, shakeStep, type Guards, type PressSignal } from "../👆️gesture/🟦️.ts";
 import { RELEASE_WEIGHTS, releaseVelocity } from "../🪢️swing/🟦️.ts";
-import { giveBack, hold, letGo, lift, toss, tossTarget } from "../🚶️locomotion/🟦️.ts";
+import { giveBack, hold, letGo, lift, toss, tossTarget } from "../🚶️locomotion/✋️hand/🟦️.ts";
 import { performed, settled, shownMood, stateAfterTrick, tricksFor } from "../💗️feeling/🟦️.ts";
 import { smoothstep } from "../📐️trigonometry/🟦️.ts";
 import { WALL_LIP } from "../🏞️terrain/🟦️.ts";

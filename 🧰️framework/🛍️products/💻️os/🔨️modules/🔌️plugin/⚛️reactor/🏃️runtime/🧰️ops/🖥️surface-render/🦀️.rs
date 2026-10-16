@@ -1,13 +1,28 @@
 //! 🖥️ Surface mounting, rendering, UI refresh sections and the context menu.
 
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_ui_runtime::ComponentTree;
+use semio_framework_ui_layout::layout::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
+use serde::{Deserialize, Serialize};
+use semio_framework_value::{DslValue, FromValue, ToValue};
+use semio_framework::kernel::Effect;
+use semio_framework::{Fault, FaultFrom, ViewModel};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_plugin_program::{PluginProgram, decode_wire_serialized};
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use serde_json::Value;
+use crate::ops_wire_limits::find_instance;
+use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_framework_ui_contract as ui_contract;
+use semio_framework_plugin_runtime_instances::inst_wire_frames::{with_instances_mut, with_instances_turn_mut};
 /// 📏️ Both bounds are DERIVED from the one language-neutral view-context contract
 /// (`🛂️manifest/🪟️view-context/🧬️schema/🔣️.json`), not borrowed from the DFF public-action
 /// admission caps this used to reuse: `MAX_PUBLIC_ACTION_BODY_BYTES` (256 KiB) is smaller
 /// than the two 64 Ki-character long strings that schema alone permits, so a schema-valid
 /// context was rejected and every window body became this fault card
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub(crate) async fn plugin_mount_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: String, body_key: String, view_state: &[u8]) -> Result<(), Fault> {
+#[doc(hidden)]
+pub async fn plugin_mount_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: String, body_key: String, view_state: &[u8]) -> Result<(), Fault> {
     if view_state.len() > semio_framework::MAX_SURFACE_VIEW_CONTEXT_BYTES || body_key.len() > semio_framework::MAX_SURFACE_BODY_KEY_BYTES {
         return Err(plugin_internal_fault(format!(
             "surface context exceeds its wire bound: view state {} B of {} B, body key {} B of {} B",
@@ -28,7 +43,8 @@ pub(crate) async fn plugin_mount_surface<PA: PluginApp>(runtime: &PluginRuntime<
     })
     .await
 }
-pub(crate) async fn plugin_hide_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: &str) -> Result<(), Fault> {
+#[doc(hidden)]
+pub async fn plugin_hide_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: &str) -> Result<(), Fault> {
     with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
         instance.surface_contexts.remove(surface);
@@ -41,7 +57,8 @@ pub(crate) async fn plugin_hide_surface<PA: PluginApp>(runtime: &PluginRuntime<P
 /// `SurfaceContexts::background_surfaces`). Answers empty for an instance with nothing mounted, so a
 /// job that completes before the first refresh dirties nothing instead of minting a synthetic surface
 /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
-pub(crate) async fn plugin_instance_document_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Vec<String> {
+#[doc(hidden)]
+pub async fn plugin_instance_document_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Vec<String> {
     with_instances_mut(runtime, |list| {
         let instance = find_instance(list, instance_id)?;
         Ok(instance.surface_contexts.document_surfaces())
@@ -49,7 +66,8 @@ pub(crate) async fn plugin_instance_document_surfaces<PA: PluginApp>(runtime: &P
     .await
     .unwrap_or_default()
 }
-pub(crate) async fn plugin_instance_background_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Vec<String> {
+#[doc(hidden)]
+pub async fn plugin_instance_background_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Vec<String> {
     with_instances_mut(runtime, |list| {
         let instance = find_instance(list, instance_id)?;
         Ok(instance.surface_contexts.background_surfaces())
@@ -57,7 +75,8 @@ pub(crate) async fn plugin_instance_background_surfaces<PA: PluginApp>(runtime: 
     .await
     .unwrap_or_default()
 }
-pub(crate) async fn plugin_render_surface<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,surface:&str,receive:&mut dyn FnMut(&mut Option<ComponentTree>,&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Vec<ui_contract::PresenceUpdate>>,semio_framework_job::OriginalTurnFailure>{
+#[doc(hidden)]
+pub async fn plugin_render_surface<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,surface:&str,receive:&mut dyn FnMut(&mut Option<ComponentTree>,&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Vec<ui_contract::PresenceUpdate>>,semio_framework_job::OriginalTurnFailure>{
     with_instances_turn_mut(runtime,|list|{
         let mut instance=find_instance(list,instance_id)?;
         let context=instance.surface_contexts.get(surface).ok_or_else(||plugin_internal_fault(format!("surface {surface} has no host context")))?;
@@ -290,24 +309,25 @@ pub async fn plugin_refresh_ui<PA: PluginApp>(runtime: &PluginRuntime<PA>, insta
 /// 🖱️ Wire shape for an on-demand context-menu request. Module-scoped (not nested in
 /// `plugin_context_menu`) so `plugin_exchange`'s `AppCommand::ContextMenu` arm below can decode the
 /// same typed shape directly off the binary wire instead of round-tripping through JSON strings.
+#[doc(hidden)]
 #[derive(Deserialize, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-pub(super) struct ContextMenuWireRequest {
-    pub(super) menu: UiMenuRef,
-    pub(crate) view_state: ViewModel,
+pub struct ContextMenuWireRequest {
+    pub menu: UiMenuRef,
+    pub view_state: ViewModel,
     #[serde(default)]
     #[value(default)]
-    pub(super) surface: Option<ContextMenuSurfaceTarget>,
+    pub surface: Option<ContextMenuSurfaceTarget>,
     #[serde(default)]
     #[value(default)]
-    pub(super) window_instance_id: Option<String>,
+    pub window_instance_id: Option<String>,
     #[serde(default)]
     #[value(default)]
-    pub(super) point: Option<ContextMenuPoint>,
+    pub point: Option<ContextMenuPoint>,
 }
 impl ContextMenuWireRequest {
-    pub(super) fn into_parts(self) -> Result<(ContextMenuRequest, ViewModel), Fault> {
+    pub fn into_parts(self) -> Result<(ContextMenuRequest, ViewModel), Fault> {
         let view = match self.window_instance_id.as_deref() {
             Some(window) => self.view_state.for_window_instance(window).ok_or_else(|| plugin_internal_fault(format!("unknown context-menu window instance {window}")))?,
             None => self.view_state.for_panel(),

@@ -107,5 +107,192 @@
       "close": "success",
       "outcome": "body"
     }
+  ],
+  "dashboardCases": [
+    {
+      "project": "",
+      "target": "",
+      "forward": true
+    },
+    {
+      "project": "@semio-tech/repo-dashboard-rs",
+      "target": "",
+      "forward": true
+    },
+    {
+      "project": "other",
+      "target": "build",
+      "forward": true
+    },
+    {
+      "project": "@semio-tech/repo-dashboard-rs",
+      "target": "build",
+      "forward": false
+    }
+  ],
+  "cargoCallerPaths": [
+    "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/📜️script.ts",
+    "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧱️script-bases/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/📸️snapshot-checks/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧪️source-and-native-tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts"
+  ],
+  "cargoAliasCases": [
+    {
+      "source": "import {runRepositoryCargoTestsV1 as local} from \"./admission\";local(1,2,3,4);",
+      "calls": 1,
+      "missing": 1,
+      "canonicalArguments": [
+        4
+      ]
+    },
+    {
+      "source": "import {runRepositoryCargoLintV1 as local} from \"./admission\";local(1,2,3,4,5);",
+      "calls": 1,
+      "missing": 0,
+      "canonicalArguments": [
+        5
+      ]
+    },
+    {
+      "source": "import {runRepositoryCargoTestsV1 as local} from \"./admission\";function f(local){local(1,2,3,4)}",
+      "calls": 0,
+      "missing": 0,
+      "canonicalArguments": []
+    },
+    {
+      "source": "import {runRepositoryCargoTestsV1 as local} from \"./admission\";function f(){const local=()=>{};local(1,2,3,4)}local(1,2,3,4,5);",
+      "calls": 1,
+      "missing": 0,
+      "canonicalArguments": [
+        5
+      ]
+    }
+  ],
+  "cargoReceiverPaths": [
+    "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/📜️script.ts",
+    "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧱️script-bases/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/📸️snapshot-checks/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧪️source-and-native-tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/📜️script.ts"
+  ],
+  "cargoReceiverArguments": [
+    [
+      "--lib",
+      "--offline"
+    ],
+    [
+      "--test",
+      "pack_record_laws",
+      "--test",
+      "pack_record_schema_laws",
+      "--offline"
+    ]
   ]
 }

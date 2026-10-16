@@ -13,6 +13,9 @@ pub use semio_framework_mesh_component_references::ComponentReferenceTable;
 #[cfg(test)]
 #[path="🧪️allocation/🦀️.rs"]
 mod component_reference_custody_tests;
+#[cfg(test)]
+#[path="🧪️tests/🧰️support/🦀️.rs"]
+mod test_inputs;
 // 🔬️ `serde`/`serde_json` survive ONLY as a `#[cfg(test)]` differential oracle (see
 // `mesh_data_json_oracle_tests`/`mesh_data_from_value_oracle_tests` below) now that `MeshData` has
 // its own first-party `ToValue`/`FromValue` codec — never a production dependency of this crate.

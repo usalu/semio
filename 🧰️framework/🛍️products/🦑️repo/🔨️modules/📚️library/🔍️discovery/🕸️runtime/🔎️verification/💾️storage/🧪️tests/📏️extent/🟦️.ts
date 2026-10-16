@@ -1,0 +1,9 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import ts from "typescript";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import corpus from "./🔣️.json" with {type:"json"};
+import schema from "./🧬️schema.json" with {type:"json"};
+/** 📏️ Derives the physical read extent from the exact Source bytes authored by the same fixture. */
+export function testRuntimeSourceExtentV1():void{assert(new Ajv({strict:true}).validate(schema,corpus));const source=ts.createSourceFile("runtime-fixture.ts",readFileSync(new URL("../📥️runtime/🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true);let request:ts.VariableDeclaration|undefined,written:string|undefined;const visit=(node:ts.Node)=>{if(ts.isVariableDeclaration(node)&&ts.isIdentifier(node.name)&&node.name.text==="sourceRequest")request=node;if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="writeFileSync"&&node.arguments[0]?.getText(source).includes('"src/lib.rs"')&&node.arguments[1]&&ts.isStringLiteral(node.arguments[1]))written=node.arguments[1].text;ts.forEachChild(node,visit);};visit(source);assert.equal(written,corpus.source);assert(request?.initializer);const declaration:ts.VariableDeclaration=request,expression=declaration.initializer;assert(expression);const code=ts.transpileModule("const value="+expression.getText(source),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,actual=new Function("Buffer","directory",code+";return value;")(Buffer,"/fixture");assert.equal(actual.expectedBytes,corpus.expectedBytes);assert.equal(actual.maximumBytes,corpus.maximumBytes[0]);const database=new Database(":memory:");try{assert.deepEqual(database.query("select length(cast(? as blob)) bytes").get(written),{bytes:actual.expectedBytes});}finally{database.close();}console.log("[DEBUG] Actual verifier read request matches exact authored Source UTF8 bytes and independent SQLite extent");}

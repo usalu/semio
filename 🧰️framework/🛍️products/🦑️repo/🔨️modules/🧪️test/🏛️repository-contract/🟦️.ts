@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { parseFeature } from "../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
+import { parseFeature } from "@semio-tech/framework/test/gherkin";
 import { readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
 import { type BreachRecord, getRepoMetaDir } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";

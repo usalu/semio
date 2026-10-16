@@ -49,5 +49,5 @@ export const lowpolyLowpolyDiffTextGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseLowpolyDiffText(value: unknown, at = "$"): LowpolyDiffText {
-  return lowpolyLowpolyDiffTextGuardObject(value, `${at}`);
+  return lowpolyLowpolyDiffTextGuardString(value, `${at}`);
 }

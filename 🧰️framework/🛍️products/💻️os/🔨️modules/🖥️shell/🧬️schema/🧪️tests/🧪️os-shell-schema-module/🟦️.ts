@@ -1,3 +1,8 @@
+import * as ModuleUnderTest from "../../🟦️.ts";
+import * as Dep0 from "@semio-tech/framework/config/schema";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "OS_SHELL_SCHEMA_EXPORT_IDS" | "OS_SHELL_SCHEMA_ID" | "OsConfigSchemaError" | "ShellSchemaError" | "osShellSchemaDocument" | "parseAnchor" | "parseByAnchor" | "parseLayoutNode" | "parseLoadedPlugin" | "parseShellCommand" | "parseShellError" | "parseShellEvent" | "parseShellState" | "parseUiLocale">, source: TestSource): Promise<void> {
@@ -51,3 +56,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../🟦️.ts")).href;
+const moduleUnderTestDirectory = resolve(import.meta.dirname, "../..");
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { OS_SHELL_SCHEMA_EXPORT_IDS: ModuleUnderTest.OS_SHELL_SCHEMA_EXPORT_IDS, OS_SHELL_SCHEMA_ID: ModuleUnderTest.OS_SHELL_SCHEMA_ID, OsConfigSchemaError: Dep0.OsConfigSchemaError, ShellSchemaError: ModuleUnderTest.ShellSchemaError, osShellSchemaDocument: ModuleUnderTest.osShellSchemaDocument, parseAnchor: ModuleUnderTest.parseAnchor, parseByAnchor: ModuleUnderTest.parseByAnchor, parseLayoutNode: ModuleUnderTest.parseLayoutNode, parseLoadedPlugin: ModuleUnderTest.parseLoadedPlugin, parseShellCommand: ModuleUnderTest.parseShellCommand, parseShellError: ModuleUnderTest.parseShellError, parseShellEvent: ModuleUnderTest.parseShellEvent, parseShellState: ModuleUnderTest.parseShellState, parseUiLocale: Dep0.parseUiLocale }, { directory: moduleUnderTestDirectory, url: moduleUnderTestUrl });

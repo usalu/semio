@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-plugin-reactor-app = { path = "../../../🔌️app/📦️packages/🦀️rust" }
@@ -35,7 +35,9 @@ semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/�
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde = { version = "1.0.219", features = ["derive"] }
+semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+serde_json = "1.0.140"

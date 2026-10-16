@@ -18,7 +18,7 @@
 
 use semio_hub_runtime::startup::HubError;
 use semio_hub_auth::password::{DEFAULT_ITERATIONS, MAX_ITERATIONS, MIN_ITERATIONS, PASSWORD_MAX_BYTES, PASSWORD_MIN_BYTES, PasswordCredentialV1};
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{AuthSessionDirectory, CredentialDirectory, UserDirectory};
 use std::ffi::OsString;
 
 /// 🧾️ The exact parsed `credential set` invocation.

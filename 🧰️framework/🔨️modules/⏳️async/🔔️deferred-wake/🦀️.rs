@@ -13,9 +13,9 @@ static NEXT_DEFERRED_WAKE_POOL_ID: AtomicU64 = AtomicU64::new(1);
 /// 🎫️ One generation-qualified partition reserved by a subsystem controller.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct WorkerDeferredWakeTicket {
-    pool: u64,
+    #[doc(hidden)] pub pool: u64,
     partition: u8,
-    generation: u64,
+    #[doc(hidden)] pub generation: u64,
 }
 
 /// 🚧️ A rejected transfer returns its exact waker owner.
@@ -31,7 +31,7 @@ pub enum WorkerDeferredWakeError {
 
 /// 🧷️ Exact rejected transfer; no fallback callback is invoked.
 pub struct WorkerDeferredWakeRejected {
-    error: WorkerDeferredWakeError,
+    #[doc(hidden)] pub error: WorkerDeferredWakeError,
     waker: Waker,
 }
 
@@ -52,15 +52,15 @@ impl WorkerDeferredWakeRejected {
 }
 
 struct Partition {
-    generation: u64,
+    pub generation: u64,
     closing: bool,
-    entries: [Option<Waker>; WORKER_DEFERRED_WAKES_PER_PARTITION],
+    pub entries: [Option<Waker>; WORKER_DEFERRED_WAKES_PER_PARTITION],
 }
 
 struct State {
-    next_generation: u64,
+    pub next_generation: u64,
     closed: bool,
-    entries: [Option<Partition>; WORKER_DEFERRED_WAKE_PARTITIONS],
+    pub entries: [Option<Partition>; WORKER_DEFERRED_WAKE_PARTITIONS],
     cursor: usize,
 }
 
@@ -69,7 +69,7 @@ pub(super) struct WorkerDeferredWakeInvocation {
 }
 
 impl WorkerDeferredWakeInvocation {
-    pub(super) fn run(self) {
+    pub fn run(self) {
         let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.waker.wake()));
     }
 }
@@ -78,17 +78,17 @@ impl WorkerDeferredWakeInvocation {
 /// read without it, so an idle worker learns there is nothing to wake without contending.
 pub(super) struct WorkerDeferredWakeRegistry {
     identity: u64,
-    state: Mutex<State>,
+    pub state: Mutex<State>,
     occupied: AtomicUsize,
 }
 
 impl WorkerDeferredWakeRegistry {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         let identity = NEXT_DEFERRED_WAKE_POOL_ID.try_update(Ordering::Relaxed, Ordering::Relaxed, |value| value.checked_add(1)).expect("WorkerPool deferred-wake identity exhausted");
         Self { identity, state: Mutex::new(State { next_generation: 1, closed: false, entries: std::array::from_fn(|_| None), cursor: 0 }), occupied: AtomicUsize::new(0) }
     }
 
-    pub(super) fn install(&self) -> Result<WorkerDeferredWakeTicket, WorkerDeferredWakeError> {
+    pub fn install(&self) -> Result<WorkerDeferredWakeTicket, WorkerDeferredWakeError> {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         if state.closed {
             return Err(WorkerDeferredWakeError::Shutdown);
@@ -107,7 +107,7 @@ impl WorkerDeferredWakeRegistry {
         state.entries.get_mut(usize::from(ticket.partition)).and_then(Option::as_mut).filter(|entry| entry.generation == ticket.generation).ok_or(WorkerDeferredWakeError::Stale)
     }
 
-    pub(super) fn defer_wake(&self, ticket: WorkerDeferredWakeTicket, slot: usize, waker: Waker) -> Result<(), WorkerDeferredWakeRejected> {
+    pub fn defer_wake(&self, ticket: WorkerDeferredWakeTicket, slot: usize, waker: Waker) -> Result<(), WorkerDeferredWakeRejected> {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         if state.closed {
             return Err(WorkerDeferredWakeRejected { error: WorkerDeferredWakeError::Shutdown, waker });
@@ -135,7 +135,7 @@ impl WorkerDeferredWakeRegistry {
         Ok(self.exact(&mut state, ticket)?.entries.get(slot).is_some_and(Option::is_some))
     }
 
-    pub(super) fn remove(&self, ticket: WorkerDeferredWakeTicket) -> Result<bool, WorkerDeferredWakeError> {
+    pub fn remove(&self, ticket: WorkerDeferredWakeTicket) -> Result<bool, WorkerDeferredWakeError> {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         let partition = self.exact(&mut state, ticket)?;
         partition.closing = true;
@@ -146,15 +146,15 @@ impl WorkerDeferredWakeRegistry {
         Ok(true)
     }
 
-    pub(super) fn has_pending(&self) -> bool {
+    pub fn has_pending(&self) -> bool {
         self.occupied.load(Ordering::Acquire) != 0
     }
 
-    pub(super) fn shutdown(&self) {
+    #[doc(hidden)] pub fn shutdown(&self) {
         self.state.lock().unwrap_or_else(PoisonError::into_inner).closed = true;
     }
 
-    pub(super) fn select(&self) -> Option<WorkerDeferredWakeInvocation> {
+    #[doc(hidden)] pub fn select(&self) -> Option<WorkerDeferredWakeInvocation> {
         if !self.has_pending() {
             return None;
         }
@@ -173,6 +173,8 @@ impl WorkerDeferredWakeRegistry {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod internals {
+    pub type WorkerDeferredWakeRegistry = super::WorkerDeferredWakeRegistry;
+}

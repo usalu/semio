@@ -49,5 +49,5 @@ export const imperativeImperativeDiffTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseProcedureDiffText(value: unknown, at = "$"): ProcedureDiffText {
-  return imperativeImperativeDiffTextGuardObject(value, `${at}`);
+  return imperativeImperativeDiffTextGuardString(value, `${at}`);
 }

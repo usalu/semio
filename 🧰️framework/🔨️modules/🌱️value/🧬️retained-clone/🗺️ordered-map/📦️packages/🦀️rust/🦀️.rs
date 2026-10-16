@@ -10,12 +10,8 @@ pub use serde;
 pub mod ordered_map;
 pub use ordered_map::*;
 #[cfg(test)]
-#[path="../../../../🧪️testing/💾️allocator/🦀️.rs"]
-mod allocation_testing;
+use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
 #[cfg(test)]
-#[path="../../../🔗️source/🧪️testing/🦀️.rs"]
-mod original_source_fixture;
-#[cfg(test)]
-pub(crate) use original_source_fixture::FixtureSourceBirth;
+pub(crate) use semio_framework_value_clone_source_testing::FixtureSourceBirth;

@@ -10,6 +10,7 @@ use tokio_tungstenite::connect_async;
 use semio_hub_document_routes::directory_events::directory_message_visible;
 use semio_hub_runtime::support::now_ms;
 use semio_hub_session_routes::directory_commands::resolve_bearer_user;
+use semio_hub_directory::{AuthSessionDirectory, DocumentDirectory, EventLog, UserDirectory};
 #[cfg(test)]
 use protocol::{ClientFrame, Lane, ServerFrame};
 #[cfg(test)]

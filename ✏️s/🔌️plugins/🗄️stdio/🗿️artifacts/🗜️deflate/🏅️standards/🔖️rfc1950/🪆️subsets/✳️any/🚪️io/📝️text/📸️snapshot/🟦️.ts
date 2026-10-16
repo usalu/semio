@@ -49,5 +49,5 @@ export const stdioDeflateRfc1950AnySnapshotTextGuardConstant = <T extends string
 //#endregion 🚪️Parsers
 
 export function parseDeflateSnapshotText(value: unknown, at = "$"): DeflateSnapshotText {
-  return stdioDeflateRfc1950AnySnapshotTextGuardObject(value, `${at}`);
+  return stdioDeflateRfc1950AnySnapshotTextGuardString(value, `${at}`);
 }

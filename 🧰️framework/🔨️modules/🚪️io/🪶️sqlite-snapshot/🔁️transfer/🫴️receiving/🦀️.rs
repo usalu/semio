@@ -25,7 +25,7 @@ struct Token{start:usize,end:usize,content:usize,decoded:usize,quote:u8,quoted:b
 struct Column{name:usize,integer:bool,real:bool,not_null:bool}
 semio_framework_value::artifact_retire_leaf!(Token,Column);
 #[derive(RetireOwned)]
-struct Definition{tokens:Vec<Token>,columns:Vec<Column>,groups:Vec<(usize,usize)>,names:Vec<usize>,name:usize,primary:Option<usize>}
+#[doc(hidden)] pub struct Definition{tokens:Vec<Token>,columns:Vec<Column>,groups:Vec<(usize,usize)>,names:Vec<usize>,name:usize,primary:Option<usize>}
 impl Definition{fn new()->Self{Self{tokens:Vec::new(),columns:Vec::new(),groups:Vec::new(),names:Vec::new(),name:0,primary:None}}}
 fn next<W:ReceivingWallet>(sql:&str,at:&mut usize,port:&mut Port<'_,'_,'_,W>)->Result<Option<Token>>{
  let b=sql.as_bytes();loop{while *at<b.len()&&b[*at].is_ascii_whitespace(){if *at%256==0{port.work(3,0)?}*at+=1;}if b.get(*at..).is_some_and(|b|b.starts_with(b"--")){*at+=2;while *at<b.len()&&b[*at]!=b'\n'{if *at%256==0{port.work(3,0)?}*at+=1;}continue}if b.get(*at..).is_some_and(|b|b.starts_with(b"/*")){*at+=2;while *at+1<b.len()&&!b[*at..].starts_with(b"*/"){if *at%256==0{port.work(3,0)?}*at+=1;}if *at+1>=b.len(){return Err(invalid("unterminated SQL comment"))}*at+=2;continue}break}

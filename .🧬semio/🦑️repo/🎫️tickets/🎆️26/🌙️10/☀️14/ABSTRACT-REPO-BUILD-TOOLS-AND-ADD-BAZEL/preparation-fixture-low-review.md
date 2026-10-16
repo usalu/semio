@@ -1,0 +1,5 @@
+# Preparation Fixture Read-Only Review
+
+The held caching Script passes actual phase to cache-contract owner and testCommandInputs, then to live-activation/native-runtime fixtures. The shared preparation helper authenticates the same Original and phase before Source writes, around each write, before return and before/after awaited Original progress. Fixtures pass actual taxonomy generator contracts, parser-admitted catalog contributions and the resulting context to the six-argument target factory, then check phase after the await.
+
+The portable model executes actual helper/factory bodies with genuine issued, copied and cancelled controls. Filesystem and native no-dependency analysis ports are explicitly modeled; Ajv/catalog parsing, runtime closure helpers, TOML comparison and SQLite target assertions are separate actual oracles. This does not establish physical provisioning or every generated target at runtime. Root/Core report final GREEN and focused five-root strict0; this audit did not execute them. No blocking issue was found in the reviewed slice.

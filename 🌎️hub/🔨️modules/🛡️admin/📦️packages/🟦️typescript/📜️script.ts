@@ -27,7 +27,7 @@ async function warnWhenHubIsUnreachable(): Promise<void> {
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await warnWhenHubIsUnreachable();
-    await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, {
+    await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, { runtimeChannels:[],
       config: "../../🏗️builder/🌐️vite/🟦️.ts",
       portEnv: "OS_HUB_ADMIN_DEV_PORT",
       defaultPort: "8790",
@@ -38,7 +38,7 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.some((arg) => /^(?:--outDir|--config|--root)(?:=|$)/.test(arg))) throw new Error("Build output and configuration are owned by this Nx target");
+    if (segments.some((arg) => /^(?:--outDir|--config|--root)(?:=|$)/.test(arg))) throw new Error("Build output and configuration are owned by this build target");
     await runViteBuild(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, "../../🏗️builder/🌐️vite/🟦️.ts");
   }
 }

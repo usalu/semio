@@ -100,6 +100,9 @@ features = [ "derive" ]
 version = "1.0.149"
 features = [ "raw_value" ]
 
+[workspace.dependencies.semio-s-wfc-sqlite-bitmap]
+path = "../../🪶️sqlite/🎨️bitmap/📦️packages/🦀️rust"
+
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"
 unused_lifetimes = "warn"

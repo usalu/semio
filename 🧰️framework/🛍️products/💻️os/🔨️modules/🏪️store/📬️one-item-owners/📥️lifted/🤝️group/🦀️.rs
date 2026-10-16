@@ -23,7 +23,7 @@ pub(super) struct MemberGroupPreparation {
 }
 
 impl MemberGroupPreparation {
-    pub(super) fn new(visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, history: Option<ArtifactStoreHistoryCommitReservation>, displaced: Option<ArtifactStoreDisplacedOwnerReservation>) -> Self {
+    pub fn new(visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, history: Option<ArtifactStoreHistoryCommitReservation>, displaced: Option<ArtifactStoreDisplacedOwnerReservation>) -> Self {
         Self { visibility: Arc::clone(visibility), history, displaced, applied: semio_framework_os_vcs::HistoryPageStack::empty(), cursor: semio_framework_os_vcs::HistoryPageStack::empty(), revision: None, checkpoint: None, phase: 0, ordinal: 0, operation: 0, operation_indexed: false, demand: 1, completed: 0 }
     }
 

@@ -1,11 +1,12 @@
 /** 🏠️ Strict local-interaction contracts and independent immutable restore semantics. */
-import { semioSchemaAjvV1 } from "../../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { produce } from "immer";
 import { applyEdits, modify, parse } from "jsonc-parser";
 import { sumBy } from "lodash";
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
 import{unsignedLebOracleV1}from"../../../../../🎒️pack/📐️format/🧪️tests/🔮️oracles/🔢️leb/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl } from "../../../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 const leb=unsignedLebOracleV1();
 
 //#region 🧬️Contract
@@ -177,7 +178,7 @@ type TransportFixture = {
 const rootFixture: RetainedRootFixture = await Bun.file(new URL("../../🌳️root/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
 
 const ownershipSchema=await Bun.file(new URL("../../🌳️root/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
-const orderedOwnershipSchema=await Bun.file(new URL("../../../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
+const orderedOwnershipSchema=await Bun.file(valueOrderedRetirementSchemaUrl).json();
 const ownershipAjv=semioSchemaAjvV1({allErrors:true}).addSchema(orderedOwnershipSchema).addSchema(ownershipSchema);
 const validateOwnershipGrant=ownershipAjv.compile({$ref:ownershipSchema.$id+"#/$defs/Grant"});
 const validateOwnershipDemand=ownershipAjv.compile({$ref:ownershipSchema.$id+"#/$defs/Demand"});

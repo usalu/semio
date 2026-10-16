@@ -2,6 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
+import { turnAdmissionReadyFixtureUrl, turnAdmissionReadySchemaUrl } from "../../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
 /** 🎟️ An outstanding guest receipt retains its exact initiating scope after expiry or cancellation. */
 test("original Host root requires explicit policy and preserves the exact suspended receipt scope",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/🔣️.json",import.meta.url)).json(),schema=await Bun.file(new URL("../🧬️schema/🔣️.json",import.meta.url)).json();expect(new Ajv({strict:true}).compile(schema)(law.policy)).toBe(true);for(const key of Object.keys(law.policy)){const missing={...law.policy};delete missing[key];expect(new Ajv({strict:true}).compile(schema)(missing)).toBe(false)}
@@ -12,7 +13,7 @@ test("original Host root requires explicit policy and preserves the exact suspen
 
 /** 📤️ A ready original input transfers only after all guest currency has returned and its actual copy is paid. */
 test("original admitted Actor input requires ready ownership and paid final move",async()=>{
- const law=await Bun.file(new URL("../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/📤️ready/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).json(),schema=await Bun.file(new URL("../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/📤️ready/🧬️schema/🔣️.json",import.meta.url)).json();expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{for(const row of law.cuts){const taken=(db.query("SELECT (?1>=?2 AND ?3=1 AND ?4=0 AND ?5=0 AND ?6=0) AS taken").get(row.copyBytes,law.inputBytes,Number(row.ready),Number(row.issued),Number(row.guest),Number(row.refused))as{taken:number}).taken;expect(Boolean(taken)).toBe(row.expectedTaken)}}finally{db.close()}
+ const law=await Bun.file(turnAdmissionReadyFixtureUrl).json(),schema=await Bun.file(turnAdmissionReadySchemaUrl).json();expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{for(const row of law.cuts){const taken=(db.query("SELECT (?1>=?2 AND ?3=1 AND ?4=0 AND ?5=0 AND ?6=0) AS taken").get(row.copyBytes,law.inputBytes,Number(row.ready),Number(row.issued),Number(row.guest),Number(row.refused))as{taken:number}).taken;expect(Boolean(taken)).toBe(row.expectedTaken)}}finally{db.close()}
  const source=readFileSync(new URL("../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🦀️.rs",import.meta.url),"utf8");expect(source).toContain("take_admitted_input_step");expect(source).toContain("size_of::<T>()");expect(source).toContain("original_source_epoch()");
 });
 

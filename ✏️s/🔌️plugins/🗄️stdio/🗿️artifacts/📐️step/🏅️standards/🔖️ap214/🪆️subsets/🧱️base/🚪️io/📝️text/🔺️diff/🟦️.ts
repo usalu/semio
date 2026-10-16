@@ -49,5 +49,5 @@ export const stdioStepAp214BaseDiffTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseStepDiffText(value: unknown, at = "$"): StepDiffText {
-  return stdioStepAp214BaseDiffTextGuardObject(value, `${at}`);
+  return stdioStepAp214BaseDiffTextGuardString(value, `${at}`);
 }

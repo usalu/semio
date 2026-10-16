@@ -183,7 +183,8 @@ pub mod protocol_record {
 pub mod original_receiving;
 pub mod variants_binary {
     use super::{protocol_record, DslVariants};
-    use semio_framework_os_pack::{decode_record_body_exact, encode_record_body, write_varint_u64, ByteReader, DecodeOptions, EncodeOptions};
+    use semio_framework_os_pack::record::{decode_record_body_exact, encode_record_body, DecodeOptions, EncodeOptions};
+    use semio_framework_os_pack::{write_varint_u64, ByteReader};
     use protocol::ProtocolError;
 
     pub const OP_BINARY_FORMAT: u8 = 1;

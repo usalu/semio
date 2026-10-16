@@ -1,33 +1,50 @@
 //! 🧯️ Live and close cleanup pumps and jobs of the runtime, and the instance close admission.
 
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
+use std::cell::Cell;
+use semio_framework_plugin_job::reserved_job_outcomes::CleanupTurn;
+use semio_framework::{Fault, FaultFrom};
+use semio_framework_value::{FromValue, RetirementDemand, ToValue};
+use semio_framework_plugin_reactor_app::app_runtime_helpers::{LAST_MAINTENANCE_STAGE, debug_runtime_line, plugin_internal_fault};
+use semio_framework_plugin_mounted_owner::{MountedOwnerIdentityV1, MountedOwnerPhaseV1, MountedOwnerTurnV1};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_plugin_program::PluginProgram;
+use crate::life_instance_registry::{PluginRuntime, RuntimeActorAuthority, RuntimeCloseEntry, RuntimeCloseWorkerState};
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use crate::life_app_cell::{RuntimeAppCell, RuntimeInstanceRefusal};
+use crate::life_cleanup_vocabulary::{RuntimeCloseStatus, RuntimeMaintenanceStatus};
+use std::mem::size_of_val;
 /// 🧳️ Keeps the exact opening inputs and partial app through every original caller admission turn.
-pub(crate) struct PendingNativeCreation<PA:PluginApp>{request:semio_framework::kernel::ActorInstanceOpenRequest,source:std::mem::ManuallyDrop<Option<(String,String)>>,app:std::mem::ManuallyDrop<Option<PA>>,loan:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,identity:(semio_framework_job::OperationId,semio_framework_job::Generation),parent:usize,returning_loan:bool,authority:Option<RuntimeActorAuthority>,issuer_ready:bool,closing:bool,failure:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,metadata_source:std::mem::ManuallyDrop<Option<String>>,metadata_closing:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>>,source_closing:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<(String,String)>>>}
+#[doc(hidden)]
+pub struct PendingNativeCreation<PA:PluginApp>{pub request:semio_framework::kernel::ActorInstanceOpenRequest,pub source:std::mem::ManuallyDrop<Option<(String,String)>>,pub app:std::mem::ManuallyDrop<Option<PA>>,pub loan:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,pub identity:(semio_framework_job::OperationId,semio_framework_job::Generation),pub parent:usize,pub returning_loan:bool,pub authority:Option<RuntimeActorAuthority>,pub issuer_ready:bool,pub closing:bool,pub failure:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,pub metadata_source:std::mem::ManuallyDrop<Option<String>>,pub metadata_closing:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>>,pub source_closing:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<(String,String)>>>}
 impl<PA:PluginApp> PendingNativeCreation<PA>{
- pub(super) fn validate(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if self.identity!=(cx.operation(),cx.generation())||self.parent!=cx.original_source_parent()?.source_identity()?{return Err(plugin_internal_fault("original opening continuation requires its same actor creation source").into())}if !self.returning_loan{if let Some(loan)=self.loan.as_ref(){loan.validate_context(cx)?}}Ok(())}
+ pub fn validate(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if self.identity!=(cx.operation(),cx.generation())||self.parent!=cx.original_source_parent()?.source_identity()?{return Err(plugin_internal_fault("original opening continuation requires its same actor creation source").into())}if !self.returning_loan{if let Some(loan)=self.loan.as_ref(){loan.validate_context(cx)?}}Ok(())}
 }
-pub(super) struct RuntimeLiveCleanupPump<PA: PluginApp> {
-    pub(super) session: Option<semio_framework_job_worker::BatchJobSession<RuntimeLiveCleanupJob<PA>>>,
-    pub(super) rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<RuntimeLiveCleanupJob<PA>>>,
-    pub(crate) outcome_pending: bool,
-    pub(super) terminal: bool,
-    pub(super) pending_status: RuntimeMaintenanceStatus,
-    pub(crate) closing: bool,
-    pub(super) faulted: bool,
-    pub(crate) resume_pending: bool,
+#[doc(hidden)]
+pub struct RuntimeLiveCleanupPump<PA: PluginApp> {
+    pub session: Option<semio_framework_job_worker::BatchJobSession<RuntimeLiveCleanupJob<PA>>>,
+    pub rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<RuntimeLiveCleanupJob<PA>>>,
+    pub outcome_pending: bool,
+    pub terminal: bool,
+    pub pending_status: RuntimeMaintenanceStatus,
+    pub closing: bool,
+    pub faulted: bool,
+    pub resume_pending: bool,
 }
 impl<PA: PluginApp> RuntimeLiveCleanupPump<PA> {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { session: None, rejected: None, outcome_pending: false, terminal: false, pending_status: RuntimeMaintenanceStatus::Ready, closing: false, faulted: false, resume_pending: false }
     }
-    pub(super) fn retirement_demands(&self,body:usize)->Result<RetirementDemand,semio_framework_value::ValueError>{
+    pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,semio_framework_value::ValueError>{
         let metadata=|bytes|RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};
         let quote=if let Some(rejected)=self.rejected.as_ref(){if rejected.terminal_is_empty(){return Ok(metadata(size_of_val(rejected)));}rejected.retirement_demands(body)?}
         else if let Some(session)=self.session.as_ref(){if session.terminal_is_empty(){return Ok(metadata(size_of_val(session)));}session.retirement_demands(body).map_err(|error|match error{semio_framework_job_worker::WorkerJobDemandError::Refused(error)=>error,semio_framework_job_worker::WorkerJobDemandError::Contention(_)=>semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"runtime cleanup original session remains checked out")})?}
         else{return Ok(Default::default());};
         Ok(RetirementDemand{depth:quote.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"runtime cleanup session depth overflow"))?,..quote})
     }
-    pub(super) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::{InteractiveJobCloseStep as Step};
 use semio_framework_job_worker_authority::{WorkerJobCloseStep as Worker};
         let grant=cx.retained_grant();if cx.should_yield(){return Ok(Step::Pending{progress:Default::default()})}
@@ -48,52 +65,54 @@ use semio_framework_job_worker_authority::{WorkerJobCloseStep as Worker};
         }
         Ok(Step::Complete{progress:Default::default()})
     }
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.closing && self.session.is_none() && self.rejected.is_none() && !self.outcome_pending
     }
 }
-pub(super) struct RuntimeCloseCleanupPump<PA: PluginApp> {
-    pub(super) session: Option<semio_framework_job_worker::BatchJobSession<RuntimeCloseCleanupJob<PA>>>,
-    pub(super) rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<RuntimeCloseCleanupJob<PA>>>,
-    pub(crate) outcome_pending: bool,
-    pub(super) terminal: bool,
-    pub(super) complete: bool,
-    pub(super) blocked: bool,
-    pub(super) pending_status: RuntimeCloseStatus,
-    pub(super) faulted: bool,
-    pub(crate) resume_pending: bool,
+#[doc(hidden)]
+pub struct RuntimeCloseCleanupPump<PA: PluginApp> {
+    pub session: Option<semio_framework_job_worker::BatchJobSession<RuntimeCloseCleanupJob<PA>>>,
+    pub rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<RuntimeCloseCleanupJob<PA>>>,
+    pub outcome_pending: bool,
+    pub terminal: bool,
+    pub complete: bool,
+    pub blocked: bool,
+    pub pending_status: RuntimeCloseStatus,
+    pub faulted: bool,
+    pub resume_pending: bool,
 }
 impl<PA: PluginApp> RuntimeCloseCleanupPump<PA> {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { session: None, rejected: None, outcome_pending: false, terminal: false, complete: false, blocked: false, pending_status: RuntimeCloseStatus::Ready, faulted: false, resume_pending: false }
     }
 }
-pub(super) struct RuntimeLiveCleanupJob<PA: PluginApp> {
-    pub(super) instance_id: u32,
-    pub(crate) generation: semio_framework_job::Generation,
-    pub(super) cell: Option<std::sync::Weak<RuntimeAppCell<PA>>>,
-    pub(super) progress: Option<PluginLifecycleStep>,
-    pub(super) contended: bool,
-    pub(super) publication: crate::reserved_job_outcomes::CleanupPublication,
-    pub(crate) closing: bool,
+#[doc(hidden)]
+pub struct RuntimeLiveCleanupJob<PA: PluginApp> {
+    pub instance_id: u32,
+    pub generation: semio_framework_job::Generation,
+    pub cell: Option<std::sync::Weak<RuntimeAppCell<PA>>>,
+    pub progress: Option<PluginLifecycleStep>,
+    pub contended: bool,
+    pub publication: semio_framework_plugin_job::reserved_job_outcomes::CleanupPublication,
+    pub closing: bool,
 }
-impl<PA: PluginApp> crate::reserved_job_outcomes::CleanupJob for RuntimeLiveCleanupJob<PA> {
+impl<PA: PluginApp> semio_framework_plugin_job::reserved_job_outcomes::CleanupJob for RuntimeLiveCleanupJob<PA> {
     fn advance(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> CleanupTurn {
         RuntimeLiveCleanupJob::advance(self, cx)
     }
     fn instance_id(&self) -> u32 {
         self.instance_id
     }
-    fn publication_mut(&mut self) -> &mut crate::reserved_job_outcomes::CleanupPublication {
+    fn publication_mut(&mut self) -> &mut semio_framework_plugin_job::reserved_job_outcomes::CleanupPublication {
         &mut self.publication
     }
 }
 impl<PA: PluginApp> RuntimeLiveCleanupJob<PA> {
-    pub(super) fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
+    pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         let Self{instance_id,cell,progress,contended,..}=self;let Some(original)=cell.as_ref()else{return CleanupTurn::Cancelled};
         match cx.with_original_native_weak_source(original,|cell,cx|Ok(Self::advance_source(cell,*instance_id,progress,contended,cx))){Ok(turn)=>turn,Err(original)=>CleanupTurn::OriginalFailure(original)}
     }
-    fn advance_source(cell:&RuntimeAppCell<PA>,instance_id:u32,outcome_progress:&mut Option<PluginLifecycleStep>,contended:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
+    pub fn advance_source(cell:&RuntimeAppCell<PA>,instance_id:u32,outcome_progress:&mut Option<PluginLifecycleStep>,contended:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         cx.set_stage("plugin-runtime-live-cleanup");
         *outcome_progress = None;
         *contended = false;
@@ -115,7 +134,7 @@ impl<PA: PluginApp> RuntimeLiveCleanupJob<PA> {
         cell.maintenance_probe_entries.fetch_add(1, Ordering::Relaxed);
         let traced = semio_framework_trace::runtime_diagnostics_enabled();
         let maintenance_started_us = traced.then(semio_framework_job::default_now_us).flatten();
-        let maintenance = (|| -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
+        let maintenance = (|| -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
             let phase = instance.app.mounted_owner_maintenance_phase()?;
             let identity = MountedOwnerIdentityV1 { instance_id: instance_id, operation: cx.operation(), generation: cx.generation() };
             let Some(mut turn) = MountedOwnerTurnV1::admit(instance_id, identity, phase, cell.mounted_policy, cx)? else { return Ok(PluginLifecycleStep::AwaitingInput { reason: "mounted maintenance retains its original scheduling authority" }); };
@@ -152,7 +171,7 @@ impl<PA: PluginApp> RuntimeLiveCleanupJob<PA> {
 }
 impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJob<PA> {
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        crate::reserved_job_outcomes::drive_turn(self, cx)
+        semio_framework_plugin_job::reserved_job_outcomes::drive_turn(self, cx)
     }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.publication.borrow_outcome(descriptor)
@@ -185,31 +204,32 @@ impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJo
         self.closing && self.cell.is_none() && self.publication.terminal_is_empty()
     }
 }
-pub(super) struct RuntimeCloseCleanupJob<PA: PluginApp> {
-    pub(super) state: Option<std::sync::Weak<RuntimeCloseWorkerState<PA>>>,
-    pub(super) instance_id: u32,
-    pub(super) progress: Option<PluginLifecycleStep>,
-    pub(super) contended: bool,
-    pub(super) publication: crate::reserved_job_outcomes::CleanupPublication,
-    pub(crate) closing: bool,
+#[doc(hidden)]
+pub struct RuntimeCloseCleanupJob<PA: PluginApp> {
+    pub state: Option<std::sync::Weak<RuntimeCloseWorkerState<PA>>>,
+    pub instance_id: u32,
+    pub progress: Option<PluginLifecycleStep>,
+    pub contended: bool,
+    pub publication: semio_framework_plugin_job::reserved_job_outcomes::CleanupPublication,
+    pub closing: bool,
 }
-impl<PA: PluginApp> crate::reserved_job_outcomes::CleanupJob for RuntimeCloseCleanupJob<PA> {
+impl<PA: PluginApp> semio_framework_plugin_job::reserved_job_outcomes::CleanupJob for RuntimeCloseCleanupJob<PA> {
     fn advance(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> CleanupTurn {
         RuntimeCloseCleanupJob::advance(self, cx)
     }
     fn instance_id(&self) -> u32 {
         self.instance_id
     }
-    fn publication_mut(&mut self) -> &mut crate::reserved_job_outcomes::CleanupPublication {
+    fn publication_mut(&mut self) -> &mut semio_framework_plugin_job::reserved_job_outcomes::CleanupPublication {
         &mut self.publication
     }
 }
 impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
-    pub(super) fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
+    pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         let Self{state,progress,contended,..}=self;let Some(original)=state.as_ref()else{return CleanupTurn::Cancelled};
         match cx.with_original_native_weak_source(original,|state,cx|Ok(Self::advance_source(state,progress,contended,cx))){Ok(turn)=>turn,Err(original)=>CleanupTurn::OriginalFailure(original)}
     }
-    fn advance_source(state:&RuntimeCloseWorkerState<PA>,outcome_progress:&mut Option<PluginLifecycleStep>,contended:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
+    pub fn advance_source(state:&RuntimeCloseWorkerState<PA>,outcome_progress:&mut Option<PluginLifecycleStep>,contended:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         runtime_close_phase(&state, 8);
         cx.set_stage("plugin-runtime-close-cleanup");
         runtime_close_phase(&state, 9);
@@ -271,7 +291,7 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
         runtime_close_phase(&state, 12);
         #[cfg(test)]
         state.physical_close_calls.fetch_add(1, Ordering::SeqCst);
-        let progress = (|| -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
+        let progress = (|| -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
             let identity = MountedOwnerIdentityV1 { instance_id: state.instance_id, operation: cx.operation(), generation: cx.generation() };
             let Some(mut turn) = MountedOwnerTurnV1::admit(state.instance_id, identity, MountedOwnerPhaseV1::Close, state.mounted_policy, cx)? else { return Ok(PluginLifecycleStep::AwaitingInput { reason: "mounted close retains its original scheduling authority" }); };
             let step = instance.app.mounted_owner_close_step(&mut turn)?;
@@ -309,7 +329,7 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
 }
 impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJob<PA> {
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        crate::reserved_job_outcomes::drive_turn(self, cx)
+        semio_framework_plugin_job::reserved_job_outcomes::drive_turn(self, cx)
     }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.publication.borrow_outcome(descriptor)
@@ -353,7 +373,8 @@ fn runtime_close_pending_authority(reason: &'static str) {
     }
 }
 static RUNTIME_CLOSE_PENDING_AUTHORITY_TURNS: AtomicU64 = AtomicU64::new(0);
-pub(super) fn runtime_close_phase<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, phase: usize) {
+#[doc(hidden)]
+pub fn runtime_close_phase<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, phase: usize) {
     #[cfg(test)]
     if let Some(now) = semio_framework_job::default_now_us() {
         state.callback_phase_us[phase].store(now.saturating_sub(state.callback_phase_started_us.load(Ordering::SeqCst)), Ordering::SeqCst);
@@ -370,7 +391,8 @@ std::thread_local! {
     static RUNTIME_CLOSE_CONSTRUCTION_LIVE: Cell<Option<bool>> = const { Cell::new(None) };
     static RUNTIME_CLOSE_CONSTRUCTION_FAIL: Cell<bool> = const { Cell::new(false) };
 }
-pub(super) fn plugin_begin_instance_close<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>, instance_id: u32, expected: Option<&std::sync::Weak<RuntimeAppCell<PA>>>) -> Result<std::sync::Arc<RuntimeCloseWorkerState<PA>>, Fault> {
+#[doc(hidden)]
+pub fn plugin_begin_instance_close<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>, instance_id: u32, expected: Option<&std::sync::Weak<RuntimeAppCell<PA>>>) -> Result<std::sync::Arc<RuntimeCloseWorkerState<PA>>, Fault> {
     let mut instances = runtime.instances.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
     let mut quarantine = runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?;
     let mut actors = runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority is busy"))?;

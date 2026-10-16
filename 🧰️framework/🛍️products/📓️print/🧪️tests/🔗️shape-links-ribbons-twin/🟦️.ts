@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { pathRound } from "d3-path";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "@semio-tech/framework/test/adapter";
 import { vizLink, type VizLinkKind, type VizPoint } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 import base from "../🎀️shape-links-ribbons/🟦️.ts";
 // #endregion 🔌️Adapters

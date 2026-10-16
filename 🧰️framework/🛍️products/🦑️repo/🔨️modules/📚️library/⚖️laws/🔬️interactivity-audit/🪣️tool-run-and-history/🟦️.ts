@@ -1,4 +1,4 @@
-/** 🧭️ Interactivity audit: puzzle-fill tool-run laws, tool-run policy and history closure.
+/** ⏳️ Interactivity audit: puzzle-fill tool-run laws, tool-run policy and history closure.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🏁️run/🟦️.ts
  */
 import { type InteractivityToolRunSource, type InteractivityToolRunRequirement, INTERACTIVITY_TOOL_RUN_TRIGGER, interactivityToolRunWithin, interactivityToolRunScopePath, interactivityToolRunCode, interactivityToolRunEnclosing } from "../../../🔍️discovery/📋️policy/⏯️tool-run/🟦️.ts";

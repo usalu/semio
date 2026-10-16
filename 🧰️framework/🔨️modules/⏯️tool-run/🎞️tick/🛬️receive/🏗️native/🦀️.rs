@@ -30,6 +30,14 @@ impl ToolRunReceivedTick{
  pub fn retract_to(&self)->Option<u32>{self.retract_to}
  pub fn payload(&self)->Option<&PagedBytes<262144>>{self.payload.as_ref()}
 }
+#[cfg(feature = "testkit")]
+impl ToolRunNativeTickPreparation {
+    /// 🔬️ Reads the final entity column of the frame for the companion laws; compiled only with the `testkit` feature.
+    #[doc(hidden)]
+    pub fn testkit_entity_column(&self, source: &RetainedRecordBodySourceDecode, address: usize) -> Result<&PagedList<u64, 262144>, ValueError> {
+        self.entity_column(source, address)
+    }
+}
 impl ToolRunNativeTickPreparation{
  pub const fn birth_bytes()->usize{size_of::<ToolRunReceivedTick>()}
  pub fn admit(source:&RetainedRecordBodySourceDecode,limits:ToolRunReceivingLimits,g:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
@@ -95,6 +103,3 @@ fn close_frame(frame:&mut Option<Box<MaybeUninit<ToolRunReceivedTick>>>,headers:
 }
 impl Drop for ToolRunNativeTickPreparation{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original native Tick preparation abandoned its frame or receipt")}}
 impl Drop for ToolRunReceivedTickSource{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original received Tick source abandoned its frame or receipt")}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

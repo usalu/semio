@@ -9,8 +9,11 @@
     ".": "./🟦️.ts"
   },
   "dependencies": {
+    "@semio-tech/framework": "workspace:*",
     "@semio-tech/framework-actor": "workspace:*",
-    "@semio-tech/schema-validator-ts": "workspace:*"
+    "@semio-tech/schema-ts": "workspace:*",
+    "@semio-tech/schema-validator-ts": "workspace:*",
+    "@semio-tech/value-ts": "workspace:*"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-kernel:test",

@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+          "protocolVersion": "2025-06-18",
+          "capabilities": {}
+        }
+      },
+      "accepted": true,
+      "kind": "request"
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "notifications/initialized",
+        "params": {}
+      },
+      "accepted": true,
+      "kind": "notification"
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "protocolVersion": "2025-06-18",
+          "capabilities": {}
+        }
+      },
+      "accepted": true,
+      "kind": "response"
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": "peer:1",
+        "error": {
+          "code": -32601,
+          "message": "Method not found",
+          "data": {
+            "method": "unknown"
+          }
+        }
+      },
+      "accepted": true,
+      "kind": "response"
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 0,
+        "method": "ping"
+      },
+      "accepted": true,
+      "kind": "request"
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": -1,
+        "result": {
+          "nested": [
+            true,
+            false,
+            null,
+            1.25,
+            {
+              "é": "line\nvalue",
+              "a": "nul\u0000value"
+            }
+          ]
+        }
+      },
+      "accepted": true,
+      "kind": "response"
+    },
+    {
+      "message": {},
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": [],
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "1.0",
+        "id": 1,
+        "method": "ping"
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": null,
+        "method": "ping"
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1.5,
+        "method": "ping"
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": "",
+        "method": "ping"
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": ""
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "rpc.private"
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "ping",
+        "params": []
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {},
+        "error": {
+          "code": 1,
+          "message": "ambiguous"
+        }
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": []
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "error": {
+          "code": 1.5,
+          "message": "fraction"
+        }
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {},
+        "extra": true
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "method": "notice",
+        "result": {}
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 1
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": true,
+        "method": "ping"
+      },
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "message": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "ordering",
+        "params": {
+          "10": "ten",
+          "2": "two",
+          "": 1,
+          "𐀀": 2
+        }
+      },
+      "accepted": true,
+      "kind": "request"
+    }
+  ],
+  "generated": [
+    {
+      "field": "method",
+      "scalar": "😀",
+      "repeat": 256,
+      "accepted": true,
+      "kind": "request"
+    },
+    {
+      "field": "method",
+      "scalar": "😀",
+      "repeat": 257,
+      "accepted": false,
+      "kind": null
+    },
+    {
+      "field": "id",
+      "scalar": "😀",
+      "repeat": 256,
+      "accepted": true,
+      "kind": "response"
+    },
+    {
+      "field": "id",
+      "scalar": "😀",
+      "repeat": 257,
+      "accepted": false,
+      "kind": null
+    }
+  ]
+}

@@ -17,7 +17,7 @@ use std::sync::Arc;
 struct Node { id: String, text: String }
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-struct Document { title: String, nodes: Vec<Node> }
+struct Document { pub title: String, nodes: Vec<Node> }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]

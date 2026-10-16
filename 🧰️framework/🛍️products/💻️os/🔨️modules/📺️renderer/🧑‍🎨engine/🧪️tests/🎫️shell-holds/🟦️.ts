@@ -1,21 +1,16 @@
 /** 🎫 The shell says what it holds, plus gizmo, virtual file system, replay refusal and locale source. */
 import { readUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
 import explicitLocaleFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/⏳️compute-locale.json";
-import vfsDescriptorFixture from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🧪️tests/🧫️fixtures/🧾️descriptors/🔣️.json";
+import { gizmoTipBoundsFixture, sceneListTransferFixture, treeDragHandleFixture, vfsDescriptorFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx";
-import gizmoTipBoundsFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { COMPACT_UI_DRIVER, DEFAULT_UI_DRIVER, TreeContext, TreeItem, UiDriverProvider, closestCenter, deriveTreeDragRoles, uiI18n } from "@semio-tech/ui-react";
-import treeDragHandleFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🌳️tree-drag-handles/🔣️.json";
-import sceneListTransferFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔀️scene-list-transfer/🔣️.json" with { type: "json" };
 import { BlockListHost } from "../../🧱️elements/🧩️BlockListHost/🟦️.tsx";
 import replayRefusalVocabulary from "../../🧱️elements/🏛️ShellHost/📣️replay-refusal/🔣️.json";
 import { REPLAY_REFUSAL_LABELS_V1, replayRefusalCodeV1, replayRefusalNoticeTextV1, type ReplayRefusalReasonV1 } from "../../🧱️elements/🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 import * as THREE from "three";
-import world3dLightingFixture from "../../../../♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🌞️scene-lighting/🔣️.json" with { type: "json" };
-import world3dShadowFixture from "../../../../♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🌑️scene-shadows/🔣️.json" with { type: "json" };
-import world3dShadowParityFixture from "../../../../♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json" with { type: "json" };
+import { worldSceneLightingFixture as world3dLightingFixture, worldSceneShadowsFixture as world3dShadowFixture, sceneShadowParityFixture as world3dShadowParityFixture } from "../../../../♾️infinite/🧪️tests/🧫️fixtures/🟦️.ts";
 import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";

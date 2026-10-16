@@ -1,4 +1,4 @@
-/** 🧭️ Tool-job coverage: retained-command checkpoint laws and the census run behind `verify interactivity tool-jobs`.
+/** 🏁️ Tool-job coverage: retained-command checkpoint laws and the census run behind `verify interactivity tool-jobs`.
  * @see 📜️script.ts
  */
 import { toolJobMemberStoreProducerExact, type ToolJobMemberStoreProducerSources } from "../../../../../../💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
@@ -147,14 +147,14 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   const artifactRetainedCommand = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs");
   const store = policyReadOsStoreSource(root);
   const presenceRetirement = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs");
-  const vcs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs");
+  const vcs = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs");
   const causal = policyReadFileSafe(root, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs");
-  const channel = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs");
+  const channel = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs");
   const actor = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎭️actor/🦀️.rs");
   const kernel = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs");
   const pluginHost = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
   const mcpWorkspace = readMcpGatewaySource(root, (file) => policyReadFileSafe(root, relative(root, file)));
-  const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs");
+  const runHost = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs");
   const wgpuHost = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
   const nativeIo = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs");
   const shardHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");

@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import {mkdir,mkdtemp,rm,writeFile} from "node:fs/promises";
 import {join,resolve} from "node:path";
-import {semioSchemaAjvV1} from "../../../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
 import {captureOwnedCommandResultV1} from "../../../../../🎛️owned-execution/🟦️.ts";
 import {createIssuedResourceControlV1,receiveScriptProcessInvocation,scriptInvocationEnvironment,withIssuedResourceOperationV1} from "../../🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};

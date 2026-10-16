@@ -40,7 +40,7 @@ fn vfs_scene(surface_id: &str, rows: Value) -> UiComponentSceneNode {
         text_editor: None,
         table: None,
         paint_2d: None,
-        virtual_file_system: Some(ui_wgpu::wgpu::VirtualFileSystemScene { schema_json: "{}".into(), rows_json: rows.to_string(), selected_row_ids_json: None, hovered_row_id: None, empty_message: None, drag_drop_enabled: None }),
+        virtual_file_system: Some(semio_framework_ui_scene_views::VirtualFileSystemScene { schema_json: "{}".into(), rows_json: rows.to_string(), selected_row_ids_json: None, hovered_row_id: None, empty_message: None, drag_drop_enabled: None }),
         tiled_map: None,
         board2d: None,
         icon_render: None,
@@ -98,7 +98,7 @@ fn double_click_on_an_instance_row_opens_the_instance() {
 /// 🧬️ Raw scene rows, renderer-local expansion, and navigation routes share one neutral law with React.
 #[test]
 fn raw_tree_expansion_and_navigation_match_the_shared_react_law() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json"))).expect("shared VFS interaction fixture");
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json"))).expect("shared VFS interaction fixture");
     let rows = fixture["rows"].as_array().expect("rows");
     for vector in fixture["visibility"].as_array().expect("visibility") {
         let expanded: BTreeSet<String> = vector["expandedRowIds"].as_array().expect("expanded ids").iter().filter_map(Value::as_str).map(str::to_string).collect();
@@ -129,7 +129,7 @@ fn raw_tree_expansion_and_navigation_match_the_shared_react_law() {
 
 #[test]
 fn accepted_vfs_controls_match_the_shared_localized_keyboard_law() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json"))).expect("shared VFS interaction fixture");
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json"))).expect("shared VFS interaction fixture");
     let german = fixture["chrome"].as_array().expect("chrome packs").iter().find(|pack| pack["locale"] == "de").expect("German pack");
     let host_id = "vfs-accepted-controls";
     let row = VfsAccessibilityControl { key: format!("{host_id}.vfs.folder"), row_id: "folder".into(), label: "Models".into(), kind: VfsAccessibilityControlKind::Row, rect: Rect::new(0.0, 40.0, 320.0, 24.0), expanded: None };
@@ -200,7 +200,7 @@ fn the_additive_key_is_meta_or_ctrl_and_nothing_else() {
 /// 🧾️ Descriptor tags and avatar fallback text share the React component fixture.
 #[test]
 fn vfs_descriptor_cells_decode_the_actual_react_tagged_union() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🧫️fixtures/🧾️descriptors/🔣️.json"))).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🧪️tests/🧫️fixtures/🧾️descriptors/🔣️.json"))).unwrap();
     for law in fixture["cases"].as_array().unwrap() {
         let schema: VfsSchema = serde_json::from_value(json!({
             "fileNodeKinds": { "file": { "descriptors": [{ "id": "cell", "descriptorKindId": law["kind"] }] }, "other": { "descriptors": [] } },

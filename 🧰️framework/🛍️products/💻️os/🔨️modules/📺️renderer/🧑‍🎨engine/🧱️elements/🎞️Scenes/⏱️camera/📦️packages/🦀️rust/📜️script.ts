@@ -1,21 +1,23 @@
 #!/usr/bin/env bun
+import { createIssuedResourceControlV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { runRepositoryCargoTests } from "../../../../../../../../../\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83d\udfe6\ufe0f.ts";
-import { runOwnedCommand } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { scriptInvocationBudget } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readCargoTestPolicyV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { scriptInvocationBudget } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 /** ⏱️ Receives the complete original camera storage package without law filters. */
 class TestScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
         const { rest } = resolveTestLevel(segments);
         if (rest.length) throw Error("Camera storage receives its whole original owning package");
-        await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-os-renderer-camera"], cwd: this.root, extraArgs: ["--all-targets", "--no-fail-fast"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+        await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-os-renderer-camera"], cwd: this.root, extraArgs: ["--all-targets", "--no-fail-fast"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
     }
 }
 /** 🔑️ Verifies the original borrowed NodeKey through its Source and complete native camera owner. */

@@ -68,6 +68,3 @@ impl RetainedHistoryOpDecode{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.receipt.is_none()&&self.field.is_none()&&self.partial.is_none()}
 }
 impl Drop for RetainedHistoryOpDecode{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original History operation abandoned partial native field custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.field);ManuallyDrop::drop(&mut self.partial)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

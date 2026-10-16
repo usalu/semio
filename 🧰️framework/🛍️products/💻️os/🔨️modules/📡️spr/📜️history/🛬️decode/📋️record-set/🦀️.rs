@@ -39,12 +39,45 @@ pub use retained_history_conflict::{RetainedHistoryConflictDecode,RetainedHistor
 mod retained_history_transition_validation;
 pub use retained_history_transition_validation::{RetainedHistoryTransitionPayloadValidation,RetainedHistoryTransitionPayloadValidationReceipt,RetainedHistoryTransitionPayloadValidationStep};
 
-#[cfg(test)]
-pub(crate) use semio_framework_trace_memory_testing as test_allocation;
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
-
-#[cfg(test)]
-#[path="../../🧪️testing/♻️retirement/🦀️.rs"]
-mod test_retirement;
+/// 🪝️ Test hook of the companion crate `semio-framework-os-history-record-decode-tests`: the private decoder modules, public only behind the `testkit` feature.
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub mod retained_history_records {
+        pub use crate::retained_history_records::*;
+    }
+    pub mod retained_history_paged_records {
+        pub use crate::retained_history_paged_records::*;
+    }
+    pub mod retained_history_operation {
+        pub use crate::retained_history_operation::*;
+    }
+    pub mod retained_history_id {
+        pub use crate::retained_history_id::*;
+    }
+    pub mod retained_history_message {
+        pub use crate::retained_history_message::*;
+    }
+    pub mod retained_history_origin {
+        pub use crate::retained_history_origin::*;
+        pub use crate::retained_history_origin::testkit::json;
+    }
+    pub mod retained_history_metadata {
+        pub use crate::retained_history_metadata::*;
+    }
+    pub mod retained_history_transition {
+        pub use crate::retained_history_transition::*;
+    }
+    pub mod retained_history_edit {
+        pub use crate::retained_history_edit::*;
+    }
+    pub mod retained_history_identity_records {
+        pub use crate::retained_history_identity_records::*;
+    }
+    pub mod retained_history_conflict {
+        pub use crate::retained_history_conflict::*;
+    }
+    pub mod retained_history_transition_validation {
+        pub use crate::retained_history_transition_validation::*;
+    }
+}

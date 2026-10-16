@@ -1,46 +1,50 @@
 //! 🔒️ The reactor close registry and the close participant steps of the lifecycle owner.
 
-use super::*;
+use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::{PLUGIN_REACTOR_INSTANCE_SLOTS, ReactorFixedSlots};
+use crate::{REACTOR_CLOSES, instance_lifetime};
+use semio_framework_plugin_reactor_tasks::{REGISTRY, TASK_RESUMES};
+use semio_framework_plugin_actor_host::requests;
 
 struct ReactorCloseState {
-    pub(super) key: instance_lifetime::NativeCloseKey,
-    pub(super) instance: u32,
-    pub(super) active: bool,
-    pub(super) complete: bool,
-    pub(super) task_cursor: usize,
-    pub(super) timer_cursor: usize,
-    pub(super) request_cursor: requests::RequestCloseCursor,
-    pub(super) resume_remaining: usize,
-    pub(super) command_ingress_complete: bool,
-    pub(super) requests_complete: bool,
-    pub(super) resumes_complete: bool,
+    pub key: instance_lifetime::NativeCloseKey,
+    pub instance: u32,
+    pub active: bool,
+    pub complete: bool,
+    pub task_cursor: usize,
+    pub timer_cursor: usize,
+    pub request_cursor: requests::RequestCloseCursor,
+    pub resume_remaining: usize,
+    pub command_ingress_complete: bool,
+    pub requests_complete: bool,
+    pub resumes_complete: bool,
     /// ✅️ `cancel_instance_tasks_step`'s own completion witness. The cursor alone cannot stand in
     /// for it: the executor answers `Complete` without advancing its cursor whenever the sweep has
     /// nothing left to visit, so a cursor-bound loop condition never terminates (26/09/09).
-    pub(super) tasks_complete: bool,
-    pub(super) timers_complete: bool,
-    pub(super) metadata_complete: bool,
+    pub tasks_complete: bool,
+    pub timers_complete: bool,
+    pub metadata_complete: bool,
 }
 
-pub(super) struct ReactorCloseRegistry {
-    pub(super) slots: ReactorFixedSlots<ReactorCloseState>,
+#[doc(hidden)]
+pub struct ReactorCloseRegistry {
+    pub slots: ReactorFixedSlots<ReactorCloseState>,
 }
 
 impl ReactorCloseRegistry {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { slots: ReactorFixedSlots::new() }
     }
 
-    pub(super) fn index(instance: u32) -> usize {
+    pub fn index(instance: u32) -> usize {
         instance as usize % PLUGIN_REACTOR_INSTANCE_SLOTS
     }
 
-    pub(super) fn insert(&mut self, state: ReactorCloseState) -> Result<(), ReactorCloseState> {
+    pub fn insert(&mut self, state: ReactorCloseState) -> Result<(), ReactorCloseState> {
         let index = Self::index(state.instance);
         self.slots.insert(index, state)
     }
 
-    fn take_at(&mut self, index: usize) -> Option<ReactorCloseState> {
+    pub fn take_at(&mut self, index: usize) -> Option<ReactorCloseState> {
         self.slots.take(index)
     }
 }
@@ -58,7 +62,8 @@ pub(super) fn preflight_reactor_close(key: instance_lifetime::NativeCloseKey) ->
     })
 }
 
-pub(super) fn reserve_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+#[doc(hidden)]
+pub fn reserve_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
     let instance = key.instance();
     let request_cursor = REGISTRY.with(|registry| registry.begin_cancel_instance(instance));
     let resume_remaining = TASK_RESUMES.with(|resumes| resumes.borrow().begin_cancel_instance());
@@ -87,11 +92,13 @@ pub(super) fn reserve_reactor_close(key: instance_lifetime::NativeCloseKey) -> R
     })
 }
 
-pub(super) fn reactor_close_fault(message: &'static str) -> semio_framework::Fault {
+#[doc(hidden)]
+pub fn reactor_close_fault(message: &'static str) -> semio_framework::Fault {
     semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-authority"), message)
 }
 
-pub(super) fn activate_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+#[doc(hidden)]
+pub fn activate_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
     REACTOR_CLOSES.with(|closes| {
         let mut closes = closes.try_borrow_mut().map_err(|_| reactor_close_fault("reactor close authority is busy"))?;
         let state = closes.slots.get_mut(ReactorCloseRegistry::index(key.instance())).filter(|state| state.key == key).ok_or_else(|| reactor_close_fault("exact reactor close reservation missing"))?;
@@ -100,14 +107,16 @@ pub(super) fn activate_reactor_close(key: instance_lifetime::NativeCloseKey) -> 
     })
 }
 
-pub(super) fn reactor_close_complete(key: instance_lifetime::NativeCloseKey) -> Result<bool, semio_framework::Fault> {
+#[doc(hidden)]
+pub fn reactor_close_complete(key: instance_lifetime::NativeCloseKey) -> Result<bool, semio_framework::Fault> {
     REACTOR_CLOSES.with(|closes| {
         let closes = closes.try_borrow().map_err(|_| reactor_close_fault("reactor close receipt is busy"))?;
         closes.slots.get(ReactorCloseRegistry::index(key.instance())).filter(|state| state.key == key).map(|state| state.complete).ok_or_else(|| reactor_close_fault("exact reactor close receipt missing"))
     })
 }
 
-pub(super) fn release_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+#[doc(hidden)]
+pub fn release_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
     REACTOR_CLOSES.with(|closes| {
         let mut closes = closes.try_borrow_mut().map_err(|_| reactor_close_fault("reactor close receipt is busy"))?;
         let index = ReactorCloseRegistry::index(key.instance());

@@ -2,12 +2,12 @@ import {repositoryTestArtifactEnvironmentV1} from "../../💾️storage/🟦️.
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { materializeHost } from "../../🖥️host/🏗️materialization/🟦️.ts";
-import { type Implementation, type SubjectRawInputs, type TestRole } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type Implementation, type SubjectRawInputs, type TestRole } from "@semio-tech/framework/test/adapter";
 import { type DiscoveredCase, type TestResult, markRunComplete, planExecution, readResults } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { type TestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { scriptInvocationEnvironment,requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type { ResourceLeaseControl } from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import { captureOwnedCommandResultV1 } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import type { ResourceLeaseControl } from "@semio-tech/process/leases";
+import { captureOwnedCommandResultV1 } from "@semio-tech/process/owned-execution";
 import { rmSync, writeFileSync } from "node:fs";
 
 export type PhaseOutcome = Readonly<{ results: TestResult[]; problems: string[] }>;

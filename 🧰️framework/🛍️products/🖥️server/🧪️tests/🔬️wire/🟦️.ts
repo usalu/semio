@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readModuleTreeSource } from "../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import type { HttpRequest, HttpTransport } from "../../🟦️.ts";
 
 type TestSource = { readonly directory: string; readonly url: string };
@@ -81,7 +82,7 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
   });
 
   describe("🛣️routes", () => {
-    const routerSource = readFileSync(resolve(productRoot, "🔨️modules/📡️gateway/🦀️.rs"), "utf8");
+    const routerSource = readModuleTreeSource(resolve(productRoot, "🔨️modules/📡️gateway/🦀️.rs"));
     const baseRouter = routerSource.slice(routerSource.indexOf("fn base_router<I: ServerInstance>"));
     const block = baseRouter.slice(0, baseRouter.indexOf("\n}"));
     let group = "core";

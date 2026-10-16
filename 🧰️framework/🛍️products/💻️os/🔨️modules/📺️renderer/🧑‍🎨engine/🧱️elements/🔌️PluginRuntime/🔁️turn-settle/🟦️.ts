@@ -3,13 +3,14 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { decodeAppFrame, decodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
+import { decodePackValue } from "@semio-tech/framework/packs";
+import { decodeAppFrame, faultDisplayMessage } from "@semio-tech/framework/app-channel";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { retainedUiIntakeStepCeiling } from "../../📃️UiDocumentStore/📥️intake/🟦️.ts";
 import { type ShardActorActivationLease, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { type Lane } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
-import { hostContinuations } from "../../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
-import { hopTrace } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { hostContinuations } from "@semio-tech/framework/async/continuation";
+import { hopTrace } from "@semio-tech/framework/trace";
 import { wireTurnStatusTag } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import {
   leftoverShellInvocationFrames,

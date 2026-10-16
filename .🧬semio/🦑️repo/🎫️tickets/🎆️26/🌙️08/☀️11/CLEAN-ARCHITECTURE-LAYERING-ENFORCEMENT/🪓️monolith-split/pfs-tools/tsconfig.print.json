@@ -1,0 +1,27 @@
+{
+ "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false,
+  "types": [
+   "bun",
+   "node",
+   "react",
+   "react-dom",
+   "vite/client"
+  ]
+ },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/📜️script.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🎬️render-scene/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🧪️tests/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🎨️paint/🧪️tests/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🧪️tests/📥️grammar/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🧪️tests/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/📖️source-files/🟦️.ts"
+ ]
+}

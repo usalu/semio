@@ -1,3 +1,11 @@
+import {testNativeExecutableControlV1,testRepositoryExecutablePinV1,testCoreExecutablePinControlV1,testNativeSessionControlV1,testExecutableDigestCleanupV1,testArtifactReleaseCleanupV1,testNativeFractionV1} from "../../📦️artifacts/📌️executable/🧪️tests/🟦️.ts";
+import {testFixtureValuesV1} from "../📋️values/🟦️.ts";
+import {testOwnedFixtureWireBindingsV1} from "../🎚️build-mode/📥️contracts/🟦️.ts";
+import {testPlaygroundPreparationBindingsV1,testPlaygroundPreparationModelV1} from "../🧊️preparation/🧪️tests/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {resolveBuildSelectionV1} from "../../../🏗️build/🧭️invocation/🟦️.ts";
+import {resolveNxBuildMode} from "../../🚀️bootstrap/🎚️mode/🟦️.ts";
+import {testCacheContractBindingsV1} from "./📋️bindings/🟦️.ts";
 import { testWgpuBrowserServing } from "../🧊️browser-serving/🟦️.ts";
 import { inventory } from "../../📇️inventory/🧮️composition/🟦️.ts";
 import { slash } from "../../🔍️discovery/📂️source/🟦️.ts";
@@ -54,7 +62,10 @@ export function proveCachePolicy(workspace: string, internals: { targetPolicy(na
 }
 
 /** 🧪️ Verifies native source and command ownership against compiler and bundler input oracles. */
-export async function testCommandInputs(workspace: string, output: string, invocation: ScriptInvocation): Promise<void> {
+export async function testCommandInputs(workspace: string, output: string, invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): Promise<void> {
+  testFixtureValuesV1();testOwnedFixtureWireBindingsV1(workspace,invocation,phaseControl);await testNativeExecutableControlV1(workspace,invocation,phaseControl);await testRepositoryExecutablePinV1(invocation,phaseControl);await testCoreExecutablePinControlV1(workspace,invocation,phaseControl);await testNativeSessionControlV1(workspace,invocation,phaseControl);await testExecutableDigestCleanupV1(workspace,invocation,phaseControl);await testArtifactReleaseCleanupV1(workspace,invocation,phaseControl);await testNativeFractionV1(workspace,invocation,phaseControl);
+  await testPlaygroundPreparationBindingsV1();
+  await testPlaygroundPreparationModelV1(workspace,invocation,phaseControl);
   await testGraphRevision(workspace, output);
   await testWasmOptimizer(workspace, output);
   await testBinaryenToolchain(workspace, output);
@@ -115,15 +126,15 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   await testWgpuGeneratorOwnership(workspace);
   await testWgpuGeneratorPublication(workspace, output);
   const { testNativeRendererOutputs } = await import("../🧊️native-renderer-outputs/🟦️.ts");
-  await testNativeRendererOutputs(workspace, output);
+  await testNativeRendererOutputs(workspace, output, invocation, phaseControl);
   const { testStylingOutputs } = await import("../🎨️styling-outputs/🟦️.ts");
   await testStylingOutputs(workspace, output);
   const { testStylingPythonOutputs } = await import("../🐍️styling-python-outputs/🟦️.ts");
   await testStylingPythonOutputs(workspace, output);
   const { testWgpuLiveActivation } = await import("../🧊️live-activation/🟦️.ts");
-  await testWgpuLiveActivation(workspace, output);
+  await testWgpuLiveActivation(workspace, output, invocation, phaseControl);
   const { testNativeRuntime } = await import("../🧊️native-runtime/🟦️.ts");
-  await testNativeRuntime(workspace, output);
+  await testNativeRuntime(workspace, output, invocation, phaseControl);
   const { testPlaygroundInputView } = await import("../🎮️playground-input-view/🟦️.ts");
   await testPlaygroundInputView(workspace);
   const { testInferredNativeInputs } = await import("../../../../🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts");
@@ -473,7 +484,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
   const { assert, cacheInternals, chmodSync, copyFileSync, createRequire, devToolingEnv, dirname, EventEmitter, existsSync, getWorkspaceRoot, join, lstatSync, mkdirSync, mkdtempSync, plugin, readFileSync, relative, resolve, rmSync, SCRIPT_ROOT, spawn, stageRepositoryArtifacts, utimesSync, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment, writeFileSync } = dependencies;
 
   /** 🧪️ Executes language-neutral policy examples against the Nx project plugin. */
-  async function testCacheContracts(invocation: ScriptInvocation): Promise<void> {
+  async function testCacheContracts(invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): Promise<void> {
+    testCacheContractBindingsV1();
     const { validate } = createRequire(testSource.url)("jsonschema");
     const policy = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🔣️policy.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧬️schema/🔣️.json"), "utf8"));
@@ -562,7 +574,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.equal(disabled.cache, row.disabledCache, `${row.target}: owner cache refusal precedes automatic cache families`);
       assert.equal(isCacheableTask({ cache: enabled.cache, continuous: enabled.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), row.cache, `${row.target}: nx isCacheableTask`);
     }
-    await testCommandInputs(root, ticketOutput(root, []), invocation);
+    await testCommandInputs(root, ticketOutput(root, []), invocation, phaseControl);
     await (await import("../🚀️bootstrap/🟦️.ts")).testNxBootstrap(root, ticketOutput(root, []));
     await runProcessTestOwner(invocation, root, ticketOutput(root, []), "artifact-publication");
     await runProcessTestOwner(invocation, root, ticketOutput(root, []), "native-artifact-publication");
@@ -833,10 +845,10 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const nxSource = ts.createSourceFile("nx.ts", readFileSync(join(SCRIPT_ROOT, "🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
     const { testNxCoordinator } = await import("../🛑️coordinator/🟦️.ts");
     await testNxCoordinator(root);
-    const invocation = nxSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveNxInvocation");
-    const route = ts.transpileModule(invocation.getText(nxSource).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-    const resolveInvocation = new Function("process", `${route}; return resolveNxInvocation;`)({ env: {} });
-    const resolvePrint = new Function("process", "readFileSync", "join", "WORKSPACE_ROOT", `${route}; return resolveNxInvocation;`)({ env: {} }, readFileSync, join, root);
+    const invocationNode = nxSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveNxInvocation");
+    const route = ts.transpileModule(invocationNode.getText(nxSource).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+    const resolveInvocation = new Function("process", "WORKSPACE_ROOT", "resolveBuildSelectionV1", "resolveNxBuildMode", `${route}; return resolveNxInvocation;`)({ env: {} }, root, resolveBuildSelectionV1, resolveNxBuildMode);
+    const resolvePrint = new Function("process", "WORKSPACE_ROOT", "resolveBuildSelectionV1", "resolveNxBuildMode", `${route}; return resolveNxInvocation;`)({ env: {} }, root, resolveBuildSelectionV1, resolveNxBuildMode);
     for (const path of ["🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🧫️invocations.json", "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧫️invocations.json", "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧫️invocations.json"]) {
       const invocations = JSON.parse(readFileSync(join(root, path), "utf8"));
       for (const vector of invocations.valid) {
@@ -1033,7 +1045,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const retired of [["run", "workspace:dev", "--", "s"], ["run", "workspace:dev", "--", "mcp", "http", "os"], ["run", "@semio-tech/framework-os-dev:dev"]]) assert.deepEqual(resolveNxInvocation(retired).args, retired, `${retired.join(" ")}: the bootstrap is no playground or MCP resolver; the dashboard registry resolves playgrounds`);
     const osDevProject = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json"), "utf8")) as { targets: Record<string, { dependsOn?: readonly string[]; options?: { command?: string } }> };
     assert.equal(osDevProject.targets.dev, undefined, "the framework-os-dev dev alias is dissolved: playgrounds are the generated dev-<variant>-<renderer>-<profile> targets");
-    assert.ok(!invocation.getText(nxSource).includes("PlaygroundSelections") && !invocation.getText(nxSource).includes("PlaygroundCatalog"), "the bootstrap resolves no playground variant");
+    assert.ok(!invocationNode.getText(nxSource).includes("PlaygroundSelections") && !invocationNode.getText(nxSource).includes("PlaygroundCatalog"), "the bootstrap resolves no playground variant");
     assert.equal(root.length > 0, true);
     rmSync(fixture, { recursive: true });
     console.log("[cache-contract] schema, graph ownership, source-byte discovery, native dependency oracles and materializer cancellation passed");

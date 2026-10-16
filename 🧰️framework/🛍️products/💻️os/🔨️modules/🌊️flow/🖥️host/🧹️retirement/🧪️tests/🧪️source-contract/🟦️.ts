@@ -49,7 +49,7 @@ assert.deepEqual(JSON.parse(stableStringify(sessionClose)), sessionClose);
 //#endregion 🧹️BridgeSessionClose
 
 //#region 🧑‍🤝‍🧑️BrowserRuntimeLifetime
-const runtimeLifetime = await Bun.file(new URL("../../../../🕸️wasm/🧪️tests/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json", import.meta.url)).json();
+const runtimeLifetime = await Bun.file(new URL("../../../../🕸️wasm/🧪️tests/🧫️fixtures/🧑‍🤝‍🧑browser-runtime/🔣️.json", import.meta.url)).json();
 
 
 assert.deepEqual(JSON.parse(stableStringify(runtimeLifetime)), runtimeLifetime);

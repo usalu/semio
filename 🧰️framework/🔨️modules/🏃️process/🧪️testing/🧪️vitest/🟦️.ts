@@ -1,11 +1,11 @@
+import type{VitestPolicyV1}from"./📋️contract/🟦️.ts";
+export type{VitestPolicyV1}from"./📋️contract/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { isTestLevel, TEST_LEVEL_BUDGET_MS } from "../🎚️budget/🟦️.ts";
 import { runBudgetedTestCommand } from "../🎛️execution/🟦️.ts";
 
-/** 🧪️ Binds a test runner, storage and runtime to the owning caller. */
-export type VitestPolicyV1=Readonly<{version:1;cwd:string;toolPath:string;runtime:string;coverageRuntime:string;cacheRoot:string;coverageDirectory:string;budgetMs:number}>;
 const schema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url),"utf8"));
 function admit(policy:VitestPolicyV1):VitestPolicyV1{
   if(validateJsonSchemaSubset(schema,policy).length||![policy.cwd,policy.toolPath,policy.cacheRoot,policy.coverageDirectory].every(isAbsolute))throw Error("Invalid Vitest owner policy");

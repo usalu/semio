@@ -25,7 +25,7 @@ describe("framework plugin runtime", () => {
   // `KernelPluginWasmHandle`'s old synchronous `exchange(instanceId, frames) -> Promise<frames>`
   // per-call RPC is gone (`📌️important.md`'s "Replace, never wrap" list) — split into fire-and-forget
   // `enqueue(instanceId, events): void` plus the handle-wide `outcomes: AsyncIterable<TurnOutcome>`
-  // broadcast `AppChannelClient` correlates FIFO against (`🎠️kernel/🟦️.ts`'s
+  // broadcast `AppChannelClient` correlates FIFO against (`🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts`'s
   // `PluginWasmHandle` header doc). This helper re-creates `exchange`'s old request/reply shape on
   // top of the two new primitives, purely for these fakes' own convenience — production code never
   // has a synchronous responder like this to call.
@@ -230,7 +230,7 @@ describe("framework plugin runtime", () => {
 
   // 🧬️ H1-react — `withSerializedPluginWasmHandle` (which queued concurrent per-call requests
   // transparently against the old synchronous wasm handle) is deleted alongside `PluginWorkerClient`
-  // (`🎠️kernel/🟦️.ts`'s own doc comment names it). The reason it existed still applies:
+  // (`🎠️kernel/🌉️plugin-backbone-routing/🟦️.ts`'s own doc comment names it). The reason it existed still applies:
   // `🟨️shard-worker.js` REJECTS (does not queue) a second in-flight `turn` for the same actor
   // (`inFlightTurnActors` guard, `🟦️.ts`). `serializePerActor`
   // (`PluginRuntime/🟦️.tsx`'s `🔖️ActorAdapter` region) is `loadPluginModule`'s real

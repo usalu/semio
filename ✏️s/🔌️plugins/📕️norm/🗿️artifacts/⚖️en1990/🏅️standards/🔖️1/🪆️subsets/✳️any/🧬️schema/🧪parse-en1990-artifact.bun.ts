@@ -1,5 +1,5 @@
 /** 🧪️ The EN 1990 artifact twin admits a complete document and refuses a missing and a mistyped member at their positions. */
-import { NormWireRefusal } from "../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { NormWireRefusal } from "@semio-tech/norm-js/registry/contract";
 import { parseEn1990Artifact } from "./🟦️.ts";
 
 const ok = parseEn1990Artifact({

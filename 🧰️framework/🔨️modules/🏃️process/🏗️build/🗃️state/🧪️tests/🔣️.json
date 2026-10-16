@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "receivers": [
+    "state",
+    "typescript"
+  ],
+  "repositoryCases": [
+    "copied-control",
+    "copied-invocation"
+  ],
+  "cases": [
+    {
+      "kind": "missing-storage",
+      "accepted": false,
+      "dataReads": 0,
+      "effects": 0
+    },
+    {
+      "kind": "forged-storage",
+      "accepted": false,
+      "dataReads": 0,
+      "effects": 0
+    },
+    {
+      "kind": "copied-owner",
+      "accepted": false,
+      "dataReads": 0,
+      "effects": 0
+    },
+    {
+      "kind": "foreign-owner",
+      "accepted": false,
+      "dataReads": 0,
+      "effects": 0
+    }
+  ],
+  "effectGuards": [
+    {
+      "operation": "storage.recheck",
+      "guard": "checkResourceLeaseControl",
+      "argument": "control"
+    },
+    {
+      "operation": "mkdir",
+      "guard": "checkResourceLeaseControl",
+      "argument": "control"
+    }
+  ]
+}

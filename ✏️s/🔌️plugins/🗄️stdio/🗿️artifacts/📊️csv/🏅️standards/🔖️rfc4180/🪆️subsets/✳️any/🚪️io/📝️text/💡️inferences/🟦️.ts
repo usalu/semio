@@ -49,5 +49,5 @@ export const stdioCsvRfc4180AnyInferenceTextGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseCsvInferenceText(value: unknown, at = "$"): CsvInferenceText {
-  return stdioCsvRfc4180AnyInferenceTextGuardObject(value, `${at}`);
+  return stdioCsvRfc4180AnyInferenceTextGuardString(value, `${at}`);
 }

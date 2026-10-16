@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import Ajv2020 from "ajv/dist/2020";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import grantSchema from "../../../../../🧵️job/🏃️work/🎟️grant/🧬️schema/🔣️.json";
+import { jobWorkGrantSchema as grantSchema } from "@semio-tech/framework/job/testing/fixtures";
 import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
 import failureFixture from "../🧪️tests/🧫️fixtures/⚠️frontier.json";
 

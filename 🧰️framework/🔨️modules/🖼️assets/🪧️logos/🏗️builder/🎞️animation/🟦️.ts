@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { exportSvgVideoV1, type SvgVideoExportControlV1 } from "../../../../🖌️raster/🎥️video/🖋️svg-export/🟦️.ts";
+import { exportSvgVideoV1, type SvgVideoExportControlV1 } from "@semio-tech/framework/raster/video/svg-export";
 
 type OwnedSvgElement = { getAttribute(name: string): string | null; querySelector(selector: string): OwnedSvgElement | null };
 type OwnedSvgDocument = { querySelector(selector: string): OwnedSvgElement | null; querySelectorAll(selector: string): Iterable<OwnedSvgElement> };

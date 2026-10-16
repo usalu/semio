@@ -40,7 +40,7 @@ impl HubClock {
 }
 
 /// ✉️ One decided-but-not-yet-persisted directory event: everything `decide` (see
-/// `//#region 🔖️Decider`) can determine on its own. `append_events` (the `HubDirectory` trait,
+/// `//#region 🔖️Decider`) can determine on its own. `append_events` (the `EventLog` trait,
 /// implemented once per backend) turns this into a full `DirectoryEvent` by assigning the
 /// backend-dense `seq`, minting a uuid v7 `id`, and stamping `recorded_at_ms`.
 #[derive(Clone, Debug)]

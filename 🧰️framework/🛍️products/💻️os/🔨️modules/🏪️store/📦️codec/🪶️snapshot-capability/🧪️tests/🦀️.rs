@@ -1,21 +1,5 @@
 use super::*;
 
-#[path = "../🪶️native-encoding/🧪️tests/🦀️.rs"]
-mod native_encoding_tests;
-
-#[path = "../🪶️native-decoding/🧪️tests/🦀️.rs"]
-mod native_decoding_tests;
-
-impl ArtifactDsl for RetainedTextSnapshot {
-    const EXTENSION: &'static str = "retained-text";
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        Ok(Self { text: text.to_string() })
-    }
-    fn print_dsl(&self) -> String {
-        self.text.clone()
-    }
-}
-
 #[test]
 fn native_document_codec_requires_only_declared_snapshot_capabilities() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();

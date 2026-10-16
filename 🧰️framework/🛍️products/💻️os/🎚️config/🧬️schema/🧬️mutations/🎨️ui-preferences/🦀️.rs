@@ -31,7 +31,3 @@ pub use set_locale::*;
 pub use set_named_layout::*;
 pub use set_terminology::*;
 pub use set_theme::*;
-
-#[cfg(test)]
-#[path = "🧪️tests/🎨️updates-every-os-ui-preference/🦀️.rs"]
-mod tests_updates_every_os_ui_preference;

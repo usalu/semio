@@ -49,5 +49,5 @@ export const stdioTsvIanaAnyDiffTextGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseTsvDiffText(value: unknown, at = "$"): TsvDiffText {
-  return stdioTsvIanaAnyDiffTextGuardObject(value, `${at}`);
+  return stdioTsvIanaAnyDiffTextGuardString(value, `${at}`);
 }

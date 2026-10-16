@@ -28,3 +28,4 @@ semio-framework-value-shared-issuance = { path="../../../../♻️retirement/�
 [dev-dependencies]
 semio-framework-value-derive = { path="../../../../✨️derive/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

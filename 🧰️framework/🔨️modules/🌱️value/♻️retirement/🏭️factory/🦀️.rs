@@ -238,7 +238,10 @@ pub mod shared;
 pub use shared::FactorySharedRetirement;
 
 #[cfg(test)]
-#[path="../../🧪️testing/💾️allocator/🦀️.rs"]
-mod allocation_testing;
+use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
+
+#[cfg(any(test, feature="testkit"))]
+#[path="🧪️testing/🦀️.rs"]
+pub mod original_factory_fixture;

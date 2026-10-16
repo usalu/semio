@@ -4,11 +4,12 @@ import Ajv from "ajv";
 import {readFileSync} from "node:fs";
 import fixture from "../../🧪️tests/🧫️fixtures/🔣️.json";
 import grant from "../../🧪️tests/🧫️fixtures/🫴️grant/🔣️.json";
+import { retainedCloneWireSchemaUrl } from "../../../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 const read=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8");
 const contract=fixture.directionalValidation;
 test("borrowed History validation contract covers all seven exact tables and legal signed surrogates against SQLite",()=>{
  expect(contract.directions).toEqual(["decoding","encoding"]);expect(contract.indexCounts).toEqual({ids:7,ordered:5});expect(contract.textChunkBytes).toBe(256);expect(contract.tables.length).toBe(7);
- const root=new URL("../../../../../../../../../../../",import.meta.url);const canonical=JSON.parse(readFileSync(new URL("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",root),"utf8"));expect(new Ajv({strict:true}).compile(canonical)(grant)).toBe(true);
+ const root=new URL("../../../../../../../../../../../",import.meta.url);const canonical=JSON.parse(readFileSync(retainedCloneWireSchemaUrl,"utf8"));expect(new Ajv({strict:true}).compile(canonical)(grant)).toBe(true);
  for(const offset of [0,...contract.signedOffsets]){const db=new Database(":memory:");try{db.exec(read("../../🗄️.sql"));for(const [name,width]of contract.tables){const rows=(fixture.rows as Record<string,(number|string|null)[][]>)[name as string]!;const columns=db.query(`PRAGMA table_info(${name})`).all()as{name:string}[];expect(typeof width).toBe("number");expect(columns.length).toBe(Number(width));const foreign=new Set((db.query(`PRAGMA foreign_key_list(${name})`).all()as{from:string}[]).map(row=>row.from));for(const row of rows){const values=row.map((cell,index)=>index===0||foreign.has(columns[index]!.name)?Number(cell)+offset:cell);db.run(`INSERT INTO ${name} VALUES(${values.map(()=>"?").join(",")})`,values);}expect(db.query(`SELECT count(*) count FROM ${name}`).get()).toEqual({count:rows.length});}expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT id FROM space_history_document").get()).toEqual({id:1+offset});}finally{db.close();}}
  for(const edit of contract.edits){expect(edit.accepted).toBe(false);expect(contract.tables.some(([name])=>name===edit.table)).toBe(true);}console.log("[DEBUG] History validation neutral full-table shape, canonical original Grant and legal zero/negative surrogate renumbering verified with independent SQLite");
 });

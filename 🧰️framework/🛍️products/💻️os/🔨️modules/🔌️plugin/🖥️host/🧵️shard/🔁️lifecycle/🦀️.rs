@@ -37,13 +37,13 @@ pub enum LifecycleRetry {
 }
 
 #[derive(Debug)]
-pub(super) struct AdmittedAuthority {
+pub struct AdmittedAuthority {
     pub(super) allocation: Option<ShardActorAllocation>,
-    pub(super) authority: DeferredAuthority,
+    pub authority: DeferredAuthority,
     pub(super) budget: Option<semio_framework_actor::Budget>,
     pub(super) lane: semio_framework_actor::Lane,
     pub(super) owner_bytes: usize,
-    pub(super) retry: LifecycleRetry,
+    pub retry: LifecycleRetry,
     pub(super) original_event:Option<super::OriginalShardEvent>,
 }
 

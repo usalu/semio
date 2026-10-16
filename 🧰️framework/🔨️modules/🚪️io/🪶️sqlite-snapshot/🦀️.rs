@@ -20,24 +20,4 @@ pub fn import_sqlite_database(bytes: &[u8], limits: SqliteDatabaseLimits, callba
     import_sqlite_database_controlled(bytes, &mut SqliteSnapshotControl::new(callback, limits))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
-#[cfg(test)]
-#[path = "⚠️refusal/🧪️tests/🦀️.rs"]
-mod typed_refusal_tests;
-
-#[cfg(test)]
-#[path="♻️retirement/🧪️tests/🦀️.rs"]
-mod original_field_retirement_tests;
-
-#[cfg(test)]
-#[path="⚠️refusal/💰️limits/🧪️tests/🦀️.rs"]
-mod original_fixed_limit_tests;
-
-#[cfg(test)]
-#[path="🔁️transfer/🫴️receiving/🧪️tests/🦀️.rs"]
-mod original_physical_receiving_tests;
-
 pub use transfer::{PhysicalExportFrame,PhysicalImportFrame,export_sqlite_database_receiving_into,import_sqlite_database_receiving_into};

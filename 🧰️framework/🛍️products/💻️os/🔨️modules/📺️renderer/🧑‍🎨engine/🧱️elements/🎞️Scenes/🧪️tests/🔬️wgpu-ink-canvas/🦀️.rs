@@ -1,5 +1,5 @@
 use super::*;
-use ui_wgpu::wgpu::UiPresence;
+use semio_framework_ui_layout::layout::UiPresence;
 
 fn sample_block(id: &str, x: f64, y: f64, w: f64, h: f64) -> Value {
     json!({
@@ -80,7 +80,7 @@ fn clipboard_scene(fixture: &Value, selection: &Value) -> UiComponentSceneNode {
         tiled_map: None,
         board2d: None,
         icon_render: None,
-        ink_canvas: Some(ui_wgpu::wgpu::InkCanvasScene {
+        ink_canvas: Some(semio_framework_ui_scene_plane::InkCanvasScene {
             document_json: serde_json::to_string(&fixture["document"]).unwrap(),
             selection_json: serde_json::to_string(selection).unwrap(),
             hovered_id: None,
@@ -107,7 +107,7 @@ fn domain_scene(fixture: &Value, utility: &str) -> UiComponentSceneNode {
     ink.document_json = serde_json::to_string(&document).expect("document JSON");
     ink.selection_json = fixture["scene"]["selectionJson"].as_str().expect("selection JSON").into();
     ink.hovered_id = fixture["scene"]["hoveredId"].as_str().map(str::to_owned);
-    ink.interaction_domain = Some(ui_wgpu::wgpu::InkCanvasInteractionDomain {
+    ink.interaction_domain = Some(semio_framework_ui_scene_plane::InkCanvasInteractionDomain {
         id: fixture["scene"]["interactionDomain"]["id"].as_str().expect("interaction domain id").into(),
         granularity_id: fixture["scene"]["interactionDomain"]["granularityId"].as_str().expect("interaction domain granularity").into(),
     });
@@ -291,8 +291,8 @@ fn item_card_background_uses_the_background_token_not_panel() {
         block_list: None,
         menu: None,
     };
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
@@ -336,7 +336,7 @@ fn active_ink_editor_registers_a_retained_accessible_input_over_the_surface() {
         tiled_map: None,
         board2d: None,
         icon_render: None,
-        ink_canvas: Some(ui_wgpu::wgpu::InkCanvasScene {
+        ink_canvas: Some(semio_framework_ui_scene_plane::InkCanvasScene {
             document_json: serde_json::to_string(&law["document"]).expect("document serializes"),
             selection_json: "[]".into(),
             hovered_id: None,
@@ -357,8 +357,8 @@ fn active_ink_editor_registers_a_retained_accessible_input_over_the_surface() {
     edit.screen_rect = ink_edit_screen_rect(&edit, InkCameraF { x: 0.0, y: 0.0, zoom: 1.0 }, bounds);
     mutate_scene_state(surface_id, |state| state.ink_edit = Some(edit));
 
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();

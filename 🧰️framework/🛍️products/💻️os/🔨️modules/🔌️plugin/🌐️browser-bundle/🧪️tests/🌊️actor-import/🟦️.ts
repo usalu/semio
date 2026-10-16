@@ -7,7 +7,6 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import Ajv from "ajv";
-import { buildClosedBrowserActorArtifactV1 } from "../../📜️script.ts";
 
 import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
@@ -15,13 +14,15 @@ const testSourceDirectory = fileURLToPath(new URL("../🧫️fixtures/🌊️act
 
 export type ActorImportCore = Readonly<{ name: string; bytes: Uint8Array }>;
 export type ActorImportFactoryPort = (source: string, cores: readonly ActorImportCore[], control: Readonly<{ importInterfaces: readonly string[] }>) => Promise<string>;
+export type ActorImportArtifactPort = (component: Uint8Array, invocation: ScriptInvocation, control: ReturnType<typeof scriptCompilerAdmissionControlV1>) => Promise<Readonly<{ bytes: Uint8Array; codegenPolicy: string; componentSha256: string; sha256: string; byteLength: number; importInterfaces: readonly string[] }>>;
+export type ActorImportBundlePort = Readonly<{ close: ActorImportFactoryPort; build: ActorImportArtifactPort }>;
 type ActorSpec = Readonly<{ actorId: string; link: Readonly<{ okRequest: readonly number[]; okValue: readonly number[]; errorRequest: readonly number[]; errorValue: readonly number[] }>; blob: Readonly<{ okHash: string; chunks: readonly (readonly number[])[]; errorHash: string; errorValue: readonly number[] }>; timer: Readonly<{ delayMs: number }> }>;
 type JcoPolicy = Readonly<{ asyncMode: "jspi"; asyncImports: readonly string[] }>;
 type EmittedAsyncBinding = Readonly<{ trampoline: string; fnName: string }>;
 type Fixture = Readonly<{ identity: Readonly<{ component: string; canonicalInterface: string; expectedImports: readonly string[]; jco: JcoPolicy; emittedAsyncBindings: readonly EmittedAsyncBinding[]; unsupportedImport: string; productionHostAsyncAbiQualified: true; artifactPolicy: string }>; actors: readonly ActorSpec[]; limits: Readonly<{ buildBudgetMs: number; runtimeBudgetMs: number; maximumOutputBytes: number; actors: number }>; streamClose: Readonly<{ phase: "closed"; activeInvocations: 0; cancellations: 1; result: "rejected"; locked: false }>; guestStreamDrop: Readonly<{ phase: "closed"; activeInvocations: 0; cancellations: 1; result: "fulfilled"; locked: false }>; lateStreamFault: Readonly<{ code: string; message: string }>; failedStreamRetirement: Readonly<{ code: string; message: string; cancelMessage: string }> }>;
 
 /** 🧪️ Builds the standalone guest and executes two independent canonical actors. */
-export async function testCanonicalActorAsyncImport(repoRoot: string, invocation: ScriptInvocation, evidenceRoot: string, closeFactory?: ActorImportFactoryPort, closeActorBundle?: ActorImportFactoryPort, pendingHostClose = true): Promise<void> {
+export async function testCanonicalActorAsyncImport(repoRoot: string, invocation: ScriptInvocation, evidenceRoot: string, closeFactory?: ActorImportFactoryPort, closeActorBundle?: ActorImportBundlePort, pendingHostClose = true): Promise<void> {
   const fixtureRoot = testSourceDirectory;
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as Fixture;
   const schemaDocument = JSON.parse(readFileSync(resolve(fixtureRoot, "../../🧬️schema/🔣️.json"), "utf8"));
@@ -95,20 +96,20 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, invocation
     assert(blocking);
     const broken = source.replace(`_trampoline${blocking.trampoline}.manuallyAsync = true;`, `_trampoline${blocking.trampoline}.manuallyAsync = false;`);
     assert.notEqual(broken, source);
-    await assert.rejects(closeActorBundle(broken, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
+    await assert.rejects(closeActorBundle.close(broken, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
     const mapping = `'[method]pollable.block': trampoline${blocking.trampoline},`;
     const decoySuspension = source.replace(mapping, `'[method]pollable.block': _trampoline${blocking.trampoline},`);
     assert.notEqual(decoySuspension, source);
-    await assert.rejects(closeActorBundle(decoySuspension, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
+    await assert.rejects(closeActorBundle.close(decoySuspension, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
     const conditionalFalse = source.replace(`let trampoline${blocking.trampoline} = _trampoline${blocking.trampoline}.manuallyAsync ?`, `let trampoline${blocking.trampoline} = false ?`);
     assert.notEqual(conditionalFalse, source);
-    await assert.rejects(closeActorBundle(conditionalFalse, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
+    await assert.rejects(closeActorBundle.close(conditionalFalse, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
     const indirectSuspension = source.replace(mapping, `'[method]pollable.block': (value => value)(trampoline${blocking.trampoline}),`);
     assert.notEqual(indirectSuspension, source);
-    await assert.rejects(closeActorBundle(indirectSuspension, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
-    await assert.rejects(closeActorBundle(source, cores, { importInterfaces: [...importInterfaces, fixture.identity.unsupportedImport] }), /unsupported import interface/);
+    await assert.rejects(closeActorBundle.close(indirectSuspension, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
+    await assert.rejects(closeActorBundle.close(source, cores, { importInterfaces: [...importInterfaces, fixture.identity.unsupportedImport] }), /unsupported import interface/);
     actorModulePath = join(evidence, "actor-import.closed.js");
-    const { bytes, ...receipt } = await buildClosedBrowserActorArtifactV1(component, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0));
+    const { bytes, ...receipt } = await closeActorBundle.build(component, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0));
     // 🧭️ `slice()` answers a `Uint8Array<ArrayBuffer>`: a view over a `SharedArrayBuffer` is not a
     // `BufferSource`, and `Uint8Array` alone no longer says which of the two backs it.
     const digest = async (value: Uint8Array) => Buffer.from(await crypto.subtle.digest("SHA-256", value.slice())).toString("hex");

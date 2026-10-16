@@ -1,4 +1,4 @@
-import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../📇️directory/🚪️io/📝️text/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 /** 👥️ Two humans, one hub, every kind the hub can create — driven in two isolated browser profiles of the React `s` shell.
  *
  * Per kind the hub's creation catalog offers: A creates it from the Space app (the creation saga opens it for A), B opens it
@@ -23,8 +23,8 @@ import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️ex
 import { FAULT, NOISE, clickUncovered, fillStagedArgument, readMatrixPins, readShell, submitStagedVerb, unfoldActionsRail, withDevServe } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 import { hubProbeCall, hubProbeOpenDocument, hubProbeSignIn } from "../../../📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
-import { createSpaceCommandV1 } from "../../../📇️directory/🏘️spaces/🟦️.ts";
-import { type DirectorySpaceRole } from "../../../📇️directory/🧬️schema/🟦️.ts";
+import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
+import { type DirectorySpaceRole } from "@semio-tech/framework/directory/schema";
 
 //#region 🔖️Sessions
 /** 🔑️ One human: a hub credential. */

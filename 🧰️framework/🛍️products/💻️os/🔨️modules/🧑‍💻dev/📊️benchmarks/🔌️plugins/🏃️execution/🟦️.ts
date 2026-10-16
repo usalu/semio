@@ -29,7 +29,7 @@ import { renderScaleFixtureArtifacts } from "../../../../../🧪️testing/⚖�
 class BenchPluginsScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [renderer, ...segments] = args;
-    if (!["native", "react", "wgpu"].includes(renderer) || segments.some((segment) => segment === "--renderer" || segment.startsWith("--renderer="))) throw new Error("Select the renderer through the Nx benchmark target");
+    if ((renderer!=="native"&&renderer!=="react"&&renderer!=="wgpu") || segments.some((segment) => segment === "--renderer" || segment.startsWith("--renderer="))) throw new Error("Select the renderer through the Nx benchmark target");
     const pluginCount = Number(benchFlag(segments, "count", "50"));
     const extensionsPerPlugin = Number(benchFlag(segments, "extensions", "50"));
     const shardCount = Number(benchFlag(segments, "shards", "8"));

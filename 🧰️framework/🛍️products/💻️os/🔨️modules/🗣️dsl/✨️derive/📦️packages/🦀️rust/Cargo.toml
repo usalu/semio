@@ -19,16 +19,6 @@ proc-macro = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-schema-state = { path = "../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-# 🧷️ `visit`/`visit-mut` pinned: `wasm-bindgen-macro-support` requests them in some hub components, and one host `syn` feature set keeps every component on the same proc-macro units.
-syn = { version = "2.0", features = ["full", "extra-traits", "visit", "visit-mut"] }
-quote = "1.0"
-proc-macro2 = "1.0"
-serde_json = "1.0"
-semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-os-kernel-dsl-derive-expand = { path = "../../🧩️expand/📦️packages/🦀️rust" }
+semio-framework-native-build-compiler-resources = { path = "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/📦️packages/🦀️rust" }
 
-[dev-dependencies]
-serde = { version = "1.0", features = ["derive"] }
-sha2 = "0.10"

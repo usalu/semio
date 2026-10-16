@@ -1,0 +1,21 @@
+{
+"name": "smg",
+"crates": [
+"semio-framework-plugin-guest-contract",
+"semio-framework-plugin-abi",
+"semio-framework-plugin-reactor-context",
+"semio-framework-os-renderer-wgpu-host-plumbing",
+"semio-framework-plugin-host-operation"
+],
+"base": {
+"rev": "HEAD",
+"crates": [
+"semio-framework-plugin-guest-contract",
+"semio-framework-plugin-abi",
+"semio-framework-plugin-reactor-context",
+"semio-framework-os-renderer-wgpu-host-plumbing",
+"semio-framework-plugin-host-operation"
+]
+},
+"note": "SINGLE-MOUNT-AND-GATE (guest-contract/abi/context/host-plumbing/operation)"
+}

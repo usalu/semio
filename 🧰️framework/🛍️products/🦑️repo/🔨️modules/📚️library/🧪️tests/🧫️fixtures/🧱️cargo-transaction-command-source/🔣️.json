@@ -182,7 +182,37 @@
   ],
   "consumers": [
     {
-      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🌎️hub/🧪️tests/🪪️check-in-process/🟦️.ts",
+      "owners": [
+        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts",
+      "owners": [
+        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🕹️gis-map-process/🟦️.ts",
+      "owners": [
+        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🎛️commands/🏷️trusted-catalog/🟦️.ts",
+      "owners": [
+        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🎁️trusted-stdio-gis-bundle-check/🟦️.ts",
+      "owners": [
+        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🎛️commands/🏗️build-and-dev/🟦️.ts",
       "owners": [
         "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
       ]

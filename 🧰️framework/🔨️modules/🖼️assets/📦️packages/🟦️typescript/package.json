@@ -14,7 +14,9 @@
     "email": "ueli@semio-tech.com",
     "url": "https://github.com/usalu"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^22.19.6",
     "jsdom": "^24.1.3",

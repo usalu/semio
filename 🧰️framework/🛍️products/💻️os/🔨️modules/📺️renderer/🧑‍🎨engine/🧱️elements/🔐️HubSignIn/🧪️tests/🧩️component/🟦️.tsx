@@ -12,7 +12,7 @@ import Ajv from "ajv";
 import equal from "fast-deep-equal";
 import { useState, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import fixture from "../../../../../../📇️directory/🧪️tests/🧫️fixtures/🔐️sign-in/🔣️.json";
+import { directorySignInFixture as fixture, directoryLocalSessionDocument as localSessionFixture, directoryLocalSessionSchema as localSessionSchema } from "../../../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
 import {
   HUB_AUTH_ERROR_SCHEMA_V1,
   HUB_CONNECTION_BOOK_MAX_ENTRIES,
@@ -55,11 +55,9 @@ import {
   type HubSessionStateV1,
   type HubSignInErrorCodeV1,
   type HubSignInResponseV1,
-  type HubSignInTransportV1,
-} from "../../../../../../📇️directory/🔐️sign-in/🟦️.ts";
-import localSessionFixture from "../../../../../../📇️directory/🎫️local-session/🔣️.json";
-import localSessionSchema from "../../../../../../📇️directory/🎫️local-session/🧬️.schema.json";
-import { localHubSessionAnswerV1, parseLocalHubSessionAnswerV1, type LocalHubSessionV1 } from "../../../../../../📇️directory/🎫️local-session/🟦️.ts";
+  type HubSignInTransportV1
+} from "@semio-tech/framework/directory/sign-in";
+import { localHubSessionAnswerV1, parseLocalHubSessionAnswerV1, type LocalHubSessionV1 } from "@semio-tech/framework/directory/local-session";
 import { HubSignInPane, hubSignInFormOfferedV1, hubSignInSubmittableV1 } from "../../🟦️.tsx";
 import { createHubConnectionFetchPortV1, useHubConnection, type HubConnectionPortV1 } from "../../../🔗️HubConnection/🟦️.tsx";
 // #endregion 🔌️Adapters

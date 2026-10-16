@@ -1,3 +1,4 @@
+import {testRecordV1} from "../../../../🧪️tests/📋️values/🟦️.ts";
 import assert from "node:assert/strict";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -77,7 +78,7 @@ export async function testDerivedConfig(workspace: string): Promise<void> {
     assert.deepEqual(await writeDerivedConfig(copy), [DEVCONTAINER, hub]);
     assert.deepEqual(describeEditorDrift(expectedContainerEditor(copy), readContainerEditor(copy)), []);
     assert.deepEqual(nextestProblems(copy), []);
-    assert.equal(Bun.TOML.parse(readFileSync(join(copy, hub), "utf8")).profile.quick.overrides.length, 1);
+    const overrides=testRecordV1(Bun.TOML.parse(readFileSync(join(copy, hub), "utf8")),"profile","quick").overrides;assert(Array.isArray(overrides));assert.equal(overrides.length, 1);
     assert.deepEqual(await writeDerivedConfig(copy), [], "the writer is idempotent");
     assert.equal(readFileSync(join(copy, DEVCONTAINER), "utf8"), readFileSync(join(workspace, DEVCONTAINER), "utf8").replaceAll("\r\n", "\n"), "the written devcontainer equals the checked-in one");
   } finally {

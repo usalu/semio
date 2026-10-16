@@ -10,7 +10,7 @@ import { tutorialInteractionSelectionActions } from "../../🧱️elements/🏛�
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🔣️.json";
 import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
-import interactionSchema from "../../../../../../../🔨️modules/🕹️interaction/🧬️schema/🔣️.json";
+import { interactionSchema } from "../../../../../../../🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🟦️.ts";
 import type { InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import type { TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";

@@ -1,6 +1,6 @@
 import Ajv from "ajv/dist/2020.js";
-import viewport from "../../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json";
-import sceneContract from "../../../../../../../../../🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧬️schema/🔣️.json";
+import { uiViewport2dSchema as viewport } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { nodeGraphSceneSchema as sceneContract } from "../../../../../../../../../🔨️modules/🗺️surface/🧪️tests/🧫️fixtures/🟦️.ts";
 import inputContract from "../../📡️scene/🧬️schema/🔣️.json";
 import inputCorpus from "../../📡️scene/🧪️tests/🧫️fixtures/🔣️.json";
 import{expect,test}from"bun:test";

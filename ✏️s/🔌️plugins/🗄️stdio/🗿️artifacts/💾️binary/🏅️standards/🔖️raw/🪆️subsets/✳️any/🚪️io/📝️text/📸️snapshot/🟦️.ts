@@ -49,5 +49,5 @@ export const stdioBinaryRawAnySnapshotTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseBinarySnapshotText(value: unknown, at = "$"): BinarySnapshotText {
-  return stdioBinaryRawAnySnapshotTextGuardObject(value, `${at}`);
+  return stdioBinaryRawAnySnapshotTextGuardString(value, `${at}`);
 }

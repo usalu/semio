@@ -13,11 +13,11 @@ impl std::error::Error for PngDecodeError{}
 fn invalid(v:&'static str)->PngDecodeError{PngDecodeError::Invalid(v)}
 fn be(data:&[u8],at:usize)->u32{u32::from_be_bytes(data[at..at+4].try_into().unwrap())}
 #[derive(semio_framework_value::RetireOwned)]
-struct Chunk{kind:[u8;4],start:usize,at:usize,end:usize,crc:u32}
+struct Chunk{kind:[u8;4],start:usize,pub at:usize,end:usize,crc:u32}
 struct PngInflater(Inflater);
 impl std::ops::Deref for PngInflater{type Target=Inflater;fn deref(&self)->&Inflater{&self.0}}
 impl std::ops::DerefMut for PngInflater{fn deref_mut(&mut self)->&mut Inflater{&mut self.0}}
-struct PngInflaterRetirement {owner:Option<PngInflater>}
+struct PngInflaterRetirement {pub owner:Option<PngInflater>}
 impl semio_framework_value::retirement::RetireOwned for PngInflater {
  fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(PngInflaterRetirement {owner:Some(self)})}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<PngInflaterRetirement>())}
@@ -40,11 +40,11 @@ impl semio_framework_value::retirement::RetirementCursor for PngInflaterRetireme
 /// 🧩️ Reconstruction consumes one chunk byte, inflated byte, or expanded pixel per work unit.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct PngDecodeJob{
- source:Vec<u8>,max_pixels:usize,max_chunks:usize,total_bytes:usize,phase:&'static str,work:u64,bytes:usize,pixels:usize,total_pixels:usize,
- at:usize,chunks:usize,chunk:Option<Chunk>,header:Option<Ihdr>,palette:[[u8;3];256],palette_length:usize,alpha:[u8;256],alpha_length:usize,gray_trans:Option<u32>,rgb_trans:Option<(u32,u32,u32)>,had_palette:bool,had_transparency:bool,
- had_idat:bool,closed_idat:bool,ranges:PagedList<(usize,usize),65536>,z_length:usize,range:usize,range_at:usize,z_at:usize,z_header:[u8;2],z_header_length:usize,tail:[u8;4],tail_length:usize,inflater:Option<PngInflater>,pending:Option<u8>,output:RasterImage,allocation_at:u8,
+ #[doc(hidden)] pub source:Vec<u8>,#[doc(hidden)] pub max_pixels:usize,max_chunks:usize,total_bytes:usize,#[doc(hidden)] pub phase:&'static str,#[doc(hidden)] pub work:u64,#[doc(hidden)] pub bytes:usize,#[doc(hidden)] pub pixels:usize,total_pixels:usize,
+ #[doc(hidden)] pub at:usize,chunks:usize,chunk:Option<Chunk>,header:Option<Ihdr>,palette:[[u8;3];256],palette_length:usize,alpha:[u8;256],alpha_length:usize,gray_trans:Option<u32>,rgb_trans:Option<(u32,u32,u32)>,had_palette:bool,had_transparency:bool,
+ had_idat:bool,closed_idat:bool,ranges:PagedList<(usize,usize),65536>,z_length:usize,range:usize,range_at:usize,z_at:usize,z_header:[u8;2],z_header_length:usize,tail:[u8;4],tail_length:usize,inflater:Option<PngInflater>,pending:Option<u8>,#[doc(hidden)] pub output:RasterImage,allocation_at:u8,
  pass:usize,pass_width:usize,pass_height:usize,sx:u32,sy:u32,dx:u32,dy:u32,row:usize,column:usize,row_at:Option<usize>,row_bytes:usize,stride:usize,bpp:usize,filter:u8,
- current:Vec<u8>,previous:Vec<u8>,raw_bytes:usize,expected_bytes:usize,adler_a:u32,adler_b:u32,stream_done:bool,cancelled:bool,failed:Option<PngDecodeError>,
+ current:Vec<u8>,previous:Vec<u8>,raw_bytes:usize,expected_bytes:usize,adler_a:u32,adler_b:u32,stream_done:bool,cancelled:bool,#[doc(hidden)] pub failed:Option<PngDecodeError>,
 }
 impl PngDecodeJob{
  pub fn new(input:PngDecodeInput)->Result<Self,(PngDecodeError,PngDecodeInput)>{
@@ -194,6 +194,12 @@ impl PngDecodeJob{
  pub fn result(&self)->Result<&RasterImage,PngDecodeError>{self.check()?;if self.phase!="complete"{return Err(PngDecodeError::Incomplete);}Ok(&self.output)}
  pub fn take_result(&mut self,grant:RetainedCloneGrant)->Result<Option<(RasterImage,RetainedCloneProgress)>,PngDecodeError>{self.check()?;if self.phase!="complete"{return Err(PngDecodeError::Incomplete);}if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<RasterImage>()||grant.maximum_depth==0{return Ok(None);}self.phase="transferred";Ok(Some((std::mem::take(&mut self.output),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RasterImage>(),..Default::default()})))}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    use super::*;
+    pub fn invalid(v:&'static str) ->PngDecodeError {
+        super::invalid(v)
+    }
+}

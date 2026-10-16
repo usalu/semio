@@ -18,23 +18,23 @@
 
 use super::{Identity, IdentityConfigMutation, IdentityDiff, IdentitySetting};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🪪️sign-in/🪪️replaces-the-active-session-with-a-second-account/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
 }
 fn before() -> IdentitySetting {
-    serde_json::from_str(BEFORE).expect("before identity setting decodes")
+    serde_json::from_str(BEFORE.as_str()).expect("before identity setting decodes")
 }
 fn expected_after() -> IdentitySetting {
-    serde_json::from_str(AFTER).expect("after identity setting decodes")
+    serde_json::from_str(AFTER.as_str()).expect("after identity setting decodes")
 }
 fn mutation() -> IdentityConfigMutation {
-    serde_json::from_str(MUTATION).expect("sign-in mutation decodes")
+    serde_json::from_str(MUTATION.as_str()).expect("sign-in mutation decodes")
 }
 fn session(setting: &IdentitySetting) -> Identity {
     setting.0.clone().expect("the setting carries a session")
@@ -79,14 +79,14 @@ fn restoring_the_prior_session_restores_before() {
 /// BESIDE the `"mutation"` tag rather than nested under it.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: IdentitySetting = serde_json::from_str(text).expect("identity setting decodes");
         let reencoded = serde_json::to_value(decoded).expect("identity setting encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("identity setting reparses");
         assert_eq!(reencoded, original, "sign-in/replaces-the-active-session-with-a-second-account: committed {label} setting JSON is not canonical");
     }
     let reencoded = serde_json::to_value(mutation()).expect("signIn payload encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("signIn payload reparses");
+    let original: serde_json::Value = serde_json::from_str(MUTATION.as_str()).expect("signIn payload reparses");
     assert_eq!(reencoded, original, "sign-in/replaces-the-active-session-with-a-second-account: committed signIn JSON is not canonical");
     assert_eq!(original.get("mutation").and_then(serde_json::Value::as_str), Some("signIn"), "sign-in/replaces-the-active-session-with-a-second-account: the payload must be internally tagged on \"mutation\"");
 }
@@ -95,7 +95,7 @@ fn committed_json_is_canonical() {
 /// `applied` outcome must hold.
 #[test]
 fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "sign-in/replaces-the-active-session-with-a-second-account: this fixture declares an applied outcome");
     let produced = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None, "sign-in/replaces-the-active-session-with-a-second-account: establishing a different session must not raise a diagnostic");
@@ -107,24 +107,24 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let outcome = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::diff(&mutation(), &before());
     let produced = json_value(outcome.diff());
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(produced, committed, "sign-in/replaces-the-active-session-with-a-second-account: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff decodes to the facet's sparse diff type and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: IdentityDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed sign-in diff decodes");
+    let decoded: IdentityDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed sign-in diff decodes");
     assert_eq!(decoded.session.as_ref().and_then(|edit| edit.value.as_ref()).map(|identity| identity.email.as_str()), Some("grace@studio.example"), "sign-in/replaces-the-active-session-with-a-second-account: the committed diff must carry the new session");
     let reencoded = json_value(&decoded);
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff reparses");
     assert_eq!(reencoded, original, "sign-in/replaces-the-active-session-with-a-second-account: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed diff carries the before-setting to the after-setting through the central applier.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: IdentityDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed sign-in diff decodes");
+    let decoded: IdentityDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed sign-in diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-setting");
     assert_eq!(produced, expected_after(), "sign-in/replaces-the-active-session-with-a-second-account: committed diff did not carry before to after");
 }

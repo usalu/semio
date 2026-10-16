@@ -1,6 +1,5 @@
 //! 🌬️ Complete building subject fidelity, independent semantic SQL and actual declaration-owned I/O laws.
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 #[test]

@@ -101,10 +101,3 @@ export function encodePluginReturnResult(original: unknown, activationGeneration
   return encodeActorReturnResult(result);
 }
 //#endregion 📤️WitReturnEncoding
-
-//#region 🧪️WitReturnLaws
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️pluginreturnwit-maps-every-canonical-drive-to-the-exact-wit-nesting-and/🟦️.ts");
-  await registerTests1(import.meta.vitest, { encodePluginReturnResult, generation, pluginReturnDriveToWit }, { url: import.meta.url });
-}
-//#endregion 🧪️WitReturnLaws

@@ -10,14 +10,12 @@ import { defineLint, goLevelTestArgs, resolveCliBin, runCanonicalGoBuild, runCan
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { readEntityCatalog, type EntityCatalogSource } from "../../../../../../../🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts";
+import { readEntityCatalog } from "../../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🏷️entity-kinds/📥️source/🟦️.ts";
 import { writeGeneratedFileIfChanged } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
-import { emitGo, GENERATOR_ID, REFRESH_COMMAND } from "../../🏷️entity-kinds/📽️projection/🟦️.ts";
+import { GENERATOR_ID, REFRESH_COMMAND, REPO_CLI_GO, repoEntityKindTarget } from "../../🏷️entity-kinds/📽️projection/🟦️.ts";
 
 export const policyFile = "🐹️.go";
 
-const REPO_CLIENT_DIR = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client");
-const REPO_CLI_GO = join(REPO_CLIENT_DIR, "⌨️cli");
 const REPO_CLI_MAIN = join(REPO_CLI_GO,"📦️packages","🐹️go","📦️main");
 
 export const policy = defineLint("repo-client-cli-main-go", (l: FileLinter) => {
@@ -70,11 +68,6 @@ class TestScript extends BundleScript {
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
     });
   }
-}
-
-/** 📋️ Plans only the Go projection owned by this Repo CLI. */
-export function repoEntityKindTarget(repoRoot: string, source: EntityCatalogSource): { readonly path: string; readonly content: string } {
-  return { path: join(repoRoot, REPO_CLI_GO, "🏷️entity-kinds/🐹️.go"), content: emitGo(source) };
 }
 
 class GenerateEntityKindsScript extends BundleScript {

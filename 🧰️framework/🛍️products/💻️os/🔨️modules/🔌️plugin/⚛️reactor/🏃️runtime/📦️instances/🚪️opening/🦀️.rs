@@ -1,8 +1,22 @@
 //! 🚪️ Native instance opening and app creation with the close grant constants.
 
-use super::*;
+use semio_framework_plugin_plugin_program::{AppInstance, PluginProgram};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework::{Fault, FaultFrom};
+use semio_framework_value::{FromValue, ToValue};
+use crate::inst_descriptor::NEXT_INSTANCE_ID;
+use std::sync::atomic::Ordering;
+use semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps::PendingNativeCreation;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::PluginInstanceCloseLease;
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry::{PluginRuntime, RuntimeActorAuthority, instance_lifetime};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell;
+use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use crate::inst_wire_frames::with_instances_mut;
 /// 🪪️ Retains original request inputs before factory work; a denied issuer never erases the partial app.
-pub(crate) async fn plugin_open_actor_instance<PA:PluginApp>(runtime:&PluginRuntime<PA>,request:semio_framework::kernel::ActorInstanceOpenRequest,app_id:String,actor:String,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+#[doc(hidden)]
+pub async fn plugin_open_actor_instance<PA:PluginApp>(runtime:&PluginRuntime<PA>,request:semio_framework::kernel::ActorInstanceOpenRequest,app_id:String,actor:String,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
  let mut lifetimes=runtime.guest_lifetimes.try_borrow_mut().map_err(|_|plugin_internal_fault("lifecycle authority busy"))?;let slot=lifetimes.get_mut(request.instance_id).filter(|slot|slot.cell.matches_open(request)).ok_or_else(||plugin_internal_fault("exact opening lifecycle missing"))?;
  if slot.native_created||slot.cell.owner().is_some(){return Err(plugin_internal_fault("native opening already captured").into())}
  if slot.pending_creation.is_some(){return Err(plugin_internal_fault("original opening inputs already remain owned").into())}
@@ -50,16 +64,17 @@ async fn plugin_advance_actor_opening<PA:PluginApp>(runtime:&PluginRuntime<PA>,i
    match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>*opening.metadata_closing=Some(owner),Err((failure,source))=>{*opening.metadata_source=Some(source);return Err(failure.into())}}
    cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
   }
-  if crate::reactor::take_original_instance_metadata_app_id(instance_id,&mut opening.metadata_source,cx)?!=Some(true){return Ok(false)}
+  if crate::inst_metadata_owner::take_original_instance_metadata_app_id(instance_id,&mut opening.metadata_source,cx)?!=Some(true){return Ok(false)}
  }
  if let Some(loan)=opening.loan.as_mut(){opening.returning_loan=true;let parent=cx.original_source_parent()?;loan.close_step(parent,cx)?;if loan.terminal_is_empty(){opening.loan.take();}return Ok(false)}
  if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}
  if opening.closing{let failure=opening.failure.take();slot.pending_creation.take();lifetimes.remove_uncreated(instance_id).map_err(plugin_internal_fault)?;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return match failure{Some(failure)=>Err(failure),None=>Ok(false)}}
  let mut instances=runtime.instances.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime instance authority busy"))?;let mut actors=runtime.instance_actors.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime actor authority busy"))?;
- let actor=opening.authority.take().ok_or_else(||plugin_internal_fault("original opening actor authority missing"))?;let app=opening.app.take().unwrap();let cell=std::sync::Arc::new(RuntimeAppCell::new(AppInstance{id:instance_id,app,surface_contexts:Default::default()},runtime.mounted_policy));let lease=PluginInstanceCloseLease::from_cell(instance_id,&cell);let owner=crate::reactor::instance_lifetime::NativeLifetimeOwner::from_lease(slot.cell.lifetime(),lease).expect("preflighted exact native lifetime");slot.cell.install_owner(owner).unwrap_or_else(|_|panic!("preflighted opening owner slot"));instances.insert_admitted(instance_id,cell);actors.insert_admitted(instance_id,actor);slot.native_created=true;slot.pending_creation.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+ let actor=opening.authority.take().ok_or_else(||plugin_internal_fault("original opening actor authority missing"))?;let app=opening.app.take().unwrap();let cell=std::sync::Arc::new(RuntimeAppCell::new(AppInstance{id:instance_id,app,surface_contexts:Default::default()},runtime.mounted_policy));let lease=PluginInstanceCloseLease::from_cell(instance_id,&cell);let owner=semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeLifetimeOwner::from_lease(slot.cell.lifetime(),lease).expect("preflighted exact native lifetime");slot.cell.install_owner(owner).unwrap_or_else(|_|panic!("preflighted opening owner slot"));instances.insert_admitted(instance_id,cell);actors.insert_admitted(instance_id,actor);slot.native_created=true;slot.pending_creation.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
 }
 /// 🔁️ Resumes the original allocation-bound opening once per supplied caller turn without running its factory again.
-pub(crate) async fn plugin_resume_actor_openings<PA:PluginApp>(runtime:&PluginRuntime<PA>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+#[doc(hidden)]
+pub async fn plugin_resume_actor_openings<PA:PluginApp>(runtime:&PluginRuntime<PA>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
  let instance={let lifetimes=runtime.guest_lifetimes.try_borrow().map_err(|_|plugin_internal_fault("lifecycle authority busy"))?;lifetimes.pending_opening()};if let Some(instance)=instance{plugin_resume_actor_opening(runtime,instance,identity,cx).await?;}Ok(())
 }
 pub async fn plugin_create_app<PA: PluginApp>(runtime: &PluginRuntime<PA>, app_id: &str, actor: protocol::ActorId, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<u32, Fault> {
@@ -99,11 +114,13 @@ pub async fn plugin_create_app_with_id<PA: PluginApp>(runtime: &PluginRuntime<PA
 /// ticket 26/09/09).
 const RUNTIME_CLOSE_BYTES_PER_STEP: usize = 32 * 1_024;
 /// 🎟️ Runtime admission bounds price logical copy, constructor capacity and physical release independently.
-pub(crate) fn runtime_lifecycle_grant()->RetainedCloneGrant {
+#[doc(hidden)]
+pub fn runtime_lifecycle_grant()->RetainedCloneGrant {
     RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RUNTIME_CLOSE_BYTES_PER_STEP,maximum_capacity_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,maximum_depth:4096}
 }
 pub(super) const RUNTIME_CLOSE_INNER_GRANT_US: u64 = 2_000;
-pub(super) const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
+#[doc(hidden)]
+pub const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
 /// ⏱️ Real time a close ladder must spend making no progress before the structural accountant is
 /// allowed to call it stalled — the SECOND half of the zero-progress verdict, next to the step
 /// count above.
@@ -115,4 +132,5 @@ pub(super) const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
 /// boot, ticket 26/08/28, `📓️fix-2026-09-16-concurrent-boot-timeout-and-close-fault.md`). A ladder
 /// that is genuinely wedged still burns this credit within a few reactor turns; one that is merely
 /// finishing never does.
-pub(super) const RUNTIME_CLOSE_STALL_CREDIT_US: u64 = semio_framework_trace::INTERACTIVE_STEP_CEILING_US;
+#[doc(hidden)]
+pub const RUNTIME_CLOSE_STALL_CREDIT_US: u64 = semio_framework_trace::INTERACTIVE_STEP_CEILING_US;

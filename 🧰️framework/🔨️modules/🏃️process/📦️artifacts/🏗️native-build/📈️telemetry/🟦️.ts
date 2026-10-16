@@ -1,14 +1,20 @@
-import { execFile } from "node:child_process";
+import {open} from "node:fs/promises";
+import {constants} from "node:fs";
+import {withArtifactDescriptorV1} from "@semio-tech/framework/filesystem/observation/descriptor";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../🔒️leases/🟦️.ts";
+import {requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {captureOwnedCommandResultV1} from "../../../🎛️owned-execution/📥️capture/🟦️.ts";
+import {startTelemetrySamplerV1} from "./⏱️sampling/🟦️.ts";
+export {startTelemetrySamplerV1} from "./⏱️sampling/🟦️.ts";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { cpus, freemem, totalmem } from "node:os";
 import { dirname, join } from "node:path";
-import { promisify } from "node:util";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type { UnitRecordV1 } from "../🎟️admission/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 📈️ Sampling cadence, idle-window thresholds and report sizes. */
-export const TELEMETRY_POLICY_V1 = schema.definitions.Policy.const;
+export const TELEMETRY_POLICY_V1 = Object.freeze({...schema.definitions.Policy.const});
 
 /** 🕒️ One timeline row (`TimelineRowV1`). */
 export type TimelineRowV1 = Readonly<{ v: 1; atMs: number; cpuPercent: number; cores: number; memoryTotalBytes: number; memoryAvailableBytes: number | null; swapUsedBytes: number | null; swapOutBytesPerSecond: number | null; rustcRunning: number; admissionWaiting: number; rustcRssBytes: number; frozen: boolean; tokensHeld: number; stagesRunning: number; stagesWaiting: number }>;
@@ -45,23 +51,29 @@ export function cpuPercentV1(previous: Readonly<{ idle: number; total: number }>
   return total <= 0 ? 0 : Math.min(100, Math.max(0, 100 * (1 - (next.idle - previous.idle) / total)));
 }
 
-const exec = promisify(execFile);
-
-/** 🧠️ Available memory, used swap and the cumulative swapped-out bytes, read from the platform's own counters (`vm_stat`/`sysctl` on macOS, `/proc` on Linux). */
-export async function memoryCountersV1(platform: NodeJS.Platform = process.platform): Promise<Readonly<{ availableBytes: number | null; swapUsedBytes: number | null; swappedOutBytes: number | null }>> {
-  if (platform === "darwin") {
-    const [stat, swap] = await Promise.all([exec("vm_stat"), exec("sysctl", ["-n", "vm.swapusage"])]);
-    const pageSize = Number(/page size of (\d+) bytes/u.exec(stat.stdout)?.[1] ?? 4096), pages = (name: string): number => Number(new RegExp(`^${name}:\\s+(\\d+)\\.`, "mu").exec(stat.stdout)?.[1] ?? 0);
-    const used = /used = ([\d.]+)([KMG])/u.exec(swap.stdout), scale = { K: 1024, M: 1024 ** 2, G: 1024 ** 3 } as const;
-    return { availableBytes: (pages("Pages free") + pages("Pages inactive") + pages("Pages speculative")) * pageSize, swapUsedBytes: used ? Math.round(Number(used[1]) * scale[used[2] as keyof typeof scale]) : null, swappedOutBytes: pages("Swapouts") * pageSize };
+/** 🧠️ Parses fixed platform memory counter DATA without executing platform commands. */
+export function parseMemoryCountersV1(platform:"darwin"|"linux",first:string,second:string):Readonly<{availableBytes:number|null;swapUsedBytes:number|null;swappedOutBytes:number|null}>{
+ if(Buffer.byteLength(first)>TELEMETRY_POLICY_V1.maximumOutputBytes||Buffer.byteLength(second)>TELEMETRY_POLICY_V1.maximumOutputBytes)throw Error("Bounded telemetry counter bytes required");
+ if(platform==="darwin"){
+  const pageSize=Number(/page size of (\d+) bytes/u.exec(first)?.[1]??4096),pages=(name:string)=>Number(new RegExp(`^${name}:\\s+(\\d+)\\.`,"mu").exec(first)?.[1]??0),used=/used = ([\d.]+)([KMG])/u.exec(second),unit=used?.[2],scale=unit==="K"?1024:unit==="M"?1024**2:unit==="G"?1024**3:0;
+  return Object.freeze({availableBytes:(pages("Pages free")+pages("Pages inactive")+pages("Pages speculative"))*pageSize,swapUsedBytes:used?Math.round(Number(used[1])*scale):null,swappedOutBytes:pages("Swapouts")*pageSize});
+ }
+ const kib=(name:string):number|null=>{const match=new RegExp(`^${name}:\\s+(\\d+) kB`,"mu").exec(first);return match?Number(match[1])*1024:null;},total=kib("SwapTotal"),free=kib("SwapFree"),out=/^pswpout (\d+)$/mu.exec(second);
+ return Object.freeze({availableBytes:kib("MemAvailable"),swapUsedBytes:total===null||free===null?null:total-free,swappedOutBytes:out?Number(out[1])*4096:null});
+}
+/** 🧠️ Reads finite platform counters beneath the actual carried sample phase. */
+export function memoryCountersV1(control:ResourceLeaseControl,platform:NodeJS.Platform=process.platform):Promise<Readonly<{availableBytes:number|null;swapUsedBytes:number|null;swappedOutBytes:number|null}>>{
+ requireIssuedResourceControlV1(control);
+ return withRequestedIssuedResourceControlV1(control,TELEMETRY_POLICY_V1.maximumSampleMilliseconds,async actual=>{
+  const output={maximumBytes:TELEMETRY_POLICY_V1.maximumOutputBytes,maximumLines:TELEMETRY_POLICY_V1.maximumOutputLines};
+  const command=async(program:string,args:readonly string[])=>{const result=await captureOwnedCommandResultV1(program,args,process.cwd(),{control:actual,output});if(result.signal!==null)throw Error("Telemetry counter process terminated by signal");return result.status===0?result.stdout:null;};
+  if(platform==="darwin"){const stat=await command("vm_stat",[]),swap=await command("sysctl",["-n","vm.swapusage"]);return stat===null||swap===null?Object.freeze({availableBytes:null,swapUsedBytes:null,swappedOutBytes:null}):parseMemoryCountersV1(platform,stat,swap);}
+  if(platform==="linux"){
+   const read=(path:string)=>withArtifactDescriptorV1(()=>open(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)),async handle=>{const bytes=Buffer.alloc(TELEMETRY_POLICY_V1.maximumOutputBytes+1);let used=0;while(used<bytes.length){checkResourceLeaseControl(actual);const row=await handle.read(bytes,used,bytes.length-used,used);if(row.bytesRead===0)break;used+=row.bytesRead;}checkResourceLeaseControl(actual);if(used>TELEMETRY_POLICY_V1.maximumOutputBytes)throw Error("Bounded telemetry counter file required");return bytes.subarray(0,used).toString("utf8");});
+   return parseMemoryCountersV1(platform,await read("/proc/meminfo"),await read("/proc/vmstat"));
   }
-  if (platform === "linux") {
-    const meminfo = readFileSync("/proc/meminfo", "utf8"), vmstat = readFileSync("/proc/vmstat", "utf8");
-    const kib = (name: string): number | null => { const match = new RegExp(`^${name}:\\s+(\\d+) kB`, "mu").exec(meminfo); return match ? Number(match[1]) * 1024 : null; };
-    const total = kib("SwapTotal"), free = kib("SwapFree"), out = /^pswpout (\d+)$/mu.exec(vmstat);
-    return { availableBytes: kib("MemAvailable"), swapUsedBytes: total === null || free === null ? null : total - free, swappedOutBytes: out ? Number(out[1]) * 4096 : null };
-  }
-  return { availableBytes: freemem(), swapUsedBytes: null, swappedOutBytes: null };
+  return Object.freeze({availableBytes:freemem(),swapUsedBytes:null,swappedOutBytes:null});
+ });
 }
 
 /** 🎛️ The driver-side counters a timeline row records beside the machine sample. */
@@ -74,27 +86,16 @@ export interface TimelineSamplerV1 {
 }
 
 /** 🕒️ Samples machine CPU, memory and swap plus the driver's counters at start, every `intervalMs` and at stop, appends each row to `path` and hands it to `onRow`. */
-export function startTimelineV1(options: Readonly<{ path: string; intervalMs?: number; counters: () => TimelineCountersV1; onRow?: (row: TimelineRowV1) => void; now?: () => number }>): TimelineSamplerV1 {
-  const now = options.now ?? Date.now, rows: TimelineRowV1[] = [];
-  mkdirSync(dirname(options.path), { recursive: true });
-  let previous = cpuTimesV1(), swapped: { atMs: number; bytes: number } | null = null, pending: Promise<void> = Promise.resolve(), stopped = false;
-  const sample = async (): Promise<void> => {
-    const memory = await memoryCountersV1().catch(() => ({ availableBytes: null, swapUsedBytes: null, swappedOutBytes: null }));
-    const atMs = now(), times = cpuTimesV1();
-    const swapOutBytesPerSecond = memory.swappedOutBytes === null || swapped === null || atMs <= swapped.atMs ? null : Math.max(0, (memory.swappedOutBytes - swapped.bytes) * 1000 / (atMs - swapped.atMs));
-    if (memory.swappedOutBytes !== null) swapped = { atMs, bytes: memory.swappedOutBytes };
-    const row: TimelineRowV1 = { v: 1, atMs, cpuPercent: Math.round(cpuPercentV1(previous, times) * 10) / 10, cores: cpus().length, memoryTotalBytes: totalmem(), memoryAvailableBytes: memory.availableBytes, swapUsedBytes: memory.swapUsedBytes, swapOutBytesPerSecond: swapOutBytesPerSecond === null ? null : Math.round(swapOutBytesPerSecond), ...options.counters() };
-    previous = times;
-    rows.push(row);
-    appendFileSync(options.path, `${JSON.stringify(row)}\n`);
-    options.onRow?.(row);
-  };
-  const timer = setInterval(() => { if (!stopped) pending = pending.then(sample); }, options.intervalMs ?? TELEMETRY_POLICY_V1.sampleMs);
-  pending = pending.then(sample);
-  return {
-    rows: () => rows,
-    stop: async () => { if (!stopped) { stopped = true; clearInterval(timer); pending = pending.then(sample); } await pending; return rows; },
-  };
+export function startTimelineV1(options:Readonly<{control:ResourceLeaseControl;path:string;intervalMs?:number;counters:()=>TimelineCountersV1;onRow?:(row:TimelineRowV1,control:ResourceLeaseControl)=>Promise<void>;now?:()=>number}>):TimelineSamplerV1{
+ requireIssuedResourceControlV1(options.control);const {control,path,intervalMs,counters,onRow}=options,now=options.now??Date.now,rows:TimelineRowV1[]=[];
+ mkdirSync(dirname(path),{recursive:true});let previous=cpuTimesV1(),swapped:{atMs:number;bytes:number}|null=null;
+ const sampler=startTelemetrySamplerV1(control,async actual=>{
+  const memory=await memoryCountersV1(actual),atMs=now(),times=cpuTimesV1(),swapOutBytesPerSecond=memory.swappedOutBytes===null||swapped===null||atMs<=swapped.atMs?null:Math.max(0,(memory.swappedOutBytes-swapped.bytes)*1000/(atMs-swapped.atMs));
+  if(memory.swappedOutBytes!==null)swapped={atMs,bytes:memory.swappedOutBytes};
+  const row:TimelineRowV1=Object.freeze({v:1,atMs,cpuPercent:Math.round(cpuPercentV1(previous,times)*10)/10,cores:cpus().length,memoryTotalBytes:totalmem(),memoryAvailableBytes:memory.availableBytes,swapUsedBytes:memory.swapUsedBytes,swapOutBytesPerSecond:swapOutBytesPerSecond===null?null:Math.round(swapOutBytesPerSecond),...counters()});
+  const line=JSON.stringify(row)+"\n";if(Buffer.byteLength(line)>TELEMETRY_POLICY_V1.maximumRowBytes)throw Error("Bounded telemetry row required");previous=times;rows.push(row);appendFileSync(path,line);await onRow?.(row,actual);
+ },intervalMs);
+ return Object.freeze({rows:()=>Object.freeze([...rows]),stop:async()=>{await sampler.stop();return Object.freeze([...rows]);}});
 }
 
 /** 🧗️ The critical path recomputed from the observed unit graph: every unit's dependencies are the artifacts its `--extern`s name (metadata edges pipeline on rmeta,

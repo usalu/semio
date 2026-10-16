@@ -1,0 +1,27 @@
+# Cargo Admission Actual Phase: Held Source
+
+`runRepositoryCargoTestsV1(request,policy,workspace,invocation,phaseControl)` and LintV1 now require the exact privately issued fifth phase. Shared execute authenticates it before effects, derives the build-policy cap with a requested child control, authenticates/refines the returned compiler-store phase, passes that actual phase into Core and per-command input/write work, and checks after awaited compiler/store completion. No Original sibling is issued there.
+
+The separate package receiver `runRepositoryCargoTests` legitimately issues its first genuine0 phase once at its actual Original entry. Preparation and subsequent test caps derive from that phase. Fifteen actual permanent Script call sites now issue their first genuine0 phase at `this.invocation` and pass the fifth argument. A TypeScript AST census distinguishes these15 actual calls from unused imports in other Scripts; those imports were not changed. Policy, network, build mode, package selections and command arguments retain their existing owners. No compatibility overload or optional phase was added.
+
+Root additionally authorized the three generated process-budget child programs that forwarded `original.control` to forward their already-received `original`. The artifact mock now names and authenticates that actual invocation and issues/authenticates its first genuine0 phase before reporting its marker. It does not execute a compiler or store body.
+
+## Actual Bounded Receipts
+
+- Schema/corpus preceded implementation. Sixteen language-neutral test/lint rows cover finite grant versus policy cap, copied/live-foreign/cancelled/expired refusal, cancellation after store admission and after compiler return. Ajv validates the closed corpus; independent SQLite relational evaluation agrees with its expected admissions/effect counts. Actual function bodies compiled by both TypeScript and esbuild yield equal receipts.
+- Mandatory API strict RED returned1 with exactly two TS2554 diagnostics: actual Tests/Lint API expected4 arguments but got5. After implementation the same actual imported API strict returned0/zero diagnostics. Logs `🗑️generated/cargo-admission-api-{red,green}.log`; retained input `cargo-admission/api/📜️script.ts`.
+- Initial actual received Source model RED:1pass/17fail/94 assertions. Corrected admission GREEN:18pass/0fail/195 assertions. Logs `cargo-admission-phase-{red,green}.log` under generated. Real issued Original/private control/refinement/progress and actual shrinking deadlines are used; explicit compiler-store/compiler ports replace physical work.
+- Actual generated-callbinding RED:18pass/2fail, including the honestly retained receiver-ledger failure from the rejected callback. After aligning the3 callbacks and mock, the received permanent suite returned0:19pass/0fail/215 assertions/577ms, owned child status0/signalnull and actual wire SHA-256 equal to its parent. Logs `cargo-budget-binding-{red,green}.log`. The law executes only each exact extracted callback/mock and the actual receiver's issuance/authentication prefix, compiled independently by TypeScript/esbuild. It does not run the generated native-program bodies.
+- Pre-fixture seventeen-root strict returned0/zero diagnostics and remains retained in `cargo-admission-seventeen-strict.log`. Final eighteen-root strict75037 returned0/zero diagnostics across admission, its permanent law, all15 Scripts and the corrected process-budget test owner. Log `cargo-admission-eighteen-strict.log`.
+
+The permanent admission law is imported by the existing Cargo execution test owner after GREEN, coordinated with Core. No new public command or launch registration is needed. Core owns the execution endpoint, exact owner, custody and corresponding tests; those files are outside this lane's Source inventory.
+
+## Held Inventory and Qualification Boundary
+
+`🗑️generated/cargo-admission-before.json` records the admission owner and15 pre-edit Script hashes/call coordinates. `cargo-budget-fixture-before.json` records the extra authorized fixture's pre-edit hash. `cargo-admission-source-held.json` records final hashes for18 roots plus schema/corpus, actual5-argument calls, registration and strict result.
+
+Against Root's retained historical `tooling-closures-lease-profile-ready-current.json`, changed-path membership is reader0/runtime0/compiler0. Against retained `bazel-aggregate-source-readiness-95466.json`, admission is the sole intersecting path. These are historical membership comparisons, not current Source/SDK provenance; Root still owns fresh capture, independent FD review, SDK provenance and actual canonical/native qualification.
+
+No canonical images/stores, native watcher, Cargo, SDK or Bazel runtime was opened in this lane. The Source runner owns real Bun children and unchanged received envelopes; SQLite oracle storage is in-memory and all modeled work drains before its child exits. Low reviewed the admission hierarchy and final fixture correction narrowly as clean. The inventory helper's first extra-fixture registration-path lookup failed after type checking; that setup log is retained separately as `cargo-admission-strict-inventory-setup.log` and is not counted as strict success.
+
+Ticket inputs retained: `cargo-admission/📜️script.ts` (AST census/full strict/inventory), `cargo-admission/api/📜️script.ts` (actual API type boundary), `cargo-admission/run/📜️script.ts` (owned received Source model). Source is held; no further production edits are planned by this lane.

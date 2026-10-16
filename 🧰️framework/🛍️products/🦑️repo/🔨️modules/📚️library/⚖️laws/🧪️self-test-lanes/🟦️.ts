@@ -1,4 +1,4 @@
-/** 🧪️ Self-test lanes the composition root injects into the verification gates, so no production gate imports a test module.
+/** 🧫️ Self-test lanes the composition root injects into the verification gates, so no production gate imports a test module.
  * @see 📜️script.ts (builds the lane registry)
  */
 import type { PolicyRustSourceEvidence } from "../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";

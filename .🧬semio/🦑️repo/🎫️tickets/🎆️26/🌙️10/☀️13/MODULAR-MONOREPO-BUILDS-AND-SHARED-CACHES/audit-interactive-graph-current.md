@@ -1,0 +1,27 @@
+# Interactive, MCP Wire, Graph And Stdio Source Audit
+
+Read-only independent Source audit on 2026-10-16. Only ticket Markdown was written. No tests, builds, runtime child launches, Native provider, network, platform probe, git mutation or worktree ran. Existing evidence was read and hashed, never regenerated. Runtime validation remains the authors’ retained evidence, not a new audit claim.
+
+## Finding
+
+**P2 — Interactive close waits for blocked writes before stopping their child.** `🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts:75` closes admission and resolves queued readers, but then awaits every pending operation before calling `stdin.end()` and `terminateOwnedChildTree(child)`. An accepted frame can exceed the pipe capacity (the policy permits 16 MiB) while the child keeps running without reading stdin. Its real write callback cannot finish, so an explicit close waits until the Original deadline path at71/76 eventually terminates the child. That converts requested closure into a deadline failure. Initiate child stop before joining pending writes, while retaining each actual write completion/close and terminal before buffer wiping. This is a concrete Source control-flow finding, not a runtime reproduction. The current tests do not combine a backpressured accepted write with explicit close.
+
+## Reviewed Boundaries
+
+The actual interactive token is frozen and carries nullable PID DATA; only its private WeakMap identity grants operations. Copies and retired tokens refuse. Ordinary admission checks the actual issued control; closure and cached diagnostics preserve only the live accepted scope. Before-spawn checks enforce finite remaining Original time. Rejections preserve thrown undefined via the separate failed boolean/failure-array presence. Input buffers are wiped only after the real publishing promise settles. No fake accepted Native provider was introduced in the reviewed laws.
+
+The pure wire module checks proxies before reflection, then own data descriptors, plain containers, dense arrays, cycles and Unicode scalar completeness. It charges punctuation, escaped keys/values, depth and nodes, snapshots aliases independently and freezes copied values. The canonical serializer explicitly sorts keys, avoiding JavaScript integer-key enumeration reordering. Actual neutral tests use Ajv, SQLite JSON and fast-json-stable-stringify; their assertions and retained red/green logs are Source evidence only. No additional actionable wire defect was established.
+
+Graph Source admission checks all 43 current function names (42 authored Rust js_name exports plus generated free), both constructor prototype before initialization/birth and created instance afterward. It captures initializer/constructor references. The exact generated subfile import remains static; source bare roots fall through to authored package exports, generated subfiles require the declared delivery inventory. The required source/generated tag has no omitted-tag fallback. Tests parse the actual Rust roster and TypeScript interface and exercise the actual resolver against Ajv/SQLite projections. These facts do not qualify generated ABI, browser assets or actual managed reader/compiler runtime. No additional actionable Graph defect was established in the inspected contract/resolver.
+
+The Stdio execution owner snapshots argv/env before yielding, authenticates exact invocation/control, uses bounded Core capture for ordinary tools, and retains actual managed compiler/input/writer owners for Cargo. The component producer consumes its actual captured wasm within the capture scope; catalog cancel-file polling aborts the requested additional signal and clears its timer in finally. The report says seven calls, but current Script has eight syntactic `runControlled` calls at100,369,970,975,1025,1109,1125,1132; all route through the same owner at72. This is a count correction, not an uncovered raw-spawn path. Compiler/tool/publication runtime remains unqualified.
+
+The earlier two Host findings are corrected in current Source: `🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts:409,417` initiates retained run closure before ledger drain, and447–458 places accepted prebirth setup inside rollback protection with run-close on prebirth refusal. This is Source reinspection only; no actual Hub ran.
+
+## Frozen Epoch Accounting
+
+All 86 cited entries (Source and evidence, including repeated entries) across the four requested reports matched their recorded SHA256 at the initial read. The detailed per-entry comparison is retained in `audit-interactive-graph-hashes.md`. The exact wrapper initially matched `43ff0971aeadb992cd4bcd2e9720d74abbd209ce65eedbec450e905b6308d94f`; any subsequent internal selector successor is a new epoch, not validation of the frozen wrapper. The interactive capture inspected here is `d79b440d586d26c9b17764b707e2425779113bf9aa518abcb0ee000f5e6733c4`, wire `603eb737ad2428d4367d6e64daa5b86245143be5f03712ecc9e4fcb0cf01a73a`, Graph runtime `5378a02e3196caefb6ada91b1927a0d58f43cf47c8c9280b67b5fbd7b372f61c`, Stdio execution `5ed56b0b6bd9eddd8b3ae86ecf6b9afba006aaa932306b34904947936b49529d`.
+
+CPU canonical physical cleanup changes and Storage runtimeenv changes are separate files/hunks and cannot retroactively alter these frozen claims. This bounded review did not requalify the complete moving Host report hash inventory or its BOTH32/347 runtime evidence.
+
+Final exact-pair rehash checked 86 entries: all still matched the frozen report hashes.

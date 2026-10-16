@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import semver from "semver";
-import { defineTestAdapter, type AdapterContext } from "../../../🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { versionSatisfies } from "../../🕸️plugin-graph/🟦️.ts";
 // #endregion 🔌️Adapters
 

@@ -37,3 +37,4 @@ semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modul
 semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
+semio-framework-os-space-testing-sqlite-native-caller = { path = "../../../../../../../🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust" }

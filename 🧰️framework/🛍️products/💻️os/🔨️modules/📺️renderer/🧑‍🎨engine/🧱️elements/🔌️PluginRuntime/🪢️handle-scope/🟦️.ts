@@ -5,10 +5,10 @@
 
 import { OwnedUiPatchIntake } from "../../📃️UiDocumentStore/📥️intake/🟦️.ts";
 // #region 🔌️Adapters
-import { ActivationRegistry } from "../../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
-import { type ActivationReason } from "../../../../../../../../🔨️modules/🎠️kernel/🚦️activation-reason/🟦️.ts";
-import { createTurnOutcomeBroadcast, type TurnOutcome } from "../../../../../../../../🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts";
-import { type PluginWasmHandle as KernelPluginWasmHandle } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
+import { ActivationRegistry } from "@semio-tech/framework";
+import { type ActivationReason } from "@semio-tech/framework";
+import { createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
+import { type PluginWasmHandle as KernelPluginWasmHandle } from "@semio-tech/framework";
 import {
   ShardClient,
   type ShardActorActivationLease,
@@ -19,7 +19,7 @@ import {
 // #endregion 🔌️Adapters
 import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { type Lane } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
-import { ActorDocumentBindingV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
+import { ActorDocumentBindingV1 } from "@semio-tech/framework/backbone/binding";
 import { type WireTurnResult } from "../🪝️wire-codec/🟦️.ts";
 import { forgetInstanceForRecovery, getShardClient } from "../🛰️runtime-singletons/🟦️.ts";
 import { submitPluginTurn, teardownPluginActor } from "../🧵️turn-dispatch/🟦️.ts";

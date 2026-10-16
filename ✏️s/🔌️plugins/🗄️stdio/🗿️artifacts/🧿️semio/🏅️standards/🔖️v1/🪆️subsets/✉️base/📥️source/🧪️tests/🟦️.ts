@@ -8,7 +8,7 @@ import fixtures from "./🧫️fixtures/🔣️.json" with {type:"json"};
 /** 📥️ One producer or member body of the explicit extension whose source text the binding mutations edit. */
 type ProducerSourceBodyV1=Readonly<{source:string}>;
 /** 📥️ The explicit extensions of one member-store producer source declaration, as the owning check receives them. */
-type ProducerSourcesV1=Readonly<{extensions:readonly Readonly<{producer:ProducerSourceBodyV1;members:ProducerSourceBodyV1}>[]}>;
+type ProducerSourcesV1=Readonly<{extensions:readonly Readonly<{producer:ProducerSourceBodyV1;members:ProducerSourceBodyV1;declaration:unknown}>[]}>;
 /** 🧪️ Checks this instance’s actual producer/table binding under the original Generic source contract; the owning check, the sources and the Generic domain schema are supplied by the composition that owns the Store contract. */
 export function semioMemberStoreProducerSourceSelfTests(check:(sources:ProducerSourcesV1)=>boolean,sources:ProducerSourcesV1,domainSchema:Readonly<{$id:string}>):number{
  const root=resolve(dirname(fileURLToPath(import.meta.url)),"../../../../../../../../../../..");

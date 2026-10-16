@@ -8,9 +8,8 @@ pub use semio_framework_os_kernel::{io_schema, os_dsl, sqlite_snapshot};
 pub use semio_framework_os_kernel::{io, os_pack};
 pub use semio_framework_os_kernel::os_pack::codec;
 
-pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 #[global_allocator]
-static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
 
 #[path = "../🦀️.rs"]
 mod decoding;
@@ -19,17 +18,11 @@ mod encoding;
 #[path = "../../../🪶️native-retirement/🧪️tests/🦀️.rs"]
 mod retirement;
 
-#[path = "🧬️octets/🦀️.rs"]
-mod octets;
-
 #[path = "../../../../../../🧬️semio/🧪️tests/🚦️controlled/🦀️.rs"]
 mod envelope;
 
 #[path = "../../../../../../🗣️dsl/🧬️schema/🧪️tests/🛬️decoding/🦀️.rs"]
 mod controlled_text;
-
-#[path = "../../../../../../🗣️dsl/🧬️schema/🏭️producer/🧪️tests/🦀️.rs"]
-mod schema_metadata;
 
 #[test]
 fn sqlite_snapshot_link_controlled_binding_preserves_all_pin_branches_and_cancels_before_copies(){
@@ -52,7 +45,7 @@ use semio_framework_value::NativeDecodeControl;
         let expected=store::ArtifactLink{target:semio_framework_artifact_reference::ArtifactRef::parse_uri(row["target"].as_str().unwrap()).unwrap(),pin,role:row["role"].as_str().unwrap().into()};let field=<store::ArtifactLink as DslField>::to_value(&expected);
         let decoded=<store::ArtifactLink as DslField>::from_value_controlled(&field,&mut semio_framework_value::NativeDecodeControl::new(4096,&mut |_|true)).unwrap();assert_eq!(decoded,expected);
         let semio_framework_dsl_record::Shape::Record(spec)=<store::ArtifactLink as DslField>::shape()else{unreachable!()};let semio_framework_dsl_record::FieldValue::Record(record)=&field else{unreachable!()};
-        let bytes=os_pack::encode_document(&(spec.ordinary)(),record,&store::PackEncodeOptions::default()).unwrap();let(decoded_record,report)=os_pack::decode_document(&bytes,&(spec.ordinary)(),&store::PackDecodeOptions::default()).unwrap();assert!(!report.schema_drift);let mut decoded_field=semio_framework_dsl_record::FieldValue::Record(decoded_record);
+        let bytes=os_pack::record::encode_document(&(spec.ordinary)(),record,&store::PackEncodeOptions::default()).unwrap();let(decoded_record,report)=os_pack::record::decode_document(&bytes,&(spec.ordinary)(),&store::PackDecodeOptions::default()).unwrap();assert!(!report.schema_drift);let mut decoded_field=semio_framework_dsl_record::FieldValue::Record(decoded_record);
         assert_eq!(<store::ArtifactLink as DslField>::from_value(&decoded_field).unwrap(),expected);assert_eq!(<store::ArtifactLink as DslField>::from_value_controlled(&decoded_field,&mut semio_framework_value::NativeDecodeControl::new(4096,&mut |_|true)).unwrap(),expected);
         let semio_framework_dsl_record::FieldValue::Record(root)=&mut decoded_field else{unreachable!()};let Some(semio_framework_dsl_record::FieldValue::Record(pin))=root.fields.get_mut(&1)else{unreachable!()};pin.fields.insert(99,semio_framework_dsl_record::FieldValue::Absent);assert!(<store::ArtifactLink as DslField>::from_value_controlled(&decoded_field,&mut semio_framework_value::NativeDecodeControl::new(4096,&mut |_|true)).is_err());
 

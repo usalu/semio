@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
-fn grants()->(RetainedCloneGrant,RetainedCloneGrant){let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let read=|name:&str|{let p=law[name].as_array().unwrap();RetainedCloneGrant{maximum_items:p[0].as_u64().unwrap()as usize,maximum_copy_bytes:p[1].as_u64().unwrap()as usize,maximum_capacity_bytes:p[2].as_u64().unwrap()as usize,maximum_release_bytes:p[3].as_u64().unwrap()as usize,maximum_depth:p[4].as_u64().unwrap()as usize}};(read("originalGrant"),read("closeGrant"))}
+fn grants()->(RetainedCloneGrant,RetainedCloneGrant){let law:serde_json::Value=serde_json::from_str(crate::text("🛑️cancel/🎟️admission/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let read=|name:&str|{let p=law[name].as_array().unwrap();RetainedCloneGrant{maximum_items:p[0].as_u64().unwrap()as usize,maximum_copy_bytes:p[1].as_u64().unwrap()as usize,maximum_capacity_bytes:p[2].as_u64().unwrap()as usize,maximum_release_bytes:p[3].as_u64().unwrap()as usize,maximum_depth:p[4].as_u64().unwrap()as usize}};(read("originalGrant"),read("closeGrant"))}
 fn close(token:CancelToken,grant:RetainedCloneGrant)->usize{
  let(mut owner,heap)=observe(||CancelTokenRetirement::from_token(token));assert_eq!(heap,(0,0));let mut released=0;let mut turns=0;
  while !owner.terminal_is_empty(){let(demand,heap)=observe(||owner.retirement_demands().unwrap());assert_eq!(heap,(0,0));assert_eq!(demand.copy_bytes,0);

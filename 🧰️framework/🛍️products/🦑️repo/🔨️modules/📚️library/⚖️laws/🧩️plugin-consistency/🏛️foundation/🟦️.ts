@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: crate discovery, region and function parsing.
+/** 🏛️ Wave 4 plugin consistency policy: crate discovery, region and function parsing.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { type PolicyModSpan, policyMaskLiterals } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";
@@ -245,8 +245,12 @@ export const POLICY_ROOT_SCRIPT_OWNER_DIRECTORIES: readonly string[] = [
   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root",
 ];
 
-/** 📋️ Repo-relative paths of the root `📜️script.ts` and of every module it owns (`🧪️tests` below an owner directory are not part of it). */
-export function policyRootScriptModulePaths(repoRoot: string): string[] {
+/** 🗂️ Directories whose `🟦️.ts` modules hold the logic a package `📜️script.ts` routes to (the script itself is found by the repo-wide `📜️script.ts` walk). */
+export const POLICY_PACKAGE_SCRIPT_OWNER_DIRECTORIES: readonly string[] = [
+  "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands",
+];
+
+function policyOwnedModulePaths(repoRoot: string, directories: readonly string[]): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
     let entries: Dirent[];
@@ -264,8 +268,18 @@ export function policyRootScriptModulePaths(repoRoot: string): string[] {
       if (ent.name === "🟦️.ts") found.push(childRel);
     }
   };
-  for (const directory of POLICY_ROOT_SCRIPT_OWNER_DIRECTORIES) walk(directory);
-  return ["📜️script.ts", ...found.sort()];
+  for (const directory of directories) walk(directory);
+  return found.sort();
+}
+
+/** 📋️ Repo-relative paths of the root `📜️script.ts` and of every module it owns (`🧪️tests` below an owner directory are not part of it). */
+export function policyRootScriptModulePaths(repoRoot: string): string[] {
+  return ["📜️script.ts", ...policyOwnedModulePaths(repoRoot, POLICY_ROOT_SCRIPT_OWNER_DIRECTORIES)];
+}
+
+/** 📋️ Repo-relative paths of the modules owned by package scripts (`POLICY_PACKAGE_SCRIPT_OWNER_DIRECTORIES`). */
+export function policyPackageScriptModulePaths(repoRoot: string): string[] {
+  return policyOwnedModulePaths(repoRoot, POLICY_PACKAGE_SCRIPT_OWNER_DIRECTORIES);
 }
 /** 🪧️ True for the root `📜️script.ts` and for every module it owns: their policy literals name the vocabulary the rules ban, so scans of the rule vocabulary skip them. */
 export function policyIsRootScriptSource(relPath: string): boolean {

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { createSurfaceSchemaOracleV1 } from "../🔮️schema/🟦️.ts";
 import { Earcut } from "three/src/extras/Earcut.js";
-import { validateJsonSchemaSubset } from "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import schema from "../../🧬️schema/🔣️.json";
 import fixture from "../🧫️fixtures/🔣️.json";
 type Point=readonly[number,number,number];

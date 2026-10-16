@@ -1279,7 +1279,7 @@ impl KernelPoolState {
             *job = None;
         }
         self.begin_fault_close(actor);
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         CANCELLED_KERNEL_TURNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         format!("kernel: actor {}'s turn was cancelled by its owner", actor.0).into()
     }

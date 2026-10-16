@@ -1,4 +1,4 @@
-/** 🧭️ Tool-job coverage inventory: reserved ids, static rows, publication contracts, app-owned rows, dispositions and proofs.
+/** 📋️ Tool-job coverage inventory: reserved ids, static rows, publication contracts, app-owned rows, dispositions and proofs.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { policyTestModSpans } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";

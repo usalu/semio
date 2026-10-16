@@ -12,7 +12,7 @@ fn opening_preferences_default_is_empty() {
 /// (`🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts`); this half replays the very same event logs through the
 /// OS config projection that owns the vocabulary, so a boot script that agreed with itself but not
 /// with the shell would still fail.
-const APPEARANCE_BOOT_FIXTURE_JSON: &str = include_str!("../../../../../../🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧫️fixtures/🌓️appearance-boot.json");
+static APPEARANCE_BOOT_FIXTURE_JSON: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧫️fixtures/🌓️appearance-boot.json")).expect("fixture"));
 
 /// ⚖️ LAW: replaying a case's `events` through `apply_ui_preferences_config_mutation` yields the
 /// `appearance` the fixture declares — the projection the head script has to reproduce by hand.
@@ -23,7 +23,7 @@ const APPEARANCE_BOOT_FIXTURE_JSON: &str = include_str!("../../../../../../🔨�
 /// could notice (`📓️react-i18n-a11y-customization-2026-09-13.md` §3.2).
 #[test]
 fn every_appearance_boot_case_replays_to_the_appearance_the_fixture_declares() {
-    let fixture: serde_json::Value = serde_json::from_str(APPEARANCE_BOOT_FIXTURE_JSON).expect("appearance boot fixture");
+    let fixture: serde_json::Value = serde_json::from_str(APPEARANCE_BOOT_FIXTURE_JSON.as_str()).expect("appearance boot fixture");
     assert_eq!(fixture["preferenceKey"].as_str(), Some(UI_PREFERENCES_CONFIG_SCHEMA), "the fixture names the preference key this facet is registered under");
     let mut replayed = 0usize;
     for case in fixture["cases"].as_array().expect("cases") {
@@ -54,7 +54,7 @@ fn every_appearance_boot_case_replays_to_the_appearance_the_fixture_declares() {
 /// fixture's `deadKeys` are dead because the vocabulary moved, not because someone renamed a string.
 #[test]
 fn no_retired_storage_key_is_part_of_the_ui_preferences_vocabulary() {
-    let fixture: serde_json::Value = serde_json::from_str(APPEARANCE_BOOT_FIXTURE_JSON).expect("appearance boot fixture");
+    let fixture: serde_json::Value = serde_json::from_str(APPEARANCE_BOOT_FIXTURE_JSON.as_str()).expect("appearance boot fixture");
     let dead: Vec<&str> = fixture["deadKeys"].as_array().expect("deadKeys").iter().map(|key| key.as_str().expect("dead key")).collect();
     assert!(!dead.is_empty(), "the fixture must name the keys it retires");
     for key in dead {

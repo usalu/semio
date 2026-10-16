@@ -1,4 +1,4 @@
-import { jsonSchemaSubsetValueEquals, validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { jsonSchemaSubsetValueEquals, validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
@@ -10,7 +10,7 @@ import { discoverPluginBuildTargets, generatePluginRegistry, generatePluginRegis
 import { REGISTRY_HOST_APP_CHANNEL_VERSION } from "../../🧬️schema/🟦️.ts";
 import contract from "../🧬️schema/🔣️.json";
 import corpus from "./🧫️fixtures/🔣️.json";
-import identity from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
+import { identityInstallationSchema as identity } from "../../../../../../../🔨️modules/🪪️identity/🧪️tests/🧫️fixtures/🟦️.ts";
 import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, parsePluginBuildTargetV1 } from "../🧬️schema/🟦️.ts";
 
 const parsers = { source: parseComponentSourceRowV1, target: parsePluginBuildTargetV1, compiled: parseCompiledComponentRowV1, deployed: parseDeployedRegistryEntryV1 };

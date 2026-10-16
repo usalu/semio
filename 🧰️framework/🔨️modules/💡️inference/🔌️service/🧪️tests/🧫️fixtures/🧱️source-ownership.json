@@ -1,0 +1,7 @@
+{
+  "schema": "semio.test.service-source-ownership/v1",
+  "owner": "🧰️framework",
+  "entry": "🔨️modules/💡️inference/🔌️service/🧪️tests/🧱️io-boundary/🟦️.ts",
+  "removedOwners": ["🧰️framework/🛍️products", "✏️s", "🌎️hub", "♻️mit-bestand", "compose"],
+  "expectedSpecificSources": 0
+}

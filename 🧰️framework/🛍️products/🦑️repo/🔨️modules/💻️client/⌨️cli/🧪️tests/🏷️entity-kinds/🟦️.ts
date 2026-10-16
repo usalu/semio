@@ -3,10 +3,9 @@ import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import Ajv from "ajv";
-import { readEntityCatalog } from "../../../../../../../🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts";
-import { entityKindIndexByEmoji } from "../../../../../../../🔨️modules/🧬️schema/🟦️.ts";
-import { emitGo, GENERATOR_ID, REFRESH_COMMAND } from "../../🏷️entity-kinds/📽️projection/🟦️.ts";
-import { repoEntityKindTarget } from "../../📦️packages/🟦️typescript/📜️script.ts";
+import { readEntityCatalog } from "@semio-tech/schema-ts/entity-kinds/source";
+import { entityKindIndexByEmoji } from "@semio-tech/schema-ts";
+import { emitGo, GENERATOR_ID, REFRESH_COMMAND, repoEntityKindTarget } from "../../🏷️entity-kinds/📽️projection/🟦️.ts";
 
 type OwnershipFixture = {
   readonly schemaVersion: 1;

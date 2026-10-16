@@ -1,6 +1,6 @@
 
 import {expect,test} from "bun:test";
-import {NativeDecodeControl} from "../../../../../../🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
 import {unwrapBinaryControlled,admitTextPreambleControlled} from "../../🟦️.ts";
 import envelopeFixture from "../🧫️fixtures/🚦️controlled/🔣️.json";
 
@@ -32,7 +32,7 @@ test("native envelopes admit exact identity without owning their payload",async(
 });
 
 import Ajv2020 from "ajv/dist/2020";
-import refusalSchema from "../../../../../../🔨️modules/🌱️value/⚠️refusal/🔁️codec/🧬️schema/🔣️.json";
+import { refusalCodecSchema as refusalSchema } from "@semio-tech/value-ts/refusal/codec/schema";
 
 test("original controlled binary envelope refuses through canonical literal ValueError without allocation",async()=>{
  const validate=new Ajv2020({strict:true}).compile(refusalSchema);

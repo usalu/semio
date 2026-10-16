@@ -160,7 +160,7 @@ fn known_tones_resolve_to_distinct_theme_tokens() {
 
 #[test]
 fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📡️EventFeedHost/🧫️fixtures/🎨️layout/🔣️.json"))).expect("EventFeed visual layout fixture");
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧱️elements/📡️EventFeedHost/🧪️tests/🧫️fixtures/🎨️layout/🔣️.json"))).expect("EventFeed visual layout fixture");
     let entries: Vec<EventFeedEntryJson> = serde_json::from_value(fixture["entries"].clone()).expect("visual entries");
     let expected = &fixture["expected"];
     let viewport = &fixture["viewport"];
@@ -181,8 +181,8 @@ fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
     assert_eq!(event_feed_tone_color(Some("warning"), &theme), theme.warning);
     assert_eq!(event_feed_tone_color(Some("error"), &theme), theme.error);
     assert_eq!(event_feed_tone_color(Some("fatal"), &theme), theme.error);
-    let medium = ui_wgpu::wgpu::TextWeight::Medium.synthetic_offset(theme.font_size_small).unwrap();
-    let semibold = ui_wgpu::wgpu::TextWeight::Semibold.synthetic_offset(theme.font_size_small).unwrap();
+    let medium = semio_framework_ui_text::TextWeight::Medium.synthetic_offset(theme.font_size_small).unwrap();
+    let semibold = semio_framework_ui_text::TextWeight::Semibold.synthetic_offset(theme.font_size_small).unwrap();
     assert!(medium > 0.0 && medium < semibold, "font-medium stays lighter than fatal font-semibold");
 
     let scene = UiComponentSceneNode {
@@ -206,7 +206,7 @@ fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
         ink_canvas: None,
         graph_timeline: None,
         diff_view: None,
-        event_feed: Some(ui_wgpu::wgpu::EventFeedScene {
+        event_feed: Some(semio_framework_ui_scene_views::EventFeedScene {
             entries_json: fixture["entries"].to_string(),
             follow: None,
             activate_action: fixture["activateAction"].as_str().map(str::to_owned),
@@ -225,8 +225,8 @@ fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
     let second_y = controls[1].rect.y + 1.0;
     assert_eq!(event_feed_hit(&scene, bounds, layout.inner.x + 1.0, second_y, &theme).expect("second card").control_id, "feed-visual-layout.feed.success");
 
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -245,8 +245,8 @@ fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
     let partial_scroll = heights[0] * 0.5;
     set_scroll_offset(&scene.host_id, "feed", partial_scroll);
     let clipped_controls = event_feed_accessibility_controls(&scene, &layout, &entries, &heights, partial_scroll, None);
-    let mut clipped_draw = ui_wgpu::wgpu::DrawList::default();
-    let mut clipped_atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut clipped_draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut clipped_atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut clipped_input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     {
         let mut ctx = crate::interpreter::framework_widget_context(&mut clipped_draw, None, &mut clipped_atlas, None, &mut clipped_input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
@@ -262,7 +262,7 @@ fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
 /// 🧰️ Renders `render_event_feed` with one entry of the given `tone` and returns its `DrawList`,
 /// so the title glyph's tint can be inspected directly — matches `FEED_TONE_CLASS`'s title-span
 /// coloring in `event-feed-host.tsx`.
-fn render_feed_entry(tone: Option<&str>) -> (ui_wgpu::wgpu::DrawList, Theme) {
+fn render_feed_entry(tone: Option<&str>) -> (semio_framework_ui_draw_contract::DrawList, Theme) {
     let entry = json!({ "id": "e1", "title": "Built", "tone": tone });
     let scene = UiComponentSceneNode {
         host_id: "feed-paint-test".into(),
@@ -285,12 +285,12 @@ fn render_feed_entry(tone: Option<&str>) -> (ui_wgpu::wgpu::DrawList, Theme) {
         ink_canvas: None,
         graph_timeline: None,
         diff_view: None,
-        event_feed: Some(ui_wgpu::wgpu::EventFeedScene { entries_json: json!([entry]).to_string(), follow: None, activate_action: None, domain_id: None }),
+        event_feed: Some(semio_framework_ui_scene_views::EventFeedScene { entries_json: json!([entry]).to_string(), follow: None, activate_action: None, domain_id: None }),
         block_list: None,
         menu: None,
     };
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
@@ -303,7 +303,7 @@ fn render_feed_entry(tone: Option<&str>) -> (ui_wgpu::wgpu::DrawList, Theme) {
     (draw, theme)
 }
 
-fn instance_colors(draw: &ui_wgpu::wgpu::DrawList) -> Vec<Rgba> {
+fn instance_colors(draw: &semio_framework_ui_draw_contract::DrawList) -> Vec<Rgba> {
     draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| Rgba::new(instance.color[0], instance.color[1], instance.color[2], instance.color[3])).collect()
 }
 
@@ -349,7 +349,7 @@ fn row_activation_sends_surface_id_and_id_like_react() {
         ink_canvas: None,
         graph_timeline: None,
         diff_view: None,
-        event_feed: Some(ui_wgpu::wgpu::EventFeedScene { entries_json: entries, follow: None, activate_action: Some("openEntry".into()), domain_id: None }),
+        event_feed: Some(semio_framework_ui_scene_views::EventFeedScene { entries_json: entries, follow: None, activate_action: Some("openEntry".into()), domain_id: None }),
         block_list: None,
         menu: None,
     };
@@ -397,7 +397,7 @@ fn rows_without_an_activate_action_resolve_hover_only() {
         block_list: None,
         menu: None,
     };
-    scene.event_feed = Some(ui_wgpu::wgpu::EventFeedScene { entries_json: entries, follow: None, activate_action: None, domain_id: None });
+    scene.event_feed = Some(semio_framework_ui_scene_views::EventFeedScene { entries_json: entries, follow: None, activate_action: None, domain_id: None });
     let theme = Theme::default();
     let bounds = Rect::new(0.0, 0.0, 400.0, 200.0);
     let layout = event_feed_layout(bounds, &theme);
@@ -408,7 +408,7 @@ fn rows_without_an_activate_action_resolve_hover_only() {
 
 #[test]
 fn neutral_accessible_entries_stage_clipped_labels_and_exact_actions() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📡️EventFeedHost/🧫️fixtures/♿️accessible-entry/🔣️.json"))).expect("EventFeed accessible entry fixture");
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧱️elements/📡️EventFeedHost/🧪️tests/🧫️fixtures/♿️accessible-entry/🔣️.json"))).expect("EventFeed accessible entry fixture");
     let theme = Theme::default();
     for (index, row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let entries_json = json!([row["entry"].clone()]).to_string();
@@ -434,7 +434,7 @@ fn neutral_accessible_entries_stage_clipped_labels_and_exact_actions() {
             ink_canvas: None,
             graph_timeline: None,
             diff_view: None,
-            event_feed: Some(ui_wgpu::wgpu::EventFeedScene { entries_json, follow: None, activate_action: row["activateAction"].as_str().map(str::to_owned), domain_id: None }),
+            event_feed: Some(semio_framework_ui_scene_views::EventFeedScene { entries_json, follow: None, activate_action: row["activateAction"].as_str().map(str::to_owned), domain_id: None }),
             block_list: None,
             menu: None,
         };

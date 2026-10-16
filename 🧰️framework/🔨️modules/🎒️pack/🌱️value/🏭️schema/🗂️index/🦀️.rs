@@ -1,14 +1,14 @@
 //! 🗂️ Concrete controlled slots for schema producer identities and semantic digest buckets.
 use semio_framework_dsl_record::NativeSchemaControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-pub(super)trait Key:Eq{fn index_hash(&self)->usize;}
+pub trait Key:Eq{fn index_hash(&self)->usize;}
 fn hash(bytes:impl IntoIterator<Item=u8>)->usize{let mut hash=0xcbf29ce484222325u64;for byte in bytes{hash=(hash^u64::from(byte)).wrapping_mul(0x100000001b3);}hash as usize}
 impl Key for usize{fn index_hash(&self)->usize{hash(self.to_le_bytes())}}
 impl Key for [u8;32]{fn index_hash(&self)->usize{hash(self.iter().copied())}}
-pub(super)struct Index<K,V>{slots:Vec<Option<(K,V)>>,length:usize}
+pub struct Index<K,V>{slots:Vec<Option<(K,V)>>,length:usize}
 enum Position{Found(usize),Vacant(usize)}
 impl<K:Key,V>Index<K,V>{
- pub(super)fn new()->Self{Self{slots:Vec::new(),length:0}}
+ pub fn new()->Self{Self{slots:Vec::new(),length:0}}
  fn position<C:NativeSchemaControl>(&self,key:&K,control:&mut C)->Result<Position,ValueError>{
   control.scoped_stage(|control|{
    control.begin_stage(0)?;let count=self.slots.len();
@@ -18,11 +18,11 @@ impl<K:Key,V>Index<K,V>{
    Err(ValueError::new(ValueRefusalKind::InvariantViolated,"schema index exhausted its controlled probe domain"))
   })
  }
- pub(super)fn lookup<C:NativeSchemaControl>(&self,key:&K,control:&mut C)->Result<Option<&V>,ValueError>{
+ pub fn lookup<C:NativeSchemaControl>(&self,key:&K,control:&mut C)->Result<Option<&V>,ValueError>{
   if self.slots.is_empty(){return Ok(None)}
   Ok(match self.position(key,control)?{Position::Found(index)=>Some(&self.slots[index].as_ref().expect("found schema slot").1),Position::Vacant(_)=>None})
  }
- pub(super)fn lookup_mut<C:NativeSchemaControl>(&mut self,key:&K,control:&mut C)->Result<Option<&mut V>,ValueError>{
+ pub fn lookup_mut<C:NativeSchemaControl>(&mut self,key:&K,control:&mut C)->Result<Option<&mut V>,ValueError>{
   if self.slots.is_empty(){return Ok(None)}
   Ok(match self.position(key,control)?{Position::Found(index)=>Some(&mut self.slots[index].as_mut().expect("found schema slot").1),Position::Vacant(_)=>None})
  }
@@ -42,7 +42,7 @@ impl<K:Key,V>Index<K,V>{
    }Ok(())
   })
  }
- pub(super)fn bind<C:NativeSchemaControl>(&mut self,key:K,value:V,control:&mut C)->Result<(),ValueError>{
+ pub fn bind<C:NativeSchemaControl>(&mut self,key:K,value:V,control:&mut C)->Result<(),ValueError>{
   let length=self.length.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"schema identity count overflow"))?;
   let demand=length.checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"schema index load overflow"))?;
   if demand>self.slots.len(){self.grow(control)?;}

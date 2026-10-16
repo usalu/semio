@@ -4,8 +4,8 @@ import {existsSync} from "node:fs";
 import {resolve} from "node:path";
 import {createRequire} from "node:module";
 import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
-import contract from "../../../../../../🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json";
-import ordered from "../../../../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
+import { retirementContractSchema as contract } from "@semio-tech/value-ts/retirement/contract/schema";
+import { orderedRetirementSchema as ordered } from "@semio-tech/value-ts/ordered/retirement/schema";
 import originalLimits from "../../../../🧪️tests/🧫️fixtures/🫳️read-limits.json";
 
 test("complete source container limits match an independent relational JSON tree",()=>{

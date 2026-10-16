@@ -19,7 +19,7 @@
 import { Component, useId, type ReactElement, type ReactNode } from "react";
 import type { Deed, Menagerie, Point, Slug } from "@semio-tech/pets";
 import { localized, type QuizLabelKey, type QuizLocale, type QuizText } from "../../🌐️i18n/🟦️.ts";
-import type { QuizState, QuizStep } from "../../🧭️session/🟦️.ts";
+import type { QuizState, QuizStep } from "../../🧭️session/🧮️state/🟦️.ts";
 import { BodyButton, useAnnouncement } from "../../🪟️chrome/🟦️.tsx";
 import type { PetPlay, PetPlayer, ShownPets } from "../🟦️.tsx";
 

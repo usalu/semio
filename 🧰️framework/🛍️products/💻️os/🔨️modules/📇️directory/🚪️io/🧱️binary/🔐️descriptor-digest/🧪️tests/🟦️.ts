@@ -1,9 +1,9 @@
 import {admitCheckpointSelectionV1,decodeCanonicalCheckpointPairV1} from "../../🪢️checkpoint-pair/🟦️.ts";
-import {admitCanonicalCheckpointPairV1} from "../../../../🧬️schema/🟦️.ts";
+import { admitCanonicalCheckpointPairV1 } from "@semio-tech/framework/directory/schema";
 import {artifactHashHex,parseArtifactHashHex} from "../../🪪️artifact-hash/🟦️.ts";
 import Parser from "web-tree-sitter";
 import {dirname,join} from "node:path";
-import {validateDocumentDescriptorV1, type DocumentDescriptor } from "../../../../🧬️schema/🟦️.ts";
+import { validateDocumentDescriptorV1, type DocumentDescriptor } from "@semio-tech/framework/directory/schema";
 import {expect,test} from "bun:test";
 import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";

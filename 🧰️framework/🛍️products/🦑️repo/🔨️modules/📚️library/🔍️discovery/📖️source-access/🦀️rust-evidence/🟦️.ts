@@ -1,4 +1,4 @@
-/** 🧭️ Rust source evidence readers: production/test source pairs, store roots and comment stripping.
+/** 🦀️ Rust source evidence readers: production/test source pairs, store roots and comment stripping.
  * @see 📜️script.ts
  */
 import { memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "../../../../../../💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
@@ -90,7 +90,7 @@ export function policyReadRustSourceEvidence(repoRoot: string, sourcePath: strin
       if (tests.some((entry) => entry.path === target)) continue;
       const targetSource = policyReadFileSafe(repoRoot, target);
       if (!targetSource) throw new Error(`[policy rust evidence] declared canonical test source missing: ${target}`);
-      tests.push({ path: target, source: targetSource });
+      tests.push({ path: target, source: POLICY_SPLIT_SOURCE_ROOTS.includes(target) ? policyReadModuleTreeSource(repoRoot, target) : targetSource });
     }
   }
   return { production: { path: normalizedSourcePath, source: split ? policyReadModuleTreeSource(repoRoot, normalizedSourcePath) : source }, tests };

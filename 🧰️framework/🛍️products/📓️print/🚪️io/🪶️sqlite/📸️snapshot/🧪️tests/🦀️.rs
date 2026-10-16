@@ -5,7 +5,7 @@ use protocol::os_store::serialization::ArtifactSqliteSnapshotHost;
 use semio_framework_value::{DslValue,Number};
 use protocol::sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase};
 use std::{io::Write,process::{Command,Stdio}};
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪶️sqlite/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/📸️snapshot/🪶️sqlite/🔣️.json")).unwrap()}
 fn owned(case:&serde_json::Value)->ChartSnapshot{ChartSnapshot{chart:DslValue::from(&case["snapshot"]["chart"])}}
 fn exact(actual:&DslValue,expected:&DslValue){match(actual,expected){
  (DslValue::Number(Number::UInt(a)),DslValue::Number(Number::UInt(b)))=>assert_eq!(a,b),

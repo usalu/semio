@@ -188,7 +188,7 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
   const inputs = [
     `{workspaceRoot}/${caseRel}/${featureFilename}`,
     ...(existsSync(join(workspaceRoot, sharedFixtures)) ? [`{workspaceRoot}/${sharedFixtures}/**/*`] : []),
-    ...adapters.map((adapter) => `{workspaceRoot}/${adapter}`),
+    ...adapters.map((adapter) => `{workspaceRoot}/${dirname(adapter)}/**/${basename(adapter)}`),
     `{workspaceRoot}/${locationPath(vocabulary, vocabulary.testOracleRegistryLocation)}`,
     `{workspaceRoot}/${locationPath(vocabulary, vocabulary.testSchemaLocation)}`,
     `{workspaceRoot}/${TAXONOMY_REL}`,

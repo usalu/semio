@@ -32,3 +32,4 @@ semio-framework-dispatch-macros = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

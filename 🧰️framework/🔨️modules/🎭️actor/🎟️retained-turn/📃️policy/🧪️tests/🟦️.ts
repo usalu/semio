@@ -1,5 +1,5 @@
-import grantSchema from "../../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
-import {semioSchemaAjvV1} from "../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";
+import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
 /** 🎟️ Resource policy preserves the exact original input through its sole semantic accessor. */
 import{test,expect}from"bun:test";import{Database}from"bun:sqlite";import{readFileSync}from"node:fs";
 import{resolveOriginalTurnInputSource}from"../../🔎️source/🟦️.ts";

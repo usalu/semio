@@ -2,8 +2,7 @@
 
 extern crate semio_framework_os_kernel as protocol;
 
-#[path = "../../../../../🧪️tests/🔬️vectors/🦀️.rs"]
-mod vectors;
+use semio_s_artifact_remodel_remodeling_mut_vectors as vectors;
 
 #[path = "../../../../../🔭create-camera/🧪️tests/📷️adds/🦀️.rs"]
 mod create_camera_tests_adds_a_fourth_97e912;

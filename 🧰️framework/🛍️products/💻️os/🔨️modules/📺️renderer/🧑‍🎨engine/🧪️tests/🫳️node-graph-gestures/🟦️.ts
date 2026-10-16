@@ -41,7 +41,7 @@ const law = JSON.parse(readFileSync(resolve(engineRoot, "🧪️tests/🧫️fix
 };
 
 const canvas = readModuleTreeSource(canvasSource);
-const guest = readFileSync(guestSource, "utf8");
+const guest = readModuleTreeSource(guestSource);
 
 /** 🔗️ The field names the GUEST reads out of one `nodeGraphEdit` sub-operation: the closed field list its own match arm
  * declares (`action_row_fields(row, operation, &[…])`), less the discriminator. A node drag is the shared node-graph gesture

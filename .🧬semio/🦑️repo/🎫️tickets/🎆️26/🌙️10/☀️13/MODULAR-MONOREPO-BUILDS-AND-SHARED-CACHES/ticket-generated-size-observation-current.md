@@ -1,0 +1,3 @@
+# Ticket Generated Size Observation
+
+An ordinary read-only du -sk observation of this ticket generated directory completed terminal0 (handle30419) and reported325944KiB, or333,766,656 allocated bytes, at that historical observation. This is not a current quota measurement or a managed Native cache image. Active ticket output remains separate from the fixed managed cache budget; no maximum whole-repository size can be claimed from that budget. Generated logs must be removed only when the actual ticket is finished, preserving authored input and Markdown reports. No files were deleted by this observation.

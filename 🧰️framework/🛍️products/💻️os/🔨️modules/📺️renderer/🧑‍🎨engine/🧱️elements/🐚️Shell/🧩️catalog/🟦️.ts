@@ -1,5 +1,5 @@
 import { admitPluginCatalogV1, pluginCatalogV1, type PluginCatalogAdmissionV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
-import { PlaygroundBootPlanner } from "../../../../../../../../🔨️modules/🎠️kernel/🎮️playground-boot/🟦️.ts";
+import { PlaygroundBootPlanner } from "@semio-tech/framework";
 
 /** 🐚️ Admits the exact per-mount inventory and configures the real React boot without generated defaults. */
 export function resolveFrameworkOsCatalogConfigurationV1(input: unknown, variant: string | undefined, control: PluginCatalogAdmissionV1) {

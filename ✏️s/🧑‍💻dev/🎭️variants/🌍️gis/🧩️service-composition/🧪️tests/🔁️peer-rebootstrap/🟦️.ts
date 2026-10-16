@@ -4,9 +4,9 @@ import type { TestSource } from "../../../../../../../🧰️framework/🛍️pr
 import type { ServiceCompositionTestDependenciesV1 } from "../🧰️dependencies/🟦️.ts";
 
 type BackboneWorkerResponse = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").BackboneWorkerResponse;
-type DocumentScope = import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentScope;
+type DocumentScope = import("@semio-tech/framework/directory/schema").DocumentScope;
 type PersistenceBinding = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").PersistenceBinding;
-type UiNodeRecord = import("../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts").UiNodeRecord;
+type UiNodeRecord = import("@semio-tech/framework/manifest").UiNodeRecord;
 type WireFrontierSummary = import("../../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts").WireFrontierSummary;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 

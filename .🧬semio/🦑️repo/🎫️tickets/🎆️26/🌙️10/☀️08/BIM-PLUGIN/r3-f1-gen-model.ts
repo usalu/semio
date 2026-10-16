@@ -325,29 +325,49 @@ for (const s of entityList) entitiesRs += structRs(s);
 //#endregion 🔖️RustValues
 
 //#region 🔖️RustPatches
-let patchRs = header("sparse patches of `s.bim.model@1` entities") + "use super::*;\n\n";
 const patchables = structs.filter((s) => s.entity || s.singleton);
 const slotTy = (t: Ty) => (t.kind === "opt" ? `Option<Assigned<${rust(t)}>>` : `Option<${rust(t)}>`);
+const patchBlocks = new Map<string, string>();
 for (const s of patchables) {
+  let block = "";
   const fields = s.fields.map((x) => ({ ...x, t: parseTy(x.type) }));
   const opt = (x: { t: Ty }) => x.t.kind === "opt";
-  patchRs += `/// 🩹 Sparse patch of [\`${s.name}\`]: an absent field is untouched.\n#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]\n#[value(default)]\npub struct ${s.name}Patch {\n${fields.map((x) => `    #[value(skip_serializing_if = "Option::is_none")]\n    pub ${x.name}: ${slotTy(x.t)},`).join("\n")}\n}\n\n`;
-  patchRs += `impl Patch<${s.name}> for ${s.name}Patch {\n`;
-  patchRs += `    fn write(&self, base: &${s.name}) -> ${s.name} {\n        ${s.name} { ${fields.map((x) => `${x.name}: ${opt(x) ? "take_assigned" : "take"}(&self.${x.name}, &base.${x.name})`).join(", ")} }\n    }\n`;
-  patchRs += `    fn restoring(&self, base: &${s.name}) -> Self {\n        Self { ${fields.map((x) => `${x.name}: ${opt(x) ? "restore_assigned" : "restore"}(&self.${x.name}, &base.${x.name})`).join(", ")} }\n    }\n`;
-  patchRs += `    fn merge(&mut self, later: Self) {\n${fields.map((x) => `        merge_slot!(&mut self.${x.name}, later.${x.name});`).join("\n")}\n    }\n`;
-  patchRs += `    fn minimal(&self, base: &${s.name}) -> Self {
+  block += `/// 🩹 Sparse patch of [\`${s.name}\`]: an absent field is untouched.\n#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]\n#[value(default)]\npub struct ${s.name}Patch {\n${fields.map((x) => `    #[value(skip_serializing_if = "Option::is_none")]\n    pub ${x.name}: ${slotTy(x.t)},`).join("\n")}\n}\n\n`;
+  block += `impl Patch<${s.name}> for ${s.name}Patch {\n`;
+  block += `    fn write(&self, base: &${s.name}) -> ${s.name} {\n        ${s.name} { ${fields.map((x) => `${x.name}: ${opt(x) ? "take_assigned" : "take"}(&self.${x.name}, &base.${x.name})`).join(", ")} }\n    }\n`;
+  block += `    fn restoring(&self, base: &${s.name}) -> Self {\n        Self { ${fields.map((x) => `${x.name}: ${opt(x) ? "restore_assigned" : "restore"}(&self.${x.name}, &base.${x.name})`).join(", ")} }\n    }\n`;
+  block += `    fn merge(&mut self, later: Self) {\n${fields.map((x) => `        merge_slot!(&mut self.${x.name}, later.${x.name});`).join("\n")}\n    }\n`;
+  block += `    fn minimal(&self, base: &${s.name}) -> Self {
         Self { ${fields.map((x) => `${x.name}: ${opt(x) ? "changed_assigned" : "changed"}(&self.${x.name}, &base.${x.name})`).join(", ")} }
     }
 `;
-  patchRs += `    fn touched(&self) -> Vec<String> {\n        let mut out = Vec::new();\n${fields.map((x) => `        if self.${x.name}.is_some() {\n            out.push("${x.name}".to_string());\n        }`).join("\n")}\n        out\n    }\n`;
-  patchRs += `    fn is_empty(&self) -> bool {\n        self == &Self::default()\n    }\n}\n\n`;
+  block += `    fn touched(&self) -> Vec<String> {\n        let mut out = Vec::new();\n${fields.map((x) => `        if self.${x.name}.is_some() {\n            out.push("${x.name}".to_string());\n        }`).join("\n")}\n        out\n    }\n`;
+  block += `    fn is_empty(&self) -> bool {\n        self == &Self::default()\n    }\n}\n\n`;
+  patchBlocks.set(s.name, block);
 }
+const patchGroups: { folder: string; mod: string; doc: string; names: string[] }[] = [
+  { folder: "📝️documentation", mod: "documentation", doc: "Sparse patches of the documentation records: dimensions, tags, text notes, leaders, annotation styles, sheets, viewports, sheet revisions, views and schedules.", names: ["Dimension", "Tag", "TextNote", "Leader", "AnnotationStyle", "Sheet", "Viewport", "SheetRevision", "View", "Schedule"] },
+  { folder: "📚️library", mod: "library", doc: "Sparse patches of the library records: property templates, classification systems, space conditions, families, components, MEP elements, materials and the element types.", names: ["PropertyTemplate", "ClassificationSystem", "SpaceConditions", "Family", "FamilyParameter", "FamilySolid", "Component", "ComponentOverride", "MepElement", "Material", "WallType", "SlabType", "CeilingType", "RoofType", "ColumnType", "BeamType", "WindowType", "DoorType", "CurtainWallType"] },
+  { folder: "🤝️coordination", mod: "coordination", doc: "Sparse patches of the coordination records: clash sets, rules, issues and issue comments.", names: ["ClashSet", "Rule", "Issue", "IssueComment"] },
+  { folder: "🏢️site-and-spaces", mod: "site_and_spaces", doc: "Sparse patches of the project, wall sweeps, site, buildings, storeys, grid lines, spaces, zones and area schemes.", names: ["Project", "WallSweep", "Site", "Building", "Storey", "GridLine", "Space", "Zone", "AreaScheme"] },
+  { folder: "🧱️building-elements", mod: "building_elements", doc: "Sparse patches of the physical building elements: walls, curtain walls, columns, beams, slabs, ceilings, roofs, openings, stairs, railings and ramps.", names: ["Wall", "CurtainPanelOverride", "CurtainWall", "Column", "Beam", "Slab", "Ceiling", "Roof", "Opening", "Stair", "Railing", "Ramp"] },
+];
+const handWrittenPatches = { folder: "🖋️hand-written", mod: "hand_written" };
+const assignedPatches = patchGroups.flatMap((g) => g.names);
+for (const s of patchables) if (assignedPatches.filter((n) => n === s.name).length !== 1) throw new Error(`patch group missing or duplicated for ${s.name}`);
+for (const n of assignedPatches) if (!patchBlocks.has(n)) throw new Error(`patch group names unknown entity ${n}`);
+const patchChildRs = (g: (typeof patchGroups)[number]) => `//! ${String.fromCodePoint(g.folder.codePointAt(0)!)}\uFE0F ${g.doc}\n\nuse super::*;\n\n${patchables.filter((s) => g.names.includes(s.name)).map((s) => patchBlocks.get(s.name)!).join("").trimEnd()}\n`;
+const wiring = (g: { folder: string; mod: string }) => `#[path = "${g.folder}/${RS}"]\nmod ${g.mod};\npub use ${g.mod}::*;\n`;
+const patchRs = header("sparse patches of `s.bim.model@1` entities") + "use super::*;\n\n" + [...patchGroups, handWrittenPatches].map(wiring).join("\n");
 //#endregion 🔖️RustPatches
 
 put(file(values, RS), valuesRs);
 put(file(entities, RS), entitiesRs);
 put(file(patches, RS), patchRs);
+for (const g of patchGroups) {
+  mkdirSync(join(patches, g.folder), { recursive: true });
+  put(join(patches, g.folder, RS), patchChildRs(g));
+}
 
 //#region 🔖️JsonSchema
 const NS = "https://json.schemas.assets.semio-tech.com/s/bim/model";

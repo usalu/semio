@@ -1,7 +1,9 @@
 //! 🔤️ Shared original text wrapping reference for font and renderer laws.
-const KERNED_PANGRAM: &str = "The quick brown fox jumps over the lazy dog";
+use super::FontAtlas;
 
-fn reference_break_indices(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -> Vec<usize> {
+pub const KERNED_PANGRAM: &str = "The quick brown fox jumps over the lazy dog";
+
+pub fn reference_break_indices(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -> Vec<usize> {
     let advance = |atlas: &mut FontAtlas, ch: char| atlas.ensure_glyph(ch, size).advance;
     let mut breaks = Vec::new();
     let (mut pen, mut cursor) = (0.0f32, 0usize);

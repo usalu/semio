@@ -6,10 +6,11 @@ import { fileURLToPath } from "node:url";
 import { BufferGeometry, EdgesGeometry, Float32BufferAttribute } from "three";
 import { describe, expect, it } from "vitest";
 import { resolveIconRenderStroke } from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx";
+import { world3dGlbOutlineFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️world3d-glb-outline/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(world3dGlbOutlineFixtureUrl, "utf8"));
 
 type Point = readonly [number, number, number];
 type Segment = readonly [Point, Point];

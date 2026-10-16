@@ -14,7 +14,7 @@ use std::path::PathBuf;
 
 /// 🌳️ `…/🧑‍🎨engine`, the common root of all four sources.
 fn engine_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root")
+    semio_framework_os_renderer_wgpu_test_support::engine_root()
 }
 
 fn read(relative: &str) -> String {

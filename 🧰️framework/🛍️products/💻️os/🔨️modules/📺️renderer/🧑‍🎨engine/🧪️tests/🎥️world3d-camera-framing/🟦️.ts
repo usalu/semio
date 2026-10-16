@@ -6,10 +6,11 @@ import { Box3, BufferGeometry, EdgesGeometry, Float32BufferAttribute, Group, Lin
 import { describe, expect, it } from "vitest";
 import { frameWorldProjectionPose, worldSceneContentBounds } from "../../../../♾️infinite/🌍️world/🎨️r3f/🟦️.tsx";
 import { world3dAutoFitKey, world3dAutoFitOwed, world3dBoundsRadius, world3dFrameCameraFromBounds } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { world3dCameraFramingFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎥️world3d-camera-framing/🔣️.json"), "utf8")) as any;
+const fixture = JSON.parse(readFileSync(world3dCameraFramingFixtureUrl, "utf8")) as any;
 const closeArray = (actual: readonly number[], expected: readonly number[], precision = 5) => actual.forEach((value, index) => expect(value).toBeCloseTo(expected[index]!, precision));
 
 type FixtureCamera = { position: [number, number, number]; target: [number, number, number]; up: [number, number, number]; fov: number; zoom: number; projection: unknown };

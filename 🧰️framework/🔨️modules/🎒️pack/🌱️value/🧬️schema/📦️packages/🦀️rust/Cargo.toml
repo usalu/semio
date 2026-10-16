@@ -28,5 +28,6 @@ semio-framework-pack-error = { path = "../../../../⚠️error/📦️packages/�
 semio-framework-pack-json = { path = "../../../../🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication-codec = { path = "../../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack-schema-index = { path = "../../../🏭️schema/🗂️index/📦️packages/🦀️rust" }
 
 [dev-dependencies]

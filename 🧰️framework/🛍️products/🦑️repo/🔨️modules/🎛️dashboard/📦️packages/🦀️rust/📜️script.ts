@@ -3,7 +3,7 @@ import {repositoryCargoNetworkV1} from "./../../../📚️library/🏃️process
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {readBuildMode,buildModeEnvironment} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {runOwnedCommand} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { scriptInvocationEnvironment,receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { createIssuedResourceControlV1,scriptInvocationEnvironment,receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {runDeclaredRustBuildV1} from "../../../📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts";
 import {runOwnedBuildChildInvocationV1} from "../../../📚️library/🏗️build/📥️caller/📤️child/🟦️.ts";
@@ -51,7 +51,7 @@ class LaunchScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
-    if(process.env.SEMIO_TASK_PROJECT!=="@semio-tech/repo-dashboard-rs"||process.env.SEMIO_TASK_TARGET!=="build"){await runOwnedBuildChildInvocationV1(this.repoRoot,["run","@semio-tech/repo-dashboard-rs:build",...segments],this.invocation);return;}
+    if(process.env.SEMIO_TASK_PROJECT!=="@semio-tech/repo-dashboard-rs"||process.env.SEMIO_TASK_TARGET!=="build"){await runOwnedBuildChildInvocationV1(this.repoRoot,["run","@semio-tech/repo-dashboard-rs:build",...segments],this.invocation,createIssuedResourceControlV1(this.invocation,"dashboard:build",0));return;}
     await buildAndInstallDashboard(this.root,this.repoRoot,dashboardOptions(this.invocation,this.repoRoot));
   }
 }

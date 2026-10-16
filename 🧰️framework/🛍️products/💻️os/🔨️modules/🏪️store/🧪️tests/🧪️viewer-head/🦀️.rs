@@ -16,10 +16,10 @@ struct Replica {
 }
 
 async fn fresh(document: &str, initial: Option<i32>) -> DemoStore {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", document, DemoSnapshot { n: initial }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", document, DemoSnapshot { n: initial }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await
 }
 
-async fn apply(store: &mut DemoStore, mutations: Vec<DemoMutation>, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn apply(store: &mut DemoStore, mutations: Vec<DemoMutation>, _identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     test_support::dispatch_test_command(store, ArtifactCommand::Apply { mutations, transaction: None }).await.expect("a clean edit applies");
 }
 
@@ -90,7 +90,7 @@ fn shown(store: &DemoStore) -> (Option<String>, Option<String>, Option<i32>, Vec
 }
 
 /// 📥️ `to` takes every event of `log` it lacks, in the order given; afterwards every delivered event found its dependencies.
-async fn deliver(to: &mut DemoStore, log: Vec<crate::os_spr::MutationEnvelope>) {
+async fn deliver(to: &mut DemoStore, log: Vec<semio_framework_os_spr::MutationEnvelope>) {
     let known: std::collections::HashSet<MutationId> = to.event_log().expect("log").into_iter().map(|event| event.mutation_id).collect();
     for event in log.into_iter().filter(|event| !known.contains(&event.mutation_id)) {
         to.ingest_remote(event).await.expect("a replica ingests a shared event");
@@ -103,19 +103,19 @@ async fn reloaded(store: &DemoStore, through: &str) -> DemoStore {
     let envelope = match through {
         "spr" => {
             let files = print_document_pack(store.envelope()).await.expect("the pair prints");
-            parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope()
+            parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope()
         }
         "ops" => {
             let text = print_document_text(store.envelope()).await.expect("the text prints");
-            parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text parses").into_envelope()
+            parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text parses").into_envelope()
         }
         other => panic!("unknown persisted form {other}"),
     };
-    ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
+    ArtifactStore::new(envelope, &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await
 }
 
 /// 🎬️ One corpus action at replica `at`.
-async fn act(replicas: &mut [Replica; 2], at: usize, action: &serde_json::Value, identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn act(replicas: &mut [Replica; 2], at: usize, action: &serde_json::Value, identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     match action["kind"].as_str().expect("an action kind") {
         "edit" => {
             let store = &mut replicas[at].store;
@@ -170,7 +170,7 @@ async fn act(replicas: &mut [Replica; 2], at: usize, action: &serde_json::Value,
 async fn the_viewer_head_corpus_matches_two_stores() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️viewer-head/🔣️.json")).expect("the corpus parses");
     for case in corpus["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("a case name");
@@ -216,7 +216,7 @@ async fn the_viewer_head_corpus_matches_two_stores() {
 async fn a_content_revision_names_a_head_whatever_line_its_replica_stood_on() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️viewer-head/🔣️.json")).expect("the corpus parses");
     for case in corpus["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("a case name");
@@ -275,7 +275,7 @@ async fn a_content_revision_names_a_head_whatever_line_its_replica_stood_on() {
 async fn the_ledgers_list_their_facts_in_log_order_whatever_order_the_events_arrived_in() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut a = fresh("viewer-ledger-order", Some(0)).await;
     apply(&mut a, vec![DemoMutation::SetN(SetN { n: 1 })], &mut identity).await;
     test_support::dispatch_test_command(&mut a, ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("a's checkpoint");
@@ -319,7 +319,7 @@ async fn the_ledgers_list_their_facts_in_log_order_whatever_order_the_events_arr
 async fn a_finalize_as_a_new_alternative_moves_only_its_author() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut author = fresh("viewer-finalize", Some(0)).await;
     apply(&mut author, vec![DemoMutation::SetN(SetN { n: 1 })], &mut identity).await;
     apply(&mut author, vec![DemoMutation::AddN(AddN { delta: 2 })], &mut identity).await;
@@ -386,7 +386,7 @@ async fn a_finalize_as_a_new_alternative_moves_only_its_author() {
 async fn a_commit_on_an_alternative_waits_for_the_alternative() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut author = fresh("viewer-commit-line", Some(0)).await;
     apply(&mut author, vec![DemoMutation::SetN(SetN { n: 1 })], &mut identity).await;
     test_support::dispatch_test_command(&mut author, ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("a trunk checkpoint");
@@ -395,10 +395,10 @@ async fn a_commit_on_an_alternative_waits_for_the_alternative() {
     test_support::dispatch_test_command(&mut author, ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }).await.expect("a checkpoint on the alternative");
     let side = author.envelope().active_alternative_id.clone().expect("the author stands on the alternative");
     let log = author.event_log().expect("log");
-    let transitions: Vec<(MutationId, Vec<MutationId>, crate::os_spr::HistoryTransition)> =
-        log.iter().filter_map(|event| crate::os_spr::history_transition_from_envelope(event).ok().flatten().map(|transition| (event.mutation_id.clone(), event.dependencies.clone(), transition))).collect();
-    let registration = transitions.iter().find(|(_, _, transition)| matches!(transition, crate::os_spr::HistoryTransition::Branch { alternative_id, .. } if *alternative_id == side)).map(|(id, _, _)| id.clone()).expect("the registration is in the log");
-    let (_, dependencies, _) = transitions.iter().find(|(_, _, transition)| matches!(transition, crate::os_spr::HistoryTransition::Commit(checkpoint) if checkpoint.line_id.as_deref() == Some(side.as_str()))).expect("the commit on the alternative is in the log");
+    let transitions: Vec<(MutationId, Vec<MutationId>, semio_framework_os_spr::HistoryTransition)> =
+        log.iter().filter_map(|event| semio_framework_os_spr::history_transition_from_envelope(event).ok().flatten().map(|transition| (event.mutation_id.clone(), event.dependencies.clone(), transition))).collect();
+    let registration = transitions.iter().find(|(_, _, transition)| matches!(transition, semio_framework_os_spr::HistoryTransition::Branch { alternative_id, .. } if *alternative_id == side)).map(|(id, _, _)| id.clone()).expect("the registration is in the log");
+    let (_, dependencies, _) = transitions.iter().find(|(_, _, transition)| matches!(transition, semio_framework_os_spr::HistoryTransition::Commit(checkpoint) if checkpoint.line_id.as_deref() == Some(side.as_str()))).expect("the commit on the alternative is in the log");
     assert!(dependencies.contains(&registration), "the commit names its line's registration among its dependencies");
     let registrations = |store: &DemoStore| store.envelope().vcs.alternatives.iter().map(|alternative| (alternative.id.clone(), alternative.name.clone(), alternative.checkpoint_ids.clone())).collect::<Vec<_>>();
     let mut arrivals = vec![log.iter().rev().cloned().collect::<Vec<_>>()];
@@ -421,7 +421,7 @@ async fn a_commit_on_an_alternative_waits_for_the_alternative() {
 type SeverityStore = ArtifactStore<DemoSnapshot, SeverityMutation>;
 
 /// ✏️ One history edit of `target` through the session path: the Report replay of its draft, finalized as `finalization`.
-async fn finalized(store: &mut SeverityStore, target: &MutationId, operation: SeverityMutation, finalization: HistoryFinalization, identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn finalized(store: &mut SeverityStore, target: &MutationId, operation: SeverityMutation, finalization: HistoryFinalization, identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     let drafts: protocol::HistoryInputDrafts = [(target.clone(), protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: operation.encode_op().expect("severity operations encode") })].into_iter().collect();
     let mut replay = store.begin_report_replay(&drafts, None).expect("the session replay");
     drive_test_report_replay(&mut replay, store.replay_edits());
@@ -450,8 +450,8 @@ fn ledger(store: &SeverityStore) -> (Vec<(String, Option<semio_framework_value::
 async fn the_persisted_pair_restores_edits_history_edits_alternatives_the_head_and_warnings() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "folder-reload", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "folder-reload", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     for n in [1, 2, 3] {
         test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n })], transaction: None }).await.expect("a clean edit applies");
     }
@@ -466,7 +466,7 @@ async fn the_persisted_pair_restores_edits_history_edits_alternatives_the_head_a
     assert_eq!((store.snapshot_ref().n, store.supersessions().len()), (Some(30), 2));
 
     let files = print_document_pack(store.envelope()).await.expect("the pair prints");
-    let reattached = ArtifactStore::new(parse_document_pack::<DemoSnapshot, SeverityMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let reattached = ArtifactStore::new(parse_document_pack::<DemoSnapshot, SeverityMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(ledger(&reattached), expected, "edits, history transitions, alternatives and outcomes survive the re-attach");
     assert_eq!((reattached.envelope().active_alternative_id.clone(), reattached.envelope().viewer_checkpoint_id.clone()), head, "the replica stands where its own pair says");
     assert_eq!((reattached.snapshot_ref().n, reattached.supersessions(), reattached.applied_edit_ids().iter().collect::<Vec<_>>()), (Some(30), store.supersessions(), store.applied_edit_ids().iter().collect::<Vec<_>>()));
@@ -474,7 +474,7 @@ async fn the_persisted_pair_restores_edits_history_edits_alternatives_the_head_a
     test_support::assert_live_equals_replay(&reattached).await;
 
     let text = print_document_text(store.envelope()).await.expect("the text prints");
-    let shared = ArtifactStore::new(parse_document_text::<DemoSnapshot, SeverityMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let shared = ArtifactStore::new(parse_document_text::<DemoSnapshot, SeverityMutation>(&text.dsl, &text.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let (edits, transitions, alternatives, _) = ledger(&shared);
     assert_eq!((edits, transitions, alternatives), (expected.0.clone(), expected.1.clone(), expected.2.clone()), "the shared log carries every edit, transition and alternative");
     assert_eq!((shared.envelope().active_alternative_id.clone(), shared.envelope().viewer_checkpoint_id.clone(), shared.snapshot_ref().n, shared.supersessions().len()), (None, None, Some(3), 1), "and no head: it hydrates to the trunk tip, where only the overwrite holds");
@@ -494,7 +494,7 @@ async fn the_persisted_pair_restores_edits_history_edits_alternatives_the_head_a
 async fn a_read_back_pair_merges_its_log_and_never_moves_the_reader() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut a = fresh("pair-merge", Some(0)).await;
     apply(&mut a, vec![DemoMutation::SetN(SetN { n: 1 })], &mut identity).await;
     apply(&mut a, vec![DemoMutation::AddN(AddN { delta: 2 })], &mut identity).await;
@@ -549,12 +549,12 @@ async fn a_read_back_pair_merges_its_log_and_never_moves_the_reader() {
 async fn two_peers_on_one_folder_converge_through_an_open_history_edit() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut a = fresh("two-peers", Some(0)).await;
     apply(&mut a, vec![DemoMutation::SetN(SetN { n: 100 })], &mut identity).await;
     apply(&mut a, vec![DemoMutation::AddN(AddN { delta: 60 })], &mut identity).await;
     let folder = print_document_pack(a.envelope()).await.expect("a writes the folder");
-    let mut b = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&folder.pack, &folder.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("b opens the folder").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut b = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&folder.pack, &folder.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("b opens the folder").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!((b.snapshot_ref().n, b.applied_edit_ids().len()), (Some(160), 2), "b shows a's document and a's edit");
 
     let target = a.mutation_ops().expect("applied operations")[1].mutation_id.clone();
@@ -603,7 +603,7 @@ async fn two_peers_on_one_folder_converge_through_an_open_history_edit() {
 async fn a_port_rebinding_moves_no_content_and_keeps_a_finished_replay() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut store = fresh("rebind", Some(0)).await;
     apply(&mut store, vec![DemoMutation::SetN(SetN { n: 1 })], &mut identity).await;
     apply(&mut store, vec![DemoMutation::AddN(AddN { delta: 2 })], &mut identity).await;

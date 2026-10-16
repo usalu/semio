@@ -444,7 +444,7 @@ fn interrupted_snapshot_close_reaches_terminal_empty() {
 
 #[test]
 fn mounted_mutation_region_has_zero_whole_string_reader_edges() {
-    let source = include_str!("../../🦀️.rs");
+    let source = include_str!("../../🧬️mutation-decode/🦀️.rs");
     let retained = source.split_once("enum Process3dRetainedMutationPhase").expect("retained mutation region start").1.split_once("enum Process3dMutationDecodeState").expect("retained mutation region end").0;
     assert_eq!(retained.matches(concat!("read_str", "_lp")).count(), 0, "mounted mutation reader must have no whole-string edge");
 }

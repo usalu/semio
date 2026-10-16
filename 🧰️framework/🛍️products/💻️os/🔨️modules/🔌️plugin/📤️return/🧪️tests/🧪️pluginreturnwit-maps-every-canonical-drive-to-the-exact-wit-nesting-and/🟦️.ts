@@ -1,3 +1,8 @@
+import * as ModuleUnderTest from "../../🟦️.ts";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { loadActorReturnFixture, loadActorReturnSchema } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+
 type TestSource = { readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "encodePluginReturnResult" | "generation" | "pluginReturnDriveToWit">, source: TestSource): Promise<void> {
@@ -24,7 +29,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   it("PluginReturnWit maps every canonical drive to the exact WIT nesting and u64 request", async () => {
     const api = await import("../../🟦️.ts");
-    const { default: fixture } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorReturnFixture();
     const { decodeActorReturnDrive } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
     const name = "@webassemblyjs/leb128/lib/leb.js";
     const module = await import(name);
@@ -48,11 +53,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   it("PluginReturnWit matches the shared fixed result vectors and exact enum subset", async () => {
     const api = await import("../../🟦️.ts");
-    const { default: fixture } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
-    const { default: schema } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json");
+    const fixture = await loadActorReturnFixture();
+    const schema = await loadActorReturnSchema();
     const { actorInstanceLifecycleSchema: lifetimeSchema } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
     const { actorBytePageSchema: pageSchema } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
-    const { default: valueSchema } = await import("../../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json");
+    const { valueSchema } = await import("@semio-tech/value-ts/schema");
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/Return")!;
     const { decodeActorReturnResult } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
@@ -86,7 +91,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   it("PluginReturnWit preserves all neutral page words without interpreting semantic bytes", async () => {
     const api = await import("../../🟦️.ts");
-    const { default: fixture } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorReturnFixture();
     const { createActorBytePage } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
     for (const row of fixture.pageResultVectors) {
       const bytes = Buffer.alloc(fixture.maximumPageBytes);
@@ -102,7 +107,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   it("PluginReturnWit rejects unsafe WIT integers and accessors while leaving unknown roots owned by its caller", async () => {
     const api = await import("../../🟦️.ts");
-    const { default: fixture } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorReturnFixture();
     const source: any = result(hydrate(fixture.resultVectors.find(row => row.value.kind === "refused")!.value));
     const generation = source.val.origin.activationGeneration;
     for (const value of [0n, -1n, 9007199254740992n, 1, "1", null, undefined]) expect(() => api.encodePluginReturnResult({ ...source, val: { ...source.val, origin: { ...source.val.origin, requestSequence: value } } }, generation)).toThrow();
@@ -119,3 +124,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../🟦️.ts")).href;
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { encodePluginReturnResult: ModuleUnderTest.encodePluginReturnResult, generation: ModuleUnderTest.generation, pluginReturnDriveToWit: ModuleUnderTest.pluginReturnDriveToWit }, { url: moduleUnderTestUrl });

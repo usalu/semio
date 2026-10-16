@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { retainedUiIntakeStepCeiling, RETAINED_UI_INTAKE_STEPS_PER_NODE, RETAINED_UI_INTAKE_SLICE_STEPS } from "../../🟦️.ts";
+import { loadUiRetainedIntakeFixture } from "../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 describe("paged scene-lane intake ceiling", () => {
   it("credits every node a document's first publication has to mint", () => {
@@ -8,7 +9,7 @@ describe("paged scene-lane intake ceiling", () => {
     expect(retainedUiIntakeStepCeiling({ maxNodes: 1 })).toBe(RETAINED_UI_INTAKE_STEPS_PER_NODE);
   });
   it("carries the numbers the language-agnostic fixture declares, so the Rust twin cannot drift", async () => {
-    const { default: fixture } = await import("../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/📥️intake/🔣️.json");
+    const fixture = await loadUiRetainedIntakeFixture();
     expect(RETAINED_UI_INTAKE_STEPS_PER_NODE).toBe(fixture.budget.stepsPerNode);
     expect(RETAINED_UI_INTAKE_SLICE_STEPS).toBe(fixture.budget.sliceSteps);
     for (const ceiling of fixture.budget.ceilings) expect(retainedUiIntakeStepCeiling({ maxNodes: ceiling.maxNodes })).toBe(ceiling.steps);

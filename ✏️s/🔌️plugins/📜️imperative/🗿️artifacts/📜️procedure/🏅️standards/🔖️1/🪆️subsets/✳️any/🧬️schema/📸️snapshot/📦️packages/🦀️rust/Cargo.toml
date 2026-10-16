@@ -50,6 +50,11 @@ semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-flow = { workspace = true }
 semio-s-artifact-stdio-semio-text-model = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
+semio-s-plugin-imperative-control = { path = "../../../../../../../../../../🧩️extensions/🎮️control/📦️packages/🦀️rust" }
+semio-s-plugin-imperative-effect = { path = "../../../../../../../../../../🧩️extensions/📣️effect/📦️packages/🦀️rust" }
+semio-s-plugin-imperative-logic = { path = "../../../../../../../../../../🧩️extensions/🧠️logic/📦️packages/🦀️rust" }
+semio-s-plugin-imperative-math = { path = "../../../../../../../../../../🧩️extensions/🧮️math/📦️packages/🦀️rust" }
+semio-s-plugin-imperative-text = { path = "../../../../../../../../../../🧩️extensions/📝️text/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde.workspace = true

@@ -1,15 +1,20 @@
 //! 🧹️ Cleanup fault, maintenance status and close status vocabulary of the runtime lifecycle.
 
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
+use semio_framework_value::{FromValue, ToValue};
+use semio_framework_plugin_plugin_program::{Plugin, PluginProgram};
+use semio_framework_plugin_reactor_app::PluginApp;
 /// 🩺️ The single cause taxonomy shared by both supervisory cleanup loops (live maintenance and
 /// close), replacing the bare magic `u8` fault constants: every store site names its own cause,
 /// so the one decode site per loop can emit a distinct `plugin.internal.*` wire fault code
 /// instead of collapsing thirteen unrelated conditions into one opaque string. The language
 /// neutral examples are `🩺️runtime-fault-vectors.json`; native tests and the React window-fault
 /// classifier compare their observed outcomes against those examples.
+#[doc(hidden)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 #[repr(u8)]
-pub(super) enum RuntimeCleanupFault {
+pub enum RuntimeCleanupFault {
     Clock = 0,
     ClockRegression = 1,
     InteractiveCeiling = 2,
@@ -33,11 +38,12 @@ pub(super) enum RuntimeCleanupFault {
 /// 🩺️ Wire projection of one {@link RuntimeCleanupFault}: the fixture key, the emitted
 /// `Fault::code`, and the human sentence spliced into `Fault::message`.
 struct RuntimeCleanupFaultVector {
-    pub(super) slug: &'static str,
-    pub(super) code: &'static str,
-    pub(super) detail: &'static str,
+    pub slug: &'static str,
+    pub code: &'static str,
+    pub detail: &'static str,
 }
-pub(super) const RUNTIME_CLEANUP_FAULTS: [RuntimeCleanupFault; 19] = [
+#[doc(hidden)]
+pub const RUNTIME_CLEANUP_FAULTS: [RuntimeCleanupFault; 19] = [
     RuntimeCleanupFault::Clock,
     RuntimeCleanupFault::ClockRegression,
     RuntimeCleanupFault::InteractiveCeiling,
@@ -80,7 +86,7 @@ const RUNTIME_CLEANUP_FAULT_VECTORS: [RuntimeCleanupFaultVector; 19] = [
     RuntimeCleanupFaultVector { slug: "maintenance-not-drained", code: "plugin.internal.maintenance-not-drained", detail: "the maintenance pump still held terminal state at retirement" },
 ];
 impl RuntimeCleanupFault {
-    pub(super) const fn vector(self) -> &'static RuntimeCleanupFaultVector {
+    pub const fn vector(self) -> &'static RuntimeCleanupFaultVector {
         &RUNTIME_CLEANUP_FAULT_VECTORS[self as usize]
     }
     fn from_index(index: u8) -> Option<Self> {
@@ -90,8 +96,9 @@ impl RuntimeCleanupFault {
 /// 🩺️ Live maintenance-loop status stored in `RuntimeAppCell::maintenance_status`. The three
 /// non-fault states keep their historic `0..2` encoding; every fault is `3 + cause`, so the
 /// atomic carries the discriminator the decode site needs without a second word.
+#[doc(hidden)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(super) enum RuntimeMaintenanceStatus {
+pub enum RuntimeMaintenanceStatus {
     Ready,
     Queued,
     Running,
@@ -99,7 +106,7 @@ pub(super) enum RuntimeMaintenanceStatus {
 }
 const RUNTIME_MAINTENANCE_FAULT_BASE: u8 = 3;
 impl RuntimeMaintenanceStatus {
-    pub(super) const fn repr(self) -> u8 {
+    pub const fn repr(self) -> u8 {
         match self {
             Self::Ready => 0,
             Self::Queued => 1,
@@ -107,7 +114,7 @@ impl RuntimeMaintenanceStatus {
             Self::Fault(cause) => RUNTIME_MAINTENANCE_FAULT_BASE + cause as u8,
         }
     }
-    pub(super) fn from_repr(repr: u8) -> Self {
+    pub fn from_repr(repr: u8) -> Self {
         match repr {
             0 => Self::Ready,
             1 => Self::Queued,
@@ -115,8 +122,8 @@ impl RuntimeMaintenanceStatus {
             other => Self::Fault(RuntimeCleanupFault::from_index(other - RUNTIME_MAINTENANCE_FAULT_BASE).expect("maintenance status repr is written only by this module")),
         }
     }
-    #[cfg(test)]
-    pub(super) const fn cause(self) -> Option<RuntimeCleanupFault> {
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub const fn cause(self) -> Option<RuntimeCleanupFault> {
         match self {
             Self::Fault(cause) => Some(cause),
             _ => None,
@@ -125,8 +132,9 @@ impl RuntimeMaintenanceStatus {
 }
 /// 🩺️ Close-worker status stored in `RuntimeCloseWorkerState::status`, laid out like
 /// {@link RuntimeMaintenanceStatus} with two extra terminal states before the fault base.
+#[doc(hidden)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(super) enum RuntimeCloseStatus {
+pub enum RuntimeCloseStatus {
     Ready,
     Queued,
     Running,
@@ -137,7 +145,7 @@ pub(super) enum RuntimeCloseStatus {
 }
 const RUNTIME_CLOSE_FAULT_BASE: u8 = 6;
 impl RuntimeCloseStatus {
-    pub(super) const fn repr(self) -> u8 {
+    pub const fn repr(self) -> u8 {
         match self {
             Self::Ready => 0,
             Self::Queued => 1,
@@ -148,7 +156,7 @@ impl RuntimeCloseStatus {
             Self::Fault(cause) => RUNTIME_CLOSE_FAULT_BASE + cause as u8,
         }
     }
-    pub(super) fn from_repr(repr: u8) -> Self {
+    pub fn from_repr(repr: u8) -> Self {
         match repr {
             0 => Self::Ready,
             1 => Self::Queued,
@@ -159,7 +167,7 @@ impl RuntimeCloseStatus {
             other => Self::Fault(RuntimeCleanupFault::from_index(other - RUNTIME_CLOSE_FAULT_BASE).expect("close status repr is written only by this module")),
         }
     }
-    pub(super) const fn cause(self) -> Option<RuntimeCleanupFault> {
+    pub const fn cause(self) -> Option<RuntimeCleanupFault> {
         match self {
             Self::Fault(cause) => Some(cause),
             _ => None,
@@ -169,7 +177,8 @@ impl RuntimeCloseStatus {
 /// 🩺️ The one decoded wire fault both cleanup loops emit — `origin`/`code`/`severity`/`message`
 /// keep their shape, the discrimination lives entirely in `code`, and the message always names
 /// the instance, the variant slug, and the measured turn cost against the interactive ceiling.
-pub(super) fn runtime_cleanup_fault(scope: &str, cause: RuntimeCleanupFault, instance_id: u32, elapsed_us: u64) -> Fault {
+#[doc(hidden)]
+pub fn runtime_cleanup_fault(scope: &str, cause: RuntimeCleanupFault, instance_id: u32, elapsed_us: u64) -> Fault {
     let vector = cause.vector();
     let elapsed = if elapsed_us == RUNTIME_CLEANUP_UNMEASURED_US { "unmeasured".to_string() } else { format!("{elapsed_us}us") };
     Fault::new(
@@ -188,5 +197,7 @@ pub fn runtime_cleanup_fault_is_instance_scoped(code: &str) -> bool {
 }
 /// ⏱️ Sentinel the two cleanup loops already store when the clock itself failed, so the decoded
 /// message says `unmeasured` instead of printing `u64::MAX` microseconds as if it were a reading.
-pub(super) const RUNTIME_CLEANUP_UNMEASURED_US: u64 = u64::MAX;
-pub(super) const RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT: u32 = 256;
+#[doc(hidden)]
+pub const RUNTIME_CLEANUP_UNMEASURED_US: u64 = u64::MAX;
+#[doc(hidden)]
+pub const RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT: u32 = 256;

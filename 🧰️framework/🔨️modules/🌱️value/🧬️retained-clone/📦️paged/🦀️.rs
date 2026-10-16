@@ -499,6 +499,3 @@ impl<V: RetainedClone, const N: usize> RetainedClone for PagedMap<V, N> {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

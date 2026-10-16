@@ -13,7 +13,7 @@ import {
   unavailable,
   type GltfTsGeometryContext,
   type GltfTsMeasure,
-} from '../../🔨️geometry-core/🟦️.ts';
+} from '../../🔨️geometry-kernel/🟦️.ts';
 import type { GltfVec3 } from '../../../../🔨️modules/🧾️measurement-contracts/🟦️.ts';
 
 export const inferGltfAspectRatios = (context: GltfTsGeometryContext): GltfTsMeasure<GltfVec3> => {

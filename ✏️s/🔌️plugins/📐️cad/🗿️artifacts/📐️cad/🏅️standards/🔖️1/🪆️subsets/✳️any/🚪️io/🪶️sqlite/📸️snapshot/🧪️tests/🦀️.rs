@@ -1,9 +1,7 @@
 //! 📐️ Genuine CAD parent native baselines before semantic provider opt-in.
 extern crate semio_framework_os_kernel as store;
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
-#[path="../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
-pub(crate) mod backing_observer;
+use semio_framework_test_original_snapshot_owners as original_owners;
+pub(crate) use semio_framework_io_sqlite_snapshot_testing_backing as backing_observer;
 fn complete_literal_cad(actual:&CadSnapshot,expected:&CadSnapshot){
  assert_eq!(actual.schema,expected.schema);assert_eq!(actual.id,expected.id);
  assert_eq!(actual.shape_model,expected.shape_model);assert_eq!(actual.building_model,expected.building_model);assert_eq!(actual.energy_model,expected.energy_model);assert_eq!(actual.structure_classic_model,expected.structure_classic_model);

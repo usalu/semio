@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
-import { testBuiltTreeRetirementFixture } from "../../../../../../🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
+import { testBuiltTreeRetirementFixture } from "../../../../../../🔨️modules/🖱️ui/🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { fixedFilenameContractIdsForPath, inspectRustModuleGraphFacts, loadTaxonomy } from "../../🔍️discovery/🟦️.ts";
 import corpus from "../🧫️fixtures/⚙️native-source-ownership/🔣️.json";

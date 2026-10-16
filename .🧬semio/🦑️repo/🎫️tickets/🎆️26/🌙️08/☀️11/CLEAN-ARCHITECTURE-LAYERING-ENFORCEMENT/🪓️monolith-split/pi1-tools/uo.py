@@ -13,7 +13,7 @@ import ed
 EXCLUDE = ['node_modules', 'target', '.cache', '🖥️host', '🧠️interpreter', '🏇️mounted-owner', '🏛️ownership', '🧬️guest-contract', '🖨️describe', '📦️packages', '.🧬semio', '🌐️browser-bundle', '🏗️build', '🧷️companions']
 FEATS = ['artifact-app-testing', 'media-turn-testing', 'reserved-producer-testing', 'original-actor-context-testing']
 FEATARGS = [x for f in FEATS for x in ('--cfg', 'feature="%s"' % f)]
-CFGS = {'lib': [], 'test': ['--test'], 'wasip2': ['--target', 'wasm32-wasip2'], 'wasip2-test': ['--test', '--target', 'wasm32-wasip2'], 'lib-features': FEATARGS, 'test-features': ['--test'] + FEATARGS, 'wasm': ['--target', 'wasm32-unknown-unknown']}
+CFGS = {'lib': [], 'test': ['--test'], 'wasip2': ['--target', 'wasm32-wasip2'], 'wasip2-test': ['--test', '--target', 'wasm32-wasip2'], 'lib-features': FEATARGS, 'test-features': ['--test'] + FEATARGS, 'wasm': ['--target', 'wasm32-unknown-unknown'], 'wasmp2': ['--target', 'wasm32-unknown-unknown', '--cfg', 'target_env="p2"', '-A', 'explicit_builtin_cfgs_in_flags'], 'wasmp2-test': ['--test', '--target', 'wasm32-unknown-unknown', '--cfg', 'target_env="p2"', '-A', 'explicit_builtin_cfgs_in_flags']}
 PK_REL = PLUG_REL + "/" + PKGDIR
 SBROOT = SCRATCH + "/pi1"
 FLIPPED = TOOLS + "/flipped.json"
@@ -23,6 +23,8 @@ R_CRATE = re.compile(r"(?<![A-Za-z0-9_$])(?<!::)crate::")
 R_PUBCRATE = re.compile(r"\bpub\(crate\)")
 R_EXT = re.compile(r"(?<![A-Za-z0-9_])(?<!::)" + PFX + r"([A-Za-z0-9_]+)(?=::)")
 R_EXTERN = re.compile(r"(pub(?:\([^)]*\))?\s+)?extern\s+crate\s+(" + PFX + r"[A-Za-z0-9_]+)\s+as\s+([A-Za-z0-9_]+)\s*;")
+R_USE_SELF_CRATE = re.compile(r"((?:pub(?:\([^)]*\))?\s+)?)use\s+crate\s+as\s+([A-Za-z0-9_]+)\s*;")
+R_USE_CRATE = re.compile(r"(?<![A-Za-z0-9_:])use\s+(" + PFX + r"[A-Za-z0-9_]+)(\s+as\s+[A-Za-z0-9_]+\s*;)")
 R_EXTERN_BARE = re.compile(r"(pub(?:\([^)]*\))?\s+)?extern\s+crate\s+(" + PFX + r"[A-Za-z0-9_]+)\s*;")
 
 
@@ -67,14 +69,21 @@ def libn(k):
     return PFX + k.replace("-", "_")
 
 
+MANIFEST_DIR = {}
+
+
 def rewrite_owned(path, lib, names):
-    text = read(path)
+    original = text = read(path)
+    if lib in MANIFEST_DIR and 'env!("CARGO_MANIFEST_DIR")' in text:
+        text = text.replace('env!("CARGO_MANIFEST_DIR")', json.dumps(MANIFEST_DIR[lib], ensure_ascii=False))
     new = sub_outside_strings(text, R_CRATE, f"crate::{lib}::")
+    new = sub_outside_strings(new, R_USE_SELF_CRATE, lambda m: f"{m.group(1)}use crate::{lib} as {m.group(2)};")
     new = sub_outside_strings(new, R_PUBCRATE, f"pub(in crate::{lib})")
     new = sub_outside_strings(new, R_EXTERN, lambda m: f"{m.group(1) or ''}use crate::{m.group(2)} as {m.group(3)};" if m.group(2) in names else m.group(0))
     new = sub_outside_strings(new, R_EXTERN_BARE, lambda m: f"{m.group(1) or ''}use crate::{m.group(2)};" if m.group(2) in names else m.group(0))
+    new = sub_outside_strings(new, R_USE_CRATE, lambda m: f"use crate::{m.group(1)}{m.group(2)}" if m.group(1) in names else m.group(0))
     new = sub_outside_strings(new, R_EXT, lambda m: "crate::" + PFX + m.group(1) if PFX + m.group(1) in names else m.group(0))
-    if new != text:
+    if new != original:
         write(path, new)
 
 
@@ -82,6 +91,7 @@ def rewrite_foreign(path, names):
     text = read(path)
     new = sub_outside_strings(text, R_EXTERN, lambda m: f"{m.group(1) or ''}use crate::{m.group(2)} as {m.group(3)};" if m.group(2) in names else m.group(0))
     new = sub_outside_strings(new, R_EXTERN_BARE, lambda m: f"{m.group(1) or ''}use crate::{m.group(2)};" if m.group(2) in names else m.group(0))
+    new = sub_outside_strings(new, R_USE_CRATE, lambda m: f"use crate::{m.group(1)}{m.group(2)}" if m.group(1) in names else m.group(0))
     new = sub_outside_strings(new, R_EXT, lambda m: "crate::" + PFX + m.group(1) if PFX + m.group(1) in names else m.group(0))
     if new != text:
         write(path, new)
@@ -191,6 +201,10 @@ def prepare(sb, real, mode="full"):
                 if p not in owners:
                     rewrite_foreign(p, names)
     shims = {}
+    MANIFEST_DIR.clear()
+    for k in real:
+        MANIFEST_DIR[libn(k)] = sb + "/" + CR[k]["dir"] + "/" + PKGDIR
+        os.makedirs(MANIFEST_DIR[libn(k)], exist_ok=True)
     for p, k in owners.items():
         rewrite_owned(p, libn(k), names)
     for k, root in real.items():
@@ -216,6 +230,8 @@ def run(sb, label, extra, tag):
     pk = sb + "/" + PK_REL
     env = dict(os.environ, OUT_DIR=sb + "/outdir", CARGO_PKG_VERSION="0.1.0", CARGO_MANIFEST_DIR=pk, CARGO_PKG_NAME="semio-framework-plugin")
     started = time.time()
+    if os.environ.get("PI1_WASM"):
+        extra = [*extra, "--target", "wasm32-unknown-unknown", "--cfg", 'target_env="p2"', "-A", "explicit_builtin_cfgs_in_flags"]
     p = subprocess.run(["rustc", "+nightly-2026-07-20", "--edition", "2021", "--crate-type", "lib", "--crate-name", "semio_framework_plugin", "--error-format=json", "--emit=metadata", "-o", "/dev/null", *extra, pk + "/🦀️.rs"], capture_output=True, text=True, env=env, cwd=pk)
     write(f"{GEN}/pi1-oracle-{tag}-{label}.jsonl", p.stderr)
     return p.stderr, time.time() - started

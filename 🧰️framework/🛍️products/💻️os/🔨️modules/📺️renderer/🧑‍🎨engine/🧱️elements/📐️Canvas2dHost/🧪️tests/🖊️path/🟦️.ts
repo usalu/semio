@@ -36,7 +36,7 @@ it("does not construct a path for an empty scene", () => {
   expect(buildScenePath(undefined)).toBeNull();
 });
 
-import { paintDrawingScene, type PathSegment } from "../../../../../../../../../🔨️modules/◻️2d/🟦️.ts";
+import { paintDrawingScene, type PathSegment } from "@semio-tech/framework/2d";
 
 it("preserves arcs in raster paint and clipping", () => {
   vi.stubGlobal("Path2D", PathCapture);

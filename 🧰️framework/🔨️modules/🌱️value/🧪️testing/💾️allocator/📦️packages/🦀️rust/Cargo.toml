@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-value-testing-allocator"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original physical allocation receipt observer shared by true native owner suites: the one global allocator of each value test binary."
+
+[package.metadata.semio]
+role = "test"
+id = "value-testing-allocator"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]

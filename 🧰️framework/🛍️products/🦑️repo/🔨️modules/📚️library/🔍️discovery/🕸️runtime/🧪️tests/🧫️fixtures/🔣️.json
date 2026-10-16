@@ -6,10 +6,10 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "#[test] fn example(){ let _ = include_str!(\"🧫️fixtures/input.json\"); }",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "#[test] fn example(){ let _ = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\"); }",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -25,9 +25,9 @@
       ],
       "files": {
         "src/lib.rs": "#[cfg(test)] #[path=\"helper.rs\"] mod examples;",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -43,9 +43,9 @@
       ],
       "files": {
         "src/lib.rs": "#[cfg(not(test))] #[path=\"helper.rs\"] mod examples;",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -60,10 +60,10 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "#[cfg(any(test,feature=\"testing\"))] mod examples { const DATA:&str=include_str!(\"🧫️fixtures/input.json\"); }",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "#[cfg(any(test,feature=\"testing\"))] mod examples { const DATA:&str=include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\"); }",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -78,10 +78,10 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "#[cfg(any(test,feature=\"testing\"))] mod examples { const DATA:&str=include_str!(\"🧫️fixtures/input.json\"); }",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "#[cfg(any(test,feature=\"testing\"))] mod examples { const DATA:&str=include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\"); }",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [
         "testing"
@@ -98,10 +98,10 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "mod live { #[cfg(test)] mod examples { const DATA:&str=include_str!(\"🧫️fixtures/input.json\"); } }",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "mod live { #[cfg(test)] mod examples { const DATA:&str=include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\"); } }",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -116,10 +116,10 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "pub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "pub const DATA:&str=include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -134,10 +134,10 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "pub const DATA:&[u8]=include_bytes!(r#\"🧫️fixtures/input.json\"#);",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "pub const DATA:&[u8]=include_bytes!(r#\"\ud83e\uddeb\ufe0ffixtures/input.json\"#);",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -152,11 +152,11 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "pub const DATA:&str=include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"),\"/🧫️fixtures/input.json\"));",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "pub const DATA:&str=include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"),\"/\ud83e\uddeb\ufe0ffixtures/input.json\"));",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");",
-        "/owner/🧫️fixtures/input.json": "{}"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "/owner/\ud83e\uddeb\ufe0ffixtures/input.json": "{}"
       },
       "features": [],
       "cfg": [],
@@ -172,9 +172,9 @@
       ],
       "files": {
         "src/lib.rs": "const DATA:&str=include_str!(resource_path!());",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -190,9 +190,9 @@
       ],
       "files": {
         "src/lib.rs": "#[path=\"FixturePayload.rs\"] mod payload;",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -207,10 +207,10 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "// include_str!(\"🧫️fixtures/input.json\")\npub const NAME:&str = \"include_str!(fixture)\";",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "// include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\")\npub const NAME:&str = \"include_str!(fixture)\";",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -225,8 +225,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "import input from \"./🧫️fixtures/input.json\";",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "import input from \"./\ud83e\uddeb\ufe0ffixtures/input.json\";",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -240,8 +240,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "export {default} from \"./🧫️fixtures/input.json\";",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "export {default} from \"./\ud83e\uddeb\ufe0ffixtures/input.json\";",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -255,8 +255,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "export const input = import(\"./🧫️fixtures/input.json\");",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "export const input = import(\"./\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -270,8 +270,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "export const input = require(\"./🧫️fixtures/input.json\");",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "export const input = require(\"./\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -286,11 +286,11 @@
       ],
       "files": {
         "src/main.ts": "import input from \"@input\";",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {
-        "@input": "src/🧫️fixtures/input.json"
+        "@input": "src/\ud83e\uddeb\ufe0ffixtures/input.json"
       },
       "generated": {},
       "forbidden": true,
@@ -303,11 +303,11 @@
       ],
       "files": {
         "src/main.ts": "import input from \"virtual:input\";",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {
-        "virtual:input": "src/🧫️fixtures/input.json"
+        "virtual:input": "src/\ud83e\uddeb\ufe0ffixtures/input.json"
       },
       "generated": {},
       "forbidden": true,
@@ -319,8 +319,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "const input = new URL(\"./🧫️fixtures/input.json\", import.meta.url);",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "const input = new URL(\"./\ud83e\uddeb\ufe0ffixtures/input.json\", import.meta.url);",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -334,8 +334,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "import {readFileSync} from \"node:fs\"; readFileSync(\"./🧫️fixtures/input.json\");",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "import {readFileSync} from \"node:fs\"; readFileSync(\"./\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -351,7 +351,7 @@
       ],
       "files": {
         "src/main.ts": "const name=\"input\"; import(name);",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -366,7 +366,7 @@
       ],
       "files": {
         "src/main.ts": "import {readFileSync} from \"node:fs\"; readFileSync(path);",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -382,14 +382,14 @@
       ],
       "files": {
         "src/main.ts": "import input from \"./generated.ts\";",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;",
         "src/generated.ts": "export const input=1;"
       },
       "aliases": {},
       "generated": {
         "src/generated.ts": [
-          "src/🧫️fixtures/input.json"
+          "src/\ud83e\uddeb\ufe0ffixtures/input.json"
         ]
       },
       "forbidden": true,
@@ -402,7 +402,7 @@
       ],
       "files": {
         "src/main.ts": "import {FixturePayload} from \"./FixturePayload.ts\";",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -416,8 +416,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "// import(\"./🧫️fixtures/input.json\")\nexport const name=\"fixture\";",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "// import(\"./\ud83e\uddeb\ufe0ffixtures/input.json\")\nexport const name=\"fixture\";",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -431,8 +431,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "import {readFileSync as load} from \"node:fs\";load(\"./🧫️fixtures/input.json\");",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "import {readFileSync as load} from \"node:fs\";load(\"./\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -448,7 +448,7 @@
       ],
       "files": {
         "src/main.ts": "const input=new URL(join(root,\"input\"),import.meta.url);",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -462,8 +462,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "const input=new URL(\"./🧫️fixtures/\"+name,import.meta.url);",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "const input=new URL(\"./\ud83e\uddeb\ufe0ffixtures/\"+name,import.meta.url);",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -477,8 +477,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "import{readFileSync}from\"node:fs\";readFileSync(\"./🧫️fixtures/\"+name);",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "import{readFileSync}from\"node:fs\";readFileSync(\"./\ud83e\uddeb\ufe0ffixtures/\"+name);",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -493,10 +493,10 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "macro_rules! data { () => {pub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");} } data!();",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "macro_rules! data { () => {pub const DATA:&str=include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");} } data!();",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -512,9 +512,9 @@
       ],
       "files": {
         "src/lib.rs": "external_module!();",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -529,8 +529,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "if(import.meta.vitest){await import(\"./🧫️fixtures/input.json\");} export const runtime=1;",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "if(import.meta.vitest){await import(\"./\ud83e\uddeb\ufe0ffixtures/input.json\");} export const runtime=1;",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -545,8 +545,8 @@
         "src/main.ts"
       ],
       "files": {
-        "src/main.ts": "if(import.meta.vitest){await import(\"./🧫️fixtures/input.json\");} export const runtime=1;",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/main.ts": "if(import.meta.vitest){await import(\"./\ud83e\uddeb\ufe0ffixtures/input.json\");} export const runtime=1;",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -561,7 +561,7 @@
       ],
       "files": {
         "src/main.ts": "const input=new URL(\"./runtime.json\",import.meta.url);",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;"
       },
       "aliases": {},
@@ -569,7 +569,7 @@
       "forbidden": true,
       "unresolved": false,
       "assetOwners": {
-        "src/runtime.json": "src/🧫️fixtures/input.json"
+        "src/runtime.json": "src/\ud83e\uddeb\ufe0ffixtures/input.json"
       }
     },
     {
@@ -579,7 +579,7 @@
       ],
       "files": {
         "src/main.ts": "const input=new URL(\"./runtime.json\",import.meta.url);",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.ts": "export const FixturePayload = 1;",
         "assets/runtime.json": "{}"
       },
@@ -597,10 +597,10 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "#![cfg(test)]\npub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "#![cfg(test)]\npub const DATA:&str=include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -615,10 +615,10 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "mod examples {#![cfg(test)]\npub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");}",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "mod examples {#![cfg(test)]\npub const DATA:&str=include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");}",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");"
       },
       "features": [],
       "cfg": [],
@@ -628,16 +628,16 @@
       "unresolved": false
     },
     {
-      "id": "collection-🧫️examples",
+      "id": "collection-\ud83e\uddeb\ufe0fexamples",
       "roots": [
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "pub const DATA:&str=include_str!(\"🧫️examples/input.json\");",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "pub const DATA:&str=include_str!(\"\ud83e\uddeb\ufe0fexamples/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");",
-        "src/🧫️examples/input.json": "{}"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0fexamples/input.json": "{}"
       },
       "features": [],
       "cfg": [],
@@ -647,16 +647,16 @@
       "unresolved": false
     },
     {
-      "id": "collection-🧪️fixtures",
+      "id": "collection-\ud83e\uddea\ufe0ffixtures",
       "roots": [
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "pub const DATA:&str=include_str!(\"🧪️fixtures/input.json\");",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "pub const DATA:&str=include_str!(\"\ud83e\uddea\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");",
-        "src/🧪️fixtures/input.json": "{}"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddea\ufe0ffixtures/input.json": "{}"
       },
       "features": [],
       "cfg": [],
@@ -666,16 +666,16 @@
       "unresolved": false
     },
     {
-      "id": "collection-🧪️examples",
+      "id": "collection-\ud83e\uddea\ufe0fexamples",
       "roots": [
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "pub const DATA:&str=include_str!(\"🧪️examples/input.json\");",
-        "src/🧫️fixtures/input.json": "{}",
+        "src/lib.rs": "pub const DATA:&str=include_str!(\"\ud83e\uddea\ufe0fexamples/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}",
         "src/FixturePayload.rs": "pub struct FixturePayload;",
-        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");",
-        "src/🧪️examples/input.json": "{}"
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddea\ufe0fexamples/input.json": "{}"
       },
       "features": [],
       "cfg": [],
@@ -715,12 +715,12 @@
       ],
       "files": {
         "src/entry.ts": "export async function run(url:string){return import(url)}",
-        "🧫️fixtures/runtime.js": "export const runtime = 1;"
+        "\ud83e\uddeb\ufe0ffixtures/runtime.js": "export const runtime = 1;"
       },
       "dynamicImports": {
         "src/entry.ts": [
           {
-            "path": "🧫️fixtures/runtime.js",
+            "path": "\ud83e\uddeb\ufe0ffixtures/runtime.js",
             "sha256": "d926316c95295321b148a6f1748a181d400de61b333988d1c5cf9f93eb7a8006",
             "sourceSha256": "b75d876cd65185c05c282ac89222e0a42ee0389036b5dd6c9bac8f8374b4e649",
             "callsiteIndex": 0
@@ -762,8 +762,8 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "macro_rules! resource {($path:expr)=>{include_str!($path)}} pub const DATA:&str=resource!(\"🧫️fixtures/input.json\");",
-        "src/🧫️fixtures/input.json": "{}"
+        "src/lib.rs": "macro_rules! resource {($path:expr)=>{include_str!($path)}} pub const DATA:&str=resource!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}"
       },
       "features": [],
       "forbidden": false,
@@ -775,8 +775,8 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "macro_rules! resource {()=>{include_str!(\"🧫️fixtures/input.json\")};($other:expr)=>{\"\"};} pub const DATA:&str=resource!();",
-        "src/🧫️fixtures/input.json": "{}"
+        "src/lib.rs": "macro_rules! resource {()=>{include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\")};($other:expr)=>{\"\"};} pub const DATA:&str=resource!();",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}"
       },
       "features": [],
       "forbidden": false,
@@ -788,8 +788,8 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "pub fn payload()->Vec<u8>{std::fs::read(\"🧫️fixtures/input.json\").unwrap()}",
-        "🧫️fixtures/input.json": "{}"
+        "src/lib.rs": "pub fn payload()->Vec<u8>{std::fs::read(\"\ud83e\uddeb\ufe0ffixtures/input.json\").unwrap()}",
+        "\ud83e\uddeb\ufe0ffixtures/input.json": "{}"
       },
       "features": [],
       "forbidden": true,
@@ -804,7 +804,7 @@
       ],
       "files": {
         "src/lib.rs": "use std::fs::read as load; pub fn run(path:&str){let _=load(path);}",
-        "🧫️fixtures/input.json": "{}"
+        "\ud83e\uddeb\ufe0ffixtures/input.json": "{}"
       },
       "features": [],
       "forbidden": false,
@@ -817,7 +817,7 @@
       ],
       "files": {
         "src/lib.rs": "use std::fs as files; pub fn run(path:&str){let _=files::read_dir(path);}",
-        "🧫️fixtures/input.json": "{}"
+        "\ud83e\uddeb\ufe0ffixtures/input.json": "{}"
       },
       "features": [],
       "forbidden": false,
@@ -829,8 +829,8 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "pub fn run(){let _=std::fs::read(\"🧫️fixtures/input.json\");}",
-        "🧫️fixtures/input.json": "{}"
+        "src/lib.rs": "pub fn run(){let _=std::fs::read(\"\ud83e\uddeb\ufe0ffixtures/input.json\");}",
+        "\ud83e\uddeb\ufe0ffixtures/input.json": "{}"
       },
       "features": [],
       "forbidden": false,
@@ -854,7 +854,7 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "mod fs {pub fn read(_: &str){}} pub fn run(){fs::read(\"🧫️fixtures/input.json\");}"
+        "src/lib.rs": "mod fs {pub fn read(_: &str){}} pub fn run(){fs::read(\"\ud83e\uddeb\ufe0ffixtures/input.json\");}"
       },
       "features": [],
       "forbidden": false,
@@ -878,8 +878,8 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "#[cfg(any(test,feature=\"mutation-testing\"))] pub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");",
-        "src/🧫️fixtures/input.json": "{}"
+        "src/lib.rs": "#[cfg(any(test,feature=\"mutation-testing\"))] pub const DATA:&str=include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}"
       },
       "features": [],
       "forbidden": false,
@@ -891,8 +891,8 @@
         "src/lib.rs"
       ],
       "files": {
-        "src/lib.rs": "#[cfg(any(test,feature=\"mutation-testing\"))] pub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");",
-        "src/🧫️fixtures/input.json": "{}"
+        "src/lib.rs": "#[cfg(any(test,feature=\"mutation-testing\"))] pub const DATA:&str=include_str!(\"\ud83e\uddeb\ufe0ffixtures/input.json\");",
+        "src/\ud83e\uddeb\ufe0ffixtures/input.json": "{}"
       },
       "features": [
         "mutation-testing"
@@ -941,12 +941,12 @@
     {
       "id": "domain-fixtures-module",
       "roots": [
-        "🔨️modules/🧫️fixtures/lib.rs"
+        "\ud83d\udd28\ufe0fmodules/\ud83e\uddeb\ufe0ffixtures/lib.rs"
       ],
       "features": [],
       "cfg": [],
       "files": {
-        "🔨️modules/🧫️fixtures/lib.rs": "pub const DOMAIN:u8=1;"
+        "\ud83d\udd28\ufe0fmodules/\ud83e\uddeb\ufe0ffixtures/lib.rs": "pub const DOMAIN:u8=1;"
       },
       "forbidden": false,
       "unresolved": false
@@ -983,7 +983,7 @@
       "cfg": [],
       "files": {
         "src/host.ts": "export const worker=new URL(\"../worker.js/entry.js\",import.meta.url);",
-        "🧫️fixtures/worker.js": "export const value=1;"
+        "\ud83e\uddeb\ufe0ffixtures/worker.js": "export const value=1;"
       },
       "moduleUrls": {
         "src/host.ts": "https://runtime.invalid/library.js/entry.js"
@@ -992,7 +992,7 @@
         "/worker.js": "generated/worker"
       },
       "assetOwners": {
-        "generated/worker/entry.js": "🧫️fixtures/worker.js"
+        "generated/worker/entry.js": "\ud83e\uddeb\ufe0ffixtures/worker.js"
       },
       "forbidden": true,
       "unresolved": false
@@ -1134,7 +1134,7 @@
       "files": {
         "src/lib.rs": "pub fn run(path: &str) -> Vec<u8> { std::fs::read(path).unwrap() }",
         "assets/runtime.json": "{\"runtime\":true}",
-        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+        "\ud83e\uddeb\ufe0ffixtures/runtime.json": "{\"runtime\":true}"
       },
       "resourceReads": {
         "src/lib.rs": [
@@ -1165,7 +1165,7 @@
       "files": {
         "src/lib.rs": "pub fn run(first: &str, second: &str) { std::fs::read(first).unwrap(); std::fs::read(second).unwrap(); }",
         "assets/runtime.json": "{\"runtime\":true}",
-        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+        "\ud83e\uddeb\ufe0ffixtures/runtime.json": "{\"runtime\":true}"
       },
       "resourceReads": {
         "src/lib.rs": [
@@ -1196,7 +1196,7 @@
       "files": {
         "src/lib.rs": "pub fn run(first: &str, second: &str) { std::fs::read(first).unwrap(); std::fs::read(second).unwrap(); }",
         "assets/runtime.json": "{\"runtime\":true}",
-        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+        "\ud83e\uddeb\ufe0ffixtures/runtime.json": "{\"runtime\":true}"
       },
       "resourceReads": {
         "src/lib.rs": [
@@ -1227,7 +1227,7 @@
       "files": {
         "src/lib.rs": "pub fn run(path: &str) -> Vec<u8> { std::fs::read(path).unwrap() }",
         "assets/runtime.json": "{\"runtime\":true}",
-        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+        "\ud83e\uddeb\ufe0ffixtures/runtime.json": "{\"runtime\":true}"
       },
       "resourceReads": {
         "src/lib.rs": [
@@ -1236,7 +1236,7 @@
             "callsiteOffset": 45,
             "inputs": [
               {
-                "path": "🧫️fixtures/runtime.json",
+                "path": "\ud83e\uddeb\ufe0ffixtures/runtime.json",
                 "sha256": "ea6f12f50f859e224f09271a5fcd774ec17f623da82405e2592d7c1b334d3b2c",
                 "kind": "file"
               }
@@ -1258,7 +1258,7 @@
       "files": {
         "src/lib.rs": "pub fn run(path: &str) { for _ in std::fs::read_dir(path).unwrap() {} }",
         "assets/runtime.json": "{\"runtime\":true}",
-        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+        "\ud83e\uddeb\ufe0ffixtures/runtime.json": "{\"runtime\":true}"
       },
       "resourceReads": {
         "src/lib.rs": [
@@ -1295,7 +1295,7 @@
       "files": {
         "src/lib.rs": "pub fn run(path: &str) { for _ in std::fs::read_dir(path).unwrap() {} }",
         "assets/runtime.json": "{\"runtime\":true}",
-        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+        "\ud83e\uddeb\ufe0ffixtures/runtime.json": "{\"runtime\":true}"
       },
       "resourceReads": {
         "src/lib.rs": [
@@ -1363,12 +1363,12 @@
       "rows": [
         {
           "kind": "copy",
-          "path": "assets/🧫️fixtures/logo.svg",
+          "path": "assets/\ud83e\uddeb\ufe0ffixtures/logo.svg",
           "output": "out/logo.svg"
         }
       ],
       "files": {
-        "assets/🧫️fixtures/logo.svg": "<svg/>",
+        "assets/\ud83e\uddeb\ufe0ffixtures/logo.svg": "<svg/>",
         "out/logo.svg": "<svg/>"
       },
       "forbidden": true,
@@ -1657,53 +1657,6 @@
       "unresolved": 1
     }
   ],
-  "actorCargoChanges": [
-    {
-      "name": "exact",
-      "accepted": true
-    },
-    {
-      "name": "wrong-args",
-      "accepted": false
-    },
-    {
-      "name": "test-unit",
-      "accepted": false
-    },
-    {
-      "name": "wrong-package",
-      "accepted": false
-    },
-    {
-      "name": "wrong-stage",
-      "accepted": false
-    },
-    {
-      "name": "wrong-digest",
-      "accepted": false
-    },
-    {
-      "name": "failed",
-      "accepted": false
-    },
-    {
-      "name": "testing-feature",
-      "accepted": false
-    },
-    {
-      "name": "implicit-root",
-      "accepted": false
-    },
-    {
-      "name": "foreign-unit-manifest",
-      "accepted": false
-    }
-  ],
-  "actorCargoWorkspace": {
-    "member": "actor",
-    "package": "neutral-actor",
-    "manifest": "hub/actor/Cargo.toml"
-  },
   "compilerCustody": [
     {
       "name": "RuntimeCompilerInputV1",

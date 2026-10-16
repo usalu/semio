@@ -963,4 +963,10 @@ impl FrameBuildHandle {
 }
 //#endregion 📮️FrameBuildHandle
 
+#[cfg(test)]
+#[path = "../../../🧪️tests/🔬️wgpu-frame-job-unit/🦀️.rs"]
+mod frame_job_unit_tests;
 
+#[cfg(test)]
+#[path = "📬️outcome/🧪️tests/🦀️.rs"]
+mod original_outcome_tests;

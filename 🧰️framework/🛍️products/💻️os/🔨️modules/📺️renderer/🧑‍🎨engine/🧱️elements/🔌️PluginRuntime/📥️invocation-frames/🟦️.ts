@@ -13,20 +13,26 @@ import {
 } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
 import {
+  decodePackValue,
+  encodePackValue
+} from "@semio-tech/framework/packs";
+import {
   AppChannelClient,
-  type AppFrameValue,
   decodeAppCommand,
   decodeAppFrame,
   decodeFaultFromWire,
+  faultDisplayMessage
+} from "@semio-tech/framework/app-channel";
+import {
+  type AppFrameValue
+} from "@semio-tech/framework/wire-contracts";
+import {
   decodeInvocationResultPacks,
-  decodePackValue,
   decodePackWire,
-  encodePackValue,
-  faultDisplayMessage,
   viewContextWireValue
-} from "@semio-tech/framework-os";
-import { type PluginDispatchHintV1 } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
-import { hopTrace } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+} from "@semio-tech/framework/packs";
+import { type PluginDispatchHintV1 } from "@semio-tech/framework";
+import { hopTrace } from "@semio-tech/framework/trace";
 import type { ViewModel } from "../🧷️handle-contract/🟦️.ts";
 import { leftoverShellInvocationFrames, type WireVariant } from "../🪝️wire-codec/🟦️.ts";
 import { wireEffectToFriendly } from "../🪟️retained-ui-patch/🟦️.ts";

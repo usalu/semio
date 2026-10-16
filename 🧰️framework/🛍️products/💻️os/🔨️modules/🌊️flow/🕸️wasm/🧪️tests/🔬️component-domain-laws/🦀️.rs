@@ -76,7 +76,7 @@ fn compiled_session_close_retires_the_real_vcs_and_host_before_terminal_empty() 
 
 #[test]
 fn compiled_session_close_receipt_preserves_a_real_sibling_until_global_close() {
-    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧑‍🤝‍🧑browser-runtime/🔣️.json")).unwrap();
     let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
     let mut sessions = Vec::new();
     for request in 1..=2 {

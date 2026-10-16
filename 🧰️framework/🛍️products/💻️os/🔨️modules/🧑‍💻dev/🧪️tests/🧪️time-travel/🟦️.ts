@@ -1,7 +1,7 @@
 /** ⏪️ `time-travel` — the plugin-neutral end-to-end harness of non-destructive history editing. One headless Chromium, one fresh browser context per UI locale (`en`, then `de`, chosen through `navigator.language`), the steps of a plugin scenario and the shared universal journey, each verdict compared against the localized texts of the framework's own history panel.
  *
  * A scenario ({@link TimeTravelScenarioV1}) names the playground it drives, where its serve listens and the steps of its journey; a plugin owns its scenario as data, a repository-relative module whose `timeTravelScenarioV1` export this runner loads for `--scenario <module>`; a run without a scenario is universal and drives any declared playground through the mirror's own controls. Outputs under `--out`: `probe-<renderer>-<stamp>.md` (step lines, verdicts, notes, timeline, console digest), `.ndjson` (one record per verdict/note/dump) and `probe-<renderer>-<stamp>-<locale>-s<step>-<tag>.png|json`; the acceptance record `time-travel`.
- * @see @semio-tech/framework/time-travel/testing/scenario
+ * @see ../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧩️scenario/🟦️.ts
  * @see ../../../🔌️plugin/⏪️time-travel/🦀️.rs
  * @see ../👥️two-human/🟦️.ts */
 import { checkScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -13,9 +13,9 @@ import { ensureDevServe, devServePortV1 } from "../../🚀️local-hub/🏃️ex
 import { existsSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import type { TimeTravelScenarioV1 } from "@semio-tech/framework/time-travel/testing/scenario";
-import { configure, routeUrl, flagValue } from "@semio-tech/framework/time-travel/testing/arguments";
-import { serveOrigin, universalRoute, renderer, setUniversalRoute, OUT, base, locales, chordLocales, ndjsonPath } from "@semio-tech/framework/time-travel/testing/state";
+import type { TimeTravelScenarioV1 } from "../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧩️scenario/🟦️.ts";
+import { configure, routeUrl, flagValue } from "../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧭️arguments/🟦️.ts";
+import { serveOrigin, universalRoute, renderer, setUniversalRoute, OUT, base, locales, chordLocales, ndjsonPath } from "../../../../../../🔨️modules/⏪️time-travel/🧪️testing/🧠️state/🟦️.ts";
 import { runProbe } from "./🎪️run/🟦️.ts";
 
 //#region 🔖️Arguments

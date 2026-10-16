@@ -35,9 +35,10 @@ export function testWatchdogTailFixture(): void {
   
   const elapsed = (start: number | null, end: number | null): bigint | null => start === null || end === null || end < start ? null : BigInt(end) - BigInt(start);
   for (const row of fixture.cases) {
-    const first = elapsed(row.clock[0], row.clock[1]);
-    const monotonic = row.clock.every((value: number | null, index: number, clock: readonly (number | null)[]) => value !== null && (index === 0 || clock[index - 1] !== null && value >= clock[index - 1]!));
-    const last = monotonic ? elapsed(row.clock[0], row.clock[3]) : null;
+    const [start,entered,,finished]=row.clock;if(row.clock.length!==4||start===undefined||entered===undefined||finished===undefined)throw Error("Four actual watchdog clock samples required");
+    const first = elapsed(start, entered);
+    const monotonic = row.clock.every((value: number | null, index: number, clock: readonly (number | null)[]) => value !== null && (index === 0 || (()=>{const previous=clock[index-1];return previous!==undefined&&previous!==null&&value>=previous;})()));
+    const last = monotonic ? elapsed(start, finished) : null;
     const refused = first === null || first >= BigInt(fixture.exclusiveCeilingUs);
     const fault = last === null || last >= BigInt(fixture.exclusiveCeilingUs);
     assert.equal(refused, row.admissionFault);

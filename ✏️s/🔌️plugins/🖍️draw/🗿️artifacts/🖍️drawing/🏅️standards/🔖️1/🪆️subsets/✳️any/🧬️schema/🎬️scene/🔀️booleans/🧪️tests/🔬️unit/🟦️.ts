@@ -40,7 +40,7 @@ test("actual document Boolean pixels match independent authored SVG",async()=>{
 });
 test("document Boolean dependencies, unsupported operands and caps fail privately",()=>{
  const value=input(rows[0]!);for(const patch of [{maxWork:0},{maxDepth:0},{maxRetainedSegments:0},{epsilon:0}])expect(()=>new DocumentBooleanJob({...value,limits:{...value.limits,...patch}})).toThrow();
- for(const kind of ["missing","cycle","unsupported","duplicate","depth","references","retained","work"]){const v=structuredClone(value);if(kind==="missing")(v.plan.nodes.at(-1)!.content as any).children=["absent"];if(kind==="cycle")(v.plan.nodes.at(-1)!.content as any).children=["result"];if(kind==="unsupported")v.plan.nodes[0]!.content={kind:"image",asset:"x",width:1,height:1};if(kind==="duplicate")v.plan.nodes[0]!.id="result";if(kind==="depth")v.limits.maxDepth=1;if(kind==="references")v.limits.maxReferences=1;if(kind==="retained")v.limits.maxRetainedSegments=1;if(kind==="work")v.limits.maxWork=1;
+ for(const kind of ["missing","cycle","unsupported","duplicate","depth","references","retained","work"]){const v=structuredClone(value);if(kind==="missing")(v.plan.nodes.at(-1)!.content as any).children=["absent"];if(kind==="cycle")(v.plan.nodes.at(-1)!.content as any).children=["result"];if(kind==="unsupported")v.plan.nodes[0]!.content={kind:"image",asset:"x",width:1,height:1};if(kind==="duplicate")Object.assign(v.plan.nodes[0]!,{id:"result"});if(kind==="depth")v.limits.maxDepth=1;if(kind==="references")v.limits.maxReferences=1;if(kind==="retained")v.limits.maxRetainedSegments=1;if(kind==="work")v.limits.maxWork=1;
   const job=new DocumentBooleanJob(v);expect(()=>{while(!job.advance(4096).done){}}).toThrow();expect(()=>job.result()).toThrow();expect(()=>job.advance(1)).toThrow();
  }for(const budget of [0,-1,NaN,Infinity,.5])expect(()=>new DocumentBooleanJob(value).advance(budget)).toThrow();
 });
@@ -50,7 +50,7 @@ test("every document Boolean phase cancels and published plans remain owned",()=
 });
 test("exact retained and work caps preserve complete output",()=>{const value=input(rows[0]!);let last!:DocumentBooleanProgress;const expected=finish(value,1,p=>last=p);expect(finish({...value,limits:{...value.limits,maxWork:last.work,maxRetainedSegments:last.segments}},7)).toEqual(expected);});
 test("unrepresentable result accuracy refuses privately and empty singular results stay empty",()=>{
- const value=input(rows[0]!);value.plan.nodes.at(-1)!.transform=[1e8,0,0,1e8,0,0];const job=new DocumentBooleanJob(value);expect(()=>{while(!job.advance(4096).done){}}).toThrow(/precision/);expect(()=>job.result()).toThrow(/precision/);
+ const value=input(rows[0]!);Object.assign(value.plan.nodes.at(-1)!,{transform:[1e8,0,0,1e8,0,0]});const job=new DocumentBooleanJob(value);expect(()=>{while(!job.advance(4096).done){}}).toThrow(/precision/);expect(()=>job.result()).toThrow(/precision/);
  const empty=input(rows[8]!);(empty.plan.nodes.at(-1)!.content as any).referenceTransform=[0,0,0,0,0,0];expect((finish(empty,7).nodes.at(-1)!.content as any).segments).toEqual([]);
 });
 test("document Boolean async work yields and completion abort prevents publication",async()=>{const value=input(rows[0]!);let tick=false;setTimeout(()=>tick=true,0);expect(await resolveDocumentBooleans(value,{workBudget:7})).toEqual(finish(value,4096));expect(tick).toBe(true);const abort=new AbortController();await expect(resolveDocumentBooleans(value,{signal:abort.signal,onProgress:p=>{if(p.done)abort.abort();}})).rejects.toThrow(/cancel/i);});
@@ -67,10 +67,11 @@ test("document pipeline cancels real algorithm work and does not publish after c
 /** 🧹️ Complete results own their mutable metadata; failed graphs keep private retirement state. */
 import retirementRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔀️booleans/🧹️retirement/🔣️.json";
 import {ScenePlanCloseJob} from "../../../🧹️retire/🟦️.ts";
+import {rasterSceneAssetFixture,rasterSceneGroupFixture} from "../../../../../🧪️tests/🧫️fixtures/🟦️.ts";
 const retirementValid=ajv.compile({$ref:schema.$id+"#/definitions/retirementProgress"});
 test("document Boolean retirement composes actual children and keeps source and completed plans independent",()=>{
  for(const sample of retirementRows.cases)for(const grant of [1,7,4096]){
-  const row=rows.find(r=>r.name===("source" in sample?sample.source:retirementRows.source))!,source=input(row);for(const n of source.plan.nodes)n.groups=[structuredClone(retirementRows.metadata.group)];const c=source.plan.nodes.at(-1)!.content as any;c.fill=structuredClone(retirementRows.metadata.fill);c.stroke=structuredClone(retirementRows.metadata.stroke);source.plan.assets=[structuredClone(retirementRows.metadata.asset)];
+  const row=rows.find(r=>r.name===("source" in sample?sample.source:retirementRows.source))!,source=input(row);for(const n of source.plan.nodes)n.groups=[rasterSceneGroupFixture(retirementRows.metadata.group)];const c=source.plan.nodes.at(-1)!.content as any;c.fill=structuredClone(retirementRows.metadata.fill);c.stroke=structuredClone(retirementRows.metadata.stroke);source.plan.assets=[rasterSceneAssetFixture(retirementRows.metadata.asset)];
   if("maxWork" in sample)source.limits={...source.limits,maxWork:sample.maxWork!};if("maxRetainedSegments" in sample)source.limits={...source.limits,maxRetainedSegments:sample.maxRetainedSegments!};
   const before=structuredClone(source),job=new DocumentBooleanJob(source),state=job as any;
   if(sample.phase==="failure")expect(()=>job.advance(100000)).toThrow();else if(sample.phase!=="fresh"){

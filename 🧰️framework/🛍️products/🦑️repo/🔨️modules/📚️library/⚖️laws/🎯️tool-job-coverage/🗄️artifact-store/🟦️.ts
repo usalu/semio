@@ -1,4 +1,4 @@
-/** 🧭️ Tool-job coverage: artifact store, envelope and retained-ownership laws per app.
+/** 🗄️ Tool-job coverage: artifact store, envelope and retained-ownership laws per app.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { readFileSync } from "node:fs";

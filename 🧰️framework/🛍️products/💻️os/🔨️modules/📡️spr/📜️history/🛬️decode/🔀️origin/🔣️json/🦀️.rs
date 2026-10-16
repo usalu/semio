@@ -14,8 +14,8 @@ impl<S:RetainedWireByteSource+?Sized> JsonReadSource for OriginalHistoryJsonRang
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum RetainedHistoryOriginJsonStep{Blocked,Progress,Ready,Fault,Closed}
 pub struct RetainedHistoryOriginJsonDecode{
- source:OriginalWireSourceIdentity,control_identity:(u64,Option<u64>),range:(usize,usize),allocation_limit:usize,grammar:ManuallyDrop<Option<JsonGrammarCursor<DslValue>>>,parsed:ManuallyDrop<Option<DslValue>>,
- projection:ManuallyDrop<Option<RetainedHistoryOriginProjection>>,failure:ManuallyDrop<Option<JsonError>>,grammar_complete:bool,closing:bool,closed:bool,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,
+ source:OriginalWireSourceIdentity,control_identity:(u64,Option<u64>),range:(usize,usize),allocation_limit:usize,#[doc(hidden)] pub grammar:ManuallyDrop<Option<JsonGrammarCursor<DslValue>>>,parsed:ManuallyDrop<Option<DslValue>>,
+ projection:ManuallyDrop<Option<RetainedHistoryOriginProjection>>,failure:ManuallyDrop<Option<JsonError>>,#[doc(hidden)] pub grammar_complete:bool,closing:bool,closed:bool,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,
 }
 impl RetainedHistoryOriginJsonDecode{
  pub fn admit<S:RetainedWireByteSource+?Sized>(source:&S,range:(usize,usize),limits:JsonReadLimits,control:&NativeDecodeControl<'_>,g:RetainedCloneGrant)->Result<Option<Self>,ValueError>{
@@ -79,6 +79,3 @@ impl RetainedHistoryOriginJsonDecode{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.grammar.is_none()&&self.parsed.is_none()&&self.projection.is_none()&&self.failure.is_none()&&self.receipt.is_none()}
 }
 impl Drop for RetainedHistoryOriginJsonDecode{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original origin JSON abandoned a native grammar or receiving owner");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.grammar);ManuallyDrop::drop(&mut self.parsed);ManuallyDrop::drop(&mut self.projection);ManuallyDrop::drop(&mut self.failure)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

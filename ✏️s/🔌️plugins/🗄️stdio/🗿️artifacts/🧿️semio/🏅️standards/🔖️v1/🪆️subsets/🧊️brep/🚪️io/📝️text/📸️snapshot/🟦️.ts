@@ -50,5 +50,5 @@ export const stdioSemioV1BrepSnapshotTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseSemioBrepSnapshotText(value: unknown, at = "$"): SemioBrepSnapshotText {
-  return stdioSemioV1BrepSnapshotTextGuardObject(value, `${at}`);
+  return stdioSemioV1BrepSnapshotTextGuardString(value, `${at}`);
 }

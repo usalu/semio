@@ -4,22 +4,22 @@ import {test,expect} from "bun:test";
 import {IoError as ExposedIoError} from "../../🟦️.ts";
 import {IoError,encodeIoErrorControlled,decodeIoErrorControlled} from "../🟦️.ts";
 import {ValueError,type ValueRefusalKind} from "../../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
-import {NativeDecodeControl} from "../../../../🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
 import {TextError} from "../../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
 import {encodeDiagnosticControlled,decodeDiagnosticControlled} from "../../../../⚠️diagnostic/🎛️controlled/🟦️.ts";
-import type {IntrinsicValue} from "../../../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
+import type {IntrinsicValue} from "@semio-tech/value-ts/schema/intrinsic";
 import {binary64,binary64Value} from "../../../../🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 
 
-import copyCases from "../../../🧪️tests/🧫️fixtures/⚠️refusal/🧵️stress/🔣️.json";
+import { refusalStressFixture as copyCases } from "@semio-tech/framework/io/testing/fixtures/refusal/stress";
 
 
-import cases from "../../../🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json";
-import wireCases from "../../../🧪️tests/🧫️fixtures/⚠️refusal/🔁️wire/🔣️.json";
+import { ioRefusalFixture as cases } from "@semio-tech/framework/io/testing/fixtures/refusal";
+import { refusalWireFixture as wireCases } from "@semio-tech/framework/io/testing/fixtures/refusal/wire";
 
 
 
-import diagnosticCases from "../../../../⚠️diagnostic/🧪️tests/🧫️fixtures/🎛️controlled/🔣️.json";
+import { diagnosticControlledFixture as diagnosticCases } from "../../../../⚠️diagnostic/🧪️tests/🧫️fixtures/🟦️.ts";
 const kinds:ValueRefusalKind[]=["invalidValue","canceled","ownershipLimit","allocationFailed","workLimit","depthLimit","unsupportedOwner","invariantViolated"];
 function intrinsic(value:unknown):IntrinsicValue {
  if(value===null)return{kind:"null"};

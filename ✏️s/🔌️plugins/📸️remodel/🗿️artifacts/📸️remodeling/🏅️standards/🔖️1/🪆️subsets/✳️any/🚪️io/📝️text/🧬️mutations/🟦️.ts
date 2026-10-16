@@ -49,5 +49,5 @@ export const remodelRemodelingMutationsTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseRemodelingMutationsText(value: unknown, at = "$"): RemodelingMutationsText {
-  return remodelRemodelingMutationsTextGuardObject(value, `${at}`);
+  return remodelRemodelingMutationsTextGuardString(value, `${at}`);
 }

@@ -33,7 +33,11 @@ semio-framework-value-derive = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
+[features]
+testkit = []
+
 [dev-dependencies]
+semio-framework-plugin-host-operation = { path = "../../../../🖥️host/🚪️io/🎛️operation/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }

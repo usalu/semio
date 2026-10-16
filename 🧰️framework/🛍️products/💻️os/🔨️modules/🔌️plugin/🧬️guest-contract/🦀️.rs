@@ -7,12 +7,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-#[path = "../🚪️io/🛂️authority/🦀️.rs"]
-pub mod operation_authority;
-#[path = "../⚛️reactor/🎟️context/🦀️.rs"]
+pub use semio_framework_plugin_abi::{operation_authority, return_walk_template, sqlite_wire};
+#[path = "🎟️original-actor-context/🦀️.rs"]
 pub mod original_actor_context;
-#[path = "../🧬️schema/🪶️sqlite/🦀️.rs"]
-pub mod sqlite_wire;
 
 /// 🧮️ The heap witness the crate's allocation laws read through `semio_framework_trace::observe_heap_allocations_on_this_thread`.
 #[cfg(test)]

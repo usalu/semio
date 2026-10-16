@@ -7,13 +7,22 @@ fn permits(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items>0&&g.m
 fn metadata()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 #[path="🔣️json/🦀️.rs"]
 mod json;
+
+/// 🪝️ Test hook: the private JSON reader, public only behind the `testkit` feature.
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub mod json {
+        pub use super::super::json::*;
+    }
+}
 pub use json::{RetainedHistoryOriginJsonDecode,RetainedHistoryOriginJsonStep};
 pub struct RetainedHistoryOriginPartial{
- cells:ManuallyDrop<[Option<DslValue>;10]>,key:ManuallyDrop<Option<String>>,retiring:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+ #[doc(hidden)] pub cells:ManuallyDrop<[Option<DslValue>;10]>,#[doc(hidden)] pub key:ManuallyDrop<Option<String>>,#[doc(hidden)] pub retiring:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
  hash:[u8;32],hash_ready:bool,field:usize,kind:u8,
 }
 impl RetainedHistoryOriginPartial{
- fn empty(original:DslValue)->Self{let mut cells=std::array::from_fn(|_|None);cells[0]=Some(original);Self{cells:ManuallyDrop::new(cells),key:ManuallyDrop::new(None),retiring:ManuallyDrop::new(None),hash:[0;32],hash_ready:false,field:usize::MAX,kind:0}}
+ #[doc(hidden)] pub fn empty(original:DslValue)->Self{let mut cells=std::array::from_fn(|_|None);cells[0]=Some(original);Self{cells:ManuallyDrop::new(cells),key:ManuallyDrop::new(None),retiring:ManuallyDrop::new(None),hash:[0;32],hash_ready:false,field:usize::MAX,kind:0}}
  pub fn original_cell(&self,index:usize)->Option<&DslValue>{self.cells.get(index)?.as_ref()}
  pub fn terminal_is_empty(&self)->bool{self.key.is_none()&&self.retiring.is_none()&&self.cells.iter().all(Option::is_none)}
  fn child_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -47,7 +56,7 @@ impl RetainedHistoryOriginPartial{
  }
 }
 impl Drop for RetainedHistoryOriginPartial{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original History origin partial abandoned native fields");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.cells);ManuallyDrop::drop(&mut self.key);ManuallyDrop::drop(&mut self.retiring)}}}}
-pub struct RetainedHistoryOriginProjection{partial:ManuallyDrop<Option<RetainedHistoryOriginPartial>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,closing:bool,ready:bool,closed:bool}
+#[doc(hidden)] pub struct RetainedHistoryOriginProjection{#[doc(hidden)] pub partial:ManuallyDrop<Option<RetainedHistoryOriginPartial>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,closing:bool,ready:bool,closed:bool}
 impl RetainedHistoryOriginProjection{
  pub fn admit_original(original:&mut Option<DslValue>,g:RetainedCloneGrant)->Result<Option<Self>,ValueError>{if original.is_none()||g.maximum_items==0||g.maximum_depth==0{return Ok(None)}Ok(Some(Self{partial:ManuallyDrop::new(Some(RetainedHistoryOriginPartial::empty(original.take().unwrap()))),receipt:Some((g,metadata())),closing:false,ready:false,closed:false}))}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}
@@ -103,6 +112,3 @@ impl RetainedHistoryOriginProjection{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.partial.is_none()&&self.receipt.is_none()}
 }
 impl Drop for RetainedHistoryOriginProjection{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original origin projection abandoned partial custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.partial)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

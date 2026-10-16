@@ -1,3 +1,4 @@
+import { loadActorCodecFixture, loadTurnBootstrapCompositionFixture } from "../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
 /** 🧬️ LAW: one codec call reaches a component's `codec` interface through every browser hop with the
@@ -9,11 +10,11 @@ type TestSource = { readonly directory: string; readonly url: string };
  * @see 🔌️plugin/🖥️host/🧬️component-codec/🦀️.rs (the native twin) */
 export async function registerComponentCodecReplyTests(vitest: NonNullable<ImportMeta["vitest"]>, _testSource: TestSource): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🔣️.json");
+  const fixture = await loadActorCodecFixture();
   const { actorCodecAnswer } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts");
   const { OriginalOperationSource } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts");
   const { KernelOriginalBootstrapStock, originalBootstrapStockFromWire } = await import("../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts");
-  const { default: stockFixture } = await import("../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/📋️composition.json");
+  const stockFixture = await loadTurnBootstrapCompositionFixture();
   type CodecRequest = import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ActorCodecRequest;
   type CodecExports = import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ActorCodecExports;
   type Case = (typeof fixture.cases)[number];

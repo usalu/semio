@@ -15,7 +15,7 @@ export type { DocumentBackboneBatchLimits } from "./🚪️io/💾️binary/🔗
 import { writeVecEnvelope, readVecEnvelope } from "./🚪️io/💾️binary/🔗️causal/🟦️.ts";
 export { writeVecStr, readVecStr, writeVecEnvelope, readVecEnvelope, decodeCausalEnvelopeBatch, encodeCausalEnvelopeBatch, mutationEnvelopeToWire, mutationEnvelopeFromWire } from "./🚪️io/💾️binary/🔗️causal/🟦️.ts";
 export type { ReplicationPackCodec } from "./🚪️io/💾️binary/🔗️causal/🟦️.ts";
-import { blake3Hex } from "../🔏️hash/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework/hash";
 import { encodePresencePeer, decodePresencePeer } from "./🚪️io/💾️binary/👥️presence/🟦️.ts";
 export { encodePresencePeer, PRESENCE_PEER_WIRE_LIMITS_V1, decodePresencePeer, encodePresenceToolRun, decodePresenceToolRun, encodePresenceHistoryEdit, decodePresenceHistoryEdit, readU8, encodePresenceInteraction, decodePresenceInteraction } from "./🚪️io/💾️binary/👥️presence/🟦️.ts";
 import { writeVarintU64, writeStr, writeBytes } from "./🚪️io/💾️binary/🟦️.ts";

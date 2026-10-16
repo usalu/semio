@@ -3,8 +3,7 @@ use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
 use semio_framework_3d_brep_analysis::{edge_table, face_table, ShapeScope};
 use semio_framework_3d_brep_engine::ShapeRoot;
 
-#[path = "../🧰️support/🦀️.rs"]
-mod support;
+use semio_s_artifact_procedural_3d_geometry_phased_job_support as support;
 
 fn kind() -> &'static Kind {
     catalogue().kind("brep.feature.fillet").expect("catalogued")

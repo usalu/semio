@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { resolve as compilerStatePath } from "node:path";
-import { typecheckProject } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { typecheckRepositoryProjectV1 } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
@@ -373,6 +373,14 @@ class SdkSurfaceScript extends BundleScript {
   }
 }
 
+/** 📤️ Executes the module package surface law for the value, schema validator and schema TypeScript packages. */
+class ModulePackageSurfaceScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("test-module-package-surface accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("./🧪️tests/📤️module-package-surface/🟦️.ts", import.meta.url))], this.root, "framework:module-package-surface", 300_000);
+  }
+}
+
 /** 📏️ Executes the closed general command-owner boundary. */
 class ScriptBoundaryScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -406,6 +414,14 @@ class SourceTextScript extends BundleScript {
   }
 }
 
+/** 🪪️ Executes the document scope and frontier law. */
+class DocumentScopeScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("test-document-scope accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/📄️document/🪪️scope/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:document-scope", cmdBudgetMs(process.env));
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -417,7 +433,7 @@ class TestScript extends BundleScript {
 /** 🔎️ Type-checks every `🧰️framework/🔨️modules/**` and `🧰️framework/📦️packages/**` source file against `tsconfig.json`. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, stateRoot: compilerStatePath(this.repoRoot, ".cache", "framework"), leaseDirectory: compilerStatePath(this.repoRoot, ".cache", "framework", "leases"), invocation: this.invocation, cwd: this.root, project: "tsconfig.json", owner: "framework:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "tsconfig.json", owner: "framework:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 
@@ -430,6 +446,6 @@ class InstallationIdentityScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-document-scope", DocumentScopeScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript).register("test-module-package-surface", ModulePackageSurfaceScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

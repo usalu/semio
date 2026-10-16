@@ -8,7 +8,7 @@
  * @see ../../../../../🏪️store/👷️worker/🟦️.ts
  * @see ../../../../../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📇fold-directory-events/🦀️.rs
  */
-import type { DirectoryEvent } from "../../../../../📇️directory/🟦️.ts";
+import type { DirectoryEvent } from "@semio-tech/framework/directory/schema";
 
 /** 📇️ One space's directory history, deduplicated by `seq`. */
 export class SpaceDirectoryHistoryV1 {

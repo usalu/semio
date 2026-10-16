@@ -4,7 +4,7 @@
  */
 
 import { createAdmittedShellInstanceV1 } from "../🗨️dialog-origin/🟦️.ts";
-import { isTerminalDocumentCheckInPhaseV1, type DocumentCheckInStatusV1 } from "../../../../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
+import { isTerminalDocumentCheckInPhaseV1, type DocumentCheckInStatusV1 } from "@semio-tech/framework/document/check-in";
 // #region 🔌️Adapters
 import {
   useCallback,
@@ -14,7 +14,8 @@ import {
   useRef,
   useState
 } from "react";
-import { buildFrameworkSyncUtilities, encodeBackboneWorkerRequest, type DocumentScope } from "@semio-tech/framework-os";
+import { type DocumentScope } from "@semio-tech/framework/document/scope";
+import { buildFrameworkSyncUtilities, encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { type ScopedPresencePeerV1 } from "../👥️presence-scope/🟦️.ts";
 import { SHELL_HUB_ROUTE, shellRouteAdmissionTextV1, shellRouteAdmissionV1 } from "../🔀️surface-switch/🟦️.ts";
 import { type PanelTabNode, singleTreeLeaf } from "@semio-tech/ui-react";

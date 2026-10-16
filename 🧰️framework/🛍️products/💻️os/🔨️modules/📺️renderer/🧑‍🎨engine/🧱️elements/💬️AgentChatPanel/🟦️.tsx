@@ -20,7 +20,7 @@ import { Button, Textarea, useLabel } from "@semio-tech/ui-react";
 import { AgentPresence, type AgentPresenceProps } from "../🚦️AgentPresence/🟦️.tsx";
 import { agentUiLabel, type AgentConversationEntry } from "../🔗️AgentBridge/🟦️.tsx";
 import { AgentApprovalAffordance } from "../🤖️AgentApprovals/🟦️.tsx";
-import { type ApprovalDecision } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
+import { type ApprovalDecision } from "@semio-tech/framework/mcp/bridge";
 // #endregion 🔌️Adapters
 
 //#region 🔖️AgentChatPanel

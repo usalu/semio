@@ -150,8 +150,8 @@ describe("demonstrator shell brands", () => {
 import Ajv from "ajv";
 import { DEMONSTRATOR_SHELL_BRANDS, DEMONSTRATOR_FOOTER_ITEMS } from "../../🪧️brand.ts";
 import { shellFooterNavbarItem } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellFooter/🟦️.tsx";
-import schema from "../../../../🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json";
-import fixture from "../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🏛️shell-footer/🔣️.json";
+import { manifestSchema as schema } from "@semio-tech/framework/manifest/schema";
+import { manifestShellFooterFixture as fixture } from "@semio-tech/framework/manifest/testing/fixtures/shell-footer";
 import type { ShellFooterItem, ShellLocale } from "@semio-tech/framework";
 
 it("renders schema-owned neutral credits and validates every concrete owner contribution", () => {

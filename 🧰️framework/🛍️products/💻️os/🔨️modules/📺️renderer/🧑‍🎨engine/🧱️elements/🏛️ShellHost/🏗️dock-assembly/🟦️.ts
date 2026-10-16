@@ -57,7 +57,7 @@ import { toolRunPanelReveal } from "../../🛠️ShellHelpers/⏯️tool-run-pan
 import { useTimeTravelRevealV1 } from "../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { FRAMEWORK_SETTINGS_PANEL_ID } from "../../📌️ChromePanels/🟦️.tsx";
 import { leftoverInspectionRefreshScope, leftoverInspectionPanelHash } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { shellAppFault, type ShellAppFrameV1 } from "../../../../../🌉️mcp/🐚️channel/🟦️.ts";
+import { shellAppFault, type ShellAppFrameV1 } from "@semio-tech/framework/mcp/channel";
 import type { ShellCommand } from "../../../../../🖥️shell/🟦️.ts";
 import type { ShellCoreAfterCommandBar } from "../🔎️command-bar/🟦️.tsx";
 

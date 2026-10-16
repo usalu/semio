@@ -16,7 +16,8 @@ import {
   SET_ACTIVE_UTILITY_ACTION_ID,
   type Severity
 } from "@semio-tech/framework";
-import { decodeDocumentArchiveBytes, decodePackValue, encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework-os";
+import { decodePackValue } from "@semio-tech/framework/packs";
+import { decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
 import {
   KEYBINDING_UNOWNED_CODE,
   keybindingUnownedTextV1,

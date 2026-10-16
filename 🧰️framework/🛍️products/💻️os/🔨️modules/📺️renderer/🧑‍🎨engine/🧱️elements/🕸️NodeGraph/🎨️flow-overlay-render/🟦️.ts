@@ -3,9 +3,9 @@
  * 🧱️ Child hook module of {@link ../🟦️.tsx | FlowGraphCanvasHost}: `useFlowOverlayAndRender` runs the original statements in order and returns the bindings later hooks and the render read; the component merges them into the shared core object.
  */
 
-import { decodeDagHoverJson } from "../../../../../♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts";
+import { decodeDagHoverJson } from "@semio-tech/framework/infinite/board/io/text/dag-input";
 import { useCallback, useRef } from "react";
-import { hopTrace } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { hopTrace } from "@semio-tech/framework/trace";
 import { flowBoolean, flowJsonText, nodeGraphInputDecodeControl } from "../🧰️graph-core/🟦️.ts";
 import {
   computeDagMarqueeOverlay,

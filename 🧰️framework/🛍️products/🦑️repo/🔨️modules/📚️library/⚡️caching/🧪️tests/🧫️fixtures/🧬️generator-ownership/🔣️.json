@@ -88,27 +88,27 @@
     "imports": [
       {
         "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
-        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
+        "target": "🧰️framework/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
         "scope": "service-worker"
       },
       {
-        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
-        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
+        "source": "🧰️framework/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
+        "target": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
         "scope": "service-worker"
       },
       {
-        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
-        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧬️schema/🟦️.ts",
+        "source": "🧰️framework/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
+        "target": "🧰️framework/🔨️modules/💡️inference/🔌️service/🌐️document-http/🧬️schema/🟦️.ts",
         "scope": "service-worker"
       },
       {
-        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts",
-        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
+        "source": "🧰️framework/🔨️modules/💡️inference/🔌️service/🟦️.ts",
+        "target": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
         "scope": "browser"
       },
       {
-        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts",
-        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧬️schema/🟦️.ts",
+        "source": "🧰️framework/🔨️modules/💡️inference/🔌️service/🟦️.ts",
+        "target": "🧰️framework/🔨️modules/💡️inference/🔌️service/🌐️document-http/🧬️schema/🟦️.ts",
         "scope": "browser"
       },
       {
@@ -117,18 +117,18 @@
         "scope": "browser"
       },
       {
-        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
-        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts",
+        "source": "🧰️framework/🔨️modules/📇️directory/🟦️.ts",
+        "target": "🧰️framework/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts",
         "scope": "browser"
       },
       {
         "source": "🧰️framework/🛍️products/💻️os/🟦️.ts",
-        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+        "target": "🧰️framework/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
         "scope": "browser"
       },
       {
-        "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📞️directory-client/🟦️.ts",
-        "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+        "source": "🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
+        "target": "🧰️framework/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
         "scope": "browser"
       },
       {

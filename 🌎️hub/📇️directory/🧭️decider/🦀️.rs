@@ -6,7 +6,7 @@ use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
 use semio_hub_directory_dispatch::HubDirectories;
 use semio_hub_directory_contract::model::{SpaceRecord, SpaceRole};
 use directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
-use semio_hub_directory::{frontier_strictly_advances, published_artifact_checkpoint, validate_checkpoint_shape, validate_document_descriptor, validate_retention_shape};
+use semio_hub_directory::{frontier_strictly_advances, published_artifact_checkpoint, validate_checkpoint_shape, validate_document_descriptor, validate_retention_shape, DocumentDirectory, InviteDirectory, SpaceDirectory, UserDirectory};
 use directory::os_identity::time_ordered_id;
 
 //#region 🔖️Decider

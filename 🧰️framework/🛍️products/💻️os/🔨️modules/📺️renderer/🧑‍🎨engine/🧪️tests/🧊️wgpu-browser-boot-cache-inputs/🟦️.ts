@@ -46,7 +46,7 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
     else { const [field, child] = row.axis.split("."); args.overrides = { [field]: child ? { [child]: value } : value }; }
     assert.throws(() => resolver.resolveWgpuBootDescriptor(args), (error: any) => error.message.includes(row.message));
   }
-  const session = resolve(entry, "../../../../../../🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts"), filter = /\.ts$/, bundles: Record<string, string[]> = { bun: [], esbuild: [] };
+  const session = resolve(entry, "../../../../../../🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts"), filter = /\.ts$/, bundles: Record<"bun"|"esbuild", string[]> = { bun: [], esbuild: [] };
   const controlContents = "export const PLAYGROUND_SESSION = { variant: 'predicate-control' };";
   let bunControlReads = 0, esbuildControlReads = 0;
   const bunControl = await Bun.build({ entrypoints: [session], target: "browser", format: "esm", plugins: [{ name: "session-predicate-control", setup(build) { build.onLoad({ filter }, (args) => { if (resolve(args.path) !== session) return; bunControlReads++; return { contents: controlContents, loader: "ts" }; }); } }] });
@@ -59,7 +59,7 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
     let bunReads = 0, esbuildReads = 0;
     const bun = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" }, plugins: [{ name: "session-input-oracle", setup(build) { build.onLoad({ filter }, (args) => { if (resolve(args.path) !== session) return; bunReads++; return { contents, loader: "ts" }; }); } }] });
     assert.equal(bun.success, true, bun.logs.map(String).join("\n")); assert.equal(bunReads, 0, "Bun must not read the canonical default session for a WGPU boot");
-    assert.equal(bun.outputs.length, 1); bundles.bun.push(await bun.outputs[0].text());
+    assert.equal(bun.outputs.length, 1);const emitted=bun.outputs[0];assert(emitted,"Actual Bun output required");bundles.bun.push(await emitted.text());
     const esbuild = await require("esbuild").build({ entryPoints: [entry], absWorkingDir: workspace, bundle: true, write: false, platform: "browser", format: "esm", define: { "import.meta.vitest": "undefined" }, metafile: true, logLevel: "silent", plugins: [{ name: "session-input-oracle", setup(build: any) { build.onLoad({ filter }, (args: any) => { if (resolve(args.path) !== session) return; esbuildReads++; return { contents, loader: "ts" }; }); } }] });
     assert.equal(esbuildReads, 0, "esbuild must not read the canonical default session for a WGPU boot");
     for (const input of Object.keys(esbuild.metafile.inputs)) if (!input.endsWith("🤖️generated/🎮️playgrounds/🟦️.ts")) assert.ok(sourceFiles.includes(input), `Untracked browser input ${input}`);
@@ -67,9 +67,9 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
     assert.equal(esbuild.outputFiles.length, 1); bundles.esbuild.push(esbuild.outputFiles[0].text);
   }
   for (const [compiler, builds] of Object.entries(bundles)) {
-    assert.equal(builds[0], builds[1], compiler);
-    const syntax = spawnSync("node", ["--input-type=module", "--check"], { input: builds[0], encoding: "utf8", timeout: 10000 }); assert.equal(syntax.status, 0, syntax.stderr);
-    writeFileSync(join(output, `${compiler}.log`), `Independent session overlays emitted identical parseable bundles: ${Buffer.byteLength(builds[0])} bytes\n`);
+    const first=builds[0];assert(first!==undefined,"Actual first compiler bundle required");assert.equal(first,builds[1],compiler);
+    const syntax = spawnSync("node", ["--input-type=module", "--check"], { input:first, encoding: "utf8", timeout: 10000 }); assert.equal(syntax.status, 0, syntax.stderr);
+    writeFileSync(join(output, `${compiler}.log`), `Independent session overlays emitted identical parseable bundles: ${Buffer.byteLength(first)} bytes\n`);
   }
   const api = await import(resolve(packageRoot, "../../⚙️browser-build/🟦️.ts"));
   const fixtureWorkspace = join(output, "workspace"), owner = project.sourceRoot;

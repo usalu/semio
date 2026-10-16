@@ -69,7 +69,7 @@ import {
   uiNumberKeyValue,
   uiNumberTypedValue
 } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
-import type { InteractionState } from "../../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
+import type { InteractionState } from "@semio-tech/framework/interaction";
 import { groupUtilityNodesByCategory, UTILITY_CATEGORIES, UtilityTree } from "../../🎛️UtilityTree/🟦️.tsx";
 import { type ActionPaneState, actionStageKey, type ShellAction } from "../../🐚️Shell/🟦️.tsx";
 import { WindowMeasureNumber, WindowMeasureSelect, WindowMeasureToggle } from "../🎚️measure-controls/🟦️.tsx";

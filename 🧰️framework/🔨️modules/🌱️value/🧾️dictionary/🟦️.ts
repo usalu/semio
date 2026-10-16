@@ -1,5 +1,5 @@
 /** 🧾️ Authored configured defaults preserve ordered unique question identities and intrinsic values. */
-import{parseSchemaRecord}from"../../🧬️schema/🧾️record/🟦️.ts";
+import{parseSchemaRecord}from"@semio-tech/schema-ts/record";
 import{parseIntrinsicValue,type IntrinsicValue}from"../🧬️schema/🟦️.ts";
 export interface QuestionDictionaryEntry{questionId:string;value:IntrinsicValue}
 export interface QuestionDictionary{entries:QuestionDictionaryEntry[]}

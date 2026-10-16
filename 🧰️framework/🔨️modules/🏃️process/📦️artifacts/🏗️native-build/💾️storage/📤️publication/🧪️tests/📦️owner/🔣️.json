@@ -1,0 +1,401 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "success",
+      "fault": "none",
+      "pending": false,
+      "released": true,
+      "reject": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "fail-accepted",
+      "fault": "accepted",
+      "pending": false,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "fail-observed",
+      "fault": "observed",
+      "pending": false,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "fail-witnessed",
+      "fault": "witnessed",
+      "pending": true,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "fail-detached",
+      "fault": "detached",
+      "pending": true,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "fail-underlying",
+      "fault": "underlying",
+      "pending": true,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "fail-staged",
+      "fault": "staged",
+      "pending": true,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "fail-published",
+      "fault": "published",
+      "pending": true,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "fail-attached",
+      "fault": "attached",
+      "pending": true,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "fail-verified",
+      "fault": "verified",
+      "pending": true,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "fail-settled",
+      "fault": "settled",
+      "pending": false,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "cancel-detached",
+      "fault": "cancel-detached",
+      "pending": true,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "undefined-detached",
+      "fault": "undefined-detached",
+      "pending": true,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "cleanup-attach",
+      "fault": "cleanup-attach",
+      "pending": true,
+      "released": false,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "cleanup-observe",
+      "fault": "cleanup-observe",
+      "pending": true,
+      "released": false,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "release-success",
+      "fault": "release-success",
+      "pending": false,
+      "released": false,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "release-primary",
+      "fault": "release-primary",
+      "pending": true,
+      "released": false,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "mutable-options",
+      "fault": "mutable-options",
+      "pending": false,
+      "released": true,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "descriptor-before-effect",
+      "fault": "descriptor-before-effect",
+      "pending": false,
+      "released": false,
+      "reject": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "inactive-success",
+      "fault": "none",
+      "initialState": "inactive",
+      "pending": false,
+      "released": true,
+      "reject": false
+    },
+    {
+      "id": "inactive-association",
+      "fault": "inactive-association",
+      "initialState": "inactive",
+      "pending": false,
+      "released": true,
+      "reject": true
+    },
+    {
+      "id": "inactive-underlying",
+      "fault": "inactive-underlying",
+      "initialState": "inactive",
+      "pending": false,
+      "released": true,
+      "reject": true
+    },
+    {
+      "id": "inactive-attach",
+      "fault": "inactive-attach",
+      "initialState": "inactive",
+      "pending": true,
+      "released": true,
+      "reject": true
+    },
+    {
+      "id": "inactive-witness",
+      "fault": "inactive-witness",
+      "initialState": "inactive",
+      "pending": true,
+      "released": true,
+      "reject": true
+    }
+  ],
+  "metadata": [
+    {
+      "name": "intent.json",
+      "file": true,
+      "symlink": false,
+      "sameDevice": true,
+      "links": "1",
+      "mode": 384,
+      "bytes": 0,
+      "admit": true
+    },
+    {
+      "name": "intent.json",
+      "file": true,
+      "symlink": false,
+      "sameDevice": true,
+      "links": "1",
+      "mode": 384,
+      "bytes": 1,
+      "admit": true
+    },
+    {
+      "name": "receipt.json",
+      "file": true,
+      "symlink": false,
+      "sameDevice": true,
+      "links": "1",
+      "mode": 384,
+      "bytes": 4096,
+      "admit": true
+    },
+    {
+      "name": "foreign.json",
+      "file": true,
+      "symlink": false,
+      "sameDevice": true,
+      "links": "1",
+      "mode": 384,
+      "bytes": 1,
+      "admit": false
+    },
+    {
+      "name": "receipt.json",
+      "file": true,
+      "symlink": false,
+      "sameDevice": true,
+      "links": "1",
+      "mode": 384,
+      "bytes": 4097,
+      "admit": false
+    },
+    {
+      "name": "intent.json",
+      "file": false,
+      "symlink": false,
+      "sameDevice": true,
+      "links": "1",
+      "mode": 384,
+      "bytes": 2,
+      "admit": false
+    },
+    {
+      "name": "intent.json",
+      "file": true,
+      "symlink": true,
+      "sameDevice": true,
+      "links": "1",
+      "mode": 384,
+      "bytes": 2,
+      "admit": false
+    },
+    {
+      "name": "intent.json",
+      "file": true,
+      "symlink": false,
+      "sameDevice": false,
+      "links": "1",
+      "mode": 384,
+      "bytes": 2,
+      "admit": false
+    },
+    {
+      "name": "intent.json",
+      "file": true,
+      "symlink": false,
+      "sameDevice": true,
+      "links": "2",
+      "mode": 384,
+      "bytes": 2,
+      "admit": false
+    },
+    {
+      "name": "intent.json",
+      "file": true,
+      "symlink": false,
+      "sameDevice": true,
+      "links": "1",
+      "mode": 420,
+      "bytes": 2,
+      "admit": false
+    }
+  ],
+  "commands": [
+    {
+      "id": "darwin-mounted",
+      "platform": "darwin",
+      "initialState": "mounted",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "id": "darwin-inactive",
+      "platform": "darwin",
+      "initialState": "inactive",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "id": "linux-mounted",
+      "platform": "linux",
+      "initialState": "mounted",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "id": "linux-inactive",
+      "platform": "linux",
+      "initialState": "inactive",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "id": "linux-not-durable",
+      "platform": "linux",
+      "initialState": "mounted",
+      "fault": "not-durable",
+      "admit": false
+    },
+    {
+      "id": "linux-no-witness",
+      "platform": "linux",
+      "initialState": "mounted",
+      "fault": "no-witness",
+      "admit": false
+    },
+    {
+      "id": "linux-no-mapping",
+      "platform": "linux",
+      "initialState": "mounted",
+      "fault": "no-mapping",
+      "admit": false
+    },
+    {
+      "id": "linux-duplicate",
+      "platform": "linux",
+      "initialState": "mounted",
+      "fault": "duplicate",
+      "admit": false
+    }
+  ],
+  "reads": [
+    {
+      "id": "read-none",
+      "fault": "none",
+      "admit": true,
+      "unresolved": false
+    },
+    {
+      "id": "read-short",
+      "fault": "short",
+      "admit": false,
+      "unresolved": false
+    },
+    {
+      "id": "read-growth",
+      "fault": "growth",
+      "admit": false,
+      "unresolved": false
+    },
+    {
+      "id": "read-changed",
+      "fault": "changed",
+      "admit": false,
+      "unresolved": false
+    },
+    {
+      "id": "read-close",
+      "fault": "close",
+      "admit": false,
+      "unresolved": true
+    },
+    {
+      "id": "read-undefined-close",
+      "fault": "undefined-close",
+      "admit": false,
+      "unresolved": true
+    },
+    {
+      "id": "read-frozen-close",
+      "fault": "frozen-close",
+      "admit": false,
+      "unresolved": true
+    }
+  ]
+}

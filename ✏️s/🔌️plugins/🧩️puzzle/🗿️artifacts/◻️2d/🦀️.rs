@@ -23,14 +23,11 @@ extern crate semio_framework_value_derive as value_derive;
 #[path="🧪️tests/🔗️source-custody/🦀️.rs"]
 pub(crate) mod test_source_custody;
 
-#[path = "../../🔨️modules/🎲️board/🎬️scene/🦀️.rs"]
-pub mod board_scene;
+pub use semio_s_plugin_puzzle_board_scene as board_scene;
 
-#[path = "../../🎮️commands/📤️jobs/🦀️.rs"]
-pub mod puzzle_job;
+pub use semio_s_plugin_puzzle_jobs as puzzle_job;
 
-#[path = "../../🎮️commands/🧵️retained/🦀️.rs"]
-pub mod retained_command;
+pub use semio_s_plugin_puzzle_retained as retained_command;
 
 #[cfg(test)]
 fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'static str], &'static str) {

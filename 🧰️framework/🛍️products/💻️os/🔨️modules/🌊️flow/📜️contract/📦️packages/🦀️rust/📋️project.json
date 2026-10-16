@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/framework-os-flow-contract-rs",
+  "tags": [
+    "lang:rust",
+    "role:product",
+    "family:os-flow"
+  ]
+}

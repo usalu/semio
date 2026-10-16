@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-lowpoly-lowpoly-mut-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The laws every committed quintet of a single-row-inverse lowpoly leaf holds, written once and called by each scenario."
+
+[package.metadata.semio]
+role = "test"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-value = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model-diff = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mutations = { workspace = true }
+serde_json = { workspace = true }

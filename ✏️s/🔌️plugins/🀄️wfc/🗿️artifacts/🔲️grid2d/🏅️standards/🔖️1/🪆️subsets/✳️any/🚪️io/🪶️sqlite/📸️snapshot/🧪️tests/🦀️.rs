@@ -1,5 +1,4 @@
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
 #[test]
@@ -71,7 +70,7 @@ fn sqlite_snapshot_grid2d_native_real_collection_and_utf_frontiers(){
  }
 }
 
-#[path="../../../../../../../../../../🪶️sqlite/🎨️bitmap/🧪️tests/🦀️.rs"]mod bitmap_pixel_tests;
+use semio_s_wfc_sqlite_bitmap::pixel_laws as bitmap_pixel_tests;
 #[test]
 fn sqlite_snapshot_wfc_grid2d_canonical_pixels_and_full_literal_owner_states(){
  let contract:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../🪶️sqlite/🎨️bitmap/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();

@@ -1,7 +1,7 @@
 /** 🔗️ Shared references preserve independent artifact lifetimes and explicit history pins. */
-import { parseArtifactRef, type ArtifactRef } from "../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { parseArtifactRef, type ArtifactRef } from "@semio-tech/schema-ts/artifact-reference";
 import { parseBlobRef, type BlobRef } from "../../📦️blob/🧬️schema/🟦️.ts";
-export type { ArtifactRef } from "../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+export type { ArtifactRef } from "@semio-tech/schema-ts/artifact-reference";
 export type { BlobRef } from "../../📦️blob/🧬️schema/🟦️.ts";
 export type LinkPin = { kind: "head" } | { kind: "checkpoint"; id: string } | { kind: "snapshot"; blob: BlobRef };
 export interface ArtifactLink { target: ArtifactRef; pin: LinkPin; role: string }

@@ -58,12 +58,12 @@ struct Expect {
 }
 
 /// 📨️ Every envelope the store sent since the last drain, split into edit operations and history transitions.
-fn drain_announced(remote: &ChannelBackboneRemote) -> (Vec<crate::os_spr::MutationEnvelope>, Vec<crate::os_spr::MutationEnvelope>) {
+fn drain_announced(remote: &ChannelBackboneRemote) -> (Vec<semio_framework_os_spr::MutationEnvelope>, Vec<semio_framework_os_spr::MutationEnvelope>) {
     let (mut operations, mut transitions) = (Vec::new(), Vec::new());
     for message in drain_channel_for_test(remote).expect("drain outbound") {
         if let BackboneMessage::Mutations { envelopes } = message {
-            for envelope in crate::os_spr::decode_envelopes(&envelopes).expect("announced envelopes decode") {
-                let target = if crate::os_spr::is_history_transition(&envelope) { &mut transitions } else { &mut operations };
+            for envelope in semio_framework_os_spr::decode_envelopes(&envelopes).expect("announced envelopes decode") {
+                let target = if semio_framework_os_spr::is_history_transition(&envelope) { &mut transitions } else { &mut operations };
                 target.push(envelope);
             }
         }
@@ -103,7 +103,7 @@ async fn every_locally_authored_operation_is_announced_exactly_once() {
     assert_eq!(fixture.schema, "semio.store.outbound-announcement/v1");
     let mut steps = 0usize;
     for vector in &fixture.vectors {
-        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.install_document_store_owners_exact(demo_closable_store_owners());
         store.closes_on_drop();
         let (channel, remote) = ChannelBackbone::pair("outbound").await;
@@ -120,7 +120,7 @@ async fn every_locally_authored_operation_is_announced_exactly_once() {
                     next_value += 1;
                     let mut envelope = mutation_envelope_at("peer", &arriving.id, DemoMutation::SetN(SetN { n: next_value }), HybridLogicalTimestamp { actor: 7, physical_ms: 4_000_000_000_000 + index as u64, logical: 0 }, Vec::new());
                     envelope.observed = arriving.observed.clone().map(MutationId);
-                    remote.push(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&[envelope]) }).await.expect("push the remote operation");
+                    remote.push(BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&[envelope]) }).await.expect("push the remote operation");
                     store.tick().await.expect("ingest the remote operation");
                     assert!(store.envelope().vcs.edits.iter().any(|edit| edit.id == arriving.id), "{} step {index}: a remote operation is applied at once, whatever it observed", vector.id);
                     foreign.push(arriving.id.clone());
@@ -140,7 +140,7 @@ async fn every_locally_authored_operation_is_announced_exactly_once() {
         }
         let unique: HashSet<&String> = announced.iter().collect();
         assert_eq!(unique.len(), announced.len(), "{}: an operation was announced twice: {announced:?}", vector.id);
-        let ledger: HashSet<String> = store.envelope().vcs.edits.iter().flat_map(|edit| crate::os_spr::mutation_ids_for_edit::<DemoSnapshot, DemoMutation>(edit)).map(|id| id.0).filter(|id| !foreign.contains(id)).collect();
+        let ledger: HashSet<String> = store.envelope().vcs.edits.iter().flat_map(|edit| semio_framework_os_spr::mutation_ids_for_edit::<DemoSnapshot, DemoMutation>(edit)).map(|id| id.0).filter(|id| !foreign.contains(id)).collect();
         assert_eq!(unique.into_iter().cloned().collect::<HashSet<_>>(), ledger, "{}: the announced operations are exactly the ledger's", vector.id);
     }
     assert!(steps >= 14, "the fixture walks every declared step");

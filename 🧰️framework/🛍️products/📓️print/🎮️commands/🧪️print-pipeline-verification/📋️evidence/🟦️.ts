@@ -1,4 +1,4 @@
-import{validateJsonSchemaSubset}from"./../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import schemaData from"./🧬️schema/🔣️.json"with{type:"json"};
 const schema:typeof schemaData=structuredClone(schemaData);
 /** 📋️ Captures a finite evidence filename and size without granting a destination. */

@@ -1,9 +1,9 @@
 /** 🧊️ Complete Block3d persisted fields and literal independent child identity. */
-import * as shared from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
-import * as p from "../../../../../../../../🧬️schema/🧱️shared/📐️scalar/🟦️.ts";
+import * as shared from "../../../../../../../../🧬️schema/🧱️document-fields/🟦️.ts";
+import * as p from "../../../../../../../../🧬️schema/🧱️document-fields/📐️scalar/🟦️.ts";
 import type {Binary64} from "@semio-tech/framework/value/ieee754";
 import {parseArtifactChild,type ArtifactChild} from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-export * from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
+export * from "../../../../../../../../🧬️schema/🧱️document-fields/🟦️.ts";
 export interface Block3dVortexKindExtra{id:string;name:string;label:string;color:string;defaultCableKind:string}
 export interface Block3dVortexTemplate{id:string;vortexKind:string;position:p.BlockVector3;direction:p.BlockVector3;radius:Binary64;label:string|null}
 export interface Block3dSnapshot{

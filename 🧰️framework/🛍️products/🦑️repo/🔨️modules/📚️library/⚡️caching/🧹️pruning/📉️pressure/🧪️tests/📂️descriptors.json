@@ -1,5 +1,5 @@
 [
-  {"name":"Original Guard","status":0,"reason":"exit","stderr":"","records":["p71","f3","n{store}/debug/.cargo-build-lock"],"admitted":true},
+  {"name":"Original Guard","status":0,"reason":"exit","stderr":"","records":["p71","n{store}/debug/.cargo-build-lock"],"admitted":true},
   {"name":"Incomplete Search","status":1,"reason":"exit","stderr":"","records":["p71","n{store}/debug/.cargo-build-lock"],"admitted":false},
   {"name":"Truncated Inventory","status":0,"reason":"output-limit","stderr":"","records":["p71","n{store}/debug/.cargo-build-lock"],"admitted":false},
   {"name":"Inspection Error","status":0,"reason":"exit","stderr":"incomplete","records":["p71","n{store}/debug/.cargo-build-lock"],"admitted":false},

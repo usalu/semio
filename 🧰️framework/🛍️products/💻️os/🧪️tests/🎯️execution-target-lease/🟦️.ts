@@ -1,5 +1,5 @@
 /** 🎯️ Execution target lease: server asset verification, hostile asset refusal, single-field substitution and bounded body readers. */
-import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { stubFetch } from "../🌐️fetch-stub/🟦️.ts";
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
 import { workerLawFakesV1, FakeHubWebSocket, executionTargetBytes, WORKER_LAW_CAPABILITY, sampleEnvelope } from "../🧰️worker-law-fakes/🟦️.ts";

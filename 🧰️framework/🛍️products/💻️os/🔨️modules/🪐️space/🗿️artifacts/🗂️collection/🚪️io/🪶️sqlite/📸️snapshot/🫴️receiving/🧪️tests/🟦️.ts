@@ -4,7 +4,7 @@ import{Database}from"bun:sqlite";
 import{readFileSync}from"node:fs";
 import contract from"./🧫️fixtures/🔣️.json";
 import schema from"./🧬️schema/🔣️.json";
-import{semioSchemaAjvV1}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import{semioSchemaAjvV1}from"@semio-tech/schema-ts/oracles/validator";
 type Body={kind:"document";schema:string;document_id:string}|{kind:"blob";blob:{hash:string;size:string;mediaType:string}};
 type Snapshot={schema:string;name:string;folders:{id:string;parent_id:string|null;name:string}[];entries:{id:string;folder_id:string|null;name:string;kind_id:string;body:Body}[]};
 type Cell=string|number|null;

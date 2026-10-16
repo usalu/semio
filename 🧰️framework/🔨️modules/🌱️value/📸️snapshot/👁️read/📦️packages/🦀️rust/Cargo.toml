@@ -21,10 +21,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["dep:semio-framework-trace", "dep:semio-framework-value-testing-presence-retirement"]
 
 [dependencies]
 semio-framework-value = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-value-testing-presence-retirement = { path = "../../../../🧪️testing/👥️presence-retirement/📦️packages/🦀️rust", optional = true }
+semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust", optional = true }
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
@@ -32,3 +34,4 @@ semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮
 serde_json = "1.0.140"
 
 semio-framework-value = { path="../../../../📦️packages/🦀️rust", features=["testkit"] }
+semio-framework-value-testing-presence-retirement = { path = "../../../../🧪️testing/👥️presence-retirement/📦️packages/🦀️rust" }

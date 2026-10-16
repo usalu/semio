@@ -1,0 +1,280 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "classes",
+    "fuzzy",
+    "diff",
+    "polylines",
+    "clipping",
+    "controls",
+    "matrices"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "classes": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "input",
+          "expected"
+        ],
+        "properties": {
+          "input": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "$ref": "#/$defs/Class"
+            }
+          },
+          "expected": {
+            "type": "string",
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "fuzzy": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "query",
+          "expected"
+        ],
+        "properties": {
+          "items": {
+            "$ref": "#/$defs/Lines"
+          },
+          "query": {
+            "type": "string",
+            "maxLength": 96
+          },
+          "expected": {
+            "$ref": "#/$defs/Lines"
+          }
+        }
+      }
+    },
+    "diff": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "before",
+          "after"
+        ],
+        "properties": {
+          "before": {
+            "$ref": "#/$defs/Lines"
+          },
+          "after": {
+            "$ref": "#/$defs/Lines"
+          }
+        }
+      }
+    },
+    "polylines": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "points",
+          "at"
+        ],
+        "properties": {
+          "points": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "x",
+                "y"
+              ],
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "at": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "clipping": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "svg",
+          "width",
+          "height",
+          "bounds"
+        ],
+        "properties": {
+          "svg": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "width": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "height": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "bounds": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y",
+              "width",
+              "height"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "width": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
+    "controls": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "paths"
+        ],
+        "properties": {
+          "paths": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^[a-z]+(?:/[a-z]+)*$"
+            }
+          }
+        }
+      }
+    },
+    "matrices": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to",
+          "at"
+        ],
+        "properties": {
+          "from": {
+            "type": "array",
+            "minItems": 16,
+            "maxItems": 16,
+            "items": {
+              "type": "number"
+            }
+          },
+          "to": {
+            "type": "array",
+            "minItems": 16,
+            "maxItems": 16,
+            "items": {
+              "type": "number"
+            }
+          },
+          "at": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Lines": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "maxLength": 96
+      }
+    },
+    "Class": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/Class"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      ]
+    }
+  }
+}

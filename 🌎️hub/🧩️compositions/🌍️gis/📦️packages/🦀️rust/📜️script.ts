@@ -49,7 +49,7 @@ class TestScript extends BundleScript {
 }
 
 /** 🧬️ Regenerates this plugin's committed native-codec projection `packSchemaHash` column from the live Rust
- * receipts (`os_pack::schema_hash`); the same test, run without the write mode, is the projection-equals-receipts law. */
+ * receipts (`pack::record::schema_hash`); the same test, run without the write mode, is the projection-equals-receipts law. */
 class NativeCodecProjectionScript extends BundleScript {
   run(): void {
     runCmd("cargo", ["test", "--manifest-path", resolve(this.root, "Cargo.toml"), "-p", "semio-hub-gis", "--test", "native_codecs", "--", "native_codec_projection_pack_schema_hashes_equal_live_receipts", "--exact"], { cwd: this.repoRoot, env: devToolingEnv({ SEMIO_NATIVE_CODEC_PROJECTION: "write", CARGO_INCREMENTAL: "0" }), budgetMs: buildBudgetMs() });

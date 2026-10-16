@@ -7,7 +7,7 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { descending, extent, sort } from "d3-array";
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { compileVizProbeDocument, roundProbeNumbers, type ProbeProjection, type ProbeRecord, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 

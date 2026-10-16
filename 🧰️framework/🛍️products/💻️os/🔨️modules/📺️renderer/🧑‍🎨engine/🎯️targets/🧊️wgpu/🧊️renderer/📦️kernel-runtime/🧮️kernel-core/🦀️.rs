@@ -325,7 +325,7 @@ pub const TURN_REQUESTS_BETWEEN_SLICES: usize = 1;
 pub const COMPILED_COMPONENT_CAPACITY: usize = 8;
 
 /// 🧪️ How many mid-flight turns their owners cancelled in this test process ([`KernelPoolState::retire_cancelled_turn`]).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub static CANCELLED_KERNEL_TURNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// 🤫️ Consecutive continuation turns that carried nothing after which [`KernelPoolState::run_turn`]

@@ -1,40 +1,45 @@
 //! 🧵️ Task records, resumes, quota, spawn and cancellation of the actor-local task lane.
 
-use super::*;
+use crate::{INSTANCE_METADATA, REACTOR_EXECUTOR, TASK_EXECUTOR, TASK_RECORDS, TASK_RESUMES};
+use crate::tasks_fixed_slots::{REACTOR_TASK_SLOTS, ReactorFixedSlots};
+use std::collections::VecDeque;
+use semio_framework_plugin_actor_host::executor;
+use crate::tasks_extension_continuation::{host, host_for_instance};
 
 /// 🧵️ A task retains its instance and optional checkpoint restart command.
 struct TaskRecord {
-    pub(super) instance: u32,
-    pub(super) key: Option<String>,
-    pub(super) restart: Option<Vec<u8>>,
+    pub instance: u32,
+    pub key: Option<String>,
+    pub restart: Option<Vec<u8>>,
 }
 const REACTOR_TASK_KEY_BYTES: usize = 256;
 const REACTOR_TASK_LABEL_BYTES: usize = 256;
 const REACTOR_TASK_RESTART_BYTES: usize = 64 * 1_024;
 
-pub(super) struct TaskRecordRegistry {
-    pub(super) slots: ReactorFixedSlots<(executor::TaskId, TaskRecord)>,
+#[doc(hidden)]
+pub struct TaskRecordRegistry {
+    pub slots: ReactorFixedSlots<(executor::TaskId, TaskRecord)>,
 }
 
 impl TaskRecordRegistry {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { slots: ReactorFixedSlots::new() }
     }
 
-    pub(super) fn index(id: executor::TaskId) -> usize {
+    pub fn index(id: executor::TaskId) -> usize {
         id as usize % REACTOR_TASK_SLOTS
     }
 
-    fn can_insert(&self, id: executor::TaskId) -> bool {
+    pub fn can_insert(&self, id: executor::TaskId) -> bool {
         self.slots.allocation_admitted && self.slots.get(Self::index(id)).is_none()
     }
 
-    pub(super) fn insert_admitted(&mut self, id: executor::TaskId, record: TaskRecord) {
+    pub fn insert_admitted(&mut self, id: executor::TaskId, record: TaskRecord) {
         debug_assert!(self.can_insert(id));
         self.slots.insert_admitted(Self::index(id), (id, record));
     }
 
-    pub(super) fn remove(&mut self, id: executor::TaskId) -> Option<TaskRecord> {
+    pub fn remove(&mut self, id: executor::TaskId) -> Option<TaskRecord> {
         let index = Self::index(id);
         if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) {
             None
@@ -43,19 +48,19 @@ impl TaskRecordRegistry {
         }
     }
 
-    pub(super) fn find_key(&self, instance: u32, key: &str) -> Option<executor::TaskId> {
+    pub fn find_key(&self, instance: u32, key: &str) -> Option<executor::TaskId> {
         self.slots.iter().find_map(|(id, record)| (record.instance == instance && record.key.as_deref() == Some(key)).then_some(*id))
     }
 
-    pub(super) fn count_instance(&self, instance: u32) -> usize {
+    pub fn count_instance(&self, instance: u32) -> usize {
         self.slots.iter().filter(|(_, record)| record.instance == instance).count()
     }
 
-    pub(super) fn iter(&self) -> impl Iterator<Item = (executor::TaskId, &TaskRecord)> {
+    pub fn iter(&self) -> impl Iterator<Item = (executor::TaskId, &TaskRecord)> {
         self.slots.iter().map(|(id, record)| (*id, record))
     }
 
-    pub(super) fn entry_at(&self, index: usize) -> Option<(executor::TaskId, &TaskRecord)> {
+    pub fn entry_at(&self, index: usize) -> Option<(executor::TaskId, &TaskRecord)> {
         self.slots.get(index).map(|(id, record)| (*id, record))
     }
 }
@@ -65,7 +70,8 @@ impl TaskRecordRegistry {
 /// one-for-one except `Emit` is pre-encoded (the SAME `protocol::encode_ops_vec`/`OpBinary::
 /// encode_op` idiom `dispatch_emit`'s own `last_emit_wire` uses) and a task future that resolved
 /// `Err(fault)` gets its own variant (never silently dropped).
-pub(super) enum TaskResumeOutcome {
+#[doc(hidden)]
+pub enum TaskResumeOutcome {
     Command(Vec<u8>),
     Emit { artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8> },
     Fault(semio_framework::Fault),
@@ -76,10 +82,11 @@ pub(super) enum TaskResumeOutcome {
 /// `task_restarts` replay, since a checkpoint restart has no "spawn" of its own to snapshot from —
 /// see `restore_now`), preserved so the follow-up dispatch stays attributed to the actor that
 /// asked for it even if a different one is active by the time it resolves.
-pub(super) struct PendingResume {
-    pub(super) instance: u32,
-    pub(super) meta: crate::app_emission::ActionMeta,
-    pub(super) outcome: TaskResumeOutcome,
+#[doc(hidden)]
+pub struct PendingResume {
+    pub instance: u32,
+    pub meta: semio_framework_plugin_decl_emission::ActionMeta,
+    pub outcome: TaskResumeOutcome,
 }
 
 const REACTOR_RESUME_SLOTS: usize = 1_024;
@@ -87,7 +94,7 @@ const REACTOR_RESUME_BYTES: usize = 3 * 64 * 1_024;
 const REACTOR_RESUME_ACTOR_BYTES: usize = 256;
 
 impl PendingResume {
-    fn admitted_bytes(&self) -> Option<usize> {
+    pub fn admitted_bytes(&self) -> Option<usize> {
         let mut bytes = self.meta.actor.len();
         if bytes > REACTOR_RESUME_ACTOR_BYTES {
             return None;
@@ -117,20 +124,21 @@ impl PendingResume {
     }
 }
 
-pub(super) struct FixedResumeQueue {
-    entries: std::mem::ManuallyDrop<VecDeque<PendingResume>>,
-    pub(crate) allocation_admitted: bool,
+#[doc(hidden)]
+pub struct FixedResumeQueue {
+    pub entries: std::mem::ManuallyDrop<VecDeque<PendingResume>>,
+    pub allocation_admitted: bool,
 }
 
 impl FixedResumeQueue {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         let mut entries = VecDeque::new();
         let allocation_admitted = entries.try_reserve_exact(REACTOR_RESUME_SLOTS).is_ok();
         Self { entries: std::mem::ManuallyDrop::new(entries), allocation_admitted }
     }
 
     #[expect(clippy::result_large_err, reason = "The fixed resume queue returns the admitted view snapshot, task metadata, and payload owner intact without allocating on rejection.")]
-    pub(super) fn push(&mut self, value: PendingResume) -> Result<(), PendingResume> {
+    pub fn push(&mut self, value: PendingResume) -> Result<(), PendingResume> {
         if !self.allocation_admitted || self.entries.len() >= REACTOR_RESUME_SLOTS || value.admitted_bytes().is_none() {
             return Err(value);
         }
@@ -138,24 +146,24 @@ impl FixedResumeQueue {
         Ok(())
     }
 
-    pub(super) fn push_admitted(&mut self, value: PendingResume) {
+    pub fn push_admitted(&mut self, value: PendingResume) {
         debug_assert!(self.allocation_admitted && self.entries.len() < REACTOR_RESUME_SLOTS && value.admitted_bytes().is_some());
         self.entries.push_back(value);
     }
 
-    pub(super) fn pop(&mut self) -> Option<PendingResume> {
+    pub fn pop(&mut self) -> Option<PendingResume> {
         self.entries.pop_front()
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
 
-    pub(super) fn begin_cancel_instance(&self) -> usize {
+    pub fn begin_cancel_instance(&self) -> usize {
         self.entries.len()
     }
 
-    pub(super) fn cancel_instance_step(&mut self, instance: u32, remaining: &mut usize) -> bool {
+    pub fn cancel_instance_step(&mut self, instance: u32, remaining: &mut usize) -> bool {
         if *remaining == 0 || self.entries.is_empty() {
             *remaining = 0;
             return true;
@@ -200,7 +208,8 @@ fn instance_task_quota(instance: u32) -> u64 {
 /// 🔑️ Latest-wins dedupe: a task spawned with the same `(instance, key)` as one still live
 /// cancels the live one FIRST — its future (and anything it owns, including a parked
 /// `RequestFuture`) is dropped without ever completing, so no resume is ever queued for it.
-pub(crate) fn spawn_task<M, C, D>(instance: u32, meta: &crate::app_emission::ActionMeta, task: crate::app_emission::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
+#[doc(hidden)]
+pub fn spawn_task<M, C, D>(instance: u32, meta: &semio_framework_plugin_decl_emission::ActionMeta, task: semio_framework_plugin_decl_emission::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
 where
     M: ::protocol::OpBinary + 'static,
     C: ::protocol::OpBinary + 'static,
@@ -233,7 +242,7 @@ where
             let detached = TASK_EXECUTOR.with(|executor| executor.detach(previous));
             let record = TASK_RECORDS.with(|records| records.borrow_mut().remove(previous));
             if detached.is_none() && record.is_none() {
-                crate::app_emission::dispose_cold_task_run(run);
+                semio_framework_plugin_decl_emission::dispose_cold_task_run(run);
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.supersession-pending"), "keyed task supersession found no exact previous owner to dispose"));
             }
             drop(record);
@@ -244,29 +253,29 @@ where
     let reservation = match TASK_EXECUTOR.with(|executor| executor.reserve()) {
         Ok(reservation) => reservation,
         Err(message) => {
-            crate::app_emission::dispose_cold_task_run(run);
+            semio_framework_plugin_decl_emission::dispose_cold_task_run(run);
             return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.executor-capacity"), message));
         }
     };
     let task_id = reservation.id();
     if !TASK_RECORDS.with(|records| records.borrow().can_insert(task_id)) {
-        crate::app_emission::dispose_cold_task_run(run);
+        semio_framework_plugin_decl_emission::dispose_cold_task_run(run);
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.record-capacity"), "fixed task record authority rejected an executor-reserved direct slot"));
     }
     TASK_RECORDS.with(|records| records.borrow_mut().insert_admitted(task_id, TaskRecord { instance, key, restart }));
 
-    let ctx = crate::app_emission::TaskCtx { host: host_for_instance(instance), meta: meta.clone() };
+    let ctx = semio_framework_plugin_decl_emission::TaskCtx { host: host_for_instance(instance), meta: meta.clone() };
     let resume_instance = instance;
     let resume_meta = meta.clone();
-    let mut cold_run = crate::app_emission::ColdTaskRun::new(run);
+    let mut cold_run = semio_framework_plugin_decl_emission::ColdTaskRun::new(run);
     reservation.install(Box::pin(async move {
         let future = cold_run.take().run(ctx);
         let outcome = match future.await {
-            Ok(crate::app_emission::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
-            Ok(crate::app_emission::TaskResolution::Emit(emit)) => {
+            Ok(semio_framework_plugin_decl_emission::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
+            Ok(semio_framework_plugin_decl_emission::TaskResolution::Emit(emit)) => {
                 Some(TaskResumeOutcome::Emit { artifact_ops: encode_mutation_lane(&emit.artifact_mutations).await, config_ops: encode_mutation_lane(&emit.config_mutations).await, draft_ops: encode_mutation_lane(&emit.draft_mutations).await })
             }
-            Ok(crate::app_emission::TaskResolution::Done) => None,
+            Ok(semio_framework_plugin_decl_emission::TaskResolution::Done) => None,
             Err(fault) => Some(TaskResumeOutcome::Fault(fault)),
         };
         TASK_RECORDS.with(|records| drop(records.borrow_mut().remove(task_id)));
@@ -309,7 +318,8 @@ async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
 /// `RequestRegistry::begin_cancel_instance`'s doc relies on when it retires slots with no wake.
 // 🚫️async: E1 pure in-memory sweep over `TASK_RECORDS`/`EXECUTOR`/`TASK_KEYS` (all sync now,
 // R9) consumed by `poll`'s sync `world actor` boundary — zero suspension.
-pub(super) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> bool {
+#[doc(hidden)]
+pub fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> bool {
     if *cursor < REACTOR_TASK_SLOTS {
         if TASK_RECORDS.with(|records| records.borrow().count_instance(instance)) == 0 {
             *cursor = REACTOR_TASK_SLOTS;
@@ -332,8 +342,9 @@ pub(super) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> b
     matches!(step, executor::ReactorTaskStep::Complete)
 }
 
-#[cfg(test)]
-pub(crate) fn cancel_instance_tasks(instance: u32) {
+#[doc(hidden)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
+pub fn cancel_instance_tasks(instance: u32) {
     let mut cursor = 0;
     for _ in 0..REACTOR_TASK_SLOTS {
         let before = cursor;

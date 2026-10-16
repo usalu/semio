@@ -34,6 +34,3 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for RemoveRunNode {
 }
 //#endregion ⚙️Semantics
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

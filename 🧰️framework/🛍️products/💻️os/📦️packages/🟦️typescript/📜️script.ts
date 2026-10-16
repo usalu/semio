@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
-import { resolve as compilerStatePath } from "node:path";
-import { typecheckProject } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { typecheckRepositoryProjectV1 } from "../../../🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-os` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
@@ -18,7 +19,7 @@ import { readModuleTreeSource } from "../../../../🔨️modules/📚️compiler
 class InstalledServiceSourceScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw new Error("installed-service-source accepts no arguments");
-    const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧪️tests/🧱️io-boundary/🟦️.ts");
+    const source=join(this.repoRoot,"🧰️framework/🔨️modules/💡️inference/🔌️service/🧪️tests/🧱️io-boundary/🟦️.ts");
     await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"installed-service-strict",TEST_LEVEL_BUDGET_MS.long);
     await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"installed-service-source",TEST_LEVEL_BUDGET_MS.long);
   }
@@ -27,7 +28,7 @@ class InstalledServiceSourceScript extends BundleScript {
 /** ⚖️ Verifies bounded installed service dispatch, transport and contribution removal. */
 class InstalledServiceCheckScript extends BundleScript {
   async run(): Promise<void> {
-    const { verifyInstalledServiceLawsV1 } = await import("../../🔨️modules/💡️inference/🔌️service/🧪️tests/🟦️.ts");
+    const { verifyInstalledServiceLawsV1 } = await import("../../../../📦️packages/🟦️typescript/💡️inference/🔌️service/🧪️testing/🟦️.ts");
     console.log("installed-service-check", verifyInstalledServiceLawsV1());
   }
 }
@@ -117,7 +118,7 @@ const OWNED_SCHEMA_MODULES = {
 
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
 async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MODULES, exportId: string) {
-  const { semioSchemaAjvV1 } = await import("../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts");
+  const { semioSchemaAjvV1 } = await import("../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🔮️oracles/✅️validator/🟦️.ts");
   const doc = JSON.parse(readFileSync(join(repoRoot, OWNED_SCHEMA_MODULES[scope]), "utf8")) as { $id: string };
   const compiled = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
   if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
@@ -159,7 +160,7 @@ async function proveDocumentOpeningAttempt(repoRoot: string): Promise<number> {
   const shell = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"));
   const storeWire = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
   const storeWorker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🦀️.rs"), "utf8");
-  const patchHandoff = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"), "utf8");
+  const patchHandoff = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"), "utf8");
   const conforms = (candidateProtocol: string, candidateWorker: string, candidateShell: string, candidateStoreWire: string, candidateStoreWorker: string): boolean =>
     candidateProtocol.includes('readonly kind: "open"; readonly clientInstanceId?: string') &&
     candidateProtocol.includes('readonly kind: "close"; readonly documentId: string; readonly spaceId?: string; readonly clientInstanceId?: string') &&
@@ -220,13 +221,13 @@ class DocumentOpeningAttemptCheckScript extends BundleScript {
 class MutationVerbVocabularyCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { checkMutationVerbVocabulary } = await import("../../🔨️modules/📡️spr/🎮️command/🧪️tests/🗣️verb-vocabulary/🟦️.ts");
-    await checkMutationVerbVocabulary(this.invocation, this.repoRoot, segments);
+    await checkMutationVerbVocabulary(this.invocation,exactCargoCallerControlV1(this.invocation,"mutation-verb:caller",0), this.repoRoot, segments);
   }
 }
 
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, stateRoot: compilerStatePath(this.repoRoot, ".cache", "framework"), leaseDirectory: compilerStatePath(this.repoRoot, ".cache", "framework", "leases"), invocation: this.invocation, cwd: this.root, project: "../../tsconfig.json", owner: "os:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "../../tsconfig.json", owner: "os:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 

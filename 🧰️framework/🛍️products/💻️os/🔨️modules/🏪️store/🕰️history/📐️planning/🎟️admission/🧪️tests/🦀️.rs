@@ -3,8 +3,8 @@ use semio_framework_os_store_read::history_read_admission::{admit_history_read_r
 use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, HistoryReadPlan};
 use semio_framework_os_store_replay::ReplayProgress;
 use semio_framework_value_snapshot_read::{SnapshotReadLeaseRegistry, artifact_retirement_box_close_step, artifact_retirement_box_demands};
-use super::fixture_mutations::demo::DemoMutation;
-use super::tests::DemoSnapshot;
+use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
+use semio_framework_os_store_testing_fixtures::DemoSnapshot;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::OwnedValueRetirementFactory,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueRefusalKind};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 use std::{sync::Arc,marker::PhantomData};

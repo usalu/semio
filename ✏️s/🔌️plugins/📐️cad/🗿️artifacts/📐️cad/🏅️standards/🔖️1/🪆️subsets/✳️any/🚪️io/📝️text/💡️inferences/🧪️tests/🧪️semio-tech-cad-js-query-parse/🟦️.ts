@@ -3,7 +3,9 @@ import constructFixture from "../🧫️fixtures/🔍️construct.json";
 import { preciseSpatialKernelMath } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
 import type { FaceRef, ShellRef, SolidRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 import type { InferencesTestDependencies } from "../../🟦️.ts";
-import type { Model, ObjectRef, SelectionTarget, TypologyRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { ObjectRef, TypologyRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { Model } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import type { SelectionTarget } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import type { SpatialKernel } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import type { Vec3 } from "@semio-tech/framework/3d";
 

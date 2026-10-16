@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
 import {encodeIeee754Cells,readBinary64,readBinary32} from "../🟦️.ts";
 import { binary64, binary32, parseBinary64, parseBinary32 } from "../../../../🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
-import { parseBinary64Transport, parseBinary32Transport } from "../../../📝️text/🔢️ieee754/🟦️.ts";
+import { parseBinary64Transport, parseBinary32Transport } from "@semio-tech/framework/io/text/ieee754";
 import { exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema } from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import integerFixture from "./🧫️fixtures/🎯️integer-query.json";

@@ -589,7 +589,7 @@ export function worldProjectionGoalMatrix(spec: WorldProjectionSpec, options: { 
 export function worldProjectionMorphMatrix(from: Matrix4, to: Matrix4, t: number): Matrix4 {
   const result = new Matrix4();
   for (let i = 0; i < 16; i++) {
-    result.elements[i] = from.elements[i] + (to.elements[i] - from.elements[i]) * t;
+    const start=from.elements[i],end=to.elements[i];if(start===undefined||end===undefined)throw Error("Complete world projection matrix required");result.elements[i]=start+(end-start)*t;
   }
   return result;
 }
@@ -956,11 +956,13 @@ function WorldCurvilinearPass(props: { readonly mode: Extract<WorldProjectionMod
     } else if (morph && !enteringCurvilinear && !leavingCurvilinear) {
       ramp = 0;
     }
-    material.uniforms.tCapture.value = target.texture;
-    material.uniforms.uFov.value = Math.min(fov, 160) * (Math.PI / 180);
-    material.uniforms.uStrength.value = props.mode.strength * ramp;
-    material.uniforms.uAspect.value = size.width / Math.max(1, size.height);
-    material.uniforms.uMapping.value = props.mode.mapping === "panini" ? 1 : 0;
+    const {tCapture,uFov,uStrength,uAspect,uMapping}=material.uniforms;
+    if(!tCapture||!uFov||!uStrength||!uAspect||!uMapping)throw Error("Complete curvilinear shader uniforms required");
+    tCapture.value = target.texture;
+    uFov.value = Math.min(fov, 160) * (Math.PI / 180);
+    uStrength.value = props.mode.strength * ramp;
+    uAspect.value = size.width / Math.max(1, size.height);
+    uMapping.value = props.mode.mapping === "panini" ? 1 : 0;
 
     gl.setRenderTarget(target);
     gl.render(scene, camera);

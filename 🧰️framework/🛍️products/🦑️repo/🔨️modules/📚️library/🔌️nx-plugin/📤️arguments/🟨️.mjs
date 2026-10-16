@@ -79,7 +79,7 @@ export async function issueNativeOwnerInvocationV1(options,context,environment,n
  const expectedArguments=expected.forwardAllArgs===false?[]:[...expected.args??[],...expected.__unparsed__??[]],actualArguments=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]];
  if(JSON.stringify(expectedArguments)!==JSON.stringify(actualArguments))throw Error("Original native task arguments changed");
  if(typeof environment.CARGO_TARGET_DIR!=="string"||resolve(context.root,caller.native.artifactDirectory)!==resolve(context.root,environment.CARGO_TARGET_DIR)||environment.CARGO_NET_OFFLINE!==String(caller.native.network.offline))throw Error("Original native artifact or network authority changed");
- const forwarded=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]],capabilities={version:1,buildMode:caller.buildMode,repositoryRoot:context.root,artifactDirectory:resolve(context.root,caller.native.artifactDirectory),command:{...request,arguments:[...request.arguments,...forwarded]},transport:caller.native.transport,child:caller.native.child,network:caller.native.network};
+ const forwarded=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]],capabilities={version:1,buildMode:caller.buildMode,repositoryRoot:context.root,artifactDirectory:resolve(context.root,caller.native.artifactDirectory),command:{...request,arguments:[...request.arguments,...forwarded]},transport:caller.native.transport,child:caller.native.child,network:caller.native.network,...(caller.native.windowsSystem?{windowsSystem:caller.native.windowsSystem}:{})};
  if(!conforms(nativeSchema,capabilities))throw Error("Issued original native capability refused");return {...original,capabilities};
 }
 

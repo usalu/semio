@@ -1,12 +1,11 @@
-/// <reference types="vitest/importMeta" />
 /** 🧭️ The app router: which app opens an artifact dialect in a role, from the manifests of the loaded plugins, with its surface fault codes.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { type ArtifactDialect } from "../../🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
 import { dialectCoordinate } from "../../🚪️io/🧬️schema/🟦️.ts";
-import { type AppRole, type AppRef } from "../../🛂️manifest/🧬️schema/🟦️.ts";
+import { type AppRole, type AppRef } from "@semio-tech/framework/manifest/schema";
 import { type PluginDependency } from "../🗂️plugin-registry/🟦️.ts";
 import { type Fault, type FaultScope } from "../🚨️fault/🟦️.ts";
 import { resolvePluginLoadOrder } from "../🕸️plugin-graph/🟦️.ts";
@@ -219,12 +218,5 @@ export class AppRouter {
     return gaps;
   }
 }
-
-//#region 🧪️AppRouterTests
-if (import.meta.vitest) {
-  const { registerTests2 } = await import("../🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests2(import.meta.vitest, { AppRouter, dialectCoordinate }, { directory: (await import("node:path")).dirname((await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url))), url: import.meta.url });
-}
-//#endregion 🧪️AppRouterTests
 //#endregion 🔖️AppRouter
 // #endregion 🎠️Kernel

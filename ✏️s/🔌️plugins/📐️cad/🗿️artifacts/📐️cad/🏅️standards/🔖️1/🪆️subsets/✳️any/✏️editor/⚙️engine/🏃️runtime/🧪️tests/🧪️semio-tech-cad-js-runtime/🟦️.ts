@@ -6,7 +6,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { bootstrapCadModules } = dependencies;
 
   const { describe, expect, it } = vitest;
-  const { defaultModelDefinitionId, listModelDefinitionManifests, listTransformationsIntoModelDefinition, loadPropertyDefinition, loadStatDefinition, resolveModelDefinitionScope } = await import("../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts");
+  const { defaultModelDefinitionId, listModelDefinitionManifests } = await import("../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts");
+  const { listTransformationsIntoModelDefinition } = await import("../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🔄️transformation-spec/🟦️.ts");
+  const { loadPropertyDefinition } = await import("../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎨️typology/🟦️.ts");
+  const { loadStatDefinition } = await import("../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📊️stats/🟦️.ts");
+  const { resolveModelDefinitionScope } = await import("../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧷️selection-operations/🟦️.ts");
   const { SPATIAL_SHAPE_VOLUME_PROPERTY_ID } = await import("@semio-tech/cad-js-module-spatial-shape");
   const { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, ENERGY_DEMAND_STAT_ID } = await import("@semio-tech/cad-js-module-aec-building-energy");
 

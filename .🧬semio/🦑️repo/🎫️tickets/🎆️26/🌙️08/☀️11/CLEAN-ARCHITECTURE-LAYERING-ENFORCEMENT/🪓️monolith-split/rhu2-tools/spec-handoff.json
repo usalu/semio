@@ -1,0 +1,37 @@
+{
+ "moves": [
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/💡️inference/🚪️opening/🟦️.ts"
+  }
+ ],
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/rhu2-snap-handoff.json"
+}

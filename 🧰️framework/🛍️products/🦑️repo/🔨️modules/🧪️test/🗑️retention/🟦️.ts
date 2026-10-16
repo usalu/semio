@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type TestEvidence } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type TestEvidence } from "@semio-tech/framework/test/adapter";
 import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { repoCacheDirectory } from "../../📚️library/⚡️caching/🟦️.ts";

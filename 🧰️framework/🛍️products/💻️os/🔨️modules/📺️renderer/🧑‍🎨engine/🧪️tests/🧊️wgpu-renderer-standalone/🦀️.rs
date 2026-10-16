@@ -1,19 +1,8 @@
 #[cfg(test)]
-fn collect_fixture_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
-    let mut actions = Vec::new();
-    while let Some(action) = input.take_action_step().expect("fixture action authority remains live") {
-        let queued = action.into_envelope().expect("bounded fixture action materializes");
-        if let Some(receipt) = queued.receipt { settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Accepted); }
-        actions.push(queued.descriptor);
-    }
-    actions
-}
-
-#[cfg(test)]
 #[test]
 fn realize_fault_remains_scheduled_until_the_aborted_cursor_is_terminal() {
-    let glue = crate::RENDERER_SOURCE;
-    let native = include_str!("../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+    let glue = semio_framework_os_renderer_wgpu_test_support::renderer_source();
+    let native = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
     assert!(glue.contains("cursor.phase = AppPresentPhase::Aborted;\n                            if self.retained_fault.is_none()"));
     assert!(glue.contains("return Ok(AppPresentStep::Pending);"));
     assert!(native.contains("if self.presenter.has_pending_presentation()"));

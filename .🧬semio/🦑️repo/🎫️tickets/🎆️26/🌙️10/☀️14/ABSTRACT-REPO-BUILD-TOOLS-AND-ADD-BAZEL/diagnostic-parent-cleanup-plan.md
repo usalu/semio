@@ -1,0 +1,36 @@
+# Diagnostic Parent Cleanup Plan
+
+The diagnostic function is `LIB/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts`, `withRepositoryCacheStoreFixtureV1` (currently lines 77–82). Root owns the other Store and Opening/Nx changes; this investigation has not changed those files.
+
+## Concrete current behavior
+
+The function enrolls a real parent consumer, then raw-opens a persistent child below `parent.root`. It closes that child after body settlement, raw-reopens it for allocation retirement using `parent.control`, and calls ordinary Native image retirement with the same parent control. The new concrete parent guard rejects the first raw nested open. Merely replacing those two calls with scoped child factories would fix parent authentication during a successful body but would not provide terminal authority after cancellation of the actual enclosing phase. The final catch currently hides cleanup failure whenever the body failed, so that path can report only the primary while leaving a mounted or allocated fixture behind.
+
+## Existing accepted custody inspected
+
+- `withAcceptedPhysicalCleanupV1(control, request, callback)` genuinely reserves terminal time before effects. Its callback receives the exact enrolled body control. `beginAcceptedPhysicalCleanupV1` stops and drains that body; cleanup operations then run under the private enrollment and its independent bounded cleanup signal, without issuing a replacement resource control.
+- `captureNativePlatformImageCleanupV1(image, exactBodyControl, enrollment)` captures an actual registered receiver's real kernel reader and physical facts. `withNativePlatformImageCleanupReadV1` provides retained observations/rechecks, not a child birth, maintenance port, or image retirement operation.
+- The concrete retained reader captures its original lease through `acceptNativeImageBorrowerCleanupV1`. Lease infrastructure already provides `withAcceptedResourceLeaseCleanupRetirementWriterV1`, which reacquires the exact original database/resource exclusively after the original reader has actually released, and retains unresolved writer custody on failure.
+- `acceptNativeStorageCleanupV1` / `withNativeStorageCleanupV1` capture an actual recomputable allocation and provide exact journal state, physical recheck and metadata synchronization. Their callback access has no retirement/appending operation. Ordinary reservation `.retire()` remains tied to its issued body control/port.
+- `retireNativePlatformStorageV1` and concrete macOS/Fixed retirement require a live ordinary issued control and perform ordinary writer acquisition and owned-command dispatch. They do not accept a captured terminal enrollment or cleanup writer. No Core Native terminal image-retirement dispatcher exists in the inspected current Source.
+- macOS `withNativeImageStorageV1` has an existing creator-owned ephemeral lifecycle that settles its physical creator under preaccepted cleanup. It is not the cross-platform registered persistent-child interface: its body omits `close`, the parent binding is not threaded into that route, and Linux/Windows expose only persistent open/ordinary retirement. Substituting it into the Repo Store with fabricated close/maintenance methods would break the actual owner contract.
+
+## Required Core gap and proposed contained route
+
+Existing accepted cleanup supports retained read/metadata and exact lease-writer continuation, but does **not** currently support the complete diagnostic child allocation/image retirement. Therefore a function-only rewrite cannot truthfully meet success, arbitrary failure and actual enclosing cancellation cleanup. No production rewrite is landed until that gap has an authorized Core owner.
+
+The smallest coherent extension is a privately captured terminal image-retirement continuation on the **actual ready child receiver**, funded before user body starts. It must also retain the actual containing parent through terminal settlement. This is a Core owner operation, not an ordinary-control adapter or a caller-supplied callback proving deletion authority:
+
+1. Enter one genuine accepted-cleanup scope beneath the actual parent consumer phase before any child birth. Snapshot primitive directory/envelope/actual parent identity first. Retain a genuine parent terminal read loan before the enrolled body can stop; do not wait for that same enrollment's settlement inside its owner.
+2. Open the child through the authentic parent-owned child factory using the exact enrolled body/returned descendants. Capture the actual child receiver and exact child allocation cleanup while those issued controls are live. No raw re-open is permitted.
+3. Stop new fixture Store consumers, join all accepted work, and invalidate those Store owners. Stop the enrolled body before terminal work. Keep the parent frame and child physical facts live during cleanup even when the body control has aborted.
+4. Drain and release the child's real reader through its captured Native cleanup owner, preserving the accepted outcome separately. Use the already captured exact lease cleanup retirement writer. Under that writer, verify the same receipt/backing/mount and complete allocation/journal census, then detach only the actual owned mapping with existing bounded terminal command dispatch. Delete only after exact inactive backing, underlying mount-directory identity and bounded known-entry checks. Durably synchronize via the actual containing parent cleanup port before reporting completion.
+5. Preserve the original body value/error, including `undefined` and frozen objects. Cleanup failure must remain observable as structured aggregation or an explicit retained unresolved custody outcome; it must not imply rollback or a successful retirement. A changed inode, foreign allocation, busy exact writer, cancellation exhaustion or dispatch failure must fail closed while retaining relevant custody.
+
+The actual Native owner should expose one operation such as `retireNativePlatformImageCleanupV1(capturedChildOwner)` with no arbitrary path/control/callback authority. Allocation retirement should be a private accepted journal operation (or a narrowly issued allocation cleanup method), rather than publishing writable raw access. Exact public naming/signature requires Root's Core ownership decision; this is a proposed API, not an implemented/exported capability.
+
+## Schema-first laws and execution boundary
+
+Extend the existing closed diagnostic corpus/schema to cover successful body, frozen/undefined body failure, actual body cancellation, enclosing phase cancellation, stopped-before-effects, changed child identity, foreign allocation, writer contention, terminal command failure and cleanup deadline exhaustion. Execute the actual diagnostic function against explicit Native/FS ports and genuine issued phases, with an Ajv case validator and independent SQLite outcome/order oracle. Counterlaws must prove parent loan → child birth → consumer drain → child reader release → exact writer → allocation empty → actual detach → exact unlink → parent metadata barrier → parent release. Pure Source ports do not establish physical Native behavior. Root remains owner of later actual qualification.
+
+No Native runtime/store, system resolver, VHD allocator, prebirth writer, quota or cap change was performed for this plan.

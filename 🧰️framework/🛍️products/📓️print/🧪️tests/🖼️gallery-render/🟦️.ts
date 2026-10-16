@@ -7,7 +7,7 @@ import type { GalleryRenderEvidence } from "../../🔨️modules/📊️visualiz
 
 // #region 🔌️Adapters
 import { readFileSync } from "node:fs";
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { loadVizCatalog } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { measurePrintGalleryVariant, printGalleryMatrix } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts";
 // #endregion 🔌️Adapters

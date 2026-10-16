@@ -6,7 +6,11 @@ use std::mem::ManuallyDrop;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 enum Phase{Begin,Field,Tag,Scalar,Length,Bytes,Complete,Closed}
 pub struct ToolRunStepReceiving{
- source:(usize,usize,Option<(u64,u64)>,(usize,usize)),phase:Phase,field:u8,seen:u8,fields:u8,argument_bytes:usize,argument_at:usize,argument:[u8;9],
+ source:(usize,usize,Option<(u64,u64)>,(usize,usize)),phase:Phase,field:u8,seen:u8,fields:u8,argument_bytes:usize,
+    #[cfg(feature = "testkit")] #[doc(hidden)] pub argument_at:usize,
+    #[cfg(not(feature = "testkit"))] argument_at:usize,
+    #[cfg(feature = "testkit")] #[doc(hidden)] pub argument:[u8;9],
+    #[cfg(not(feature = "testkit"))] argument:[u8;9],
  step:ManuallyDrop<Option<ToolRunStep>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,closing:bool,
 }
 fn witness(source:&RetainedRecordBodySourceDecode)->(usize,usize,Option<(u64,u64)>,(usize,usize)){let original=source.source_identity();(original.address,original.extent,original.authority,source.original_range())}
@@ -48,6 +52,3 @@ impl ToolRunStepReceiving{
  pub fn terminal_is_empty(&self)->bool{self.phase==Phase::Closed&&self.step.is_none()&&self.receipt.is_none()}
 }
 impl Drop for ToolRunStepReceiving{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original typed step abandoned native arguments or receipt");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.step)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type EngineFamily } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type EngineFamily } from "@semio-tech/framework/test/adapter";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { type BreachRecord } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";

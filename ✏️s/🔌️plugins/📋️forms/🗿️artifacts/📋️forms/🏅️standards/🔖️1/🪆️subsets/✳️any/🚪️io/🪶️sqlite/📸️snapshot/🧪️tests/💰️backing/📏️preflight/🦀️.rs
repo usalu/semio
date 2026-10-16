@@ -1,6 +1,5 @@
 //! 📏️ Direct preflight law keeps encoded forecasts separate from real borrowed scratch requests.
-#[path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use super::*;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
 use semio_framework_value::ValueRefusalKind;

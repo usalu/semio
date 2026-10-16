@@ -1,6 +1,6 @@
 import {ValueError} from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
-import {encodeValueErrorControlled,decodeValueErrorControlled,type ValueRefusalCodecControl} from "../../../🌱️value/⚠️refusal/🔁️codec/🟦️.ts";
-import type {IntrinsicValue,IntrinsicMember} from "../../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
+import {encodeValueErrorControlled,decodeValueErrorControlled,type ValueRefusalCodecControl} from "@semio-tech/value-ts/refusal/codec";
+import type {IntrinsicValue,IntrinsicMember} from "@semio-tech/value-ts/schema/intrinsic";
 import type {TextError} from "../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
 import {encodeDiagnosticControlled,decodeDiagnosticControlled,ownDiagnosticText,type Diagnostic} from "../../../⚠️diagnostic/🎛️controlled/🟦️.ts";
 /** 🚪️ One canonical owned refusal retains every attached source diagnostic. */

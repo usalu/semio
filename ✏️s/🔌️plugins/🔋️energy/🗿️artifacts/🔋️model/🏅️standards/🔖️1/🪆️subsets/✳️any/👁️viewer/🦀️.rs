@@ -21,7 +21,6 @@ use crate::modes::view;
 use crate::modes::view::windows::{model as model_window, simulation, structure, zones};
 use crate::mutations::EnergyModelMutation;
 use crate::snapshot::{EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
-use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
@@ -54,7 +53,6 @@ use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::ViewEmit;
 use semio_framework_plugin::Viewer;
 use semio_framework_plugin::ViewerApp;
-use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🏷️ActionIds
 /// 🏷️ Every dispatchable verb of this VIEWER, exactly once. One row: the 3d window's orbit pose.
@@ -71,125 +69,13 @@ const ENERGY_MODEL_VIEW_RAW_BYTES: usize = 8_192;
 const ENERGY_MODEL_VIEW_WORK_ITEMS: usize = 1;
 //#endregion 🏷️ActionIds
 
-//#region 🔖️Command
-/// 👁️ The viewer's typed command channel. It has exactly one row, and that row is the reason the
-/// channel is no longer inert: the react `World3dHost` dispatches `setCamera` after every orbit of
-/// ANY World3d window, read-only or not, and a window kind that does not declare and reduce it drops
-/// every gesture (`dropped action "setCamera" … no window kind declares it`).
-///
-/// 🔒️ Row order is the binary variant ordinal: appending is safe, reordering is a wire break.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
-pub enum EnergyModelViewCommand {
-    /// 🎥️ The orbit pose as the canonical `{position,target,zoom,up?}` JSON the host sends. One text
-    /// field because a `dsl::DslOps` variant binds scalars only — and because that string IS what
-    /// `World3dScene::camera_json` consumes.
-    #[dsl(key = "setCamera")]
-    SetCamera { camera: String },
-}
+#[path = "🔖️view-command/🦀️.rs"]
+mod view_command;
+pub use view_command::EnergyModelViewCommand;
 
-impl Default for EnergyModelViewCommand {
-    /// 🌱️ An empty pose, which `camera_emit` refuses explicitly rather than applying — there is no
-    /// "do nothing" verb to default to any more, and inventing a pose here would let a malformed
-    /// dispatch write a camera nobody asked for.
-    fn default() -> Self {
-        Self::SetCamera { camera: String::new() }
-    }
-}
-
-impl EnergyModelViewCommand {
-    /// 🪪️ The manifest action id this command stands for.
-    pub fn action_id(&self) -> &'static str {
-        match self {
-            Self::SetCamera { .. } => model_window::SET_CAMERA_ACTION_ID,
-        }
-    }
-}
-
-//#region 🔖️OpCodec
-impl protocol::OpBinary for EnergyModelViewCommand {
-    /// 🧵️ The exact manifest ids this typed command schema owns — the left-hand side of
-    /// `validate_tool_job_rows`' set equality against the `bounded_first_step_tool_proofs!` rows.
-    const TOOL_JOB_IDS: &'static [&'static str] = ENERGY_MODEL_VIEW_TOOL_IDS;
-
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1.ordinary)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = (spec_fn.ordinary)();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-//#endregion 🔖️OpCodec
-//#endregion 🔖️Command
-
-//#region 🎥️Camera
-/// 🎥️ Turns one `setCamera` gesture into the addressed window-config write, or into an explicit
-/// refusal. This is the WHOLE behavior of the viewer's command channel.
-///
-/// 🔒️ The emitted `Emit` carries `window_config_mutations` and NOTHING else — no artifact mutation,
-/// no config mutation, no effect — which is the runtime half of the read-only guarantee whose
-/// compile-time half is `ViewEmit`. `reduce`'s own signature could carry a document mutation; this
-/// function is the one place that decides, and it never builds one.
-fn camera_emit(command: &EnergyModelViewCommand, view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<EnergyModelMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let EnergyModelViewCommand::SetCamera { camera } = command;
-    let view = view_state.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("energy.model.3d.viewer.window-required"), "a camera change requires a concrete 3d model window"))?;
-    if camera.is_empty() {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "setCamera carries no {position,target,zoom} pose"));
-    }
-    let value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(camera, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
-    let pose = <model_window::config::EnergyModelViewerCameraPose as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is malformed: {error}")))?;
-    if !pose.is_valid() {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the camera pose is not finite, or its zoom is not positive"));
-    }
-    let mutation = model_window::config::EnergyModelViewerWindowConfigMutation::SetCamera(model_window::config::SetCamera { camera: pose });
-    Ok(Emit {
-        window_config_mutations: vec![model_window::config::addressed(view, mutation)?],
-        // 🐢️ Nothing to repaint: the pane that sent the pose already holds it.
-        ui_scope: UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
-        ..Default::default()
-    })
-}
-
-/// 🪪️ The bridge from a dispatched action's args to the typed command. The pose is validated and
-/// canonicalized to the exact JSON string `World3dScene::camera_json` consumes, so a malformed
-/// gesture is refused here rather than silently ignored.
-fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<EnergyModelViewCommand, Fault> {
-    if action != model_window::SET_CAMERA_ACTION_ID {
-        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the energy model viewer has no command for action '{action}'")));
-    }
-    let camera = args
-        .and_then(|args| args.get("camera"))
-        .and_then(|value| {
-            let pose = <store::Viewport3dOrbit as semio_framework_value::FromValue>::from_value(value.clone()).ok()?;
-            pose.validate().ok()?;
-            Some(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&pose)))
-        })
-        .unwrap_or_default();
-    Ok(EnergyModelViewCommand::SetCamera { camera })
-}
-//#endregion 🎥️Camera
+#[path = "🎥️camera-gesture/🦀️.rs"]
+mod camera_gesture;
+use camera_gesture::{camera_emit, command_from_action};
 
 //#region 🧵️RetainedCommands
 fn energy_model_view_contract() -> ToolExecutionContract {
@@ -483,23 +369,23 @@ mod tests;
 //#region 🧩️Facets
 #[path = "👥️presence/🧬️schema/🦀️.rs"]
 pub mod presence;
-pub mod config {
-    #[path = "../🎚️config/🧬️schema/🦀️.rs"]
+#[path = "🎚️config"] pub mod config {
+    #[path = "🧬️schema/🦀️.rs"]
     pub mod schema;
 }
-pub mod modes {
-    pub mod view {
-        #[path = "../../🎭️modes/👁️view/🦀️.rs"]
+#[path = "🎭️modes"] pub mod modes {
+    #[path = "👁️view"] pub mod view {
+        #[path = "🦀️.rs"]
         mod component;
         pub use component::*;
-        pub mod windows {
-            #[path = "../../../🎭️modes/👁️view/🪟️windows/🧊️model/🦀️.rs"]
+        #[path = "🪟️windows"] pub mod windows {
+            #[path = "🧊️model/🦀️.rs"]
             pub mod model;
-            #[path = "../../../🎭️modes/👁️view/🪟️windows/⚡️simulation/🦀️.rs"]
+            #[path = "⚡️simulation/🦀️.rs"]
             pub mod simulation;
-            #[path = "../../../🎭️modes/👁️view/🪟️windows/🌳️structure/🦀️.rs"]
+            #[path = "🌳️structure/🦀️.rs"]
             pub mod structure;
-            #[path = "../../../🎭️modes/👁️view/🪟️windows/📊️zones/🦀️.rs"]
+            #[path = "📊️zones/🦀️.rs"]
             pub mod zones;
         }
     }

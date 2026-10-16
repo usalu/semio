@@ -45,3 +45,11 @@ serde = { version = "1.0.219", features = ["derive"] }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 
 [dev-dependencies]
+semio-framework-ui-action = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio-framework-ui-prepared-staging = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust" }
+semio-framework-ui-scene-plane = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }

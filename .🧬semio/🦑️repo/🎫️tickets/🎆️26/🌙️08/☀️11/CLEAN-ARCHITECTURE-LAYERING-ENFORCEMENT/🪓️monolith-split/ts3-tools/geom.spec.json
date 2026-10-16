@@ -1,0 +1,135 @@
+{
+ "file": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
+ "label": "geometry",
+ "children": [
+  {
+   "folder": "🪪️selection",
+   "doc": "/** 🪪️ Selection vocabulary of the spatial kernel: picked targets, selection events and specs, accept expansion and object deletion from a selection. */",
+   "stmts": [
+    "19-87",
+    "1279-1300"
+   ]
+  },
+  {
+   "folder": "🗺️paths",
+   "doc": "/** 🗺️ Attribute paths and tables: path segments with their reads, writes and clears, the attribute table and the spatial entity flags. */",
+   "stmts": [
+    "122-148",
+    "161-194",
+    "201-220",
+    "229-324"
+   ]
+  },
+  {
+   "folder": "🧮️expressions",
+   "doc": "/** 🧮️ The interaction expression language: `Expr` nodes, environments, evaluation, guards and path targets on an environment. */",
+   "stmts": [
+    "149-149",
+    "156-156",
+    "195-195",
+    "221-221",
+    "329-533"
+   ]
+  },
+  {
+   "folder": "🎰️interaction-spec",
+   "doc": "/** 🎰️ Interaction and action specs: states, transitions, effects, display items, engagement controls, and their parsers and compilers. */",
+   "stmts": [
+    "90-117",
+    "538-1025"
+   ]
+  },
+  {
+   "folder": "📥️definition-catalog",
+   "doc": "/** 📥️ The model definition catalog: manifests, registered asset modules, their caches and listeners, and asset path ownership. */",
+   "stmts": [
+    "1555-1742",
+    "1745-1754",
+    "1765-1765",
+    "2021-2021",
+    "2045-2045",
+    "2938-2976"
+   ]
+  },
+  {
+   "folder": "🎨️typology",
+   "doc": "/** 🎨️ Typologies: specs, display styles, construct kits, and the attribute and property definitions that apply to them. */",
+   "stmts": [
+    "1757-1764",
+    "1771-2020",
+    "2028-2044",
+    "2046-2176"
+   ]
+  },
+  {
+   "folder": "🧊️model",
+   "doc": "/** 🧊️ The in-memory spatial model: objects, geometry records, attribute store, hydration, primitive hashes and entity property reads. */",
+   "stmts": [
+    "1104-1116",
+    "1128-1276",
+    "1373-1392",
+    "1470-1546",
+    "2179-2200"
+   ]
+  },
+  {
+   "folder": "🌌️model-space",
+   "doc": "/** 🌌️ The model space: linked models, their hashes, transfer by transformation and serialization. */",
+   "stmts": [
+    "1395-1466"
+   ]
+  },
+  {
+   "folder": "🧾️primitive-document",
+   "doc": "/** 🧾️ Primitive kind resolution, the primitive document of a model and the property computers that derive values from it. */",
+   "stmts": [
+    "2203-2351"
+   ]
+  },
+  {
+   "folder": "🧭️definition-ownership",
+   "doc": "/** 🧭️ Which model definition owns a typology, action, interaction, attribute or property, which actions a definition makes available, and its objects. */",
+   "stmts": [
+    "2622-2705",
+    "2978-3220",
+    "3309-3326"
+   ]
+  },
+  {
+   "folder": "📊️stats",
+   "doc": "/** 📊️ Stat definitions and their computers over the objects of a model. */",
+   "stmts": [
+    "2353-2619"
+   ]
+  },
+  {
+   "folder": "🔄️transformation-spec",
+   "doc": "/** 🔄️ Transformation specs: the derive rules, their parsers and the shipped transformation catalog. */",
+   "stmts": [
+    "2708-2935"
+   ]
+  },
+  {
+   "folder": "🧷️selection-operations",
+   "doc": "/** 🧷️ Selection operations of a model definition and its resolved scope of entity kinds and objects. */",
+   "stmts": [
+    "3223-3306",
+    "3329-3354"
+   ]
+  },
+  {
+   "folder": "🔁️transformation-apply",
+   "doc": "/** 🔁️ Applying a transformation to a model: appliers, derive matching, classification and the derive runner. */",
+   "stmts": [
+    "3357-3548"
+   ]
+  }
+ ],
+ "parentHeadLines": [
+  "11-16"
+ ],
+ "parentTailLines": [
+  "3549-3552"
+ ],
+ "sha1": "0c040aaa7337b350ff2472f4705235a0a9e2a439"
+}

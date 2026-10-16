@@ -1,5 +1,5 @@
 /** 📦️ Portable candidate custody mirrors native edit, root, seal and metadata ownership. */
-import {FactoryBoxedValue,type FactoryBoxedIssuer} from "../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🟦️.ts";
+import {FactoryBoxedValue,type FactoryBoxedIssuer} from "@semio-tech/value-ts/retirement/factory/boxed";
 export interface PreparedCandidate<E,P,A>{edit:E;post:P;authority:A;identities:string[]}
 export interface PreparedCandidateIssuers<E,P,A>{edit:FactoryBoxedIssuer<E>;post:FactoryBoxedIssuer<P>;authority:FactoryBoxedIssuer<A>}
 export class PreparedCandidateRetirement<E,P,A>{

@@ -19,7 +19,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { applyLocalFoldersConfigMutation, inverseLocalFoldersConfigMutation, type LocalFolderBindings, type LocalFoldersConfigMutation } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { applyLocalFoldersConfigMutation, inverseLocalFoldersConfigMutation, type LocalFolderBindings, type LocalFoldersConfigMutation } from "../../../../../../../🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🔖️Fixtures

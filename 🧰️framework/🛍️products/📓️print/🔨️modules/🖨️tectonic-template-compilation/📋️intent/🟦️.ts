@@ -1,6 +1,6 @@
 import{types}from"node:util";
 import{isAbsolute}from"node:path";
-import{validateJsonSchemaSubset}from"./../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 /** 📄️ Carries authored document Source names; the actual producer derives its publication destination. */
 export interface PrintDocumentIntentV1{readonly version:1;readonly kind:"document";readonly namespace:"print"|"report"|"probe";readonly id:string;readonly sourceRoot:string;readonly texPath:string;readonly sources:readonly string[];readonly dark:boolean}

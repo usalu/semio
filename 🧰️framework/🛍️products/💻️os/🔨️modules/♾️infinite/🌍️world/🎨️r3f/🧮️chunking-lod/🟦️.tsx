@@ -75,6 +75,7 @@ export function useVisibleChunkKeys(chunkKeys: Iterable<string>, chunkSize: numb
       const next = new Set(prev);
       for (const key of chunkKeys) {
         const [ix, iy, iz] = key.split("|").map(Number);
+        if(ix===undefined||iy===undefined||iz===undefined)throw Error("Complete spatial chunk coordinates required");
         centerTmp.set((ix + 0.5) * chunkSize, (iy + 0.5) * chunkSize, (iz + 0.5) * chunkSize);
         const show = chunkDistanceVisible({
           camPos,

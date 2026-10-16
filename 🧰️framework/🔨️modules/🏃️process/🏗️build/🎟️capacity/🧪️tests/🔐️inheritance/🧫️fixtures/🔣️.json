@@ -2,6 +2,10 @@
   "environment": {"SEMIO_COMPILER_CAPACITY_HELD": "true", "SEMIO_COMPILER_PARALLELISM": "1"},
   "requestedParallelism": 1,
   "maximumAdmissionMilliseconds": 500,
+  "authorityRefusals": [
+    {"kind": "copy", "expectedReads": 0, "expectedRefused": true},
+    {"kind": "structural", "expectedReads": 0, "expectedRefused": true}
+  ],
   "expected": {"version": 1, "parentExclusiveBefore": true, "parentExclusiveAfter": true, "childEntered": false, "childCoreDatabases": 0},
   "invalidResults": [
     {"version": 1, "entered": false, "outcome": "refused", "parallelism": null, "token": "copied"},

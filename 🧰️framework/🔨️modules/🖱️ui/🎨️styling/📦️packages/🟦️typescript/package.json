@@ -27,6 +27,8 @@
     "./tokens": "./🔤️tokens/🟦️.ts"
   },
   "dependencies": {
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/schema-validator-ts": "workspace:*",
     "@tailwindcss/typography": "^0.5.19",
     "tailwindcss": "^4.0.0"
   },

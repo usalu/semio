@@ -2,7 +2,10 @@ import type { GeometryTestDependencies } from "../../🟦️.ts";
 import { applyModelDiff } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { CAD_GUMBALL_HIDDEN, cadGumballConfigVisible, collectGeometrySelectionTargets, modelDefinitionActionRegistry, runRegisteredAction } from "../../../../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts";
 import { preciseSpatialKernelMath } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
-import type { EdgeRecord, EdgeRef, Expr, ModelSpaceJson, ObjectRef, SelectionEvent, SelectionSpec, TypologyRef, VertexRef } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { EdgeRecord, EdgeRef, ObjectRef, TypologyRef, VertexRef } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { ModelSpaceJson } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🌌️model-space/🟦️.ts";
+import type { Expr } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧮️expressions/🟦️.ts";
+import type { SelectionEvent, SelectionSpec } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import type { SpatialKernel, SpatialPreviewKernel } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import type { Vec3 } from "@semio-tech/framework-3d-js";
 

@@ -1,7 +1,7 @@
 import { test } from "bun:test";
 import vectors from '../../../🧫️fixtures/💡️inferences/🕸️topology/🥯️handles/🔣️.json' with { type: 'json' };
 import { inferGltfHandles } from '../../../../🧬️schema/💡️inferences/🕸️topology/🥯️handles/🟦️.ts';
-import type { GltfTsGeometryContext } from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts';
+import type { GltfTsGeometryContext } from '../../../../🧬️schema/💡️inferences/🔨️geometry-kernel/🟦️.ts';
 
 test("original GLTF 💡️inferences/🕸️topology/🥯️handles vectors", () => {
 for (const vector of vectors.vectors) {

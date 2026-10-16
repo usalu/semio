@@ -8,8 +8,8 @@
 
 // #region 🔌️Adapters
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
-import { isTerminalDocumentCheckInPhaseV1 } from "../../../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
-import { SessionAuthorityNotice } from "../../../../📇️directory/🪪️session-refresh/🪪️notice/🟦️.tsx";
+import { isTerminalDocumentCheckInPhaseV1 } from "@semio-tech/framework/document/check-in";
+import { SessionAuthorityNotice } from "./🔖️session-notice/🟦️.tsx";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   type Anchor,
@@ -55,7 +55,7 @@ import {
 // #endregion 🔌️Adapters
 import { HistoryReprojectionStatus, TimeTravelBand } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { localFolderNameV1, LocalFolderReconnectBand } from "./📎️local-folders/🟦️.tsx";
-import { parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
+import { parseHubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
 import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InstalledServicePanelV1 } from "./🪪️host-bootstrap/🟦️.tsx";
 import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice } from "./🌱️artifact-creation/🟦️.tsx";
 import { DirectoryBootstrapStatusNotice } from "./📇️directory-bootstrap/🟦️.tsx";
@@ -175,7 +175,7 @@ export {
   publishPanelBodiesV1
 } from "./🧱️built-node-stores/🟦️.ts";
 
-export type { DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1 } from "@semio-tech/framework-os";
+export type { DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1 } from "@semio-tech/framework/directory/schema";
 
 /** 🪢️ The shell mounts windows through the Interpreter, so it is a composition root of the element hosts. */
 registerElementHostsV1();

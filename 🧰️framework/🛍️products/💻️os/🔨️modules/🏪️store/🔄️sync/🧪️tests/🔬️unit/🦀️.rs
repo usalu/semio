@@ -14,7 +14,7 @@ use tokio::sync::broadcast;
 use semio_framework_os_spr::{ArtifactId, Edit, Mutation, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcomeClass, OpBinary, OpText};
 use semio_framework_os_store_codec_factory::lifted_store::artifact_codec;
 use semio_framework_os_store_document::create_document_envelope;
-use semio_framework_os_pack::{pack_rt, DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError};
+use semio_framework_os_pack::{pack_rt, PackDecodeOptions, PackEncodeOptions, PackError};
 use semio_framework_os_store_text_io::text_format::{parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, ParsedDocumentText};
 use semio_framework_os_store_codec_registry::register_document_codec;
 use semio_framework_os_store_text_io::ArtifactCodec;
@@ -238,7 +238,7 @@ impl ArtifactDsl for DemoSnapshot {
         Self::__DSL_ENVELOPE_ID
     }
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match semio_format::split_text_preamble(text) {
+        let body = match semio_framework_os_semio::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
@@ -247,8 +247,8 @@ impl ArtifactDsl for DemoSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        semio_format::wrap_text(&envelope, &body)
+        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Dsl, 1).expect("valid envelope_id");
+        semio_framework_os_semio::wrap_text(&envelope, &body)
     }
 }
 
@@ -258,11 +258,11 @@ impl ArtifactPack for DemoSnapshot {
 
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_format::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
-        Ok(semio_format::wrap_binary(&envelope, &inner))
+        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
+        Ok(semio_framework_os_semio::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
+        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
@@ -273,9 +273,9 @@ impl ArtifactPack for DemoSnapshot {
         Some(Self::__dsl_spec())
     }
 }
-impl semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DemoSnapshot {
+impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DemoSnapshot {
 fn sqlite_snapshot_codec() -> Option<semio_framework_os_store_text_io::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
+        Some(<Self as semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
 }
 
@@ -338,7 +338,7 @@ impl OpBinary for DemoMutation {
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (idx, (_, spec_fn)) = variants.iter().enumerate().find(|(_, (k, _))| k == &keyword).expect("variant spec must exist");
-        let body = semio_framework_os_pack::encode_record_body(&(spec_fn.ordinary)(), &record, &PackEncodeOptions::default()).map_err(|e| semio_framework_os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
+        let body = semio_framework_os_pack::record::encode_record_body(&(spec_fn.ordinary)(), &record, &PackEncodeOptions::default()).map_err(|e| semio_framework_os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
         let mut out = Vec::with_capacity(2 + body.len());
         out.push(pack_rt::OP_BINARY_FORMAT);
         out.push(idx as u8);
@@ -356,7 +356,7 @@ impl OpBinary for DemoMutation {
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| semio_framework_os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: format!("op ordinal {ordinal} out of range for {}", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
-        let (record, _report) = semio_framework_os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(semio_framework_os_spr::ProtocolError::from)?;
+        let (record, _report) = semio_framework_os_pack::record::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(semio_framework_os_spr::ProtocolError::from)?;
         let offset = reader.position() as u64;
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| semio_framework_os_spr::ProtocolError::Malformed { what: "op record", offset, detail: error.to_string() })
     }
@@ -422,7 +422,7 @@ fn bootstrap_frontier(document_id: &str, ordinal: u64, edit_id: &str, commit: u6
 
 async fn demo_artifact_bootstrap(inline: bool) -> (ArtifactBootstrap, ArtifactBootstrapPair) {
     ensure_demo_codec_registered().await;
-    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 7 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 7 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let files = print_document_pack(&envelope).await.expect("print bootstrap pair");
     drop(envelope.into_owners());
     let pair = ArtifactBootstrapPair { pack: files.pack, spr: files.spr };
@@ -637,7 +637,7 @@ async fn concurrent_supersessions_of_one_operation_converge_through_the_hub_sock
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     const LEFT: &str = "hub.v1.1111111111111111111111111111111111111111111111111111111111111111";
     const RIGHT: &str = "hub.v1.2222222222222222222222222222222222222222222222222222222222222222";
-    let genesis = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "authored-stamps", DemoSnapshot { n: 0 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let genesis = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "authored-stamps", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut left = semio_framework_os_store_test_support::plain_test_store(genesis()).await;
     let mut right = semio_framework_os_store_test_support::plain_test_store(genesis()).await;
     let mut shared = sample_operation_envelope("shared-edit", 1).await;
@@ -939,7 +939,7 @@ async fn receive_under_fixture_identity(session: &mut SyncSession<DemoSnapshot, 
 //#region 🧪️SyncSession
 #[semio_framework_async_macros::async_test]
 async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-    let envelope: semio_framework_os_store_space_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope: semio_framework_os_store_space_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let store = semio_framework_os_store_test_support::plain_test_store(envelope).await;
     let mut session = SyncSession::new(store).await;
     receive_under_fixture_identity(&mut session, sample_operation_envelope("edit-1", 5).await).await.expect("receive");
@@ -950,7 +950,7 @@ async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
 
 #[tokio::test]
 async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-    let envelope: semio_framework_os_store_space_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope: semio_framework_os_store_space_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let store = semio_framework_os_store_test_support::plain_test_store(envelope).await;
     let mut session = SyncSession::new(store).await;
     let first = sample_operation_envelope("edit-1", 5).await;
@@ -1153,7 +1153,7 @@ async fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
 /// The current socket hello round-trips in memory; the committed obsolete hello must reject.
 #[semio_framework_async_macros::async_test]
 async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
-    let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../🔨️modules/📡️replication/🧫️fixtures/📡️wire");
+    let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../../../🔨️modules/📡️replication/🧫️fixtures/📡️wire");
 
     async fn check_client(dir: &std::path::Path, name: &str, frame: &ClientFrame, lane: Lane) {
         let bytes = std::fs::read(dir.join(name)).unwrap_or_else(|error| panic!("read {name}: {error}"));
@@ -1452,7 +1452,7 @@ use tokio::sync::broadcast;
     use tokio_tungstenite::tungstenite::Message as WsMessage;
 
     async fn demo_envelope(document_id: &str) -> semio_framework_os_store_space_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
-        create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
+        create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
     }
 
     async fn wait_until<Fut>(label: &str, mut predicate: impl FnMut() -> Fut)
@@ -2245,7 +2245,7 @@ use tokio::sync::broadcast;
     // sequence and final timeline. The same fixtures drive WS-E's vitest harness against the TS twin.
     #[tokio::test]
     async fn fixtures_replay_matches_expected_events() {
-        let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🔨️modules/🏪️store/🔄️sync/🧫️fixtures");
+        let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../🧫️fixtures");
         let fixtures = load_fixtures(&fixtures_dir).await;
         assert!(!fixtures.is_empty(), "expected fixtures in {fixtures_dir:?}");
         for fixture in fixtures {
@@ -2263,7 +2263,7 @@ use tokio::sync::broadcast;
         let channels =
             host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
         let mut events = host.subscribe(&fixture.document_id).await;
-        let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+        let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read_archive(&fixture.document_id).await.expect("read archive").is_some() }).await;
@@ -2479,7 +2479,7 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
 
-    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply e1");
     let post_e1 = store.snapshot().expect("post-e1");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }, &mut identity).await.expect("apply e2");
@@ -2490,7 +2490,7 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     storage.write("doc-a", "demo/v1", &files.pack, &files.spr).await.expect("write");
 
     let (pack, spr) = storage.read("doc-a").await.expect("read").expect("some");
-    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
+    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
     assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1 through the folder storage layer");
     let mut reloaded = semio_framework_os_store_test_support::plain_test_store(parsed.envelope).await;
     assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
@@ -2517,11 +2517,11 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     assert_eq!(storage.read("demo", "demo").await.expect("read empty"), None, "absent document reads as None");
 
-    let mut seed = semio_framework_os_store_test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut seed = semio_framework_os_store_test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let files = print_document_text(seed.envelope()).await.expect("print document text");
     storage.write("demo", "demo", &files).await.expect("write");
 
-    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
@@ -2531,7 +2531,7 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
     let reloaded = storage.read("demo", "demo").await.expect("read").expect("some");
-    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
+    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
     assert_eq!(parsed.snapshot.n, 2, "write + append reconstructs every edit in order");
     let _ = parsed.into_snapshot();
 
@@ -2569,12 +2569,12 @@ async fn folder_text_storage_round_trips_pack() {
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     assert_eq!(storage.read_pack("demo", "demo").await.expect("read empty"), None, "absent pack reads as None");
 
-    let mut seed = semio_framework_os_store_test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut seed = semio_framework_os_store_test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let files = print_document_pack(seed.envelope()).await.expect("print document pack");
     let dsl_mirror = seed.envelope().vcs.genesis.facts().snapshot().print_dsl();
     storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
 
-    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
@@ -2584,12 +2584,12 @@ async fn folder_text_storage_round_trips_pack() {
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
     let reloaded_text = storage.read("demo", "demo").await.expect("read text").expect("some text");
-    let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse text: {error}"));
+    let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse text: {error}"));
     assert_eq!(parsed_text.snapshot.n, 2, "the .ops text mirror reflects every appended edit");
     let _ = parsed_text.into_snapshot();
 
     let reloaded_pack = storage.read_pack("demo", "demo").await.expect("read pack").expect("some pack");
-    let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack: {error}"));
+    let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack: {error}"));
     assert_eq!(parsed_pack.snapshot.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
     let _ = parsed_pack.into_snapshot();
 
@@ -2597,7 +2597,7 @@ async fn folder_text_storage_round_trips_pack() {
     let dsl_mirror2 = store.envelope().vcs.genesis.facts().snapshot().print_dsl();
     storage.write_pack("demo", "demo", &files2, &dsl_mirror2).await.expect("write pack 2");
     let reloaded_pack2 = storage.read_pack("demo", "demo").await.expect("read pack 2").expect("some pack 2");
-    let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));
+    let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));
     assert_eq!(parsed_pack2.snapshot.n, 2, "a fresh write_pack brings pack+spr current with the live store");
     let _ = parsed_pack2.into_snapshot();
 

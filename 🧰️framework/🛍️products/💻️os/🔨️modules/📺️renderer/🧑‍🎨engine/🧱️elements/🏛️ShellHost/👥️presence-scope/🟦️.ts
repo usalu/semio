@@ -1,5 +1,6 @@
-import type { BackboneWorkerResponse, DocumentScope } from "@semio-tech/framework-os";
-import type { ArtifactPresenceHistoryEdit, ArtifactPresencePeer } from "@semio-tech/framework-replication";
+import type { DocumentScope } from "@semio-tech/framework/document/scope";
+import type { BackboneWorkerResponse } from "@semio-tech/framework/backbone";
+import type { ArtifactPresenceHistoryEdit, ArtifactPresencePeer } from "@semio-tech/framework/replication";
 import type { PresencePeer } from "@semio-tech/ui-react";
 
 function presenceRole(role: ArtifactPresencePeer["role"]): PresencePeer["role"] {

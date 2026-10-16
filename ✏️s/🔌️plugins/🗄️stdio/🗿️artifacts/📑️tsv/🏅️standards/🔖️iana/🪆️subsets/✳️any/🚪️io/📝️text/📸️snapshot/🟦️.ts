@@ -49,5 +49,5 @@ export const stdioTsvIanaAnySnapshotTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseTsvSnapshotText(value: unknown, at = "$"): TsvSnapshotText {
-  return stdioTsvIanaAnySnapshotTextGuardObject(value, `${at}`);
+  return stdioTsvIanaAnySnapshotTextGuardString(value, `${at}`);
 }

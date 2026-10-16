@@ -1,0 +1,31 @@
+# Compiler Worker And Stage Ownership Design
+
+Source tracing on2026-10-16; implementation is HIGH Nx-owned. This design authorizes Source corrections under existing ordinary FS/process/SQLite tests only. No physical compiler/Native/cache/publication qualification is granted.
+
+## Actual Isolated Bun Compiler
+
+The real parent withBunBundleFiles retains whole-host CPU capacity, streams a closed request to the actual fixed Bun compiler child, receives bounded file frames and joins its terminal process. The internal compile main currently reacquires the same CPU reservation, which cannot work after raw environment-marker inheritance is refused. Preserve this isolated killable process. Its private compile body is an internal compiler leaf; the actual parent scope owns the direct process through close. Remove the worker's redundant local reservation and any claim that a copied HELD/count field lends capacity. Clear the HELD marker for this child, authenticate the actual received Original and its existing closed Native caller workspace/mode before stdin/work, keep compileBunBundle private, and trace every actual entry reference/human launch so public build commands always enter the real parent owner. No new nonce/token/FD/provider/adopter or IPC-as-lease proof is required or accepted. The projected Original is process provenance only.
+
+The parent must inspect actual privately allotted parallelism, requiring all current host workers before spawning unbounded Bun work. A numeric environment hint cannot satisfy that check. Its narrowed canonical control covers child birth, setup failure, streaming, cancellation, terminal join and consumer drainage. Lease release occurs after actual terminal process and accepted descendants, including a failed setup. Source ordinary-child SQLite busy/free and cancellation laws can prove that direct custody; actual Bun compiler/runtime remains separate. A same-process Bun.build replacement would lose bounded child termination and is not selected.
+
+## Actual Component Stage Roster
+
+Only one production stage reads mutable context.widen: OS plugin driver-stages optimize calls widen(availableParallelism()) immediately before Binaryen. describe/model/transpile/browser/complete do not request widening. Current componentStagePlanV1 supplies no workerProtocol, so they all enter under one jobserver slot. Transpile invokes JCO through Node with bounded v8/UV hints; optimizer passes an explicit BINARYEN_CORES budget. The current stage callback receives outer options.control, which cannot establish a narrower actual allotment.
+
+Replace the mutable widening API with a schema-owned REQUIRED stage capacity request: single, available, whole-host, or cleanup. These are scheduling intents, never authority. single holds exactly one genuine jobserver token. available holds one then opportunistically acquires extra currently available tokens once BEFORE callback, respecting the real FIFO queue. whole-host waits for the actual entire jobserver and additionally requires the genuine parent reservation to equal current host capacity before admitting an unbounded compiler. cleanup is only the existing cheap finalizer and has no compute allotment. The domain plan authors single for describe/model/transpile/browser/complete, available for optimize, cleanup for discard. Any actual future unbounded Bun stage must explicitly author whole-host. No guessed all-stage maximum, optional legacy field or compatibility widening method remains.
+
+After actual token admission, scope each computational callback with exactly the number of held slots under the real parent compiler capacity scope and pass its genuine narrowed control plus immutable parallelism DATA. Return tokens only after canonical callback/accepted-descendant drain. The pure count model and independent SQLite/FIFO ordinary mechanisms must establish requested-versus-granted distinction, unavailable-token behavior, fairness, cancellation, no early release and no inferred authority from environment. Existing Cargo/jobserver jobs remain shared-pool participants; their exposed whole-pool worker limit must not be confused with an independent local reservation. All actual declarations/tests/callers must migrate atomically when this API is implemented.
+
+Actual Core component-pass and OS plugin stage files are Nx-owned. Root has not edited them. The global Rust writer, cross-process recursive build Scripts, actual production concurrency and platform receiver qualification remain open.
+
+
+## Actual Launcher Consumer Frontier
+
+After the stage/driver Source cut, the actual Repo Cargo launcher still needs the same retained input/store versus compiler-only CPU separation. `admitted` wraps `execute` in `withCompilerCapacityScopeV1`; `execute` calls `options.consume` after the real child is terminal while that scope remains retained. The optional `beforeConsume` callback is not a canonical CPU-scope release. This can retain the global capacity lease through a completed-output/Host consumer. Root observed this actual Source and informed the Nx execution owner; no launcher change or runtime qualification is included in the current stage checkpoint.
+
+The remaining producer census also includes raw CMake/Python/VSCode namespaces and long-lived development compilers. Whole-host admission is necessary for a genuinely unbounded compiler child, but retaining that admission through an idle serving lifetime does not establish the requested concurrent iteration performance. Any future separation must preserve the actual dependency/input readers and original phase while ending only actual compiler work; environment markers or an invented worker count do not prove bounded execution. Warm-hit admission ordering and independent build throughput still require actual current physical qualification before default activation.
+
+| Observed Actual Source | SHA-256 |
+| --- | --- |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts` | `c203317ccc6bec7ffc6fb3e7871349c5891b4ae41679c52a73acae31dc61e7e9` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts` | `df7b4a644aa2c7edca1a236aa002c2d1bbc847280cc7f1b2eebfe66b339c817c` |

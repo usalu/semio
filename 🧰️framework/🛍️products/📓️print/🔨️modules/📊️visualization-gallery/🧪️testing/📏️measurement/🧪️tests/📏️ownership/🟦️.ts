@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import { printPdfMeasurementHashV1 } from "../../📥️pdf/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import cases from "../🧫️fixtures/📏️measurement/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 
 test("PDF measurement uses the same canonical bytes across metadata and compression", () => {
     const expected = Buffer.from(sha256(new TextEncoder().encode(cases.canonicalPdf))).toString("hex");

@@ -63,7 +63,7 @@ fn prepared_readback_reads_the_production_target_and_never_publishes_cancelled_b
         let format = if bgra { gpu_device::TextureFormat::Bgra8UnormSrgb } else { gpu_device::TextureFormat::Rgba8UnormSrgb };
         let layout = PreparedReadbackLayout::new(row["width"].as_u64().unwrap() as u32, row["height"].as_u64().unwrap() as u32, bgra).unwrap();
         let mut target = None;
-        crate::draw::PreparedCompositeTarget::ensure(&device, &mut target, layout.width, layout.height, format);
+        semio_framework_ui_wgpu_draw_execution::PreparedCompositeTarget::ensure(&device, &mut target, layout.width, layout.height, format);
         let target = target.unwrap();
         for pixel in row["rgba"].as_array().unwrap().chunks_exact(4) {
             let rgba: Vec<u8> = pixel.iter().map(|byte| byte.as_u64().unwrap() as u8).collect();

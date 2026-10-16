@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "maxItems": 256,
+  "items": {
+    "$ref": "#/$defs/Value"
+  },
+  "$defs": {
+    "Value": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string",
+          "maxLength": 512
+        },
+        {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/Value"
+          }
+        },
+        {
+          "type": "object",
+          "maxProperties": 256,
+          "additionalProperties": {
+            "$ref": "#/$defs/Value"
+          }
+        }
+      ]
+    }
+  }
+}

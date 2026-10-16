@@ -24,7 +24,8 @@ import {readExactCargoLawPreparationV1} from "../../../../../../../../../🔨️
 import {nativeOwnerTestManifestRequestV1} from "../../🗺️owner-test-manifests/🟦️.ts";
 const owner=resolve(import.meta.dir,"../.."),fixture=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/📬️test-body/🔣️.json"),"utf8"));
 const source=ts.createSourceFile("native.ts",readFileSync(resolve(owner,"🟦️.ts"),"utf8"),ts.ScriptTarget.Latest,true);
-const ownerEnvironment=source.statements.find((node:any)=>node.name?.text==="ownerEnvironmentV1")!.getText(source).replace(/^export /,"");
+const environmentSource=ts.createSourceFile("environment.ts",readFileSync(resolve(owner,"🌱️environment/🟦️.ts"),"utf8"),ts.ScriptTarget.Latest,true);
+const ownerEnvironment=environmentSource.statements.find((node:any)=>node.name?.text==="ownerEnvironmentV1")!.getText(environmentSource).replace(/^export /,"");
 const native=source.statements.find((node:any)=>node.name?.text==="NativeScript")!.getText(source).replace(/^export /,"");
 const library=resolve(owner,"../../.."),bodySource=ts.createSourceFile("cargo-admission.ts",readFileSync(resolve(library,"🏃️process/🦀️cargo/🎟️admission/🟦️.ts"),"utf8"),ts.ScriptTarget.Latest,true);
 const consume=bodySource.statements.find((node:any)=>node.name?.text==="runRepositoryCargoTests")!.getText(bodySource).replace(/^export /,"");

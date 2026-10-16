@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import fixture from "./🧫️fixtures/🔣️.json";
 import relationalSchema from "../../../🧬️schema/🏛️relational/🔣️.json";
-import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {SqliteAllocationControl,ValueError} from "../../../🟦️.ts";
 import authority from "./🧫️fixtures/🛂️authority.json";
 import {readFileSync} from "node:fs";

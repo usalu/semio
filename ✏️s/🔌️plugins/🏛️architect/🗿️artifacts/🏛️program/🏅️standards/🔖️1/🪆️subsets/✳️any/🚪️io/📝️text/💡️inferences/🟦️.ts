@@ -49,5 +49,5 @@ export const architectProgramInferenceTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseProgramInferenceText(value: unknown, at = "$"): ProgramInferenceText {
-  return architectProgramInferenceTextGuardObject(value, `${at}`);
+  return architectProgramInferenceTextGuardString(value, `${at}`);
 }

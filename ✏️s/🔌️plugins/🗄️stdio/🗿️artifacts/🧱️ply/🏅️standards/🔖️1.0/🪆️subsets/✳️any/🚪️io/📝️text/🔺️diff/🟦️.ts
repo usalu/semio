@@ -49,5 +49,5 @@ export const stdioPly10AnyDiffTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parsePlyDiffText(value: unknown, at = "$"): PlyDiffText {
-  return stdioPly10AnyDiffTextGuardObject(value, `${at}`);
+  return stdioPly10AnyDiffTextGuardString(value, `${at}`);
 }

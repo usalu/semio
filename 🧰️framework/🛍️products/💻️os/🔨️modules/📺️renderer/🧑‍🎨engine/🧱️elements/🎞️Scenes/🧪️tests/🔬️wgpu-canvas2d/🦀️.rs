@@ -77,7 +77,7 @@ fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
         pane_id: None,
         binding_id: None,
         presence: UiPresence::default(),
-        canvas_2d: Some(ui_wgpu::wgpu::Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }),
+        canvas_2d: Some(semio_framework_ui_scene_plane::Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() }),
         world_3d: None,
         node_graph: None,
         text_editor: None,
@@ -160,10 +160,10 @@ fn catalogue_drop_refusal_keeps_hover_and_never_publishes_a_partial_pair() {
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     for index in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
         let action = format!("occupied-{index}");
-        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&["fixture", action.as_str()]).unwrap();
+        let bytes = semio_framework_ui_action::checked_action_string_bytes(&["fixture", action.as_str()]).unwrap();
         input.reserve_action("fixture", &action, bytes).unwrap().publish().unwrap();
     }
-    assert_eq!(canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, 73.0, 41.0, "{\"kind\":\"rect\"}", &mut input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits),);
+    assert_eq!(canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, 73.0, 41.0, "{\"kind\":\"rect\"}", &mut input), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits),);
     assert!(CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().is_some()), "refusal retains the terminal hover owner for a bounded retry");
     let first = input.take_action_step().unwrap().unwrap().into_descriptor().unwrap();
     assert_eq!(first.action, "occupied-0", "refusal leaves the pre-existing FIFO unchanged and publishes neither terminal member");
@@ -194,8 +194,8 @@ fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let layers = json!([{ "kind": "rectangle", "id": "r1", "x": 10.0, "y": 10.0, "width": 40.0, "height": 20.0, "selected": true }]);
     let node = canvas_scene("s1", layers.to_string());
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
@@ -219,8 +219,8 @@ fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
 #[test]
 fn empty_layer_list_paints_the_react_empty_canvas_label() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
@@ -230,7 +230,7 @@ fn empty_layer_list_paints_the_react_empty_canvas_label() {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_canvas_2d(&canvas_scene("empty-canvas-label", "[]".to_string()), Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
-    let glyphs = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH).count();
+    let glyphs = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH).count();
     assert_eq!(glyphs, CANVAS_2D_EMPTY_LABEL.chars().count(), "an empty canvas paints exactly the label React paints, got {glyphs} glyphs");
 }
 
@@ -488,7 +488,7 @@ fn scene_camera_deadlines_saturate_before_ownership_and_close_cursor_restores_on
 fn canvas_framing_waits_for_measurement_and_preserves_navigation() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let mut scene = canvas_scene("framing-window", "[]".into());
-    scene.canvas_2d.as_mut().unwrap().framing = Some(ui_wgpu::wgpu::Canvas2dFraming { revision: 1, bounds: [-100.0, -50.0, 300.0, 150.0], padding: 40.0 });
+    scene.canvas_2d.as_mut().unwrap().framing = Some(semio_framework_ui_scene_plane::Canvas2dFraming { revision: 1, bounds: [-100.0, -50.0, 300.0, 150.0], padding: 40.0 });
     assert!(!apply_canvas_framing(&scene, Rect::new(0.0, 0.0, 0.0, 0.0)));
     assert!(apply_canvas_framing(&scene, Rect::new(0.0, 0.0, 800.0, 600.0)));
     let fitted = scene_state(&scene.host_id).viewport;
@@ -578,8 +578,8 @@ fn the_armed_gumball_paints_and_any_other_utility_does_not() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let painted = |node: &UiComponentSceneNode| {
-        let mut draw = ui_wgpu::wgpu::DrawList::default();
-        crate::canvas2d_gumball::paint(node, bounds, (0.0, 0.0, 1.0), &ui_wgpu::wgpu::Theme::light(), &mut draw);
+        let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+        crate::canvas2d_gumball::paint(node, bounds, (0.0, 0.0, 1.0), &semio_framework_ui_theme::Theme::light(), &mut draw);
         draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.vector_vertices.len()).sum::<usize>()
     };
     assert!(painted(&gumball_scene("canvas2d-gumball-paint", true)) > 0, "the armed gumball paints its handles");
@@ -591,8 +591,8 @@ fn gumball_pivot_and_boundary_read_the_explicit_appearance_roles() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let node = gumball_scene("canvas2d-gumball-theme", true);
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
-    for theme in [ui_wgpu::wgpu::Theme::light(), ui_wgpu::wgpu::Theme::dark()] {
-        let mut draw = ui_wgpu::wgpu::DrawList::default();
+    for theme in [semio_framework_ui_theme::Theme::light(), semio_framework_ui_theme::Theme::dark()] {
+        let mut draw = semio_framework_ui_draw_contract::DrawList::default();
         crate::canvas2d_gumball::paint(&node, bounds, (0.0, 0.0, 1.0), &theme, &mut draw);
         let colors = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter().map(|vertex| vertex.color)).collect::<Vec<_>>();
         for role in [theme.text, theme.text_muted] {
@@ -607,7 +607,7 @@ fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
     json!([{ "kind": "move", "to": [x, y] }, { "kind": "line", "to": [x + width, y] }, { "kind": "line", "to": [x + width, y + height] }, { "kind": "line", "to": [x, y + height] }, { "kind": "close" }])
 }
 
-pub fn covers(triangle: &[ui_wgpu::wgpu::draw_types::VectorVertex], point: [f32; 2]) -> bool {
+pub fn covers(triangle: &[semio_framework_ui_draw_contract::VectorVertex], point: [f32; 2]) -> bool {
     let side = |a: [f32; 2], b: [f32; 2]| (b[0] - a[0]) * (point[1] - a[1]) - (b[1] - a[1]) * (point[0] - a[0]);
     let (a, b, c) = (triangle[0].position, triangle[1].position, triangle[2].position);
     let (s1, s2, s3) = (side(a, b), side(b, c), side(c, a));
@@ -631,8 +631,8 @@ fn layout_path_records_paint_their_geometry_in_record_order() {
     ]);
     let node = canvas_scene("canvas2d-scene-path", layers.to_string());
     mutate_scene_state("canvas2d-scene-path", |state| state.viewport = Viewport { x: 100.0, y: 75.0, zoom: 2.0 });
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
@@ -640,7 +640,7 @@ fn layout_path_records_paint_their_geometry_in_record_order() {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_canvas_2d(&node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
     }
-    let triangles = |color: [f64; 4]| -> Vec<(usize, Vec<ui_wgpu::wgpu::draw_types::VectorVertex>)> {
+    let triangles = |color: [f64; 4]| -> Vec<(usize, Vec<semio_framework_ui_draw_contract::VectorVertex>)> {
         let color = color.map(|channel| channel as f32);
         draw.layers.iter().enumerate().flat_map(|(index, layer)| layer.vector_vertices.chunks(3).filter(move |triangle| triangle[0].color == color).map(move |triangle| (index, triangle.to_vec()))).collect()
     };
@@ -648,7 +648,7 @@ fn layout_path_records_paint_their_geometry_in_record_order() {
     assert!(!triangles(fill).iter().any(|(_, triangle)| covers(triangle, [30.0, 30.0])), "nothing of the frame paints outside it");
     assert!(!triangles(stroke).is_empty(), "the frame's stroke reaches the vector paint");
     let paper_layer = triangles(paper).iter().map(|(index, _)| *index).max().expect("the paper paints");
-    let glyph_layer = draw.layers.iter().position(|layer| layer.ui_instances.iter().any(|instance| instance.params[2] == ui_wgpu::wgpu::draw_types::KIND_AFFINE_GLYPH)).expect("the text run paints affine glyphs");
+    let glyph_layer = draw.layers.iter().position(|layer| layer.ui_instances.iter().any(|instance| instance.params[2] == semio_framework_ui_draw_contract::KIND_AFFINE_GLYPH)).expect("the text run paints affine glyphs");
     assert!(glyph_layer > paper_layer, "the text run's glyphs follow the paper in a later draw layer ({glyph_layer} > {paper_layer})");
     assert!(draw.layers.iter().filter(|layer| !layer.vector_vertices.is_empty() || !layer.ui_instances.is_empty()).all(|layer| layer.scissor.is_some()), "every painted layer sits under the canvas scissor");
 }

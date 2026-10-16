@@ -8,7 +8,7 @@ use semio_framework_os_store_retirement::resident_backing::{PagedSourceIterator,
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_os_store_ephemeral::SNAPSHOT_READ_RELEASE_PAGE_BYTES;
 use std::collections::VecDeque;
-use super::document_materialize::create_document_envelope;
+use semio_framework_os_store_document::create_document_envelope;
 use super::{fixture_mutations, snapshot_read, resident_backing_tests as tests};
 
 #[test]
@@ -220,7 +220,7 @@ fn undergrants(demand: semio_framework_value::RetirementDemand) -> Vec<RetainedC
 fn artifact_store_resident_uninstalled_catalog_terminal_drop_has_no_unreported_factory_owners() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let maximum = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
-    let mut owners = super::tests::demo_closable_store_owners();
+    let mut owners = semio_framework_os_store_testing_doubles::demo_closable_store_owners();
     while !owners.store_disposer.uninstalled_terminal_is_empty() {
         let demand = owners.store_disposer.uninstalled_demands(0).unwrap();
         assert!(matches!(owners.store_disposer.close_uninstalled_step(demand_grant(demand)).unwrap(), RetainedCloneStep::Progress(_) | RetainedCloneStep::Complete(_)));
@@ -255,8 +255,8 @@ fn artifact_store_resident_uninstalled_catalog_terminal_drop_has_no_unreported_f
 #[test]
 fn artifact_store_resident_consumed_envelope_keeps_catalog_until_exact_terminal_release() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let owners = super::tests::demo_closable_store_owners();
-    let envelope = create_document_envelope::<super::tests::DemoSnapshot, super::fixture_mutations::demo::DemoMutation>("demo/v1", "catalog-cancel", super::tests::DemoSnapshot::default(), None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let owners = semio_framework_os_store_testing_doubles::demo_closable_store_owners();
+    let envelope = create_document_envelope::<semio_framework_os_store_testing_fixtures::DemoSnapshot, semio_framework_os_store_testing_fixtures::demo::DemoMutation>("demo/v1", "catalog-cancel", semio_framework_os_store_testing_fixtures::DemoSnapshot::default(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: owners.uninstalled_envelope_retirement_demands(&envelope).copy_bytes, maximum_capacity_bytes: usize::MAX / 2, maximum_release_bytes: 0, maximum_depth: 64 };
     let (born, progress) = owners.retire_envelope_uninstalled(envelope, grant).unwrap_or_else(|_| panic!("catalog envelope birth is funded"));
     assert!(progress.fits(grant));

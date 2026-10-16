@@ -130,7 +130,7 @@ fn tool_run_panel_of_a_running_run_paints_and_its_buttons_dispatch_the_run() {
 
 /// 🔢️ The arena slot of a freshly reconciled retained node — its record's publication index (`NodeId` keeps its index
 /// private; its `Debug` spelling is the only reader).
-fn arena_index(node: &ui_wgpu::wgpu::NodeId) -> usize {
+fn arena_index(node: &semio_framework_ui_arena::NodeId) -> usize {
     let spelled = format!("{node:?}");
     spelled.split("index: ").nth(1).and_then(|rest| rest.split(',').next()).and_then(|digits| digits.trim().parse().ok()).unwrap_or_else(|| panic!("a node id spells its index: {spelled}"))
 }

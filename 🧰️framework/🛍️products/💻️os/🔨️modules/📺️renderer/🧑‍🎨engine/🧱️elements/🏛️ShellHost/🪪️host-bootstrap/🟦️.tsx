@@ -1,5 +1,7 @@
-import type { ArtifactBootstrapWorkerEvent, BackboneWorkerResponse, DocumentScope } from "@semio-tech/framework-os";
-import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1, documentRuntimeKeyV1 } from "@semio-tech/framework-os";
+import type { DocumentScope } from "@semio-tech/framework/document/scope";
+import type { ArtifactBootstrapWorkerEvent, BackboneWorkerResponse } from "@semio-tech/framework/backbone";
+import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1 } from "@semio-tech/framework/directory/schema";
+import { documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
 import React from "react";
 
 export interface HostAppIdentity {
@@ -216,7 +218,7 @@ export interface InstalledServicePresentationV1 {
 }
 
 /** ♿ Mounts the installed owner's accessible view without interpreting its status. */
-export function InstalledServicePanelV1({ status, presentation, locale, onAction }: { readonly status: import("@semio-tech/framework-os").InstalledServiceStatusV1; readonly presentation: InstalledServicePresentationV1; readonly locale: "en" | "de"; readonly onAction: (action: InferencePortUiAction) => void }) {
+export function InstalledServicePanelV1({ status, presentation, locale, onAction }: { readonly status: import("@semio-tech/framework/inference/service").InstalledServiceStatusV1; readonly presentation: InstalledServicePresentationV1; readonly locale: "en" | "de"; readonly onAction: (action: InferencePortUiAction) => void }) {
   if (status.owner !== presentation.owner || status.serviceId !== presentation.serviceId) throw new Error("installed-service.foreign-presentation");
   return <>{presentation.render(status.payload, locale, onAction)}</>;
 }

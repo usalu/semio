@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/birth/claim/component.json",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumBytes": 16384,
+        "maximumRecords": 3,
+        "maximumOwners": 32,
+        "filename": ".native-birth-",
+        "suffix": ".jsonl",
+        "stages": [
+          "declared",
+          "directory",
+          "root"
+        ],
+        "unknown": "retain-refuse",
+        "numericRetry": false,
+        "metadataOrder": [
+          "directory-parent-sync",
+          "directory-claim",
+          "root-parent-sync",
+          "root-claim"
+        ]
+      }
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "mode"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "Request": {
+      "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ChildRequest"
+    },
+    "Record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "request",
+        "stage",
+        "parent",
+        "directory",
+        "root"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "request": {
+          "$ref": "#/definitions/Request"
+        },
+        "stage": {
+          "enum": [
+            "declared",
+            "directory",
+            "root"
+          ]
+        },
+        "parent": {
+          "$ref": "#/definitions/Identity"
+        },
+        "directory": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/Identity"
+            }
+          ]
+        },
+        "root": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/Identity"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "$ref": "#/definitions/Record"
+}

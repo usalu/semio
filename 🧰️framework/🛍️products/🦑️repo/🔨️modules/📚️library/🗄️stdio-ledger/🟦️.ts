@@ -1,4 +1,4 @@
-/** 🧭️ Stdio artifact ledger: definition catalog, support ledger, structural assertions.
+/** 📒️ Stdio artifact ledger: definition catalog, support ledger, structural assertions.
  * @see 📜️script.ts
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";

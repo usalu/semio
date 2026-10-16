@@ -49,5 +49,5 @@ export const stdioPly10AnySnapshotTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parsePlySnapshotText(value: unknown, at = "$"): PlySnapshotText {
-  return stdioPly10AnySnapshotTextGuardObject(value, `${at}`);
+  return stdioPly10AnySnapshotTextGuardString(value, `${at}`);
 }

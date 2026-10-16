@@ -6,7 +6,7 @@ import { assign, createMachine, initialTransition, transition, type AnyMachineSn
 import lifecycle from "../🧫️fixtures/🧫️lifecycle-law/🔣️.json";
 import { replayReportBlocksFinalize, type InputReplacement } from "@semio-tech/framework-replication";
 import schema from "../../🧬️schema/🔣️.json";
-import replaySchema from "../../../📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json";
+import { conflictReplayReportSchema as replaySchema } from "../../../📡️replication/🧪️tests/🧫️fixtures/🟦️.ts";
 import * as M from "../../🟦️.ts";
 
 const law = lifecycle as any;

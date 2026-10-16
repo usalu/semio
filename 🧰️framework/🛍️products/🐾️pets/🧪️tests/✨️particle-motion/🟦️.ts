@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/✨️effects/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type Emission, type Particle, bornAt, capped, emitterEnds, lifeTicks, lowbias32, mix, particlesOf, periodOf, swarmOf, unit } from "../../🔨️modules/✨️effects/🟦️.ts";
 
 const VECTORS = "shared://✨️particle-motion/🔣️.json";

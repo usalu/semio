@@ -1,7 +1,7 @@
 import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { phaseCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { pathEmojiStatuteFindings } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
+import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 
 import * as Vitest from "vitest";
 import * as Fs from "node:fs";
@@ -73,6 +73,7 @@ import * as External12 from "../../../🔌️plugin/🏪️store/📥️installa
 import * as External13 from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import * as External14 from "../../🚚️distribution/🟦️.ts";
 import * as External15 from "../../../../🟦️.ts";
+import { actorPageFixtureUrl, actorLifetimePatchFixtureUrl, actorLifetimeFixtureUrl } from "../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -412,7 +413,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     itLong("stages canonical command-page bytes unchanged and leaves poll carrying no page", async () => {
       const { execFileSync } = await import("node:child_process");
       const { createShardCommandIngressPages } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📃️page/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(actorPageFixtureUrl, "utf8"));
       const vectors = fixture.vectors.filter((row: { length: number }) => row.length !== 0);
       const inputs = vectors.map((row: { length: number }, index: number) => {
         const command = Uint8Array.from({ length: row.length }, (_, byte) => (byte * fixture.bytePattern.multiplier + fixture.bytePattern.addend) % fixture.bytePattern.modulus);
@@ -446,7 +447,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     itLong("maps issued UI patch receipts and exact ACK or rejection through the generated bridge", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(actorLifetimePatchFixtureUrl, "utf8"));
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
         import { readFileSync } from "node:fs";
@@ -511,7 +512,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     itLong("maps canonical lifecycle requests and receipts through the real generated bridge", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(actorLifetimeFixtureUrl, "utf8"));
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";
         import { readFileSync } from "node:fs";
@@ -697,7 +698,7 @@ export const describe = {};`);
 
     itLong("forwards lifecycle through the captured scheduled turn and rejects the removed side message", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as { vectors: Array<{ value: { kind: string }; hex: string }> };
+      const fixture = JSON.parse(readFileSync(actorLifetimeFixtureUrl, "utf8")) as { vectors: Array<{ value: { kind: string }; hex: string }> };
       const request = fixture.vectors.find((row) => row.value.kind === "close")!;
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { SourceTextModule, createContext } from "node:vm";

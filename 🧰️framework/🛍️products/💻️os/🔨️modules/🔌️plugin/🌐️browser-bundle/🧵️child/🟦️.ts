@@ -1,6 +1,6 @@
-import { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_SCHEMA, childBindingMatches, childLoadStageDeadlineMs, childRecord, childRejectionText, childSha256, isChildLoadProgress, isChildRejectionReason, measureChildValue, type BrowserActorChildBinding, type BrowserActorChildLoadProgressV1, type BrowserActorChildRejectionV1, type BrowserActorChildValue } from "./🧬️schema/🟦️.ts";
-export { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_LOAD_STAGES, BROWSER_ACTOR_CHILD_REJECTION_LIMITS, boundChildText, childLoadDeadlineMs, childLoadStageDeadlineMs, childRejectionReason, childRejectionText, isChildRejectionReason } from "./🧬️schema/🟦️.ts";
-export type { BrowserActorChildLoadProgressV1, BrowserActorChildLoadStageV1, BrowserActorChildRejectionV1, BrowserActorChildValue } from "./🧬️schema/🟦️.ts";
+import { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_SCHEMA, childBindingMatches, childLoadStageDeadlineMs, childRecord, childRejectionText, childSha256, isChildLoadProgress, isChildRejectionReason, measureChildValue, type BrowserActorChildBinding, type BrowserActorChildLoadProgressV1, type BrowserActorChildRejectionV1, type BrowserActorChildValue } from "../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+export { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_LOAD_STAGES, BROWSER_ACTOR_CHILD_REJECTION_LIMITS, boundChildText, childLoadDeadlineMs, childLoadStageDeadlineMs, childRejectionReason, childRejectionText, isChildRejectionReason } from "../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+export type { BrowserActorChildLoadProgressV1, BrowserActorChildLoadStageV1, BrowserActorChildRejectionV1, BrowserActorChildValue } from "../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
 
 type ChildAdmission = Readonly<{ actorId: string; activationGeneration: bigint; bundleSha256: string; bundleByteLength: number }>;
 type ChildPhase = "booting" | "ready" | "loading" | "active" | "closed";

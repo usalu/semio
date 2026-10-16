@@ -34,7 +34,7 @@ export function proveChannelVersionContributionCensusV1(): number {
   const ajv = new Ajv({ strict: true }).addKeyword("x-semio-path-identity").addSchema(schema);
   
   for (const row of corpus.census) {
-    const consumers = admitChannelVersionContributionsV1(row.owners);
+    const consumers = admitChannelVersionContributionsV1(row.owners),expected:readonly string[]=row.expected;
     const files = row.files as Record<string, string>;
     const source = { pin: row.pin, consumers, candidates: row.candidates, readText: (path: string) => { if (!Object.hasOwn(files, path)) throw Error("Missing source"); return files[path]!; } };
     assert.deepEqual(channel.channelVersionCensus(source).findings.map(finding => finding.problem), row.expected, row.id);
@@ -42,9 +42,9 @@ export function proveChannelVersionContributionCensusV1(): number {
       if (!Object.hasOwn(files, consumer.path)) continue;
       const values = Object.values(JSON.parse(files[consumer.path]!));
       const admitted = ajv.compile({ type: "array", items: { enum: [row.pin, ...(consumer.hostileValues ?? [])] } })(values);
-      assert.equal(consumer.arbitrary || admitted, !row.expected.includes("drift"), `${row.id}: independent JSON/AJV pin oracle`);
+      assert.equal(consumer.arbitrary || admitted, !expected.includes("drift"), `${row.id}: independent JSON/AJV pin oracle`);
       const hostile = values.filter(value => (consumer.hostileValues ?? []).includes(value as number)).length;
-      assert.equal(consumer.arbitrary || hostile === (consumer.hostileOccurrences ?? 0), !row.expected.includes("hostile"), `${row.id}: independent hostile-count oracle`);
+      assert.equal(consumer.arbitrary || hostile === (consumer.hostileOccurrences ?? 0), !expected.includes("hostile"), `${row.id}: independent hostile-count oracle`);
     }
   }
   return corpus.census.length;

@@ -19,7 +19,7 @@ use semio_hub_inference::command::{encode_server_stamped_command_v1, CanonicalIn
 use semio_hub_inference::schema::{GisMapInferencePreviewV1, InferenceApprovalReceiptV1, InferenceEventPageV1, InferenceEventV1, InferenceIdentityV1, InferenceJobReceiptV1, InferenceJobReconcileResultV1, InferenceProgressV1, GIS_DOCUMENT_SCHEMA, PROPOSAL_MAX_BYTES, RESULT_MAX_BYTES};
 use semio_hub_inference_ledger::{InferenceJobLedgerV1, InferenceReaderV1};
 use semio_hub_inference::{sha256, InferenceOperationControlV1, InferencePrivateBytesV1};
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{AuthSessionDirectory, DocumentDirectory};
 
 #[cfg(feature = "integration-fixtures")]
 #[path = "🚧️checkpoint-test-gate/🦀️.rs"]

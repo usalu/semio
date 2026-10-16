@@ -110,7 +110,8 @@
           "NODE_DISABLE_COMPILE_CACHE": "1"
         },
         "removedVariables": [
-          "SEMIO_SCRIPT_PROCESS_INVOCATION"
+          "SEMIO_SCRIPT_PROCESS_INVOCATION",
+          "SEMIO_VITE_RUNTIME_CHANNELS_V1"
         ],
         "paidVariables": [
           "SEMIO_COMPILER_CAPACITY_HELD",

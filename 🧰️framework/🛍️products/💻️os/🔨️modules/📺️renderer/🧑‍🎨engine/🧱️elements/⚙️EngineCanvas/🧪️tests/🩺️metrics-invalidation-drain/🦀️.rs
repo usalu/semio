@@ -33,9 +33,12 @@ fn the_primary_metrics_invalidation_scan_terminates_within_the_fixed_slot_table(
 /// `GpuContext` no unit test can mint.
 #[test]
 fn realize_step_drains_the_whole_metrics_invalidation_scan_in_one_answer() {
-    const SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
-    let start = SOURCE.find("if self.metrics_invalidation_scan.is_some() {").expect("the realize ladder still guards on the scan");
-    let arm = &SOURCE[start..start + SOURCE[start..].find("return Ok(false);").expect("the arm answers not-yet")];
+    #[allow(non_snake_case)]
+    fn SOURCE() -> &'static str {
+        semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs")
+    }
+    let start = SOURCE().find("if self.metrics_invalidation_scan.is_some() {").expect("the realize ladder still guards on the scan");
+    let arm = &SOURCE()[start..start + SOURCE()[start..].find("return Ok(false);").expect("the arm answers not-yet")];
     assert!(arm.contains("for _ in 0..=ENGINE_SURFACE_CAPACITY {"), "the arm drains the scan against the fixed slot ceiling");
     assert!(arm.contains("if self.invalidate_primary_metrics_step() {"), "the drain stops on the scan's own terminal answer");
     assert!(!arm.contains("self.invalidate_primary_metrics_step();\n            self.note_realize_stall"), "no single-slot advance remains");

@@ -1,9 +1,9 @@
 import{withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
-import {buildModePolicy,readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import{repositoryExactCargoProfileV1}from"./📋️profile/🟦️.ts";
 import {join} from "node:path";
 import {runOwnedCommand,captureOwnedProcess,type OwnedCommandOptions,type OwnedProcessCaptureOptions,type OwnedProcessCaptureResult} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {runExactCargoLaws,readExactCargoLawPolicyV1,exactExecutableFingerprint,originalNativeLibraryDirectory,type ExactCargoLawPreparationOptionsV1,type ExactCargoLawOptions,type ExactCargoLawPort,type ExactCargoLawReceipt} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import {checkScriptInvocation,advanceScriptInvocation,scriptInvocationEnvironment} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,checkScriptInvocation,advanceScriptInvocation,scriptInvocationEnvironment} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
 import {cargoRepositoryPackageSelections,cargoWorkspacePreparationInvocationV1,type CargoPreparationInvocationV1} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
@@ -11,7 +11,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../📦️packages/�
 import preparationSchema from "../🛠️preparation/🧬️schema/🔣️.json";
 import preparationPolicy from "../🛠️preparation/📋️policy/🔣️.json";
 import {withRepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {compilerAdmissionBudgetV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../📥️dependencies/🟦️.ts";
 
 /** 📋️ Declares Repository preparation line authority independently of byte capacity. */
@@ -36,13 +36,15 @@ export type RepositoryExactCargoLawOptions=Omit<ExactCargoLawOptions,"storage"|"
 
 /** 🦀️ Owns Repository selection and preparation for exact native laws. */
 export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLawOptions,port?:RepositoryExactCargoLawPort):Promise<readonly ExactCargoLawReceipt[]> {
+  const invocation=options.invocation,control=options.control;requireIssuedResourceControlInvocationV1(control,invocation);
+  return withIssuedResourceOperationV1(control,async()=>{
+  const consumer=Object.getOwnPropertyDescriptor(options,"consume");if(consumer&&(!("value"in consumer)||typeof consumer.value!=="function"&&consumer.value!==undefined))throw Error("Own repository exact Cargo output consumer required");if(consumer?.value&&port!==undefined)throw Error("Actual repository exact Cargo producers required for output consumption");
   const preparation=readRepositoryCargoPreparationPolicyV1(options.preparation);
   readExactCargoLawPolicyV1(options.policy);
-  checkScriptInvocation(options.invocation);
-  const mode=readBuildMode(Object.getOwnPropertyDescriptor(options.invocation.capabilities,"buildMode")?.value),profile=buildModePolicy(mode).cargoProfile;
-  for(const args of [options.cargoArgs??[],...options.groups.map(group=>group.cargoArgs??[])])if(args.some(arg=>arg==="--release"||arg==="--profile"||arg.startsWith("--profile=")))throw Error("Exact Cargo profile belongs to the original caller build mode");
-  await advanceScriptInvocation(options.invocation, "repository:exact-cargo-selection", "loading");
-  const root=getWorkspaceRoot(),network=repositoryCargoNetworkV1(options.invocation,root),control=scriptCompilerAdmissionControlV1(options.invocation,"repository:exact-cargo-storage",0);
+  checkScriptInvocation(invocation);
+  const {mode,profile}=repositoryExactCargoProfileV1(Object.getOwnPropertyDescriptor(invocation.capabilities,"buildMode")?.value,[options.cargoArgs??[],...options.groups.map(group=>group.cargoArgs??[])]);
+  await advanceScriptInvocation(invocation, "repository:exact-cargo-selection", "loading");
+  const root=getWorkspaceRoot(),network=repositoryCargoNetworkV1(invocation,root);
   return await withRepositoryCompilerStoreV1(root,mode,control,options.env??process.env,async (store,control)=>{
   const environment:Readonly<Record<string,string|undefined>>={...store.environment,CARGO_NET_OFFLINE:String(network.offline)},artifactDirectory=store.captureDirectory;
   const selected = options.manifestPath||options.manifestPaths ? [] : cargoRepositoryPackageSelections(root, options.groups.map(group => group.package));
@@ -53,29 +55,25 @@ export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLa
     nativeLibraryDirectory:host.nativeLibraryDirectory,
     prepare: async (command, args, capture) => {
       if (command === "cargo") {
-        if (capture.invocation !== options.invocation) throw Error("Exact original Cargo preparation invocation required");
-        const started = performance.now();
-        await advanceScriptInvocation(options.invocation, "repository:exact-cargo-preparation", "running");
-        const remaining=():number=>{
-          checkScriptInvocation(options.invocation);
-          const parent=options.invocation.control.remainingMilliseconds(),phase=capture.budgetMs===0?null:capture.budgetMs-(performance.now()-started),budget=parent===null?phase:phase===null?parent:Math.min(parent,phase);
-          if(budget!==null&&budget<=0)throw Error("Exact Cargo phase authority exhausted during preparation");
-          return budget??0;
-        };
+        if (capture.invocation !== invocation) throw Error("Exact original Cargo preparation invocation required");
+        requireIssuedResourceControlRefinementV1(control,capture.control);
+        await advanceScriptInvocation(invocation, "repository:exact-cargo-preparation", "running");
+        const remaining=():number=>compilerAdmissionBudgetV1(capture.control);
         remaining();
         const request=await host.prepare(command,args,capture);
-        if(request)await host.execute(request.command,[...request.args],request.cwd,"cargo:selected-preparation",remaining(),{env:scriptInvocationEnvironment(options.invocation,{...request.environment,...environment}),stdout:"stderr",output:{maximumBytes:capture.maxOutputBytes,maximumLines:preparation.maximumOutputLines},signal:options.invocation.control.signal,onProgress:async line=>{await advanceScriptInvocation(options.invocation,"repository:exact-cargo-preparation","running");process.stderr.write(line+"\n");}});
+        if(request)await host.execute(request.command,[...request.args],request.cwd,"cargo:selected-preparation",remaining(),{env:scriptInvocationEnvironment(invocation,{...request.environment,...environment}),stdout:"stderr",output:{maximumBytes:capture.maxOutputBytes,maximumLines:preparation.maximumOutputLines},signal:capture.control.signal,onProgress:async line=>{await advanceScriptInvocation(invocation,"repository:exact-cargo-preparation","running");process.stderr.write(line+"\n");}});
         remaining();
       }
     },
     withBuildInputs:async(command,args,capture,phaseControl,body)=>{
-      if(command!=="cargo"||args[0]!=="test"||capture.invocation!==options.invocation)throw Error("Original exact Cargo dependency operation required");
+      if(command!=="cargo"||args[0]!=="test"||capture.invocation!==invocation)throw Error("Original exact Cargo dependency operation required");
       const selector=args.indexOf("--manifest-path"),manifest=args[selector+1];
       if(selector<0||!manifest||!Object.values(manifestPaths).includes(manifest))throw Error("Original exact Cargo dependency manifest required");
-      return withRepositoryCargoInputsV1({invocation:options.invocation,consumption:{kind:"compiler",producer:"artifact",operation:"test"},workspace:root,cwd:root,manifest,args,network,control:phaseControl,storage:store.storage,environment},input=>{if(input.selections.length!==1)throw Error("One issued exact Cargo manifest selection required");return withCompilerWorkspaceWriteV1(store.storage,join(root,".cache/b/l/m/data"),input.control,()=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control}));});
+      return withRepositoryCargoInputsV1({invocation:invocation,consumption:{kind:"compiler",producer:"artifact",operation:"test"},workspace:root,cwd:root,manifest,args,network,control:phaseControl,storage:store.storage,environment},input=>{if(input.selections.length!==1)throw Error("One issued exact Cargo manifest selection required");return withCompilerWorkspaceWriteV1(store.storage,join(root,".cache/b/l/m/data"),input.control,()=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control}));});
     },
-    probe:(command,args,capture)=>host.capture(command,args,capture),
+    probe:host.capture,
   };
-  return runExactCargoLaws({...options,storage:store.storage,sourceBoundary:store.sourceBoundary,leaseDirectory:join(root,".cache/b/l/m/data"),env:environment,nativeEnv:{...options.nativeEnv,CARGO_HOME:environment.CARGO_HOME,CARGO_BUILD_BUILD_DIR:environment.CARGO_BUILD_BUILD_DIR,TMPDIR:environment.TMPDIR,TMP:environment.TMP,TEMP:environment.TEMP,SEMIO_TEST_ARTIFACT_DIR:artifactDirectory},artifactDir:artifactDirectory,cargoArgs:["--profile",profile,...(options.cargoArgs??[])],manifestPaths,cargoTargetDir:environment.CARGO_TARGET_DIR!},preparedPort);
+  return runExactCargoLaws({...options,consume:consumer?.value,invocation,control,storage:store.storage,sourceBoundary:store.sourceBoundary,leaseDirectory:join(root,".cache/b/l/m/data"),env:environment,nativeEnv:{...options.nativeEnv,CARGO_HOME:environment.CARGO_HOME,CARGO_BUILD_BUILD_DIR:environment.CARGO_BUILD_BUILD_DIR,TMPDIR:environment.TMPDIR,TMP:environment.TMP,TEMP:environment.TEMP,SEMIO_TEST_ARTIFACT_DIR:artifactDirectory},artifactDir:artifactDirectory,cargoArgs:["--profile",profile,...(options.cargoArgs??[])],manifestPaths,cargoTargetDir:environment.CARGO_TARGET_DIR!},preparedPort);
+  });
   });
 }

@@ -3,32 +3,32 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️document/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️generations/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️synapses/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️widgets/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
-    "🔨️modules/🏠️host/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
-    "🧪️tests/🧰️support/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️generations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️document/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️widgets/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️synapses/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
+    "🔨️modules/🏠️host/📦️packages/🦀️rust",
+    "🧪️tests/🧰️support/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",
@@ -132,10 +132,10 @@ version = "1.0.149"
 features = [ "raw_value" ]
 
 [workspace.dependencies.semio-s-procedural-core-semantic-ui]
-path = "../../🫀️core/🖼️semantic-ui/📦️packages/🦀️rust"
+path = "../../🫀️foundation/🖼️semantic-ui/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-procedural-core-generation-sqlite]
-path = "../../🫀️core/🧬️generation/🪶️sqlite/📦️packages/🦀️rust"
+path = "../../🫀️foundation/🧬️generation/🪶️sqlite/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-procedural-2d-model]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
@@ -211,6 +211,12 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 
 [workspace.dependencies.semio-s-artifact-procedural-2d-mut-document]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️document/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-procedural-core-generation-sqlite-test-support]
+path = "../../🫀️foundation/🧬️generation/🪶️sqlite/🧪️tests/🧰️support/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-procedural-core-generation-sqlite-native]
+path = "../../🫀️foundation/🧬️generation/🪶️sqlite/🚦️native/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

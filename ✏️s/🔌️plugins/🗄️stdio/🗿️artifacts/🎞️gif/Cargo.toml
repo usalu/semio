@@ -3,34 +3,32 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-  "🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
-  "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
-  "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
-  "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-  "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixture/📦️packages/🦀️rust",
-  "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
-  "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
-  "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-  "📦️packages/🦀️rust",
+    "🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixture/📦️packages/🦀️rust",
+    "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+    "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "📦️packages/🦀️rust",
 ]
 exclude = [
-  "**/🏅️standards/**",
-  "**/👽️guest/**",
-  "**/🔮️oracles/**",
-  "**/🏭️bridge/**",
-  "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust",
-  "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust",
-  "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📖️reader/📦️packages/🦀️rust",
-  "🔮️oracles/📦️packages/🦀️rust"
+    "**/🏭️bridge/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+    "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust",
+    "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust",
+    "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📖️reader/📦️packages/🦀️rust",
+    "🔮️oracles/📦️packages/🦀️rust",
 ]
 
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
-  "**/🏅️standards/**",
   "**/👽️guest/**",
   "**/🔮️oracles/**",
-  "**/🏭️bridge/**"
+  "**/🏭️bridge/**",
 ]
 member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 

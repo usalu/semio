@@ -49,5 +49,5 @@ export const stdioPptxEcma376BaseDiffTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parsePptxDiffText(value: unknown, at = "$"): PptxDiffText {
-  return stdioPptxEcma376BaseDiffTextGuardObject(value, `${at}`);
+  return stdioPptxEcma376BaseDiffTextGuardString(value, `${at}`);
 }

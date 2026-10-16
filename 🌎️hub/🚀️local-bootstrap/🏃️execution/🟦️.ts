@@ -1,10 +1,25 @@
+import {decodeCargoProvenanceV1} from "@semio-tech/process/native-receipt";
+import {repositoryLeaseDirectoryV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import {withRepositoryDevelopmentStateTaskV1,type RepositoryDevelopmentStateV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💾️development/🟦️.ts";
+import {AsyncLocalStorage} from "node:async_hooks";
+import {lstat,mkdir,rm} from "node:fs/promises";
+import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withCapturedCargoArtifactsTaskV1,type CapturedCargoArtifactsV1} from "@semio-tech/process/native-build";
+import {withRepositoryPublishedCargoExecutableV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
+import {buildRepositoryCargoArtifacts} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import {repositoryCargoNetworkV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {withRepositoryCacheStoreV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import {advanceLocalHubReadinessProgressV1,type LocalHubReadinessProgressV1,captureLocalHubStartV1,localHubHostPolicyV1,advanceLocalHubHostStateV1,LocalHubHostLedgerV1,type LocalHubHostStateV1,type LocalHubStartDataV1} from "../🎛️host/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { randomBytes } from "node:crypto";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import type { Duplex } from "node:stream";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
@@ -29,28 +44,21 @@ export const LOCAL_READINESS_STALL_BOUND_MS = 30_000;
  * abandons a hub that is still loading. */
 export const TRUSTED_CATALOG_READINESS_STALL_BOUND_MS = 300_000;
 
-export type LocalHubRunAllocationOperations = Readonly<{
-  makeTemporaryDirectory: (prefix: string) => string;
-  protectDirectory: (path: string) => void;
-  removeDirectory: (path: string) => void;
-}>;
-
-export type LocalHubStartOptions = Readonly<{
-  port?: number;
-  dataDir?: string;
-  capture?: boolean;
-  adminSubjects?: readonly string[];
-  isolatedSecuritySmoke?: boolean;
-  binaryPath?: string;
-  /** 🔐️ When set, the child keeps `OS_HUB_ADMIN_TOKEN` for operator surfaces (collab e2e admin checks). */
-  adminToken?: string;
-  inferenceCheckpointControl?: boolean;
-  runParent?: string;
-  allocationOperations?: LocalHubRunAllocationOperations;
-}>;
-
+declare const localHubHostBrand:unique symbol;
+/** 🏠️ Identifies a private retained executable and data owner; paths and receipts cannot mint it. */
+export type LocalHubHostV1=Readonly<{readonly[localHubHostBrand]:true}>;
+export type LocalHubStartOptions=LocalHubStartDataV1;
+/** 📋️ Exposes actual retained Host facts only inside its enrolled consumer. */
+export type LocalHubHostContextV1=Readonly<{invocation:ScriptInvocation;control:ResourceLeaseControl;workspace:string;root:string;dataRoot:string;diagnosticsRoot:string;binaryPath:string;environment:Readonly<Record<string,string|undefined>>}>;
+type HostScopeV1={readonly facts:LocalHubHostContextV1;readonly ledger:LocalHubHostLedgerV1;readonly runs:Set<LocalHubRun>;readonly closing:Map<LocalHubRun,Promise<void>>;readonly runParent:string;readonly maximumOutputBytes:number;readonly maximumOutputLines:number;bodySettled:boolean;live:boolean;state:LocalHubHostStateV1};
+type RunScopeV1={readonly host:HostScopeV1;readonly control:ResourceLeaseControl;readonly child:ChildProcess;readonly runRoot:string;readonly ledger:LocalHubHostLedgerV1;readonly terminal:Promise<void>;terminalFacts?:Promise<Readonly<{status:number|null;signal:NodeJS.Signals|null}>>;readonly identity:Readonly<{dev:bigint;ino:bigint}>;readonly output:Set<Promise<void>>;readonly cleanup:unknown[];terminationRequested:boolean;closed:boolean;finishing:boolean;failurePresent:boolean;failure:unknown;finish?:Promise<void>;timer?:ReturnType<typeof setInterval>;abort:()=>void;expectedTermination?:"graceful"|"crash"};
+const hostSlotsV1=new WeakMap<ScriptInvocation,Set<number>>();
+const localHubHostsV1=new WeakMap<LocalHubHostV1,HostScopeV1>(),localHubRunsV1=new WeakMap<LocalHubRun,RunScopeV1>(),hostFramesV1=new AsyncLocalStorage<Readonly<{host:LocalHubHostV1;control:ResourceLeaseControl}>>();
+function throwHubFailuresV1(failures:readonly unknown[]):never{if(failures.length>1)throw new AggregateError(failures,"Local Hub body, accepted work and close failed");throw failures[0];}
+function requireLocalHubHostV1(host:LocalHubHostV1):HostScopeV1{const scope=localHubHostsV1.get(host);if(!scope?.live)throw Error("Actual live local Hub Host required");requireIssuedResourceControlInvocationV1(scope.facts.control,scope.facts.invocation);for(const run of scope.runs){const record=localHubRunsV1.get(run);if(record?.failurePresent)throw record.failure;}return scope;}
+function hostControlV1(host:LocalHubHostV1,scope:HostScopeV1):ResourceLeaseControl{const frame=hostFramesV1.getStore(),control=frame?.host===host?frame.control:scope.facts.control;requireIssuedResourceControlInvocationV1(control,scope.facts.invocation);requireIssuedResourceControlRefinementV1(scope.facts.control,control);return control;}
 export type LocalHubRun = {
-  readonly child: ChildProcess;
+  readonly child:Readonly<{pid:number|undefined;exitCode:number|null;signalCode:NodeJS.Signals|null}>;
   readonly pipe: Duplex;
   readonly reader: LocalFrameReader;
   readonly channelKey: Buffer;
@@ -63,27 +71,12 @@ export type LocalHubRun = {
    * {@link localHubReadinessAdmitted} compares against. */
   readonly publicSessionIssuance: boolean;
   readonly output: () => string;
-  readonly removeRunRoot: () => void;
   readonly inferenceCheckpointPipe?: Duplex;
   readonly inferenceCheckpointReader?: LocalFrameReader;
   inferenceCheckpointEnteredJobId?: string;
   inferenceCheckpointProgress?: Readonly<{ progressCursor: number; completed: number; total: number }>;
   inferenceCheckpointReleased?: boolean;
-  finishPromise?: Promise<void>;
 };
-
-const nativeAllocationOperations: LocalHubRunAllocationOperations = {
-  makeTemporaryDirectory: (prefix) => mkdtempSync(prefix),
-  protectDirectory: (path) => protectOwnerOnly(path, "directory"),
-  removeDirectory: (path) => rmSync(path, { recursive: true, force: true }),
-};
-
-/** 📁 Allocates one private local-Hub root through an injectable, owned filesystem boundary. */
-export function allocateLocalHubRunRoot(parent = tmpdir(), operations: LocalHubRunAllocationOperations = nativeAllocationOperations): Readonly<{ path: string; remove: () => void }> {
-  const path = operations.makeTemporaryDirectory(join(parent, "semio-hub-run-"));
-  operations.protectDirectory(path);
-  return { path, remove: () => operations.removeDirectory(path) };
-}
 
 /** 🔌 Reserves and releases one loopback port before a bounded child starts. */
 export async function freeLoopbackPort(): Promise<number> {
@@ -405,112 +398,78 @@ export async function claimHubBackend(repoRoot: string, name: HubBackendName, ow
 }
 //#endregion 🔖️BackendServers
 
-/** 🚀 Starts one loopback Hub and completes its authenticated local-bootstrap handshake. */
-export async function startLocalHub(repoRoot: string, root: string, profiles: readonly LocalProfile[], options: LocalHubStartOptions = {}): Promise<LocalHubRun> {
-  if (profiles.length === 0 || profiles.length > 8) throw new Error("local bootstrap profiles must contain 1..=8 entries");
-  const runId = randomBytes(16).toString("hex");
-  const channelKey = randomBytes(32);
-  const allocation = allocateLocalHubRunRoot(options.runParent, options.allocationOperations);
-  const runRoot = allocation.path;
-  const port = options.port ?? (await freeLoopbackPort());
-  const captured: Buffer[] = [];
-  let capturedBytes = 0;
-  const capture = (chunk: Buffer): void => {
-    const remaining = 1024 * 1024 - capturedBytes;
-    if (remaining <= 0) return;
-    const retained = Buffer.from(chunk.subarray(0, remaining));
-    captured.push(retained);
-    capturedBytes += retained.length;
-  };
-  const env: NodeJS.ProcessEnv = {
-    ...process.env,
-    OS_HUB_MODE: "development",
-    OS_HUB_BIND: "127.0.0.1",
-    OS_HUB_PORT: String(port),
-    OS_HUB_DATA: options.dataDir ?? join(runRoot, "data"),
-  };
-  if (options.inferenceCheckpointControl) env.OS_HUB_TEST_INFERENCE_CHECKPOINT_FD = "4";
-  else delete env.OS_HUB_TEST_INFERENCE_CHECKPOINT_FD;
-  delete env.OS_HUB_TRUSTED_CATALOG_BUNDLE;
-  delete env.OS_HUB_TRUSTED_CATALOG_PROFILE;
-  if (options.adminToken) env.OS_HUB_ADMIN_TOKEN = options.adminToken;
-  else delete env.OS_HUB_ADMIN_TOKEN;
-  delete env.S_USER;
-  for (const name of Object.keys(env)) if (/^S_.*TOKEN$/.test(name)) delete env[name];
-  if (options.isolatedSecuritySmoke) {
-    env.OS_HUB_STORAGE_BACKEND = "fs";
-    env.OS_HUB_DIRECTORY_BACKEND = "sqlite";
-    delete env.OS_HUB_ADMIN_DIR;
-  }
-  if (options.adminSubjects?.length) env.OS_HUB_ADMIN_SUBJECTS = options.adminSubjects.join(",");
-  else delete env.OS_HUB_ADMIN_SUBJECTS;
-  const publicSessionIssuance = env.OS_HUB_CREDENTIAL_SIGN_IN === "true" || env.OS_HUB_CREDENTIAL_SIGN_IN === "1";
-  const outputMode: "pipe" | "inherit" = options.capture ? "pipe" : "inherit";
-  const child = spawn(options.binaryPath ?? hubBinaryPath(repoRoot), [], {
-    cwd: root,
-    env,
-    shell: false,
-    stdio: ["ignore", outputMode, outputMode, "pipe", options.inferenceCheckpointControl ? "pipe" : "ignore"],
-  });
-  if (options.capture) {
-    child.stdout?.on("data", capture);
-    child.stderr?.on("data", capture);
-  }
-  const pipe = child.stdio[3] as Duplex;
-  const inferenceCheckpointPipe = options.inferenceCheckpointControl ? (child.stdio[4] as Duplex) : undefined;
-  if (!pipe || (options.inferenceCheckpointControl && !inferenceCheckpointPipe)) {
-    channelKey.fill(0);
-    terminateOwnedChildTree(child);
-    await waitForChildExit(child, 2_000).catch(() => undefined);
-    allocation.remove();
-    throw new Error("local bootstrap inherited endpoint was not created");
-  }
-  const reader = new LocalFrameReader(pipe);
-  const run: LocalHubRun = {
-    child,
-    pipe,
-    reader,
-    channelKey,
-    runId,
-    port,
-    runRoot,
-    publicSessionIssuance,
-    output: () => Buffer.concat(captured).toString("utf8"),
-    removeRunRoot: allocation.remove,
-    inferenceCheckpointPipe,
-    inferenceCheckpointReader: inferenceCheckpointPipe ? new LocalFrameReader(inferenceCheckpointPipe, GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES + 4, "GIS inference checkpoint control") : undefined,
-    inferenceCheckpointReleased: inferenceCheckpointPipe ? false : undefined,
-  };
-  try {
-    const initialize = { schema: LOCAL_BOOTSTRAP_SCHEMA, kind: "initialize", runId, channelKey: channelKey.toString("hex"), profiles };
-    await writeLocalFrame(pipe, initialize);
-    initialize.channelKey = "";
-    const now = Date.now();
-    const helloExchange = randomBytes(16).toString("hex");
-    const hello = authenticatedFrame(channelKey, {
-      schema: LOCAL_BOOTSTRAP_SCHEMA,
-      kind: "hello",
-      runId,
-      sequence: 1,
-      exchangeId: helloExchange,
-      issuedAt: now,
-      expiresAt: now + LOCAL_BOOTSTRAP_DEADLINE_MS,
-      launcherNonce: randomBytes(32).toString("hex"),
-    });
-    await writeLocalFrame(pipe, hello);
-    const accepted = await reader.read();
-    verifyAuthenticatedFrame(channelKey, accepted);
-    if (accepted.schema !== LOCAL_BOOTSTRAP_SCHEMA || accepted.kind !== "hello-accepted" || accepted.runId !== runId || accepted.exchangeId !== helloExchange || accepted.sequence !== 1)
-      throw new Error("local bootstrap mutual hello binding mismatch");
-    return run;
-  } catch (error) {
-    let diagnostics = run.output().slice(-2_048).replaceAll(channelKey.toString("hex"), "<channel-key-redacted>");
-    for (const profile of profiles) diagnostics = diagnostics.replaceAll(profile.subject, "<profile-subject-redacted>");
-    const status = child.exitCode;
-    await finishLocalHub(run);
-    throw new Error(`local bootstrap handshake failed (child status ${status ?? "running"}): ${error instanceof Error ? error.message : "unknown"}\n${diagnostics}`);
-  }
+function narrowerHostControlV1(invocation:ScriptInvocation,current:ResourceLeaseControl,requested:ResourceLeaseControl):ResourceLeaseControl{requireIssuedResourceControlInvocationV1(current,invocation);requireIssuedResourceControlInvocationV1(requested,invocation);try{requireIssuedResourceControlRefinementV1(current,requested);return requested;}catch{requireIssuedResourceControlRefinementV1(requested,current);return current;}}
+
+/** 🛂️ Requires actual live Host membership without exposing its private owner. */
+export function requireLocalHubHostHandleV1(host:LocalHubHostV1):void{requireLocalHubHostV1(host);}
+
+/** 🧵️ Accepts bounded Host work under its actual carried restriction before effects. */
+export function withLocalHubHostTaskV1<T>(host:LocalHubHostV1,phaseControl:ResourceLeaseControl,body:(context:LocalHubHostContextV1)=>Promise<T>):Promise<T>{const scope=requireLocalHubHostV1(host),current=hostControlV1(host,scope);const actual=narrowerHostControlV1(scope.facts.invocation,current,phaseControl);return scope.ledger.run(()=>withIssuedResourceOperationV1(actual,async()=>{checkResourceLeaseControl(actual);const result=await hostFramesV1.run({host,control:actual},()=>body(Object.freeze({...scope.facts,control:actual})));checkResourceLeaseControl(actual);return result;}));}
+
+function beginLocalHubHostCloseV1(scope:HostScopeV1):void{if(scope.state.phase==="open")scope.state=advanceLocalHubHostStateV1(scope.state,"stop");scope.ledger.stop();for(const run of scope.runs)if(!scope.closing.has(run)){let work:Promise<void>;try{work=finishLocalHub(run);}catch(error){work=Promise.reject(error);}scope.closing.set(run,work);void work.catch(()=>{});}}
+
+async function withLocalHubHostStorageV1<T>(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,binaryPath:string,environment:Readonly<Record<string,string|undefined>>,retainedData:Readonly<{directory:string;environment:Readonly<Record<string,string|undefined>>}>|undefined,body:(host:LocalHubHostV1,context:LocalHubHostContextV1)=>Promise<T>):Promise<T>{
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),workspace=authority.repositoryRoot,mode=authority.original.buildMode,root=join(workspace,"🌎️hub"),slots=hostSlotsV1.get(invocation)??new Set<number>();hostSlotsV1.set(invocation,slots);let slot=0;while(slots.has(slot)&&slot<localHubHostPolicyV1().maximumActiveRuns)slot++;if(slot>=localHubHostPolicyV1().maximumActiveRuns)throw Error("Finite retained Hub Host capacity exhausted");slots.add(slot);
+ try{return await withRepositoryCacheStoreV1(workspace,"diagnostics",invocation,phaseControl,(store,control)=>withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:control,request:{version:1,mode,owner:"hub/host/"+slot}},destination=>withArtifactDestinationTaskV1(destination,invocation,async sink=>{
+  const dataRoot=retainedData?.directory??join(sink.directory,"data");if(dataRoot.length>localHubHostPolicyV1().maximumPathUnits)throw Error("Finite local Hub data path required");if(!retainedData)await mkdir(dataRoot);const identity=await lstat(dataRoot,{bigint:true});if(!identity.isDirectory()||identity.isSymbolicLink())throw Error("Actual local Hub data root required");let held:HostScopeV1|undefined,value:T|undefined;const failures:unknown[]=[];
+  try{value=await withRequestedIssuedResourceControlV1(sink.control,0,async control=>{
+   const host=Object.freeze({})as LocalHubHostV1,facts=Object.freeze({invocation,control,workspace,root,dataRoot,diagnosticsRoot:sink.directory,binaryPath,environment:Object.freeze({...environment,...retainedData?.environment,...sink.environment})}),scope:HostScopeV1={facts,ledger:new LocalHubHostLedgerV1(),runs:new Set(),closing:new Map(),runParent:sink.directory,maximumOutputBytes:Math.min(localHubHostPolicyV1().maximumOutputBytes,authority.transport.maximumBytes),maximumOutputLines:Math.min(localHubHostPolicyV1().maximumOutputLines,authority.transport.maximumLines),bodySettled:false,live:true,state:Object.freeze({phase:"open",runs:0,pending:0,births:0})};held=scope;localHubHostsV1.set(host,scope);let result:T|undefined;const errors:unknown[]=[];
+   try{result=await withLocalHubHostTaskV1(host,control,async context=>{try{return await body(host,context);}finally{beginLocalHubHostCloseV1(scope);}});}catch(error){errors.push(error);}beginLocalHubHostCloseV1(scope);try{await scope.ledger.drain();}catch(error){if(!errors.includes(error))errors.push(error);}const settled=await Promise.allSettled([...scope.closing.values()]);for(const row of settled)if(row.status==="rejected"&&!errors.includes(row.reason))errors.push(row.reason);scope.ledger.close();if(errors.length)throwHubFailuresV1(errors);return result as T;
+  });}catch(error){failures.push(error);}
+  if(held){held.bodySettled=true;beginLocalHubHostCloseV1(held);const settled=await Promise.allSettled([...held.closing.values()]);for(const row of settled)if(row.status==="rejected"&&!failures.includes(row.reason))failures.push(row.reason);held.live=false;try{held.state=advanceLocalHubHostStateV1(held.state,"close");}catch(error){failures.push(error);}}
+  try{const current=await lstat(dataRoot,{bigint:true});if(!current.isDirectory()||current.isSymbolicLink()||current.dev!==identity.dev||current.ino!==identity.ino)throw Error("Local Hub data identity changed");}catch(error){failures.push(error);}if(failures.length)throwHubFailuresV1(failures);return value as T;
+ })));}finally{slots.delete(slot);}
 }
+
+/** 🧪️ Borrows the exact retained executable into an independently paid candidate data lifetime. */
+export function withLocalHubHostCandidateV1<T>(parent:LocalHubHostV1,phaseControl:ResourceLeaseControl,body:(host:LocalHubHostV1,context:LocalHubHostContextV1)=>Promise<T>):Promise<T>{return withLocalHubHostTaskV1(parent,phaseControl,context=>withLocalHubHostStorageV1(context.invocation,context.control,context.binaryPath,context.environment,undefined,body));}
+
+/** 📦️ Retains one actual published Hub executable and paid ephemeral data until all runs close. */
+export function withPublishedLocalHubHostV1<T>(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(host:LocalHubHostV1,context:LocalHubHostContextV1)=>Promise<T>):Promise<T>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),manifest=join(authority.repositoryRoot,"🌎️hub/📦️packages/🦀️rust/Cargo.toml"),name=process.platform==="win32"?"os-hub.exe":"os-hub";return withRepositoryPublishedCargoExecutableV1(manifest,name,authority.repositoryRoot,authority.original.buildMode,invocation,phaseControl,(artifact,control)=>withLocalHubHostStorageV1(invocation,control,artifact.path,artifact.environment,undefined,body));}
+
+/** 🗄️ Retains genuine non-recomputable development state without artifact-cache adoption or removal. */
+export function withPublishedDevelopmentLocalHubHostV1<T>(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,state:RepositoryDevelopmentStateV1,body:(host:LocalHubHostV1,context:LocalHubHostContextV1)=>Promise<T>):Promise<T>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),manifest=join(authority.repositoryRoot,"🌎️hub/📦️packages/🦀️rust/Cargo.toml"),name=process.platform==="win32"?"os-hub.exe":"os-hub";return withRepositoryPublishedCargoExecutableV1(manifest,name,authority.repositoryRoot,authority.original.buildMode,invocation,phaseControl,(artifact,control)=>withRepositoryDevelopmentStateTaskV1(state,invocation,control,data=>withResourceLeases({directory:repositoryLeaseDirectoryV1(authority.repositoryRoot),control:data.control,signal:data.control.signal,resources:[{resource:"local-hub:data:"+data.directory,mode:"exclusive"}]},()=>withRequestedIssuedResourceControlV1(data.control,0,control=>withLocalHubHostStorageV1(invocation,control,artifact.path,artifact.environment,data,body)))));}
+
+/** 🏗️ Produces the canonical managed Hub before acquiring its retained publication reader. */
+export async function withBuiltLocalHubHostV1<T>(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(host:LocalHubHostV1,context:LocalHubHostContextV1)=>Promise<T>):Promise<T>{
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),workspace=authority.repositoryRoot,manifest=join(workspace,"🌎️hub/📦️packages/🦀️rust/Cargo.toml"),name=process.platform==="win32"?"os-hub.exe":"os-hub";let expected:Readonly<{digest:string;bytes:number;permissions:number}>|undefined;
+ await buildRepositoryCargoArtifacts(manifest,["--bin","os-hub"],workspace,{producer:"artifact",invocation,control:phaseControl,network:repositoryCargoNetworkV1(invocation,workspace),consume:capture=>withCapturedCargoArtifactsTaskV1(capture,async view=>{
+  const path=view.files.get(name);if(!path||view.owner!=="🌎️hub/📦️packages/🦀️rust/Cargo.toml")throw Error("Actual built Hub deliverable required");const facts=await lstat(path),observation=decodeCargoProvenanceV1(view.observation),outputs=observation.units.flatMap(unit=>unit.artifacts).filter(row=>row.stagedPath?.replaceAll("\\","/").split("/").at(-1)===name);if(observation.status!==0||observation.cancelled||outputs.length!==1||!outputs[0]?.sha256||outputs[0].sha256!==outputs[0].stagedSha256||!facts.isFile()||facts.isSymbolicLink()||facts.nlink!==1||facts.size<1)throw Error("Exact completed Hub source and published output binding required");expected=Object.freeze({digest:outputs[0].stagedSha256,bytes:facts.size,permissions:facts.mode&0o777});await view.recheck();
+ })});
+ return withRepositoryPublishedCargoExecutableV1(manifest,name,workspace,authority.original.buildMode,invocation,phaseControl,(artifact,control)=>{if(!expected||artifact.receipt.digest!==expected.digest||artifact.receipt.bytes!==expected.bytes||artifact.receipt.permissions!==expected.permissions)throw Error("Current Hub publication differs from the actual completed producer binding");return withLocalHubHostStorageV1(invocation,control,artifact.path,artifact.environment,undefined,body);});
+}
+
+/** 🦀️ Mints a candidate Host only inside the real completed Cargo producer token lifetime. */
+export function withCapturedLocalHubHostV1<T>(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,capture:CapturedCargoArtifactsV1,body:(host:LocalHubHostV1,context:LocalHubHostContextV1)=>Promise<T>):Promise<T>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);return withCapturedCargoArtifactsTaskV1(capture,async view=>{const actual=narrowerHostControlV1(invocation,view.control,phaseControl),workspace=readNativeCallerAuthorityV1(invocation.capabilities).repositoryRoot,owner=relative(workspace,join(workspace,"🌎️hub/📦️packages/🦀️rust/Cargo.toml")).replaceAll("\\","/"),binary=view.files.get(process.platform==="win32"?"os-hub.exe":"os-hub");if(view.owner!==owner||!binary)throw Error("Exact completed Hub producer required");return withLocalHubHostStorageV1(invocation,actual,binary,scriptInvocationEnvironment(invocation,process.env),undefined,body);});}
+
+/** 🚀 Starts one genuine Host child and retains birth, handshake and terminal ownership. */
+export function startLocalHub(host:LocalHubHostV1,profiles:readonly LocalProfile[],options:LocalHubStartOptions={}):Promise<LocalHubRun>{
+ const scope=requireLocalHubHostV1(host),control=hostControlV1(host,scope),captured=captureLocalHubStartV1(profiles,options);scope.state=advanceLocalHubHostStateV1(scope.state,"run-start");const birth=scope.state.births;let born=false;
+ try{return scope.ledger.run(async()=>{try{return await withIssuedResourceOperationV1(control,async()=>{
+  let created:Readonly<{path:string;dev:bigint;ino:bigint}>|undefined,receiver:Readonly<{child:ChildProcess;record:RunScopeV1}>|undefined,key:Buffer|undefined;try{const runId=randomBytes(16).toString("hex"),channelKey=randomBytes(32);key=channelKey;const runRoot=join(scope.runParent,"r"+birth.toString(16));if(runRoot.length>localHubHostPolicyV1().maximumPathUnits)throw Error("Finite local Hub run path required");if(scope.state.phase!=="open")throw Error("Local Hub Host birth admission closed");
+   checkResourceLeaseControl(control);await mkdir(runRoot);const facts=await lstat(runRoot,{bigint:true});if(!facts.isDirectory()||facts.isSymbolicLink())throw Error("Actual created Hub run root required");created=Object.freeze({path:runRoot,dev:facts.dev,ino:facts.ino});const port=captured.options.port??await freeLoopbackPort(),env:NodeJS.ProcessEnv={...scope.facts.environment,OS_HUB_MODE:"development",OS_HUB_BIND:"127.0.0.1",OS_HUB_PORT:String(port),OS_HUB_DATA:scope.facts.dataRoot};
+   env.OS_HUB_CREDENTIAL_SIGN_IN=captured.options.credentialSignIn?"1":"0";if(captured.options.traceLevel)env.SEMIO_TRACE_LEVEL=captured.options.traceLevel;delete env.SEMIO_TRACE_SINK;delete env.OS_HUB_TRUSTED_CATALOG_BUNDLE;delete env.OS_HUB_TRUSTED_CATALOG_PROFILE;delete env.OS_HUB_BINARY;delete env.S_USER;for(const name of Object.keys(env))if(/^S_.*TOKEN$/u.test(name))delete env[name];if(captured.options.inferenceCheckpointControl)env.OS_HUB_TEST_INFERENCE_CHECKPOINT_FD="4";else delete env.OS_HUB_TEST_INFERENCE_CHECKPOINT_FD;if(captured.options.adminToken)env.OS_HUB_ADMIN_TOKEN=captured.options.adminToken;else delete env.OS_HUB_ADMIN_TOKEN;if(captured.options.adminSubjects?.length)env.OS_HUB_ADMIN_SUBJECTS=captured.options.adminSubjects.join(",");else delete env.OS_HUB_ADMIN_SUBJECTS;if(captured.options.isolatedSecuritySmoke){env.OS_HUB_STORAGE_BACKEND="fs";env.OS_HUB_DIRECTORY_BACKEND="sqlite";delete env.OS_HUB_ADMIN_DIR;}
+   checkResourceLeaseControl(control);const outputMode="pipe",child=spawn(scope.facts.binaryPath,[],{cwd:scope.facts.root,env:scriptResourceProcessEnvironmentV1(control,env),shell:false,detached:process.platform!=="win32",stdio:["ignore",outputMode,outputMode,"pipe",captured.options.inferenceCheckpointControl?"pipe":"ignore"]});
+   let resolveTerminal!:()=>void;const terminal=new Promise<void>(done=>resolveTerminal=done),record:RunScopeV1={host:scope,control,child,runRoot,ledger:new LocalHubHostLedgerV1(),terminal,identity:Object.freeze({dev:facts.dev,ino:facts.ino}),output:new Set(),cleanup:[],terminationRequested:false,closed:false,finishing:false,failurePresent:false,failure:undefined,abort:()=>{}};child.once("error",error=>{if(!record.failurePresent){record.failurePresent=true;record.failure=error;}});child.once("close",(code,signal)=>{if(!record.finishing&&!record.failurePresent&&(record.expectedTermination==="crash"?signal!=="SIGKILL":code!==0||signal!==null)){record.failurePresent=true;record.failure=Error("Local Hub child failed: "+String(code??signal));}record.closed=true;clearInterval(record.timer);control.signal.removeEventListener("abort",record.abort);resolveTerminal();});receiver=Object.freeze({child,record});
+   const fail=(error:unknown)=>{if(!record.failurePresent){record.failurePresent=true;record.failure=error;}if(record.terminationRequested)return;record.terminationRequested=true;try{terminateOwnedChildTree(child);}catch(close){record.cleanup.push(close);}};record.abort=()=>fail(control.signal.reason);control.signal.addEventListener("abort",record.abort,{once:true});record.timer=setInterval(()=>{try{checkResourceLeaseControl(control);}catch(error){fail(error);}},50);record.timer.unref();const output:Buffer[]=[];let outputBytes=0,outputLines=0;const captureOutput=(destination:NodeJS.WriteStream,chunk:Buffer)=>{if(record.failurePresent)return;outputBytes+=chunk.length;for(const byte of chunk)if(byte===10)outputLines++;if(outputBytes>scope.maximumOutputBytes||outputLines>scope.maximumOutputLines||output.length>=localHubHostPolicyV1().maximumOutputChunks||record.output.size>=localHubHostPolicyV1().maximumPendingOperations){fail(Error("Local Hub output capacity exceeded"));return;}const retained=Buffer.from(chunk);output.push(retained);if(!captured.options.capture){const work=Promise.resolve().then(()=>{checkResourceLeaseControl(control);return new Promise<void>((done,reject)=>{destination.write(retained,error=>error?reject(error):done());});});record.output.add(work);void work.then(()=>record.output.delete(work),error=>{record.output.delete(work);fail(error);});}};child.stdout?.on("data",chunk=>captureOutput(process.stdout,chunk));child.stderr?.on("data",chunk=>captureOutput(process.stderr,chunk));
+   const pipe=child.stdio[3]as Duplex,checkpoint=captured.options.inferenceCheckpointControl?child.stdio[4]as Duplex:undefined;if(!pipe||captured.options.inferenceCheckpointControl&&!checkpoint){fail(Error("Local bootstrap inherited endpoint required"));await terminal;clearInterval(record.timer);throw record.failure;}const run:LocalHubRun={child:Object.freeze({pid:child.pid,get exitCode(){return child.exitCode;},get signalCode(){return child.signalCode;}}),pipe,reader:new LocalFrameReader(pipe),channelKey,runId,port,runRoot,publicSessionIssuance:env.OS_HUB_CREDENTIAL_SIGN_IN==="true"||env.OS_HUB_CREDENTIAL_SIGN_IN==="1",output:()=>Buffer.concat(output).toString("utf8"),inferenceCheckpointPipe:checkpoint,inferenceCheckpointReader:checkpoint?new LocalFrameReader(checkpoint,GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES+4,"GIS inference checkpoint control"):undefined,inferenceCheckpointReleased:checkpoint?false:undefined};for(const key of["child","pipe","reader","channelKey","runId","port","runRoot","publicSessionIssuance","output","inferenceCheckpointPipe","inferenceCheckpointReader"])Object.defineProperty(run,key,{writable:false,configurable:false});localHubRunsV1.set(run,record);scope.runs.add(run);born=true;for(const reader of[run.reader,run.inferenceCheckpointReader])if(reader){const read=reader.read.bind(reader);Object.defineProperty(reader,"read",{value:(milliseconds?:number)=>withLocalHubRunTaskV1(run,()=>read(milliseconds)),writable:false,configurable:false});}
+   try{if(!pipe||captured.options.inferenceCheckpointControl&&!checkpoint)throw Error("Local bootstrap inherited endpoint required");checkResourceLeaseControl(control);const initialize={schema:LOCAL_BOOTSTRAP_SCHEMA,kind:"initialize",runId,channelKey:channelKey.toString("hex"),profiles:captured.profiles};try{await writeLocalFrame(pipe,initialize);}finally{initialize.channelKey="";}const now=Date.now(),exchangeId=randomBytes(16).toString("hex");await writeLocalFrame(pipe,authenticatedFrame(channelKey,{schema:LOCAL_BOOTSTRAP_SCHEMA,kind:"hello",runId,sequence:1,exchangeId,issuedAt:now,expiresAt:now+LOCAL_BOOTSTRAP_DEADLINE_MS,launcherNonce:randomBytes(32).toString("hex")}));const accepted=await run.reader.read();verifyAuthenticatedFrame(channelKey,accepted);if(accepted.schema!==LOCAL_BOOTSTRAP_SCHEMA||accepted.kind!=="hello-accepted"||accepted.runId!==runId||accepted.exchangeId!==exchangeId||accepted.sequence!==1)throw Error("Local bootstrap mutual hello binding mismatch");checkResourceLeaseControl(control);if(record.failurePresent)throw record.failure;return run;}catch(error){const failures=[error];try{await finishLocalHub(run);}catch(close){if(!failures.includes(close))failures.push(close);}throwHubFailuresV1(failures);}
+  }catch(error){if(born)throw error;const failures=[error];key?.fill(0);if(receiver){try{terminateOwnedChildTree(receiver.child);await receiver.record.terminal;await Promise.allSettled([...receiver.record.output]);}catch(close){failures.push(close);}}if(created){try{const current=await lstat(created.path,{bigint:true});if(!current.isDirectory()||current.isSymbolicLink()||current.dev!==created.dev||current.ino!==created.ino)throw Error("Exact unstarted local Hub root required");await rm(created.path,{recursive:true});}catch(cleanup){failures.push(cleanup);}}throwHubFailuresV1(failures);}
+ });}catch(error){if(!born)scope.state=advanceLocalHubHostStateV1(scope.state,"run-close");throw error;}});}catch(error){scope.state=advanceLocalHubHostStateV1(scope.state,"run-close");throw error;}
+}
+
+/** 🛂️ Checks actual live run membership without returning paths, controls or mutable process authority. */
+export function requireLocalHubRunV1(run:LocalHubRun):void{const scope=localHubRunsV1.get(run);if(!scope||scope.closed||scope.finishing||!scope.host.live)throw Error("Actual live local Hub child required");if(scope.failurePresent)throw scope.failure;}
+
+/** 🔗️ Retains a genuine run operation through the exact Host and actual carried control. */
+export function withLocalHubRunTaskV1<T>(run:LocalHubRun,body:(control:ResourceLeaseControl,context:LocalHubHostContextV1)=>Promise<T>):Promise<T>{requireLocalHubRunV1(run);const scope=localHubRunsV1.get(run);if(!scope)throw Error("Actual local Hub child required");const frame=hostFramesV1.getStore(),current=frame&&localHubHostsV1.get(frame.host)===scope.host?frame.control:scope.control,control=narrowerHostControlV1(scope.host.facts.invocation,scope.control,current);return scope.host.ledger.run(()=>scope.ledger.run(()=>withIssuedResourceOperationV1(control,async()=>{checkResourceLeaseControl(control);const value=await body(control,Object.freeze({...scope.host.facts,control}));checkResourceLeaseControl(control);return value;})));}
+
+/** ⏳️ Joins the private child's actual close rather than exposing its mutable process handle. */
+export function waitForLocalHubExitV1(run:LocalHubRun):Promise<Readonly<{status:number|null;signal:NodeJS.Signals|null}>>{const scope=localHubRunsV1.get(run);if(!scope)throw Error("Actual local Hub child required");return scope.terminalFacts??=scope.terminal.then(()=>Object.freeze({status:scope.child.exitCode,signal:scope.child.signalCode}));}
+
+
+/** 🛑️ Observes one authored graceful stop or deliberate crash without adopting a pid or clearing prior failure. */
+export function stopLocalHubV1(run:LocalHubRun,intent:"graceful"|"crash"):Promise<Readonly<{status:number|null;signal:NodeJS.Signals|null}>>{if(intent!=="graceful"&&intent!=="crash")throw Error("Closed local Hub stop intent required");return withLocalHubRunTaskV1(run,async()=>{const scope=localHubRunsV1.get(run);if(!scope||scope.expectedTermination)throw Error("One actual local Hub stop intent required");checkResourceLeaseControl(scope.control);scope.expectedTermination=intent;scope.child.kill(intent==="crash"?"SIGKILL":"SIGTERM");await scope.terminal;if(scope.failurePresent)throw scope.failure;checkResourceLeaseControl(scope.control);return Object.freeze({status:run.child.exitCode,signal:run.child.signalCode});});}
 
 /** ✅ Classifies a readiness response against the exact local run and component boundary. */
 export function localHubReadinessAdmitted(body: Record<string, any>, status: number, runId: string, bootstrapSecuritySmoke = false, publicSessionIssuance = false): boolean {
@@ -533,16 +492,23 @@ function localHubReadinessObservation(run: LocalHubRun, answer: string): string 
 
 /** ⏱️ Polls the bounded readiness endpoint until the exact local run is admitted, bounded by how long
  * the hub goes without showing any sign of advancing rather than by how long the boot takes. */
-export async function waitForReadiness(run: LocalHubRun, bootstrapSecuritySmoke = false, stallBoundMs = LOCAL_READINESS_STALL_BOUND_MS): Promise<Record<string, any>> {
+export function waitForReadiness(run:LocalHubRun,bootstrapSecuritySmoke=false,stallBoundMs=LOCAL_READINESS_STALL_BOUND_MS):Promise<Record<string,any>>{return withLocalHubRunTaskV1(run,async()=>waitForLocalHubReadinessV1(run,bootstrapSecuritySmoke,stallBoundMs));}
+
+async function readLocalHubReadinessV1(response:Response,control:ResourceLeaseControl):Promise<Record<string,any>>{
+ const reader=response.body?.getReader();if(!reader)throw Error("Local Hub readiness response body required");const chunks:Uint8Array[]=[];let bytes=0,failed=false,failure:unknown;
+ try{for(;;){checkResourceLeaseControl(control);const row=await reader.read();if(row.done)break;bytes+=row.value.byteLength;if(bytes>localHubHostPolicyV1().maximumReadinessBytes||chunks.length>=localHubHostPolicyV1().maximumReadinessChunks)throw Error("Local Hub readiness response bound exceeded");chunks.push(row.value);}checkResourceLeaseControl(control);const body=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(Buffer.concat(chunks)));if(!body||typeof body!=="object"||Array.isArray(body))throw Error("Local Hub readiness object required");return body;}catch(error){failed=true;failure=error;throw error;}finally{try{await reader.cancel();}catch(error){if(!failed)throw error;if(!Object.is(error,failure))throw new AggregateError([failure,error],"Readiness read and cancellation failed");}finally{reader.releaseLock();}}
+}
+
+async function waitForLocalHubReadinessV1(run:LocalHubRun,bootstrapSecuritySmoke:boolean,stallBoundMs:number):Promise<Record<string,any>>{
+ if(!Number.isSafeInteger(stallBoundMs)||stallBoundMs<=0||stallBoundMs>TRUSTED_CATALOG_READINESS_STALL_BOUND_MS)throw Error("Authored local Hub readiness stall bound required");const scope=localHubRunsV1.get(run);if(!scope)throw Error("Actual local Hub child required");
   let closedGates = "no /readyz answer was ever received";
-  let observation = "";
-  let observedAt = Date.now();
+  let progress:LocalHubReadinessProgressV1|null=null;
   for (;;) {
-    if (run.child.exitCode !== null) throw new Error("hub exited before readiness");
+    checkResourceLeaseControl(scope.control);if(scope.failurePresent)throw scope.failure;if (run.child.exitCode !== null) throw new Error("hub exited before readiness");
     let answer = "no-answer";
     try {
-      const response = await fetch(`http://127.0.0.1:${run.port}/readyz`, { signal: AbortSignal.timeout(1000) });
-      const body = (await response.json()) as Record<string, any>;
+      const response = await fetch(`http://127.0.0.1:${run.port}/readyz`, { signal: AbortSignal.any([scope.control.signal,AbortSignal.timeout(1000)]) });
+      const body = await readLocalHubReadinessV1(response,scope.control);
       if (localHubReadinessAdmitted(body, response.status, run.runId, bootstrapSecuritySmoke, run.publicSessionIssuance)) return body;
       const blocked = Array.isArray(body.blockedBy) ? (body.blockedBy as { gate: string; reason: string }[]) : [];
       closedGates = blocked.length ? blocked.map((closed) => `${closed.gate}=${closed.reason}`).join(" ") : `status=${body.status} with no closed gate declared`;
@@ -550,14 +516,7 @@ export async function waitForReadiness(run: LocalHubRun, bootstrapSecuritySmoke 
     } catch (error) {
       if (error instanceof Error && error.message === "hub readiness binding mismatch") throw error;
     }
-    const next = localHubReadinessObservation(run, answer);
-    const now = Date.now();
-    if (next !== observation) {
-      observation = next;
-      observedAt = now;
-    } else if (now - observedAt >= stallBoundMs) {
-      throw new Error(`hub readiness stalled — nothing about the hub changed for ${now - observedAt} ms; last observation: ${next}; closed gates: ${closedGates}`);
-    }
+    progress=advanceLocalHubReadinessProgressV1(progress,localHubReadinessObservation(run,answer),Date.now(),stallBoundMs);
     await new Promise<void>((resolveDelay) => setTimeout(resolveDelay, 50));
   }
 }
@@ -568,22 +527,5 @@ export async function waitForChildExit(child: ChildProcess, deadlineMs = LOCAL_B
   await Promise.race([new Promise<void>((resolveExit) => child.once("exit", () => resolveExit())), new Promise<void>((_, reject) => setTimeout(() => reject(new Error("hub child exit deadline exceeded")), deadlineMs))]);
 }
 
-/** 🧹 Finishes one local Hub exactly once, clears secrets, and removes only its allocated root. */
-export async function finishLocalHub(run: LocalHubRun): Promise<void> {
-  if (run.finishPromise) return run.finishPromise;
-  run.finishPromise = (async () => {
-    run.pipe.end();
-    run.inferenceCheckpointPipe?.end();
-    run.channelKey.fill(0);
-    if (run.child.exitCode === null) {
-      try {
-        await waitForChildExit(run.child, 2_000);
-      } catch {
-        run.child.kill();
-        await waitForChildExit(run.child, 2_000).catch(() => terminateOwnedChildTree(run.child));
-      }
-    }
-    run.removeRunRoot();
-  })();
-  return run.finishPromise;
-}
+/** 🧹 Stops and joins the exact privately owned child before retiring its created run root. */
+export function finishLocalHub(run:LocalHubRun):Promise<void>{const scope=localHubRunsV1.get(run);if(!scope)throw Error("Actual local Hub child required");if(scope.finish)return scope.finish;if(scope.ledger.inside())throw Error("Local Hub run cannot close its own accepted operation");scope.finishing=true;scope.ledger.stop();const work=(async()=>{const failures:unknown[]=[];if(!scope.host.bodySettled)try{checkResourceLeaseControl(scope.control);}catch(error){failures.push(error);}try{run.pipe?.end();run.inferenceCheckpointPipe?.end();}catch(error){failures.push(error);}run.channelKey.fill(0);if(!scope.closed){let timer:ReturnType<typeof setTimeout>|undefined;try{await Promise.race([scope.terminal,new Promise<void>(done=>{timer=setTimeout(done,2000);})]);}finally{clearTimeout(timer);}if(!scope.closed)terminateOwnedChildTree(scope.child);}await scope.terminal;try{await scope.ledger.drain();}catch(error){failures.push(error);}scope.ledger.close();await Promise.allSettled([...scope.output]);if(scope.failurePresent&&!failures.includes(scope.failure))failures.push(scope.failure);failures.push(...scope.cleanup);try{const identity=await lstat(scope.runRoot,{bigint:true});if(!identity.isDirectory()||identity.isSymbolicLink()||identity.dev!==scope.identity.dev||identity.ino!==scope.identity.ino)throw Error("Exact created Hub run inode required");await rm(scope.runRoot,{recursive:true});}catch(error){failures.push(error);}scope.host.runs.delete(run);scope.host.state=advanceLocalHubHostStateV1(scope.host.state,"run-close");if(failures.length)throwHubFailuresV1(failures);})();scope.finish=work;void work.catch(()=>{});return work;}

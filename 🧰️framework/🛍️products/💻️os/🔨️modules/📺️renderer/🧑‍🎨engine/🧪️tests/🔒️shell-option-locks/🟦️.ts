@@ -5,7 +5,7 @@ import { FRAMEWORK_HISTORY_BODY_KEY, resolveUiDirtyScope } from "@semio-tech/fra
 import exampleOfferFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️example-offer/🔣️.json";
 import exampleOfferSchema from "../../🧱️elements/🐚️Shell/📚️example-offer/🔣️.json";
 import Ajv2020 from "ajv/dist/2020";
-import examplePickerFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📚️example-picker.json";
+import { manifestExamplePickerFixture as examplePickerFixture } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import { examplesForApp, examplesForDialect, surfaceAppId, type AppRole } from "@semio-tech/framework";
 import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { describe, expect, it, vi } from "vitest";

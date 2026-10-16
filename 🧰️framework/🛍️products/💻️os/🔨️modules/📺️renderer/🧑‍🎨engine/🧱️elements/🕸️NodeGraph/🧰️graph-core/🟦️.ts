@@ -3,11 +3,11 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | NodeGraph}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { type DagTextDecodeControl } from "../../../../../♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts";
-import type { DagWireTypeRefusal } from "../../../../../♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🟦️.ts";
-import { NativeDecodeControl } from "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import { type DagTextDecodeControl } from "@semio-tech/framework/infinite/board/io/text/dag-input";
+import type { DagWireTypeRefusal } from "@semio-tech/framework/infinite/board/schema/dag-input";
+import { NativeDecodeControl } from "@semio-tech/framework/value/decode";
 import { useMemo, type KeyboardEvent } from "react";
-import { type WasmCanvasSession } from "@semio-tech/canvas-react-renderer";
+import { type WasmCanvasSession } from "@semio-tech/framework/canvas/react-renderer";
 import { STYLING_METRICS, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import {
   diagramKeyboardAnnouncement,

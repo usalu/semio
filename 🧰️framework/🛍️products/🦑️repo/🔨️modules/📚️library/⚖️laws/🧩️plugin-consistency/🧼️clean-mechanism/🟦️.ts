@@ -1,4 +1,4 @@
-/** 📐️ Wave 4 plugin consistency policy: clean artifact standard subset mechanism rules and derived config.
+/** 🧼️ Wave 4 plugin consistency policy: clean artifact standard subset mechanism rules and derived config.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { canonicalPrimaryFilenameForKind, discoverPackageProblems, loadTaxonomy, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";

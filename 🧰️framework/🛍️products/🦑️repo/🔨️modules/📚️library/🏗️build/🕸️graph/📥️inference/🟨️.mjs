@@ -1917,19 +1917,21 @@ function projectFilesToProcess(context) {
 }
 
 /** 🏭️ Validates complete authored producers independently of the selected executable projection. */
-async function validateGeneratorOutputProducersV1(contracts,projects,workspaceRoot,selection,registry,invocation){
- await libraryBootstrap;const admission=createRequire(import.meta.url)("../🚪️admission/🟦️.ts"),selected=admission.readBuildGraphSelectionV1(selection).kind==="tasks",owners=selected?admission.readBuildOwnerRegistryV1(registry):undefined,byRoot=new Map(Object.entries(projects).flatMap(([name,project])=>[[resolve(workspaceRoot,project.root),name],...(project.metadata?.nativeRoot?[[resolve(workspaceRoot,project.metadata.nativeRoot),name]]:[])])),authored=new Map(),context={workspaceRoot,invocation};let steps=0;
+async function validateGeneratorOutputProducersV1(contracts,projects,workspaceRoot,selection,registry,context){
+ const check=()=>{if(context.workspaceRoot!==workspaceRoot)throw Error("Actual generator inference workspace context required");if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkScriptInvocation(context.invocation);checkResourceLeaseControl(context.phaseControl);}};check();
+ await libraryBootstrap;check();const admission=createRequire(import.meta.url)("../🚪️admission/🟦️.ts"),selected=admission.readBuildGraphSelectionV1(selection).kind==="tasks",owners=selected?admission.readBuildOwnerRegistryV1(registry):undefined,byRoot=new Map(Object.entries(projects).flatMap(([name,project])=>[[resolve(workspaceRoot,project.root),name],...(project.metadata?.nativeRoot?[[resolve(workspaceRoot,project.metadata.nativeRoot),name]]:[])])),authored=new Map();let steps=0;
  for(const contract of Object.values(contracts)){
   const participants=[contract.ownerPath,...contract.outputRoots.flatMap(output=>output.producer?[output.producer.ownerPath]:[])];if(!participants.some(root=>typeof root==="string"&&byRoot.has(resolve(workspaceRoot,root))))continue;
   for(const output of contract.outputRoots){if(!output.producer)continue;await yieldInferenceV1(context,"build:generator-producers",++steps);const producer=output.producer,separator=producer.target.lastIndexOf(":"),name=producer.target.slice(0,separator),target=producer.target.slice(separator+1);let valid;
    if(selected){
     const owner=owners.owners.find(owner=>owner.name===name&&(owner.root===producer.ownerPath||owner.nativeRoots?.includes(producer.ownerPath)));if(!owner)throw Error(`Generator output has no Build producer: ${output.path}`);
-    let project=authored.get(name);if(!project){const path=join(workspaceRoot,owner.manifest),bytes=readPhysicalSource(path),cargo=owner.manifest.endsWith("Cargo.toml"),declared=cargo?readToml(path):JSON.parse(bytes.toString("utf8"));project=cargo?{name:declared.package?.name,root:owner.root,targets:await cargoTargets(owner.root,workspaceRoot,undefined,createScriptInputCache(context))}:declared;if(project.name!==owner.name||project.root!==undefined&&project.root!==owner.root)throw Error(`Generator output has no Build producer: ${output.path}`);authored.set(name,project);}
+    let project=authored.get(name);if(!project){const path=join(workspaceRoot,owner.manifest),bytes=readPhysicalSource(path),cargo=owner.manifest.endsWith("Cargo.toml"),declared=cargo?readToml(path):JSON.parse(bytes.toString("utf8"));project=cargo?{name:declared.package?.name,root:owner.root,targets:await cargoTargets(owner.root,workspaceRoot,undefined,createScriptInputCache(context))}:declared;check();if(project.name!==owner.name||project.root!==undefined&&project.root!==owner.root)throw Error(`Generator output has no Build producer: ${output.path}`);authored.set(name,project);}
     valid=Boolean(project.targets?.[target]);
    }else valid=byRoot.get(resolve(workspaceRoot,producer.ownerPath))===name&&Boolean(projects[name]?.targets?.[target]);
    if(!valid)throw Error(`Generator output has no Build producer: ${output.path}`);
   }
  }
+ check();
 }
 
 /** 🕸️ Native manifests and package imports contribute edges without spawning a build or installer. */
@@ -1951,7 +1953,7 @@ async function createDependenciesImplementation(_options, context) {
   };
   const authorityPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
   const generators = existsSync(authorityPath) ? readTaxonomyProjectionV1(authorityPath).generatorContracts : {};
-  await validateGeneratorOutputProducersV1(generators,projects,workspaceRoot,context.selection??{kind:"all"},context.registry,context.invocation);
+  await validateGeneratorOutputProducersV1(generators,projects,workspaceRoot,context.selection??{kind:"all"},context.registry,context);
   for (const [name, project] of Object.entries(projects)) {
     const go = goManifest(project.root, workspaceRoot);
     if (go) {

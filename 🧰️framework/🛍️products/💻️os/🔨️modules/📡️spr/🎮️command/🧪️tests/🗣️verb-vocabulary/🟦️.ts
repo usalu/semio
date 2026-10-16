@@ -1,3 +1,4 @@
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 import { type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import assert from "node:assert/strict";
@@ -6,7 +7,7 @@ import { resolve } from "node:path";
 import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🎨️ Proves the closed mutation verb ontology with Ajv, Rust source and native membership laws. */
-export async function checkMutationVerbVocabulary(invocation: ScriptInvocation, repoRoot: string, segments: string[]): Promise<void> {
+export async function checkMutationVerbVocabulary(invocation: ScriptInvocation, control:ResourceLeaseControl, repoRoot: string, segments: string[]): Promise<void> {
   const root = resolve(import.meta.dir, "../.."), schema = JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8"));
   const ontology = schema.$defs.MutationVerbPairV1.oneOf.map((row: { const: { verb: string; record: string } }) => row.const);
   const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🗣️verb-vocabulary/🔣️.json"), "utf8"));
@@ -24,6 +25,6 @@ export async function checkMutationVerbVocabulary(invocation: ScriptInvocation, 
   assert(!validate({ verb: "paint", record: "Painted", authority: true }));
   console.log(`mutation-verb-vocabulary: pairs=${ontology.length} vectors=${fixture.cases.length} Ajv/source parity=green`);
   if (segments.includes("--oracle-only")) return;
-  const laws = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation, policy: configuredExactCargoLawPolicyV1(), cwd: repoRoot, progress: (event) => console.log(`mutation-verb-native ${event.stage} ${event.law ?? event.package}`), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: ["os_spr::command::tests::space_history_verbs_match_the_language_neutral_contract", "os_spr::command::tests::approved_verbs_match_closed_schema"] }] });
+  const laws = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation, control, policy: configuredExactCargoLawPolicyV1(), cwd: repoRoot, progress: (event) => console.log(`mutation-verb-native ${event.stage} ${event.law ?? event.package}`), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: ["os_spr::command::tests::space_history_verbs_match_the_language_neutral_contract", "os_spr::command::tests::approved_verbs_match_closed_schema"] }] });
   console.log(`mutation-verb-native: exact=${laws.length} passed`);
 }

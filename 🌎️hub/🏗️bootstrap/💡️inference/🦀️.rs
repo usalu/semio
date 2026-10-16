@@ -9,7 +9,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use directory::os_directory::access_policy::DirectoryAccessActionV1;
 use directory::os_directory::DocumentScope;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::PrincipalAuthority;
 use semio_hub_inference_runtime_contract::{GisMapApprovalIngressAuthorityV1, InferenceRouteErrorV1};
 use semio_hub_inference_runtime::InferenceApprovalRouteContextV1;
 use serde::{Deserialize, Serialize};

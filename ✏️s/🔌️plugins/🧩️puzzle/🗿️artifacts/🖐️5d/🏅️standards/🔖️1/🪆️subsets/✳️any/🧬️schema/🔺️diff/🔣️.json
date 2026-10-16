@@ -358,7 +358,7 @@
           ]
         },
         "anchor": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Puzzle5dPartAnchor"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dPartAnchor"
         },
         "2d": {
           "$ref": "#/$defs/Puzzle5dPart2dPatch"
@@ -507,28 +507,28 @@
           ]
         },
         "gap": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         },
         "shift": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         },
         "rise": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         },
         "rotation": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         },
         "turn": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         },
         "tilt": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         },
         "x": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         },
         "y": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         }
       }
     },
@@ -652,12 +652,12 @@
       "required": [],
       "properties": {
         "origin": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector3"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Vector3"
         },
         "orientation": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector4"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Vector4"
             },
             {
               "type": "null"
@@ -667,7 +667,7 @@
         "scale": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Puzzle5dScale"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dScale"
             },
             {
               "type": "null"
@@ -808,7 +808,7 @@
           "type": "boolean"
         },
         "specificity": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Puzzle5dCompatSpecificity"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dCompatSpecificity"
         }
       }
     },
@@ -819,10 +819,10 @@
       "required": [],
       "properties": {
         "x": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         },
         "y": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         },
         "shape": {
           "anyOf": [
@@ -837,7 +837,7 @@
         "radius": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
             },
             {
               "type": "null"
@@ -847,7 +847,7 @@
         "width": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
             },
             {
               "type": "null"
@@ -857,7 +857,7 @@
         "height": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
             },
             {
               "type": "null"
@@ -913,7 +913,7 @@
       "required": [],
       "properties": {
         "origin": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector3"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Vector3"
         },
         "meshUrl": {
           "anyOf": [
@@ -928,7 +928,7 @@
         "orientation": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector4"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Vector4"
             },
             {
               "type": "null"
@@ -938,7 +938,7 @@
         "scale": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Puzzle5dScale"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dScale"
             },
             {
               "type": "null"
@@ -964,7 +964,7 @@
       "required": [],
       "properties": {
         "angle": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
         },
         "gripKind": {
           "anyOf": [
@@ -979,7 +979,7 @@
         "radius": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
             },
             {
               "type": "null"
@@ -995,12 +995,12 @@
       "required": [],
       "properties": {
         "position": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector3"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Vector3"
         },
         "direction": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Vector3"
             },
             {
               "type": "null"
@@ -1010,7 +1010,7 @@
         "radius": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Binary64"
             },
             {
               "type": "null"

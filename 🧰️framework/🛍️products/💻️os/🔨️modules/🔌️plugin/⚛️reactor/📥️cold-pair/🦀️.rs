@@ -1,8 +1,9 @@
-use std::{cell::RefCell, rc::Rc};
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+use std::cell::RefCell;
+use std::rc::Rc;
 
-use semio_framework::kernel::{
-    ActorInstanceLifetime, ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES,
-};
+use semio_framework::kernel::{ActorInstanceLifetime, ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES};
 
 const COLD_PAIR_FAULT_MAXIMUM_BYTES: usize = 4 * 1024;
 
@@ -16,19 +17,19 @@ enum ColdDocumentPairPhase {
 }
 
 struct ColdDocumentPairOwner {
-    header: ColdDocumentPairHeader,
-    files: Rc<store::os_store::serialization::ArtifactPackFiles>,
+    pub header: ColdDocumentPairHeader,
+    pub files: Rc<store::os_store::serialization::ArtifactPackFiles>,
     pack_hash: semio_framework_hash::Sha256,
     spr_hash: semio_framework_hash::Sha256,
     aggregate_hash: semio_framework_hash::Sha256,
     reserved_bytes: usize,
     reserved_pages: u32,
-    next_page: u32,
-    phase: ColdDocumentPairPhase,
+    pub next_page: u32,
+    pub phase: ColdDocumentPairPhase,
 }
 
 impl ColdDocumentPairOwner {
-    fn reserve(header: ColdDocumentPairHeader) -> Result<Self, &'static str> {
+    pub fn reserve(header: ColdDocumentPairHeader) -> Result<Self, &'static str> {
         header.validate()?;
         let pack_length = usize::try_from(header.pack_length).map_err(|_| "cold-pair.length")?;
         let spr_length = usize::try_from(header.spr_length).map_err(|_| "cold-pair.length")?;
@@ -51,7 +52,7 @@ impl ColdDocumentPairOwner {
         })
     }
 
-    fn accept(&mut self, page: &ColdDocumentPairPage) -> Result<bool, &'static str> {
+    pub fn accept(&mut self, page: &ColdDocumentPairPage) -> Result<bool, &'static str> {
         if !matches!(self.phase, ColdDocumentPairPhase::Receiving) || page.header != self.header || page.page_index != self.next_page {
             return Err("cold-pair.cursor");
         }
@@ -81,16 +82,16 @@ impl ColdDocumentPairOwner {
         verified
     }
 
-    fn cursor(&self) -> ColdDocumentPairCursor {
+    pub fn cursor(&self) -> ColdDocumentPairCursor {
         self.header.cursor(self.next_page.saturating_sub(1).min(self.header.page_count - 1))
     }
 
     #[cfg(test)]
-    fn retained_bytes(&self) -> usize {
+    pub fn retained_bytes(&self) -> usize {
         self.files.pack.len() + self.files.spr.len()
     }
 
-    fn close_step(&mut self) -> ColdDocumentPairCloseStep {
+    pub fn close_step(&mut self) -> ColdDocumentPairCloseStep {
         self.phase = ColdDocumentPairPhase::Closing;
         let Some(files) = Rc::get_mut(&mut self.files) else {
             return ColdDocumentPairCloseStep { wiped_bytes: 0, closed: false };
@@ -115,18 +116,18 @@ impl ColdDocumentPairOwner {
 }
 
 pub(crate) struct ColdDocumentPairLoad {
-    owner: Rc<RefCell<ColdDocumentPairOwner>>,
-    files: Rc<store::os_store::serialization::ArtifactPackFiles>,
-    pub(crate) finished: bool,
+    pub owner: Rc<RefCell<ColdDocumentPairOwner>>,
+    pub files: Rc<store::os_store::serialization::ArtifactPackFiles>,
+    pub finished: bool,
 }
 
 impl ColdDocumentPairLoad {
     #[cfg(test)]
-    pub(crate) fn lifetime(&self) -> ActorInstanceLifetime {
+    pub fn lifetime(&self) -> ActorInstanceLifetime {
         self.owner.borrow().header.lifetime
     }
 
-    fn files(&self) -> &store::os_store::serialization::ArtifactPackFiles {
+    pub fn files(&self) -> &store::os_store::serialization::ArtifactPackFiles {
         &self.files
     }
 }
@@ -137,20 +138,21 @@ const COLD_PAIR_DOCUMENT_LOAD_OPERATION: u64 = 1 << 63;
 
 /// 🛬️ A verified cold pair whose document loads through the stepped document archive load (`📓️api-stepped-document-load.md`
 /// §8): the claimed load, the archive operation and the last page's cursor every `Loading` answer carries.
-pub(crate) struct ColdPairDocumentLoad {
-    pub(crate) load: ColdDocumentPairLoad,
-    pub(crate) operation: u64,
-    pub(crate) cursor: ColdDocumentPairCursor,
-    pub(crate) superseded: bool,
+#[doc(hidden)]
+pub struct ColdPairDocumentLoad {
+    pub load: ColdDocumentPairLoad,
+    pub operation: u64,
+    pub cursor: ColdDocumentPairCursor,
+    pub superseded: bool,
 }
 
 impl ColdPairDocumentLoad {
-    pub(crate) fn new(load: ColdDocumentPairLoad, transfer_generation: u64, cursor: ColdDocumentPairCursor) -> Self {
+    pub fn new(load: ColdDocumentPairLoad, transfer_generation: u64, cursor: ColdDocumentPairCursor) -> Self {
         Self { load, operation: COLD_PAIR_DOCUMENT_LOAD_OPERATION | transfer_generation, cursor, superseded: false }
     }
 
     /// 🧬️ The whole-document archive of the verified pair: its pack and spr, no members.
-    pub(crate) fn archive(&self) -> store::DocumentArchivePack {
+    pub fn archive(&self) -> store::DocumentArchivePack {
         let files = self.load.files();
         store::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr: files.spr.clone(), members: Vec::new() }
     }
@@ -170,26 +172,27 @@ impl Drop for ColdDocumentPairLoad {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct ColdDocumentPairCloseStep {
     wiped_bytes: usize,
-    closed: bool,
+    pub closed: bool,
 }
 
-pub(crate) struct ColdDocumentPairIngressRegistry<const N: usize> {
-    slots: [Option<Rc<RefCell<ColdDocumentPairOwner>>>; N],
-    closes: [Option<ColdDocumentPairCloseState>; N],
+#[doc(hidden)]
+pub struct ColdDocumentPairIngressRegistry<const N: usize> {
+    pub slots: [Option<Rc<RefCell<ColdDocumentPairOwner>>>; N],
+    pub closes: [Option<ColdDocumentPairCloseState>; N],
     reserved_bytes: usize,
     reserved_pages: u32,
-    close_cursor: usize,
+    pub close_cursor: usize,
 }
 
 #[derive(Clone, Copy)]
 struct ColdDocumentPairCloseState {
-    key: super::instance_lifetime::NativeCloseKey,
-    active: bool,
-    complete: bool,
+    pub key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey,
+    pub active: bool,
+    pub complete: bool,
 }
 
 impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         assert!(N > 0, "cold pair ingress requires fixed capacity");
         Self { slots: std::array::from_fn(|_| None), closes: [None; N], reserved_bytes: 0, reserved_pages: 0, close_cursor: 0 }
     }
@@ -198,11 +201,11 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         lifetime.instance_id as usize % N
     }
 
-    fn fault(cursor: ColdDocumentPairCursor, code: &'static str) -> ColdPairIngressStatus {
+    pub fn fault(cursor: ColdDocumentPairCursor, code: &'static str) -> ColdPairIngressStatus {
         ColdPairIngressStatus::Fault { cursor, fault: code.as_bytes()[..code.len().min(COLD_PAIR_FAULT_MAXIMUM_BYTES)].to_vec() }
     }
 
-    pub(crate) fn accept_page(&mut self, page: &ColdDocumentPairPage, live: Option<ActorInstanceLifetime>) -> ColdPairIngressStatus {
+    pub fn accept_page(&mut self, page: &ColdDocumentPairPage, live: Option<ActorInstanceLifetime>) -> ColdPairIngressStatus {
         let cursor = page.header.cursor(page.page_index);
         if let Err(code) = page.header.validate() {
             return Self::fault(cursor, code);
@@ -282,7 +285,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         ColdPairIngressStatus::Loading(cursor)
     }
 
-    pub(crate) fn begin_load(&mut self, lifetime: ActorInstanceLifetime, transfer_generation: u64, live: Option<ActorInstanceLifetime>) -> Option<ColdDocumentPairLoad> {
+    pub fn begin_load(&mut self, lifetime: ActorInstanceLifetime, transfer_generation: u64, live: Option<ActorInstanceLifetime>) -> Option<ColdDocumentPairLoad> {
         if live != Some(lifetime) {
             return None;
         }
@@ -301,7 +304,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         Some(ColdDocumentPairLoad { owner, files, finished: false })
     }
 
-    pub(crate) fn finish_load(&mut self, mut load: ColdDocumentPairLoad, result: Result<(), Vec<u8>>, live: Option<ActorInstanceLifetime>) -> ColdPairIngressStatus {
+    pub fn finish_load(&mut self, mut load: ColdDocumentPairLoad, result: Result<(), Vec<u8>>, live: Option<ActorInstanceLifetime>) -> ColdPairIngressStatus {
         let header = load.owner.borrow().header.clone();
         let cursor = header.cursor(header.page_count - 1);
         let index = Self::slot_index(header.lifetime);
@@ -331,7 +334,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
     }
 
     #[cfg(test)]
-    fn request_close(&mut self, lifetime: ActorInstanceLifetime) -> bool {
+    pub fn request_close(&mut self, lifetime: ActorInstanceLifetime) -> bool {
         let Some(owner) = self.slots[Self::slot_index(lifetime)].as_ref() else {
             return false;
         };
@@ -342,7 +345,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         true
     }
 
-    pub(crate) fn preflight_close_instance(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn preflight_close_instance(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         let index = Self::slot_index(key.lifetime());
         if self.slots[index].as_ref().is_some_and(|owner| owner.borrow().header.lifetime != key.lifetime()) {
             return Err("cold pair slot belongs to another lifetime");
@@ -353,7 +356,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         Ok(())
     }
 
-    pub(crate) fn reserve_close_instance(&mut self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn reserve_close_instance(&mut self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         self.preflight_close_instance(key)?;
         let index = Self::slot_index(key.lifetime());
         if self.closes[index].is_none() {
@@ -362,7 +365,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         Ok(())
     }
 
-    pub(crate) fn activate_close_instance(&mut self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn activate_close_instance(&mut self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         let index = Self::slot_index(key.lifetime());
         let close = self.closes[index].as_mut().filter(|close| close.key == key).ok_or("exact cold pair close reservation missing")?;
         close.active = true;
@@ -375,7 +378,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         Ok(())
     }
 
-    pub(crate) fn advance_close_one(&mut self) -> bool {
+    pub fn advance_close_one(&mut self) -> bool {
         let Some(index) = (0..N).map(|offset| (self.close_cursor + offset) % N).find(|index| self.closes[*index].is_some_and(|close| close.active && !close.complete)) else {
             return false;
         };
@@ -386,11 +389,11 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         true
     }
 
-    pub(crate) fn close_instance_complete(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<bool, &'static str> {
+    pub fn close_instance_complete(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<bool, &'static str> {
         self.closes[Self::slot_index(key.lifetime())].filter(|close| close.key == key).map(|close| close.complete).ok_or("exact cold pair close receipt missing")
     }
 
-    pub(crate) fn release_close_instance(&mut self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn release_close_instance(&mut self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         let index = Self::slot_index(key.lifetime());
         if !self.closes[index].is_some_and(|close| close.key == key && close.complete) {
             return Err("cold pair close receipt is not terminal");
@@ -399,7 +402,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         Ok(())
     }
 
-    fn close_step(&mut self, lifetime: ActorInstanceLifetime) -> ColdDocumentPairCloseStep {
+    pub fn close_step(&mut self, lifetime: ActorInstanceLifetime) -> ColdDocumentPairCloseStep {
         let index = Self::slot_index(lifetime);
         let Some(owner) = self.slots[index].as_ref().cloned() else {
             return ColdDocumentPairCloseStep { wiped_bytes: 0, closed: true };
@@ -421,7 +424,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
     }
 
     #[cfg(test)]
-    fn retained_bytes(&self, lifetime: ActorInstanceLifetime) -> usize {
+    pub fn retained_bytes(&self, lifetime: ActorInstanceLifetime) -> usize {
         self.slots[Self::slot_index(lifetime)].as_ref().filter(|owner| owner.borrow().header.lifetime == lifetime).map_or(0, |owner| owner.borrow().retained_bytes())
     }
 
@@ -445,6 +448,20 @@ impl<const N: usize> Drop for ColdDocumentPairIngressRegistry<N> {
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "🧪️tests/📥️cold-pair/🦀️.rs"]
-mod tests;
+pub mod tests;
+
+#[path = "../📸️checkpoint/🦀️.rs"]
+pub mod checkpoint;
+use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
+
+semio_framework_plugin_abi::component_persistent_local! {
+    pub static COLD_PAIR_INGRESS: RefCell<ColdDocumentPairIngressRegistry<PLUGIN_REACTOR_INSTANCE_SLOTS>> = RefCell::new(ColdDocumentPairIngressRegistry::new());
+    /// 🛬️ The cold pair whose document still loads through the stepped archive load, stepped once per turn.
+    pub static COLD_PAIR_DOCUMENT_LOAD: RefCell<Option<ColdPairDocumentLoad>> = RefCell::new(None);
+    /// 📸️ Instances whose checkpoint-restored document still loads under `checkpoint::RESTORE_DOCUMENT_LOAD_OPERATION`,
+    /// each stepped once per turn.
+    pub static RESTORED_DOCUMENT_LOADS: RefCell<Vec<u32>> = RefCell::new(Vec::new());
+}

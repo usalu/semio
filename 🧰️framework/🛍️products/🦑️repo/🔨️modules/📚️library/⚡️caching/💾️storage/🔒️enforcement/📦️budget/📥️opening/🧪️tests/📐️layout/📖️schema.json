@@ -1,0 +1,32 @@
+{
+  "type": "array",
+  "minItems": 7,
+  "maxItems": 7,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "read",
+      "closeFails",
+      "failed"
+    ],
+    "properties": {
+      "read": {
+        "enum": [
+          "complete",
+          "partial",
+          "growth",
+          "short",
+          "undefined",
+          "frozen"
+        ]
+      },
+      "closeFails": {
+        "type": "boolean"
+      },
+      "failed": {
+        "type": "boolean"
+      }
+    }
+  }
+}

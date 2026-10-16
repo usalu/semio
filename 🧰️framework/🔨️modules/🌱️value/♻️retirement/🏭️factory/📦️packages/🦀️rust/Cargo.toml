@@ -20,6 +20,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-value-control-contract = { path="../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../../📦️packages/🦀️rust" }
@@ -28,3 +31,4 @@ semio-framework-value-derive = { path="../../../../✨️derive/📦️packages/
 [dev-dependencies]
 semio-framework-value-retirement-queue = { path="../../../📋️queue/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

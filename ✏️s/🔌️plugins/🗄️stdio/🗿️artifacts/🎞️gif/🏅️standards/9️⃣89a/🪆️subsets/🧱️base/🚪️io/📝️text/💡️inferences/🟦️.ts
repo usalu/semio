@@ -49,5 +49,5 @@ export const stdioGif89aBaseInferenceTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseGif89aInferenceText(value: unknown, at = "$"): Gif89aInferenceText {
-  return stdioGif89aBaseInferenceTextGuardObject(value, `${at}`);
+  return stdioGif89aBaseInferenceTextGuardString(value, `${at}`);
 }

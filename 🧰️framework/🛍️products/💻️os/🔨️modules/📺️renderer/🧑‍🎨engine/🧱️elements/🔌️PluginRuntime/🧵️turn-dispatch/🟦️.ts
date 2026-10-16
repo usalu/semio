@@ -18,7 +18,7 @@ import {
 import type { ActorInstanceLifecycleReceipt } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { type OwnedUiInstanceRetirement } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { TurnScheduler, type Lane } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
-import { hostContinuations } from "../../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
+import { hostContinuations } from "@semio-tech/framework/async/continuation";
 import { createCommandStallWatchV1, type CommandStallWatchV1 } from "../⏱️command-stall/🟦️.ts";
 import { TYPED_OPERATION_ACK_MAGIC } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { coerceTurnResult, type WireTurnResult } from "../🪝️wire-codec/🟦️.ts";

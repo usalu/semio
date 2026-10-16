@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv2020 from "ajv/dist/2020";
 import {toByteArray} from "base64-js";
 import fixture from "../🧫️fixtures/🎟️funding.json";
-import schema from "../../../../../🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json";
+import { retainedCloneContractSchema as schema } from "@semio-tech/value-ts/retained-clone/contract/schema";
 import {BinarySourceJob} from "../../🟦️.ts";
 const validate=new Ajv2020({strict:true}).compile(schema);
 const funded={maximumItems:1,maximumCopyBytes:32,maximumCapacityBytes:4,maximumReleaseBytes:0,maximumDepth:1};

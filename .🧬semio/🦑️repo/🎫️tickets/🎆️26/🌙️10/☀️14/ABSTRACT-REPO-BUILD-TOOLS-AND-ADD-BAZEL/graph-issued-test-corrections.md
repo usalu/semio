@@ -1,0 +1,18 @@
+# Graph Laws: Actual Issuance and Expected Failure Isolation
+
+Only the permanent graph test entry `LIB/🏗️build/🧪️tests/🕸️graph/🟦️.ts` changed. Graph production/inference guards, selection/watch, dispatch and native owners stayed unchanged. Held Source fingerprint is `🗑️generated/graph-issued-source-held.json`.
+
+The first command-source law now uses a real issued process Original, a real signal alias and its exact issued phase for every cache/discovery context. A test-only spy forwards the actual advanceScriptInvocation publication and continuation before aborting the actual narrower controller; it never copies or spreads authority ports. The same-receiver law keeps the real parent frame control distinct from the cancelled child cache invocation, so the frame retains its observations while the actual command closure refuses the cancelled alias. The spy is restored and owned cancellation acknowledged in finally. Existing 30000/20000 grants are preserved.
+
+The optional writer contender now runs as a gated internal test in the same permanent entry, receiving the unchanged actual parent envelope through withBuildTestInvocationV1. The parent owns that child with captureOwnedCommandResultV1 and validates expected terminal1, exact wire hash/policy/deadline/capabilities, original reason, no task entry and awaited progress. The accepted failure remains a genuine failure of that child receiver and is not erased from an accepted-operation ledger. Parent acceptance sees a resolved command result. The synchronous pre-admission nested foreign identity check stays inline. Writer and child loans retain the prior20000 bound; the SQLite oracle narrows the actual writer phase. The small queued-writer150 bound is unchanged.
+
+## Actual Bounded Receipts
+
+- Direct focused current Source RED:0pass/2fail at Live Original process issuance required, before the intended assertions. `🗑️generated/graph-issued-source-red.log`.
+- Focused permanent Source laws GREEN:2pass/24 assertions, with esbuild, fast-glob and TypeScript oracles. Final rerun terminal0 on the held Source; `🗑️generated/graph-issued-source-green.log`.
+- Real private control-ledger model: catching/acknowledging an enrolled negative inline still makes the real outer Original fail (RED1). Owning a same-wire isolated child gives child1 and parent0 (GREEN0). Inputs retained in `graph-issued/📜️script.ts`; logs `graph-accepted-negative-{red,green}.log`. This model uses genuine production issuance/accepted-work tracking and owned execution, without any cache/image/database/store.
+- Focused strict80871 returned0/zero diagnostics on an in-memory AST projection of the exact six changed declarations/test statements, with actual TypeScript/Bun imports, actual fixture and actual JS dependencies; no production stubs or copied Source files. Input `graph-issued/strict/📜️script.ts`, log `graph-issued-focus-strict.log`.
+
+An intermediate whole graph-root strict attempt17810 returned2 with44 diagnostics across the existing imported transaction/preparation/root type surface plus two introduced generic equality diagnostics. The equality diagnostics were corrected using Object.is; the focused actual changed-node strict is clean. No whole-root strict success is claimed, and unrelated files were not modified to hide that result.
+
+Low reviewed the final three corrections and internal-child integration narrowly as clean. No full graph, actual canonical writer contention, native watch or canonical store was run in this lane. The real contender test remains for Root’s separately owned runtime qualification. Temporary Source fixture roots and child-model processes were closed; input scripts/reports are retained in the ticket.

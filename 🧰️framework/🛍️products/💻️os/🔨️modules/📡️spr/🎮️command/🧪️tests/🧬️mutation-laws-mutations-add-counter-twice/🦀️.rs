@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn direct_counter_leaf_contract() {
-    super::super::super::assert_counter_leaf_descriptor::<AddCounterTwice>(include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🔣️.json"));
+    super::super::super::assert_counter_leaf_descriptor::<AddCounterTwice>(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️testing/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🔣️.json")).expect("fixture").as_str());
 }
 #[test]
 fn plan_has_two_local_adds() {

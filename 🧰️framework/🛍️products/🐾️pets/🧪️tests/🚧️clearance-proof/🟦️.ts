@@ -6,7 +6,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🚧️clearance/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import {
   type Body,
   type Claim,

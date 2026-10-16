@@ -141,6 +141,3 @@ fn sheet_item(id: &str, label: &Text, short: Option<&Text>, icon: Option<&Icon>)
     SheetItem { id: id.to_string(), label: label.clone(), short: short.cloned(), icon: icon.cloned() }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;

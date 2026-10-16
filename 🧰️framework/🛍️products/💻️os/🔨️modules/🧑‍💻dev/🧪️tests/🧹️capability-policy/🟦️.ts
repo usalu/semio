@@ -49,6 +49,7 @@ async function checkPlaygroundAliasFreshness(): Promise<string[]> {
   const aliasPattern = /\{\s*find:\s*"([^"]+)",\s*replacement:\s*path\.resolve\(repoRoot,\s*"([^"]+)"\)\s*\}/g;
   const failures: string[] = [];
   for (const [, find, relativeTarget] of source.matchAll(aliasPattern)) {
+    if(find===undefined||relativeTarget===undefined)throw Error("Actual Vite alias capture required");
     if (!existsSync(join(repoRoot, relativeTarget))) {
       failures.push(`⚙️vite.config.ts: alias "${find}" -> "${relativeTarget}" does not exist on disk`);
     }

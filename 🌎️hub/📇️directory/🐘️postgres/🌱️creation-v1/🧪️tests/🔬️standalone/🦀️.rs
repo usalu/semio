@@ -6,15 +6,15 @@ use semio_hub_directory_postgres::testkit::{PostgresFixture, test_directory};
 use semio_hub_artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
 use semio_hub_artifact_creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1};
 use semio_hub_artifact_authority::{ArtifactPair, checkpoint_id_encoding_v1};
-use semio_hub_directory::published_artifact_checkpoint;
+use semio_hub_directory::{ArtifactCasDirectory, ArtifactCreationDirectory, AuthSessionDirectory, EventLog, published_artifact_checkpoint};
 use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
 use semio_hub_artifact_authority::chunk_cas::ArtifactCasReservation;
 use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEventBody};
 use semio_hub_artifact_creation::{ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
 use semio_hub_directory_contract::model::{AuthSessionIssue, AuthSessionKind};
 use semio_hub_directory_contract::error::DirectoryError;
-use semio_hub_directory_contract::{HubClock, NewDirectoryEvent};
-use semio_hub_directory_postgres::{PostgresDirectory, now_ms};
+use semio_hub_directory_contract::{HubClock, NewDirectoryEvent, now_ms};
+use semio_hub_directory_postgres::PostgresDirectory;
 
 struct GenesisFixture {
     directory: std::sync::Arc<PostgresDirectory>,

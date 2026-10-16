@@ -250,21 +250,9 @@ name = "semio"
 path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
 required-features = ["native-bin"]
 
-[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-semio-framework-os-store-sync = { path = "../../🔨️modules/🏪️store/🔄️sync/📦️packages/🦀️rust", features = ["testing"] }
-semio-framework-os-store-sync-native = { path = "../../🔨️modules/🏪️store/🔄️sync/🖥️native/📦️packages/🦀️rust", features = ["testing"] }
-tokio-tungstenite = { version = "0.26", features = ["rustls-tls-webpki-roots"] }
-
 [dev-dependencies]
-semio-framework-os-store-ledger = { path = "../../🔨️modules/🏪️store/📒️ledger/📦️packages/🦀️rust", features = ["hot-path-census"] }
-semio-framework-os-store-replay = { path = "../../🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust", features = ["hot-path-census"] }
+semio-framework-os-store-testing-fixtures = { path = "../../🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
-semio-framework-job-worker = { path = "../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 
-semio-framework-os-store-cursor = { path = "../../🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework = { workspace = true }
-semio-framework-schema = { workspace = true }
-blake3 = "1.8.2"
-semio-framework-pack = { workspace = true, features = ["corruption-testing"] }
 semio-framework-async-macros = { path = "../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -1,0 +1,280 @@
+{
+  "correlation": [
+    {
+      "issued": [
+        1,
+        2
+      ],
+      "received": [
+        2,
+        1
+      ],
+      "accepted": true
+    },
+    {
+      "issued": [
+        1
+      ],
+      "received": [
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "issued": [
+        1
+      ],
+      "received": [
+        1,
+        1
+      ],
+      "accepted": false
+    }
+  ],
+  "delegations": [
+    {
+      "value": {
+        "hubOrigin": "http://127.0.0.1:8787",
+        "spaceId": "space",
+        "token": "delegated-token",
+        "scopes": "workspace.read,artifact.write"
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "hubOrigin": "http://127.0.0.1:8787",
+        "spaceId": "space",
+        "token": "",
+        "scopes": "workspace.read,artifact.write"
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "hubOrigin": "http://127.0.0.1:8787",
+        "spaceId": "space",
+        "token": "delegated-token",
+        "scopes": "workspace.read,artifact.write",
+        "credentialPath": "/unowned"
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "hubOrigin": "file:///unowned",
+        "spaceId": "space",
+        "token": "delegated-token",
+        "scopes": "workspace.read,artifact.write"
+      },
+      "accepted": false
+    }
+  ],
+  "initializations": [
+    {
+      "value": {
+        "protocolVersion": "2025-06-18",
+        "capabilities": {}
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "protocolVersion": "2025-06-18",
+        "capabilities": {
+          "roots": {
+            "listChanged": false
+          }
+        },
+        "clientInfo": {
+          "name": "oracle",
+          "version": "1"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "protocolVersion": "2025-03-26",
+        "capabilities": {}
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "protocolVersion": "2025-06-18",
+        "capabilities": {
+          "sampling": {}
+        }
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "protocolVersion": "2025-06-18",
+        "capabilities": {
+          "roots": {
+            "listChanged": true
+          }
+        }
+      },
+      "accepted": false
+    }
+  ],
+  "settlements": [
+    {
+      "owner": "success",
+      "revoke": "success",
+      "events": [
+        "owner",
+        "body",
+        "terminal",
+        "revoke"
+      ],
+      "errors": []
+    },
+    {
+      "owner": "refused",
+      "revoke": "success",
+      "events": [
+        "owner",
+        "revoke"
+      ],
+      "errors": [
+        "refused"
+      ]
+    },
+    {
+      "owner": "body",
+      "revoke": "failure",
+      "events": [
+        "owner",
+        "body",
+        "terminal",
+        "revoke"
+      ],
+      "errors": [
+        "body",
+        "revocation"
+      ]
+    },
+    {
+      "owner": "terminal",
+      "revoke": "success",
+      "events": [
+        "owner",
+        "body",
+        "terminal",
+        "revoke"
+      ],
+      "errors": [
+        "terminal"
+      ]
+    },
+    {
+      "owner": "undefined",
+      "revoke": "failure",
+      "events": [
+        "owner",
+        "body",
+        "terminal",
+        "revoke"
+      ],
+      "errors": [
+        "undefined",
+        "revocation"
+      ]
+    },
+    {
+      "owner": "success",
+      "revoke": "undefined",
+      "events": [
+        "owner",
+        "body",
+        "terminal",
+        "revoke"
+      ],
+      "errors": [
+        "undefined"
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "recorded": [
+        "first"
+      ],
+      "body": [
+        "later"
+      ],
+      "terminal": [
+        "pump"
+      ],
+      "expected": [
+        "first",
+        "later",
+        "pump"
+      ]
+    },
+    {
+      "recorded": [
+        "first"
+      ],
+      "body": [
+        "undefined"
+      ],
+      "terminal": [
+        "first"
+      ],
+      "expected": [
+        "first",
+        "undefined"
+      ]
+    },
+    {
+      "recorded": [
+        "undefined"
+      ],
+      "body": [
+        "later"
+      ],
+      "terminal": [
+        "pump"
+      ],
+      "expected": [
+        "undefined",
+        "later",
+        "pump"
+      ]
+    },
+    {
+      "recorded": [],
+      "body": [
+        "undefined"
+      ],
+      "terminal": [
+        "pump"
+      ],
+      "expected": [
+        "undefined",
+        "pump"
+      ]
+    },
+    {
+      "recorded": [],
+      "body": [],
+      "terminal": [
+        "pump"
+      ],
+      "expected": [
+        "pump"
+      ]
+    },
+    {
+      "recorded": [],
+      "body": [],
+      "terminal": [],
+      "expected": []
+    }
+  ]
+}

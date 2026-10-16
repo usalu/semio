@@ -10,9 +10,12 @@ import invalid from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene
 import schema from "../../../🧬️schema/🔣️.json";
 import pathSchema from "../../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
 import {RasterSceneJob,rasterizeScene,type RasterSceneInput} from "../../../🟦️.ts";
+import {admitted,hostile} from "../../../../../../🧪️tests/🧫️fixtures/🟦️.ts";
 import {areaOracle,canvasOracle,delta} from "@semio-tech/framework/pixels/sampling/affine/testing/oracles";
 import { imageDecodeSchema as imageSchema } from "@semio-tech/framework/pixels/image/decode/schema";
-const ajv=new Ajv({strict:true}).addMetaSchema(draft7);ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(schema);const validate=ajv.compile(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"});
+type RasterSceneFixture=Omit<RasterSceneInput,"assets">&{readonly assets:readonly {readonly id:string;readonly image:{readonly width:number;readonly height:number;readonly pixels:readonly number[]}}[]};
+const ajv=new Ajv({strict:true}).addMetaSchema(draft7);ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(schema);const validate=ajv.compile<RasterSceneFixture>(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"});
+const sceneInput=(value:unknown):RasterSceneInput=>{const fixture=admitted(validate,value,"raster scene input");return {...fixture,assets:fixture.assets.map(a=>({...a,image:{...a.image,pixels:Uint8Array.from(a.image.pixels)}}))};};
 const complete=(value:RasterSceneInput,grant=4096)=>{const job=new RasterSceneJob(value);let work=0;for(let i=0;i<2000000;i++){const p=job.advance(grant);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)return {image:job.result(),progress:p};}throw Error("Encoded scene did not finish");};
 async function reference(value:RasterSceneInput){
  let body="",groups:string[]=[];
@@ -33,19 +36,19 @@ async function reference(value:RasterSceneInput){
  return sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${value.width}" height="${value.height}">${body}</svg>`)).ensureAlpha().raw().toBuffer();
 }
 for(const row of cases)test(row.name,async()=>{
- expect(validate(row.input)).toBe(true);const value={...row.input,assets:row.input.assets.map(a=>({...a,image:{...a.image,pixels:Uint8Array.from(a.image.pixels)}}))} as RasterSceneInput,before=structuredClone(value);
- for(const grant of [1,7,4096]){const result=complete(value,grant);expect(Array.from(result.image.pixels)).toEqual(row.expected);expect(result.progress.admittedImages).toBe(row.expectedAdmittedImages);expect(result.progress.sourceBytes).toBe(row.expectedSourceBytes);expect(result.progress.assets).toBe(value.assets.length);if("expectedAllocatedPixels" in row)expect(result.progress.pixels).toBe(row.expectedAllocatedPixels);}
+ expect(validate(row.input)).toBe(true);const value=sceneInput(row.input),before=structuredClone(value);
+ for(const grant of [1,7,4096]){const result=complete(value,grant);expect(Array.from(result.image.pixels)).toEqual(row.expected);expect(result.progress.admittedImages).toBe(row.expectedAdmittedImages);expect(result.progress.sourceBytes).toBe(row.expectedSourceBytes);expect(result.progress.assets).toBe(value.assets.length);if("expectedAllocatedPixels" in row)expect<unknown>(result.progress.pixels).toBe(row.expectedAllocatedPixels);}
  expect(value).toEqual(before);expect(delta(new Uint8Array(row.expected),await reference(value))).toBeLessThanOrEqual(2);
 });
 for(const row of invalid)test("refuse encoded scene "+row.name,()=>{
- let job:RasterSceneJob|undefined;expect(()=>{job=new RasterSceneJob(row.input as RasterSceneInput);while(!job.advance(4096).done){}job.result();}).toThrow();
+ let job:RasterSceneJob|undefined;expect(()=>{job=new RasterSceneJob(hostile<RasterSceneInput>(row.input));while(!job.advance(4096).done){}job.result();}).toThrow();
  if(job){expect(()=>job!.result()).toThrow();expect(()=>job!.advance(1)).toThrow();}
 });
 test("asset admission counts UTF-8 source bytes and abort covers every live preparation phase",async()=>{
- const original=cases[5]!.input,value={...original,assets:original.assets.map(a=>({...a,image:{...a.image,pixels:Uint8Array.from(a.image.pixels)}}))} as RasterSceneInput,probe=new RasterSceneJob(value),seen=new Set<string>();let steps=0;
+ const value=sceneInput(cases[5]!.input),probe=new RasterSceneJob(value),seen=new Set<string>();let steps=0;
  for(;;){const p=probe.advance(1);steps++;if(!seen.has(p.phase)&&!p.done){seen.add(p.phase);const job=new RasterSceneJob(value);job.advance(steps);job.cancel();expect(()=>job.result()).toThrow(/cancel/);expect(()=>job.advance(1)).toThrow(/cancel/);}if(p.done)break;}
  expect(seen.has("assets")).toBe(true);expect(seen.has("nodes")).toBe(true);expect(seen.has("compositing")).toBe(true);
- const unused={...cases[0]!.input,nodes:[],assets:[{id:"é😀",image:{width:1,height:1,pixels:new Uint8Array([255,0,0,255])}}],maxSourceBytes:4} as RasterSceneInput;
+ const unused:RasterSceneInput={...sceneInput(cases[0]!.input),nodes:[],assets:[{id:"é😀",image:{width:1,height:1,pixels:new Uint8Array([255,0,0,255])}}],maxSourceBytes:4};
  expect(complete(unused,1).progress.sourceBytes).toBe(4);expect(()=>complete({...unused,maxSourceBytes:3},1)).toThrow(/sample byte/i);
  const controller=new AbortController();let timer=false;setTimeout(()=>{timer=true;},0);
  await expect(rasterizeScene(value,{signal:controller.signal,workBudget:7,onProgress:p=>{if(p.phase==="compositing")controller.abort();}})).rejects.toThrow(/cancel/);expect(timer).toBe(true);
@@ -54,7 +57,7 @@ test("asset admission counts UTF-8 source bytes and abort covers every live prep
 });
 
 test("encoded image layers preserve every blend mode above a painted path",async()=>{
- const original=cases[cases.length-1]!.input,base={...original,assets:original.assets.map(a=>({...a,image:{...a.image,pixels:Uint8Array.from(a.image.pixels)}}))} as RasterSceneInput;
+ const base=sceneInput(cases[cases.length-1]!.input);
  const css:Record<string,string>={colorDodge:"color-dodge",colorBurn:"color-burn",hardLight:"hard-light",softLight:"soft-light"};
  for(const blendMode of ["normal","multiply","screen","overlay","darken","lighten","colorDodge","colorBurn","hardLight","softLight","difference","exclusion","hue","saturation","color","luminosity"] as const){
   const nodes=base.nodes.map((n,i)=>i?{...n,blendMode}:{...n,content:{kind:"path" as const,segments:n.content.kind==="path"?n.content.segments:[],fillRule:"nonzero" as const,fill:{kind:"solid" as const,color:[.25,.5,.75,1] as [number,number,number,number]},stroke:null}}),value={...base,nodes};
@@ -65,7 +68,7 @@ test("encoded image layers preserve every blend mode above a painted path",async
 });
 
 test("scene retains admitted images while partial composition remains private",()=>{
- const row=cases[31]!,value={...row.input,assets:row.input.assets.map(a=>({...a,image:{...a.image,pixels:Uint8Array.from(a.image.pixels)}}))} as RasterSceneInput,before=structuredClone(value),job=new RasterSceneJob(value);let partial=false;
+ const row=cases[31]!,value=sceneInput(row.input),before=structuredClone(value),job=new RasterSceneJob(value);let partial=false;
  for(;;){const p=job.advance(1);expect(validateProgress(neutral(p))).toBe(true);if(p.phase==="compositing"&&!p.done){partial=true;expect(()=>job.result()).toThrow();}if(p.done)break;}
  expect(partial).toBe(true);expect(value).toEqual(before);expect([...job.result().pixels]).toEqual(row.expected);
  console.info("[DEBUG] Admitted image owners remain intact through private bounded scene composition");

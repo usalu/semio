@@ -125,7 +125,7 @@ pub fn stage_engine_packet_step(resources: &mut EngineCanvasBuildContext) -> boo
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub enum EngineCanvasPacketDestination {
     Ready(usize),
     Rejected(usize),

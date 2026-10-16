@@ -16,7 +16,7 @@
 //! progress) and makes `PHASE_DECODED` its checkpoint; `Execute` runs the real `migrate_document`
 //! re-encode.
 
-use super::{BoundedJob, TwoPhaseBoundedJob};
+use crate::{BoundedJob, TwoPhaseBoundedJob};
 use semio_framework_value_derive::FromValue;
 
 /// 🌉️ Mirrors `job_io_run`'s own `IoRunInput`: what used to be `migrate-artifact`'s three separate
@@ -24,56 +24,59 @@ use semio_framework_value_derive::FromValue;
 #[derive(serde::Deserialize, FromValue)]
 struct MigrateInput {
     from: String,
-    to: String,
-    pack: Vec<u8>,
+    pub to: String,
+    pub pack: Vec<u8>,
 }
 
 // 🚫️async: E4 fn-pointer slot — registered into `BoundedJobFactory` (see
 // `⚛️reactor/💼️jobs/🦀️.rs`'s `builtin_registry`); the admission body is a pure constructor call.
 pub(super) fn job_migrate(_job: u64, input: &mut Option<Vec<u8>>, restored: &mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<Box<dyn BoundedJob>>,semio_framework_value::ValueError> {
-    super::admit_original_job(input,restored,cx,|input,restored|TwoPhaseBoundedJob::admit("job.migrate", input, restored, decode_phase, super::BuiltinExecuteFn::Pure(execute_phase)))
+    crate::admit_original_job(input,restored,cx,|input,restored|TwoPhaseBoundedJob::admit("job.migrate", input, restored, decode_phase, crate::BuiltinExecuteFn::Pure(execute_phase)))
 }
 
 // 🚫️async: E4 phase slot — `BuiltinPhaseFn` is synchronous by contract; `decode` itself has no
 // suspension point, so `settle_in_step` resolves it inside this state action.
 fn decode_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    super::settle_in_step("job.migrate", decode(input))
+    crate::settle_in_step("job.migrate", decode(input))
 }
 
 // 🚫️async: E4 phase slot — see `decode_phase`; `store::os_store::codec_registry::migrate_document` is the unchunked native
 // call this state action declares `WORK_UNITS_EXECUTE` for.
 fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    super::settle_in_step("job.migrate", execute(input))
+    crate::settle_in_step("job.migrate", execute(input))
 }
 
 async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), semio_framework::Fault> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
-    let from = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&input.from).map_err(|message| super::fault("job.migrate", message))?;
-    let to = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&input.to).map_err(|message| super::fault("job.migrate", message))?;
+    let from = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&input.from).map_err(|message| crate::fault("job.migrate", message))?;
+    let to = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&input.to).map_err(|message| crate::fault("job.migrate", message))?;
     Ok((from, to))
 }
 
 /// 🔎️ Validates `input` decodes as `{from, to, pack}` with two parseable dialect coordinates, and
 /// reports `"{from}->{to}"` as the first slice's progress bytes.
-async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+#[doc(hidden)]
+pub async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
-    let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
+    let input_text = std::str::from_utf8(input).map_err(|error| crate::fault("job.migrate.decode", format!("invalid {} input: {error}", crate::JOB_KIND_MIGRATE)))?;
     let parsed: MigrateInput =
-        semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
+        semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| crate::fault("job.migrate.decode", format!("invalid {} input: {error}", crate::JOB_KIND_MIGRATE)))?;
     let (from, to) = parse_dialects(&parsed).await?;
     Ok(format!("{}->{}", from.to_coordinate(), to.to_coordinate()).into_bytes())
 }
 
-async fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
+#[doc(hidden)]
+pub async fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+    let input_text = std::str::from_utf8(input).map_err(|error| crate::fault("job.migrate.decode", format!("invalid {} input: {error}", crate::JOB_KIND_MIGRATE)))?;
     let parsed: MigrateInput =
-        semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
+        semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| crate::fault("job.migrate.decode", format!("invalid {} input: {error}", crate::JOB_KIND_MIGRATE)))?;
     let (from, to) = parse_dialects(&parsed).await?;
-    store::os_store::codec_registry::migrate_document(&from, &to, &parsed.pack).await.map_err(|error| super::fault("job.migrate", format!("{error:?}")))
+    store::os_store::codec_registry::migrate_document(&from, &to, &parsed.pack).await.map_err(|error| crate::fault("job.migrate", format!("{error:?}")))
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub mod tests;

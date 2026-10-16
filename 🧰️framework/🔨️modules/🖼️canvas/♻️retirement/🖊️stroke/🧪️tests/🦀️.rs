@@ -1,5 +1,5 @@
 use super::*;
-use crate::{Cap, test_allocation::observe_backing};
+use crate::{Cap, semio_framework_trace_memory_testing::observe_backing};
 
 #[test]
 fn original_canvas_stroke_preserves_every_cancelled_dash_and_physical_receipt() {

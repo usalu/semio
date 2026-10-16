@@ -228,11 +228,60 @@
   ],
   "consumers": [
     {
-      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🌎️hub/🧪️tests/🗺️open-plan-checks/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/👤️browser-actor-checks/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🌍️gis-browser-proof/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🧮️bootstrap-claims/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts",
       "owners": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🏠️home-browser-checks/🟦️.ts",
+      "owners": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts"
       ]
     },

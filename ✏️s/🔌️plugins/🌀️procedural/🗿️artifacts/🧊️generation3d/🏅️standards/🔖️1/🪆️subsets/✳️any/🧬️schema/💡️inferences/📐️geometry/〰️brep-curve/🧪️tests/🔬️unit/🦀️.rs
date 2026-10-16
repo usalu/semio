@@ -1,24 +1,25 @@
 use super::*;
 use semio_framework_3d_brep_engine::Brep;
 
-#[path = "../../../🧪️tests/🧰️construction-support/🦀️.rs"]
-mod support;
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_geometry::registry;
+use semio_s_artifact_procedural_3d_geometry_construction_support as support;
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/〰️brep-curve/🔣️.json");
 
 #[test]
 fn every_fixture_case_holds_at_fuel_one_and_at_unbounded_fuel() {
-    assert_eq!(support::run_fixture(FIXTURE, COMPUTES), 28);
+    assert_eq!(support::run_fixture(catalogue(), registry::lookup, FIXTURE, COMPUTES), 28);
 }
 
 #[test]
 fn the_table_and_the_fixture_cover_exactly_the_catalogue_kinds_of_brep_curve() {
-    support::assert_category("brep.curve", COMPUTES, FIXTURE);
+    support::assert_category(catalogue(), "brep.curve", COMPUTES, FIXTURE);
 }
 
 #[test]
 fn equal_inputs_give_equal_shape_bytes() {
-    assert_eq!(support::assert_deterministic(FIXTURE, COMPUTES), 15);
+    assert_eq!(support::assert_deterministic(catalogue(), registry::lookup, FIXTURE, COMPUTES), 15);
 }
 
 #[test]

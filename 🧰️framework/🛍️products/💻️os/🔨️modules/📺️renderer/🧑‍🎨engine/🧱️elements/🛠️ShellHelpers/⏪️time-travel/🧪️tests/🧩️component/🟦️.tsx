@@ -24,7 +24,7 @@ import { createElement, Fragment, useCallback, useLayoutEffect, useReducer, useS
 import { createMachine, transition, type AnyMachineSnapshot } from "xstate";
 import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { CHROME_CONTROL_TOOLTIP_DELAY_MS, composeControlKeybindings, PresenceBar, SHELL_KEYBINDINGS, TREE_WINDOW_PATH_SEPARATOR, uiChromeTranslationBundles, UIDialog, UiKeybindingsProvider } from "@semio-tech/ui-react";
-import { encodePresenceHistoryEdit, encodePresenceInteraction, encodePresenceToolRun } from "@semio-tech/framework-replication";
+import { encodePresenceHistoryEdit, encodePresenceInteraction, encodePresenceToolRun } from "@semio-tech/framework/replication";
 import { createMemoryStoragePort, type ActionDescriptor, type BuiltNode, type HistoryEntry, type HistoryPatch, type HistoryTimeTravel, type UiIntent } from "@semio-tech/framework";
 import type { PanelDock, PanelTabNode } from "@semio-tech/ui-react";
 import { initialShellState, shellReducer, type ShellAction, type ShellState } from "../../../../🐚️Shell/🟦️.tsx";
@@ -33,11 +33,11 @@ import { checkinSubmitMessageV1, checkpointGateV1, checkpointOnCloseKeyV1, prese
 import { HISTORY_ROW_KEY_PREFIX, HistoryReprojectionStatus, historyReprojectionControlV1, revealHistoryPanelV1, scheduleTimeTravelFocusV1, TIME_TRAVEL_CHORD_IDS, TIME_TRAVEL_CONTROL_IDS, TIME_TRAVEL_ROW_ACTION_REFUSALS, TIME_TRAVEL_ROW_ACTION_VERBS, TimeTravelBand, timeTravelRowActionRefusalsV1, timeTravelBandControlsV1, timeTravelBandTextV1, timeTravelControlActionV1, timeTravelFocusElementV1, timeTravelFocusIsHeldV1, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, timeTravelTransitionV1, TimeTravelWindowIndicator, useTimeTravelRevealV1, type TimeTravelFocusTargetV1 } from "../../🟦️.tsx";
 import { RowActionRefusalsContext, UiPresenceOverlayContext } from "../../../../🗣️Interpreter/👥️presence-overlay/🟦️.ts";
 import { TREE_ROW_TONE_CLASSES } from "../../../../🗣️Interpreter/🌳️tree-walk/🟦️.ts";
-import { TIME_TRAVEL_CODE_LABELS, TIME_TRAVEL_LABELS } from "../../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
-import { HISTORY_NOTICE_LABELS } from "../../../../../../../../../../🔨️modules/🎠️kernel/🏷️notice-labels/🟦️.ts";
-import { historyReprojectionStatus } from "../../../../../../../../../../🔨️modules/🎠️kernel/🕰️history/🟦️.ts";
+import { TIME_TRAVEL_CODE_LABELS, TIME_TRAVEL_LABELS } from "@semio-tech/framework/time-travel";
+import { HISTORY_NOTICE_LABELS } from "@semio-tech/framework";
+import { historyReprojectionStatus } from "@semio-tech/framework";
 import { documentLoadCancelledV1, HISTORY_SILENT_REFUSALS_V1, historyFaultNoticeV1, historyLaneNoticeV1, historyOutputNoticeV1, historySilentRefusalOfFaultV1, historySilentRefusalOfOutputV1, IMPORT_ABORT_ACTION_ID, importOpenedFilesV1 } from "../../../🟦️.tsx";
-import { readModuleTreeSource } from "../../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 
 const { computeAccessibleName, computeAccessibleDescription, getRole }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 const { roles: ariaRoles, aria: ariaProperties } = createRequire(import.meta.url)("aria-query") as { readonly roles: ReadonlyMap<string, { readonly props: Readonly<Record<string, unknown>> }>; readonly aria: ReadonlyMap<string, unknown> };

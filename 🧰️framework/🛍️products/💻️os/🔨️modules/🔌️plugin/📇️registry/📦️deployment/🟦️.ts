@@ -1,6 +1,7 @@
 import schemaModule from "./🧬️schema/🔣️.json";
 import routes from "./🛣️routes.json";
 import { parseInstallationDirectoryV1, installationDirectoryEmoji, type InstallationDirectoryV1 } from "../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
+import "../../../../../../🔨️modules/🖼️assets/🌐️published-page/🟦️.ts";
 
 export type ModuleDirectory = { readonly pluginId: string; readonly directoryName: InstallationDirectoryV1 };
 export type ModuleRoutes = { readonly plugin: string; readonly extension: string };
@@ -28,29 +29,6 @@ export function parseModuleRoutes(input: unknown): ModuleRoutes {
 export const MODULE_ROUTES = parseModuleRoutes(routes);
 export const MODULE_PLUGIN_ROUTE = MODULE_ROUTES.plugin;
 export const MODULE_EXTENSION_ROUTE = MODULE_ROUTES.extension;
-
-/** 🌐️ CDN page origins keyed by root route. Empty unless a production build injects them. */
-export function readPublishedPageOrigins(): Readonly<Record<string, string>> {
-  let raw: string | undefined;
-  try { raw = import.meta.env.SEMIO_PLAY_PAGE_ORIGINS as string | undefined; } catch { return {}; }
-  if (!raw) return {};
-  const parsed = JSON.parse(raw) as unknown;
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("SEMIO_PLAY_PAGE_ORIGINS must be a route map");
-  return Object.freeze(parsed as Record<string, string>);
-}
-
-/** 🌐️ Prefix a root-relative asset path with the CDN page that publishes it. Absolute URLs stay put. */
-export function publishedPageUrl(path: string, origins: Readonly<Record<string, string>> = readPublishedPageOrigins()): string {
-  if (!path.startsWith("/") || path.startsWith("//")) return path;
-  const encoded = path.split(/[?#]/, 1)[0]!;
-  if (/%(?:2f|5c)/iu.test(encoded)) return path;
-  let pathname: string;
-  try { pathname = decodeURIComponent(encoded); } catch { return path; }
-  const key = Object.keys(origins).sort((a, b) => b.length - a.length).find((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-  const origin = key === undefined ? undefined : origins[key];
-  return origin === undefined ? path : `${origin.replace(/\/$/, "")}${path}`;
-}
-
 
 /** 🚏️Decodes one canonical module request path without accepting obsolete routes or traversal aliases. */
 export function moduleRoutePath(rawUrl: string): string | null {
@@ -105,45 +83,6 @@ export function moduleIdForDirectoryName(directoryName: string, inventory: reado
   if (matches.length > 1) throw new Error(`Repeated declared module directory ${JSON.stringify(directoryName)}`);
   return matches[0]?.pluginId;
 }
-
-/** 🌐️ Points a same-origin asset request at the CDN page that publishes that route. */
-export function relocatePublishedRequestUrl(url: string, pageOrigin: string, origins: Readonly<Record<string, string>> = readPublishedPageOrigins()): string {
-  let path = url;
-  if (/^[a-z][a-z0-9+.-]*:/i.test(url)) {
-    let parsed: URL;
-    try { parsed = new URL(url); } catch { return url; }
-    if (parsed.origin !== pageOrigin) return url;
-    path = `${parsed.pathname}${parsed.search}${parsed.hash}`;
-  }
-  const next = publishedPageUrl(path, origins);
-  return next === path ? url : next;
-}
-
-const publishedFetchInstalled = Symbol.for("semio.publishedPageFetch");
-
-/** 🌐️ Sends root-relative and same-origin asset fetches to the page that publishes them. */
-export function installPublishedPageFetch(): void {
-  const origins = readPublishedPageOrigins();
-  const scope = globalThis as typeof globalThis & { fetch?: typeof fetch; location?: { origin: string } };
-  if (Object.keys(origins).length === 0 || typeof scope.fetch !== "function" || typeof scope.location?.origin !== "string") return;
-  const holder = scope as typeof scope & { [publishedFetchInstalled]?: true };
-  if (holder[publishedFetchInstalled]) return;
-  holder[publishedFetchInstalled] = true;
-  const native = scope.fetch.bind(scope);
-  const pageOrigin = scope.location.origin;
-  scope.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
-    if (typeof Request !== "undefined" && input instanceof Request) {
-      if (input.method !== "GET" && input.method !== "HEAD") return native(input, init);
-      const next = relocatePublishedRequestUrl(input.url, pageOrigin, origins);
-      return next === input.url ? native(input, init) : native(new Request(next, input), init);
-    }
-    const raw = typeof input === "string" ? input : input instanceof URL ? input.href : "";
-    const next = raw ? relocatePublishedRequestUrl(raw, pageOrigin, origins) : "";
-    return native((next || input) as RequestInfo | URL, init);
-  }) as typeof fetch;
-}
-
-installPublishedPageFetch();
 
 /** 🔑️ The one `stageRepositoryArtifacts` ownership key of a component's module directory, whichever profile produced it. */
 export function componentModuleOwnerV1(cratePath: string): string {

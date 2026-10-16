@@ -7,7 +7,7 @@ from rs import blank, expand_use
 HEAD = re.compile(r"""\s*((?:\#\!?\[(?:[^\[\]]|\[[^\]]*\])*\]\s*)*)          # attributes
     (pub(?:\s*\([^)]*\))?\s+)?                                                  # visibility
     (?:(?:default|async|unsafe|const(?=\s+(?:fn|unsafe|extern|async))|extern(?:\s+"[^"]*")?(?=\s+(?:fn|crate|\{)))\s+)*   # qualifiers
-    (fn|struct|enum|union|trait|impl|mod|use|type|const|static|extern\s+crate|macro_rules!|macro)\b\s*(?:mut\s+)?([A-Za-z_][A-Za-z0-9_]*|\{|<|\()?""", re.X | re.S)
+    (fn|struct|enum|union|trait|impl|mod|use|type|const|static|extern\s+crate|macro_rules!|macro)(?:\b|(?<=!))\s*(?:mut\s+)?([A-Za-z_][A-Za-z0-9_]*|\{|<|\()?""", re.X | re.S)
 BLOCK_KINDS = {"fn", "struct", "enum", "union", "trait", "impl", "mod", "macro_rules!", "macro"}
 
 

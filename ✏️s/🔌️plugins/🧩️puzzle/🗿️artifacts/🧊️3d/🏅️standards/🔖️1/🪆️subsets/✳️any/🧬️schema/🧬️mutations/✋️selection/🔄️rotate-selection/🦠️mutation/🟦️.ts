@@ -1,2 +1,2 @@
 /** 🧬️ One canonical mutation payload shared by every owning consumer. */
-export type {RotateSelection} from "../../🟦️.ts";
+export type {RotateSelection} from "../../../🟦️.ts";

@@ -32,17 +32,13 @@ pub(crate) use original_retirement::assert_discard_publication_original;
 #[cfg(test)]
 pub(crate) use original_retirement::native_original_actor_grant;
 
-#[path = "🪟️panel/🔢️pointer/🦀️.rs"]
-mod panel_pointer;
+use semio_framework_plugin_time_travel_panel::panel_pointer as panel_pointer;
 pub use panel_pointer::*;
 
-#[path = "🪟️panel/🖼️sections/🦀️.rs"]
-mod panel_sections;
+use semio_framework_plugin_time_travel_panel::panel_sections as panel_sections;
 pub use panel_sections::*;
 
-#[path = "../🎮️command/🛬️lifted/⏪️time-travel/🦀️.rs"]
-mod lifted_command;
-pub use lifted_command::*;
+pub use semio_framework_plugin_command::lifted_command::*;
 
 //#region 🔖️Limits
 /// ⏱️ Wall budget of one replay slice per reactor turn.

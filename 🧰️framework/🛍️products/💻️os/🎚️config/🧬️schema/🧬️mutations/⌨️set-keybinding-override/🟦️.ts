@@ -1,2 +1,2 @@
-export { setKeybindingOverride } from "../🟦️.ts";
-export type { SetKeybindingOverride } from "../🟦️.ts";
+export { setKeybindingOverride } from "@semio-tech/framework/config/mutations";
+export type { SetKeybindingOverride } from "@semio-tech/framework/config/mutations";

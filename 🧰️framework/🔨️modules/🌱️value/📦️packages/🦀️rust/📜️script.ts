@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
@@ -23,19 +24,21 @@ class NativeRecipientSourceTestScript extends BundleScript{
 }
 /** 🔐️ Executes original detached recipient identity and real retained physical custody laws. */
 class NativeRecipientTestScript extends BundleScript{
- async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-native-recipient");await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value"],cwd:this.root,extraArgs:["--lib","native_local_original","--","--nocapture"]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);}
+ async run(args:string[]):Promise<void>{
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);if(args.length)throw Error("Expected test-native-recipient");await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value-tests"],cwd:this.root,extraArgs:["--lib","native_local_original","--","--nocapture"]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);}
 }
 /** 🧮️ Exercises the existing complete neutral value package route. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     if (args[0] === "portable") {
       if (args.length !== 1) throw Error("Expected test portable");
-      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🔁️codec/🧪️tests/🛬️controlled/🟦️.ts")], this.repoRoot, "value:portable:construction", Math.min(15_000, this.invocation.control.remainingMilliseconds()), { signal: this.invocation.control.signal });
-      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🛬️decode/🧪️tests/🟦️.ts")], this.repoRoot, "value:portable:decoding", Math.min(30_000, this.invocation.control.remainingMilliseconds()), { signal: this.invocation.control.signal });
+      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🔁️codec/🧪️tests/🛬️controlled/🟦️.ts")], this.repoRoot, "value:portable:construction", scriptInvocationBudget(this.invocation,15_000), { signal: this.invocation.control.signal });
+      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🛬️decode/🧪️tests/🟦️.ts")], this.repoRoot, "value:portable:decoding", scriptInvocationBudget(this.invocation,30_000), { signal: this.invocation.control.signal });
       return;
     }
     const { rest } = resolveTestLevel(args);
-    await runCargoTestsV1({ ...({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-value"], cwd: this.root, extraArgs: rest }), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ ...({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-value-tests"], cwd: this.root, extraArgs: rest }), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 /** 🛬️ Exercises canonical borrowed construction, allocation admission and owner retirement. */
@@ -60,13 +63,15 @@ class OrderedRetirementSourceTestScript extends BundleScript {
 }
 class ControlledValueTestScript extends BundleScript {
   async run(args:string[]):Promise<void>{
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const {rest}=resolveTestLevel(args);
-    await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value"],cwd:this.root,extraArgs:["--lib","controlled_value_",...rest]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value-tests"],cwd:this.root,extraArgs:["--lib","controlled_value_",...rest]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 /** 🛫️ Exercises explicit borrowed output construction and cumulative encoding admission. */
 class ControlledEncodingTestScript extends BundleScript {
- async run(args:string[]):Promise<void>{const{rest}=resolveTestLevel(args);await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value"],cwd:this.root,extraArgs:["--lib","controlled_value_encoding_",...rest]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);}
+ async run(args:string[]):Promise<void>{
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);const{rest}=resolveTestLevel(args);await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value-tests"],cwd:this.root,extraArgs:["--lib","controlled_value_encoding_",...rest]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);}
 }
 /** 🏷️ Validates the canonical type corpus and direct lower ownership. */
 class TypeOwnershipTestScript extends BundleScript {
@@ -74,8 +79,8 @@ class TypeOwnershipTestScript extends BundleScript {
   if(args.length)throw Error("Expected test-type-ownership");
   const absence=resolve(this.root,"../../🏷️type/🧪️tests/🚮️absence/🟦️.ts");
   const source=resolve(this.root,"../../🏷️type/🟦️.ts"),tests=resolve(this.root,"../../🏷️type/🧪️tests/🟦️.ts");
-  await runOwnedCommand(process.execPath, [resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,tests,absence], this.repoRoot, "value:type:types", Math.min(15000, this.invocation.control.remainingMilliseconds()), { signal: this.invocation.control.signal });
-  await runOwnedCommand(process.execPath, ["test",tests], this.repoRoot, "value:type:ownership", Math.min(15000, this.invocation.control.remainingMilliseconds()), { signal: this.invocation.control.signal });
+  await runOwnedCommand(process.execPath, [resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,tests,absence], this.repoRoot, "value:type:types", scriptInvocationBudget(this.invocation,15000), { signal: this.invocation.control.signal });
+  await runOwnedCommand(process.execPath, ["test",tests], this.repoRoot, "value:type:ownership", scriptInvocationBudget(this.invocation,15000), { signal: this.invocation.control.signal });
   await runOwnedCommand(process.execPath, ["test","--timeout","30000",absence], this.repoRoot, "value:type:absence", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
  }
 }

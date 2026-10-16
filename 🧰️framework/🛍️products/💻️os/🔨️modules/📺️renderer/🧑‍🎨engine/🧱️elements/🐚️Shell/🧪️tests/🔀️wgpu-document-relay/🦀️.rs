@@ -3,6 +3,7 @@
 //! playground (no identity, no space, no data dir) hands the relay, and the one execution-target
 //! lease a hub document of a codec-less kind may bind.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::host_test_shell;
 use super::*;
 
 fn hub() -> PersistenceBinding {
@@ -153,8 +154,8 @@ fn a_remote_backbone_uri_names_host_space_and_document() {
 /// "action window instance framework.hub has no declared kind").
 #[test]
 fn the_hub_workspace_overlay_is_never_the_active_plugin_window() {
-    let shell = super::panel_anchor_model_tests::host_test_shell();
-    assert!(SessionCtx::of(&mut shell).retained_surface_is_panel(crate::hub_connection::FRAMEWORK_HUB_PANEL_ID));
+    let shell = host_test_shell();
+    assert!(SessionCtx::of(&mut shell).retained_surface_is_panel(semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID));
     let plugin_window = shell.docs.session.as_ref().expect("host test shell has a session").app.window_kinds.first().id.clone();
     assert!(!SessionCtx::of(&mut shell).retained_surface_is_panel(&plugin_window), "a plugin window stays a window");
 }
@@ -233,7 +234,7 @@ fn a_presence_heartbeat_names_the_signed_in_person() {
 /// door and agent bridge ride the same pump. Pinned on the source because the gate lives in wasm32-only control flow.
 #[test]
 fn the_sync_pump_cadence_is_not_gated_off_the_browser_build() {
-    let renderer = crate::RENDERER_SOURCE;
+    let renderer = semio_framework_os_renderer_wgpu_test_support::renderer_source();
     let deferred = renderer.split("FrameFinishPhase::Deferred => {").nth(1).expect("the deferred finish phase exists");
     let deferred = &deferred[..deferred.find("FrameFinishPhase::IconRaster => {").expect("the phase ends before the icon raster")];
     assert!(deferred.contains("cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= SHELL_SYNC_PUMP_INTERVAL_MS;"), "the pump is owed on a fixed cadence");

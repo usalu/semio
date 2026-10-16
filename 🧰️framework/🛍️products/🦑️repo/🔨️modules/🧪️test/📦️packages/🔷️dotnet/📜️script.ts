@@ -2,13 +2,13 @@
 import{receiveScriptProcessInvocation,scriptInvocationEnvironment,createIssuedResourceControlV1,BundleScript,ScriptRouter,runScriptMain,type ScriptInvocation}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{compilerAdmissionBudgetV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import{readBuildMode}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import{runOwnedCommand}from"../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import{withResourceLeases}from"../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{requireNativeStoragePathV1}from"../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{runOwnedCommand}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import{withResourceLeases}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{withRepositoryCacheStoreV1}from"../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import{withArtifactScratchV1,withArtifactDestinationTaskV1}from"../../../📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
 import{stageRepositoryArtifacts,withRepositoryArtifactDestinationV1}from"../../../📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import{collectArtifactFiles}from"../../../../../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
+import{collectArtifactFiles}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import{readNativeCallerAuthorityV1}from"../../../📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{mkdir}from"node:fs/promises";
 import{join}from"node:path";

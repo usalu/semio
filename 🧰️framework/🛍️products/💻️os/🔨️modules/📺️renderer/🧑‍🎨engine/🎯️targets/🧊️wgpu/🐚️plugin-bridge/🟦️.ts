@@ -87,14 +87,14 @@ import {
 } from "@semio-tech/framework";
 import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import { decodeCausalEnvelopeBatch } from "@semio-tech/framework-replication";
-import { DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1, splitDocumentBackboneControlTurnV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
+import { DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1, splitDocumentBackboneControlTurnV1 } from "../../../../../../../../🔨️modules/🛰️backbone/🔗️binding/🟦️.ts";
 import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import type { ActorCodecRequest, ActorCodecSuccess } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import type { OwnedUiPatchAcknowledgementEntry, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { WORKER_STEP_BUDGET_MS } from "../⏱️turn-budget/🟦️.ts";
-import { rendererResidentLedger } from "../../../💾️resident/🟦️.ts";
+import { rendererResidentLedger } from "../../../../../../../../🔨️modules/🖼️canvas/💾️renderer-resident/🟦️.ts";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
 import { OwnedUiPatchIntake, RETAINED_UI_INTAKE_SLICE_STEPS, retainedUiIntakeStepCeiling } from "../../../🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts";
 import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";

@@ -6,7 +6,7 @@ import {readBuildMode,buildModeEnvironment} from "../../../../../../../🔨️mo
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {withCompilerState} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts";
 import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {receiveScriptProcessInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withCoordinatorNextInputsV1} from "../📥️inputs/🟦️.ts";
 import {withNextStorageV1} from "../💾️storage/🟦️.ts";
@@ -16,7 +16,7 @@ import {stageRepositoryArtifacts,withRepositoryArtifactDestinationV1} from "../.
 import {withRepositoryCacheStoreV1} from "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {devToolingEnv} from "../../../../📚️library/🏃️process/🌿️environment/🟦️.ts";
 import {getWorkspaceRoot} from "../../../../📚️library/🗂️workspaces/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import executionSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 const PACKAGE_DIR=resolve(import.meta.dir,"../../📦️packages/🟦️typescript");
@@ -27,7 +27,7 @@ export async function buildCoordinatorNextV1(workspace:string,invocation:ScriptI
     const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), require = createRequire(join(PACKAGE_DIR, "package.json"));
     const control = scriptCompilerAdmissionControlV1(invocation, "compiler:build", 600_000);
     await withCoordinatorNextInputsV1(workspace,invocation,control,async(inputs,inputPhase)=>withRepositoryCacheStoreV1(workspace,"dependencies",invocation,inputPhase,(_dependencies,dependencyPhase)=>withNextStorageV1(workspace,mode,invocation,dependencyPhase,async(store,layout,_temporary,actualPhase)=>{
-    await withCompilerState({ root: layout.state, owner: "repo-coordinator:next", compiler: `next:${require("next/package.json").version}:node:${process.versions.node}`, configuration: JSON.stringify([PACKAGE_DIR, await readFile(join(PACKAGE_DIR, "next.config.mjs"), "utf8"), segments]), mode, control:actualPhase, leaseDirectory: join(workspace, ".cache/b/l/m/data"), files: ["next", "node_modules", "tsconfig.json", "next.tsbuildinfo", "required-server-files-publication.json", "standalone-server.js", "standalone-package.json", "next-env.d.ts"], environment: {...devToolingEnv(),...store.environment} }, async (directory, compilerEnvironment) => {
+    await withCompilerState({ root: layout.state, owner: "repo-coordinator:next", compiler: `next:${require("next/package.json").version}:node:${process.versions.node}`, configuration: JSON.stringify([PACKAGE_DIR, await readFile(join(PACKAGE_DIR, "next.config.mjs"), "utf8"), segments]), mode, control:actualPhase, storage:store.storage,storageControl:store.control, files: ["next", "node_modules", "tsconfig.json", "next.tsbuildinfo", "required-server-files-publication.json", "standalone-server.js", "standalone-package.json", "next-env.d.ts"], environment: {...devToolingEnv(),...store.environment} }, async (directory, compilerEnvironment,actualPhase) => {
       await rm(join(directory, "node_modules"), { recursive: true, force: true });
       await symlink(join(PACKAGE_DIR, "node_modules"), join(directory, "node_modules"), process.platform === "win32" ? "junction" : "dir");
       const mutable = join(directory, "next"), destination = layout.output, typescript = join(directory, "tsconfig.json");

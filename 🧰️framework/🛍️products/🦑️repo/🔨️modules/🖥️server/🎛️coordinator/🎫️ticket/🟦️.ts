@@ -13,9 +13,9 @@
 // #region 🔌️Adapters
 import { NextRequest, NextResponse } from "next/server";
 import { parseCommandAction, parseTicketCloseRequest, parseTicketOpenRequest, parseTicketReopenRequest } from "../🧬️schema/🟦️.ts";
-import { upsertTicket, getTicket, listTickets, insertTicketFiles, listClaimsByTicket, type Ticket } from "@/lib/persistence";
-import { requireAuth, isAuthError } from "@/lib/authentication";
-import { publishEvent } from "@/lib/event";
+import { upsertTicket, getTicket, listTickets, insertTicketFiles, listClaimsByTicket, type Ticket } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
+import { requireAuth, isAuthError } from "@semio-tech/framework/products/repo/modules/server/library/authentication";
+import { publishEvent } from "@semio-tech/framework/products/repo/modules/server/library/event";
 // #endregion 🔌️Adapters
 
 // 🎯️#region 🪄️Handlers

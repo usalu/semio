@@ -4,7 +4,7 @@
  */
 
 import { shellDialogSessionIsCurrentV1, type ShellDialogOriginV1 } from "../🗨️dialog-origin/🟦️.ts";
-import { directorySessionAuthorityIsCurrentV1 } from "../../../../../📇️directory/🪪️session-refresh/🟦️.ts";
+import { directorySessionAuthorityIsCurrentV1 } from "@semio-tech/framework/directory/session-refresh";
 import { useCallback, useEffect, useRef } from "react";
 // #region 🔌️Adapters
 import {
@@ -31,7 +31,8 @@ import {
   panelViewContext,
   windowViewContext
 } from "@semio-tech/framework";
-import { decodePackWire, encodeBackboneWorkerRequest, FRAMEWORK_SYNC_CONTROLLER_ID } from "@semio-tech/framework-os";
+import { decodePackWire } from "@semio-tech/framework/packs";
+import { encodeBackboneWorkerRequest, FRAMEWORK_SYNC_CONTROLLER_ID } from "@semio-tech/framework/backbone";
 import {
   programHistoryKeyV1,
   programHistoryProjectionV1,
@@ -101,9 +102,9 @@ import {
   isDeclaredSurfaceCancelAction
 } from "../../🛠️ShellHelpers/🟦️.tsx";
 // #endregion 🔌️Adapters
-import { browserActorActionRefusalReasonV1 } from "../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
-import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
-import { publishBrowserActorHostEffectsV1 } from "../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
+import { browserActorActionRefusalReasonV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
+import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "@semio-tech/framework/browser-bundle/action-handoff";
+import { publishBrowserActorHostEffectsV1 } from "@semio-tech/framework/browser-bundle/action-handoff/publication";
 import { shellHistoryUndoRouteV1 } from "../🪪️host-bootstrap/🟦️.tsx";
 import { syncAttachTargetV1 } from "../../🔄️ShellSync/🟦️.tsx";
 import { startedTypedOperationV1, typedOperationCancellationActionV1, typedOperationCancellationOwnerIsCurrentV1 } from "../🏁️operation-settle/🟦️.ts";

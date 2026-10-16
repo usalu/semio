@@ -21,9 +21,9 @@ export async function mountSDevInventoryV1<T>(installed: readonly T[], mount: (c
   operation.signal.addEventListener("abort", dispose, { once: true });
   try {
     operation.progress({ stage: "mount", completed: 0, total: installed.length });
-    for (let index = 0; index < installed.length; index++) {
+    for (const [index, contribution] of installed.entries()) {
       operation.signal.throwIfAborted();
-      const acquired = await mount(installed[index], operation);
+      const acquired = await mount(contribution, operation);
       if (disposed || operation.signal.aborted) { acquired.dispose(); operation.signal.throwIfAborted(); throw new Error("s-dev.retired"); }
       retained.push(acquired);
       operation.progress({ stage: "mount", completed: index + 1, total: installed.length });

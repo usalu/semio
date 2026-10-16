@@ -89,7 +89,7 @@ pub fn installed() {
 }
 
 /// 🧩️ The host's `contributionsJson` for the generation3d closure, built the way
-/// `buildContributionsJson` (`🎠️kernel/🟦️.ts`) builds it: one `{pluginId, topicContribution}` entry
+/// `buildContributionsJson` (`🎠️kernel/🧾️contributions-json/🟦️.ts`) builds it: one `{pluginId, topicContribution}` entry
 /// per `flow.extension` topic contribution the staged extension plugins declare, JSON-encoded as an
 /// array. The two manifests come from the extension crates themselves, so this is the SAME payload
 /// the served shell pushes — not a hand-written stand-in. Surface-neutral on purpose: the editor

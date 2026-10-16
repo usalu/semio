@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -18,16 +20,17 @@ const PACKAGE = "semio-framework-graph-layout-run";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const { rest } = resolveTestLevel(segments);
     await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🧪️tests/🧩️conformance/🟦️.ts")], { cwd: this.repoRoot , budgetMs: testLevelBudgetMs()});
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [PACKAGE], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [PACKAGE], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 
 class CheckScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", PACKAGE],this.repoRoot,process.env,buildBudgetMs());
-    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", PACKAGE, "--target", "wasm32-wasip2"],this.repoRoot,process.env,buildBudgetMs());
+    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", PACKAGE],this.repoRoot,process.env,buildBudgetMs());
+    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", PACKAGE, "--target", "wasm32-wasip2"],this.repoRoot,process.env,buildBudgetMs());
   }
 }
 

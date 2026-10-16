@@ -22,9 +22,6 @@ workspace = true
 path = "../../🦀️.rs"
 doctest = false
 
-[features]
-testkit = ["dep:semio-framework-trace"]
-
 [dependencies]
 framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 schemars = "0.8.22"
@@ -34,7 +31,3 @@ semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒�
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-trace = { workspace = true, optional = true }
-
-[dev-dependencies]
-semio-framework-trace = { workspace = true }

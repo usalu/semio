@@ -86,7 +86,7 @@ test("clipboard schema rejects foreign versions and duplicate selection identiti
 });
 test("neutral image asset deltas and inverses agree with independent JSON Patch",()=>{
  const before=parseDrawingArtifact(assetBefore),after=parseDrawingArtifact(assetAfter),asset=after.assets.bitmap!;
- const delta=importImageAssetDiff(before,{assetId:"bitmap",asset});expect(delta).toEqual(assetDiff.assets);
+ const delta=importImageAssetDiff(before,{assetId:"bitmap",asset});expect<unknown>(delta).toEqual(assetDiff.assets);
  const actual=foldImageAssetDelta(before,delta);expect(actual).toEqual(after);
  expect(jsonPatch.applyPatch(structuredClone(before),[{op:"add",path:"/assets/bitmap",value:asset}]).newDocument).toEqual(actual);
  const removal=removeImageAssetDiff(actual,{assetId:"bitmap"});expect(foldImageAssetDelta(actual,removal)).toEqual(before);

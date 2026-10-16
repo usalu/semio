@@ -9,6 +9,15 @@ pub mod opening_config {
     mod component;
     pub use component::*;
 
+    /// 🪝️ Test hook of the companion crates `semio-framework-os-config-tests-1` and `-2`: the private schema module, public only behind the `testkit` feature.
+    #[cfg(feature = "testkit")]
+    #[doc(hidden)]
+    pub mod testkit {
+        pub mod component {
+            pub use super::super::component::*;
+        }
+    }
+
     #[path = "."]
     pub mod mutations {
         #[path = "🧬️schema/🧬️mutations/🦀️.rs"]

@@ -49,5 +49,5 @@ export const stdioBmpV3AnyDiffTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseBmpDiffText(value: unknown, at = "$"): BmpDiffText {
-  return stdioBmpV3AnyDiffTextGuardObject(value, `${at}`);
+  return stdioBmpV3AnyDiffTextGuardString(value, `${at}`);
 }

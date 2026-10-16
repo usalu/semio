@@ -64,7 +64,7 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
             "gis.terrain" => <semio_s_artifact_gis_gisterrain::GisTerrainSnapshot as ArtifactPack>::record_spec().expect("GIS terrain structural pack schema"),
             _ => unreachable!(),
         };
-        assert_eq!(codec.pack_schema_hash, store::os_pack::schema_hash(&record));
+        assert_eq!(codec.pack_schema_hash, pack::record::schema_hash(&record));
         let observed_record = serde_json::json!({
             "keyword": record.keyword.as_deref(),
             "fields": record.fields.iter().map(|field| serde_json::json!({ "id": field.id, "key": field.key, "optional": field.optional })).collect::<Vec<_>>(),
@@ -236,7 +236,7 @@ async fn gis_guest_genesis_is_byte_for_byte_the_linked_codec_pair_on_one_generat
 }
 
 /// 🧬️ Generator and law of `📇️native-codecs/🔣️.json`'s `packSchemaHash`: each receipt's value is the live
-/// `os_pack::schema_hash` the hub's linked GIS codec binds, so the trusted-catalog bootstrap reads it instead of
+/// `pack::record::schema_hash` the hub's linked GIS codec binds, so the trusted-catalog bootstrap reads it instead of
 /// deriving it. With `SEMIO_NATIVE_CODEC_PROJECTION=write` (the gis `native-codec-projection` verb) the committed
 /// values are written in place; otherwise the committed projection must already equal the live receipts.
 #[test]

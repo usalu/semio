@@ -6,6 +6,10 @@
   "description": "@semio-tech/norm-js authored owner test infrastructure.",
   "type": "module",
   "private": true,
+  "exports": {
+    "./registry/contract": "./📇️registry/🧬️contract/🟦️.ts",
+    "./testing/document-contract": "./🧪️testing/🪪️document-contract/🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/norm-js:test"
   },

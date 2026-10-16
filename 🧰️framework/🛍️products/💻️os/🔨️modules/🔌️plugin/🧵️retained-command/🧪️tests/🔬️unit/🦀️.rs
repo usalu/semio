@@ -1,30 +1,36 @@
-#[cfg(test)] use crate::tool_contract::reducer_fault_of_detail;
-use super::*;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::reducer_fault_of_detail;
+use crate::{ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES, ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES, ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES, ArtifactCommandCheckpoint, ArtifactCommandWork, ArtifactRetainedWorkCapacity, decode_artifact_command_checkpoint, encode_artifact_command_checkpoint, reducer_fault_detail};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::Fault;
+use semio_framework_job::InteractiveJob;
+use semio_framework_os_kernel as store;
 
 const CHECKPOINT_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/📸️artifact-command-checkpoint.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CheckpointFixture {
-    format: String,
-    version: u8,
-    maximum_bytes: usize,
-    header_bytes: usize,
-    cases: Vec<CheckpointCase>,
+    pub format: String,
+    pub version: u8,
+    pub maximum_bytes: usize,
+    pub header_bytes: usize,
+    pub cases: Vec<CheckpointCase>,
 }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CheckpointCase {
-    name: String,
+    pub name: String,
     work_phase: bool,
     raw_page_cursor: u64,
-    raw_bytes: u64,
+    pub raw_bytes: u64,
     work_progress: u64,
     context_digest: u64,
     workspace_identity: u64,
     work_state: CheckpointWorkState,
-    outcome: String,
+    pub outcome: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -35,7 +41,7 @@ enum CheckpointWorkState {
 }
 
 impl CheckpointWorkState {
-    fn materialize(&self) -> Vec<u8> {
+    pub fn materialize(&self) -> Vec<u8> {
         match self {
             Self::Bytes { bytes } => bytes.clone(),
             Self::Fill { fill, length } => vec![*fill; *length],
@@ -131,21 +137,21 @@ const WORK_CAPACITY_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧮�
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct WorkCapacityFixture {
-    format: String,
-    version: u8,
+    pub format: String,
+    pub version: u8,
     invertible_rows_per_item: usize,
-    cases: Vec<WorkCapacityCase>,
+    pub cases: Vec<WorkCapacityCase>,
 }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct WorkCapacityCase {
-    name: String,
+    pub name: String,
     invertible_items: usize,
-    items: usize,
-    pub(crate) rows: usize,
-    work_items: usize,
-    admitted: bool,
+    pub items: usize,
+    pub rows: usize,
+    pub work_items: usize,
+    pub admitted: bool,
 }
 
 /// 🧮️ The declaration law, language-agnostic: for every declared route capacity the rows a gesture
@@ -208,10 +214,10 @@ fn an_item_counted_extent_cannot_stand_in_for_a_row_counted_footprint() {
 fn a_refused_reducer_step_reports_the_apps_own_fault_code_and_message() {
     let mut fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("generation3d.io.export"), "format `dwg` has no readable descriptor set").with_param("path", "/format");
     fault.span = Some(semio_framework::TextSpan::with_length(3, 8, 3));
-    let detail = super::reducer_fault_detail(&fault);
+    let detail = crate::reducer_fault_detail(&fault);
     let oracle: serde_json::Value = serde_json::from_slice(&detail).expect("the independent JSON oracle accepts the canonical fault wire");
     assert_eq!(oracle["code"], "generation3d.io.export");
-    let back = crate::tool_contract::reducer_fault_of_detail(&detail).expect("the canonical reducer fault reads back");
+    let back = semio_framework_plugin_decl_app::tool_contract::reducer_fault_of_detail(&detail).expect("the canonical reducer fault reads back");
     assert_eq!(back, fault);
 }
 
@@ -219,10 +225,10 @@ fn a_refused_reducer_step_reports_the_apps_own_fault_code_and_message() {
 #[test]
 fn an_oversized_reducer_fault_detail_is_clipped_on_a_char_boundary() {
     let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("x"), "ü".repeat(4096));
-    let detail = super::reducer_fault_detail(&fault);
-    assert!(detail.len() <= super::ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES);
+    let detail = crate::reducer_fault_detail(&fault);
+    assert!(detail.len() <= crate::ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES);
     assert!(serde_json::from_slice::<serde_json::Value>(&detail).is_ok());
-    let back = crate::tool_contract::reducer_fault_of_detail(&detail).expect("a narrowed detail remains a typed fault");
+    let back = semio_framework_plugin_decl_app::tool_contract::reducer_fault_of_detail(&detail).expect("a narrowed detail remains a typed fault");
     assert!(back.message.is_char_boundary(back.message.len()));
 }
 
@@ -231,9 +237,9 @@ fn an_oversized_reducer_fault_detail_is_clipped_on_a_char_boundary() {
 #[test]
 fn a_reducer_fault_detail_reads_back_as_the_reducers_own_code_and_message() {
     let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("app.command.targets-required"), "patchNodes needs node ids or a node selection");
-    let back = crate::tool_contract::reducer_fault_of_detail(&super::reducer_fault_detail(&fault)).expect("a reducer detail reads back");
+    let back = semio_framework_plugin_decl_app::tool_contract::reducer_fault_of_detail(&crate::reducer_fault_detail(&fault)).expect("a reducer detail reads back");
     assert_eq!((back.code.0.as_str(), back.message.as_str()), ("app.command.targets-required", "patchNodes needs node ids or a node selection"));
     for foreign in [b"puzzle command reducer rejected the admitted operation".as_slice(), b"retained command reducer rejected operation: ".as_slice(), b"".as_slice()] {
-        assert!(crate::tool_contract::reducer_fault_of_detail(foreign).is_none(), "{foreign:?} is not a reducer detail");
+        assert!(semio_framework_plugin_decl_app::tool_contract::reducer_fault_of_detail(foreign).is_none(), "{foreign:?} is not a reducer detail");
     }
 }

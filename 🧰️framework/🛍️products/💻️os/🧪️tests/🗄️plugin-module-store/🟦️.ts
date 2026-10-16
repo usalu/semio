@@ -6,7 +6,8 @@ import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { PluginModuleUnavailableError, type PluginModuleAcquisitionProgress } from "@semio-tech/framework";
-import { PLUGIN_MODULE_STORE_V1, validatePluginModuleStoreRecordV1, type PluginModuleStoreRecordV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { PLUGIN_MODULE_STORE_V1 } from "@semio-tech/framework/plugin-module/hub-source/schema";
+import { validatePluginModuleStoreRecordV1, type PluginModuleStoreRecordV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
 import {
   collectPluginModuleStoreGarbageV1,
   commitPluginModuleBundleV1,
@@ -20,13 +21,13 @@ import {
   type PluginModuleCacheV1,
 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🗄️store/🟦️.ts";
 import { createHubPluginSource, HUB_PLUGIN_MODULE_ROUTE, TrustedPluginModuleTransientError, type HubPluginSourceNoticeV1, type PluginModuleLocksV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
-import { PLUGIN_MODULE_TRANSFER_RETRY_V1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
-import { TrustedPluginModuleRefusalV1 } from "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { PLUGIN_MODULE_TRANSFER_RETRY_V1 } from "@semio-tech/framework/plugin-module/hub-source/schema";
+import { TrustedPluginModuleRefusalV1 } from "@semio-tech/framework/plugin-module";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧪️tests/🧫️fixtures/🗄️store/🔣️.json");
-const storeSchema = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🔣️.json");
+const storeSchema = here("../../../../🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🔣️.json");
 const hubSchema = here("../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json");
 const origin: string = fixture.origin;
 type BundleId = "noteA" | "noteB" | "drawB";

@@ -43,11 +43,11 @@ test("point references match neutral topology and their exact geometry revision"
     const segments=row.segments as PathGeometrySegment[],geometry=geometryId(segments)!;
     expect(geometry).toBe(blake3Hex(Uint8Array.from(row.bytes.match(/../g)!,byte=>parseInt(byte,16))));
     const slots=segments.flatMap((segment,index)=>pointSlots(segment).map(point=>[index,point]));
-    expect(slots).toEqual(row.points);
+    expect<unknown>(slots).toEqual(row.points);
     for(const [index,point] of slots) {
       const reference={layerId:row.layerId,geometry,index,point};
       expect(validate(reference)).toBe(true);
-      expect(parsePointId(pointId(reference as Parameters<typeof pointId>[0])!)).toEqual(reference);
+      expect<unknown>(parsePointId(pointId(reference as Parameters<typeof pointId>[0])!)).toEqual(reference);
     }
     if(segments.length) {
       const moved=structuredClone(segments); if(moved[0]!.kind!=="close")moved[0]!.to[0]+=1;
@@ -79,7 +79,7 @@ for(const row of pointTopologyFixture)test(`point topology: ${row.name}`,()=>{
     const layer=node.userData.layer as DrawingInteractionLayer|undefined;
     if(layer?.kind==="path")for(const [index,segment] of (layer.segments??[]).entries())for(const point of pointSlots(segment))oracle.push([layer.base.id,index,point]);
   });
-  expect(actual).toEqual(oracle);
+  expect<unknown>(actual).toEqual(oracle);
 });
 
 import pointPicks from "../../🎯️points/🧪️tests/🧫️fixtures/🖱️picking/🔣️.json";
@@ -101,12 +101,10 @@ test("node picks preserve drag groups and support modified membership",()=>{
 });
 
 import {Box2,Matrix3,Vector2} from "three";
-import Ajv from "ajv";
-import areaFixture from "../../🎯️points/🧪️tests/🧫️fixtures/▧️marquee/🔣️.json";
+import areaFixture from "../../🎯️points/🧪️tests/🧫️fixtures/🔲️marquee/🔣️.json";
 
 import documentSchema from "../../../../🧬️schema/🔣️.json";
 import {anchorInMarquee,mergePointSelection} from "../../🎯️points/🟦️.ts";
-import type {PathGeometrySegment} from "../../../../🧬️schema/🟦️.ts";
 
 test("node marquee selects transformed anchors and merges membership",()=>{
   const ajv=new Ajv({strict:false,validateFormats:false}).addSchema(documentSchema);

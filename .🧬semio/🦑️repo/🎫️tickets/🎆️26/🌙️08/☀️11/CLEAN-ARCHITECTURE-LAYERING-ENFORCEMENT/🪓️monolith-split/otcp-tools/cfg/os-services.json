@@ -1,0 +1,38 @@
+{
+ "id": "os-services",
+ "pkg": "semio_framework_os_services",
+ "trees": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services"
+ ],
+ "inputs_units": [
+  "os-services-lib-test-semio-framework-os-services"
+ ],
+ "p_lib": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/🦀️.rs",
+ "comps": [
+  {
+   "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🍎️companion/🦀️.rs"
+  }
+ ],
+ "ext": [
+  "semio_framework_job_worker",
+  "semio_framework_job_worker_authority",
+  "semio_framework_async",
+  "semio_framework_actor",
+  "semio_framework_job",
+  "semio_framework_value",
+  "tokio",
+  "semio_framework_async_macros",
+  "serde_json",
+  "semio_framework_trace"
+ ],
+ "base_features": [],
+ "features": [
+  "testkit"
+ ],
+ "p_dirs": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services"
+ ],
+ "traits": [
+  "WorkerJobAdmissionControl"
+ ]
+}

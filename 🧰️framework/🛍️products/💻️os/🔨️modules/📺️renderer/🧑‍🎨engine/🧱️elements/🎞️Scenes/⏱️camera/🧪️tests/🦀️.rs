@@ -254,19 +254,19 @@ fn borrowed_node_key_keeps_original_text_and_matches_the_independent_corpus_with
     for row in fixture["cases"].as_array().unwrap() {
         let value = &row["owned"];
         let owned = match value["explicit"].as_str() {
-            Some(text) => ui_wgpu::wgpu::NodeKey::Explicit(text.to_owned()),
-            None => ui_wgpu::wgpu::NodeKey::Positional(value["positional"][0].as_u64().unwrap() as u32, value["positional"][1].as_u64().unwrap() as u32),
+            Some(text) => semio_framework_ui_retained_tree::tree::NodeKey::Explicit(text.to_owned()),
+            None => semio_framework_ui_retained_tree::tree::NodeKey::Positional(value["positional"][0].as_u64().unwrap() as u32, value["positional"][1].as_u64().unwrap() as u32),
         };
         let other = &row["borrowed"];
         let key = match other["explicit"].as_str() {
-            Some(text) => ui_wgpu::wgpu::NodeKeyRef::Explicit(text),
-            None => ui_wgpu::wgpu::NodeKeyRef::Positional(other["positional"][0].as_u64().unwrap() as u32, other["positional"][1].as_u64().unwrap() as u32),
+            Some(text) => semio_framework_ui_retained_tree::tree::NodeKeyRef::Explicit(text),
+            None => semio_framework_ui_retained_tree::tree::NodeKeyRef::Positional(other["positional"][0].as_u64().unwrap() as u32, other["positional"][1].as_u64().unwrap() as u32),
         };
         let ((matches, original), heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
             let witness = owned.borrowed();
             (witness == key, match (&owned, witness) {
-                (ui_wgpu::wgpu::NodeKey::Explicit(text), ui_wgpu::wgpu::NodeKeyRef::Explicit(borrowed)) => text.as_ptr() == borrowed.as_ptr() && text.len() == borrowed.len(),
-                (ui_wgpu::wgpu::NodeKey::Positional(a, b), ui_wgpu::wgpu::NodeKeyRef::Positional(x, y)) => (*a, *b) == (x, y),
+                (semio_framework_ui_retained_tree::tree::NodeKey::Explicit(text), semio_framework_ui_retained_tree::tree::NodeKeyRef::Explicit(borrowed)) => text.as_ptr() == borrowed.as_ptr() && text.len() == borrowed.len(),
+                (semio_framework_ui_retained_tree::tree::NodeKey::Positional(a, b), semio_framework_ui_retained_tree::tree::NodeKeyRef::Positional(x, y)) => (*a, *b) == (x, y),
                 _ => false,
             })
         });

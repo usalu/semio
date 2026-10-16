@@ -6,16 +6,14 @@ import AjvDraft7 from "ajv";
 import {readFileSync} from "node:fs";
 import fixture from "../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧊️renderer/🪶️sqlite/🔣️.json";
 import identityFixture from "../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧊️renderer/🪶️sqlite/🪪️identity/🔣️.json";
-import identitySchema from "../../../../../../../🏪️store/🧬️schema/📸️native-identity/🔣️.json";
-import bindingFixture from "../../../../../../../🚪️io/🪪️bindings/🧪️tests/🧫️fixtures/🔣️.json";
-import bindingSchema from "../../../../../../../🚪️io/🪪️bindings/🧬️schema/🔣️.json";
-import catalogFixture from "../../../../../../../🚪️io/🪪️bindings/🏛️catalog/🧪️tests/🧫️fixtures/🔣️.json";
-import catalogSchema from "../../../../../../../🚪️io/🪪️bindings/🏛️catalog/🧬️schema/🔣️.json";
+import { storeNativeIdentitySchema as identitySchema } from "../../../../../../../🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
+import { ioBindingsFixture as bindingFixture, ioBindingsSchema as bindingSchema, ioBindingsCatalogFixture as catalogFixture, ioBindingsCatalogSchema as catalogSchema } from "../../../../../../../🚪️io/🧪️tests/🧫️fixtures/🟦️.ts";
 import componentReceiptSchema from "../../../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🔣️.json";
 import draft07MetaSchema from "ajv/dist/refs/json-schema-draft-07.json";
 import {catalogBindingKey,proposeCatalogBindings,type ArtifactCatalogBinding} from "../../../../../../../🚪️io/🪪️bindings/🏛️catalog/🟦️.ts";
 import {SOCKET_PROBE_NATIVE_DIALECT,socketProbeToSqliteDatabase as project,socketProbeFromSqliteDatabase as restore} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { retainedCloneWireSchemaUrl } from "../../../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 const large=fixture.large.unit.repeat(fixture.large.repetitions);
 test("native_socket_sqlite_snapshot_original_catalog_declarations_preserve_owner_and_capability",()=>{
  const validate=new Ajv({strict:true,allErrors:true}).addMetaSchema(draft07MetaSchema).addSchema(componentReceiptSchema).compile(catalogSchema);
@@ -63,7 +61,7 @@ test("native_socket_sqlite_snapshot_closed_native_identity_policy",()=>{
  for(const field of identityFixture.guestFields){const row:Record<string,string>={kind:"guest",pluginId:"schema-specimen",packageHash:"00".repeat(32),schema:fixture.artifactSchema};delete row[field];expect(validate(row)).toBe(false);}
 });
 test("native_socket_sqlite_snapshot_closed_raw_text_policy",()=>{expect(testingSchemaExists(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);
- const grantSchema=JSON.parse(readFileSync(new URL("../../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",import.meta.url),"utf8")),validate=new AjvDraft7({strict:true,allErrors:true}).compile(grantSchema);expect(validate(fixture.callerGrant)).toBe(true);expect(validate({...fixture.callerGrant,extra:1})).toBe(false);for(const name of Object.keys(fixture.callerGrant)){const changed=structuredClone(fixture.callerGrant);delete (changed as Record<string,number>)[name];expect(validate(changed)).toBe(false);}expect(readFileSync(new URL("../🗄️.sql",import.meta.url),"utf8")).toBe(fixture.sql);
+ const grantSchema=JSON.parse(readFileSync(retainedCloneWireSchemaUrl,"utf8")),validate=new AjvDraft7({strict:true,allErrors:true}).compile(grantSchema);expect(validate(fixture.callerGrant)).toBe(true);expect(validate({...fixture.callerGrant,extra:1})).toBe(false);for(const name of Object.keys(fixture.callerGrant)){const changed=structuredClone(fixture.callerGrant);delete (changed as Record<string,number>)[name];expect(validate(changed)).toBe(false);}expect(readFileSync(new URL("../🗄️.sql",import.meta.url),"utf8")).toBe(fixture.sql);
  expect(SOCKET_PROBE_NATIVE_DIALECT).toBe(fixture.dialect);
  for(const row of fixture.cases){expect(new TextEncoder().encode(row.text).length).toBe(row.utf8Bytes);expect(row.valueBytes).toBe(row.utf8Bytes+8);}expect(new TextEncoder().encode(large).length).toBe(fixture.large.utf8Bytes);
 });

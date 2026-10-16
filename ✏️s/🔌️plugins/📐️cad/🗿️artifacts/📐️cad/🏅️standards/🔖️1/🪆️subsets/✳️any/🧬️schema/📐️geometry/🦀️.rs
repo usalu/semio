@@ -97,7 +97,7 @@ pub(crate) struct CadVertex {
 
 /// 📐️ One edge's curve. `kind` is the family (`line`/`arc`/`circle`/`ellipse`/`nurbs`); every other
 /// field is that family's parameters, exactly as the TypeScript `EdgeCurve`
-/// (`✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts`) carries them.
+/// (`✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🌀️curve-sampling/🟦️.ts`) carries them.
 ///
 /// 🩸️ Until ticket 26/09/17 packet W14g this struct carried ONLY `kind`, so every curved edge
 /// degraded to its two boundary vertices wherever the editor tessellated one — a circle picked and

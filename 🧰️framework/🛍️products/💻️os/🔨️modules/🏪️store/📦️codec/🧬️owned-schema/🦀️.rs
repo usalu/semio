@@ -272,7 +272,7 @@ impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
         }
         Ok(Default::default())
     }
-    pub(crate) fn new(path: OwnedSchemaPath, retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<T>>, decoder: Arc<dyn ArtifactOwnedHistoryEntryDecoder<T>>) -> Self {
+    pub fn new(path: OwnedSchemaPath, retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<T>>, decoder: Arc<dyn ArtifactOwnedHistoryEntryDecoder<T>>) -> Self {
         Self {
             path,
             values: std::mem::ManuallyDrop::new(Some(ArtifactHistoryLedger::new())),
@@ -1216,8 +1216,8 @@ pub const ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY: usize = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactEnvelopeCompletedRecordTicket {
-    index: u16,
-    generation: u64,
+    pub index: u16,
+    pub generation: u64,
 }
 
 impl ArtifactEnvelopeCompletedRecordTicket {
@@ -1554,7 +1554,7 @@ pub struct ArtifactEnvelopeFreshSnapshotTarget<P> {
 }
 
 impl<P> ArtifactEnvelopeFreshSnapshotTarget<P> {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { next_generation: 0, reserved: None, value: None }
     }
 }

@@ -1672,7 +1672,7 @@ pub mod role_chrome {
     //! strings/command ids as `📋️contract-freeze.md` §3/§5. Domain-neutral: this crate never depends
     //! on `semio_framework` (see the `wgpu` feature's `Cargo.toml` deps), so `ChromeRole` is a local
     //! wire-compatible mirror of `semio_framework::AppRole`/the TS host's own `AppRole` mirror in
-    //! `🎠️kernel/🟦️.ts` — same boundary this file already draws around `PluginCatalog`-style
+    //! `🎠️kernel/🧭️app-router/🟦️.ts` — same boundary this file already draws around `PluginCatalog`-style
     //! product data. A concrete `AppRouter`/`ConfigStore` never appears here: callers (the renderer
     //! product) resolve real entries and hand this module only already-resolved data to render.
 

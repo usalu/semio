@@ -1,4 +1,4 @@
-import intrinsicCorpus from "../../../../🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json";
+import { valueIntrinsicMediaFixture as intrinsicCorpus } from "../../../../🎒️pack/🧪️tests/🧫️fixtures/🟦️.ts";
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv/dist/2020";

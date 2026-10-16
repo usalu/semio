@@ -14,6 +14,13 @@ class LintScript extends BundleScript {
   }
 }
 
+const PLATFORM_TESTS: ReadonlyMap<string, string> = new Map([
+  ["platform-discovery-contract", "🔍️discovery-contract"],
+  ["platform-comparison-profiles", "⚖️comparison-profiles"],
+  ["platform-oracle-governance", "🔮️oracle-governance"],
+  ["platform-mutation-catalogs", "🦠️mutation-catalogs"],
+]);
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "fixture-isolation") {
@@ -28,8 +35,14 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "discovery-boundaries"), budgetMs: 30_000 });
       return;
     }
+    const platform = PLATFORM_TESTS.get(segments[0] ?? "");
+    if (platform) {
+      if (segments.length !== 1) throw new Error(`Expected test ${segments[0]}`);
+      await runRepositoryTestCommand(process.execPath, ["test", `../../🧪️tests/${platform}/🟦️.ts`], { cwd: this.root });
+      return;
+    }
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryTestCommand(process.execPath, ["test", "../../🧪️tests/🚷️discovery-boundaries/🟦️.ts", "../../🧪️tests/🧪️test-platform/🟦️.ts", "../../🧪️tests/🧬️schema-invariants/🟦️.ts", "../../🧪️tests/📐️test-layout/🟦️.ts", "../../🧪️tests/🧭️fixture-resolution/🟦️.ts", "../../🧪️tests/🧬️mutation-fixtures/🟦️.ts", ...rest], { cwd: this.root });
+    await runRepositoryTestCommand(process.execPath, ["test", "../../🧪️tests/🚷️discovery-boundaries/🟦️.ts", "../../🧪️tests/🔍️discovery-contract/🟦️.ts", "../../🧪️tests/⚖️comparison-profiles/🟦️.ts", "../../🧪️tests/🔮️oracle-governance/🟦️.ts", "../../🧪️tests/🦠️mutation-catalogs/🟦️.ts", "../../🧪️tests/🧬️schema-invariants/🟦️.ts", "../../🧪️tests/📐️test-layout/🟦️.ts", "../../🧪️tests/🧭️fixture-resolution/🟦️.ts", "../../🧪️tests/🧬️mutation-fixtures/🟦️.ts", ...rest], { cwd: this.root });
   }
 }
 

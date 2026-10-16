@@ -136,7 +136,7 @@ pub fn resource_matches_owner(props: &serde_json::Value, owner: &PresentedMediaO
 
 /// 📐️ Walks one strictly presented tree and composes its leaves with the accepted shell body.
 #[cfg(test)]
-pub fn collect_tree_slots(tree: &ui_wgpu::wgpu::tree::UiTree, window_id: &str, body: Rect, owner: &PresentedMediaOwner, slots: &mut Vec<PresentedMediaSlot>) -> bool {
+pub fn collect_tree_slots(tree: &semio_framework_ui_retained_tree::tree::UiTree, window_id: &str, body: Rect, owner: &PresentedMediaOwner, slots: &mut Vec<PresentedMediaSlot>) -> bool {
     let Some(root) = tree.root else { return true };
     if !valid_bounds(body) || !(1..=512).contains(&window_id.chars().count()) || !(1..=256).contains(&owner.plugin_id.chars().count()) || !(1..=256).contains(&owner.controller_id.chars().count()) || !(1..=512).contains(&owner.parent_document_id.chars().count()) {
         return true;
@@ -164,10 +164,10 @@ pub fn collect_tree_slots(tree: &ui_wgpu::wgpu::tree::UiTree, window_id: &str, b
         }
         if let Some(document_id) = tree.document_id(id) {
             if let UiNode::ExternalSlot(slot) = &node.spec.0 {
-                if slot.body_key == ui_wgpu::wgpu::reconcile::MEDIA_TRANSPORT_EXTENSION_ID && slot.params_json.len() <= PRESENTED_MEDIA_DESCRIPTOR_BYTES && slot.app_id == owner.controller_id {
+                if slot.body_key == semio_framework_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID && slot.params_json.len() <= PRESENTED_MEDIA_DESCRIPTOR_BYTES && slot.app_id == owner.controller_id {
                     if let Ok(props) = serde_json::from_str::<serde_json::Value>(&slot.params_json) {
                         let clip = intersect(rect, inherited_clip);
-                        if valid_bounds(rect) && valid_bounds(clip) && ui_wgpu::wgpu::reconcile::media_transport_contract_valid(&props) && resource_matches_owner(&props, owner) {
+                        if valid_bounds(rect) && valid_bounds(clip) && semio_framework_ui_retained_tree::reconcile::media_transport_contract_valid(&props) && resource_matches_owner(&props, owner) {
                             if slots.len() == PRESENTED_MEDIA_SLOT_CAPACITY {
                                 return false;
                             }
@@ -189,7 +189,7 @@ pub fn collect_tree_slots(tree: &ui_wgpu::wgpu::tree::UiTree, window_id: &str, b
             if stack.len().saturating_add(children.len()) > ui_contract::UI_DOCUMENT_NODES {
                 return false;
             }
-            let clip = if node.flags.contains(ui_wgpu::wgpu::tree::NodeFlags::CLIPS_CHILDREN) { intersect(inherited_clip, rect) } else { inherited_clip };
+            let clip = if node.flags.contains(semio_framework_ui_retained_tree::tree::NodeFlags::CLIPS_CHILDREN) { intersect(inherited_clip, rect) } else { inherited_clip };
             let Some(origin) = tree.child_walk_origin(id, (origin_x, origin_y)) else { return false };
             stack.extend(children.into_iter().rev().map(|child| (child, origin.0, origin.1, clip, depth + 1, occluded || tree.disclosure_open(id) == Some(false))));
         }

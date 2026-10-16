@@ -3,7 +3,7 @@ import{withCompiledPrintProbeV1}from"../../🔨️modules/🖨️tectonic-templa
 /** 🧬️ Authored transformation columns adjudicated by native TeX and independent D3. */
 import { join, resolve } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { parseProbeJsonLines, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import vectors from "./🔣️.json";
 

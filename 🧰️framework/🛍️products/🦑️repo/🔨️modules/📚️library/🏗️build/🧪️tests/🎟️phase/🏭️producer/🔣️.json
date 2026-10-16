@@ -1,0 +1,1 @@
+{"cases":[{"phase":"issued","accepted":true},{"phase":"cancelled","accepted":false},{"phase":"copied","accepted":false},{"phase":"expired","accepted":false},{"phase":"after-await","accepted":false},{"phase":"cargo-issued","accepted":true},{"phase":"cargo-cancel-after","accepted":false}]}

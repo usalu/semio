@@ -1,0 +1,38 @@
+{
+  "file": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🚧️clearance/🧪️tests/🔬️unit/🟦️.ts",
+  "label": "clearance-ts",
+  "childRoot": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🚧️clearance/🧪️tests",
+  "deleteParent": true,
+  "children": [
+    {
+      "folder": "🌍️reference-world",
+      "doc": "/** 🌍️ The reference world of the clearance unit suite: a pure, seeded fold in which the rules of the module, and nothing else, keep six to ten pets apart while they walk, hop, glide, fall, land on heads, are dragged and thrown by a hand and lose, shrink and move their perches.\n *\n * The world is exported: `clearance_world.ts` of ticket 2026/10/02/QUIZ-PETS runs it for the published metrics and ablations.\n *\n * @see ../../🟦️.ts — the implementation under test\n * @see ../../../🏞️terrain/🟦️.ts — the perches, falls and hops the world moves by\n * @see ../../../🎲️randomness/🟦️.ts — the draws of the world\n */",
+      "stmts": ["78-761"]
+    },
+    {
+      "folder": "🧰️clearance-tools",
+      "doc": "/** 🧰️ Tools of the cases of the clearance unit suite: how many generated cases a comparison takes at the level of the run, the worlds and ablations that are played, the cheapest runs that bite per rule, and the small builders of boxes, bodies and sweeps.\n *\n * @see ../🌍️reference-world/🟦️.ts — the world the sweeps play\n * @see ../../🟦️.ts — the implementation under test\n */",
+      "stmts": ["765-835"]
+    },
+    {
+      "folder": "📦️boxes-and-places",
+      "doc": "/** 📦️ Unit suite of the clearance module, boxes and places: the constants of the design, the box of a body around its feet, and the free places among obstacles.\n *\n * @see ../🧰️clearance-tools/🟦️.ts — the builders of the cases\n * @see ../../🟦️.ts — the implementation under test\n */",
+      "stmts": ["838-1014"]
+    },
+    {
+      "folder": "📜️claims-and-order",
+      "doc": "/** 📜️ Unit suite of the clearance module, claims and order: planned paths cut into slices and compared tick by tick, and strides that keep walkers apart and in their order on a perch.\n *\n * @see ../🧰️clearance-tools/🟦️.ts — the builders of the cases\n * @see ../../🟦️.ts — the implementation under test\n */",
+      "stmts": ["1016-1293"]
+    },
+    {
+      "folder": "🪑️seating-and-heads",
+      "doc": "/** 🪑️ Unit suite of the clearance module, seating and heads: the nearest valid seating of pooled neighbours, landings on heads and slides off them, held bodies pushed out of obstacles and the last resort of a pet without a clear plan.\n *\n * @see ../🧰️clearance-tools/🟦️.ts — the builders of the cases\n * @see ../../🟦️.ts — the implementation under test\n */",
+      "stmts": ["1295-1590"]
+    },
+    {
+      "folder": "🏛️world-laws",
+      "doc": "/** 🏛️ Unit suite of the clearance module, laws of the world: lanes and metrics, exact operations without side effects, and the reference world that keeps every pair of bodies apart.\n *\n * @see ../🌍️reference-world/🟦️.ts — the world under test\n * @see ../🧰️clearance-tools/🟦️.ts — the sweeps and the ablations\n * @see ../../🟦️.ts — the implementation under test\n */",
+      "stmts": ["1592-1768"]
+    }
+  ]
+}

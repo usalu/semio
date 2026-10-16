@@ -47,3 +47,4 @@ semio-framework-value-derive = { path="../../../../../../../🔨️modules/🌱�
 semio-framework-ui-locale = { path="../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path="../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-os-command = { path="../../../../📡️spr/🎮️command/📦️packages/🦀️rust", features=["mutation-testing"] }
+semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust", features = ["testkit"] }

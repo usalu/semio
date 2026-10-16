@@ -193,8 +193,6 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 self.note_time_travel_changed(true, true);
             }
             Err(error) => {
-                #[cfg(debug_assertions)]
-                eprintln!("[DEBUG] deferred reprojection refused local={local} generation={generation} detail={error:?} message={error}");
                 let code = match local && matches!(error, vcs::VcsError::Rejected { .. }) {
                     true => HISTORY_STEP_BLOCKED_CODE.to_string(),
                     false => error.into_fault().code.0,
@@ -735,17 +733,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         }
         self.prepare_time_travel_patch().await?;
         self.flush_time_travel_ui_dirty();
-        if let Some(step) = self.time_travel_retire_step(grant)? {
-            if step.progress()!=RetainedCloneProgress::default() {
-                #[cfg(debug_assertions)]
-                if self.stores.store.reprojection_progress().is_some() {
-                    static TURNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-                    let turns = TURNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed).saturating_add(1);
-                    if turns >= 1024 && turns.is_power_of_two() {
-                        eprintln!("[DEBUG] reprojection driver cleanup turn={turns} step={step:?} progress={:?} documentRetirements={} documentDiscarded={}", self.stores.store.reprojection_progress(), self.time_travel.document.retirements.len(), self.time_travel.document.discarded.len());
-                    }
-                }
-            }
+        if self.time_travel_retire_step(grant)?.is_some() {
             return Ok(());
         }
         let moved = self.watch_time_travel_base(identity).await?;

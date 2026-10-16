@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
+artifact-app-testing = []
 original-actor-context-testing = []
 
 [dependencies]
@@ -54,7 +55,11 @@ semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱
 semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+semio_framework_ui_contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-layout = { path = "../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio_framework_ui_runtime = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
 
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

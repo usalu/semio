@@ -10,13 +10,13 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralMap } from "../../../../../../../🔨️modules/🫧️transient/🟦️.ts";
+import { ephemeralMap } from "@semio-tech/framework/transient";
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 // #endregion 🔌️Adapters
 
-import { publishEvent } from "@/lib/event";
-import { removeContributorWorkForCheckpoint } from "@/lib/persistence";
+import { publishEvent } from "@semio-tech/framework/products/repo/modules/server/library/event";
+import { removeContributorWorkForCheckpoint } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
 
 const GITHUB_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
 

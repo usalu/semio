@@ -142,7 +142,7 @@ fn fixture_labels(fixture: &Fixture) -> RetainedOrderedMap<String, String> {
     for (key, value) in &fixture.source.labels {
         let key = key.clone();
         let value = value.clone();
-        let (result, allocated, released) = crate::test_allocation::observe_backing(|| RetainedOrderedMapInsertCursor::admit(labels, key, value, retirement));
+        let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| RetainedOrderedMapInsertCursor::admit(labels, key, value, retirement));
         let (mut cursor, receipt) = result.unwrap_or_else(|_| panic!("fixed insertion birth policy"));
         assert!(receipt.fits(physical_grant()));
         assert_eq!((allocated, released), (receipt.retained_capacity_bytes, receipt.released_bytes));
@@ -201,7 +201,7 @@ fn close_cursor<T: RetainedClone>(cursor: &mut T::Cursor) {
     let mut turns = 0usize;
     let grant = physical_grant();
     while !cursor.terminal_is_empty() {
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| cursor.close_step(grant).expect("retained clone close"));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| cursor.close_step(grant).expect("retained clone close"));
         assert!(step.progress().fits(grant));
         assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
         if matches!(step, RetainedCloneStep::Complete(_)) {
@@ -358,10 +358,10 @@ fn utf8_copy_is_boundary_paged_and_source_lease_captures_one_value() {
 #[test]
 fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellation() {
     let captured = fixture().immutable_lease.captured;
-    let registry = super::SnapshotReadRegistryHandle::new();
+    let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(captured.clone());
     let lease = registry.try_issue(Arc::clone(&owner)).expect("production snapshot read lease");
-    let mut retained_source = super::SnapshotRead::new(Arc::clone(&owner), lease).admit_retained_clone_source(physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
+    let mut retained_source = snapshot_read::SnapshotRead::new(Arc::clone(&owner), lease).admit_retained_clone_source(physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
     let copy_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: captured.len(), maximum_depth: 64, maximum_release_bytes: captured.len() };
     let mut cursor = String::retained_clone_cursor();
     cursor.advance(retained_source.borrow(), bound(copy_grant)).expect("production snapshot read alias bind");
@@ -381,10 +381,10 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     drop(owner);
 
     let fixture = fixture();
-    let registry = super::SnapshotReadRegistryHandle::new();
+    let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(source(&fixture));
     let lease = registry.try_issue(Arc::clone(&owner)).expect("production cancellation snapshot read lease");
-    let mut retained_source = super::SnapshotRead::new(owner, lease).admit_retained_clone_source(physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
+    let mut retained_source = snapshot_read::SnapshotRead::new(owner, lease).admit_retained_clone_source(physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
     let grant = grant(&fixture);
     let mut cursor = NeutralSnapshot::retained_clone_cursor();
     cursor.advance(retained_source.borrow(), grant).expect("production cancellation reserve");
@@ -393,12 +393,12 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     assert!(!registry.terminal_is_empty(), "active cursor binding retains the exact production snapshot read");
     close_cursor::<NeutralSnapshot>(&mut cursor);
     assert!(registry.has_returned(), "the last large owner returns to the bounded registry pump");
-    let factory: Arc<dyn super::ArtifactOwnedValueRetirementFactory<NeutralSnapshot>> = Arc::new(OwnedValueRetirementFactory::<NeutralSnapshot>::default());
+    let factory: Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<NeutralSnapshot>> = Arc::new(OwnedValueRetirementFactory::<NeutralSnapshot>::default());
     let mut active = None;
     let mut retirement_turns = 0usize;
     loop {
         retirement_turns += 1;
-        let step = super::advance_returned_snapshot_read(&registry, &mut active, &factory, physical_grant()).expect("returned large snapshot retirement");
+        let step = snapshot_read::advance_returned_snapshot_read(&registry, &mut active, &factory, physical_grant()).expect("returned large snapshot retirement");
         assert!(step.progress().fits(physical_grant()));
         if matches!(step, RetainedCloneStep::Complete(_)) {
             break;
@@ -634,7 +634,7 @@ fn physical_grant() -> RetainedCloneGrant {
 
 fn retained_source<T: RetireOwned + Sync>(owner: T) -> RetainedCloneSource<T> {
     let grant = physical_grant();
-    let (result, allocated, released) = crate::test_allocation::observe_backing(|| RetainedCloneSource::admit_owned(owner, (), grant));
+    let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| RetainedCloneSource::admit_owned(owner, (), grant));
     let (source, progress) = result.unwrap_or_else(|_| panic!("fixed source admission policy"));
     assert!(progress.fits(grant));
     assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -645,19 +645,19 @@ fn close_source<T: Sync + 'static, A: RetireOwned + Sync>(source: &mut RetainedC
     let grant = physical_grant();
     for _ in 0..100_000 {
         if source.terminal_is_empty() { return; }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| source.close_step(grant).expect("fixed source retirement policy"));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| source.close_step(grant).expect("fixed source retirement policy"));
         assert!(step.progress().fits(grant));
         assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     }
     panic!("original source did not close under its independent policy");
 }
 
-fn close_registry(registry: super::SnapshotReadRegistryHandle) {
-    let mut original = Some(super::SnapshotReadRegistryAliasRetirement::new(registry));
+fn close_registry(registry: semio_framework_value_snapshot_read::SnapshotReadRegistryHandle) {
+    let mut original = Some(semio_framework_value_snapshot_read::SnapshotReadRegistryAliasRetirement::new(registry));
     let grant = physical_grant();
     for _ in 0..100_000 {
         if original.is_none() { return; }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| super::snapshot_registry_alias_close_step(&mut original, grant).expect("fixed registry backing policy"));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| semio_framework_value_snapshot_read::snapshot_registry_alias_close_step(&mut original, grant).expect("fixed registry backing policy"));
         assert!(step.progress().fits(grant));
         assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     }

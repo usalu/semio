@@ -14,7 +14,8 @@ use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::outputs;
 use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
-use semio_s_artifact_procedural_3d_geometry::registry;
+use semio_s_artifact_procedural_3d_geometry_compute::StartFn;
+use semio_s_artifact_procedural_3d_model::catalogue::Catalogue;
 use semio_framework_3d_brep_engine::{GeometryKind, ShapeRoot, ShapeValue};
 use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_surface::Surface;
@@ -23,14 +24,13 @@ use std::collections::BTreeMap;
 use std::f64::consts::TAU;
 use std::sync::Arc;
 
-#[path = "../🧰️oracle-support/🦀️.rs"]
-pub mod oracle;
+pub use semio_s_artifact_procedural_3d_geometry_oracle_support as oracle;
 
-pub use semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::assert_category;
-pub use semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::cases;
-pub use semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::close;
-pub use semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::drive;
-pub use semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::kind_of;
+pub use oracle::assert_category;
+pub use oracle::cases;
+pub use oracle::close;
+pub use oracle::drive;
+pub use oracle::kind_of;
 
 fn number(value: &Value) -> f64 {
     value.as_f64().unwrap_or_else(|| panic!("number expected, found {value}"))
@@ -42,14 +42,17 @@ fn triple(value: &Value) -> [f64; 3] {
 }
 
 //#region 🔖️Inputs
+/// 🗃️ The registered compute start of a kind id, supplied by the caller because the registry sits above the constructions.
+pub type Lookup = fn(&str) -> Option<StartFn>;
+
 /// 🧊️ The shape a fixture recipe names; a widget recipe runs the registered compute to its end.
-pub fn shape_of(recipe: &Value) -> Arc<ShapeValue> {
+pub fn shape_of(catalogue: &'static Catalogue, lookup: Lookup, recipe: &Value) -> Arc<ShapeValue> {
     if recipe["recipe"].as_str() != Some("widget") {
-        return Arc::new(semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::build_shape(recipe));
+        return Arc::new(oracle::build_shape(recipe));
     }
-    let kind = kind_of(recipe["kind"].as_str().expect("widget kind"));
-    let start = registry::lookup(&kind.id).unwrap_or_else(|| panic!("{} has a compute", kind.id));
-    let evaluation = drive(start(kind, inputs_of(kind, recipe)), usize::MAX);
+    let kind = kind_of(catalogue, recipe["kind"].as_str().expect("widget kind"));
+    let start = lookup(&kind.id).unwrap_or_else(|| panic!("{} has a compute", kind.id));
+    let evaluation = drive(start(kind, inputs_of(catalogue, lookup, kind, recipe)), usize::MAX);
     if let Some(fault) = &evaluation.fault {
         panic!("the widget recipe {} faulted: {fault}", kind.id);
     }
@@ -61,15 +64,15 @@ pub fn shape_of(recipe: &Value) -> Arc<ShapeValue> {
 }
 
 /// 🔌️ The typed inputs a case (or a widget recipe) states for its kind.
-pub fn inputs_of(kind: &Kind, case: &Value) -> WidgetInputs {
+pub fn inputs_of(catalogue: &'static Catalogue, lookup: Lookup, kind: &Kind, case: &Value) -> WidgetInputs {
     let stated = case["inputs"].as_object().expect("case inputs");
     let mut values: BTreeMap<String, GeometryValue> = BTreeMap::new();
     for port in &kind.inputs {
         let Some(value) = stated.get(&port.name) else { continue };
         let decoded = match port.port_type {
-            PortType::Shape | PortType::Shapes if port.list || port.port_type == PortType::Shapes => GeometryValue::List(value.as_array().expect("a list of shapes").iter().map(|item| GeometryValue::Shape(shape_of(item))).collect()),
-            PortType::Shape => GeometryValue::Shape(shape_of(value)),
-            _ => semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::decode(port, value),
+            PortType::Shape | PortType::Shapes if port.list || port.port_type == PortType::Shapes => GeometryValue::List(value.as_array().expect("a list of shapes").iter().map(|item| GeometryValue::Shape(shape_of(catalogue, lookup, item))).collect()),
+            PortType::Shape => GeometryValue::Shape(shape_of(catalogue, lookup, value)),
+            _ => oracle::decode(port, value),
         };
         values.insert(port.name.clone(), decoded);
     }
@@ -261,7 +264,7 @@ pub fn assert_extras(name: &str, shape: &ShapeValue, expected: &Value, tolerance
 //#region 🔖️Run
 /// ✅️ Asserts one fixture case against an evaluation: the oracle support's checks, then the extra statements of every shape output.
 pub fn assert_case(case: &Value, kind: &Kind, evaluation: &WidgetEvaluation, tolerance: f64) {
-    semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::assert_case(case, kind, evaluation, tolerance);
+    oracle::assert_case(case, kind, evaluation, tolerance);
     let name = case["name"].as_str().unwrap_or("case");
     if let Some(expected) = case.get("outputs").and_then(Value::as_object) {
         for (port, wanted) in expected {
@@ -273,14 +276,14 @@ pub fn assert_case(case: &Value, kind: &Kind, evaluation: &WidgetEvaluation, tol
 }
 
 /// 🧪️ Runs every case of a fixture at fuel 1 and at unbounded fuel, asserts both against the fixture and requires the two evaluations to be equal value for value.
-pub fn run_fixture(text: &str, entries: &[ComputeEntry]) -> usize {
+pub fn run_fixture(catalogue: &'static Catalogue, lookup: Lookup, text: &str, entries: &[ComputeEntry]) -> usize {
     let (fixture, cases) = cases(text);
     let tolerance = fixture["tolerance"].as_f64().expect("fixture tolerance");
     for case in &cases {
-        let kind = kind_of(case["kind"].as_str().expect("case kind"));
+        let kind = kind_of(catalogue, case["kind"].as_str().expect("case kind"));
         let case_tolerance = case["tolerance"].as_f64().unwrap_or(tolerance);
-        let stepped = semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::evaluate(kind, inputs_of(kind, case), entries, 1);
-        let whole = semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::evaluate(kind, inputs_of(kind, case), entries, usize::MAX);
+        let stepped = oracle::evaluate(kind, inputs_of(catalogue, lookup, kind, case), entries, 1);
+        let whole = oracle::evaluate(kind, inputs_of(catalogue, lookup, kind, case), entries, usize::MAX);
         assert_case(case, kind, &whole, case_tolerance);
         assert_eq!(stepped, whole, "{}: stepping at fuel 1 never changes the evaluation", case["name"]);
     }
@@ -294,13 +297,13 @@ fn shape_bytes(evaluation: &WidgetEvaluation) -> Vec<String> {
 }
 
 /// 🎲️ Equal inputs give equal value bytes: every successful case is computed twice from scratch and its shape outputs must encode to the same JSON.
-pub fn assert_deterministic(text: &str, entries: &[ComputeEntry]) -> usize {
+pub fn assert_deterministic(catalogue: &'static Catalogue, lookup: Lookup, text: &str, entries: &[ComputeEntry]) -> usize {
     let (_, cases) = cases(text);
     let mut checked = 0;
     for case in cases.iter().filter(|case| case.get("fault").is_none()) {
-        let kind = kind_of(case["kind"].as_str().expect("case kind"));
-        let first = semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::evaluate(kind, inputs_of(kind, case), entries, usize::MAX);
-        let second = semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::evaluate(kind, inputs_of(kind, case), entries, 3);
+        let kind = kind_of(catalogue, case["kind"].as_str().expect("case kind"));
+        let first = oracle::evaluate(kind, inputs_of(catalogue, lookup, kind, case), entries, usize::MAX);
+        let second = oracle::evaluate(kind, inputs_of(catalogue, lookup, kind, case), entries, 3);
         assert_eq!(shape_bytes(&first), shape_bytes(&second), "{}: equal inputs give equal shape bytes", case["name"]);
         assert!(!shape_bytes(&first).is_empty(), "{}: a shape output to compare", case["name"]);
         checked += 1;
@@ -309,13 +312,13 @@ pub fn assert_deterministic(text: &str, entries: &[ComputeEntry]) -> usize {
 }
 
 /// 🛑️ A job cancelled between two steps releases its session and answers `cancelled` from then on; a case that finishes within its first step cannot be cancelled and is skipped.
-pub fn assert_cancellable(text: &str, entries: &[ComputeEntry]) -> usize {
+pub fn assert_cancellable(catalogue: &'static Catalogue, lookup: Lookup, text: &str, entries: &[ComputeEntry]) -> usize {
     let (_, cases) = cases(text);
     let mut cancelled = 0;
     for case in cases.iter().filter(|case| case.get("fault").is_none()) {
-        let kind = kind_of(case["kind"].as_str().expect("case kind"));
+        let kind = kind_of(catalogue, case["kind"].as_str().expect("case kind"));
         let entry = entries.iter().find(|entry| entry.id == kind.id).expect("registered kind");
-        let mut job = (entry.start)(kind, inputs_of(kind, case));
+        let mut job = (entry.start)(kind, inputs_of(catalogue, lookup, kind, case));
         if let WidgetStep::Done(_) = job.step(1) {
             continue;
         }
@@ -335,11 +338,11 @@ pub fn assert_cancellable(text: &str, entries: &[ComputeEntry]) -> usize {
 }
 
 /// 🔁️ The shape of the first successful output of a case.
-pub fn first_shape(text: &str, entries: &[ComputeEntry], name: &str) -> Arc<ShapeValue> {
+pub fn first_shape(catalogue: &'static Catalogue, lookup: Lookup, text: &str, entries: &[ComputeEntry], name: &str) -> Arc<ShapeValue> {
     let (_, cases) = cases(text);
     let case = cases.iter().find(|case| case["name"] == name).unwrap_or_else(|| panic!("case {name}"));
-    let kind = kind_of(case["kind"].as_str().expect("case kind"));
-    match semio_s_artifact_procedural_3d_brep_surface::tests::support::oracle::evaluate(kind, inputs_of(kind, case), entries, usize::MAX).outputs.cold_remove("shape") {
+    let kind = kind_of(catalogue, case["kind"].as_str().expect("case kind"));
+    match oracle::evaluate(kind, inputs_of(catalogue, lookup, kind, case), entries, usize::MAX).outputs.cold_remove("shape") {
         Some(GeometryValue::Shape(shape)) => shape,
         other => panic!("{name} has a shape output, found {other:?}"),
     }

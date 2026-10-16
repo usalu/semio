@@ -1,0 +1,26 @@
+{
+ "crate_dir": "🧰️framework/🛍️products/❓️quiz",
+ "lib_name": "quiz",
+ "companion_dir": "🧰️framework/🛍️products/❓️quiz/🧪️tests/🍰️companion-primitives",
+ "doc": "//! 🍰️ Companion tests of the quiz primitives: the Mersenne Twister with its shuffle and the presence tags.\n//!\n//! 🧭️ Each module's unit file is mounted below a wrapper module of the same name.",
+ "preamble": [
+  "pub use quiz::*;",
+  ""
+ ],
+ "modules": [
+  {
+   "name": "randomness",
+   "lib_file": "🔨️modules/🎲️randomness/🦀️.rs",
+   "tests": "🔨️modules/🎲️randomness/🧪️tests/🔬️unit/🦀️.rs",
+   "emoji": "🎲",
+   "doc": "The Mersenne Twister and shuffle laws."
+  },
+  {
+   "name": "presence",
+   "lib_file": "🔨️modules/👥️presence/🦀️.rs",
+   "tests": "🔨️modules/👥️presence/🧪️tests/🔬️unit/🦀️.rs",
+   "emoji": "👥",
+   "doc": "The presence tag and roster laws."
+  }
+ ]
+}

@@ -4376,6 +4376,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-native-build-compiler-resources"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+]
+
+[[package]]
 name = "semio-framework-number"
 version = "0.1.0"
 
@@ -4511,6 +4518,13 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+]
+
+[[package]]
+name = "semio-framework-os-flow-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-flow-flow",
 ]
 
 [[package]]
@@ -5342,6 +5356,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -5408,13 +5423,10 @@ name = "semio-framework-os-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
- "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-pack-record-token",
  "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
@@ -5430,6 +5442,13 @@ dependencies = [
  "semio-framework-os-pack",
  "semio-framework-pack-source",
  "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-os-playbook-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-playbook-playbook",
 ]
 
 [[package]]
@@ -6063,15 +6082,16 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
+ "semio-framework-pack-schema-index",
  "semio-framework-replication-codec",
  "semio-framework-value",
 ]
 
 [[package]]
-name = "semio-framework-pack-record-token"
+name = "semio-framework-pack-schema-index"
 version = "0.1.0"
 dependencies = [
- "semio-framework-pack",
+ "semio-framework-dsl-record",
  "semio-framework-value",
 ]
 
@@ -6133,6 +6153,7 @@ dependencies = [
  "semio-framework-plugin-decl-views",
  "semio-framework-plugin-document-media",
  "semio-framework-plugin-extension",
+ "semio-framework-plugin-guest-contract",
  "semio-framework-plugin-identity",
  "semio-framework-plugin-instance-app",
  "semio-framework-plugin-instance-children",
@@ -6461,6 +6482,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-app-builder",
  "semio-framework-plugin-decl-app",
@@ -6578,7 +6600,10 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-job",
+ "semio-framework-job-fault-publication",
  "semio-framework-os-kernel",
+ "semio-framework-plugin-abi",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
@@ -7151,6 +7176,7 @@ dependencies = [
  "semio-framework-plugin-abi",
  "semio-framework-plugin-decl-emission",
  "semio-framework-plugin-extension",
+ "semio-framework-plugin-guest-contract",
  "semio-framework-plugin-reactor-app",
  "semio-framework-plugin-reactor-jobs",
  "semio-framework-plugin-reactor-lifecycle",
@@ -7938,6 +7964,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-test-original-snapshot-owners"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-time-travel"
 version = "0.1.0"
 dependencies = [
@@ -8057,6 +8091,7 @@ name = "semio-framework-ui-backend-webgpu"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
+ "semio-framework-abi",
  "semio-framework-ui-render",
  "semio-framework-value",
  "wgpu",
@@ -8789,6 +8824,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "syn 2.0.117",
 ]
 
@@ -8966,6 +9002,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-analysis-measure",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-oracle-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
@@ -8984,6 +9021,7 @@ dependencies = [
  "semio-framework-3d-brep-vector",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-oracle-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-math-arithmetic",
@@ -9007,6 +9045,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-brep-surface",
  "semio-s-artifact-procedural-3d-geometry",
  "semio-s-artifact-procedural-3d-geometry-compute",
+ "semio-s-artifact-procedural-3d-geometry-construction-support",
  "semio-s-artifact-procedural-3d-geometry-inputs",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
@@ -9032,6 +9071,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-brep-surface",
  "semio-s-artifact-procedural-3d-geometry",
  "semio-s-artifact-procedural-3d-geometry-compute",
+ "semio-s-artifact-procedural-3d-geometry-construction-support",
  "semio-s-artifact-procedural-3d-geometry-inputs",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
@@ -9053,6 +9093,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-brep-sources",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-phased-job-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
@@ -9072,6 +9113,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-brep-curve",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-phased-job-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
@@ -9098,6 +9140,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-brep-sources",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-phased-job-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
@@ -9115,6 +9158,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-oracle-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
@@ -9135,6 +9179,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-brep-surface",
  "semio-s-artifact-procedural-3d-geometry",
  "semio-s-artifact-procedural-3d-geometry-compute",
+ "semio-s-artifact-procedural-3d-geometry-construction-support",
  "semio-s-artifact-procedural-3d-geometry-inputs",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
@@ -9169,6 +9214,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-brep-sources",
  "semio-s-artifact-procedural-3d-geometry",
  "semio-s-artifact-procedural-3d-geometry-compute",
+ "semio-s-artifact-procedural-3d-geometry-construction-support",
  "semio-s-artifact-procedural-3d-geometry-inputs",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
@@ -9191,6 +9237,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-brep-feature",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-phased-job-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
@@ -9213,6 +9260,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-brep-feature",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-phased-job-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
@@ -9564,6 +9612,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-procedural-3d-geometry-construction-support"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-engine",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-pack-json",
+ "semio-s-artifact-procedural-3d-geometry-compute",
+ "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-oracle-support",
+ "semio-s-artifact-procedural-3d-geometry-value",
+ "semio-s-artifact-procedural-3d-model",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-artifact-procedural-3d-geometry-inputs"
 version = "0.1.0"
 dependencies = [
@@ -9577,6 +9641,51 @@ dependencies = [
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
  "semio-s-artifact-procedural-3d-mut-widgets",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-procedural-3d-geometry-mesh-harness"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d",
+ "semio-framework-io-base64",
+ "semio-framework-pack-json",
+ "semio-s-artifact-procedural-3d-geometry-compute",
+ "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-oracle-support",
+ "semio-s-artifact-procedural-3d-geometry-value",
+ "semio-s-artifact-procedural-3d-model",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-procedural-3d-geometry-oracle-support"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d",
+ "semio-framework-3d-brep-analysis",
+ "semio-framework-3d-brep-engine",
+ "semio-s-artifact-procedural-3d-geometry-compute",
+ "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-value",
+ "semio-s-artifact-procedural-3d-model",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-procedural-3d-geometry-phased-job-support"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-analysis",
+ "semio-framework-3d-brep-engine",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-value",
+ "semio-s-artifact-procedural-3d-geometry-compute",
+ "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-oracle-support",
+ "semio-s-artifact-procedural-3d-geometry-value",
+ "semio-s-artifact-procedural-3d-model",
  "serde_json",
 ]
 
@@ -9779,6 +9888,8 @@ dependencies = [
  "semio-s-artifact-procedural-3d-geometry",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
+ "semio-s-artifact-procedural-3d-geometry-phased-job-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-mesh-support",
@@ -9829,12 +9940,14 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
+ "semio-framework-test-original-snapshot-owners",
  "semio-framework-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
  "semio-s-artifact-procedural-3d-mutations",
  "semio-s-artifact-procedural-generation3d",
  "semio-s-procedural-core-generation-sqlite",
+ "semio-s-procedural-core-generation-sqlite-test-support",
  "serde_json",
 ]
 
@@ -9892,6 +10005,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-mut-widgets",
  "semio-s-artifact-procedural-3d-mutations",
  "semio-s-artifact-procedural-3d-testkit",
+ "semio-s-procedural-core-generation-sqlite-native",
  "serde_json",
 ]
 
@@ -9904,6 +10018,7 @@ dependencies = [
  "semio-framework-3d-brep-engine",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-oracle-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
@@ -9919,6 +10034,7 @@ dependencies = [
  "semio-framework-3d-brep-engine",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-oracle-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-math-arithmetic",
@@ -9935,6 +10051,7 @@ dependencies = [
  "semio-framework-3d-brep-engine",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-oracle-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
@@ -9950,6 +10067,7 @@ dependencies = [
  "semio-framework-3d-brep-engine",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-oracle-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-math-arithmetic",
@@ -9986,6 +10104,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-mesh-primitive",
@@ -10006,6 +10125,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-mesh-primitive",
@@ -10025,6 +10145,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-mesh-primitive",
@@ -10044,6 +10165,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-mesh-primitive",
@@ -10064,6 +10186,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-geometry",
  "semio-s-artifact-procedural-3d-io-text",
@@ -10083,6 +10206,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-mesh-primitive",
@@ -10102,6 +10226,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-mesh-primitive",
@@ -10123,6 +10248,7 @@ dependencies = [
  "semio-framework-value",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-mesh-edit",
@@ -10142,6 +10268,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-mesh-primitive",
@@ -10161,6 +10288,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-mesh-harness",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-mesh-primitive",
@@ -10382,6 +10510,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-brep-feature",
  "semio-s-artifact-procedural-3d-geometry-compute",
  "semio-s-artifact-procedural-3d-geometry-inputs",
+ "semio-s-artifact-procedural-3d-geometry-phased-job-support",
  "semio-s-artifact-procedural-3d-geometry-value",
  "semio-s-artifact-procedural-3d-io-text",
  "semio-s-artifact-procedural-3d-model",
@@ -13292,17 +13421,41 @@ dependencies = [
 name = "semio-s-procedural-core-generation-sqlite"
 version = "0.1.0"
 dependencies = [
- "semio-framework-artifact-flow-flow",
- "semio-framework-artifact-playbook-playbook",
+ "semio-framework-os-flow-contract",
  "semio-framework-os-kernel",
+ "semio-framework-os-playbook-contract",
  "semio-framework-value",
+]
+
+[[package]]
+name = "semio-s-procedural-core-generation-sqlite-native"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-os-flow-contract",
+ "semio-framework-os-kernel",
+ "semio-framework-os-playbook-contract",
+ "semio-framework-pack",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-s-procedural-core-generation-sqlite-test-support"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-flow-contract",
+ "semio-framework-os-playbook-contract",
+ "semio-framework-value",
+ "serde_json",
 ]
 
 [[package]]
 name = "semio-s-procedural-core-semantic-ui"
 version = "0.1.0"
 dependencies = [
- "semio-framework-artifact-playbook-playbook",
+ "semio-framework-os-playbook-contract",
  "semio-framework-plugin",
  "semio-framework-ui",
  "semio-framework-ui-locale",

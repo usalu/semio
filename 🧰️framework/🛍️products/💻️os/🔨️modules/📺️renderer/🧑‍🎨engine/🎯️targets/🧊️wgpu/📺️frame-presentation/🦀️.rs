@@ -5,7 +5,7 @@
 extern crate infinite_canvas as infinite_world;
 use semio_framework_os_renderer_wgpu_app_runtime::{AppFramePresentation, AppMailbox};
 use semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState;
-use semio_framework_os_renderer_wgpu_runtime_mailbox::{PresenterInteractionStep, RuntimePresentationAuthority, RuntimeRasterOperationAuthority};
+use semio_framework_os_renderer_wgpu_runtime_mailbox::{MailboxRuntime, PresenterInteractionStep, RuntimePresentationAuthority, RuntimeRasterOperationAuthority};
 use semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx;
 use infinite_world::world::{begin_world3d_dynamic_retirement, step_world3d_dynamic_retirement, world3d_dynamic_retirement_terminal_is_empty};
 use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneProgress};

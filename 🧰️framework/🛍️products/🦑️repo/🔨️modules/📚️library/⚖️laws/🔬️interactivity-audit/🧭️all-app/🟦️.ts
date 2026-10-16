@@ -1,4 +1,4 @@
-/** 🎯️ Interactivity audit: metadata-derived all-app discovery ledger.
+/** 🛰️ Interactivity audit: metadata-derived all-app discovery ledger.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🏁️run/🟦️.ts
  */
 import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";

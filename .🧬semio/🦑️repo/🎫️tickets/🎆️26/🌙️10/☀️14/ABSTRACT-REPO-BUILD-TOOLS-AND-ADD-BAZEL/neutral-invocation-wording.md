@@ -1,0 +1,13 @@
+# Neutral Invocation Wording
+
+The shared selection docstring now describes shared task graph admission. The mode-conflict diagnostic now says `Conflicting build modes` without the duplicated word. No selection, policy, argument, authority or backend behavior changed.
+
+Actual bounded Bun invocation662857 returned0 under a genuine60-second Original. Direct production calls verified default Nx selection, explicit Bazel selection, literal arguments after `--`, release configuration projection and the exact corrected mode-conflict error. Console evidence is retained at G/neutral-invocation-wording-current.log. No backend or store opened. Existing permanent portable CLI laws remain; this wording-only correction adds no feature or runtime dependency.
+
+The independent pre-edit and post-edit review is [neutral-invocation-final-low-review.md](neutral-invocation-final-low-review.md). Fresh Source captures remain required before SDK/backend acceptance; this document is not such a capture.
+
+Focused strict32301 first returned1 on three pre-existing implicit callback parameter types in the ticket metadata diagnostic. The callbacks now name the canonical first-party ScriptInvocation, ResourceLeaseControl and RepositoryToolingStoreV1 types. The same exact two roots (metadata diagnostic and shared invocation owner) then passed strict88894, terminal0/6.586seconds with53,413ms remaining of the same genuine60-second policy. Failed and successful logs are separately retained; no runtime metadata observation or SDK publication was performed by these type checks. The diagnostic selector also admits one exact future layout-reconciled capture filename and unique output, preserving previous failed/currentness receipts.
+
+The TypeScript package README had another concrete shared-inference description error. It attributed policy inference to Nx and called generated breach projects targets. Current shared policy inference actually attaches lint-policy/lint dependency to the declared owner, or emits a breach-* project when no owner exists. The paragraph now describes that implementation and shows neutral task commands with explicit Bazel selection and Nx default. Root inspected the actual shared policy owner and private Nx graph projection. Package root reexports the library root; the inspected public export path does not reexport nxBuildArgumentsV1. No runtime behavior or API changed, and no new test is needed for this prose correction.
+
+Low reviewed the corrected policy paragraph against the actual shared owner and found it accurate. It also found the adjacent obsolete repo/lib/js/bin/lint.ts command points to an absent file. That advice is replaced with the actual neutral `<project>:lint-policy` task route; no compatibility script was added.

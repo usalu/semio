@@ -3,7 +3,7 @@ import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {Database} from "bun:sqlite";
 import {inspectNeutralBindingOwnership,type BindingFixture} from "../../../../../../🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/🟦️.ts";
-import {parseArtifactRef} from "../../../../../../🧬️schema/🗿️artifact-reference/🟦️.ts";
+import {parseArtifactRef} from "@semio-tech/schema-ts/artifact-reference";
 const root=resolve(import.meta.dir,"../../../../../../../.."),fixturePath="🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧪️tests/🧫️fixtures/🪆️binding/🔣️.json",read=(path:string)=>readFileSync(resolve(root,path),"utf8");
 const project=(row:BindingFixture["cases"][number]):[number,unknown][]=>{const value=parseArtifactRef(row.value);return [[0,value.artifactId],[1,value.dialect.artifactKind],[2,value.dialect.standard],[3,value.dialect.subset]];};
 test("canonical io binding is owned beside the types with direct Record authority",async()=>{const result=await inspectNeutralBindingOwnership(root,fixturePath);expect(result.types).toBe(1);});

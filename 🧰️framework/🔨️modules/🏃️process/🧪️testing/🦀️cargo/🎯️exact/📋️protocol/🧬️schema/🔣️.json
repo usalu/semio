@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.process.exact-cargo.protocol/v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumOutputCharacters": 268435456
+      }
+    },
+    "Target": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "lib"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "test",
+                "bin"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          }
+        }
+      ]
+    },
+    "Laws": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_:]*$"
+      }
+    },
+    "Capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "signal",
+        "stdout",
+        "stderr"
+      ],
+      "properties": {
+        "status": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "signal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stdout": {
+          "type": "string",
+          "maxLength": 268435456
+        },
+        "stderr": {
+          "type": "string",
+          "maxLength": 268435456
+        },
+        "reason": {
+          "enum": [
+            "exit",
+            "timeout",
+            "cancelled",
+            "output-limit",
+            "spawn-error"
+          ]
+        }
+      }
+    },
+    "Fingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}

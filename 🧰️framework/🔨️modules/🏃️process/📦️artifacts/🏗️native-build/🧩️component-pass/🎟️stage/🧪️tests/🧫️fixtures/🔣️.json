@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "capacity": "single",
+      "held": 1,
+      "host": 4,
+      "expected": 1
+    },
+    {
+      "capacity": "single",
+      "held": 2,
+      "host": 4,
+      "expected": null
+    },
+    {
+      "capacity": "available",
+      "held": 1,
+      "host": 4,
+      "expected": 1
+    },
+    {
+      "capacity": "available",
+      "held": 3,
+      "host": 4,
+      "expected": 3
+    },
+    {
+      "capacity": "available",
+      "held": 5,
+      "host": 4,
+      "expected": null
+    },
+    {
+      "capacity": "whole-host",
+      "held": 4,
+      "host": 4,
+      "expected": 4
+    },
+    {
+      "capacity": "whole-host",
+      "held": 3,
+      "host": 4,
+      "expected": null
+    },
+    {
+      "capacity": "cleanup",
+      "held": 0,
+      "host": 4,
+      "expected": 0
+    },
+    {
+      "capacity": "cleanup",
+      "held": 1,
+      "host": 4,
+      "expected": null
+    }
+  ],
+  "lifetime": {
+    "version": 1,
+    "compileBusy": true,
+    "consumerFree": true,
+    "inputHeld": true,
+    "cpuRetired": true,
+    "reacquired": true,
+    "inputFree": true,
+    "outputHeld": true,
+    "outputFree": true,
+    "childJoined": true,
+    "consumerDrained": true,
+    "bytesExact": true
+  },
+  "inputFailures": [
+    "input-error",
+    "input-undefined"
+  ]
+}

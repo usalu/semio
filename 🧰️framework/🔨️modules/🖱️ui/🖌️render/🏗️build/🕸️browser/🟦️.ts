@@ -1,6 +1,6 @@
 import data from"./🔣️.json"with{type:"json"};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 if(validateJsonSchemaSubset(schema,data).length)throw Error("Closed browser canvas hot package constraints required");
 /** ⚡️ The label hot path of the browser canvas bundles: usvg text layout (fontdb, ttf-parser face tables, rustybuzz GSUB/GPOS
  * shaping, tiny-skia-path outlines, roxmltree/svgtypes/simplecss markup) and vello's scene encoding (kurbo, peniko). At

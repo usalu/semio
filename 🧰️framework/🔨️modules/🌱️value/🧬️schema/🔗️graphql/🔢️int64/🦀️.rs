@@ -21,6 +21,12 @@ pub fn parse_int64_literal(kind:&str,value:Option<&str>)->Result<i64,Int64Error>
 }
 /// 📤️ Emits a complete intrinsic signed word through canonical decimal text.
 pub fn serialize_int64(value:i64)->String{value.to_string()}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    use super::*;
+    pub fn decimal(text:&str) ->Result<i64,Int64Error> {
+        super::decimal(text)
+    }
+}

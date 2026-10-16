@@ -1,5 +1,5 @@
 /** 🔎 Renderer twins of language-neutral contracts: label fit, camera, boot example, cancel, safe area, compute status and port types. */
-import chromePanelSafeAreaFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json";
+import { chromePanelSafeAreaFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { chromePanelSafeArea, type Anchor, type SafeAreaYield } from "@semio-tech/ui-react";
 import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
 import surfaceControlsFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🛑️surface-controls/🔣️.json";
@@ -7,9 +7,8 @@ import bootExampleFixture from "../../🧱️elements/🐚️Shell/🧪️tests/
 import { BOOT_QUERY_CAPACITY, BOOT_QUERY_EXAMPLE_PARAM, resolveBootQueryExampleId } from "../../../../🧑‍💻dev/🔗️boot-query/🟦️.ts";
 import { describe, expect, it } from "vitest";
 import { nodeGraphConnectionIsValid, portValueTypes, portValueTypesCompatible, wireRefusalLabelOptions, dagContentBounds, dagContentCoverage, dagEllipsizeByMeasure, dagFitCamera, dagStartupCamera, nodeGraphContentSignature, paintDagLabelOverlays, DAG_CONTENT_FIT_PADDING_PX, DAG_CONTENT_FRAMED_MIN_COVERAGE, DAG_CONTENT_REFIT_MAX_COVERAGE, DAG_LABEL_ELLIPSIS, resolveBootExampleId } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import cameraFitFixture from "../../../../../../../🔨️modules/🖼️canvas/🧪️tests/🧫️fixtures/📷️camera-fit/🔣️.json" with { type: "json" };
-import portTypesFixture from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🔌️port-types/🔣️.json" with { type: "json" };
-import labelFitFixture from "../../../../../../../🔨️modules/🖼️canvas/🧪️tests/🧫️fixtures/🏷️label-fit/🔣️.json" with { type: "json" };
+import { canvasCameraFitFixture as cameraFitFixture, canvasLabelFitFixture as labelFitFixture } from "../../../../../../../🔨️modules/🖼️canvas/🧪️tests/🧫️fixtures/🟦️.ts";
+import { flowPortTypesFixture as portTypesFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
 import "../🧰️engine-contract-helpers/🟦️.ts";
 
 

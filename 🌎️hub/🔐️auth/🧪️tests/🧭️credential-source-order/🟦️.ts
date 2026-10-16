@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readMcpGatewaySource } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { readModuleTreeSource } from "../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 type NativeCredentialSourcePopulation = Readonly<{ entrypoint: string; credential: string; runner: string; project: string }>;
 type McpCredentialSourcePopulation = Readonly<{ entrypoint: string; workspace: string; remote: string; directory: string; runner: string; project: string }>;
@@ -207,7 +208,7 @@ export function proveMcpCredentialSourceOrder(repoRoot: string): void {
   const population: McpCredentialSourcePopulation = {
     entrypoint: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/🦀️.rs"), "utf8"),
     workspace: readMcpGatewaySource(repoRoot),
-    remote: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs"), "utf8"),
+    remote: readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs"), { crates: false }),
     directory: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8"),
     runner: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts"), "utf8"),
     project: readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📋️project.json"), "utf8"),

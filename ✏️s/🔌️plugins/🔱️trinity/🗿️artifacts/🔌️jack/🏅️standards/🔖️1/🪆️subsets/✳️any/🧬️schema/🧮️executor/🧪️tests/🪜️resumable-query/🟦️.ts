@@ -44,8 +44,8 @@ export function testResumableQueryOracle(): void {
       const rows = oracle.select === undefined ? [] : database.query(oracle.select).values();
       assert.deepEqual(rows, test.rows, test.query);
       assert.equal(mutations, test.mutations, test.query);
-      if ("postNodeCount" in test) assert.equal(database.query("SELECT COUNT(*) FROM nodes").values()[0][0], test.postNodeCount);
-      if ("postEdgeCount" in test) assert.equal(database.query("SELECT COUNT(*) FROM edges").values()[0][0], test.postEdgeCount);
+      if ("postNodeCount" in test) assert.equal(database.query("SELECT COUNT(*) FROM nodes").values().at(0)?.at(0), test.postNodeCount);
+      if ("postEdgeCount" in test) assert.equal(database.query("SELECT COUNT(*) FROM edges").values().at(0)?.at(0), test.postEdgeCount);
       if (oracle.nodes !== undefined && "nodeIds" in test) assert.deepEqual(database.query(oracle.nodes).values().flat(), test.nodeIds, test.query);
       if (oracle.edges !== undefined && "edgeIds" in test) assert.deepEqual(database.query(oracle.edges).values().flat(), test.edgeIds, test.query);
     } finally {
@@ -70,14 +70,14 @@ export function testResumableQueryOracle(): void {
     retained.run("CREATE TABLE checkpoint_owners (operation_id INTEGER NOT NULL, generation INTEGER NOT NULL, PRIMARY KEY (operation_id, generation))");
     retained.run("INSERT INTO source VALUES (1, 1)");
     for (let unit = 1; unit <= fixture.retainedExecution.cancelAfterWorkUnits; unit += fixture.retainedExecution.maximumWorkUnitsPerStep) retained.run("INSERT INTO progress VALUES (?)", [unit]);
-    assert.equal(retained.query("SELECT COUNT(*) FROM progress").values()[0][0], fixture.retainedExecution.cancelAfterWorkUnits);
+    assert.equal(retained.query("SELECT COUNT(*) FROM progress").values().at(0)?.at(0), fixture.retainedExecution.cancelAfterWorkUnits);
     retained.run("DELETE FROM progress");
-    assert.equal(retained.query("SELECT live FROM source WHERE id = 1").values()[0][0], fixture.retainedExecution.sourceRemainsLive ? 1 : 0);
+    assert.equal(retained.query("SELECT live FROM source WHERE id = 1").values().at(0)?.at(0), fixture.retainedExecution.sourceRemainsLive ? 1 : 0);
     assert.equal(fixture.retainedExecution.retirementItemsPerStep, 1);
     assert.equal(fixture.retainedExecution.retirementBytesPerStep, fixture.retainedExecution.maximumQueryBytes);
     const checkpoint = fixture.retainedExecution.checkpointOwnership;
     retained.run("INSERT INTO checkpoint_owners VALUES (?, ?), (?, ?)", [checkpoint.operationId, checkpoint.generation, checkpoint.collisionOperationId, checkpoint.collisionGeneration]);
-    assert.equal(retained.query("SELECT COUNT(*) FROM checkpoint_owners").values()[0][0], 2);
+    assert.equal(retained.query("SELECT COUNT(*) FROM checkpoint_owners").values().at(0)?.at(0), 2);
     const rotate = (value: bigint, shift: bigint): bigint => ((value << shift) | (value >> (64n - shift))) & ((1n << 64n) - 1n);
     const tool = 0x7275_6e51_7565_7279n;
     const identity = (operation: number, generation: number): bigint => tool ^ rotate(BigInt(operation), 19n) ^ rotate(BigInt(generation), 41n);
@@ -86,14 +86,14 @@ export function testResumableQueryOracle(): void {
     const replayMaximum = checkpoint.maximumFactors.map(BigInt).reduce((product, factor) => product * factor) + 1_000_000n;
     assert.ok(BigInt(checkpoint.legalReplayProgress) < replayMaximum);
     const entity = fixture.retainedExecution.entityAdmission;
-    assert.ok(Number(retained.query("SELECT length(?)").values("x".repeat(entity.oversizedPropertyBytes))[0][0]) > entity.maximumBytesPerStep);
+    assert.ok(Number(retained.query("SELECT length(?)").values("x".repeat(entity.oversizedPropertyBytes)).at(0)?.at(0)) > entity.maximumBytesPerStep);
     assert.equal(entity.nodeRejectedBeforeClone && entity.edgeRejectedBeforeClone, true);
     retained.run("CREATE TABLE output_cells (row_id INTEGER PRIMARY KEY, value TEXT NOT NULL)");
     const output = fixture.retainedExecution.outputAdmission;
     retained.run("WITH RECURSIVE rows(id) AS (SELECT 1 UNION ALL SELECT id + 1 FROM rows WHERE id < ?) INSERT INTO output_cells SELECT id, ? FROM rows", [output.rowCount, "x".repeat(output.cellBytes)]);
-    const encodedCells = Number(retained.query("SELECT length(json_group_array(value)) FROM output_cells").values()[0][0]);
+    const encodedCells = Number(retained.query("SELECT length(json_group_array(value)) FROM output_cells").values().at(0)?.at(0));
     assert.ok(encodedCells > output.maximumBytes);
-    const ownedText = Number(retained.query("SELECT sum(length(CAST(value AS BLOB))) FROM output_cells").values()[0][0]);
+    const ownedText = Number(retained.query("SELECT sum(length(CAST(value AS BLOB))) FROM output_cells").values().at(0)?.at(0));
     assert.ok(ownedText > output.maximumBytes);
     assert.equal(output.oversizedTableRejected, true);
   } finally {

@@ -1,4 +1,4 @@
-/** 🧭️ `lint` and `format` commands.
+/** 🧹️ `lint` and `format` commands.
  * @see 📜️script.ts
  */
 import { runCmd } from "../../📦️packages/🟦️typescript/🟦️.ts";

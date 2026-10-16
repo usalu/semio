@@ -30,6 +30,3 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for StartRunNode {
 }
 //#endregion ⚙️Semantics
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

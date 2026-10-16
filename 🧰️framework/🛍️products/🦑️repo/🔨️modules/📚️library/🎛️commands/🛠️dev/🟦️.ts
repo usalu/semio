@@ -1,4 +1,4 @@
-/** 🧭️ `dev` command family: storybook, storybook-static and the MCP launchers.
+/** 🛠️ `dev` command family: storybook, storybook-static and the MCP launchers.
  * @see 📜️script.ts
  */
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";

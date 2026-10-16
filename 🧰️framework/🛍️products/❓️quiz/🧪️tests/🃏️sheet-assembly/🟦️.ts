@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🃏️sheet/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type Challenge, type Quiz, sheetOf } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://🃏️sheet-assembly/🔣️.json";

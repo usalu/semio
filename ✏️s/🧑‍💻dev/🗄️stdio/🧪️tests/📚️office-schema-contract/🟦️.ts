@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import contractFixture from './🧫️fixtures/🔣️.json';
 import type { ValidateFunction } from 'ajv';
 import { getWorkspaceRoot } from '../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts';
-import { semioSchemaAjvV1, addSemioMutationLeafSchemasV1 } from '../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts';
+import { semioSchemaAjvV1, addSemioMutationLeafSchemasV1 } from '@semio-tech/schema-ts/oracles/validator';
 import { runStdioTypeScriptCompiler } from '../../🏘️composition/🏗️build/🟦️.ts';
 import { parseDocxDiff } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
 import { parseXlsxDiff } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';

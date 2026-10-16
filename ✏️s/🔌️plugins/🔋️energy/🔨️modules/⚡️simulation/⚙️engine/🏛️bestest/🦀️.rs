@@ -488,7 +488,7 @@ pub struct CaseResults {
 /// 📊️ Project a [`Results`] onto [`CaseResults`].
 ///
 /// ⚠️ Honest gap, left visible rather than faked: the aggregation pass in
-/// `⚙️engine/🧪️sim/🦀️.rs`'s `step_aggregate_zone` registers exactly ONE time series per zone
+/// `⚙️engine/🧪️sim/🔍️pipeline/🦀️.rs`'s `step_aggregate_zone` registers exactly ONE time series per zone
 /// (`Zone Air Temperature [<zone>]`) and puts heating/cooling into METERS, which retain only the
 /// running total and the peak — not an hourly trace. So `heating_w`/`cooling_w` come back EMPTY
 /// here and the comparison harness reports the hourly-power metrics as unavailable instead of

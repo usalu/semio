@@ -10,7 +10,6 @@ pub mod backbone;
 #[path = "🧾️media-export-simple/🦀️.rs"]
 pub mod media_export_simple;
 
-pub use semio_framework_os_host_codec_abi as codec_abi;
 pub use semio_framework_os_host_instance as instance;
 pub use semio_framework_os_host_media_raster as media_export_raster;
 pub use semio_framework_os_host_registry as registry;

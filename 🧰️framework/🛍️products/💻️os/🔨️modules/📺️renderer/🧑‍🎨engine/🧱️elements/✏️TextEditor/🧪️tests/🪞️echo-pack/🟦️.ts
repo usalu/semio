@@ -9,7 +9,7 @@
 // #region 🔌️Adapters
 import { isDeepStrictEqual } from "node:util";
 import { describe, expect, it } from "vitest";
-import { decodePackValue } from "@semio-tech/framework-os";
+import { decodePackValue } from "@semio-tech/framework/packs";
 import type { TextEditorScene } from "@semio-tech/framework";
 import { sameScenePackV1, textEditorSyncPackV1 } from "../../🟦️.tsx";
 import fixture from "../🧫️fixtures/🪞️echo-pack/🔣️.json";

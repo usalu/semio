@@ -15,6 +15,5 @@ pub mod transform;
 
 //#region 🧪️TestSupport
 #[cfg(test)]
-#[path = "../../🧪️tests/🧰️support/🦀️.rs"]
-pub(crate) mod test_support;
+pub(crate) use semio_framework_3d_testing_support as test_support;
 //#endregion 🧪️TestSupport

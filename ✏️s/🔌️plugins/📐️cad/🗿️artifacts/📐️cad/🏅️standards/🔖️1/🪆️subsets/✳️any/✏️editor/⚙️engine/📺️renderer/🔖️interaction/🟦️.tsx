@@ -18,7 +18,8 @@ import {
 } from "@semio-tech/framework/ui/targets/react";
 // #endregion 🔌️Adapters
 import { type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import { Model, type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import { isEmptyModelDiff, type SpatialPreviewKernel, type ModelDiff } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import {
   cadGumballConfigVisible,

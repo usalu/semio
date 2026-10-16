@@ -13,8 +13,7 @@ mod program_bridge;
 pub use program_bridge::*;
 
 #[cfg(not(target_arch = "wasm32"))]
-#[path = "../⌨️native-entrypoint/📦️modules/🦀️.rs"]
-pub mod native_runtime_modules;
+pub use semio_framework_os_renderer_wgpu_native_runtime_modules as native_runtime_modules;
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

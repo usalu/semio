@@ -51,7 +51,7 @@
  * @see ../📏️spacing/🟦️.ts — the gaps between grounded actors
  * @see ../🗓️schedule/🟦️.ts — the whole seconds on which a pair may be drawn or somebody may arrive
  * @see ../👀️attention/🟦️.ts — eyes, head and facing: presence, turning round, gaze, blinks, mood, perking up
- * @see ../🚶️locomotion/🟦️.ts — walking, hopping, gliding, falling, landing, leaving
+ * @see ../🚶️locomotion/⚓️footing/🟦️.ts — walking, hopping, gliding, falling, landing, leaving (the module is split into the child folders of `../🚶️locomotion`)
  * @see ../💞️sociability/🟦️.ts — pairing, encounters, sulks, rapport
  * @see ../🎯️choice/🟦️.ts — what an actor does next when its time is up
  * @see ../👥️population/🟦️.ts — surveys, arrivals, spreading out, summons, liveliness
@@ -74,7 +74,7 @@ import { clicked, played } from "../💞️sociability/🟦️.ts";
 import { draftOf, sealed, type Draft } from "../📝️draft/🟦️.ts";
 import { pass } from "../🕰️clock/🟦️.ts";
 import { reclaimed } from "../🎯️choice/🟦️.ts";
-import { unlifted } from "../🚶️locomotion/🟦️.ts";
+import { unlifted } from "../🚶️locomotion/🪄️mischief/🟦️.ts";
 
 export { frameOf } from "../🎥️projection/🟦️.ts";
 

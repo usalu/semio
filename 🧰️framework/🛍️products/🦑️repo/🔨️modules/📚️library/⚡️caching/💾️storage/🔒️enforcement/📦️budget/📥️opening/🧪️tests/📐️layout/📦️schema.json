@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "filesystemBytes",
+    "maximumPhysicalBytes",
+    "previousBytes",
+    "currentBytes",
+    "phaseMilliseconds",
+    "runnerMilliseconds",
+    "payload",
+    "owner"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "filesystemBytes": {
+      "const": 67108864
+    },
+    "maximumPhysicalBytes": {
+      "const": 68157440
+    },
+    "previousBytes": {
+      "const": 62914560
+    },
+    "currentBytes": {
+      "const": 33554432
+    },
+    "phaseMilliseconds": {
+      "const": 50000
+    },
+    "runnerMilliseconds": {
+      "const": 60000
+    },
+    "payload": {
+      "const": "current original rebudget payload"
+    },
+    "owner": {
+      "const": "fixture:native-rebudget"
+    }
+  }
+}

@@ -65,7 +65,7 @@ function generate(outRoot: string): number {
 async function manifests(): Promise<void> {
   let refreshed = 0;
   for (const catalogPath of CATALOGS) {
-    const catalog = JSON.parse(readFileSync(catalogPath, "utf8")) as { testEvidence?: { generator?: { oracle?: string }; files: { path: string; sha256: string; bytes: number }[] }[] };
+    const catalog = JSON.parse(readFileSync(catalogPath, "utf8")) as { testEvidence?: { generator?: { oracle?: string; platform?: string }; files: { path: string; sha256: string; bytes: number }[] }[] };
     for (const entry of (catalog.testEvidence ?? []).filter((candidate) => candidate.generator?.oracle === ORACLE_ID)) {
       for (const file of entry.files) {
         const path = join(dirname(catalogPath), file.path);

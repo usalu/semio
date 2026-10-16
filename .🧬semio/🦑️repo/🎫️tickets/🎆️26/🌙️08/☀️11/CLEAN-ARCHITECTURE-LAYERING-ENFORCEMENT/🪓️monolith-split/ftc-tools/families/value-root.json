@@ -1,0 +1,176 @@
+{
+ "crate_dir": "🧰️framework/🔨️modules/🌱️value",
+ "lib_name": "semio_framework_value",
+ "companion_dir": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🥣️companion",
+ "doc": "//! 🥣️ Companion tests of value: retirement integration, refusal codecs, typed values, paged and shared text, leases, bounded and retained cloning.\n//!\n//! 🧭️ The root laws are mounted flat; the laws of each value module sit below a wrapper of that module that restates its imports and uses the crate's `testkit` hooks.",
+ "preamble": [
+  "pub use semio_framework_value::*;",
+  "use semio_framework_value_testing_allocator as allocation_testing;",
+  "pub(crate) use allocation_testing::observe_retirement_allocations;",
+  "",
+  "use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};",
+  "",
+  "pub fn product_directory() -> &'static Path {",
+  "    static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();",
+  "    DIRECTORY.get_or_init(|| Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../..\"))",
+  "}",
+  "",
+  "fn leaked(relative: &str) -> &'static [u8] {",
+  "    static READ: OnceLock<Mutex<HashMap<String, &'static [u8]>>> = OnceLock::new();",
+  "    let mut read = READ.get_or_init(Default::default).lock().unwrap();",
+  "    read.entry(relative.to_owned()).or_insert_with(|| {",
+  "        let path = product_directory().join(relative);",
+  "        Box::leak(std::fs::read(&path).unwrap_or_else(|error| panic!(\"test input {}: {error}\", path.display())).into_boxed_slice())",
+  "    })",
+  "}",
+  "",
+  "pub fn text(relative: &str) -> &'static str {",
+  "    std::str::from_utf8(leaked(relative)).unwrap_or_else(|error| panic!(\"test input {relative} is not UTF-8: {error}\"))",
+  "}",
+  "",
+  "pub fn bytes(relative: &str) -> &'static [u8] {",
+  "    leaked(relative)",
+  "}",
+  "",
+  "#[path = \"../../♻️retirement/🧪️tests/🔬️unit/🦀️.rs\"]",
+  "mod original_retirement_integration_tests;",
+  "",
+  "#[path = \"../../⚠️refusal/🧪️tests/🦀️.rs\"]",
+  "mod refusal_tests;",
+  ""
+ ],
+ "modules": [
+  {
+   "name": "numeric_scratch",
+   "emoji": "🧮",
+   "folder": "numeric-scratch",
+   "lib_file": "🗂️ordered/🔢️numeric/🧮️scratch/🦀️.rs",
+   "tests": "🗂️ordered/🔢️numeric/🧮️scratch/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_value::numeric_scratch::*",
+   "doc": "The numeric scratch laws."
+  },
+  {
+   "name": "paged",
+   "emoji": "📦",
+   "folder": "paged",
+   "lib_file": "📦️paged/🦀️.rs",
+   "tests": "📦️paged/🧪️tests/🔬️unit/🦀️.rs",
+   "glob": "semio_framework_value::paged::*",
+   "doc": "The paged value laws."
+  },
+  {
+   "name": "paged_append",
+   "emoji": "🎮",
+   "folder": "paged-append",
+   "lib_file": "📦️paged/🎮️append/🦀️.rs",
+   "tests": "📦️paged/🎮️append/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_value::paged::*",
+   "doc": "The paged append laws.",
+   "super_path": "crate::paged"
+  },
+  {
+   "name": "shared_utf8",
+   "emoji": "📝",
+   "folder": "shared-utf8",
+   "lib_file": "📝️shared-utf8/🦀️.rs",
+   "tests": "📝️shared-utf8/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_value::shared_utf8::*",
+   "doc": "The shared UTF-8 laws."
+  },
+  {
+   "name": "graphql_int64",
+   "emoji": "🔢",
+   "folder": "graphql-int64",
+   "lib_file": "🧬️schema/🔗️graphql/🔢️int64/🦀️.rs",
+   "tests": "🧬️schema/🔗️graphql/🔢️int64/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_value::graphql_int64::*",
+   "doc": "The GraphQL Int64 laws.",
+   "extra": [
+    "pub use semio_framework_value::graphql_int64::testkit::*;"
+   ]
+  },
+  {
+   "name": "bounded_clone",
+   "emoji": "🧬",
+   "folder": "bounded-clone",
+   "lib_file": "🧬️clone/🦀️.rs",
+   "tests": "🧬️clone/🧪️tests/🔬️unit/🦀️.rs",
+   "glob": "semio_framework_value::bounded_clone::*",
+   "doc": "The bounded clone laws.",
+   "extra": [
+    "pub use semio_framework_value::bounded_clone::testkit::*;"
+   ]
+  },
+  {
+   "name": "read",
+   "emoji": "🔗",
+   "folder": "read",
+   "lib_file": "🔗️read/🦀️.rs",
+   "tests": "🔗️read/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_value::read::*",
+   "doc": "The read lease laws."
+  },
+  {
+   "name": "types",
+   "emoji": "🏷",
+   "folder": "types",
+   "lib_file": "🏷️type/🦀️.rs",
+   "tests": "🏷️type/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_value::*",
+   "doc": "The value type laws.",
+   "extra": [
+    "pub use semio_framework_value::internals::types::*;"
+   ]
+  },
+  {
+   "name": "refusal",
+   "emoji": "⚠",
+   "folder": "refusal",
+   "lib_file": "⚠️refusal/🦀️.rs",
+   "tests": [
+    [
+     "controlled_codec_tests",
+     "⚠️refusal/🔁️codec/🧪️tests/🦀️.rs"
+    ]
+   ],
+   "glob": "semio_framework_value::refusal::*",
+   "doc": "The controlled refusal codec laws."
+  },
+  {
+   "name": "retained_clone",
+   "emoji": "🌱",
+   "folder": "retained-clone",
+   "lib_file": "🧬️retained-clone/🦀️.rs",
+   "tests": [
+    [
+     "original_projection_tests",
+     "🧬️retained-clone/🔗️projection/🧪️tests/🔬️unit/🦀️.rs"
+    ],
+    [
+     "source_custody_tests",
+     "🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs"
+    ],
+    [
+     "original_factory_source_tests",
+     "🧬️retained-clone/🔗️source/🧪️tests/🏭️factory/🦀️.rs"
+    ]
+   ],
+   "glob": "semio_framework_value::retained_clone::*",
+   "doc": "The retained clone projection, source custody and factory laws.",
+   "extra": [
+    "pub use semio_framework_value_clone_source_testing::{FixtureSource, FixtureSourceBirth};"
+   ]
+  },
+  {
+   "name": "paged",
+   "emoji": "📋",
+   "folder": "paged",
+   "lib_file": "🧬️retained-clone/📦️paged/🦀️.rs",
+   "tests": "🧬️retained-clone/📦️paged/🧪️tests/🔬️unit/🦀️.rs",
+   "glob": "semio_framework_value::retained_clone::paged::*",
+   "doc": "The retained paged clone laws.",
+   "parent": "retained_clone",
+   "super_path": "crate::retained_clone"
+  }
+ ]
+}

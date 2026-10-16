@@ -1,6 +1,6 @@
 import type {PixelImage} from "../../✍️editing/🟦️.ts";
 export interface JpegDecodeInput {data:Uint8Array;maxPixels:number;maxBytes:number;maxSegments:number;maxWorkingBytes:number}
-import type {RetainedCloneGrant,RetainedCloneProgress} from "../../../🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts";
+import type {RetainedCloneGrant,RetainedCloneProgress} from "@semio-tech/value-ts/retained-clone/contract";
 export type JpegGrant=RetainedCloneGrant;
 export type JpegReceipt=RetainedCloneProgress;
 export interface JpegProgress {phase:string;bytes:number;totalBytes:number;blocks:number;pixels:number;totalPixels:number;work:number;done:boolean}

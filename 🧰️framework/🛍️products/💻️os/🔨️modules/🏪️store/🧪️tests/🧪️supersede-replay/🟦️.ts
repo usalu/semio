@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { Database } from "bun:sqlite";
 import { blake3 } from "@noble/hashes/blake3.js";
-import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework/hash";
 
 import { applyPatch, type Operation } from "fast-json-patch";
 

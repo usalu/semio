@@ -16,7 +16,7 @@ use super::*;
 
 /// 🌳️ `…/🧑‍🎨engine`, the root every source-reading law resolves against.
 fn engine_root() -> std::path::PathBuf {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root")
+    semio_framework_os_renderer_wgpu_test_support::engine_root()
 }
 
 /// 🌳️ The workspace root — React's own key constants live outside this product.

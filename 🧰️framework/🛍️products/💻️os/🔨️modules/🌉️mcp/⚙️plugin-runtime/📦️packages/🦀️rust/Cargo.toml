@@ -49,4 +49,4 @@ semio-framework-plugin-guest-contract = { workspace = true }
 semio-framework-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 
 [dev-dependencies]
-semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

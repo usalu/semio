@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 import { Tree, isElementId, type PanelTabLeaf } from "@semio-tech/ui-react";
 import type { Rgba8 } from "@semio-tech/ui-styling";
 import type { ReactElement } from "react";
+import { inlineTreeControlsFixtureUrl } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 afterEach(() => {
   cleanup();
@@ -86,7 +87,7 @@ describe("♿️ theme contrast live warning", () => {
 
 describe("Inline Tree resolution controls", () => {
   it("keeps both labeled resolution buttons available before selecting the conflict", () => {
-    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(inlineTreeControlsFixtureUrl, "utf8"));
     const resolve = vi.fn();
     const host: ConflictsHostApi = {
       conflicts: [{ id: fixture.conflict.id, kind: { kind: "quarantined", envelopes: [] }, status: "open", messages: [], actors: [], timestamp: { actor: 1, physical_ms: 0, logical: 0 } }],

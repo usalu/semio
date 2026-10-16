@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"phase":"issued","accepted":true,"calls":1},{"phase":"copied","accepted":false,"calls":0},{"phase":"cancelled","accepted":false,"calls":0},{"phase":"expired","accepted":false,"calls":0},{"phase":"after-await","accepted":false,"calls":1},{"phase":"undefined","accepted":false,"calls":1},{"phase":"frozen","accepted":false,"calls":1}]}

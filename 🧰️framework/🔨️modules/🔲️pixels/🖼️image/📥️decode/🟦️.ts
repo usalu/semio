@@ -2,8 +2,8 @@
 import type {PixelImage} from "../../✍️editing/🟦️.ts";
 import {PngDecodeJob} from "../../📷️png/📥️decode/🟦️.ts";
 import {JpegDecodeJob} from "../../📸️jpeg/📥️decode/🟦️.ts";
-import {BinarySourceJob,type BinarySourceProgress} from "../../../🚪️io/🔢️binary/📥️source/🟦️.ts";
-import type {RetainedCloneGrant,RetainedCloneProgress} from "../../../🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts";
+import {BinarySourceJob,type BinarySourceProgress} from "@semio-tech/framework/io/binary/source";
+import type {RetainedCloneGrant,RetainedCloneProgress} from "@semio-tech/value-ts/retained-clone/contract";
 export type ImageDecodeInput={mime:string;data:string;maxSourceBytes:number;maxBytes:number;maxPixels:number;maxChunks:number};
 export type ImageDecodeProgress={phase:"header"|"validate"|"decode"|"source-handoff"|"decoder"|"png"|"jpeg"|"image-handoff"|"complete"|"transferred";sourceCompleted:number;sourceTotal:number;bytes:number;totalBytes:number;pixels:number;totalPixels:number;work:number;done:boolean};
 export type ImageDecodeOptions={workGrant:RetainedCloneGrant;signal?:AbortSignal;workBudget?:number;onProgress?:(progress:ImageDecodeProgress)=>void};

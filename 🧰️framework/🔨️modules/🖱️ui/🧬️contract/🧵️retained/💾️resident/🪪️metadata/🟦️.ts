@@ -1,5 +1,5 @@
 //#region 🪪️FixedMetadataEnvelope
-import type { ResidentResources } from "../../../../../🌱️value/💾️resident/🟦️.ts";
+import type { ResidentResources } from "@semio-tech/value-ts/resident";
 
 export type UiResidentMetadataKind = "pool" | "instance" | "payload" | "builder" | "reader" | "page" | "evidence";
 const ENVELOPES = Object.freeze({

@@ -1,5 +1,10 @@
 //! 🧪️ Same paged source and real token recipient deliver the native identity under the authored17-byte grant.
 use super::*;
+use pack::record::RetainedRecordBodySourceDecode;
+use pack::record::RetainedRecordBodyToken;
+use pack::record::RetainedValueContainer;
+use pack::record::RetainedValueToken;
+use semio_framework_value::RetainedCloneGrant;
 use crate::ToolRunReceivingLimits;
 use protocol::codec::{RetainedWireByteSource,OriginalWireSourceIdentity};
 struct Pages<'a>{bytes:&'a[u8],identity:OriginalWireSourceIdentity}
@@ -8,9 +13,9 @@ fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_fr
 fn hex(text:&str)->Vec<u8>{text.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 #[test]
 fn original_typed_identity_receiving_preserves_paid_tokens_and_every_native_interruption(){
- let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let bytes=hex(law["bodyHex"].as_str().unwrap());let source=Pages{identity:OriginalWireSourceIdentity{address:bytes.as_ptr()as usize,extent:bytes.len(),authority:Some((42,7))},bytes:&bytes};
+ let law:serde_json::Value=serde_json::from_str(crate::fixture_text("🎞️tick/🛬️receive/🪪️identity/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let bytes=hex(law["bodyHex"].as_str().unwrap());let source=Pages{identity:OriginalWireSourceIdentity{address:bytes.as_ptr()as usize,extent:bytes.len(),authority:Some((42,7))},bytes:&bytes};
  let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:17,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};let metadata=RetainedCloneGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..g};
- let tick_corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎞️ticks.json")).unwrap();let reference=crate::ToolRunTick::decode(&hex(tick_corpus["ticks"][1]["hex"].as_str().unwrap())).unwrap().identity;
+ let tick_corpus:serde_json::Value=serde_json::from_str(crate::fixture_text("🧪️tests/🧫️fixtures/🎞️ticks.json")).unwrap();let reference=crate::ToolRunTick::decode(&hex(tick_corpus["ticks"][1]["hex"].as_str().unwrap())).unwrap().identity;
  for stop in law["interruptAfter"].as_array().unwrap(){let stop=stop.as_u64().unwrap()as usize;let((mut lower,_),mut physical)=observe(||{let mut lower=RetainedRecordBodySourceDecode::admit(&source,(0,bytes.len()),ToolRunReceivingLimits::REPORTS.tick.record_body(),g).unwrap().unwrap();let receipt=lower.take_receipt().unwrap();assert_eq!(receipt.0,g);assert!(receipt.1.fits(g));(lower,receipt)});
   for denied in [RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_depth:1,..g}]{let(result,heap)=observe(||ToolRunIdentityReceiving::admit(&lower,denied));assert!(result.is_none());assert_eq!(heap,(0,0))}
   let((mut typed,progress),heap)=observe(||ToolRunIdentityReceiving::admit(&lower,g).unwrap());assert_eq!(heap,(0,0));assert_eq!(typed.take_receipt().unwrap(),(g,progress));

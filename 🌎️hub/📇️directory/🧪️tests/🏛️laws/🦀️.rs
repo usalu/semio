@@ -1,6 +1,9 @@
 //! 🏛️ Directory laws: the writer and decider unit laws and the per-backend artifact-creation laws, run over the real backends.
 
 #[cfg(test)]
+use semio_hub_directory::{AdminOperationDirectory, ArtifactCasDirectory, ArtifactCreationDirectory, AuthSessionDirectory, DocumentDirectory, EventLog, InviteDirectory, ProjectionRebuild, ReceiptDirectory, SpaceDirectory, UserDirectory};
+
+#[cfg(test)]
 #[path = "../🔬️unit/🦀️.rs"]
 mod unit;
 

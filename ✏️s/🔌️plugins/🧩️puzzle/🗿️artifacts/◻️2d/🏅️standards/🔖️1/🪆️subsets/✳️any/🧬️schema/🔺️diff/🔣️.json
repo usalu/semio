@@ -505,7 +505,7 @@
           ]
         },
         "anchor": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json/$defs/Puzzle2dNodeAnchor"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dNodeAnchor"
         },
         "handles": {
           "$ref": "#/$defs/Puzzle2dHandlesDelta"
@@ -988,7 +988,7 @@
           "type": "boolean"
         },
         "specificity": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json/$defs/Puzzle2dCompatSpecificity"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dCompatSpecificity"
         }
       }
     },
@@ -1014,7 +1014,7 @@
         "kindCatalogs": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json/$defs/Puzzle2dKindCatalogs"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dKindCatalogs"
             },
             {
               "type": "null"

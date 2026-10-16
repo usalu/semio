@@ -1,6 +1,24 @@
 //! 🔀️ The plugin exchange dispatcher: one function over every command, action and operation.
 
-use super::*;
+use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_framework_plugin_decl_app::{ArtifactApp, EphemeralSnapshot};
+use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPoll;
+use semio_framework_plugin_runtime_ops::ops_ingress::{COMMAND_INGRESS_MOVES_PER_TURN, PluginCommandIngress, PluginCommandIngressStep, PluginExchangeOutput, encode_exchange_frames, push_invocation_side_frames, relay_clear_default_app, relay_open_artifact, relay_set_default_app, transaction_proposal_frame};
+use semio_framework_plugin_runtime_ops::ops_surface_render::ContextMenuWireRequest;
+use semio_framework_value::{DslValue, FromValue, ToValue};
+use semio_framework_plugin_job::EmitWire;
+use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
+use semio_framework_plugin_plugin_program::{Plugin, PluginProgram, decode_wire_serialized, encode_wire_serialized};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use semio_framework_plugin_runtime_ops::ops_typed_operations::{TYPED_OPERATION_REPLY_LEFTOVER_PUMPS, advance_typed_operation_output, advance_typed_operation_output_with_leftover, drive_self_waking_ready, media_export_handle_from_wire, media_export_handle_into_wire, merge_typed_operation_leftover_into_reply};
+use semio_framework_plugin_window_config::WindowConfigPack;
+use semio_framework_plugin_reactor_app::app_runtime_helpers::{debug_runtime_line, plugin_internal_fault};
+use semio_framework_plugin_runtime_instances::inst_wire_frames::{decode_wire_serialized_or, instance_actor, push_app_fault, push_dispatch_fault, push_os_fault, read_conflicts_frames, resolve_conflict_frames, set_merge_policy_frames, with_instances_mut, with_instances_original_mut};
+use semio_framework_plugin_runtime_ops::ops_wire_limits::find_instance;
+use semio_framework_plugin_runtime_ops::ops_media::{plugin_cancel_media_export, plugin_consume_media, plugin_poll_media_export, plugin_produce_media, plugin_retain_media_export_result, plugin_submit_media_export, plugin_take_media_export_chunk};
+use semio_framework_plugin_runtime_ops::ops_document::{plugin_document_pack, plugin_ingest_operations};
 /// 🕹️ The typed operation an `AppCommand::Command` of this exchange STARTED (its reply's
 /// `output.operationId`) — the operation whose inline interaction fold this exchange still
 /// tries to land before the reply is sealed (`TYPED_OPERATION_REPLY_LEFTOVER_PUMPS`).
@@ -56,7 +74,7 @@ use super::*;
 ///
 /// 🌉️ Rewritten from a `.map(protocol::encode_app_frame).collect()` into an explicit loop
 /// (sync — `Iterator::map` cannot take an async closure, and `encode_app_frame` is genuinely async).
-pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: Option<(u64, PluginCommandIngress)>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput, crate::PluginLifecycleFailure> {
+pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: Option<(u64, PluginCommandIngress)>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
     debug_runtime_line(format_args!("[TRACE] plugin_exchange entry instance={instance_id} command={}", command.is_some()));
     let constructing = with_instances_mut(runtime, |list| { let instance = find_instance(list, instance_id)?; Ok(instance.app.store_constructor_is_pending()) }).await?;
@@ -231,8 +249,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 let(loan,receiver,terminal)=owner.media_chunk_parts()?;match plugin_take_media_export_chunk(runtime,instance_id,loan,receiver,terminal,cx).await{Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure);true}}
             },
             Some(protocol::AppCommand::MediaOut{port,..})=>{
-                let grant=cx.retained_grant();let artifact=identity.encode(|native|{let mut encoder=crate::io::control::NativeSnapshotEncodeOwner::new(native,grant);let result=::semio_framework_async::poll::resolve_ready(plugin_produce_media(runtime,instance_id,port,"",&mut encoder,cx));cx.consume_retained(encoder.progress()).map_err(crate::app_contract::MediaArtifactOperationFailure::from)?;result});
-                match artifact{Ok(result)=>original_media_artifact=result,Err(crate::app_contract::MediaArtifactOperationFailure::Original(failure))=>original_media_failure=Some(failure.into()),Err(crate::app_contract::MediaArtifactOperationFailure::Domain(source))=>original_media_domain=Some(source)};
+                let grant=cx.retained_grant();let artifact=identity.encode(|native|{let mut encoder=semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner::new(native,grant);let result=::semio_framework_async::poll::resolve_ready(plugin_produce_media(runtime,instance_id,port,"",&mut encoder,cx));cx.consume_retained(encoder.progress()).map_err(semio_framework_plugin_decl_app::MediaArtifactOperationFailure::from)?;result});
+                match artifact{Ok(result)=>original_media_artifact=result,Err(semio_framework_plugin_decl_app::MediaArtifactOperationFailure::Original(failure))=>original_media_failure=Some(failure.into()),Err(semio_framework_plugin_decl_app::MediaArtifactOperationFailure::Domain(source))=>original_media_domain=Some(source)};
                 original_media_artifact.is_none()
             },
             Some(protocol::AppCommand::ConfigCommand{..})=>{

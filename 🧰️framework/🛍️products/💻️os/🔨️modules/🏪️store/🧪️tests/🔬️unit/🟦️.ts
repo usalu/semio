@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import Ajv from "ajv";
-import physicalGrantSchema from "../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json" with { type: "json" };
+import { retainedCloneWireSchema as physicalGrantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { test } from "bun:test";
@@ -24,9 +24,11 @@ test("retained member publication funds independent decoding and release passes"
 
 
 test("current original Store unit source is accepted by the independent Rust grammar", () => {
-  const { status, error, stderr } = spawnSync("rustfmt", ["--edition", "2021", "--emit", "stdout", "--config", "skip_children=true", fileURLToPath(new URL("./🦀️.rs", import.meta.url))], { stdio: ["ignore", "ignore", "pipe"], timeout: 5000 });
-  assert.ifError(error);
-  assert.equal(status, 0, stderr.toString());
+  for (const unit of ["../🏙️bin-01/🔬️unit/🦀️.rs", "../🌆️bin-02/🔬️unit/🦀️.rs", "../🌈️bin-03/🔬️unit/🦀️.rs", "../🌌️bin-04/🔬️unit/🦀️.rs", "../🌅️bin-05/🔬️unit/🦀️.rs", "../🌴️bin-06/🔬️unit/🦀️.rs", "../../🧪️testing/🧭️prelude/🦀️.rs", "../../🧪️testing/🧮️snapshot/🦀️.rs", "../../🧪️testing/🧵️operations/🦀️.rs", "../../🧪️testing/🎭️doubles/🦀️.rs", "../../🧪️testing/🎭️doubles/♻️retirement/🦀️.rs", "../../🧪️testing/🎭️doubles/🏭️preparation/🦀️.rs", "../../🧪️testing/🎭️doubles/📨️envelopes/🦀️.rs", "../../🧪️testing/🎭️doubles/🗄️store/🦀️.rs", "../../🧪️testing/🎭️doubles/🧾️callers/🦀️.rs", "../../🧩️composition/🚪️open/🧪️tests/🍰️companion/🔬️unit/🦀️.rs"]) {
+    const { status, error, stderr } = spawnSync("rustfmt", ["--edition", "2021", "--emit", "stdout", "--config", "skip_children=true", fileURLToPath(new URL(unit, import.meta.url))], { stdio: ["ignore", "ignore", "pipe"], timeout: 5000 });
+    assert.ifError(error);
+    assert.equal(status, 0, unit + ": " + stderr.toString());
+  }
   console.log("[DEBUG] Original Store Unit Rust grammar accepted; no source copy or native type/runtime credit");
 });
 
@@ -53,7 +55,7 @@ test("current original Presence and Store read owners parse with independent Rus
     "../../👥️presence/♻️retirement/🦀️.rs",
     "../../👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
     "../../👥️presence/🚫️rejection/🧪️tests/🔬️unit/🦀️.rs",
-    "../../👥️presence/🧪️testing/♻️retirement/🦀️.rs",
+    "../../../../../../🔨️modules/🌱️value/🧪️testing/👥️presence-retirement/🦀️.rs",
     "../../🔗️read/♻️retirement/🦀️.rs",
     "../../🔗️read/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
   ];
@@ -85,7 +87,7 @@ test("current transfer, clone and schema consumers retain five original currenci
   for (const name of ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"]) assert(Number.isSafeInteger(transfer.retirementGrant[name]));
   assert(transfer.retirementGrant.maximumReleaseBytes >= Buffer.byteLength(text));
   const admit = new Ajv({ strict: true }).compile(physicalGrantSchema);
-  const clone = await Bun.file(new URL("../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📦️nested/🔣️.json", import.meta.url)).json();
+  const clone = await Bun.file(retainedCloneNestedFixtureUrl).json();
   const schema = await Bun.file(new URL("../🧫️fixtures/🧬️owned-schema-record/🔣️.json", import.meta.url)).json();
   for (const policy of [transfer.retirementGrant, clone.retirementGrant, schema.retirementGrant]) {
     assert.equal(admit(policy), true, JSON.stringify(admit.errors));
@@ -133,6 +135,7 @@ test("current native cleanup callers retain independent plain authority instead 
 });
 
 import{existsSync,readFileSync}from"node:fs";
+import { retainedCloneNestedFixtureUrl } from "../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 test("original returned read examples have no independent whole-trial schema",()=>{assert.equal(existsSync(new URL("../../🔗️read/🧾️return/🧬️schema/🔣️.json",import.meta.url)),false);const examples=JSON.parse(readFileSync(new URL("../../🔗️read/🧾️return/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));for(const row of examples.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);console.log("[DEBUG] Original returned read plain aliases preserve last-custody expectations without a trial contract; native2laws unqualified");});
 
 test("original codec custody examples do not own a whole-trial schema",()=>{assert.equal(existsSync(new URL("../../📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🔣️.json",import.meta.url)),false);});

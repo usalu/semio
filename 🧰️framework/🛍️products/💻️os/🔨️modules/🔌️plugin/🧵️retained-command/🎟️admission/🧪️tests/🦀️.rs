@@ -1,4 +1,4 @@
-use super::*;
+use crate::admission::{ArtifactRetainedAdmissionRefusal, admit_limits, admit_raw};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 #[test]
 fn retained_raw_admission_has_no_failure_destructor_or_undeclared_allocation(){

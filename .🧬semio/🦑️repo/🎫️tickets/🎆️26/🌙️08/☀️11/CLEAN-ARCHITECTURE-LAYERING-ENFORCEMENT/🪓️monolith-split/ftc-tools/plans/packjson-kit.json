@@ -1,0 +1,30 @@
+{
+ "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs": {
+  "alias": [
+   "Phase"
+  ],
+  "forward": [
+   "refusal"
+  ],
+  "const": [
+   "FLAT_DEPTH",
+   "FLAT_MINIMUM_BYTES"
+  ],
+  "reexport": [
+   "super::original_wire::testkit as wire"
+  ]
+ },
+ "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📨️wire/🦀️.rs": {
+  "forward": [
+   "refuses"
+  ]
+ },
+ "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs": {
+  "alias": [
+   "JsonLexeme"
+  ],
+  "reexport": [
+   "super::native_tree::testkit as tree"
+  ]
+ }
+}

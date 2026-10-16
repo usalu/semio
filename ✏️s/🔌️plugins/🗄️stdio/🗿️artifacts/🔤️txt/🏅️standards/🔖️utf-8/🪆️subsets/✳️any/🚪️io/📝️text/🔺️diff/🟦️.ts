@@ -49,5 +49,5 @@ export const stdioTxtUtf8AnyDiffTextGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseTxtDiffText(value: unknown, at = "$"): TxtDiffText {
-  return stdioTxtUtf8AnyDiffTextGuardObject(value, `${at}`);
+  return stdioTxtUtf8AnyDiffTextGuardString(value, `${at}`);
 }

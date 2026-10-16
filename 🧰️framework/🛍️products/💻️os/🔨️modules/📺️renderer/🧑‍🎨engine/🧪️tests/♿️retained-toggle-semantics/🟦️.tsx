@@ -17,6 +17,7 @@ import { interpretUiNode } from "../../🧱️elements/🗣️Interpreter/🟦�
 import { type UiInterpreterContext } from "../../🧱️elements/🗣️Interpreter/🧷️interpreter-context/🟦️.ts";
 import { createAccessibilityMirror } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
 import { uiAccessibilityProjectionNodeV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts";
+import { retainedToggleSemanticsFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 type ToggleCase = {
   readonly id: string;
@@ -33,7 +34,7 @@ type ToggleCase = {
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json"), "utf8")) as { readonly cases: readonly ToggleCase[]; readonly checkboxPaint: { readonly availableWidth: number; readonly availableHeight: number; readonly controlSide: number; readonly outlineWidth: number; readonly checkedStates: readonly boolean[] } };
+const fixture = JSON.parse(readFileSync(retainedToggleSemanticsFixtureUrl, "utf8")) as { readonly cases: readonly ToggleCase[]; readonly checkboxPaint: { readonly availableWidth: number; readonly availableHeight: number; readonly controlSide: number; readonly outlineWidth: number; readonly checkedStates: readonly boolean[] } };
 const { computeAccessibleName, getRole }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 
 function record(row: ToggleCase, id: number): UiNodeRecord {

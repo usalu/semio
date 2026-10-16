@@ -21,7 +21,7 @@ import {
   TABLE_SCENE_LANES
 } from "@semio-tech/framework";
 import { type SurfaceId, type SurfaceProps, type UiNodeId, type UiNodeRecord } from "@semio-tech/framework";
-import { decodeScenePackValue } from "@semio-tech/framework-os";
+import { decodeScenePackValue } from "@semio-tech/framework/packs";
 import { shellLabel } from "../../🛠️ShellHelpers/🟦️.tsx";
 import { ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
 import { resolveComponentSceneHost } from "../🗺️element-host-registry/🟦️.ts";

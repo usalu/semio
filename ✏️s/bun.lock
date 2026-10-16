@@ -4,14 +4,29 @@
   "workspaces": {
     "": {
       "name": "semio-s-workspace",
+      "dependencies": {
+        "@semio-tech/schema-validator-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/framework": "workspace:*",
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*",
+        "fast-xml-parser": "^5.11.2",
+        "fflate": "^0.8.3",
+        "jszip": "^3.10.2",
+        "mdast-util-to-markdown": "^2.1.3",
+        "three": "^0.182.0",
+        "three-mesh-bvh": "^0.9.14"
       }
     },
     "../🧰️framework/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/schema-ts": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
         "@semio-tech/schema-validator-ts": "workspace:*",
@@ -107,6 +122,9 @@
     },
     "../🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript": {
       "name": "@semio-tech/value-ts",
+      "dependencies": {
+        "@semio-tech/schema-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/process": "workspace:*"
       }
@@ -202,7 +220,8 @@
         "@semio-tech/framework-os": "workspace:*"
       },
       "devDependencies": {
-        "d3-geo": "3.1.1"
+        "d3-geo": "3.1.1",
+        "fast-deep-equal": "^3.1.3"
       }
     },
     "🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust": {
@@ -415,7 +434,9 @@
       "version": "0.1.0",
       "devDependencies": {
         "@noble/hashes": "^2.4.0",
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
       }
     },
     "🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🟦️typescript": {
@@ -527,6 +548,7 @@
       "version": "0.1.0",
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*",
         "@webassemblyjs/leb128": "1.13.2"
       }
     },
@@ -611,7 +633,10 @@
     "../🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript": {
       "name": "@semio-tech/pack-json-decode-ts",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
       }
     },
     "🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🟦️typescript": {
@@ -765,7 +790,9 @@
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework-actor": "workspace:*",
-        "@semio-tech/schema-validator-ts": "workspace:*"
+        "@semio-tech/schema-ts": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
       },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
@@ -861,8 +888,12 @@
     "../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-actor",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/value-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*",
         "immer": "10.1.1"
       }
     },
@@ -979,6 +1010,7 @@
       "name": "@semio-tech/process",
       "version": "0.1.0",
       "devDependencies": {
+        "@semio-tech/schema-ts": "workspace:*",
         "@semio-tech/schema-validator-ts": "workspace:*"
       }
     },
@@ -1328,6 +1360,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*",
         "@semio-tech/stdio-avi": "workspace:*",
         "@semio-tech/stdio-bcf": "workspace:*",
         "@semio-tech/stdio-binary": "workspace:*",
@@ -1367,6 +1400,7 @@
       },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*",
         "typescript": "^5.9.3",
         "vitest": "^4.0.17"
       }
@@ -1385,7 +1419,8 @@
         "@semio-tech/puzzle-2d": "workspace:*"
       },
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*"
       }
     },
     "🧑‍💻dev/🪐️space/📦️packages/🟦️typescript": {
@@ -1405,8 +1440,13 @@
     "../🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-replication",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/value-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*",
         "fast-check": "3.23.2",
         "typescript": "^5.9.3",
         "vitest": "^4.0.17"
@@ -1415,7 +1455,8 @@
     "../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-replication-rs",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "crc-32": "^1.2.2"
       }
     },
     "../🧰️framework/🔨️modules/🔄️machine/📦️packages/🟦️typescript": {
@@ -1437,6 +1478,9 @@
     "../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust": {
       "name": "semio-framework-pixels",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/value-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/process": "workspace:*"
       }
@@ -1458,6 +1502,7 @@
       "name": "@semio-tech/ui-styling",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/schema-validator-ts": "workspace:*",
         "@tailwindcss/typography": "^0.5.19",
         "tailwindcss": "^4.0.0"
       },
@@ -1550,7 +1595,9 @@
     "../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust": {
       "name": "semio-framework-canvas",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
       }
     },
     "../🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust": {
@@ -1605,7 +1652,9 @@
       "name": "@semio-tech/framework-io-control-rs",
       "version": "0.1.0",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
       }
     },
     "../🧰️framework/🔨️modules/🚪️io/📦️codec/📦️packages/🦀️rust": {
@@ -1622,6 +1671,10 @@
     "../🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-io-schema-rs",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/schema-ts": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/process": "workspace:*"
       }
@@ -1643,8 +1696,12 @@
     "../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-sqlite-snapshot-rs",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/value-ts": "workspace:*"
+      },
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*"
       }
     },
     "../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust": {
@@ -1687,6 +1744,12 @@
         "@semio-tech/process": "workspace:*"
       }
     },
+    "../🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/schema-ts",
+      "dependencies": {
+        "@semio-tech/schema-validator-ts": "workspace:*"
+      }
+    },
     "../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-schema",
       "version": "0.1.0",
@@ -1703,7 +1766,8 @@
     "../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust": {
       "name": "@semio-tech/schema-composition-rs",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*"
       }
     },
     "../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust": {
@@ -1846,12 +1910,16 @@
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework": "workspace:*",
-        "@semio-tech/framework-replication": "workspace:*"
+        "@semio-tech/framework-replication": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
       },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
         "dom-accessibility-api": "0.5.16",
         "fast-check": "3.23.2",
+        "fast-deep-equal": "^3.1.3",
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
         "xstate": "^5.32.5"
@@ -1860,7 +1928,8 @@
     "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-os-kernel",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "crc-32": "^1.2.2"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript": {
@@ -1889,15 +1958,20 @@
     "../🧰️framework/🔨️modules/◻️2d/🧮️compute": {
       "name": "@semio-tech/2d-compute",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-os-mcp",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/schema-validator-ts": "workspace:*"
+      },
       "devDependencies": {
         "@modelcontextprotocol/sdk": "^1.30.0",
         "@semio-tech/process": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*",
         "ajv": "^8.20.0",
         "typescript": "^5.9.3",
         "vitest": "^4.0.17"
@@ -1990,8 +2064,12 @@
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry": {
       "name": "@semio-tech/plugin-registry",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/schema-validator-ts": "workspace:*"
+      },
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*"
       }
     },
     "../🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution": {
@@ -2002,8 +2080,13 @@
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-plugin",
+      "dependencies": {
+        "@semio-tech/schema-validator-ts": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
+      },
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🏛️ownership/🧮️compute": {
@@ -2045,8 +2128,10 @@
         "@semio-tech/framework-os": "workspace:*",
         "@semio-tech/framework-renderer-react": "workspace:*",
         "@semio-tech/framework-renderer-wgpu": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
-        "@semio-tech/ui-styling": "workspace:*"
+        "@semio-tech/ui-styling": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
       },
       "devDependencies": {
         "@bytecodealliance/jco": "^1.34.0",
@@ -2069,7 +2154,8 @@
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust": {
       "name": "@semio-tech/neural-engine-rs",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/pkg": {
@@ -2081,6 +2167,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@napi-rs/canvas": "^1.0.2",
+        "@semio-tech/schema-validator-ts": "workspace:*",
         "pdfjs-dist": "^6.1.200",
         "sharp": "^0.34.5"
       },
@@ -2126,10 +2213,14 @@
     "../🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript": {
       "name": "@semio-tech/print-viz-inference",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/schema-validator-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
         "d3-array": "3.2.4",
         "d3-chord": "3.0.1",
+        "d3-color": "3.1.0",
         "d3-contour": "4.0.2",
         "d3-delaunay": "6.0.4",
         "d3-force": "3.0.0",
@@ -2149,6 +2240,9 @@
     "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-diagnostic-rs",
       "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/value-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/process": "workspace:*"
       }
@@ -2165,6 +2259,9 @@
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript": {
       "name": "@semio-tech/repo-client",
       "version": "1.0.0",
+      "dependencies": {
+        "@semio-tech/schema-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/process": "workspace:*"
       }
@@ -2172,6 +2269,9 @@
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript": {
       "name": "repo-vscode",
       "version": "0.0.1",
+      "dependencies": {
+        "@semio-tech/schema-ts": "workspace:*"
+      },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
         "@types/node": "^24.10.1",
@@ -2219,6 +2319,7 @@
       "name": "@semio-tech/repo-coordinator",
       "version": "1.0.0",
       "dependencies": {
+        "@semio-tech/schema-validator-ts": "workspace:*",
         "next": "^15.3.3",
         "pg": "^8.16.0",
         "pg-boss": "^10.3.2",
@@ -2239,6 +2340,8 @@
       "version": "1.0.0",
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*",
+        "@semio-tech/schema-validator-ts": "workspace:*",
         "@types/node": "^22.19.6",
         "ajv": "8.20.0",
         "class-variance-authority": "0.7.1",
@@ -7215,6 +7318,9 @@
     ],
     "@semio-tech/schema-state-rs": [
       "@semio-tech/schema-state-rs@workspace:../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust"
+    ],
+    "@semio-tech/schema-ts": [
+      "@semio-tech/schema-ts@workspace:../🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript"
     ],
     "@semio-tech/schema-validator-rs": [
       "@semio-tech/schema-validator-rs@workspace:../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust"
@@ -17579,6 +17685,18 @@
       },
       "sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ=="
     ],
+    "bl/readable-stream": [
+      "readable-stream@3.6.2",
+      "",
+      {
+        "dependencies": {
+          "inherits": "^2.0.3",
+          "string_decoder": "^1.1.1",
+          "util-deprecate": "^1.0.1"
+        }
+      },
+      "sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA=="
+    ],
     "body-parser/content-type": [
       "content-type@2.1.0",
       "",
@@ -18054,6 +18172,18 @@
       },
       "sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg=="
     ],
+    "nx/readable-stream": [
+      "readable-stream@3.6.2",
+      "",
+      {
+        "dependencies": {
+          "inherits": "^2.0.3",
+          "string_decoder": "^1.1.1",
+          "util-deprecate": "^1.0.1"
+        }
+      },
+      "sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA=="
+    ],
     "nx/semver": [
       "semver@7.8.4",
       "",
@@ -18170,6 +18300,22 @@
       {},
       "sha512-lRfVq8fE8gz6QMBuDM6a+LO3IAzTi05H6gCVaUpir2E1Rwpo4ZUog45KpNXKC/Mn3Yb9UDuHumeFTo9iV/D9FQ=="
     ],
+    "readable-stream/safe-buffer": [
+      "safe-buffer@5.1.2",
+      "",
+      {},
+      "sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g=="
+    ],
+    "readable-stream/string_decoder": [
+      "string_decoder@1.1.1",
+      "",
+      {
+        "dependencies": {
+          "safe-buffer": "~5.1.0"
+        }
+      },
+      "sha512-n/ShnvDi6FHbbVfviro+WojiFzv+s8MPMHBczVePfUpDJLwoLT0ht1l4YwBCbi8pJAveEEdnkHyPyTP/mzRfwg=="
+    ],
     "readdir-glob/minimatch": [
       "minimatch@10.2.6",
       "",
@@ -18223,6 +18369,18 @@
       "",
       {},
       "sha512-FQK+LEpYc0fBD+J8g6oSEyyNzjp+Q7Ks1C568WWaoMRLW+TkNNWmenWeGgJjV105Gd+p/2ql1ZcjYvNiPZBhuQ=="
+    ],
+    "tar-stream/readable-stream": [
+      "readable-stream@3.6.2",
+      "",
+      {
+        "dependencies": {
+          "inherits": "^2.0.3",
+          "string_decoder": "^1.1.1",
+          "util-deprecate": "^1.0.1"
+        }
+      },
+      "sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA=="
     ],
     "test-exclude/glob": [
       "glob@7.2.3",

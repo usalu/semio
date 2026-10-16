@@ -1,0 +1,31 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "maxItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "fault",
+      "checkpoint",
+      "success"
+    ],
+    "properties": {
+      "fault": {
+        "enum": [
+          "none",
+          "write-undefined",
+          "file-sync",
+          "rename",
+          "metadata"
+        ]
+      },
+      "checkpoint": {
+        "type": "boolean"
+      },
+      "success": {
+        "type": "boolean"
+      }
+    }
+  }
+}

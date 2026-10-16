@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fontAssetPublicationRootV1 } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🟦️.ts";
 import {repositoryCachePartitionRootDataV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import { canvasRuntimeAssetSources } from "../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🟦️.ts";
-import { parseInstallationDirectoryV1 } from "../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
+import { parseInstallationDirectoryV1 } from "@semio-tech/framework/identity/installation";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY, moduleDirectoryName } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import type { BrowserArtifactSource } from "../../../🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts";

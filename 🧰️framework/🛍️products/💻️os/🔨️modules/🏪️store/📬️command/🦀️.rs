@@ -5,7 +5,7 @@
 use protocol::{MutationId, UndoPolicy, Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_os_vcs::{Author, VcsError};
 use semio_framework_diagnostic::{TextError, TextSpan};
-use semio_framework_os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, PackRefusal, pack_rt};
+use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions, PackError, PackRefusal, pack_rt};
 #[path="🧬️schema/🦀️.rs"]
 mod schema;
 pub use schema::{ArtifactCommand, HistoryLane, OpenToolTransaction, SupersedeInput};
@@ -221,7 +221,7 @@ impl OpBinary for OpsHeaderLine {
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
-        let body = semio_framework_os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let body = semio_framework_os_pack::record::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
         semio_framework_os_pack::write_varint_u64(&mut out, ordinal as u64);
@@ -240,7 +240,7 @@ impl OpBinary for OpsHeaderLine {
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
-        let (record, _report) = semio_framework_os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let (record, _report) = semio_framework_os_pack::record::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
@@ -515,7 +515,7 @@ impl OpBinary for CommandHeaderLine {
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
-        let body = semio_framework_os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let body = semio_framework_os_pack::record::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
         semio_framework_os_pack::write_varint_u64(&mut out, ordinal as u64);
@@ -534,7 +534,7 @@ impl OpBinary for CommandHeaderLine {
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
-        let (record, _report) = semio_framework_os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let (record, _report) = semio_framework_os_pack::record::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }

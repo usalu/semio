@@ -4,8 +4,8 @@
  * case's owed frame (a grant or redemption naming the reader for a space its socket never delivered the creation of, every
  * removal naming it), and the worker's projection wake answers every `wakes` row (ticket 26/09/23 C11: a human added to a
  * space created before their cursor never saw its `space.created`, so Home listed it only after a reload). */
-import { directoryStreamWakeV1 } from "../../🔨️modules/📇️directory/🟦️.ts";
-import type { DirectoryStreamMessage } from "../../🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { directoryStreamWakeV1 } from "@semio-tech/framework/directory";
+import type { DirectoryStreamMessage } from "@semio-tech/framework/directory/schema";
 
 export async function registerDirectoryAccessChangedTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, it, expect } = vitest;

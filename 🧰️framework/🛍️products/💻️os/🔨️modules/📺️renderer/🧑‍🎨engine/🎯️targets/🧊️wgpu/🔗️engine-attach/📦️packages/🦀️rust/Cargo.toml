@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-framework-os-renderer-wgpu-contracts/testkit", "semio-framework-os-renderer-wgpu-engine-graph/testkit", "semio-framework-os-renderer-wgpu-engine-registry/testkit"]
+
 [dependencies]
 semio-framework-os-renderer-wgpu-canvas2d-paint = { path = "../../../🖌️canvas2d-paint/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
@@ -43,4 +46,3 @@ ui_styling = { path = "../../../../../../../../../../🔨️modules/🖱️ui/�
 ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
 
 [dev-dependencies]
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }

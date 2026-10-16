@@ -1,5 +1,5 @@
 import nativeCatalogSchema from "../📥️runtime/🧬️schema/🔣️.json";
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import neutralPublication from "../📣️publication/🔣️.json";
 import {parseCatalogPublicationV1,publicationIncludesPackageV1,publicationPackageRootsV1,type CatalogPublicationV1} from "../📣️publication/🟦️.ts";
 import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

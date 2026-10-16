@@ -1,7 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig } from "vitest/config";
-import { testCacheDirectoryV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
+import { testCacheDirectoryV1 } from "@semio-tech/framework/process/vitest";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 
@@ -265,7 +265,7 @@ export default defineConfig({
       { find: "@semio-tech/framework-os-node-graph-rs", replacement: wasmEngineStub },
       { find: "@semio-tech/framework-surface-rs", replacement: wasmEngineStub },
       { find: "@semio-tech/framework-editor-rs", replacement: wasmEngineStub },
-      { find: "@semio-tech/framework", replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
+      { find: /^@semio-tech\/framework$/u, replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/canvas-react-renderer", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: "@semio-tech/flow-core/🌐️flow-browser.js", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js") },
@@ -276,7 +276,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/framework-renderer-react",
     environment: "jsdom",
-    env: { SEMIO_PROCEDURAL_COMPOSITION_DESCRIPTOR: resolve(repoRoot, "./🌎️hub/🧩️compositions/🌀️procedural/🔣️.json") },
+    env: { SEMIO_PROCEDURAL_COMPOSITION_DESCRIPTOR: resolve(repoRoot, "./🌎️hub/🧩️compositions/🌀️procedural/🧩️component/🔣️.json") },
     coverage: { include: ["../../🟦️.tsx"] },
     exclude: [...configDefaults.exclude, ...playwrightEngineTestSuites, ...rootPolicySelfTestSuites],
     include: (includeAgentBridge ? [agentBridgeTestSuite] : testLevel === "fundamental" || testLevel === "quick" ? [quickTestSuite] : [...engineTestSuites]).map(path => path.replaceAll("\\", "/")),

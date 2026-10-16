@@ -5,7 +5,7 @@ use crate::{DslValue, FromValue, ToValue, retained_clone::RetainedCloneSource, r
 #[test]
 fn paged_native_ordered_list_edits_move_one_slot_and_preserve_cancelled_owners() {
     use crate::list::PagedListEditCursor;
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     assert!(std::mem::size_of::<PagedListEditCursor>() <= law["bodyBytes"].as_u64().unwrap() as usize);
     for row in law["listEdits"].as_array().unwrap() {
         let original: Vec<u64> = serde_json::from_value(row["initial"].clone()).unwrap();
@@ -44,7 +44,7 @@ fn paged_native_ordered_list_edits_move_one_slot_and_preserve_cancelled_owners()
 #[test]
 fn paged_native_utf8_append_has_real_turns_and_exact_partial_cancellation() {
     use crate::value::observe_retirement_allocations;
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let close = &law["appendClose"];
     let budget = close["maximumBytes"].as_u64().unwrap() as usize;
     let prefix = close["destinationPrefix"].as_str().unwrap();
@@ -105,7 +105,7 @@ fn paged_native_utf8_append_has_real_turns_and_exact_partial_cancellation() {
 
 #[test]
 fn paged_native_object_keys_clone_without_contiguous_key_capacity() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let key = law["prefix"].as_str().unwrap().repeat(law["prefixRepeat"].as_u64().unwrap() as usize);
     let expected = serde_json::Value::Object(law["objectEntries"].as_array().unwrap().iter().map(|row| (format!("{key}{}", row["suffix"].as_str().unwrap()), row["value"].clone())).collect());
     let original: PagedMap<u64, {usize::MAX}> = serde_json::from_value(expected.clone()).unwrap();
@@ -178,7 +178,7 @@ fn retire_owner<T: RetireOwned>(value: T, maximum_items: usize, maximum_bytes: u
 
 #[test]
 fn paged_octets_copy_and_retire_by_credited_bytes_under_single_item_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️owners/🔣️.json")).expect("paged owner fixture");
+    let fixture: serde_json::Value = serde_json::from_str(crate::text("🧬️retained-clone/📦️paged/🧪️tests/🧫️fixtures/📦️owners/🔣️.json")).expect("paged owner fixture");
     let length = fixture["bytes"]["length"].as_u64().expect("octet length") as usize;
     let multiplier = fixture["bytes"]["multiplier"].as_u64().expect("octet multiplier") as usize;
     let increment = fixture["bytes"]["increment"].as_u64().expect("octet increment") as usize;
@@ -238,7 +238,7 @@ fn paged_octets_copy_and_retire_by_credited_bytes_under_single_item_grants() {
 
 #[test]
 fn paged_text_and_map_copy_match_serde_oracles_and_close_terminal_empty() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️owners/🔣️.json")).expect("paged owner fixture");
+    let fixture: serde_json::Value = serde_json::from_str(crate::text("🧬️retained-clone/📦️paged/🧪️tests/🧫️fixtures/📦️owners/🔣️.json")).expect("paged owner fixture");
     let grant = grant(&fixture);
     let byte_length = fixture["bytes"]["length"].as_u64().expect("octet length") as usize;
     let multiplier = fixture["bytes"]["multiplier"].as_u64().expect("octet multiplier") as usize;
@@ -325,7 +325,7 @@ fn paged_native_combined_grants_and_identifier_order_follow_neutral_law() {
     use super::super::ordered_map::{BoundedOrd, BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep};
     fn close_grant<const N:usize>(cursor:&PagedUtf8BoundedOrdCursor<N>,items:usize)->RetainedCloneGrant{let copy=cursor.next_close_copy_byte_demand().unwrap();let release=cursor.next_close_release_byte_demand().unwrap();RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:cursor.next_close_depth_demand().unwrap()}}
     let physical=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let prefix = law["prefix"].as_str().unwrap().repeat(law["prefixRepeat"].as_u64().unwrap() as usize);
     let bytes = law["bodyBytes"].as_u64().unwrap() as usize;
     assert!(std::mem::size_of::<PagedUtf8BoundedOrdCursor<{usize::MAX}>>() <= bytes);

@@ -7,11 +7,11 @@
 
 // #region 🔌️Adapters
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { WasmCanvas, type WasmCanvasSession } from "@semio-tech/canvas-react-renderer";
+import { WasmCanvas, type WasmCanvasSession } from "@semio-tech/framework/canvas/react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { cn, ContextMenuController, glassClass, Textarea, useCanvasAppearanceSync, useLabel, useShellScopeOptional, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
 import { composeDraftStepV1, createTextEditorTypingRunV1, draftChangesJsonV1, DRAFT_SPLICES_ARGUMENT, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ActionOperationControlV1, type DraftChangeV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
-import { encodePackValue } from "@semio-tech/framework-os";
+import { encodePackValue } from "@semio-tech/framework/packs";
 import { useLocalDocumentOwnerV1, useLocalDocumentWindowV1, type LocalDocumentOwnerV1 } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { useClient } from "../🕸️NodeGraph/🟦️.tsx";
 import { createEditorSession, type EditorWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";

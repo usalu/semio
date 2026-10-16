@@ -7,7 +7,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 // #region 🔌️Adapters
 import { scaleSqrt } from "d3-scale";
 import { regressionLinear } from "d3-regression";
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 

@@ -11,7 +11,7 @@ import { type AnalyzeReport, type Breach, type ToolResult } from "../⚙️data-
 import { DIAGNOSTIC_SOURCE } from "../🎞️constants/🟦️.ts";
 import { bundleCache, type BundleInfo, fileBreachsMap, repoDiagnostics, runningProcesses } from "../🎩️globals/🟦️.ts";
 import { execAsync, getRepoCommand, getWorkspaceRoot, hasRepoAccess, log, logError, runRepoCommandJson } from "../🎼️utilities/🟦️.ts";
-import { extractFilePathFromScope } from "../🎵️path-helpers/🟦️.ts";
+import { extractFilePathFromScope } from "../🎵️path-navigation/🟦️.ts";
 import { getTreeRoot, type TreeNodeData } from "../🏬️uri-resolution/🟦️.ts";
 // #endregion 🔌️Adapters
 

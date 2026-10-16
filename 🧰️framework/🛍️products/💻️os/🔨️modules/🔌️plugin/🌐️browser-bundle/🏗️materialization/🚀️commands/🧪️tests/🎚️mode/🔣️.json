@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "mode": "prototype",
+      "profile": "prototype",
+      "accept": true
+    },
+    {
+      "mode": "prototype",
+      "profile": "release",
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "profile": "wasm-prototype",
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "profile": "wasm-release",
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "profile": "dev",
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "profile": "host-tool",
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "profile": "test",
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "profile": "unknown",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "prototype",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "release",
+      "accept": true
+    },
+    {
+      "mode": "release",
+      "profile": "wasm-prototype",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "wasm-release",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "dev",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "host-tool",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "test",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "unknown",
+      "accept": false
+    }
+  ],
+  "readers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts",
+      "owner": "withComponentModelV1",
+      "selection": "intent.mode"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🟦️.ts",
+      "owner": "verifyModel",
+      "selection": "mode"
+    }
+  ]
+}

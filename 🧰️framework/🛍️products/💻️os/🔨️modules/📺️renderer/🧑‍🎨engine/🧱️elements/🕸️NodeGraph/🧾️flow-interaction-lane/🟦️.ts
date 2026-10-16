@@ -3,7 +3,7 @@
  * 🧱️ Child hook module of {@link ../🟦️.tsx | FlowGraphCanvasHost}: `useFlowInteractionPublication` runs the original statements in order and returns the bindings later hooks and the render read; the component merges them into the shared core object.
  */
 
-import { decodeDagHoverJson, decodeDagSelectionJson } from "../../../../../♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts";
+import { decodeDagHoverJson, decodeDagSelectionJson } from "@semio-tech/framework/infinite/board/io/text/dag-input";
 import { useCallback, useMemo, useRef } from "react";
 import { flowJsonText, nodeGraphInputDecodeControl, publishNodeGraphHover, publishNodeGraphSelection } from "../🧰️graph-core/🟦️.ts";
 import { readObservedFlowTask, syncFlowSessionStructureFromScene } from "../🔄️flow-session-sync/🟦️.ts";

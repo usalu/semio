@@ -185,7 +185,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
     if (!normalizedToken) return id;
     return normalizedToken
       .split(/\s+/)
-      .map((word) => (word.length > 0 ? `${word[0].toUpperCase()}${word.slice(1)}` : word))
+      .map((word) => (word.length > 0 ? `${word.charAt(0).toUpperCase()}${word.slice(1)}` : word))
       .join(" ");
   }, [id]);
   const displayLabel = resolvedLabel ?? fallbackLabel;

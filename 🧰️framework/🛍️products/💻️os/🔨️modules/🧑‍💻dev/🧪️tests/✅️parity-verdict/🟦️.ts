@@ -2,7 +2,7 @@
 import Ajv2020 from "ajv/dist/2020.js";
 import { describe, expect, it } from "vitest";
 import { parityVerdict } from "../../⚖️parity/✅️verdict/🟦️.ts";
-import type { ParityPlaygroundReport } from "../../⚖️parity/🏗️structure/🟦️.ts";
+import type { ParityPlaygroundReport } from "../../⚖️parity/📋️playground-report/🟦️.ts";
 import fixture from "../../⚖️parity/🧪️tests/🧫️fixtures/✅️verdict/🔣️.json";
 import schema from "../../⚖️parity/🧬️schema/✅️verdict/🔣️.json";
 

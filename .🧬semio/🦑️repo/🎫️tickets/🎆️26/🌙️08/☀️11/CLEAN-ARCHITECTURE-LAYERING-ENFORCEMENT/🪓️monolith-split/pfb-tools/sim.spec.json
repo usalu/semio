@@ -1,0 +1,113 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/pfb-orig/sim/🦀️.rs",
+ "descendants": [
+  "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🧪️tests/🔬️unit/🦀️.rs"
+ ],
+ "chunks": [
+  {
+   "name": "state",
+   "folder": "🧱️state",
+   "doc": "🧱️ Job state: stage enums, work cursors, the admission rejection, the job authority, the abandonment registry and the job owner.",
+   "segments": [
+    {
+     "lines": [
+      44,
+      665
+     ]
+    }
+   ]
+  },
+  {
+   "name": "packets",
+   "folder": "📮️packets",
+   "doc": "📮️ Job authority wire surface: packet leases for preview, checkpoint, commit and fault, result hand-off, weather and wire building, and the numerical digest.",
+   "segments": [
+    {
+     "lines": [
+      667,
+      1061
+     ],
+     "wrap": {
+      "header": 666,
+      "close": 2698
+     }
+    }
+   ],
+   "reexport": false
+  },
+  {
+   "name": "pipeline",
+   "folder": "🔍️pipeline",
+   "doc": "🔍️ Job authority pipeline steps: validation, finalization, zone and facility aggregation, result build and encoded output.",
+   "segments": [
+    {
+     "lines": [
+      1062,
+      1895
+     ],
+     "wrap": {
+      "header": 666,
+      "close": 2698
+     }
+    }
+   ],
+   "reexport": false
+  },
+  {
+   "name": "run",
+   "folder": "🏃️run",
+   "doc": "🏃️ Job authority run loop: one admitted step of the resumable simulation.",
+   "segments": [
+    {
+     "lines": [
+      1896,
+      2432
+     ],
+     "wrap": {
+      "header": 666,
+      "close": 2698
+     }
+    }
+   ],
+   "reexport": false
+  },
+  {
+   "name": "close",
+   "folder": "🔚️close",
+   "doc": "🔚️ Job close ladder: close demands and steps, the interactive job trait implementation and the terminal-empty census.",
+   "segments": [
+    {
+     "lines": [
+      2433,
+      2697
+     ],
+     "wrap": {
+      "header": 666,
+      "close": 2698
+     }
+    },
+    {
+     "lines": [
+      2699,
+      2941
+     ]
+    }
+   ],
+   "reexport": "private"
+  },
+  {
+   "name": "engine",
+   "folder": "🚀️engine",
+   "doc": "🚀️ Headless batch engine: the job constructor, the batch run, the batch grant and the owned close driver.",
+   "segments": [
+    {
+     "lines": [
+      2942,
+      3023
+     ]
+    }
+   ]
+  }
+ ]
+}

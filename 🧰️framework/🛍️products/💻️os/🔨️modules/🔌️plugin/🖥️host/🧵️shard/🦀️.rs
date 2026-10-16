@@ -576,15 +576,15 @@ impl Drop for FixedReplaySeedPage {
     }
 }
 
-struct FixedReplaySeed {
-    request: JobReplayRequest,
+pub struct FixedReplaySeed {
+    pub request: JobReplayRequest,
     kind: [Option<FixedReplaySeedPage>; JOB_REPLAY_KIND_PAGE_CAPACITY],
     input: [Option<FixedReplaySeedPage>; JOB_REPLAY_INPUT_PAGE_CAPACITY],
     checkpoint: [Option<FixedReplaySeedPage>; JOB_REPLAY_CHECKPOINT_PAGE_CAPACITY],
-    kind_pages: usize,
+    pub kind_pages: usize,
     input_pages: usize,
     checkpoint_pages: usize,
-    kind_length: usize,
+    pub kind_length: usize,
     input_length: usize,
     checkpoint_length: usize,
     close_cursor: usize,
@@ -610,7 +610,7 @@ impl FixedReplaySeed {
         })
     }
 
-    fn copy_kind_page(&mut self, bytes: &[u8], cursor: &mut usize) -> Result<bool, ()> {
+    pub fn copy_kind_page(&mut self, bytes: &[u8], cursor: &mut usize) -> Result<bool, ()> {
         if *cursor == bytes.len() {
             return Ok(true);
         }
@@ -623,7 +623,7 @@ impl FixedReplaySeed {
         Ok(*cursor == bytes.len())
     }
 
-    fn copy_input_page(&mut self, bytes: &[u8], cursor: &mut usize) -> Result<bool, ()> {
+    pub fn copy_input_page(&mut self, bytes: &[u8], cursor: &mut usize) -> Result<bool, ()> {
         if *cursor == bytes.len() {
             return Ok(true);
         }
@@ -860,10 +860,10 @@ pub(crate) struct AdmissionRejected<T> {
     pub owner: T,
 }
 
-struct OwnerSlot<T> {
+pub struct OwnerSlot<T> {
     generation: u64,
     bytes: usize,
-    owner: T,
+    pub owner: T,
 }
 
 pub struct FixedOwnerRing<T, const N: usize> {
@@ -2648,16 +2648,18 @@ pub fn test_identity_issuer()->OriginalShardIdentityIssuer{
 /// 🧪️ [`LoopbackTransport`] (module level, above — moved there so [`ShardTransports`] can name
 /// it) hands this back from `paired()`; `pub(super)` so the parent `shard` module's own
 /// `LoopbackTransport::paired` can construct it.
-pub(crate) struct LoopbackProbe {
+#[cfg(any(test, feature = "testkit"))]
+pub struct LoopbackProbe {
     pub(crate) inbound: Arc<Mutex<Vec<Vec<u8>>>>,
     pub(crate) outbound: Arc<Mutex<Vec<Vec<u8>>>>,
 }
 
+#[cfg(any(test, feature = "testkit"))]
 impl LoopbackProbe {
-    async fn push_inbound(&self, bytes: Vec<u8>) {
+    pub async fn push_inbound(&self, bytes: Vec<u8>) {
         self.inbound.lock().expect("loopback lock").push(bytes);
     }
-    async fn take_outbound(&self) -> Vec<Vec<u8>> {
+    pub async fn take_outbound(&self) -> Vec<Vec<u8>> {
         std::mem::take(&mut *self.outbound.lock().expect("loopback lock"))
     }
 }

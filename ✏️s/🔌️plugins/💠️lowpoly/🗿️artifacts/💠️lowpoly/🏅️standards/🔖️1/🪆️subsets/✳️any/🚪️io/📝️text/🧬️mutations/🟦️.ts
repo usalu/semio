@@ -49,5 +49,5 @@ export const lowpolyLowpolyMutationsTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseLowpolyMutationsText(value: unknown, at = "$"): LowpolyMutationsText {
-  return lowpolyLowpolyMutationsTextGuardObject(value, `${at}`);
+  return lowpolyLowpolyMutationsTextGuardString(value, `${at}`);
 }

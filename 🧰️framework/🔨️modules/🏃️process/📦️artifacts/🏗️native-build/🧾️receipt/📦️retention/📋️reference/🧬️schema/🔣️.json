@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/receipt/retention/reference/component.json",
+  "$ref": "#/$defs/CompletedCargoPublicationReferenceV1",
+  "$defs": {
+    "CompletedCargoPublicationReferenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "kind",
+        "pass",
+        "receiptSha256",
+        "indexSha256",
+        "originalArtifact"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "component",
+            "emitter"
+          ]
+        },
+        "pass": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9._:-]+$"
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "indexSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "originalArtifact": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256",
+                "byteLength"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "byteLength": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 536870912
+                }
+              }
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "kind": {
+                  "const": "component"
+                }
+              }
+            },
+            {
+              "properties": {
+                "originalArtifact": {
+                  "type": "object"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

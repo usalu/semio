@@ -15,7 +15,7 @@ import {
   publishLocalPresenceTypingV1,
   subscribeLocalPresenceWindowViewsV1,
 } from "../../🟦️.ts";
-import { peersForWindow, canvasPointToScreen, orbitPointToScreen } from "@semio-tech/framework-replication";
+import { peersForWindow, canvasPointToScreen, orbitPointToScreen } from "@semio-tech/framework/replication";
 
 describe("👕️canvas-presence registry", () => {
   it("collects throttled local window views per runtime key", () => {

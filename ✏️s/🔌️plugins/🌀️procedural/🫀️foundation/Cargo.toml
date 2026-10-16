@@ -1,0 +1,79 @@
+cargo-features = [ "trim-paths" ]
+
+[workspace]
+resolver = "2"
+members = [
+    "🖼️semantic-ui/📦️packages/🦀️rust",
+    "🧬️generation/🪶️sqlite/📦️packages/🦀️rust",
+    "🧬️generation/🪶️sqlite/🚦️native/📦️packages/🦀️rust",
+    "🧬️generation/🪶️sqlite/🧪️tests/🧰️support/📦️packages/🦀️rust",
+]
+exclude = [
+    "**/🏅️standards/**",
+    "**/🏭️bridge/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+]
+
+[workspace.metadata.semio.repository]
+schema-version = 1
+exclude-patterns = [
+  "**/🏅️standards/**",
+  "**/👽️guest/**",
+  "**/🔮️oracles/**",
+  "**/🏭️bridge/**"
+]
+member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
+
+  [workspace.package]
+  version = "0.1.0"
+  edition = "2021"
+  rust-version = "1.95"
+
+[workspace.dependencies.semio-framework-os-flow-contract]
+path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📜️contract/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-os-kernel]
+path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-os-playbook-contract]
+path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/📜️contract/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-plugin]
+path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-ui]
+path = "../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-ui-locale]
+path = "../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value]
+path = "../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+  [workspace.lints.rust.future_incompatible]
+  level = "warn"
+  priority = -1
+
+  [workspace.lints.rust.rust_2018_idioms]
+  level = "warn"
+  priority = -1
+
+[workspace.lints.clippy]
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+  [workspace.lints.clippy.all]
+  level = "warn"
+  priority = -1
+

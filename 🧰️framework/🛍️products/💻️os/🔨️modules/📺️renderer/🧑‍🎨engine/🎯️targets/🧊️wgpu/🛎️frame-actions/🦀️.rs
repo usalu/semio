@@ -18,6 +18,12 @@ use ui_wgpu::wgpu::{ActionDescriptor, InputState, KeyAction, PointerModifiers, T
 mod frame_actions;
 pub use frame_actions::*;
 
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧰️fixtures/🦀️.rs"]
+mod fixtures;
+#[cfg(any(test, feature = "testkit"))]
+pub use fixtures::collect_fixture_actions;
+
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;

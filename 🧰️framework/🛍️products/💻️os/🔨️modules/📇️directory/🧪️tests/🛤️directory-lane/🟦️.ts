@@ -3,12 +3,12 @@ import type { BackboneWorkerTestDependencies } from "../../../🏪️store/👷�
 import { workerLawFakesV1, FakeDirectoryWebSocket } from "../../../../🧪️tests/🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../../../../🧪️tests/🧰️worker-law-fakes/🟦️.ts";
 
-type DirectoryCommand = import("../../🧬️schema/🟦️.ts").DirectoryCommand;
-type DirectoryCommandOutcomeV1 = import("../../🧬️schema/🟦️.ts").DirectoryCommandOutcomeV1;
-type DirectoryCommandRequestV1 = import("../../🧬️schema/🟦️.ts").DirectoryCommandRequestV1;
-type DirectoryCommandResultV1 = import("../../🧬️schema/🟦️.ts").DirectoryCommandResultV1;
+type DirectoryCommand = import("@semio-tech/framework/directory/schema").DirectoryCommand;
+type DirectoryCommandOutcomeV1 = import("@semio-tech/framework/directory/schema").DirectoryCommandOutcomeV1;
+type DirectoryCommandRequestV1 = import("@semio-tech/framework/directory/schema").DirectoryCommandRequestV1;
+type DirectoryCommandResultV1 = import("@semio-tech/framework/directory/schema").DirectoryCommandResultV1;
 type DirectoryCommandTransportOperationV1 = import("../../../🏪️store/👷️worker/🟦️.ts").DirectoryCommandTransportOperationV1;
-type FetchTimeoutResponse = import("../../../../../../🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts").FetchTimeoutResponse;
+type FetchTimeoutResponse = import("@semio-tech/framework/io/fetch-timeout").FetchTimeoutResponse;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerDirectoryLaneTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, source: TestSource): Promise<void> {

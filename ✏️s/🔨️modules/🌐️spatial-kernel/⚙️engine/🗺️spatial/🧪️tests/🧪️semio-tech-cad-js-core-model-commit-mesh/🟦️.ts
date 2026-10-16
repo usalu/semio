@@ -1,6 +1,7 @@
-import { ObjectRef, SelectionTarget, deletableObjectIdsFromSelection, deleteObjectsFromModel } from "../../../📐️geometry/🟦️.ts";
+import { ObjectRef } from "../../../📐️geometry/🟦️.ts";
+import { SelectionTarget, deletableObjectIdsFromSelection, deleteObjectsFromModel } from "../../../📐️geometry/🪪️selection/🟦️.ts";
 import { appendCommittedMeshFaceToModel, applyModelDiff } from "../../🟦️.ts";
-import { Model } from "../../../📐️geometry/🟦️.ts";
+import { Model } from "../../../📐️geometry/🧊️model/🟦️.ts";
 import { preciseSpatialKernelMath } from "../../../🧮️preview/🟦️.ts";
 import { solidRef } from "@semio-tech/framework-3d-js";
 import type { TypologyRef } from "../../../📐️geometry/🟦️.ts";

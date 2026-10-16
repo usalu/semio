@@ -1,6 +1,6 @@
 import{repositoryCachePartitionRootDataV1}from"../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import {posix,win32,relative,sep} from "node:path";
-import {validateJsonSchemaSubset} from "../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📦️ Projects fixed bounded slots without granting cache or filesystem custody. */

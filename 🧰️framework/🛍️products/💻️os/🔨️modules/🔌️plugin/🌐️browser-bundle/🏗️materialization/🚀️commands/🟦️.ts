@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withRepositoryArtifactDestinationV1, stageRepositoryArtifacts} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { componentModuleOwnerV1, MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../📇️registry/📦️deployment/🟦️.ts";
@@ -154,7 +154,7 @@ async function publishComponentModuleV1(work: ComponentModuleWorkV1, module: str
 
 /** 🌐️ Retains one genuine vendor reader and funded assembled module through actual probe and final publication. */
 export async function publishComponentBrowserV1(work:ComponentModuleWorkV1,transpiled:string,optimized:string|null,receipt:ComponentReceiptV1):Promise<void>{
- const mode=readNativeCallerAuthorityV1(work.invocation.capabilities).original.buildMode,policy=publicationSchema.definitions.Protocol.const;if(receipt.profile!=="wasm-"+mode)throw Error("Exact actual browser publication mode required");
+ const mode=readNativeCallerAuthorityV1(work.invocation.capabilities).original.buildMode,policy=publicationSchema.definitions.Protocol.const;if(receipt.profile!==mode)throw Error("Exact actual browser publication mode required");
  await withRepositoryCacheStoreV1(work.repoRoot,"products",work.invocation,work.control,(store,storePhase)=>withRepositoryArtifactV1({workspace:work.repoRoot,invocation:work.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,path:join(builtPluginModulesRootIn(work.repoRoot,mode),PREVIEW2_VENDOR_RELATIVE),owner:"browser-support:preview2",maximumBytes:policy.maximumOutputBytes+policy.maximumManifestBytes,maximumFiles:policy.maximumFiles}},reader=>withRepositoryArtifactTaskV1(reader,work.invocation,async artifact=>{
   await withArtifactScratchV1({workspace:work.repoRoot,invocation:work.invocation,storage:store.storage,control:store.control,phaseControl:artifact.control,request:{version:1,mode,owner:"browser/module/"+work.target.pluginId}},scratch=>withArtifactDestinationTaskV1(scratch,work.invocation,async sink=>{
    let total=0;const vendor=join(sink.directory,PREVIEW2_VENDOR_RELATIVE);for(const name of artifact.files){const source=join(artifact.path,name),destination=join(vendor,name),size=lstatSync(source).size;if(destination.length>policy.maximumPathUnits||size>policy.maximumOutputBytes-total)throw Error("Browser vendor scratch extent exceeded");total+=size;mkdirSync(dirname(destination),{recursive:true});await withArtifactDescriptorSlotV1(()=>withArtifactDescriptorSlotV1(()=>copyFile(source,destination)));}

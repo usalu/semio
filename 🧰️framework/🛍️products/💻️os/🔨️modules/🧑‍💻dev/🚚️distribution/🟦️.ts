@@ -3,7 +3,7 @@ import {frameworkOsEngineDeliveriesV1} from "../🏗️builder/🌐️vite/📥�
 import {flowBrowserPackageRequestV1} from "../../🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
 import { runtimeFixturePathV1 } from "../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts";
 import catalog from "./📇️layout.json";
-import { installationDirectoryEmoji } from "../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
+import { installationDirectoryEmoji } from "@semio-tech/framework/identity/installation";
 
 export type DistributionChunkOwner = { readonly kind: "facade" | "module"; readonly source: string; readonly output: string };
 export type DistributionAssetOwner = { readonly kind: "source" | "name"; readonly source: string; readonly emittedName?: string; readonly output: string };

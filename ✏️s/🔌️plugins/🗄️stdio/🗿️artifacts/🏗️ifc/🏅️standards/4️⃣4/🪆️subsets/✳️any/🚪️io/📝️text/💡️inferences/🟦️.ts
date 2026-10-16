@@ -49,5 +49,5 @@ export const stdioIfc4AnyInferenceTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseIfcInferenceText(value: unknown, at = "$"): IfcInferenceText {
-  return stdioIfc4AnyInferenceTextGuardObject(value, `${at}`);
+  return stdioIfc4AnyInferenceTextGuardString(value, `${at}`);
 }

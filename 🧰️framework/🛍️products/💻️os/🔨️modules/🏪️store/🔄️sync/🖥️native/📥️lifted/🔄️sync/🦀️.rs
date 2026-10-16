@@ -2,7 +2,7 @@
 use semio_framework_os_store_text_io::ArtifactPackFiles;
 use semio_framework_os_store_text_io::text_format::ArtifactTextFiles;
 #[cfg(any(test, feature = "testing"))]
-use fixtures::*;
+use semio_framework_os_store_sync::fixtures::*;
 use semio_framework_os_store_sync::is_repository_root;
 use semio_framework_os_store_sync::now_ms;
 //#region 🔖️Fixtures

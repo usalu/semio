@@ -1,3 +1,4 @@
+import { parseHtmlNode } from "../📸️snapshot/🟦️.ts";
 // 🌳 `HtmlSnapshot.root` is an `HtmlNode`, and `HtmlDiff`/`HtmlNodeDiff` diff that same node tree
 // directly -- own types throughout (HTML is not XML; only the general "recursive node tree"
 // *structural pattern* is borrowed from svg/xml, per the ticket brief).
@@ -167,4 +168,28 @@ export function parseHtmlElementDiff(value: unknown, at = "$"): HtmlElementDiff 
     attributes: row["attributes"] === undefined ? undefined : parseHtmlAttributesDiff(row["attributes"], `${at}.attributes`),
     children: row["children"] === undefined ? undefined : parseHtmlChildrenDiff(row["children"], `${at}.children`),
   };
+}
+
+export function parseHtmlChildAdded(value: unknown, at = "$"): HtmlChildAdded {
+  const row = stdioHtml5AnyDiffGuardObject(value, at);
+  return {
+    index: stdioHtml5AnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    item: parseHtmlNode(row["item"], `${at}.item`),
+  };
+}
+
+export function parseHtmlNodeDiff(value: unknown, at = "$"): HtmlNodeDiff {
+  return ((row0) => { switch (stdioHtml5AnyDiffGuardMember(row0["kind"], `${at}.kind`, ["element", "text", "comment", "rawText", "replace"] as const)) { case "element": return { kind: "element", ...parseHtmlElementDiff(row0, `${at}`) }; case "text": return { kind: "text", text: row0["text"] === undefined ? undefined : stdioHtml5AnyDiffGuardString(row0["text"], `${at}.text`) }; case "comment": return { kind: "comment", text: row0["text"] === undefined ? undefined : stdioHtml5AnyDiffGuardString(row0["text"], `${at}.text`) }; case "rawText": return { kind: "rawText", parentKind: row0["parentKind"] === undefined ? undefined : stdioHtml5AnyDiffGuardMember(row0["parentKind"], `${at}.parentKind`, ["script", "style"] as const), text: row0["text"] === undefined ? undefined : stdioHtml5AnyDiffGuardString(row0["text"], `${at}.text`) }; case "replace": return { kind: "replace", node: parseHtmlNode(row0["node"], `${at}.node`) }; } })(stdioHtml5AnyDiffGuardObject(value, `${at}`));
+}
+
+export type NullableAttrValue = string | null;
+
+export function parseNullableAttrValue(value: unknown, at = "$"): NullableAttrValue {
+  return (value === null ? null : stdioHtml5AnyDiffGuardString(value, `${at}`));
+}
+
+export type NullableString = string | null;
+
+export function parseNullableString(value: unknown, at = "$"): NullableString {
+  return (value === null ? null : stdioHtml5AnyDiffGuardString(value, `${at}`));
 }

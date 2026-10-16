@@ -31,6 +31,7 @@ class Spec:
     rehome = []               # facade-resident files whose parent module moves into a crate
     host_reexport_into = {}   # crate key -> composed hub module that re-exports the items its relocated test units define
     root_extra = {}           # crate key -> text appended to its root (re-exports of promoted modules)
+    dev_texts = {}            # crate key -> shared fixture files its tests mount (their dependencies count as dev-dependencies)
 
 
 def replace_units(hub_text, units):
@@ -48,6 +49,38 @@ def replace_units(hub_text, units):
     for a, b, rep in edits:
         t = t[:a] + rep + t[b:]
     return t
+
+
+MODOPEN = re.compile(r"\bmod\s+[A-Za-z_]\w*\s*\{")
+
+
+def root_super_fix(text):
+    """`pub(super)` at the module level of a crate root climbs above the crate: it becomes `pub(crate)`"""
+    clean = blank(text)
+    opens = {m.end() - 1 for m in MODOPEN.finditer(clean)}
+    out, last, stack = [], 0, []
+    pos = 0
+    rx = re.compile(r"pub\s*\(\s*super\s*\)")
+    marks = [m for m in rx.finditer(clean)]
+    if not marks:
+        return text
+    depth_at = {}
+    j = 0
+    for i, c in enumerate(clean):
+        if j < len(marks) and i == marks[j].start():
+            depth_at[i] = sum(1 for s in stack if s)
+            j += 1
+        if c == "{":
+            stack.append(i in opens)
+        elif c == "}" and stack:
+            stack.pop()
+    for m in marks:
+        if depth_at.get(m.start(), 1) == 0:
+            out.append(text[last:m.start()])
+            out.append("pub(crate)")
+            last = m.end()
+    out.append(text[last:])
+    return "".join(out)
 
 
 class Driver:
@@ -72,6 +105,10 @@ class Driver:
             ov[os.path.relpath(f, REPO)] = t
         for f in sp.delete:
             ov[os.path.relpath(f, REPO)] = None
+        for K, rf in pl.roots_all.items():
+            relp = os.path.relpath(pl.roots.get(K, rf), REPO)
+            if relp in ov and ov[relp]:
+                ov[relp] = root_super_fix(ov[relp])
         flipped = set(sp.group) | set(uo.BASE_REAL) | set(uo.flipped_by_me())
         hub = read(sp.hub_file)
         hub = replace_units(hub, sp.hub_units) if sp.hub_units else hub
@@ -80,6 +117,8 @@ class Driver:
             if ht:
                 hp = pl.host_path(K)
                 ov[os.path.relpath(hp, REPO)] = ht
+                for uf, ut in pl.host_unit_files.get(K, {}).items():
+                    ov[os.path.relpath(uf, REPO)] = ut
                 rel_host = os.path.relpath(hp, os.path.dirname(sp.hub_file))
                 hub = hub.rstrip("\n") + f'\n#[cfg(test)]\n#[path = "{rel_host}"]\npub(crate) mod {pl.host_module_name(K)};\n'
         for (K, unit), names in pl.host_exports.items():
@@ -195,6 +234,8 @@ class Driver:
                 a, b = pl.split_prod_test(f, ov[relp]) if f in pl.file_part else (ov[relp], "")
                 prod.append(a)
                 test.append(b)
+            for f in self.spec.dev_texts.get(K, []):
+                test.append(read(f))
             res[K] = MF.plan_manifest(K, prod, test, flip_lib=(K in self.spec.roots_b))
         return res
 
@@ -227,6 +268,7 @@ class Driver:
                 fac = MF.facade_forward(fac, f, K)
         if fac != read(MF.PKG_FACADE + "/Cargo.toml"):
             ed.put(MF.PKG_FACADE + "/Cargo.toml", fac)
+        for K in self.spec.group:
             if K in self.spec.roots_b and self.spec.drop_manifest_stub:
                 stub = MF.pkg_dir(K) + "/🦀️.rs"
                 if os.path.exists(stub):

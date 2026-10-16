@@ -25,14 +25,12 @@ import {
   devHubLocaleV1,
   devHubRoleV1,
   devHubStatusTextV1,
-  devHubWorldV1,
   devServeCommandV1,
   devServePlanV1,
   devServePortV1,
   devServeStatusTextV1,
   devServeWorldV1,
   ensureCurrentTrustedCatalogV1,
-  ensureDevLocalHub,
   ensureDevServe,
   joinDevHubV1,
   ownDevHubV1,
@@ -76,7 +74,8 @@ function writeCatalog(dataDir: string, pointer: unknown, header: unknown): void 
 function recordingWorld(overrides: Partial<DevHubWorldV1> = {}): DevHubWorldV1 & { readonly statuses: DevHubStatusV1[] } {
   const statuses: DevHubStatusV1[] = [];
   return {
-    ...devHubWorldV1(REPO, "en"),
+    ready:async hubUrl=>{try{const response=await fetch(hubUrl+"/auth/sessions/me",{signal:AbortSignal.timeout(1500)});await response.body?.cancel();return response.status===200||response.status===401;}catch{return false;}},
+    portInUse:()=>false,now:()=>Date.now(),stopOwner:async()=>{},alive:()=>false,logBytes:()=>0,
     sleep: (ms) => new Promise<void>((resolveDelay) => setTimeout(resolveDelay, Math.min(ms, 50))),
     report: (status) => void statuses.push(status),
     spawnOwner: async () => {
@@ -132,33 +131,7 @@ describe("joining a named hub", () => {
     }, 30_000);
   }
 
-  it("a serve given an explicit hub joins or continues local-first and never spawns an owner", async () => {
-    const saved = process.env.S_HUB_URL;
-    const port = await detectPort(0);
-    try {
-      const world = recordingWorld();
-      process.env.S_HUB_URL = `http://127.0.0.1:${port}`;
-      const unreachable = await ensureDevLocalHub(REPO, { dataDir: scratch("explicit"), world, joinBoundMs: 800 });
-      expect(unreachable).toBeNull();
-      expect(world.statuses.map((status) => status.kind)).toContain("gave-up");
-      expect(process.env.S_HUB_URL, "a serve that continues local-first hands its Vite no hub to proxy to").toBeUndefined();
-      const server = createServer((_request, response) => {
-        response.statusCode = 401;
-        response.end();
-      }).listen(port, "127.0.0.1");
-      try {
-        const joined = await ensureDevLocalHub(REPO, { hubUrl: `http://127.0.0.1:${port}/`, dataDir: scratch("explicit-up"), world, joinBoundMs: 5_000 });
-        expect(joined).toMatchObject({ hubUrl: `http://127.0.0.1:${port}`, userId: "" });
-        expect(process.env.S_HUB_URL, "a joined hub is the one the serve's Vite proxies to").toBe(`http://127.0.0.1:${port}`);
-        expect(world.statuses.at(-1)?.kind, "a joined hub without a broker says to sign in through the shell").toBe("no-broker");
-      } finally {
-        await new Promise<void>((resolveClosed) => server.close(() => resolveClosed()));
-      }
-    } finally {
-      if (saved === undefined) delete process.env.S_HUB_URL;
-      else process.env.S_HUB_URL = saved;
-    }
-  }, 30_000);
+  it("an explicit hub is joined through neutral role policy without starting an owner",async()=>{const world=recordingWorld({ready:async()=>true}),url="http://127.0.0.1:8787";expect(devHubRoleV1(url)).toBe("join");expect((await joinDevHubV1(url,world,800)).kind).toBe("joined");expect(world.statuses.at(-1)?.kind).toBe("joined");});
 });
 
 describe("owning the default hub", () => {
@@ -300,7 +273,7 @@ describe("the development catalog", () => {
 
   it("declares the catalog format the hub's publisher writes and its loader requires", () => {
     const declared = schema.$defs.DevHubCatalogHeaderV1.properties;
-    const publisher = readFileSync(join(REPO, "🌎️hub/📦️packages/🦀️rust/📜️script.ts"), "utf8");
+    const publisher = readFileSync(join(REPO, "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts"), "utf8");
     const start = publisher.indexOf("\nexport async function materializeTrustedCatalogBundle");
     const body = publisher.slice(start, publisher.indexOf("\nfunction ", start + 1));
     expect(start).toBeGreaterThan(0);

@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type ToleranceOverride } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type ToleranceOverride } from "@semio-tech/framework/test/adapter";
 //#endregion 🔌️Adapters
 
 //#region 📏️Tolerance

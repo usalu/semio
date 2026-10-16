@@ -49,5 +49,5 @@ export const stdioCsvRfc4180AnySnapshotTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseCsvSnapshotText(value: unknown, at = "$"): CsvSnapshotText {
-  return stdioCsvRfc4180AnySnapshotTextGuardObject(value, `${at}`);
+  return stdioCsvRfc4180AnySnapshotTextGuardString(value, `${at}`);
 }

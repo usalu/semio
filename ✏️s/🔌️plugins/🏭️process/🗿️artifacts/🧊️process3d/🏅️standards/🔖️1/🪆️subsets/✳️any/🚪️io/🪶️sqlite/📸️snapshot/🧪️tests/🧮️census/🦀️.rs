@@ -1,6 +1,5 @@
 //! 🧮️ Native semantic limits use every authored SQL storage-class cell.
-#[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,SqliteValue}};

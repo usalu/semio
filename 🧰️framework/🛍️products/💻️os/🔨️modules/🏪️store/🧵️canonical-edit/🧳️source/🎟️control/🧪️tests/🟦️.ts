@@ -2,8 +2,8 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {readFileSync} from "node:fs";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import grantSchema from "../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";
 const root=new URL("../",import.meta.url);
 const read=(path:string)=>JSON.parse(readFileSync(new URL(path,root),"utf8"));
 const schema=read("🧬️schema/🔣️.json"),law=read("🧪️tests/🧫️fixtures/🔣️.json");

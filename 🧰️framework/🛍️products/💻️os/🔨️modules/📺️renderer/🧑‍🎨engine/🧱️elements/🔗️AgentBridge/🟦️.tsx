@@ -12,7 +12,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { readPublishedPageOrigins } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { readPublishedPageOrigins } from "@semio-tech/framework/assets/published-page";
 import { AGENT_BRIDGE_OFFER_ENDPOINT, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, bridgeProtocols, fetchAgentBridgeConfig, nextBridgeDiscoveryIntervalMs, sameAgentBridgeOffer, type AgentBridgeConfig, type AgentBridgeOfferScopeV1, type BridgeOfferFetch } from "./🛰️offer/🟦️.ts";
 export { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_OFFER_SCHEMA_V1, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, agentBridgeOfferAnswerV1, agentBridgeOfferPathV1, agentBridgeOfferScopeFromDelegationsV1, parseAgentBridgeOfferRecordV2, parseAgentBridgeOfferScopeV1, selectAgentBridgeOfferV1, type AgentBridgeOfferRecordV2, type AgentBridgeOfferScopeKindV2, type AgentBridgeOfferScopeV1, BRIDGE_DISCOVERY_MAX_INTERVAL_MS, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, bridgeProtocols, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, nextBridgeDiscoveryIntervalMs, parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig, type AgentBridgeOfferAnswerV1, type BridgeOfferFetch } from "./🛰️offer/🟦️.ts";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -29,9 +29,9 @@ import {
   type BridgeInstanceRef,
   type GatewayToShell,
   type ShellKind,
-  type ShellToGateway,
-} from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
-import { decodeShellAppCommand, encodeShellAppFrame, shellAppFault, type ShellAppCommandV1, type ShellAppFrameV1 } from "../../../../🌉️mcp/🐚️channel/🟦️.ts";
+  type ShellToGateway
+} from "@semio-tech/framework/mcp/bridge";
+import { decodeShellAppCommand, encodeShellAppFrame, shellAppFault, type ShellAppCommandV1, type ShellAppFrameV1 } from "@semio-tech/framework/mcp/channel";
 // #endregion 🔌️Adapters
 
 //#region 🌐️Labels

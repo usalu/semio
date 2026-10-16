@@ -394,6 +394,3 @@ pub fn hints_of(task: &Task, sheet_task: &SheetTask, answer: Option<&Answer>) ->
         .collect()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

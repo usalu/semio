@@ -6,10 +6,17 @@ use std::{mem::{ManuallyDrop,MaybeUninit,size_of},ptr::addr_of_mut};
 type Witness=(usize,usize,Option<(u64,u64)>,(usize,usize));
 type Receipt=Option<(RetainedCloneGrant,RetainedCloneProgress)>;
 #[derive(Clone,Copy,PartialEq,Eq)]
-enum Phase{Begin,Field,Tag,Scalar,IdentityAdmit,IdentityTokens,IdentityInstall,IdentityClose,IdentityRemove,CounterLength,CounterBytes,CounterCommit,StepCount,StepTag,StepAdmit,StepTokens,StepTake,StepAdopt,StepClose,StepRemove,ListEnd,Complete,Closed}
+pub enum Phase{Begin,Field,Tag,Scalar,IdentityAdmit,IdentityTokens,IdentityInstall,IdentityClose,IdentityRemove,CounterLength,CounterBytes,CounterCommit,StepCount,StepTag,StepAdmit,StepTokens,StepTake,StepAdopt,StepClose,StepRemove,ListEnd,Complete,Closed}
 pub struct ToolRunProgressReceiving{
- slot:ManuallyDrop<Option<Box<MaybeUninit<ToolRunReceivedProgress>>>>,source:Witness,parent:usize,limits:ToolRunReceivingLimits,headers:u8,phase:Phase,field:u8,fields:u8,seen:u16,identity_at:u8,
- identity:ManuallyDrop<Option<ToolRunIdentityReceiving>>,step:ManuallyDrop<Option<ToolRunStepReceiving>>,incoming:ManuallyDrop<Option<ToolRunStep>>,counter:[u8;10],counter_at:usize,counter_bytes:usize,counter_count:usize,steps_left:usize,receipt:Receipt,closing:bool,
+ #[cfg(feature = "testkit")] #[doc(hidden)] pub slot:ManuallyDrop<Option<Box<MaybeUninit<ToolRunReceivedProgress>>>>,
+    #[cfg(not(feature = "testkit"))] slot:ManuallyDrop<Option<Box<MaybeUninit<ToolRunReceivedProgress>>>>,source:Witness,parent:usize,limits:ToolRunReceivingLimits,
+    #[cfg(feature = "testkit")] #[doc(hidden)] pub headers:u8,
+    #[cfg(not(feature = "testkit"))] headers:u8,
+    #[cfg(feature = "testkit")] #[doc(hidden)] pub phase:Phase,
+    #[cfg(not(feature = "testkit"))] phase:Phase,field:u8,fields:u8,seen:u16,identity_at:u8,
+ identity:ManuallyDrop<Option<ToolRunIdentityReceiving>>,
+    #[cfg(feature = "testkit")] #[doc(hidden)] pub step:ManuallyDrop<Option<ToolRunStepReceiving>>,
+    #[cfg(not(feature = "testkit"))] step:ManuallyDrop<Option<ToolRunStepReceiving>>,incoming:ManuallyDrop<Option<ToolRunStep>>,counter:[u8;10],counter_at:usize,counter_bytes:usize,counter_count:usize,steps_left:usize,receipt:Receipt,closing:bool,
 }
 pub struct ToolRunReceivedProgressSource{slot:ManuallyDrop<Option<Box<MaybeUninit<ToolRunReceivedProgress>>>>,source:Witness,parent:usize,limits:ToolRunReceivingLimits,receipt:Receipt,parent_receipt:bool,closing:bool,closed:bool}
 fn witness(source:&RetainedRecordBodySourceDecode)->Witness{let s=source.source_identity();(s.address,s.extent,s.authority,source.original_range())}
@@ -125,6 +132,3 @@ impl ToolRunReceivedProgressSource{
 }
 impl Drop for ToolRunProgressReceiving{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original Progress receiving abandoned its native slot, child or receipt")}}
 impl Drop for ToolRunReceivedProgressSource{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original received Progress abandoned its native slot or receipt")}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

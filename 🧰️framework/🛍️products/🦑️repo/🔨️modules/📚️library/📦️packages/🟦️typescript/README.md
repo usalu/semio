@@ -35,8 +35,16 @@ await runBundleScriptMain(router, import.meta.url);
 Run:
 
 ```bash
-bun path/to/script.ts policy
-bun repo/lib/js/bin/lint.ts path/to/script.ts
+bun repo run <project>:lint-policy
 ```
 
-Nx registers `./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs`, which matches `**/📜️script.ts` that export `policy` and adds cacheable `breach-*` targets (`bun "<script.ts>" policy`).
+The repository's shared [policy inference](../../🏗️build/🕸️graph/📥️inference/🛡️policy/🟨️.mjs) discovers `📜️script.ts` exports and adds a cacheable `lint-policy` task to the owning project. Its `lint` task depends on `lint-policy`; projects without a declared owner receive a generated `breach-*` project. Both build adapters consume this shared graph.
+
+Run declared tasks through the neutral repository interface:
+
+```bash
+bun repo run <project>:<task>[:<configuration>]
+bun repo --tool=bazel run <project>:<task>[:<configuration>]
+```
+
+Nx remains the configured default while Bazel qualification is in progress. Backend registration and argument translation belong to the private adapters.

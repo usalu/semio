@@ -484,7 +484,7 @@ async fn generated_set_mutations_satisfy_the_inverse_sum_law() {
 /// mutation per changed field, `absorb` is later-slot-wins, and the wire round trips in text and binary.
 #[test]
 fn generated_diffs_are_sparse_and_the_wire_round_trips() {
-    let corpus: serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🔨️modules/🏪️store/🚪️io/🧪️tests/🧫️fixtures/🎚️field-set/🔣️.json"))).unwrap();
+    let corpus: serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../../🏪️store/🚪️io/🧪️tests/🧫️fixtures/🎚️field-set/🔣️.json"))).unwrap();
     for row in corpus["vectors"].as_array().unwrap(){
         let mutation=ProbeConfigSet::parse_op(row["text"].as_str().unwrap()).unwrap();
         assert_eq!(mutation.print_op(),row["text"].as_str().unwrap());

@@ -1,0 +1,2476 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "first",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 0,
+          "slots": []
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "active": false
+      },
+      "expected": {
+        "slot": 0,
+        "kind": "create"
+      }
+    },
+    {
+      "name": "same-context-content-change",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "2222222222222222222222222222222222222222222222222222222222222222",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "active": false
+      },
+      "expected": {
+        "slot": 1,
+        "kind": "reuse"
+      }
+    },
+    {
+      "name": "full-oldest",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "active": false
+      },
+      "expected": {
+        "slot": 0,
+        "kind": "reset"
+      }
+    },
+    {
+      "name": "active-refuses",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "active": true
+      },
+      "expected": null
+    },
+    {
+      "name": "dirty-context-retained",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 3,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "3333333333333333333333333333333333333333333333333333333333333333",
+        "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "active": false
+      },
+      "expected": null
+    }
+  ],
+  "chargeBindings": [
+    {
+      "request": {
+        "version": 1,
+        "candidates": [],
+        "binding": null,
+        "intent": null,
+        "directoryPresent": false
+      },
+      "expected": true
+    },
+    {
+      "request": {
+        "version": 1,
+        "candidates": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "binding": null,
+        "intent": null,
+        "directoryPresent": false
+      },
+      "expected": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "candidates": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "binding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "intent": null,
+        "directoryPresent": true
+      },
+      "expected": true
+    },
+    {
+      "request": {
+        "version": 1,
+        "candidates": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "binding": null,
+        "intent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "directoryPresent": false
+      },
+      "expected": true
+    },
+    {
+      "request": {
+        "version": 1,
+        "candidates": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "binding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "intent": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "directoryPresent": true
+      },
+      "expected": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "candidates": [],
+        "binding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "intent": null,
+        "directoryPresent": true
+      },
+      "expected": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "candidates": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        "binding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "intent": null,
+        "directoryPresent": true
+      },
+      "expected": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "candidates": [],
+        "binding": null,
+        "intent": null,
+        "directoryPresent": true
+      },
+      "expected": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "candidates": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "binding": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "intent": null,
+        "directoryPresent": true
+      },
+      "expected": false
+    }
+  ],
+  "receivers": [
+    {
+      "events": [
+        "replace",
+        "replace",
+        "settle-replace",
+        "read",
+        "replace",
+        "close",
+        "read",
+        "settle-read"
+      ],
+      "accepted": [
+        true,
+        false,
+        true,
+        true,
+        false,
+        true,
+        false,
+        true
+      ]
+    },
+    {
+      "events": [
+        "read",
+        "read",
+        "settle-read",
+        "settle-read",
+        "replace",
+        "close",
+        "settle-replace",
+        "replace"
+      ],
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "events": [
+        "settle-read",
+        "settle-replace",
+        "close",
+        "close"
+      ],
+      "accepted": [
+        false,
+        false,
+        true,
+        true
+      ]
+    }
+  ],
+  "pressure": [
+    {
+      "name": "full clean pool",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "availableBytes": 1073741824,
+        "observations": [
+          {
+            "slot": 0,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 10
+          },
+          {
+            "slot": 1,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 11
+          },
+          {
+            "slot": 2,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 12
+          },
+          {
+            "slot": 3,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "4444444444444444444444444444444444444444444444444444444444444444",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 13
+          },
+          {
+            "slot": 4,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 14
+          },
+          {
+            "slot": 5,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 15
+          },
+          {
+            "slot": 6,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "7777777777777777777777777777777777777777777777777777777777777777",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 16
+          },
+          {
+            "slot": 7,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "8888888888888888888888888888888888888888888888888888888888888888",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 17
+          }
+        ]
+      },
+      "expected": {
+        "slot": 0,
+        "evict": [
+          0
+        ]
+      }
+    },
+    {
+      "name": "pressure ordered prefix",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "availableBytes": 0,
+        "observations": [
+          {
+            "slot": 0,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 10
+          },
+          {
+            "slot": 1,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 11
+          },
+          {
+            "slot": 2,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 12
+          },
+          {
+            "slot": 3,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "4444444444444444444444444444444444444444444444444444444444444444",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 13
+          },
+          {
+            "slot": 4,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 14
+          },
+          {
+            "slot": 5,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 15
+          },
+          {
+            "slot": 6,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "7777777777777777777777777777777777777777777777777777777777777777",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 16
+          },
+          {
+            "slot": 7,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "8888888888888888888888888888888888888888888888888888888888888888",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 17
+          }
+        ]
+      },
+      "expected": {
+        "slot": 0,
+        "evict": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "name": "requested warm protected",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "1111111111111111111111111111111111111111111111111111111111111111",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "availableBytes": 0,
+        "observations": [
+          {
+            "slot": 0,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 10
+          },
+          {
+            "slot": 1,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 11
+          },
+          {
+            "slot": 2,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 12
+          },
+          {
+            "slot": 3,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "4444444444444444444444444444444444444444444444444444444444444444",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 13
+          },
+          {
+            "slot": 4,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 14
+          },
+          {
+            "slot": 5,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 15
+          },
+          {
+            "slot": 6,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "7777777777777777777777777777777777777777777777777777777777777777",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 16
+          },
+          {
+            "slot": 7,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "8888888888888888888888888888888888888888888888888888888888888888",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 17
+          }
+        ]
+      },
+      "expected": {
+        "slot": 0,
+        "evict": [
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "name": "dirty oldest retained",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 1,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "availableBytes": 1073741824,
+        "observations": [
+          {
+            "slot": 0,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 10
+          },
+          {
+            "slot": 1,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 11
+          },
+          {
+            "slot": 2,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 12
+          },
+          {
+            "slot": 3,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "4444444444444444444444444444444444444444444444444444444444444444",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 13
+          },
+          {
+            "slot": 4,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 14
+          },
+          {
+            "slot": 5,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 15
+          },
+          {
+            "slot": 6,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "7777777777777777777777777777777777777777777777777777777777777777",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 16
+          },
+          {
+            "slot": 7,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "8888888888888888888888888888888888888888888888888888888888888888",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 17
+          }
+        ]
+      },
+      "expected": {
+        "slot": 1,
+        "evict": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "all dirty refused",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 1,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 2,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 3,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 4,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 5,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 6,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 7,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 8,
+              "digest": null,
+              "retirement": null
+            }
+          ]
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "availableBytes": 0,
+        "observations": [
+          {
+            "slot": 0,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 10
+          },
+          {
+            "slot": 1,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 11
+          },
+          {
+            "slot": 2,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 12
+          },
+          {
+            "slot": 3,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "4444444444444444444444444444444444444444444444444444444444444444",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 13
+          },
+          {
+            "slot": 4,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 14
+          },
+          {
+            "slot": 5,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 15
+          },
+          {
+            "slot": 6,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "7777777777777777777777777777777777777777777777777777777777777777",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 16
+          },
+          {
+            "slot": 7,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "8888888888888888888888888888888888888888888888888888888888888888",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 17
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "dirty requested refused",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 1,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "1111111111111111111111111111111111111111111111111111111111111111",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "availableBytes": 1073741824,
+        "observations": [
+          {
+            "slot": 0,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 10
+          },
+          {
+            "slot": 1,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 11
+          },
+          {
+            "slot": 2,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 12
+          },
+          {
+            "slot": 3,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "4444444444444444444444444444444444444444444444444444444444444444",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 13
+          },
+          {
+            "slot": 4,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 14
+          },
+          {
+            "slot": 5,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 15
+          },
+          {
+            "slot": 6,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "7777777777777777777777777777777777777777777777777777777777777777",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 16
+          },
+          {
+            "slot": 7,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "8888888888888888888888888888888888888888888888888888888888888888",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 17
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "free capacity no deletion",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "availableBytes": 1073741824,
+        "observations": [
+          {
+            "slot": 0,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 10
+          },
+          {
+            "slot": 1,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 11
+          },
+          {
+            "slot": 2,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 12
+          },
+          {
+            "slot": 3,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "4444444444444444444444444444444444444444444444444444444444444444",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 13
+          },
+          {
+            "slot": 4,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 14
+          },
+          {
+            "slot": 5,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 15
+          },
+          {
+            "slot": 6,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "7777777777777777777777777777777777777777777777777777777777777777",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 16
+          }
+        ]
+      },
+      "expected": {
+        "slot": 7,
+        "evict": []
+      }
+    },
+    {
+      "name": "insufficient clean capacity",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 2,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 3,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 4,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 5,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 6,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 7,
+              "digest": null,
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "dirty",
+              "sequence": 8,
+              "digest": null,
+              "retirement": null
+            }
+          ]
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "availableBytes": 0,
+        "observations": [
+          {
+            "slot": 0,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 10
+          },
+          {
+            "slot": 1,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 11
+          },
+          {
+            "slot": 2,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 12
+          },
+          {
+            "slot": 3,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "4444444444444444444444444444444444444444444444444444444444444444",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 13
+          },
+          {
+            "slot": 4,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 14
+          },
+          {
+            "slot": 5,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 15
+          },
+          {
+            "slot": 6,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "7777777777777777777777777777777777777777777777777777777777777777",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 16
+          },
+          {
+            "slot": 7,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "8888888888888888888888888888888888888888888888888888888888888888",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 17
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "resume interrupted retirement",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "retiring",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": {
+                "dev": 1,
+                "ino": 10
+              }
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "availableBytes": 1073741824,
+        "observations": [
+          {
+            "slot": 0,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 10
+          },
+          {
+            "slot": 1,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 11
+          },
+          {
+            "slot": 2,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 12
+          },
+          {
+            "slot": 3,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "4444444444444444444444444444444444444444444444444444444444444444",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 13
+          },
+          {
+            "slot": 4,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 14
+          },
+          {
+            "slot": 5,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 15
+          },
+          {
+            "slot": 6,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "7777777777777777777777777777777777777777777777777777777777777777",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 16
+          },
+          {
+            "slot": 7,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "8888888888888888888888888888888888888888888888888888888888888888",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 17
+          }
+        ]
+      },
+      "expected": {
+        "slot": 0,
+        "evict": [
+          0
+        ]
+      }
+    },
+    {
+      "name": "completed retirement absence",
+      "request": {
+        "version": 1,
+        "state": {
+          "version": 1,
+          "sequence": 8,
+          "slots": [
+            {
+              "slot": 0,
+              "context": "1111111111111111111111111111111111111111111111111111111111111111",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "retiring",
+              "sequence": 1,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": {
+                "dev": 1,
+                "ino": 10
+              }
+            },
+            {
+              "slot": 1,
+              "context": "2222222222222222222222222222222222222222222222222222222222222222",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 2,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 2,
+              "context": "3333333333333333333333333333333333333333333333333333333333333333",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 3,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 3,
+              "context": "4444444444444444444444444444444444444444444444444444444444444444",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 4,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 4,
+              "context": "5555555555555555555555555555555555555555555555555555555555555555",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 5,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 5,
+              "context": "6666666666666666666666666666666666666666666666666666666666666666",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 6,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 6,
+              "context": "7777777777777777777777777777777777777777777777777777777777777777",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 7,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            },
+            {
+              "slot": 7,
+              "context": "8888888888888888888888888888888888888888888888888888888888888888",
+              "content": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "state": "clean",
+              "sequence": 8,
+              "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "retirement": null
+            }
+          ]
+        },
+        "context": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "content": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "availableBytes": 1073741824,
+        "observations": [
+          {
+            "slot": 0,
+            "digest": null,
+            "fingerprint": null,
+            "allocatedBytes": 0,
+            "dev": null,
+            "ino": null
+          },
+          {
+            "slot": 1,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "2222222222222222222222222222222222222222222222222222222222222222",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 11
+          },
+          {
+            "slot": 2,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "3333333333333333333333333333333333333333333333333333333333333333",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 12
+          },
+          {
+            "slot": 3,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "4444444444444444444444444444444444444444444444444444444444444444",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 13
+          },
+          {
+            "slot": 4,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 14
+          },
+          {
+            "slot": 5,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 15
+          },
+          {
+            "slot": 6,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "7777777777777777777777777777777777777777777777777777777777777777",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 16
+          },
+          {
+            "slot": 7,
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fingerprint": "8888888888888888888888888888888888888888888888888888888888888888",
+            "allocatedBytes": 268435456,
+            "dev": 1,
+            "ino": 17
+          }
+        ]
+      },
+      "expected": {
+        "slot": 0,
+        "evict": [
+          0
+        ]
+      }
+    }
+  ],
+  "productionPolicy": {
+    "version": 1,
+    "chargeBytes": 4294967296,
+    "parentMetadataBytes": 67108864,
+    "maximumBackingBytes": 4227858432,
+    "filesystemBytes": 4226809856,
+    "maximumSlots": 8,
+    "maximumCatalogBytes": 32768,
+    "maximumEntries": 262144,
+    "maximumDepth": 64,
+    "maximumPathBytes": 256,
+    "maximumPending": 32,
+    "maximumOutputBytes": 16777216,
+    "maximumOutputLines": 65536,
+    "namespace": "cs",
+    "workDirectory": "w",
+    "slotDirectory": "i",
+    "catalogFile": "slots.json",
+    "chargeFile": "compiler-state.json",
+    "intentFile": "compiler-state.intent.json",
+    "volumeDirectory": "v",
+    "minimumAvailableBytes": 1073741824,
+    "initialParentFloorBytes": 4294967296,
+    "owner": "repo:compiler-state:prototype",
+    "workspaceOwner": "repo:compiler:prototype",
+    "workspaceFile": "compiler-prototype.json",
+    "outputDirectory": "b/p"
+  },
+  "smallPolicy": {
+    "version": 1,
+    "chargeBytes": 67108864,
+    "parentMetadataBytes": 16777216,
+    "maximumBackingBytes": 50331648,
+    "filesystemBytes": 49283072,
+    "maximumSlots": 2,
+    "maximumCatalogBytes": 32768,
+    "maximumEntries": 262144,
+    "maximumDepth": 64,
+    "maximumPathBytes": 256,
+    "maximumPending": 32,
+    "maximumOutputBytes": 16777216,
+    "maximumOutputLines": 65536,
+    "namespace": "fixture",
+    "workDirectory": "w",
+    "slotDirectory": "i",
+    "catalogFile": "slots.json",
+    "chargeFile": "cache.json",
+    "intentFile": "cache.intent.json",
+    "volumeDirectory": "v",
+    "minimumAvailableBytes": 4194304,
+    "initialParentFloorBytes": 16777216,
+    "owner": "diagnostic:artifact-cache",
+    "workspaceOwner": "diagnostic:artifact-workspace",
+    "workspaceFile": "producer.json",
+    "outputDirectory": "out"
+  },
+  "policyCaptures": [
+    {
+      "prototype": "object",
+      "accessor": false,
+      "proxy": false,
+      "symbol": false,
+      "expected": true
+    },
+    {
+      "prototype": "null",
+      "accessor": false,
+      "proxy": false,
+      "symbol": false,
+      "expected": true
+    },
+    {
+      "prototype": "object",
+      "accessor": true,
+      "proxy": false,
+      "symbol": false,
+      "expected": false
+    },
+    {
+      "prototype": "object",
+      "accessor": false,
+      "proxy": true,
+      "symbol": false,
+      "expected": false
+    },
+    {
+      "prototype": "object",
+      "accessor": false,
+      "proxy": false,
+      "symbol": true,
+      "expected": false
+    },
+    {
+      "prototype": "array",
+      "accessor": false,
+      "proxy": false,
+      "symbol": false,
+      "expected": false
+    }
+  ],
+  "descriptors": [
+    {
+      "name": "actual NUL foreign rooted descriptor",
+      "format": "nul-pcfatn",
+      "stdout": "p72\u0000cproducer\u0000\nf3\u0000aw\u0000tREG\u0000n{root}/i/0/output\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL exact held guard",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000aw\u0000tREG\u0000n{root}/guard\u0000\n",
+      "guardPaths": [
+        "{root}/guard"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "NUL required guard absent",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\n",
+      "guardPaths": [
+        "{root}/guard"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "NUL other process outside root",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000aw\u0000tREG\u0000n{root}/guard\u0000\np72\u0000cpeer\u0000\nf4\u0000ar\u0000tREG\u0000n{root}-other/output\u0000\n",
+      "guardPaths": [
+        "{root}/guard"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "NUL rooted guard name owned by foreign pid",
+      "format": "nul-pcfatn",
+      "stdout": "p72\u0000cpeer\u0000\nf3\u0000aw\u0000tREG\u0000n{root}/guard\u0000\n",
+      "guardPaths": [
+        "{root}/guard"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "NUL own process unlisted rooted reader",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf4\u0000ar\u0000tREG\u0000n{root}/read\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL exact root is foreign descriptor",
+      "format": "nul-pcfatn",
+      "stdout": "p72\u0000cpeer\u0000\nf4\u0000ar\u0000tDIR\u0000n{root}\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL raw newline name stays single field",
+      "format": "nul-pcfatn",
+      "stdout": "p72\u0000cpeer\u0000\nf4\u0000ar\u0000tREG\u0000n{root}/line\np71\nn/outside\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL escaped newline guard",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000ar\u0000tREG\u0000n{root}/line\\nname\u0000\n",
+      "guardPaths": [
+        "{root}/line\nname"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "NUL control caret guard",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000ar\u0000tREG\u0000n{root}/line^Aname\u0000\n",
+      "guardPaths": [
+        "{root}/line\u0001name"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "NUL UTF8 hex guard",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000ar\u0000tREG\u0000n{root}/\\xe2\\x98\\x83\u0000\n",
+      "guardPaths": [
+        "{root}/☃"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "NUL duplicate field",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000n/outside\u0000n{root}/hidden\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL duplicate process identity",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\np71\u0000cproducer\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL missing field delimiter",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000n/outside\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL missing set terminator",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000n/outside\u0000",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL missing name refuses incomplete file",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000ar\u0000tREG\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL ownerless file",
+      "format": "nul-pcfatn",
+      "stdout": "f3\u0000aw\u0000tREG\u0000n{root}/guard\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL process metadata on file",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000cpeer\u0000n/outside\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL unsupported field",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000Zunknown\u0000n/outside\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL unsafe pid",
+      "format": "nul-pcfatn",
+      "stdout": "p9007199254740992\u0000cpeer\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL malformed hex name",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000n/outside/\\xGG\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL invalid UTF8 name",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000n/outside/\\xff\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL encoded NUL name",
+      "format": "nul-pcfatn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000n/outside/\\x00\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "NUL protocol refuses newline output",
+      "format": "nul-pcfatn",
+      "stdout": "p71\nn/outside\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "newline exact guard",
+      "format": "newline-pn",
+      "stdout": "p71\nn{root}/guard\n",
+      "guardPaths": [
+        "{root}/guard"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "newline other process outside root",
+      "format": "newline-pn",
+      "stdout": "p71\nn{root}/guard\np72\nn{root}-other/file\n",
+      "guardPaths": [
+        "{root}/guard"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "newline foreign reader",
+      "format": "newline-pn",
+      "stdout": "p72\nn{root}/output\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "newline format refuses NUL",
+      "format": "newline-pn",
+      "stdout": "p71\u0000cproducer\u0000\nf3\u0000aw\u0000tREG\u0000n{root}/guard\u0000\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "newline truncated field",
+      "format": "newline-pn",
+      "stdout": "p71\nn/outside",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "newline unsupported selected field",
+      "format": "newline-pn",
+      "stdout": "p71\nf3\nn/outside\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "newline ownerless name",
+      "format": "newline-pn",
+      "stdout": "n/outside\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "newline duplicate pid",
+      "format": "newline-pn",
+      "stdout": "p71\np71\n",
+      "guardPaths": [],
+      "accepted": false
+    },
+    {
+      "name": "newline encoded name",
+      "format": "newline-pn",
+      "stdout": "p71\nn{root}/\\xe2\\x98\\x83\n",
+      "guardPaths": [
+        "{root}/☃"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "empty output",
+      "format": "newline-pn",
+      "stdout": "",
+      "guardPaths": [],
+      "accepted": false
+    }
+  ]
+}

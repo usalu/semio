@@ -182,8 +182,8 @@ fn resolve_theme_for_ids_semio_and_mono_differ() {
     assert_eq!(semio_dark.background, plain_dark.background);
     let mono_dark = resolve_theme_for_ids("mono", "dark");
     assert_ne!(mono_dark.background, semio_dark.background);
-    assert_eq!(mono_dark.background, ui_wgpu::wgpu::Theme::mono(true).background);
-    assert_ne!(mono_dark.background, ui_wgpu::wgpu::Theme::mono(false).background, "both appearances resolve");
+    assert_eq!(mono_dark.background, semio_framework_ui_theme::Theme::mono(true).background);
+    assert_ne!(mono_dark.background, semio_framework_ui_theme::Theme::mono(false).background, "both appearances resolve");
     assert_eq!(mono_dark.navbar_height, semio_dark.navbar_height);
 }
 
@@ -264,7 +264,7 @@ fn the_host_language_is_the_fallback_after_a_lock_and_the_stored_preference() {
     assert_eq!(resolve_locale_id(None, &stored(None), semio_framework_ui_locale::Locale::En), "en", "`detectShellLocale(undefined)` answers en");
     semio_framework_os_renderer_wgpu_host_base::set_host_locale(before.unwrap_or(""));
 
-    let engine = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root");
+    let engine = semio_framework_os_renderer_wgpu_test_support::engine_root();
     let read = |relative: &str| std::fs::read_to_string(engine.join(relative)).unwrap_or_else(|error| panic!("read {relative}: {error}"));
     assert!(read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs").contains("js_name = semioWgpuSetHostLocale"), "the renderer exports the locale door");
     assert!(read("🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts").contains("semioWgpuSetHostLocale?.(message.locale)"), "the frame Worker forwards the page's read before the shell boots");

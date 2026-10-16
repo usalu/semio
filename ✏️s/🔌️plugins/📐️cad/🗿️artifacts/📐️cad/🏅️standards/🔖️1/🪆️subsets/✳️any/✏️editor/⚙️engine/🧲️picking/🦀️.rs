@@ -413,7 +413,7 @@ fn unique_points(points: Vec<[f64; 3]>) -> Vec<[f64; 3]> {
 }
 
 //#region 🔖️CurveSampling
-/// 📐️ `edgeSamplePoints`' default segment count (`🧮️preview/🟦️.ts:262`).
+/// 📐️ `edgeSamplePoints`' default segment count (`🧮️preview/🌀️curve-sampling/🟦️.ts:169`).
 pub const EDGE_SAMPLE_SEGMENTS: usize = 32;
 /// ⭕️ The floor `circleSamplePoints`/`ellipseSamplePoints` raise `segments` to (`:272`, `:274`).
 pub const CLOSED_CURVE_SAMPLE_SEGMENTS: usize = 64;
@@ -447,7 +447,7 @@ fn v_normalize(a: [f64; 3]) -> [f64; 3] {
     if length < 1e-12 { a } else { v_scale(a, 1.0 / length) }
 }
 
-/// 🔵️ The plane frame of an arc — React's `arcPlaneFrame` (`🧮️preview/🟦️.ts:117`).
+/// 🔵️ The plane frame of an arc — React's `arcPlaneFrame` (`🧮️preview/🌀️curve-sampling/🟦️.ts:24`).
 struct ArcPlaneFrame {
     center: [f64; 3],
     radius: f64,
@@ -555,7 +555,7 @@ pub fn nurbs_display_sample_points(poles: &[[f64; 3]], segments_per_span: usize)
     out
 }
 
-/// 📍️ React's `edgeSamplePoints` (`🧮️preview/🟦️.ts:262`) — the exact family ladder, over the curve
+/// 📍️ React's `edgeSamplePoints` (`🧮️preview/🌀️curve-sampling/🟦️.ts:169`) — the exact family ladder, over the curve
 /// parameters `CadEdgeCurve` now carries. A producer-supplied `points` polyline wins outright.
 pub fn edge_sample_points(curve: &CadEdgeCurve, ends: &[[f64; 3]], segments: usize) -> Vec<[f64; 3]> {
     if !curve.points.is_empty() {

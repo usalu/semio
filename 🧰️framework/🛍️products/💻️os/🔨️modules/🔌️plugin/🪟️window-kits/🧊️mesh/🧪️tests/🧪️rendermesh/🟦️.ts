@@ -1,3 +1,7 @@
+import * as ModuleUnderTest from "../../🟦️.ts";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "renderMesh">, source: TestSource): Promise<void> {
@@ -13,3 +17,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../🟦️.ts")).href;
+const moduleUnderTestDirectory = resolve(import.meta.dirname, "../..");
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { renderMesh: ModuleUnderTest.renderMesh }, { directory: moduleUnderTestDirectory, url: moduleUnderTestUrl });

@@ -1,10 +1,19 @@
 //! 🛎️ The per-instance app cell of the plugin runtime: host and background holds, refusals and the cell itself.
 
-use super::*;
+use semio_framework_plugin_plugin_program::{AppInstance, PluginProgram};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering};
+use semio_framework::FaultFrom;
+use semio_framework_value::{FromValue, ToValue};
+use semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1;
+use semio_framework_plugin_reactor_app::PluginApp;
+use crate::life_cleanup_pumps::RuntimeLiveCleanupPump;
+use crate::life_cleanup_vocabulary::RuntimeMaintenanceStatus;
 /// 🛎️ Why a lane did not get [`RuntimeAppCell::instance`]. `Contended` is a hold that releases
 /// on its own — another lane is mid-step; `Poisoned` is a hold that never will.
+#[doc(hidden)]
 #[derive(Debug)]
-pub(super) enum RuntimeInstanceRefusal {
+pub enum RuntimeInstanceRefusal {
     Contended,
     Poisoned,
 }
@@ -20,9 +29,10 @@ const RUNTIME_HOST_CONTENTION_YIELDS: u32 = 4_096;
 /// spans several awaits), which is what makes the crossing atomic against the maintenance and
 /// close lanes; those lanes never wait on it — they read [`RuntimeAppCell::host_crossings`] and
 /// yield their whole turn.
-pub(super) struct HostInstanceGuard<'a, PA: PluginApp> {
-    pub(super) cell: &'a RuntimeAppCell<PA>,
-    pub(super) instance: Option<std::sync::MutexGuard<'a, AppInstance<PA>>>,
+#[doc(hidden)]
+pub struct HostInstanceGuard<'a, PA: PluginApp> {
+    pub cell: &'a RuntimeAppCell<PA>,
+    pub instance: Option<std::sync::MutexGuard<'a, AppInstance<PA>>>,
 }
 impl<PA: PluginApp> std::ops::Deref for HostInstanceGuard<'_, PA> {
     type Target = AppInstance<PA>;
@@ -47,8 +57,8 @@ impl<PA: PluginApp> Drop for HostInstanceGuard<'_, PA> {
 /// 🔧️ A background maintenance or close turn's hold on one app, counted while it lives so a
 /// host crossing can tell a transient hold from one it must refuse.
 struct BackgroundInstanceGuard<'a, PA: PluginApp> {
-    pub(super) cell: &'a RuntimeAppCell<PA>,
-    pub(super) instance: Option<std::sync::MutexGuard<'a, AppInstance<PA>>>,
+    pub cell: &'a RuntimeAppCell<PA>,
+    pub instance: Option<std::sync::MutexGuard<'a, AppInstance<PA>>>,
 }
 impl<PA: PluginApp> std::ops::Deref for BackgroundInstanceGuard<'_, PA> {
     type Target = AppInstance<PA>;
@@ -70,38 +80,39 @@ impl<PA: PluginApp> Drop for BackgroundInstanceGuard<'_, PA> {
         self.cell.background_holds.fetch_sub(1, Ordering::SeqCst);
     }
 }
-pub(super) struct RuntimeAppCell<PA: PluginApp> {
-    pub(super) id: u32,
-    pub(super) mounted_policy: MountedOwnerPolicyV1,
-    pub(super) instance: std::sync::Mutex<AppInstance<PA>>,
-    pub(super) maintenance_pump: std::sync::Mutex<RuntimeLiveCleanupPump<PA>>,
-    pub(super) maintenance_status: AtomicU8,
-    pub(super) maintenance_fault_us: AtomicU64,
-    pub(super) maintenance_generation: AtomicU64,
-    pub(super) maintenance_stalled_steps: AtomicU32,
+#[doc(hidden)]
+pub struct RuntimeAppCell<PA: PluginApp> {
+    pub id: u32,
+    pub mounted_policy: MountedOwnerPolicyV1,
+    pub instance: std::sync::Mutex<AppInstance<PA>>,
+    pub maintenance_pump: std::sync::Mutex<RuntimeLiveCleanupPump<PA>>,
+    pub maintenance_status: AtomicU8,
+    pub maintenance_fault_us: AtomicU64,
+    pub maintenance_generation: AtomicU64,
+    pub maintenance_stalled_steps: AtomicU32,
     /// 🛎️ How many HOST crossings currently want or hold [`Self::instance`]. A background lane
     /// reads it before it touches the mutex and yields its whole turn while it is non-zero, so
     /// the host lane — which has nothing to yield to — is never made to wait on maintenance it
     /// did not ask for.
-    pub(super) host_crossings: AtomicU32,
+    pub host_crossings: AtomicU32,
     /// 🔧️ How many BACKGROUND lane turns currently want or hold [`Self::instance`]. It is
     /// raised before the try-lock and lowered on release, so a non-zero reading is the host's
     /// proof that a refused try-lock is a transient maintenance or close step (which is priced
     /// at [`RUNTIME_CLOSE_INNER_GRANT_US`] and will release) rather than an app the host lane
     /// itself already owns.
-    pub(super) background_holds: AtomicU32,
+    pub background_holds: AtomicU32,
     /// 🌡️ [`PluginApp::maintenance_under_pressure`] as of the last maintenance step — read by the
     /// reactor turn to decide whether this instance gets a burst of steps instead of one.
-    pub(super) maintenance_pressure: AtomicBool,
+    pub maintenance_pressure: AtomicBool,
     #[cfg(target_arch = "wasm32")]
-    pub(super) maintenance_probe_turns: AtomicU64,
+    pub maintenance_probe_turns: AtomicU64,
     #[cfg(any(test, target_arch = "wasm32"))]
-    pub(super) maintenance_probe_entries: AtomicU64,
+    pub maintenance_probe_entries: AtomicU64,
     #[cfg(test)]
-    pub(super) maintenance_probe_input_waits: AtomicU64,
+    pub maintenance_probe_input_waits: AtomicU64,
 }
 impl<PA: PluginApp> RuntimeAppCell<PA> {
-    pub(super) fn new(instance: AppInstance<PA>, mounted_policy: MountedOwnerPolicyV1) -> Self {
+    pub fn new(instance: AppInstance<PA>, mounted_policy: MountedOwnerPolicyV1) -> Self {
         Self {
             id: instance.id,
             mounted_policy,
@@ -131,7 +142,7 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
     /// is owned by something that will NOT release for this crossing — the host lane itself (a
     /// reentrant crossing, or a submitted media export holding the app across its await) or a
     /// poisoned mutex.
-    pub(super) fn host_instance(&self) -> Option<HostInstanceGuard<'_, PA>> {
+    pub fn host_instance(&self) -> Option<HostInstanceGuard<'_, PA>> {
         self.host_crossings.fetch_add(1, Ordering::SeqCst);
         for _ in 0..RUNTIME_HOST_CONTENTION_YIELDS {
             match self.instance.try_lock() {
@@ -151,7 +162,7 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
     /// 🔧️ Takes the app for a BACKGROUND maintenance or close turn. It never waits: a host
     /// crossing in flight, or a lock already taken, is a contended turn, and the lane's own
     /// `Yield` is exactly what a contended turn costs.
-    pub(super) fn background_instance(&self) -> Result<BackgroundInstanceGuard<'_, PA>, RuntimeInstanceRefusal> {
+    pub fn background_instance(&self) -> Result<BackgroundInstanceGuard<'_, PA>, RuntimeInstanceRefusal> {
         if self.host_crossings.load(Ordering::SeqCst) > 0 {
             return Err(RuntimeInstanceRefusal::Contended);
         }

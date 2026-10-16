@@ -1,4 +1,5 @@
 /** 🧬️ Puzzle5d diff schema — sparse typed delta: per-field entity patches and id-keyed collection deltas. */
+import { parseBinary64, type Binary64 } from "@semio-tech/framework/value/ieee754";
 import {
   parsePuzzle5dCompatSpecificity,
   parsePuzzle5dFastener,
@@ -28,6 +29,8 @@ import {
   type Puzzle5dPartAnchor,
   type Puzzle5dScale,
   type Puzzle5dTargetVolume,
+  type Puzzle5dVector3,
+  type Puzzle5dVector4,
   type Puzzle5dArtifact,
   type ArtifactChildHandle,
   parseArtifactChildHandle,
@@ -60,33 +63,33 @@ export interface Puzzle5dDiff {
 
 export interface Puzzle5dKindCompatibilityKey { source: string; target: string; }
 export interface Puzzle5dPart2dPatch {
-  x?: number;
-  y?: number;
+  x?: Binary64;
+  y?: Binary64;
   shape?: string | null;
-  radius?: number | null;
-  width?: number | null;
-  height?: number | null;
+  radius?: Binary64 | null;
+  width?: Binary64 | null;
+  height?: Binary64 | null;
   text?: string | null;
   iconKind?: string | null;
   hidden?: boolean | null;
   locked?: boolean | null;
 }
 export interface Puzzle5dPart3dPatch {
-  origin?: number[];
+  origin?: Puzzle5dVector3;
   meshUrl?: string | null;
-  orientation?: number[] | null;
+  orientation?: Puzzle5dVector4 | null;
   scale?: Puzzle5dScale | null;
   label?: string | null;
 }
 export interface Puzzle5dGrip2dPatch {
-  angle?: number;
+  angle?: Binary64;
   gripKind?: string | null;
-  radius?: number | null;
+  radius?: Binary64 | null;
 }
 export interface Puzzle5dGrip3dPatch {
-  position?: number[];
-  direction?: number[] | null;
-  radius?: number | null;
+  position?: Puzzle5dVector3;
+  direction?: Puzzle5dVector3 | null;
+  radius?: Binary64 | null;
   label?: string | null;
 }
 export interface Puzzle5dGripPatch {
@@ -105,18 +108,18 @@ export interface Puzzle5dFastenerPatch {
   source?: string;
   target?: string;
   fastenerKind?: string | null;
-  gap?: number;
-  shift?: number;
-  rise?: number;
-  rotation?: number;
-  turn?: number;
-  tilt?: number;
-  x?: number;
-  y?: number;
+  gap?: Binary64;
+  shift?: Binary64;
+  rise?: Binary64;
+  rotation?: Binary64;
+  turn?: Binary64;
+  tilt?: Binary64;
+  x?: Binary64;
+  y?: Binary64;
 }
 export interface Puzzle5dTargetVolumePatch {
-  origin?: number[];
-  orientation?: number[] | null;
+  origin?: Puzzle5dVector3;
+  orientation?: Puzzle5dVector4 | null;
   scale?: Puzzle5dScale | null;
   hidden?: boolean;
   locked?: boolean;
@@ -171,8 +174,11 @@ type puzzlePuzzle5dDiffGuardTextBounds = { readonly minLength?: number; readonly
 type puzzlePuzzle5dDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type puzzlePuzzle5dDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const puzzlePuzzle5dDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle5dDiffGuardReject(at, "value is not an object");
+export const puzzlePuzzle5dDiffGuardObject = (value: unknown, at: string, keys?: readonly string[]): Readonly<Record<string, unknown>> => {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return puzzlePuzzle5dDiffGuardReject(at, "value is not an object");
+  if (keys && Object.keys(value).some((key) => !keys.includes(key))) return puzzlePuzzle5dDiffGuardReject(at, "unknown field");
+  return value as Record<string, unknown>;
+};
 export const puzzlePuzzle5dDiffGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle5dDiffGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return puzzlePuzzle5dDiffGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle5dDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -188,14 +194,23 @@ export const puzzlePuzzle5dDiffGuardString = (value: unknown, at: string, bounds
   return value;
 };
 export const puzzlePuzzle5dDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : puzzlePuzzle5dDiffGuardReject(at, "value is not a boolean"));
-export const puzzlePuzzle5dDiffGuardNumber = (value: unknown, at: string, bounds: puzzlePuzzle5dDiffGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return puzzlePuzzle5dDiffGuardReject(at, "value is not a finite number");
+export const puzzlePuzzle5dDiffGuardBinary64 = (value: unknown, at: string): Binary64 => {
+  try { return parseBinary64(value); } catch { return puzzlePuzzle5dDiffGuardReject(at, "invalid binary64 word"); }
+};
+export const puzzlePuzzle5dDiffGuardVector3 = (value: unknown, at: string): Puzzle5dVector3 => {
+  const words = puzzlePuzzle5dDiffGuardArray(value, at, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardBinary64(item, `${at}[${index}]`));
+  return [words[0]!, words[1]!, words[2]!];
+};
+export const puzzlePuzzle5dDiffGuardVector4 = (value: unknown, at: string): Puzzle5dVector4 => {
+  const words = puzzlePuzzle5dDiffGuardArray(value, at, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle5dDiffGuardBinary64(item, `${at}[${index}]`));
+  return [words[0]!, words[1]!, words[2]!, words[3]!];
+};
+export const puzzlePuzzle5dDiffGuardInteger = (value: unknown, at: string, bounds: puzzlePuzzle5dDiffGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isSafeInteger(value)) return puzzlePuzzle5dDiffGuardReject(at, "value is not an integer");
   if (bounds.minimum !== undefined && value < bounds.minimum) puzzlePuzzle5dDiffGuardReject(at, `number is below ${bounds.minimum}`);
   if (bounds.maximum !== undefined && value > bounds.maximum) puzzlePuzzle5dDiffGuardReject(at, `number is above ${bounds.maximum}`);
   return value;
 };
-export const puzzlePuzzle5dDiffGuardInteger = (value: unknown, at: string, bounds: puzzlePuzzle5dDiffGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? puzzlePuzzle5dDiffGuardNumber(value, at, bounds) : puzzlePuzzle5dDiffGuardReject(at, "value is not an integer");
 export const puzzlePuzzle5dDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
   members.includes(value as T) ? (value as T) : puzzlePuzzle5dDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
 export const puzzlePuzzle5dDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
@@ -203,7 +218,7 @@ export const puzzlePuzzle5dDiffGuardConstant = <T extends string | number | bool
 //#endregion 🚪️Parsers
 
 export function parsePuzzle5dKindCompatibilityKey(value: unknown, at = "$"): Puzzle5dKindCompatibilityKey {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["source", "target"]);
   return {
     source: puzzlePuzzle5dDiffGuardString(row["source"], `${at}.source`),
     target: puzzlePuzzle5dDiffGuardString(row["target"], `${at}.target`),
@@ -211,14 +226,14 @@ export function parsePuzzle5dKindCompatibilityKey(value: unknown, at = "$"): Puz
 }
 
 export function parsePuzzle5dPart2dPatch(value: unknown, at = "$"): Puzzle5dPart2dPatch {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["x", "y", "shape", "radius", "width", "height", "text", "iconKind", "hidden", "locked"]);
   return {
-    x: row["x"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["x"], `${at}.x`),
-    y: row["y"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["y"], `${at}.y`),
+    x: row["x"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["x"], `${at}.x`),
+    y: row["y"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["y"], `${at}.y`),
     shape: row["shape"] === undefined ? undefined : row["shape"] === null ? null : puzzlePuzzle5dDiffGuardString(row["shape"], `${at}.shape`),
-    radius: row["radius"] === undefined ? undefined : row["radius"] === null ? null : puzzlePuzzle5dDiffGuardNumber(row["radius"], `${at}.radius`),
-    width: row["width"] === undefined ? undefined : row["width"] === null ? null : puzzlePuzzle5dDiffGuardNumber(row["width"], `${at}.width`),
-    height: row["height"] === undefined ? undefined : row["height"] === null ? null : puzzlePuzzle5dDiffGuardNumber(row["height"], `${at}.height`),
+    radius: row["radius"] === undefined ? undefined : row["radius"] === null ? null : puzzlePuzzle5dDiffGuardBinary64(row["radius"], `${at}.radius`),
+    width: row["width"] === undefined ? undefined : row["width"] === null ? null : puzzlePuzzle5dDiffGuardBinary64(row["width"], `${at}.width`),
+    height: row["height"] === undefined ? undefined : row["height"] === null ? null : puzzlePuzzle5dDiffGuardBinary64(row["height"], `${at}.height`),
     text: row["text"] === undefined ? undefined : row["text"] === null ? null : puzzlePuzzle5dDiffGuardString(row["text"], `${at}.text`),
     iconKind: row["iconKind"] === undefined ? undefined : row["iconKind"] === null ? null : puzzlePuzzle5dDiffGuardString(row["iconKind"], `${at}.iconKind`),
     hidden: row["hidden"] === undefined ? undefined : row["hidden"] === null ? null : puzzlePuzzle5dDiffGuardBoolean(row["hidden"], `${at}.hidden`),
@@ -227,37 +242,37 @@ export function parsePuzzle5dPart2dPatch(value: unknown, at = "$"): Puzzle5dPart
 }
 
 export function parsePuzzle5dPart3dPatch(value: unknown, at = "$"): Puzzle5dPart3dPatch {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["origin", "meshUrl", "orientation", "scale", "label"]);
   return {
-    origin: row["origin"] === undefined ? undefined : puzzlePuzzle5dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.origin}[${index}]`)),
+    origin: row["origin"] === undefined ? undefined : puzzlePuzzle5dDiffGuardVector3(row["origin"], `${at}.origin`),
     meshUrl: row["meshUrl"] === undefined ? undefined : row["meshUrl"] === null ? null : puzzlePuzzle5dDiffGuardString(row["meshUrl"], `${at}.meshUrl`),
-    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle5dDiffGuardArray(row["orientation"], `${at}.orientation`, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.orientation}[${index}]`)),
+    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle5dDiffGuardVector4(row["orientation"], `${at}.orientation`),
     scale: row["scale"] === undefined ? undefined : row["scale"] === null ? null : parsePuzzle5dScale(row["scale"], `${at}.scale`),
     label: row["label"] === undefined ? undefined : row["label"] === null ? null : puzzlePuzzle5dDiffGuardString(row["label"], `${at}.label`),
   };
 }
 
 export function parsePuzzle5dGrip2dPatch(value: unknown, at = "$"): Puzzle5dGrip2dPatch {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["angle", "gripKind", "radius"]);
   return {
-    angle: row["angle"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["angle"], `${at}.angle`),
+    angle: row["angle"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["angle"], `${at}.angle`),
     gripKind: row["gripKind"] === undefined ? undefined : row["gripKind"] === null ? null : puzzlePuzzle5dDiffGuardString(row["gripKind"], `${at}.gripKind`),
-    radius: row["radius"] === undefined ? undefined : row["radius"] === null ? null : puzzlePuzzle5dDiffGuardNumber(row["radius"], `${at}.radius`),
+    radius: row["radius"] === undefined ? undefined : row["radius"] === null ? null : puzzlePuzzle5dDiffGuardBinary64(row["radius"], `${at}.radius`),
   };
 }
 
 export function parsePuzzle5dGrip3dPatch(value: unknown, at = "$"): Puzzle5dGrip3dPatch {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["position", "direction", "radius", "label"]);
   return {
-    position: row["position"] === undefined ? undefined : puzzlePuzzle5dDiffGuardArray(row["position"], `${at}.position`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.position}[${index}]`)),
-    direction: row["direction"] === undefined ? undefined : row["direction"] === null ? null : puzzlePuzzle5dDiffGuardArray(row["direction"], `${at}.direction`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.direction}[${index}]`)),
-    radius: row["radius"] === undefined ? undefined : row["radius"] === null ? null : puzzlePuzzle5dDiffGuardNumber(row["radius"], `${at}.radius`),
+    position: row["position"] === undefined ? undefined : puzzlePuzzle5dDiffGuardVector3(row["position"], `${at}.position`),
+    direction: row["direction"] === undefined ? undefined : row["direction"] === null ? null : puzzlePuzzle5dDiffGuardVector3(row["direction"], `${at}.direction`),
+    radius: row["radius"] === undefined ? undefined : row["radius"] === null ? null : puzzlePuzzle5dDiffGuardBinary64(row["radius"], `${at}.radius`),
     label: row["label"] === undefined ? undefined : row["label"] === null ? null : puzzlePuzzle5dDiffGuardString(row["label"], `${at}.label`),
   };
 }
 
 export function parsePuzzle5dGripPatch(value: unknown, at = "$"): Puzzle5dGripPatch {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["gripKind", "2d", "3d"]);
   return {
     gripKind: row["gripKind"] === undefined ? undefined : row["gripKind"] === null ? null : puzzlePuzzle5dDiffGuardString(row["gripKind"], `${at}.gripKind`),
     "2d": row["2d"] === undefined ? undefined : parsePuzzle5dGrip2dPatch(row["2d"], `${at}.2d`),
@@ -266,7 +281,7 @@ export function parsePuzzle5dGripPatch(value: unknown, at = "$"): Puzzle5dGripPa
 }
 
 export function parsePuzzle5dPartPatch(value: unknown, at = "$"): Puzzle5dPartPatch {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["partKind", "anchor", "2d", "3d", "grips"]);
   return {
     partKind: row["partKind"] === undefined ? undefined : row["partKind"] === null ? null : puzzlePuzzle5dDiffGuardString(row["partKind"], `${at}.partKind`),
     anchor: row["anchor"] === undefined ? undefined : parsePuzzle5dPartAnchor(row["anchor"], `${at}.anchor`),
@@ -277,27 +292,27 @@ export function parsePuzzle5dPartPatch(value: unknown, at = "$"): Puzzle5dPartPa
 }
 
 export function parsePuzzle5dFastenerPatch(value: unknown, at = "$"): Puzzle5dFastenerPatch {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["source", "target", "fastenerKind", "gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y"]);
   return {
     source: row["source"] === undefined ? undefined : puzzlePuzzle5dDiffGuardString(row["source"], `${at}.source`),
     target: row["target"] === undefined ? undefined : puzzlePuzzle5dDiffGuardString(row["target"], `${at}.target`),
     fastenerKind: row["fastenerKind"] === undefined ? undefined : row["fastenerKind"] === null ? null : puzzlePuzzle5dDiffGuardString(row["fastenerKind"], `${at}.fastenerKind`),
-    gap: row["gap"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["gap"], `${at}.gap`),
-    shift: row["shift"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["shift"], `${at}.shift`),
-    rise: row["rise"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["rise"], `${at}.rise`),
-    rotation: row["rotation"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["rotation"], `${at}.rotation`),
-    turn: row["turn"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["turn"], `${at}.turn`),
-    tilt: row["tilt"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["tilt"], `${at}.tilt`),
-    x: row["x"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["x"], `${at}.x`),
-    y: row["y"] === undefined ? undefined : puzzlePuzzle5dDiffGuardNumber(row["y"], `${at}.y`),
+    gap: row["gap"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["gap"], `${at}.gap`),
+    shift: row["shift"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["shift"], `${at}.shift`),
+    rise: row["rise"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["rise"], `${at}.rise`),
+    rotation: row["rotation"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["rotation"], `${at}.rotation`),
+    turn: row["turn"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["turn"], `${at}.turn`),
+    tilt: row["tilt"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["tilt"], `${at}.tilt`),
+    x: row["x"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["x"], `${at}.x`),
+    y: row["y"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBinary64(row["y"], `${at}.y`),
   };
 }
 
 export function parsePuzzle5dTargetVolumePatch(value: unknown, at = "$"): Puzzle5dTargetVolumePatch {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["origin", "orientation", "scale", "hidden", "locked"]);
   return {
-    origin: row["origin"] === undefined ? undefined : puzzlePuzzle5dDiffGuardArray(row["origin"], `${at}.origin`, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.origin}[${index}]`)),
-    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle5dDiffGuardArray(row["orientation"], `${at}.orientation`, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle5dDiffGuardNumber(item, `${${at}.orientation}[${index}]`)),
+    origin: row["origin"] === undefined ? undefined : puzzlePuzzle5dDiffGuardVector3(row["origin"], `${at}.origin`),
+    orientation: row["orientation"] === undefined ? undefined : row["orientation"] === null ? null : puzzlePuzzle5dDiffGuardVector4(row["orientation"], `${at}.orientation`),
     scale: row["scale"] === undefined ? undefined : row["scale"] === null ? null : parsePuzzle5dScale(row["scale"], `${at}.scale`),
     hidden: row["hidden"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBoolean(row["hidden"], `${at}.hidden`),
     locked: row["locked"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBoolean(row["locked"], `${at}.locked`),
@@ -305,7 +320,7 @@ export function parsePuzzle5dTargetVolumePatch(value: unknown, at = "$"): Puzzle
 }
 
 export function parsePuzzle5dKindCompatibilityPatch(value: unknown, at = "$"): Puzzle5dKindCompatibilityPatch {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["bidirectional", "important", "specificity"]);
   return {
     bidirectional: row["bidirectional"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBoolean(row["bidirectional"], `${at}.bidirectional`),
     important: row["important"] === undefined ? undefined : puzzlePuzzle5dDiffGuardBoolean(row["important"], `${at}.important`),
@@ -314,39 +329,39 @@ export function parsePuzzle5dKindCompatibilityPatch(value: unknown, at = "$"): P
 }
 
 export function parsePuzzle5dMetaPatch(value: unknown, at = "$"): Puzzle5dMetaPatch {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["description"]);
   return {
     description: row["description"] === undefined ? undefined : puzzlePuzzle5dDiffGuardString(row["description"], `${at}.description`),
   };
 }
 
 export function parsePuzzle5dGripRemoval(value: unknown, at = "$"): Puzzle5dGripRemoval {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "index"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
-    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    index: puzzlePuzzle5dDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
   };
 }
 
 export function parsePuzzle5dGripInsertion(value: unknown, at = "$"): Puzzle5dGripInsertion {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["index", "row"]);
   return {
-    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    index: puzzlePuzzle5dDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
     row: parsePuzzle5dGrip(row["row"], `${at}.row`),
   };
 }
 
 export function parsePuzzle5dGripRelocation(value: unknown, at = "$"): Puzzle5dGripRelocation {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "from", "to"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
-    from: puzzlePuzzle5dDiffGuardNumber(row["from"], `${at}.from`),
-    to: puzzlePuzzle5dDiffGuardNumber(row["to"], `${at}.to`),
+    from: puzzlePuzzle5dDiffGuardInteger(row["from"], `${at}.from`, { minimum: 0 }),
+    to: puzzlePuzzle5dDiffGuardInteger(row["to"], `${at}.to`, { minimum: 0 }),
   };
 }
 
 export function parsePuzzle5dGripModification(value: unknown, at = "$"): Puzzle5dGripModification {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "patch"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
     patch: parsePuzzle5dGripPatch(row["patch"], `${at}.patch`),
@@ -354,7 +369,7 @@ export function parsePuzzle5dGripModification(value: unknown, at = "$"): Puzzle5
 }
 
 export function parsePuzzle5dGripsDelta(value: unknown, at = "$"): Puzzle5dGripsDelta {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["removed", "inserted", "moved", "modified"]);
   return {
     removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dGripRemoval(item, `${at}.removed[${index}]`)),
     inserted: puzzlePuzzle5dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle5dGripInsertion(item, `${at}.inserted[${index}]`)),
@@ -364,32 +379,32 @@ export function parsePuzzle5dGripsDelta(value: unknown, at = "$"): Puzzle5dGrips
 }
 
 export function parsePuzzle5dPartRemoval(value: unknown, at = "$"): Puzzle5dPartRemoval {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "index"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
-    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    index: puzzlePuzzle5dDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
   };
 }
 
 export function parsePuzzle5dPartInsertion(value: unknown, at = "$"): Puzzle5dPartInsertion {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["index", "row"]);
   return {
-    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    index: puzzlePuzzle5dDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
     row: parsePuzzle5dPart(row["row"], `${at}.row`),
   };
 }
 
 export function parsePuzzle5dPartRelocation(value: unknown, at = "$"): Puzzle5dPartRelocation {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "from", "to"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
-    from: puzzlePuzzle5dDiffGuardNumber(row["from"], `${at}.from`),
-    to: puzzlePuzzle5dDiffGuardNumber(row["to"], `${at}.to`),
+    from: puzzlePuzzle5dDiffGuardInteger(row["from"], `${at}.from`, { minimum: 0 }),
+    to: puzzlePuzzle5dDiffGuardInteger(row["to"], `${at}.to`, { minimum: 0 }),
   };
 }
 
 export function parsePuzzle5dPartModification(value: unknown, at = "$"): Puzzle5dPartModification {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "patch"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
     patch: parsePuzzle5dPartPatch(row["patch"], `${at}.patch`),
@@ -397,7 +412,7 @@ export function parsePuzzle5dPartModification(value: unknown, at = "$"): Puzzle5
 }
 
 export function parsePuzzle5dPartsDelta(value: unknown, at = "$"): Puzzle5dPartsDelta {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["removed", "inserted", "moved", "modified"]);
   return {
     removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dPartRemoval(item, `${at}.removed[${index}]`)),
     inserted: puzzlePuzzle5dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle5dPartInsertion(item, `${at}.inserted[${index}]`)),
@@ -407,32 +422,32 @@ export function parsePuzzle5dPartsDelta(value: unknown, at = "$"): Puzzle5dParts
 }
 
 export function parsePuzzle5dFastenerRemoval(value: unknown, at = "$"): Puzzle5dFastenerRemoval {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "index"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
-    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    index: puzzlePuzzle5dDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
   };
 }
 
 export function parsePuzzle5dFastenerInsertion(value: unknown, at = "$"): Puzzle5dFastenerInsertion {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["index", "row"]);
   return {
-    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    index: puzzlePuzzle5dDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
     row: parsePuzzle5dFastener(row["row"], `${at}.row`),
   };
 }
 
 export function parsePuzzle5dFastenerRelocation(value: unknown, at = "$"): Puzzle5dFastenerRelocation {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "from", "to"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
-    from: puzzlePuzzle5dDiffGuardNumber(row["from"], `${at}.from`),
-    to: puzzlePuzzle5dDiffGuardNumber(row["to"], `${at}.to`),
+    from: puzzlePuzzle5dDiffGuardInteger(row["from"], `${at}.from`, { minimum: 0 }),
+    to: puzzlePuzzle5dDiffGuardInteger(row["to"], `${at}.to`, { minimum: 0 }),
   };
 }
 
 export function parsePuzzle5dFastenerModification(value: unknown, at = "$"): Puzzle5dFastenerModification {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "patch"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
     patch: parsePuzzle5dFastenerPatch(row["patch"], `${at}.patch`),
@@ -440,7 +455,7 @@ export function parsePuzzle5dFastenerModification(value: unknown, at = "$"): Puz
 }
 
 export function parsePuzzle5dFastenersDelta(value: unknown, at = "$"): Puzzle5dFastenersDelta {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["removed", "inserted", "moved", "modified"]);
   return {
     removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dFastenerRemoval(item, `${at}.removed[${index}]`)),
     inserted: puzzlePuzzle5dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle5dFastenerInsertion(item, `${at}.inserted[${index}]`)),
@@ -450,32 +465,32 @@ export function parsePuzzle5dFastenersDelta(value: unknown, at = "$"): Puzzle5dF
 }
 
 export function parsePuzzle5dTargetVolumeRemoval(value: unknown, at = "$"): Puzzle5dTargetVolumeRemoval {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "index"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
-    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    index: puzzlePuzzle5dDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
   };
 }
 
 export function parsePuzzle5dTargetVolumeInsertion(value: unknown, at = "$"): Puzzle5dTargetVolumeInsertion {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["index", "row"]);
   return {
-    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    index: puzzlePuzzle5dDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
     row: parsePuzzle5dTargetVolume(row["row"], `${at}.row`),
   };
 }
 
 export function parsePuzzle5dTargetVolumeRelocation(value: unknown, at = "$"): Puzzle5dTargetVolumeRelocation {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "from", "to"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
-    from: puzzlePuzzle5dDiffGuardNumber(row["from"], `${at}.from`),
-    to: puzzlePuzzle5dDiffGuardNumber(row["to"], `${at}.to`),
+    from: puzzlePuzzle5dDiffGuardInteger(row["from"], `${at}.from`, { minimum: 0 }),
+    to: puzzlePuzzle5dDiffGuardInteger(row["to"], `${at}.to`, { minimum: 0 }),
   };
 }
 
 export function parsePuzzle5dTargetVolumeModification(value: unknown, at = "$"): Puzzle5dTargetVolumeModification {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "patch"]);
   return {
     id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
     patch: parsePuzzle5dTargetVolumePatch(row["patch"], `${at}.patch`),
@@ -483,7 +498,7 @@ export function parsePuzzle5dTargetVolumeModification(value: unknown, at = "$"):
 }
 
 export function parsePuzzle5dTargetVolumesDelta(value: unknown, at = "$"): Puzzle5dTargetVolumesDelta {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["removed", "inserted", "moved", "modified"]);
   return {
     removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dTargetVolumeRemoval(item, `${at}.removed[${index}]`)),
     inserted: puzzlePuzzle5dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle5dTargetVolumeInsertion(item, `${at}.inserted[${index}]`)),
@@ -493,32 +508,32 @@ export function parsePuzzle5dTargetVolumesDelta(value: unknown, at = "$"): Puzzl
 }
 
 export function parsePuzzle5dKindCompatibilityRemoval(value: unknown, at = "$"): Puzzle5dKindCompatibilityRemoval {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "index"]);
   return {
     id: parsePuzzle5dKindCompatibilityKey(row["id"], `${at}.id`),
-    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    index: puzzlePuzzle5dDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
   };
 }
 
 export function parsePuzzle5dKindCompatibilityInsertion(value: unknown, at = "$"): Puzzle5dKindCompatibilityInsertion {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["index", "row"]);
   return {
-    index: puzzlePuzzle5dDiffGuardNumber(row["index"], `${at}.index`),
+    index: puzzlePuzzle5dDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
     row: parsePuzzle5dKindCompatibility(row["row"], `${at}.row`),
   };
 }
 
 export function parsePuzzle5dKindCompatibilityRelocation(value: unknown, at = "$"): Puzzle5dKindCompatibilityRelocation {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "from", "to"]);
   return {
     id: parsePuzzle5dKindCompatibilityKey(row["id"], `${at}.id`),
-    from: puzzlePuzzle5dDiffGuardNumber(row["from"], `${at}.from`),
-    to: puzzlePuzzle5dDiffGuardNumber(row["to"], `${at}.to`),
+    from: puzzlePuzzle5dDiffGuardInteger(row["from"], `${at}.from`, { minimum: 0 }),
+    to: puzzlePuzzle5dDiffGuardInteger(row["to"], `${at}.to`, { minimum: 0 }),
   };
 }
 
 export function parsePuzzle5dKindCompatibilityModification(value: unknown, at = "$"): Puzzle5dKindCompatibilityModification {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["id", "patch"]);
   return {
     id: parsePuzzle5dKindCompatibilityKey(row["id"], `${at}.id`),
     patch: parsePuzzle5dKindCompatibilityPatch(row["patch"], `${at}.patch`),
@@ -526,7 +541,7 @@ export function parsePuzzle5dKindCompatibilityModification(value: unknown, at = 
 }
 
 export function parsePuzzle5dKindCompatibilityDelta(value: unknown, at = "$"): Puzzle5dKindCompatibilityDelta {
-  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  const row = puzzlePuzzle5dDiffGuardObject(value, at, ["removed", "inserted", "moved", "modified"]);
   return {
     removed: puzzlePuzzle5dDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => parsePuzzle5dKindCompatibilityRemoval(item, `${at}.removed[${index}]`)),
     inserted: puzzlePuzzle5dDiffGuardArray(row["inserted"], `${at}.inserted`).map((item, index) => parsePuzzle5dKindCompatibilityInsertion(item, `${at}.inserted[${index}]`)),

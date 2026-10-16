@@ -2,7 +2,7 @@
 use super::*;
 use crate::retirement::tests::{drain,observed};
 use semio_framework_io_base64::base64_standard_decode;
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(crate::text("📸️jpeg/📥️decode/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn request(row:&serde_json::Value)->JpegDecodeInput{JpegDecodeInput{data:base64_standard_decode(row["base64"].as_str().unwrap()).unwrap(),max_pixels:16777216,max_bytes:67108864,max_segments:65536,max_working_bytes:536870912}}
 fn job(input:JpegDecodeInput)->JpegDecodeJob{JpegDecodeJob::new(input).unwrap_or_else(|(error,_)|panic!("JPEG fixture refused: {error}"))}
 fn grant(job:&JpegDecodeJob)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:job.next_copy_byte_demand(),maximum_capacity_bytes:job.next_capacity_byte_demand(),maximum_release_bytes:0,maximum_depth:1}}

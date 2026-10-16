@@ -1,3 +1,4 @@
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"@semio-tech/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -134,7 +135,7 @@ export class InferenceDiscoveryOracleScript extends BundleScript {
 export class InferenceDiscoveryCheckScript extends BundleScript {
   async run(): Promise<void> {
     await new InferenceDiscoveryOracleScript(this.root,this.repoRoot,this.invocation).run();
-    await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, lawMilliseconds: 60_000 }, cwd:this.repoRoot, artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR, groups:[
+    await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, lawMilliseconds: 60_000 }, cwd:this.repoRoot,  groups:[
         {package:"semio-s-artifact-gis-gismap-mcp",target:{kind:"lib"},laws:["tests::installed_gis_descriptor_discovery_uses_the_registered_tool_without_granting_execution"]},
         {package:"semio-hub-gis",target:{kind:"lib"},laws:["surface_tests::gis_component_assembly_declares_exact_package_identity_before_descriptor_emission"]},
         {package:"semio-hub-gis",target:{kind:"test",name:"native_codecs"},laws:["gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace"]}

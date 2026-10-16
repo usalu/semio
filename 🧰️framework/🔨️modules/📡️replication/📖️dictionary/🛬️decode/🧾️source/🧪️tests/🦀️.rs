@@ -1,6 +1,6 @@
 use super::*;
 use crate::{RetainedWireByteSource, OriginalWireSourceIdentity};
-fn observe<T>(action:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(action)}
+fn observe<T>(action:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(action)}
 struct Pages{pages:Vec<Vec<u8>>,extent:usize}
 struct Borrowed<'a>{owner:&'a Pages,authority:Option<(u64,u64)>}
 impl RetainedWireByteSource for Borrowed<'_>{

@@ -8,10 +8,11 @@ import { createElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { InkCanvasHost } from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
+import { inkCanvasEditingFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const law = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖋️ink-canvas-editing/🔣️.json"), "utf8")) as any;
+const law = JSON.parse(readFileSync(inkCanvasEditingFixtureUrl, "utf8")) as any;
 
 function actionEvents(actions: readonly any[]): any[] {
   return actions.filter((action) => action.action === "inkApplyEvents").map((action) => ({ phase: action.args.phase, events: JSON.parse(action.args.eventsJson) }));

@@ -10,6 +10,9 @@ use capabilities::*;
 #[path = "../🕰️events/🦀️.rs"]
 mod events;
 use events::*;
+
+#[path = "../🛟️backend-support/🦀️.rs"]
+mod backend_support;
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility};
 use crate::error::{DirectoryError, DirectoryResult};
 use crate::model::SpaceRole;
@@ -102,7 +105,7 @@ pub fn role_to_wire(role: SpaceRole) -> DirectorySpaceRole {
     }
 }
 
-/// 🔁️ Wire role -> local storage role (used when a `HubDirectory` method that still speaks the
+/// 🔁️ Wire role -> local storage role (used when a directory capability method that still speaks the
 /// storage vocabulary — e.g. `create_invite` — needs a role that arrived as a `DirectoryCommand` field).
 pub fn role_from_wire(role: DirectorySpaceRole) -> SpaceRole {
     match role {
@@ -145,3 +148,4 @@ pub fn actor_user_id(actor: &DirectoryActor) -> DirectoryResult<&str> {
 
 pub use capabilities::{AGENT_DELEGATED_EVENT, AGENT_DELEGATION_PAGE_MAX, AGENT_DELEGATION_REVOKED_EVENT, AGENT_IDENTITY_PROVIDER, AGENT_LABEL_MAX_BYTES, AGENT_SESSION_ISSUED_EVENT, AUTH_ASSERTION_MAX_BYTES, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, AgentDelegationCapability, AgentSessionPreflight, CAPABILITY_MAX_TTL_SECS, DEVICE_INSTANCE_MAX_BYTES, DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, HubCapability, IdentityAssertion, IdentityAssertionVerifier, IdentityAssurance, IdentityVerificationContext, IdentityVerificationControl, IdentityVerificationFuture, IdentityVerificationProgress, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, LocalBootstrapAcceptFuture, LocalBootstrapClientClass, LocalBootstrapIssueFuture, LocalBootstrapRejectCode, LocalBootstrapTerminalFuture, LocalBootstrapTransport, SessionCapability, ShareCapability, SocketGrantCapability, VerifiedIdentity, VerifiedLocalBootstrapRequest, active_capability, admin_operation_effect_receipt_v1, admit_directory_format, agent_session_preflight, auth_audit, capability_window, constant_time_digest_eq, decode_auth_digest_hex, directory_command_result_kind_from_str, directory_command_result_kind_str, encode_capability_bytes, identity_subject_digest, invite_redemption_preflight, prepare_agent_delegation, prepare_auth_session, prepare_invite, prepare_share_token, same_admin_operation_request, validate_admin_operation_audit, validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, verify_invite_redemption_event, verify_invite_redemption_scope_hint};
 pub use events::{HubClock, NewDirectoryEvent, now_ms};
+pub use backend_support::{AdminEffectPreflightFailure, actor_kind_from_str, actor_kind_to_str, admin_effect_preflight, backend};

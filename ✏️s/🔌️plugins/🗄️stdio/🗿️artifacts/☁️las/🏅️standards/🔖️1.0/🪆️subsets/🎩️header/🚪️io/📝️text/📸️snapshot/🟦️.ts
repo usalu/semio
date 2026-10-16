@@ -49,5 +49,5 @@ export const stdioLas10HeaderSnapshotTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseLasSnapshotText(value: unknown, at = "$"): LasSnapshotText {
-  return stdioLas10HeaderSnapshotTextGuardObject(value, `${at}`);
+  return stdioLas10HeaderSnapshotTextGuardString(value, `${at}`);
 }

@@ -3,7 +3,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./🕸️bindings/framework_os_node_graph.js"
+    ".": "./🟦️.ts",
+    "./framework_os_node_graph.js": {
+      "types": "./📥️runtime/🟦️.d.mts",
+      "default": "./🕸️bindings/framework_os_node_graph.js"
+    }
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

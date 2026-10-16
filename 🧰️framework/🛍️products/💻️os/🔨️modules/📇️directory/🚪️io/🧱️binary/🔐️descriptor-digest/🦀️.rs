@@ -66,7 +66,3 @@ pub fn descriptor_digest_encoding_v1(descriptor: &DocumentDescriptor) -> Result<
 pub fn descriptor_digest_v1(descriptor: &DocumentDescriptor) -> Result<ArtifactHash, DescriptorDigestError> {
     Ok(ArtifactHash(semio_framework_hash::Sha256::digest(&descriptor_digest_encoding_v1(descriptor)?)))
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

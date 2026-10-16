@@ -4,7 +4,7 @@ import React from "react";
 import {render,fireEvent,cleanup} from "@testing-library/react";
 
 import { BufferGeometry,Float32BufferAttribute,MeshStandardMaterial,SRGBColorSpace,FrontSide,DoubleSide } from "three";
-import fixture from "../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json" with {type:"json"};
+import { world3dInlineSurfaceFixture as fixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import {buildMeshVisuals,disposeMeshVisuals,cloneWorldGlbSurface,disposeWorldGlbSurface,advanceWorldMeshResidency,WorldSurfaceStatusPane} from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import {Group,Mesh,Texture,TextureLoader} from "three";
 

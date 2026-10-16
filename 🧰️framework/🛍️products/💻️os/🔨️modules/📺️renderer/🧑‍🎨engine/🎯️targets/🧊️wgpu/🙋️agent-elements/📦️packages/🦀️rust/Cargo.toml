@@ -40,3 +40,4 @@ semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/�
 
 [dev-dependencies]
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }

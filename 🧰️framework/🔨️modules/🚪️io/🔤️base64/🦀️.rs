@@ -14,12 +14,6 @@ const BASE64_URL_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm
 mod cursor;
 pub use cursor::{Base64DecodeCursor, Base64DecodeOutcome, Base64DecodeParts, Base64DecodeState, Base64Input, Base64InputRange};
 
-#[cfg(test)]
-use semio_framework_trace_memory_testing as test_allocation;
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
-
 /// 📍️ Bounded base64 work uses bytes for Encode and ASCII characters for Validate or Decode.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum Base64Phase{Encode,Validate,Decode}
@@ -177,7 +171,3 @@ pub fn base64_url_decode(encoded: impl AsRef<[u8]>) -> Result<Vec<u8>, Base64Err
     }
     Ok(decoded)
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

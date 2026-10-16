@@ -1,5 +1,5 @@
-import type {IntrinsicValue} from "../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
-import type {OriginalTurnFailure} from "../../🧵️job/⚠️failure/🟦️.ts";
+import type {IntrinsicValue} from "@semio-tech/value-ts/schema/intrinsic";
+import type {OriginalTurnFailure} from "@semio-tech/framework/job/failure";
 import {valueRefusalKindFromWire,type ValueRefusalKind} from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import type {ValueError,ValueErrorRetainedProgress} from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import type {TextSpan} from "../📍️span/🟦️.ts";

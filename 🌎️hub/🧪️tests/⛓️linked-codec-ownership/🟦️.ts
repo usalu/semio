@@ -7,11 +7,11 @@ type Case = { id: string; declared: [string, string][]; linked: Codec[]; unowned
 type Classify = (pairs: readonly (readonly [string, string])[], linked: readonly Codec[]) => ReadonlySet<string>;
 const fixture = JSON.parse(readFileSync(new URL("../../🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/⛓️linked-codec-ownership/🔣️.json", import.meta.url), "utf8")) as { schema: string; cases: Case[] };
 
-/** 🧬️ The exact `trustedBootstrapLinkedUnownedKindsV1` of the hub's `📜️script.ts`, lifted out of its source and
+/** 🧬️ The exact `trustedBootstrapLinkedUnownedKindsV1` of the hub's trusted bootstrap selection module, lifted out of its source and
  * transpiled here: importing the script would load Bun-only modules the Vitest node environment cannot run. */
 async function publisherClassify(): Promise<Classify> {
   const ts = await import("typescript");
-  const path = new URL("../../📦️packages/🦀️rust/📜️script.ts", import.meta.url);
+  const path = new URL("../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts", import.meta.url);
   const syntax = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const declaration = syntax.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "trustedBootstrapLinkedUnownedKindsV1");
   if (!declaration) throw new Error("the hub publisher no longer defines trustedBootstrapLinkedUnownedKindsV1");

@@ -1,4 +1,4 @@
-/** 🔎️ `verify` command family: the gate dispatcher over every verification lane.
+/** ✅️ `verify` command family: the gate dispatcher over every verification lane.
  * @see 📜️script.ts
  */
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
@@ -15,13 +15,15 @@ import { policyAppSchemaBreaches } from "../../🧬️schema/🗺️surface/⚖�
 import { policyInferenceFamilyBreaches } from "../../🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts";
 import { abstractionOwnershipChecks } from "../../📏️ownership/🏛️abstraction/✅️verification/🟦️.ts";
 import { policyAbstractionOwnershipBreaches } from "../../📏️ownership/🏛️abstraction/⚖️law/🟦️.ts";
-import { policyIndexedGeneratedOutputBreaches } from "../../⚖️laws/indexed-generated-output/🟦️.ts";
-import { existsSync, readFileSync, readdirSync, writeFileSync, type Dirent } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { policyIndexedGeneratedOutputBreaches } from "../../⚖️laws/📇️indexed-generated-output/🟦️.ts";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
+import { checkStorybookFreshness } from "./🎨️storybook-freshness/🟦️.ts";
 import { interactivityAllAppActionDispositionFailures, interactivityAllAppActionProductionFailures, interactivityAllAppDiscovery } from "../../⚖️laws/🔬️interactivity-audit/🧭️all-app/🟦️.ts";
-import { interactivityDatabaseCatalogBootstrapFailures, interactivityDatabaseCompactionFailures, interactivityDatabaseCreateCatalogFailures, interactivityDatabaseSyncHelloFailures, interactivityDbIoB1B6Failures, interactivityP1qR4Failures } from "../../⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
+import { interactivityDbIoB1B6Failures, interactivityP1qR4Failures } from "../../⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
+import { interactivityDatabaseCatalogBootstrapFailures, interactivityDatabaseCompactionFailures, interactivityDatabaseCreateCatalogFailures, interactivityDatabaseSyncHelloFailures } from "../../⚖️laws/🔬️interactivity-audit/🗄️database/🌱️database-lifecycle/🟦️.ts";
 import { INTERACTIVITY_AUDIT_ASYNC_FILE, INTERACTIVITY_AUDIT_DB_ARTIFACT_FAMILY, INTERACTIVITY_AUDIT_DB_CLI_FILE, INTERACTIVITY_AUDIT_DB_COMPACT_FILE, INTERACTIVITY_AUDIT_DB_ENGINE_FAMILY, INTERACTIVITY_AUDIT_DB_INDEX_FILE, INTERACTIVITY_AUDIT_DB_NEO4J_FILE, INTERACTIVITY_AUDIT_DB_POSTGRES_FILE, INTERACTIVITY_AUDIT_DB_QUERY_FILE, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE, INTERACTIVITY_AUDIT_DB_SQLITE_FILE, INTERACTIVITY_AUDIT_DB_STATE_FILE, INTERACTIVITY_AUDIT_DB_STORAGE_FAMILY, INTERACTIVITY_AUDIT_DB_SYNC_FILE, INTERACTIVITY_AUDIT_DB_WAL_FAMILY, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_HUB_BIN_FAMILY, INTERACTIVITY_AUDIT_PACK_FORMAT_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS, INTERACTIVITY_AUDIT_SEVERITY, INTERACTIVITY_AUDIT_SURFACE_LANE_FILE, INTERACTIVITY_AUDIT_UI_ENGINE_FILE, INTERACTIVITY_AUDIT_UI_ROOTS, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_P1X_CONTRACT_FILE, INTERACTIVITY_P1Y_CONTRACT_FILE, INTERACTIVITY_P1Z_CONTRACT_FILE } from "../../⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts";
-import { interactivityMountedEngineSurfaceLifetimeFailures, interactivityMountedPreparedRenderFailures, interactivityMountedSurfaceLaneFailures } from "../../⚖️laws/🔬️interactivity-audit/🖥️mounted/🟦️.ts";
+import { interactivityMountedEngineSurfaceLifetimeFailures, interactivityMountedPreparedRenderFailures, interactivityMountedSurfaceLaneFailures } from "../../⚖️laws/🔬️interactivity-audit/🖥️mounted/🖼️mounted-surface/🟦️.ts";
 import { HISTORY_CLOSURE_RULES, historyClosureFindings, historyClosureSources, policyHistoryClosureBreaches } from "../../⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
 import { interactivityAuditRun } from "../../⚖️laws/🔬️interactivity-audit/🏁️run/🟦️.ts";
 import { policyStandardsCoverageBreaches, policyStandardSubsetVocabularyBreaches } from "../../⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🟦️.ts";
@@ -558,7 +560,7 @@ export abstract class VerifyScript extends Script {
       const { testMediaExportEncodingContract } = await import("../../../../../../🔨️modules/🎠️kernel/🧪️tests/⬇️media-export-encoding/🟦️.ts");
       testMediaExportEncodingContract();
       // 🧬️ `tsc --strict` over the codec twin alone: it is self-contained by construction, whereas the
-      // law imports `🎠️kernel/🟦️.ts` and would drag the whole renderer graph (and its pre-existing,
+      // law imports `🎠️kernel/🎬️media-export/🟦️.ts` and would drag the whole renderer graph (and its pre-existing,
       // unrelated Bun-ism diagnostics) into this lane's verdict.
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.root, "🧰️framework/🔨️modules/🚪️io/🔤️base64")}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
@@ -1252,7 +1254,7 @@ export abstract class VerifyScript extends Script {
       if (domain !== "") runCmd("bun", [join(this.root, domain, "📜️script.ts"), "contract"], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
     }
     console.log("[verify] storybook scope freshness…");
-    await this.checkStorybookFreshness();
+    await checkStorybookFreshness(this.root);
     console.log("[verify] indexed generated output (wasm/jco/wasm-pack)…");
     {
       const generatedBreaches = policyIndexedGeneratedOutputBreaches(this.root);
@@ -1393,147 +1395,6 @@ export abstract class VerifyScript extends Script {
     console.log("[verify] actor kernel wasm32 bindings…");
     await this.runRustWarnings(["--target", "wasm32-unknown-unknown"]);
     console.log("[verify] gate passed.");
-  }
-
-  /** 📖️ Every `StoryScope.sourceRoots`/`storyGlobs` entry across `.storybook/📖️stories/🧭️coordination/🟦️.ts`'s `STORY_SCOPES`
-   * (both `HAND_CURATED_SCOPES` and the package-catalog-derived `GENERATED_SCOPES`) must resolve to a real
-   * on-disk path — catches exactly the "stale de-emojified sourceRoot" class of bug the W0 finding in
-   * `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE/📋️master.md` flagged (a plugin/framework
-   * dir moves mid-migration and a hand-written scope entry silently keeps pointing at the old location).
-   * `GENERATED_SCOPES` entries can't go stale this way (they're re-derived from disk on every import), but
-   * a package's own opt-in `sourceRoots` value CAN still name a subdir that no longer exists — checked the
-   * same way. See `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG`. */
-  private async checkStorybookFreshness(): Promise<void> {
-    const { STORY_SCOPES } = await import("../../../../../../../.storybook/📖️stories/🧭️coordination/🟦️.ts");
-    const offenders: string[] = [];
-    for (const scope of STORY_SCOPES) {
-      for (const root of scope.sourceRoots) {
-        if (!existsSync(join(this.root, root))) offenders.push(`scope ${JSON.stringify(scope.id)}: sourceRoot ${JSON.stringify(root)} does not exist`);
-      }
-      for (const glob of scope.storyGlobs ?? []) {
-        const literalPrefix = glob.split(/[*{]/)[0] ?? glob;
-        const literalDir = literalPrefix.endsWith("/") ? literalPrefix.slice(0, -1) : dirname(literalPrefix);
-        const resolved = literalDir.startsWith("..") || literalDir.startsWith(".") ? resolve(join(this.root, ".storybook"), literalDir) : join(this.root, literalDir);
-        if (!existsSync(resolved)) offenders.push(`scope ${JSON.stringify(scope.id)}: storyGlob ${JSON.stringify(glob)} has no matching directory (resolved ${JSON.stringify(relative(this.root, resolved))})`);
-      }
-    }
-    // 🎨️ App-level Tailwind entry CSS files' `@import`/`@source` at-rules are hand-maintained literal paths
-    // (Tailwind v4's content-scanning `@source` needs a real filesystem path, not a package specifier) —
-    // the same bug class as a de-sandwiched plugin's old `⚡️implementations/<lang>` segment left dangling
-    // (see `26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG`). Also assert each entry
-    // reaches the shared UI stylesheet through its import chain so a future app cannot silently ship a
-    // stylesheet that never scans `Layout`/`Panel`/`ShellHost` class names.
-    this.checkAppTailwindEntries(offenders);
-    if (offenders.length) {
-      console.error(`[verify] ${offenders.length} Storybook scope / Tailwind entry path(s) are stale:`);
-      for (const o of offenders) console.error(`  ${o}`);
-      console.error("run-check `.storybook/📖️stories/🧭️coordination/🟦️.ts`'s HAND_CURATED_SCOPES (or the opting-in package's own manifest / app globals.css) — see 26/08/06/GENERATED-STORYBOOK-SCOPES-AND-STORIES-FROM-PACKAGE-CATALOG.");
-      process.exit(1);
-    }
-  }
-
-  /** 🎨️ Discovers every app-level Tailwind entry (`globals.css` / `🎨️.css`), validates
-   * relative `@import`/`@source` literals resolve on disk, and asserts each entry's import chain reaches
-   * the shared UI stylesheet that owns the framework class sources. */
-  private checkAppTailwindEntries(offenders: string[]): void {
-    const uiGlobalsRel = this.findSharedUiGlobalsRel();
-    if (!uiGlobalsRel) {
-      offenders.push("shared UI react 🎨️.css not found under 🧰️framework/🔨️modules/🖱️ui");
-      return;
-    }
-    const uiGlobalsAbs = join(this.root, uiGlobalsRel);
-    const entries = this.listAppTailwindEntries();
-    for (const entryAbs of entries) {
-      const entryRel = relative(this.root, entryAbs);
-      const entryDir = dirname(entryAbs);
-      const body = readFileSync(entryAbs, "utf8");
-      for (const rawLine of body.split("\n")) {
-        const match = rawLine.match(/^@(?:import|source)\s+"([^"]+)"/);
-        if (!match) continue;
-        const literal = match[1]!;
-        if (!literal.startsWith(".")) continue;
-        const resolved = resolve(entryDir, literal);
-        if (!existsSync(resolved)) offenders.push(`${entryRel}: ${JSON.stringify(literal)} does not exist`);
-      }
-      // Fragment stylesheets (e.g. animate presentation's reveal overrides) only declare `@source` / custom
-      // rules and are `@import`ed by a real entry — they must not be forced to import the UI chain themselves.
-      const importsShared = /@import\s+"(?:\.\.?\/|@semio-tech\/ui-styling)/.test(body);
-      if (importsShared && !this.cssImportChainReaches(entryAbs, uiGlobalsAbs, new Set())) {
-        offenders.push(`${entryRel}: import chain does not reach shared UI stylesheet ${JSON.stringify(uiGlobalsRel)}`);
-      }
-    }
-  }
-
-  /** 🎨️ App / storybook / product Tailwind entry CSS files that must inherit the shared UI sources. */
-  private listAppTailwindEntries(): string[] {
-    const found: string[] = [];
-    const visit = (dir: string, depth: number): void => {
-      if (depth > 10) return;
-      let entries: Dirent[];
-      try {
-        entries = readdirSync(dir, { withFileTypes: true });
-      } catch {
-        return;
-      }
-      for (const entry of entries) {
-        if (entry.name === "node_modules" || entry.name === "dist" || entry.name === "target" || entry.name === ".git") continue;
-        const full = join(dir, entry.name);
-        if (entry.isDirectory()) {
-          visit(full, depth + 1);
-          continue;
-        }
-        if (entry.name === "globals.css" || entry.name === "🎨️.css") found.push(full);
-      }
-    };
-    for (const top of [".storybook", "♻️mit-bestand", "✏️s", "🧰️framework"]) {
-      const abs = join(this.root, top);
-      if (existsSync(abs)) visit(abs, 0);
-    }
-    return found.filter((abs) => {
-      const rel = relative(this.root, abs).replace(/\\/g, "/");
-      // Shared module stylesheets are sources in the chain, not app entries that must import themselves.
-      if (rel === "🧰️framework/🔨️modules/🖱️ui/🧵️styles/🎨️.css") return false;
-      if (rel.includes("/🎨️styling/")) return false;
-      return true;
-    });
-  }
-
-  /** 🎨️ Relative path of the shared UI `🎨️.css` from the workspace root. */
-  private findSharedUiGlobalsRel(): string | null {
-    const candidates = [
-      "🧰️framework/🔨️modules/🖱️ui/🧵️styles/🎨️.css",
-    ];
-    for (const rel of candidates) {
-      if (existsSync(join(this.root, rel))) return rel;
-    }
-    return null;
-  }
-
-  /** 🎨️ Walks relative `@import "..."` edges (skipping package specifiers) until `targetAbs` is reached. */
-  private cssImportChainReaches(fromAbs: string, targetAbs: string, seen: Set<string>): boolean {
-    const normalizedFrom = resolve(fromAbs);
-    const normalizedTarget = resolve(targetAbs);
-    if (normalizedFrom === normalizedTarget) return true;
-    if (seen.has(normalizedFrom)) return false;
-    seen.add(normalizedFrom);
-    if (!existsSync(normalizedFrom)) return false;
-    const body = readFileSync(normalizedFrom, "utf8");
-    for (const rawLine of body.split("\n")) {
-      const match = rawLine.match(/^@import\s+"([^"]+)"/);
-      if (!match) continue;
-      const literal = match[1]!;
-      let nextAbs: string | null = null;
-      if (literal.startsWith(".")) {
-        nextAbs = resolve(dirname(normalizedFrom), literal);
-      } else if (literal.startsWith("@semio-tech/ui-styling")) {
-        // Package import of the styling base — the shared UI globals imports this; reaching UI globals is enough.
-        continue;
-      } else {
-        continue;
-      }
-      if (this.cssImportChainReaches(nextAbs, normalizedTarget, seen)) return true;
-    }
-    return false;
   }
 }
 //#endregion 🔖️VerifyScript

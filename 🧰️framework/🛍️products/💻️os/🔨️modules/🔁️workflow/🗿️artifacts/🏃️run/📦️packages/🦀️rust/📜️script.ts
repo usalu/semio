@@ -10,7 +10,7 @@ import {resolve} from "node:path";
 class RunSqliteTestScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   const mode=segments[0];if(segments.length>1||(mode!==undefined&&mode!=="source"&&mode!=="native"))throw Error("Unknown Run SQLite test mode");
-  if(mode!=="source")await runArtifactRustTests("semio-framework-artifact-workflow-run", this.repoRoot, ["--lib","sqlite_","--no-fail-fast"], this.invocation);
+  if(mode!=="source")await runArtifactRustTests("semio-framework-artifact-workflow-run-tests", this.repoRoot, ["--lib","sqlite_","--no-fail-fast"], this.invocation);
   if(mode!=="native")await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],{cwd:this.repoRoot});
  }
 }
@@ -22,4 +22,4 @@ class RunSqliteVerifyScript extends BundleScript{
   await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--skipLibCheck",resolve(snapshot,"🟦️.ts"),resolve(this.root,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],this.repoRoot,"run-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
  }
 }
-await runArtifactRustPackageMain(import.meta.dir,"semio-framework-artifact-workflow-run",{commands:{"test-snapshot-sqlite":RunSqliteTestScript,verify:RunSqliteVerifyScript}});
+await runArtifactRustPackageMain(import.meta.dir,"semio-framework-artifact-workflow-run",{testPackages:["semio-framework-artifact-workflow-run-tests"],commands:{"test-snapshot-sqlite":RunSqliteTestScript,verify:RunSqliteVerifyScript}});

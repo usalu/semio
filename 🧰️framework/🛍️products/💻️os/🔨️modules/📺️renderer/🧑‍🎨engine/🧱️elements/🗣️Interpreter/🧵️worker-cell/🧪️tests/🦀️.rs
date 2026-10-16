@@ -41,11 +41,11 @@ fn retained_ui_unadmitted_read_refuses_with_the_named_locale_fault() {
 
 #[test]
 fn retained_ui_locale_readmission_preserves_the_actual_surface_tree_and_revision() {
-    let node = UiNode::Text(ui_wgpu::wgpu::UiTextNode {
+    let node = UiNode::Text(semio_framework_ui_declaration::ui::UiTextNode {
         value: semio_framework_ui_locale::Label::data("retained document"),
         emphasize: None,
         data_attributes: None,
-        presence: ui_wgpu::wgpu::UiPresence::default(),
+        presence: semio_framework_ui_layout::layout::UiPresence::default(),
         menu: None,
     });
     install_ui_engine_locale(semio_framework_ui_locale::Locale::De);

@@ -49,7 +49,7 @@ export const rasterRasterDiffTextGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseRasterDiffText(value: unknown, at = "$"): RasterDiffText {
-  return rasterRasterDiffTextGuardObject(value, `${at}`);
+  return rasterRasterDiffTextGuardString(value, `${at}`);
 }
 
 import { parseRasterLayerPatch, type RasterLayerPatch } from "./../../../🧬️schema/🔺️diff/🟦️.ts";

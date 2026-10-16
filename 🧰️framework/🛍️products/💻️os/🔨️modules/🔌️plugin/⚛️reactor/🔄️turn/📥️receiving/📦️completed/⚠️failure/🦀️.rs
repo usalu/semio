@@ -1,7 +1,7 @@
 //! 🧳️ Original parser refusals keep their complete native fields through the existing paid domain frontier.
-use super::*;
-use semio_framework_job::{OriginalDomainFailure,OriginalDomainProjection,OriginalDomainView as V};
-use semio_framework_pack::{PackRefusal,PackRetryDisposition,PackTransportCategory};
+use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
+use semio_framework_job::{OriginalDomainFailure, OriginalDomainProjection, OriginalDomainView as V};
+use semio_framework_pack::{PackRefusal, PackRetryDisposition, PackTransportCategory};
 use semio_framework_pack_json::JsonError;
 #[derive(Debug,semio_framework_value::RetireOwned)]
 pub(super) enum DecodeFailure{Json(JsonError,RetainedCloneProgress),Pack(PackRefusal,RetainedCloneProgress)}
@@ -10,11 +10,13 @@ impl OriginalDomainFailure for DecodeFailure{
  fn domain_message(&self)->&str{"original Completed input failed bounded decoding"}
  fn domain_retained_progress(&self)->RetainedCloneProgress{match self{Self::Json(_,progress)|Self::Pack(_,progress)=>*progress}}
 }
+#[doc(hidden)]
 #[derive(Clone,Copy)]
-enum Node<'a>{Failure(&'a DecodeFailure),Json(&'a JsonError),Pack(&'a PackRefusal),Value(&'a ValueError),TextError(&'a semio_framework_diagnostic::TextError),Progress(RetainedCloneProgress),Span(semio_framework_diagnostic::TextSpan),Text(&'a str),UInt(u64)}
-fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original decoder failure projection ordinal changed")}
+pub enum Node<'a>{Failure(&'a DecodeFailure),Json(&'a JsonError),Pack(&'a PackRefusal),Value(&'a ValueError),TextError(&'a semio_framework_diagnostic::TextError),Progress(RetainedCloneProgress),Span(semio_framework_diagnostic::TextSpan),Text(&'a str),UInt(u64)}
+#[doc(hidden)]
+pub fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original decoder failure projection ordinal changed")}
 impl<'a> Node<'a>{
- fn fields(self)->[Option<(&'a str,Self)>;8]{
+ pub fn fields(self)->[Option<(&'a str,Self)>;8]{
   let mut fields=[None;8];
   let mut add=|key:&'a str,value:Self|{let slot=fields.iter_mut().find(|slot|slot.is_none()).unwrap();*slot=Some((key,value))};
   match self{
@@ -40,7 +42,7 @@ impl<'a> Node<'a>{
    _=>{},
   }fields
  }
- fn locate(mut self,path:&[usize])->Result<(Self,usize),ValueError>{for(position,index)in path.iter().enumerate(){if matches!(self,Self::Value(_)){return Ok((self,position))}self=self.fields().into_iter().flatten().nth(*index).map(|(_,value)|value).ok_or_else(invalid)?}Ok((self,path.len()))}
+ pub fn locate(mut self,path:&[usize])->Result<(Self,usize),ValueError>{for(position,index)in path.iter().enumerate(){if matches!(self,Self::Value(_)){return Ok((self,position))}self=self.fields().into_iter().flatten().nth(*index).map(|(_,value)|value).ok_or_else(invalid)?}Ok((self,path.len()))}
 }
 impl OriginalDomainProjection for DecodeFailure{
  fn projection_identity(&self)->usize{self as*const Self as usize}

@@ -1,9 +1,9 @@
 use crate::{DslValue, NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(crate::text("⚠️refusal/🔁️codec/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn intrinsic(value: &serde_json::Value) -> DslValue { serde_json::from_value(value.clone()).unwrap() }
 fn wire(row: &serde_json::Value) -> DslValue {
-    let schema:serde_json::Value=serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();
+    let schema:serde_json::Value=serde_json::from_str(crate::text("⚠️refusal/🔁️codec/🧬️schema/🔣️.json")).unwrap();
     let progress=DslValue::Object(schema["$defs"]["retainedProgress"]["required"].as_array().unwrap().iter().map(|key|{let key=key.as_str().unwrap();(key.into(),intrinsic(&row["retainedProgress"][key]))}).collect());
     DslValue::Object(vec![("kind".into(), intrinsic(&row["kind"])), ("message".into(), intrinsic(&row["message"])), ("retainedProgress".into(), progress)])
 }

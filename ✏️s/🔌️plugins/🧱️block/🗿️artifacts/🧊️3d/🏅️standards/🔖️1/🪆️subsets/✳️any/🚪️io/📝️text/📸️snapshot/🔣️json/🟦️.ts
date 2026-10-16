@@ -1,7 +1,7 @@
 /** 🔣️ Physical Block 3D snapshot JSON codec. */
 import {parseBlock3dSnapshot, type Block3dSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import * as p from "../../../../../../../../../../🧬️schema/🧱️shared/📐️scalar/🟦️.ts";
-import * as sharedJson from "../../../../../../../../../../🧬️schema/🧱️shared/🚪️io/🔣️json/🟦️.ts";
+import * as p from "../../../../../../../../../../🧬️schema/🧱️document-fields/📐️scalar/🟦️.ts";
+import * as sharedJson from "../../../../../../../../../../🧬️schema/🧱️document-fields/🚪️io/🔣️json/🟦️.ts";
 
 function jsonGeometry(value:any,decode:boolean):void{
  const scalar=(word:any)=>decode?sharedJson.word(word):sharedJson.out(p.word(word));

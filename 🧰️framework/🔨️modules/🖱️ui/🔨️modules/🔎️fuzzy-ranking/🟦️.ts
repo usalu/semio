@@ -42,10 +42,13 @@ function boundedDamerauLevenshtein(left: string, right: string, maximum: number)
     const to = Math.min(right.length, row + maximum);
     for (let column = 1; column < from; column += 1) current[column] = maximum + 1;
     for (let column = from; column <= to; column += 1) {
-      const substitution = previous[column - 1] + (left[row - 1] === right[column - 1] ? 0 : 1);
-      let distance = Math.min(previous[column] + 1, current[column - 1] + 1, substitution);
+      const diagonal=previous[column-1],above=previous[column],prior=current[column-1];
+      if(diagonal===undefined||above===undefined||prior===undefined)throw Error("Complete bounded fuzzy distance row required");
+      const substitution=diagonal+(left.charAt(row-1)===right.charAt(column-1)?0:1);
+      let distance=Math.min(above+1,prior+1,substitution);
       if (row > 1 && column > 1 && left[row - 1] === right[column - 2] && left[row - 2] === right[column - 1]) {
-        distance = Math.min(distance, previousPrevious[column - 2] + 1);
+        const transposed=previousPrevious[column-2];if(transposed===undefined)throw Error("Complete fuzzy transposition row required");
+        distance=Math.min(distance,transposed+1);
       }
       current[column] = distance;
       rowMinimum = Math.min(rowMinimum, distance);
@@ -54,7 +57,8 @@ function boundedDamerauLevenshtein(left: string, right: string, maximum: number)
     if (rowMinimum > maximum) return null;
     [previousPrevious, previous, current] = [previous, current, previousPrevious];
   }
-  return previous[right.length] <= maximum ? previous[right.length] : null;
+  const distance=previous[right.length];if(distance===undefined)throw Error("Complete fuzzy terminal cell required");
+  return distance<=maximum?distance:null;
 }
 
 function fuzzyTokenScore(query: string, value: string, threshold: number): number | null {

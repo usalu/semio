@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/dsl-derive-expand-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

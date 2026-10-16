@@ -1,0 +1,315 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "unchanged",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "src/child.rs",
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "bytes": 16
+          }
+        ],
+        "observed": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "src/child.rs",
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "bytes": 16
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "reordered",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "src/child.rs",
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "bytes": 16
+          }
+        ],
+        "observed": [
+          {
+            "path": "src/child.rs",
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "bytes": 16
+          },
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "same-size-edited",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          }
+        ],
+        "observed": [
+          {
+            "path": "src/lib.rs",
+            "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "bytes": 4
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "grown",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          }
+        ],
+        "observed": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 5
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "added",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          }
+        ],
+        "observed": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "src/child.rs",
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "bytes": 16
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "removed",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "src/child.rs",
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "bytes": 16
+          }
+        ],
+        "observed": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "duplicate-observed",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "src/child.rs",
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "bytes": 16
+          }
+        ],
+        "observed": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "duplicate-expected",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          }
+        ],
+        "observed": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "src/child.rs",
+            "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "bytes": 16
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "embedded-data",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "assets/data.txt",
+            "digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "bytes": 3
+          }
+        ],
+        "observed": [
+          {
+            "path": "assets/data.txt",
+            "digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "bytes": 3
+          },
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "embedded-edited",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "assets/data.txt",
+            "digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "bytes": 3
+          }
+        ],
+        "observed": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          },
+          {
+            "path": "assets/data.txt",
+            "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "bytes": 3
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "renamed",
+      "snapshot": {
+        "version": 1,
+        "expected": [
+          {
+            "path": "src/lib.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          }
+        ],
+        "observed": [
+          {
+            "path": "src/other.rs",
+            "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bytes": 4
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "empty",
+      "snapshot": {
+        "version": 1,
+        "expected": [],
+        "observed": []
+      },
+      "accepted": false
+    }
+  ]
+}

@@ -74,5 +74,4 @@ impl<P> Drop for OriginalAliasBatch<P>{fn drop(&mut self){assert!(std::thread::p
 mod tests;
 
 #[cfg(test)]
-#[path="../../🧪️testing/💾️allocator/🦀️.rs"]
-mod allocation_testing;
+use semio_framework_value_testing_allocator as allocation_testing;

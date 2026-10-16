@@ -16,6 +16,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import Parser from "web-tree-sitter";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { FRAMEWORK_ARTIFACT_NAMES, TOOL_MACHINE_VOCABULARY, artifactNameHitsOfText, debugTagHitsOfText, docstringEmojiReuseOfText, docstringHitsOfText, interactiveJobsOfText, interfaceImportHitsOfText, placeholderHitsOfText, utilityArtifactsOfSources } from "../../📋️orchestration/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -188,7 +189,7 @@ describe("utility artifacts and their machine vocabulary", () => {
     });
   }
   test("every machine vocabulary word is a public item of the framework tool-machine module", () => {
-    const module = readFileSync(join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "🔨️modules", "🛠️tool-machine", "🦀️.rs"), "utf8");
+    const module = readModuleTreeSource(join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "🔨️modules", "🛠️tool-machine", "🦀️.rs"));
     for (const word of TOOL_MACHINE_VOCABULARY) expect(new RegExp(`^pub (?:trait|struct|fn) ${word}\\b`, "mu").test(module), word).toBe(true);
   });
 });

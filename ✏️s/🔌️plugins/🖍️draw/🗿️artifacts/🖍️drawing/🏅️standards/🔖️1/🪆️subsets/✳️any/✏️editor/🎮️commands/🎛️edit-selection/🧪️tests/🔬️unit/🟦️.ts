@@ -14,7 +14,7 @@ test("shape conversion preserves primitive outlines and independent ellipse geom
   expect(validate({operation:"toPath",ids:["shape"]})).toBe(true);
   for(const item of conversions) {
     const result=shapePath(item.kind,item.geometry),saved=structuredClone(item.geometry);
-    expect(result).toEqual(item.segments);
+    expect<unknown>(result).toEqual(item.segments);
     expect(item.geometry).toEqual(saved);
     let from=new Vector2(),quarter=0;
     for(const segment of result) {
@@ -63,9 +63,9 @@ test("selection fixture outcomes agree with Three.js and Immer", () => {
         if (item.operation === "distributeHorizontal") { layer.x = cursor; cursor += layer.width+gap; }
       }
     });
-    if ("bounds" in item) expect(output.map(layer => [layer.x,layer.y,layer.width,layer.height])).toEqual(item.bounds);
-    if ("rootCount" in item) expect(output.length).toBe(item.rootCount);
-    if ("order" in item) expect(output.map(layer => layer.id)).toEqual(item.order);
+    if ("bounds" in item) expect<unknown>(output.map(layer => [layer.x,layer.y,layer.width,layer.height])).toEqual(item.bounds);
+    if ("rootCount" in item) expect<unknown>(output.length).toBe(item.rootCount);
+    if ("order" in item) expect<unknown>(output.map(layer => layer.id)).toEqual(item.order);
   }
 });
 
@@ -103,7 +103,7 @@ test("world arrangement matches neutral outcomes and independent Three.js boxes"
   for(const row of arrangements) {
     expect(validate({operation:row.operation,bounds:row.bounds})).toBe(true);
     const saved=structuredClone(row.bounds),actual=arrange(row.bounds,row.operation);
-    expect(actual).toEqual(row.deltas);expect(row.bounds).toEqual(saved);
+    expect<unknown>(actual).toEqual(row.deltas);expect(row.bounds).toEqual(saved);
     if(!actual) continue;
     const horizontal=["alignLeft","alignCenter","alignRight","distributeHorizontal"].includes(row.operation),axis=horizontal?"x":"y";
     const boxes=row.bounds.map(([x,y,w,h])=>new Box2(new Vector2(x,y),new Vector2(x!+w!,y!+h!)));
@@ -198,7 +198,7 @@ test("ungroup retains world transforms, stack order, visibility and child select
     for(const [id,matrix] of Object.entries(row.matrices!)) {
       const layer=flatten(result.layers).find(layer=>layer.id===id)!;
       drawingTransformToMatrix(layer.transform).forEach((value,i)=>expect(value).toBeCloseTo(matrix[i]!,10));
-      expect(layer.visible).toBe(!row.hidden!.includes(id));
+      expect(layer.visible).toBe(!new Set<string>(row.hidden!).has(id));
     }
     const world=new Map<string,Matrix3>();
     function visit(nodes:any[],parent:Matrix3) {for(const node of nodes) {

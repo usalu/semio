@@ -49,5 +49,5 @@ export const stdioEpwEnergyplusAnyDiffTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseEpwDiffText(value: unknown, at = "$"): EpwDiffText {
-  return stdioEpwEnergyplusAnyDiffTextGuardObject(value, `${at}`);
+  return stdioEpwEnergyplusAnyDiffTextGuardString(value, `${at}`);
 }

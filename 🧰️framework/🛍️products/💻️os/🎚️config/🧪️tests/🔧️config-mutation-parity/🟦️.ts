@@ -12,7 +12,7 @@ export async function registerConfigMutationParityTests(vitest: Vitest, dependen
   describe("config mutation TypeScript parity", () => {
     beforeEach(resetWorkerLaw);
     it("opening mutations replace one coordinate, preserve siblings, and invert exactly", async () => {
-      const { applyOpeningConfigMutation, clearDefaultApp, inverseOpeningConfigMutation, setDefaultApp } = await import("../../🧬️schema/🧬️mutations/🟦️");
+      const { applyOpeningConfigMutation, clearDefaultApp, inverseOpeningConfigMutation, setDefaultApp } = await import("@semio-tech/framework/config/mutations");
       const dialect = { artifactKind: "s.demo.demo", standard: "1", subset: "*" };
       const viewer = { pluginId: "demo", appId: "viewer" };
       const editor = { pluginId: "demo", appId: "editor" };
@@ -39,7 +39,7 @@ export async function registerConfigMutationParityTests(vitest: Vitest, dependen
     });
 
     it("change-merge-policy applies and inverts the prior whole-record setting", async () => {
-      const { applyMergePolicyConfigMutation, changeMergePolicy, inverseMergePolicyConfigMutation } = await import("../../🧬️schema/🧬️mutations/🟦️");
+      const { applyMergePolicyConfigMutation, changeMergePolicy, inverseMergePolicyConfigMutation } = await import("@semio-tech/framework/config/mutations");
       const mutation = changeMergePolicy("Vigilant");
       expect(applyMergePolicyConfigMutation({ policy: "Normal" }, mutation)).toEqual({ policy: "Vigilant" });
       expect(inverseMergePolicyConfigMutation(mutation, { policy: "Normal" })).toEqual([changeMergePolicy("Normal")]);

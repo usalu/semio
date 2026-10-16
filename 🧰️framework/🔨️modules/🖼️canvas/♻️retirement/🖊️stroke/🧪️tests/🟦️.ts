@@ -5,8 +5,8 @@ import {Buffer} from "node:buffer";
 import Ajv from "ajv";
 import {applyPatch} from "fast-json-patch";
 import example from "./🧫️fixtures/🔣️.json";
-import contract from "../../../../🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json";
-import ordered from "../../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
+import { retirementContractSchema as contract } from "@semio-tech/value-ts/retirement/contract/schema";
+import { orderedRetirementSchema as ordered } from "@semio-tech/value-ts/ordered/retirement/schema";
 import drawList from "../../../🧬️schema/🎬️draw-list/🔣️.json";
 
 test("Canvas Stroke original dash custody uses supplied canonical control",()=>{

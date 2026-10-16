@@ -6,7 +6,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
  * a catalogue entry makes is the specification, exactly as in `showcase-families`.
  */
 import assert from "node:assert/strict";
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { loadVizCatalog } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { type ProbeProjection, type ProbeRecord, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 

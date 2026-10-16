@@ -11,7 +11,6 @@ use semio_framework::abi::{decode_abi_message, encode_abi_message, AbiErrorCode,
 use serde_json::json;
 use std::cell::{Cell, RefCell};
 use std::rc::{Rc, Weak};
-use ui_webgpu::abi::AbiErrorCode as SurfaceAbiErrorCode;
 use ui_webgpu::{CanvasMetrics, SurfaceGeneration, SurfaceId};
 use semio_framework_os_flow_host_core::*;
 

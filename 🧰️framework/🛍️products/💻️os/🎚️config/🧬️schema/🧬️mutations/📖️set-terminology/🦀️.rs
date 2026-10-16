@@ -33,13 +33,3 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetT
         vec!["terminology".to_string()]
     }
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️sets-terminology/🦀️.rs"]
-mod tests_sets_terminology;
-
-#[cfg(test)]
-#[path = "🧪️tests/🟰️keeps-terminology/🦀️.rs"]
-mod tests_keeps_terminology;
-//#endregion 🧪️Tests

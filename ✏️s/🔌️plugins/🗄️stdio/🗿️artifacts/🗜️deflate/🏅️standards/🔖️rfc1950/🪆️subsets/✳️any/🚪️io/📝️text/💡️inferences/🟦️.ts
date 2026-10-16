@@ -49,5 +49,5 @@ export const stdioDeflateRfc1950AnyInferenceTextGuardConstant = <T extends strin
 //#endregion 🚪️Parsers
 
 export function parseDeflateInferenceText(value: unknown, at = "$"): DeflateInferenceText {
-  return stdioDeflateRfc1950AnyInferenceTextGuardObject(value, `${at}`);
+  return stdioDeflateRfc1950AnyInferenceTextGuardString(value, `${at}`);
 }

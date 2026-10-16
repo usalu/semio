@@ -1,0 +1,13 @@
+/** 🧫 The ui module's public fixture entry: the language-neutral corpora its consumers read, exposed under one import so no consumer spells the owner's internal folders. */
+export { default as chromePanelSafeAreaFixture } from "./🛟️chrome-panel-safe-area/🔣️.json" with { type: "json" };
+export { default as gizmoTipBoundsFixture } from "./🧭️gizmo-tip-bounds/🔣️.json" with { type: "json" };
+export { default as graphTimelineAuthorsFixture } from "./👥️graph-timeline-authors/🔣️.json" with { type: "json" };
+export { default as sceneListTransferFixture } from "./🔀️scene-list-transfer/🔣️.json" with { type: "json" };
+export { default as sliderPresentationFixture } from "./🎚️slider-presentation/🔣️.json" with { type: "json" };
+export { default as tableStepperKeyboardFixture } from "./⌨️table-stepper-keyboard/🔣️.json" with { type: "json" };
+export { default as treeDragHandleFixture } from "./🌳️tree-drag-handles/🔣️.json" with { type: "json" };
+export { default as virtualFileSystemInteractionFixture } from "./📁️virtual-file-system-interaction/🔣️.json" with { type: "json" };
+export { default as presenceOverlayFixture } from "../../🧬️contract/🧪️tests/🧫️fixtures/👥️presence-overlay.json" with { type: "json" };
+export { default as vfsDescriptorFixture } from "../../🧱️elements/⚙️VirtualFileSystem/🧪️tests/🧫️fixtures/🧾️descriptors/🔣️.json" with { type: "json" };
+export { default as viewportPoseFixture } from "../../🪟️viewport/🧪️tests/🧫️fixtures/🪟️poses/🔣️.json" with { type: "json" };
+export { default as surfaceHostRetentionFixture } from "../../🧬️contract/🧪️tests/🧫️fixtures/🪪️surface-host-retention.json" with { type: "json" };

@@ -13,9 +13,11 @@ use std::sync::{Arc, Mutex};
 
 /// 🛂️ The neutral test caller admission the plugin host's runtime laws share; this crate's laws drive part of it.
 #[cfg(test)]
-#[allow(dead_code)]
-#[path = "../../🖥️host/🧪️tests/🛂️receiving/🦀️.rs"]
-pub(crate) mod test_native_authority;
+pub(crate) use semio_framework_plugin_host_operation::test_native_authority;
+
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧪️tests/🧫️fixtures/🌱️channel/🦀️.rs"]
+pub mod channel_fixture;
 
 /// 🧮️ The heap witness the crate's allocation laws read through `semio_framework_trace::observe_heap_allocations_on_this_thread`.
 #[cfg(test)]

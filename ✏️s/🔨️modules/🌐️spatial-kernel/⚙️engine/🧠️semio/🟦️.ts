@@ -6,36 +6,12 @@
 import { spatialKernelCommandFor } from "../🗺️spatial/🟦️.ts";
 import { SemioGeometrySession } from "./🌊️session/🟦️.ts";
 import { kernelGeometry, type EdgeCurve, type EdgeGroup, type FaceGroup, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/framework-3d-js";
-import { Model } from "../📐️geometry/🟦️.ts";
+import { Model } from "../📐️geometry/🧊️model/🟦️.ts";
 import { applyModelDiff, isEmptyModelDiff, type ModelDiff, type SpatialKernel } from "../🗺️spatial/🟦️.ts";
-import {
-  PreciseSpatialKernelMath,
-  arcEndFromAngle,
-  arcEndOnCircle,
-  arcSamplePoints,
-  circleFromCenterRadiusPoint,
-  boxModelDiff,
-  edgeCurveLength,
-  edgeSamplePoints,
-  geom,
-  nurbsCurveFromPoles,
-  nurbsDisplaySamplePoints,
-  vec3Cross,
-  vec3Distance,
-  vec3Dot,
-  vec3Length,
-  vec3Normalize,
-  vec3Sub,
-  type EdgeRecord,
-  type EdgeRef,
-  type FaceRecord,
-  type FaceRef,
-  type SolidPrimitive,
-  type SolidRecord,
-  type SolidRef,
-  type VertexRef,
-  type WireRef,
-} from "../🧮️preview/🟦️.ts";
+import { PreciseSpatialKernelMath, boxModelDiff } from "../🧮️preview/🟦️.ts";
+import { arcEndFromAngle, arcEndOnCircle, arcSamplePoints, circleFromCenterRadiusPoint, edgeCurveLength, edgeSamplePoints, nurbsCurveFromPoles, nurbsDisplaySamplePoints } from "../🧮️preview/🌀️curve-sampling/🟦️.ts";
+import { geom, type EdgeRecord, type EdgeRef, type FaceRecord, type FaceRef, type SolidPrimitive, type SolidRecord, type SolidRef, type VertexRef, type WireRef } from "../🧮️preview/🔷️brep-records/🟦️.ts";
+import { vec3Cross, vec3Distance, vec3Dot, vec3Length, vec3Normalize, vec3Sub } from "../🧮️preview/📏️vec3/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🌉️InvokeShapes

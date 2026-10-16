@@ -1,4 +1,4 @@
-/** 🧭️ `generate` command family: derived config, taxonomy census and plugin-glue inventory.
+/** 🏭️ `generate` command family: derived config, taxonomy census and plugin-glue inventory.
  * @see 📜️script.ts
  */
 import { runNestedCargoPackageAdapter } from "../../📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";

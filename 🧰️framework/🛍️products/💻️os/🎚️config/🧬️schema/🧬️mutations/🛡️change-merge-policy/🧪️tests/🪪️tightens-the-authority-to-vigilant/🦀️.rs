@@ -16,20 +16,20 @@
 
 use super::{MergePolicyConfigMutation, MergePolicyDiff, MergePolicySetting};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🛡️change-merge-policy/🪪️tightens-the-authority-to-vigilant/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn before() -> MergePolicySetting {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before merge-policy setting decodes")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before merge-policy setting decodes")
 }
 fn expected_after() -> MergePolicySetting {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after merge-policy setting decodes")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after merge-policy setting decodes")
 }
 fn mutation() -> MergePolicyConfigMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-merge-policy mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-merge-policy mutation decodes")
 }
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
@@ -69,14 +69,14 @@ fn restoring_the_prior_policy_restores_before() {
 /// internally tagged on `"mutation"`, while its `policy` value keeps the PascalCase variant name.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: MergePolicySetting = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("merge-policy setting decodes");
         let reencoded = json_value(&decoded);
         let original: serde_json::Value = serde_json::from_str(text).expect("merge-policy setting reparses");
         assert_eq!(reencoded, original, "change-merge-policy/tightens-the-authority-to-vigilant: committed {label} setting JSON is not canonical");
     }
     let reencoded = json_value(&mutation());
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("changeMergePolicy payload reparses");
+    let original: serde_json::Value = serde_json::from_str(MUTATION.as_str()).expect("changeMergePolicy payload reparses");
     assert_eq!(reencoded, original, "change-merge-policy/tightens-the-authority-to-vigilant: committed changeMergePolicy JSON is not canonical");
 }
 
@@ -84,7 +84,7 @@ fn committed_json_is_canonical() {
 /// the declared `applied` outcome must be message-free.
 #[test]
 fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-merge-policy/tightens-the-authority-to-vigilant: this fixture declares an applied outcome");
     let produced = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None, "change-merge-policy/tightens-the-authority-to-vigilant: changing to a different policy must not raise mutation.no-op");
@@ -96,24 +96,24 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let outcome = <MergePolicyConfigMutation as protocol::Mutation<MergePolicySetting>>::diff(&mutation(), &before());
     let produced = json_value(outcome.diff());
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-merge-policy/tightens-the-authority-to-vigilant: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff decodes to the facet's sparse diff type and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: MergePolicyDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-merge-policy diff decodes");
+    let decoded: MergePolicyDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-merge-policy diff decodes");
     assert_eq!(decoded.policy, Some(protocol::MergePolicy::Vigilant), "change-merge-policy/tightens-the-authority-to-vigilant: the committed diff must carry the tightened policy");
     let reencoded = json_value(&decoded);
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-merge-policy/tightens-the-authority-to-vigilant: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed diff carries the before-setting to the after-setting through the central applier.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: MergePolicyDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-merge-policy diff decodes");
+    let decoded: MergePolicyDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-merge-policy diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-setting");
     assert_eq!(produced, expected_after(), "change-merge-policy/tightens-the-authority-to-vigilant: committed diff did not carry before to after");
 }

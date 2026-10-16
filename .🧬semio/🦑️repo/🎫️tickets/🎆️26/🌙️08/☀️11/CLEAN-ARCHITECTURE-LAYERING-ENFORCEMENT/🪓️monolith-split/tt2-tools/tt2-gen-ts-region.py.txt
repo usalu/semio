@@ -1,0 +1,237 @@
+def is_null(node: object) -> bool:
+    return isinstance(node, dict) and node.get("type") == "null"
+
+
+def nullable_of(node: dict) -> dict | None:
+    """The single non-null alternative of `type: [T, "null"]` or `anyOf|oneOf: [T, {"type": "null"}]`, else None."""
+    kinds = node.get("type")
+    if isinstance(kinds, list) and "null" in kinds:
+        rest = [kind for kind in kinds if kind != "null"]
+        return {**{key: value for key, value in node.items() if key != "type"}, "type": rest[0]} if len(rest) == 1 else None
+    for key in ("anyOf", "oneOf"):
+        alternatives = node.get(key)
+        if isinstance(alternatives, list) and len(alternatives) == 2 and sum(1 for alternative in alternatives if is_null(alternative)) == 1:
+            other = next(alternative for alternative in alternatives if not is_null(alternative))
+            return other if isinstance(other, dict) else None
+    return None
+
+
+def ts_type(node: dict) -> str | None:
+    if "$ref" in node:
+        target = node["$ref"].rsplit("/", 1)[-1]
+        return target if EXPORT_RE.match(target) else None
+    nullable = nullable_of(node)
+    if nullable is not None:
+        inner = ts_type(nullable)
+        return f"{inner} | null" if inner else None
+    if isinstance(node.get("enum"), list) and all(isinstance(entry, str) for entry in node["enum"]):
+        return " | ".join(json.dumps(entry, ensure_ascii=False) for entry in node["enum"])
+    if "const" in node and isinstance(node["const"], (str, int, float, bool)):
+        return json.dumps(node["const"], ensure_ascii=False)
+    kind = node.get("type")
+    if kind == "string":
+        return "string"
+    if kind == "boolean":
+        return "boolean"
+    if kind in ("integer", "number"):
+        return "number"
+    if kind == "array":
+        inner = ts_type(item_schema(node))
+        return (f"readonly ({inner})[]" if " | " in inner else f"readonly {inner}[]") if inner else None
+    if kind == "object" and not node.get("properties"):
+        return "Readonly<Record<string, unknown>>"
+    return None
+
+
+def render_ts_type(name: str, definition: dict) -> str | None:
+    if definition.get("type") == "object" and isinstance(definition.get("properties"), dict) and definition["properties"]:
+        required = set(definition.get("required") or [])
+        lines = []
+        for field, shape in definition["properties"].items():
+            rendered = ts_type(shape if isinstance(shape, dict) else {})
+            if rendered is None:
+                return None
+            lines.append(f"  readonly {field}{'' if field in required else '?'}: {rendered};")
+        body = "\n".join(lines)
+        return f"export interface {name} {{\n{body}\n}}\n"
+    inline = ts_type(definition)
+    return f"export type {name} = {inline};\n" if inline else None
+
+
+def bounds(node: dict, keys: tuple[str, ...]) -> str:
+    """The schema's own bounds, passed to the guard so the parser refuses what the schema refuses."""
+    stated = {key: node[key] for key in keys if key in node and isinstance(node[key], (int, float, str)) and not isinstance(node[key], bool)}
+    return f", {json.dumps(stated, ensure_ascii=False)}" if stated else ""
+
+
+class Owner:
+    """One schema document's TypeScript leaf and the exports it states, addressed by the document's `$id`."""
+
+    def __init__(self, ts: str, exports: set[str]) -> None:
+        self.ts = ts
+        self.exports = exports
+
+
+class Context:
+    """What one parser rendering needs from its surroundings and what it learned about its callees."""
+
+    def __init__(self, helper: str, document_id: str | None, index: dict[str, Owner]) -> None:
+        self.helper = helper
+        self.document_id = document_id
+        self.index = index
+        self.local: set[str] = set()
+        self.foreign: set[tuple[str, str]] = set()
+
+
+def key_text(field: str) -> str:
+    return field if IDENTIFIER_RE.match(field) else json.dumps(field, ensure_ascii=False)
+
+
+def reference_call(reference: str, access: str, at: str, context: Context) -> str | None:
+    """`parse<Export>(…)` for a `$ref`; a reference into another document records that document's parser as a dependency."""
+    document, separator, fragment = reference.partition("#")
+    target = fragment.rsplit("/", 1)[-1] if separator else ""
+    if not EXPORT_RE.match(target):
+        return None
+    if document and document != context.document_id:
+        owner = context.index.get(document)
+        if owner is None or target not in owner.exports:
+            return None
+        context.foreign.add((owner.ts, target))
+    else:
+        context.local.add(target)
+    return f"parse{target}({access}, {at})"
+
+
+def object_fields(node: dict, row: str, path: str, context: Context, depth: int, declared: dict[str, bool] | None = None) -> list[str] | None:
+    required = set(node.get("required") or [])
+    if declared:
+        required |= {field for field, optional in declared.items() if not optional}
+    lines = []
+    for field, shape in node["properties"].items():
+        access = f"{row}[{json.dumps(field)}]"
+        expression = parser_expression(shape if isinstance(shape, dict) else {}, access, f"{path}.{field}", context, depth)
+        if expression is None:
+            return None
+        lines.append(f"{key_text(field)}: {expression}" if field in required else f"{key_text(field)}: {access} === undefined ? undefined : {expression}")
+    return lines
+
+
+def tagged_discriminator(alternatives: list) -> str | None:
+    """The property every alternative pins to a distinct string `const`, which selects the alternative."""
+    if not all(isinstance(alternative, dict) and isinstance(alternative.get("properties"), dict) for alternative in alternatives):
+        return None
+    for key in alternatives[0]["properties"]:
+        tags = [alternative["properties"].get(key, {}).get("const") for alternative in alternatives]
+        if all(isinstance(tag, str) for tag in tags) and len(set(tags)) == len(tags):
+            return key
+    return None
+
+
+def union_expression(alternatives: list, access: str, path: str, context: Context, depth: int) -> str | None:
+    helper = context.helper
+    at = f"`{path}`"
+    row = f"row{depth}"
+    key = tagged_discriminator(alternatives)
+    if key is not None:
+        tags = [alternative["properties"][key]["const"] for alternative in alternatives]
+        cases = []
+        for alternative, tag in zip(alternatives, tags):
+            parts = []
+            for member in alternative.get("allOf") or []:
+                call = parser_expression(member, row, path, context, depth + 1) if isinstance(member, dict) else None
+                if call is None:
+                    return None
+                parts.append(f"...{call}")
+            rest = {**alternative, "properties": {field: shape for field, shape in alternative["properties"].items() if field != key}}
+            fields = object_fields(rest, row, path, context, depth + 1) if rest["properties"] else []
+            if fields is None:
+                return None
+            cases.append(f"case {json.dumps(tag)}: return {{ {', '.join([f'{key_text(key)}: {json.dumps(tag)}', *parts, *fields])} }};")
+        members = ", ".join(json.dumps(tag) for tag in tags)
+        return f"(({row}) => {{ switch ({helper}Member({row}[{json.dumps(key)}], `{path}.{key}`, [{members}] as const)) {{ {' '.join(cases)} }} }})({helper}Object({access}, {at}))"
+    if all(isinstance(alternative, dict) and alternative.get("type") == "object" and isinstance(alternative.get("properties"), dict) and len(alternative["properties"]) == 1 for alternative in alternatives):
+        branches = []
+        for alternative in alternatives:
+            field, shape = next(iter(alternative["properties"].items()))
+            expression = parser_expression(shape if isinstance(shape, dict) else {}, f"{row}[{json.dumps(field)}]", f"{path}.{field}", context, depth + 1)
+            if expression is None:
+                return None
+            branches.append(f"if ({row}[{json.dumps(field)}] !== undefined) return {{ {key_text(field)}: {expression} }};")
+        return f"(({row}) => {{ {' '.join(branches)} return {helper}Reject({at}, \"value matches no variant\"); }})({helper}Object({access}, {at}))"
+    return None
+
+
+def parser_expression(node: dict, access: str, path: str, context: Context, depth: int = 0) -> str | None:
+    """`path` is the INNER text of a template literal, e.g. `${at}.edits`, so an array element can
+    extend it positionally without nesting one template literal inside another. `depth` names the
+    row, item and index bindings of nested levels so an inner level never shadows the path of an outer one."""
+    helper = context.helper
+    at = f"`{path}`"
+    if "$ref" in node:
+        return reference_call(node["$ref"], access, at, context)
+    nullable = nullable_of(node)
+    if nullable is not None:
+        expression = parser_expression(nullable, access, path, context, depth)
+        return None if expression is None else f"({access} === null ? null : {expression})"
+    if isinstance(node.get("enum"), list) and all(isinstance(entry, str) for entry in node["enum"]):
+        members = ", ".join(json.dumps(entry, ensure_ascii=False) for entry in node["enum"])
+        return f"{helper}Member({access}, {at}, [{members}] as const)"
+    if "const" in node and isinstance(node["const"], (str, int, float, bool)):
+        return f"{helper}Constant({access}, {at}, {json.dumps(node['const'], ensure_ascii=False)})"
+    for key in ("oneOf", "anyOf"):
+        if isinstance(node.get(key), list):
+            return union_expression(node[key], access, path, context, depth)
+    if isinstance(node.get("allOf"), list) and len(node["allOf"]) == 1 and isinstance(node["allOf"][0], dict) and "properties" not in node:
+        return parser_expression(node["allOf"][0], access, path, context, depth)
+    kind = node.get("type")
+    if kind == "string":
+        return f"{helper}String({access}, {at}{bounds(node, ('minLength', 'maxLength', 'pattern'))})"
+    if kind == "boolean":
+        return f"{helper}Boolean({access}, {at})"
+    if kind == "integer":
+        return f"{helper}Integer({access}, {at}{bounds(node, ('minimum', 'maximum'))})"
+    if kind == "number":
+        return f"{helper}Number({access}, {at}{bounds(node, ('minimum', 'maximum'))})"
+    if kind == "array":
+        items = node.get("items")
+        limits = bounds(node, ("minItems", "maxItems"))
+        if isinstance(items, list):
+            names = f"items{depth}"
+            elements = [parser_expression(member if isinstance(member, dict) else {}, f"{names}[{at_index}]", f"{path}[{at_index}]", context, depth + 1) for at_index, member in enumerate(items)]
+            if any(element is None for element in elements):
+                return None
+            exact = f", {{\"minItems\": {len(items)}, \"maxItems\": {len(items)}}}"
+            return f"(({names}) => [{', '.join(elements)}])({helper}Array({access}, {at}{exact}))"
+        if isinstance(items, dict) and items:
+            item, index = ("item", "index") if depth == 0 else (f"item{depth}", f"index{depth}")
+            element = parser_expression(items, item, f"{path}[${{{index}}}]", context, depth + 1)
+            if element is None:
+                return None
+            return f"{helper}Array({access}, {at}{limits}).map(({item}, {index}) => {element})"
+        return f"[...{helper}Array({access}, {at}{limits})]"
+    if kind == "object":
+        if isinstance(node.get("properties"), dict) and node["properties"]:
+            row = f"row{depth}"
+            fields = object_fields(node, row, path, context, depth + 1)
+            return None if fields is None else f"(({row}) => ({{ {', '.join(fields)} }}))({helper}Object({access}, {at}))"
+        extra = node.get("additionalProperties")
+        if isinstance(extra, dict) and extra:
+            key, value = f"key{depth}", f"value{depth}"
+            element = parser_expression(extra, value, f"{path}.${{{key}}}", context, depth + 1)
+            return None if element is None else f"Object.fromEntries(Object.entries({helper}Object({access}, {at})).map(([{key}, {value}]) => [{key}, {element}]))"
+        return f"{helper}Object({access}, {at})"
+    return None
+
+
+def render_parser(name: str, definition: dict, context: Context, declared: dict[str, bool] | None = None) -> str | None:
+    if definition.get("type") == "object" and isinstance(definition.get("properties"), dict) and definition["properties"]:
+        lines = object_fields(definition, "row", "${at}", context, 0, declared)
+        if lines is None:
+            return None
+        body = "\n".join(f"    {line}," for line in lines)
+        return f'export function parse{name}(value: unknown, at = "$"): {name} {{\n  const row = {context.helper}Object(value, at);\n  return {{\n{body}\n  }};\n}}\n'
+    expression = parser_expression(definition, "value", "${at}", context, 0)
+    return f'export function parse{name}(value: unknown, at = "$"): {name} {{\n  return {expression};\n}}\n' if expression else None
+
+

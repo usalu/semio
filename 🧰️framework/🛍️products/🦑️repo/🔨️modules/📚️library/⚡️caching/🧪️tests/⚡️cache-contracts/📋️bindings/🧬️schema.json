@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bindings",
+    "conflict",
+    "delegation"
+  ],
+  "properties": {
+    "bindings": {
+      "const": [
+        {
+          "name": "invocation",
+          "role": "original"
+        },
+        {
+          "name": "invocationNode",
+          "role": "source-node"
+        }
+      ]
+    },
+    "conflict": {
+      "const": [
+        {
+          "name": "invocation",
+          "role": "original"
+        },
+        {
+          "name": "invocation",
+          "role": "source-node"
+        }
+      ]
+    },
+    "delegation": {
+      "const": {
+        "input": [
+          "show",
+          "projects"
+        ],
+        "expected": [
+          "show",
+          "projects"
+        ]
+      }
+    }
+  }
+}

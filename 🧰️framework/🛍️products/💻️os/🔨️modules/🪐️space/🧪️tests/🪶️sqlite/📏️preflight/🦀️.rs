@@ -1,13 +1,13 @@
 //! 📏️ Public preflight borrows actual typed owner state and admits concrete traversal scratch.
-use semio_framework_os_kernel as store;
-use store::sqlite_snapshot::*;
+
+use semio_framework_io_sqlite_snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::fmt::Debug;
 
-pub(crate) fn verify<S:store::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+Clone+PartialEq+Debug>(
+pub fn verify<S:semio_framework_os_store_text_io::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+Clone+PartialEq+Debug>(
  short:&S,long:&S,sql:&str,rows:usize,field_bytes:usize,cancel_at:usize,
  observe:fn(&mut dyn FnMut()->Result<(),ValueError>)->(Result<(),ValueError>,usize),
- native:&mut store::io::io_mechanism::IoRunControl<'_, '_>,
+ native:&mut semio_framework_os_io::io_mechanism::IoRunControl<'_, '_>,
 ){
  let mut unchanged=semio_framework_value::retirement::controlled::ControlledRetirement::new(long.clone()).unwrap_or_else(|_|panic!("original preflight comparison specimen custody"));
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
@@ -21,7 +21,7 @@ pub(crate) fn verify<S:store::os_store::serialization::ArtifactSqliteSnapshotHos
   let mut decoded=semio_framework_value::retirement::controlled::ControlledRetirement::new(decoded).unwrap_or_else(|_|panic!("original preflight decoded specimen custody"));
   close_specimen(&mut decoded,&mut input_owner);
   drop(input_owner);
-  let output_bytes=match encoded{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};
+  let output_bytes=match encoded{semio_framework_os_io::IoPayload::Binary(bytes)=>bytes.len(),semio_framework_os_io::IoPayload::Text(text)=>text.len()};
   assert!(output_bytes>0);
   let defaults=SqliteDatabaseLimits::default();
   let mut callback=|_|true;
@@ -88,6 +88,6 @@ pub(crate) fn verify<S:store::os_store::serialization::ArtifactSqliteSnapshotHos
  close_specimen(&mut unchanged,&mut native.snapshot_decode().unwrap());
 }
 
-fn close_specimen<S:semio_framework_value::retirement::RetireOwned>(original:&mut semio_framework_value::retirement::controlled::ControlledRetirement<S>,owner:&mut store::NativeSnapshotDecodeOwner<'_, '_>){
+fn close_specimen<S:semio_framework_value::retirement::RetireOwned>(original:&mut semio_framework_value::retirement::controlled::ControlledRetirement<S>,owner:&mut semio_framework_os_io::control::NativeSnapshotDecodeOwner<'_, '_>){
  while !original.terminal_is_empty(){let grant=owner.remaining_grant();let capacity=original.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap();owner.native().checkpoint().unwrap();owner.native().charge(capacity).unwrap();let result=original.step(grant);let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};owner.record_progress(progress).unwrap();let step=result.unwrap();assert!(step.progress().copied_items!=0||original.terminal_is_empty());}
 }

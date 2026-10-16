@@ -1,14 +1,14 @@
 /** 🧪️ Layout parent facets retain the live drawing payload while enforcing its child identity. */
-import artifactReferenceSchema from "../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema } from "@semio-tech/schema-ts/artifact-reference";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
-import { assertDocumentContractOracle } from "../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
+import { assertDocumentContractOracle } from "@semio-tech/schema-ts/oracles/document";
 import ioSchema from "../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import blobSchema from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🔣️.json" with { type: "json" };
 import childSchema from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import linkSchema from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔣️.json" with { type: "json" };
 import drawingSchema from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🔣️.json" with { type: "json" };
-import dictionarySchema from "../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🔣️.json" with { type: "json" };
+import { dictionarySchema } from "@semio-tech/value-ts/dictionary";
 import artifactSchema from "../../../../🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json" with { type: "json" };
 import snapshotSchema from "../../../../🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../../../🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json" with { type: "json" };
@@ -33,7 +33,7 @@ export function testLayoutDocumentContractOracle(): void {
   const missingDrawingTexts = structuredClone(vectors.diff) as Record<string, unknown>;
   delete missingDrawingTexts.drawingTexts;
   const invalidEntry = structuredClone(vectors.diff);
-  invalidEntry.dataFields.entries.inserted[0].row = { questionId: "unsigned", value: { kind: "unsigned", high: -1, low: 0 } } as typeof invalidEntry.dataFields.entries.inserted[0].row;
+  invalidEntry.dataFields.entries.inserted[0].row = { questionId: "unsigned", value: { kind: "unsigned", high: -1, low: 0 } } as (typeof invalidEntry.dataFields.entries.inserted)[0]["row"];
   assertDocumentContractOracle({
     name: "Layout",
     dependencies: [ioSchema, blobSchema, childSchema, linkSchema, drawingSchema, dictionarySchema,artifactReferenceSchema],

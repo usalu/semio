@@ -1,54 +1,51 @@
 //! 🩹️ Retained fixed-admission reconciliation for mounted plugin surfaces.
 
-use super::instance_lifetime::NativeCloseKey;
+use semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey;
 use semio_framework_job::StepContext;
 use semio_framework_ui_contract as ui_contract;
 use semio_framework_ui_runtime::ComponentTree;
-use semio_framework_ui_runtime::{
-    ComponentTreeProducer, ComponentTreeProducerStep, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected, SurfaceReconcileReservation, SurfaceReconcileTerminal,
-    SurfaceReconciler, SURFACE_RECONCILE_ADMISSION_SLOTS,
-};
+use semio_framework_ui_runtime::{ComponentTreeProducer, ComponentTreeProducerStep, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected, SurfaceReconcileReservation, SurfaceReconcileTerminal, SurfaceReconciler, SURFACE_RECONCILE_ADMISSION_SLOTS};
 use semio_framework_ui_runtime::{SurfaceReconcileOutputReservation, SurfaceReconcileOutputTransfer, SurfaceReconcileOutputs};
 use std::cell::RefCell;
 
 const READY_PATCH_CAPACITY: usize = SURFACE_RECONCILE_ADMISSION_SLOTS;
 
 struct SurfaceSlot {
-    key: NativeCloseKey,
+    pub key: NativeCloseKey,
     output_index: Option<usize>,
-    surface: ui_contract::SurfaceId,
-    pub(crate) generation: u64,
+    pub surface: ui_contract::SurfaceId,
+    pub generation: u64,
     acknowledged_revision: ui_contract::UiRevision,
-    cancelled: bool,
+    pub cancelled: bool,
     pending_render: bool,
     pending_render_source: Option<ui_contract::UiTextOriginalCopy>,
     reconciler: Option<SurfaceReconciler>,
-    producer: Option<MountedTreeProducer>,
-    job: Option<SurfaceReconcileJob>,
+    pub producer: Option<MountedTreeProducer>,
+    pub job: Option<SurfaceReconcileJob>,
 }
 
 struct MountedTreeProducer {
     reconciler: Option<SurfaceReconciler>,
-    reservation: Option<SurfaceReconcileReservation>,
+    pub reservation: Option<SurfaceReconcileReservation>,
     rejected_index: usize,
-    authority: Box<ComponentTreeProducer>,
-    outcome: Option<ComponentTreeProducerStep>,
+    pub authority: Box<ComponentTreeProducer>,
+    pub outcome: Option<ComponentTreeProducerStep>,
 }
 
 struct MountedTreeTerminal {
-    key: NativeCloseKey,
-    instance: Option<u32>,
+    pub key: NativeCloseKey,
+    pub instance: Option<u32>,
     surface_index: Option<usize>,
-    surface: ui_contract::SurfaceId,
+    pub surface: ui_contract::SurfaceId,
     reconciler: Option<SurfaceReconciler>,
-    reservation: Option<SurfaceReconcileReservation>,
-    authority: Option<Box<ComponentTreeProducer>>,
-    close: bool,
+    pub reservation: Option<SurfaceReconcileReservation>,
+    pub authority: Option<Box<ComponentTreeProducer>>,
+    pub close: bool,
 }
 
 impl MountedTreeTerminal {
     /// 🧹️ The original source and native resources retire before the separately funded native shell release.
-    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if let Some(authority) = self.authority.as_mut() {
             if !authority.close_step_on_original(cx)? || !authority.terminal_is_empty() { return Ok(false); }
             let capacity=ComponentTreeProducer::required_capacity_bytes();let grant=cx.retained_grant();
@@ -66,35 +63,35 @@ impl MountedTreeTerminal {
         Ok(true)
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.authority.is_none() && self.reservation.is_none() && self.reconciler.is_none()
     }
 }
 
 struct TerminalSlot {
-    key: NativeCloseKey,
-    instance: Option<u32>,
-    authority: SurfaceReconcileTerminal,
-    close: bool,
+    pub key: NativeCloseKey,
+    pub instance: Option<u32>,
+    pub authority: SurfaceReconcileTerminal,
+    pub close: bool,
 }
 
 struct RejectedSlot {
-    key: NativeCloseKey,
-    surface: ui_contract::SurfaceId,
-    authority: SurfaceReconcileRejected,
+    pub key: NativeCloseKey,
+    pub surface: ui_contract::SurfaceId,
+    pub authority: SurfaceReconcileRejected,
 }
 
 struct ReadySlot {
-    pub(crate) generation: u64,
-    key: NativeCloseKey,
-    outputs: SurfaceReconcileOutputs,
-    reservation: Option<SurfaceReconcileOutputReservation>,
-    published: bool,
-    pub(crate) closing: bool,
+    pub generation: u64,
+    pub key: NativeCloseKey,
+    pub outputs: SurfaceReconcileOutputs,
+    pub reservation: Option<SurfaceReconcileOutputReservation>,
+    pub published: bool,
+    pub closing: bool,
 }
 
 impl ReadySlot {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<bool, &'static str> {
+    pub fn close_step(&mut self, items: usize, bytes: usize) -> Result<bool, &'static str> {
         self.closing = true;
         if let Some(reservation) = self.reservation.as_mut() {
             if reservation.close_step(items)?.complete {
@@ -107,21 +104,21 @@ impl ReadySlot {
 }
 
 struct UnadmittedSlot {
-    key: NativeCloseKey,
-    pub(crate) generation: u64,
+    pub key: NativeCloseKey,
+    pub generation: u64,
 }
 
 /// 🎟️ Exact mounted render reservation; the tree cannot exist before its fixed slot does.
 pub struct MountedReconcileGrant {
-    key: NativeCloseKey,
+    pub key: NativeCloseKey,
     output_index: usize,
-    state: std::rc::Rc<RefCell<PatchTrackerState>>,
-    pub(crate) index: usize,
+    pub state: std::rc::Rc<RefCell<PatchTrackerState>>,
+    pub index: usize,
     surface_index: usize,
     rejected_index: usize,
-    pub(crate) generation: u64,
-    owner: MountedReconcileOwner,
-    active: bool,
+    pub generation: u64,
+    pub owner: MountedReconcileOwner,
+    pub active: bool,
 }
 
 #[expect(clippy::large_enum_variant, reason = "The grant keeps its reconciler and reservation inline until the exact ownership transfer; an extra heap owner would escape that pre-admitted storage.")]
@@ -220,7 +217,7 @@ impl MountedReconcileGrant {
     /// `PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT`'s own doc records the same actor spinning with
     /// `acks=0` for over a thousand consecutive continuations (ticket
     /// 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5 and §8.1, wave B48 §3).
-    fn release(&mut self, state: &mut PatchTrackerState) {
+    pub fn release(&mut self, state: &mut PatchTrackerState) {
         self.active = false;
         if state.unadmitted[self.index].as_ref().is_some_and(|slot| slot.generation == self.generation) {
             state.unadmitted[self.index] = None;
@@ -268,26 +265,26 @@ impl Drop for MountedReconcileGrant {
 
 #[derive(Clone, Copy)]
 struct ClosingInstance {
-    instance: u32,
-    key: NativeCloseKey,
-    active: bool,
-    complete: bool,
+    pub instance: u32,
+    pub key: NativeCloseKey,
+    pub active: bool,
+    pub complete: bool,
 }
 
 struct PatchTrackerState {
-    slots: Box<[Option<SurfaceSlot>]>,
-    rejected: Box<[Option<RejectedSlot>]>,
+    pub slots: Box<[Option<SurfaceSlot>]>,
+    pub rejected: Box<[Option<RejectedSlot>]>,
     terminals: Box<[Option<TerminalSlot>]>,
     producer_terminals: Box<[Option<MountedTreeTerminal>]>,
     rejected_reserved: Box<[Option<u64>]>,
-    deferred: Box<[Option<ui_contract::SurfaceId>]>,
-    unadmitted: Box<[Option<UnadmittedSlot>]>,
-    closing_instances: Box<[Option<ClosingInstance>]>,
-    ready: Box<[Option<ReadySlot>]>,
-    next_generation: u64,
+    pub deferred: Box<[Option<ui_contract::SurfaceId>]>,
+    pub unadmitted: Box<[Option<UnadmittedSlot>]>,
+    pub closing_instances: Box<[Option<ClosingInstance>]>,
+    pub ready: Box<[Option<ReadySlot>]>,
+    pub next_generation: u64,
     generation_exhausted: bool,
     drive_cursor: usize,
-    close_cursor: usize,
+    pub close_cursor: usize,
     output_fault: Option<(NativeCloseKey, &'static str, bool)>,
     /// 🩺️ Why the LAST mounted render reservation was refused, and for which surface. A refusal is not a
     /// fault — the turn defers that render and retries — but eight of the eleven refusal predicates in
@@ -339,7 +336,7 @@ fn fixed_slots<T>(capacity: usize) -> Box<[Option<T>]> {
 /// 🧵️ Fixed surface, rejected-owner, terminal-owner, and ready-publication authority.
 #[derive(Default)]
 pub struct PatchTracker {
-    state: std::rc::Rc<RefCell<PatchTrackerState>>,
+    pub state: std::rc::Rc<RefCell<PatchTrackerState>>,
 }
 
 impl PatchTracker {
@@ -408,13 +405,13 @@ impl PatchTracker {
         Ok(generation)
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn retain_unadmitted(&self, surface: String, tree: ComponentTree) -> Result<u64, (String, ComponentTree)> {
         self.begin(surface, tree)
     }
 
     #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
-    pub(crate) fn reserve_mounted(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
+    pub fn reserve_mounted(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
         if surface_instance(surface.as_ref()) != Some(key.instance()) {
             return Err(self.refuse_reserve(surface, "instance-mismatch"));
         }
@@ -772,7 +769,7 @@ impl PatchTracker {
         Some((instance, format!("{surface} [reconciler g{generation}]: {fault:?}")))
     }
 
-    pub(crate) fn ready_patch_key(&self) -> Result<Option<(NativeCloseKey, u64)>, &'static str> {
+    pub fn ready_patch_key(&self) -> Result<Option<(NativeCloseKey, u64)>, &'static str> {
         let state = self.state.try_borrow().map_err(|_| "patch publication target is busy")?;
         Ok(next_ready_index(&state).map(|index| {
             let ready = state.ready[index].as_ref().expect("selected output");
@@ -784,13 +781,13 @@ impl PatchTracker {
     /// used to compare a ready output against GLOBALLY. A law reads it to prove the widened gate
     /// admits an output while a DIFFERENT allocation's lower-generation job is still running, which is
     /// exactly the state the global gate refused.
-    #[cfg(test)]
-    pub(super) fn in_flight_generations(&self) -> Vec<(NativeCloseKey, u64)> {
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn in_flight_generations(&self) -> Vec<(NativeCloseKey, u64)> {
         let state = self.state.borrow();
         state.slots.iter().flatten().filter(|slot| slot.producer.is_some() || slot.job.is_some()).map(|slot| (slot.key, slot.generation)).collect()
     }
 
-    pub(crate) fn take_ready_patch_into(&self, key: NativeCloseKey, generation: u64, target: &mut Option<SurfaceReconcileReadyPatch>, admitted_bytes: usize) -> Result<bool, &'static str> {
+    pub fn take_ready_patch_into(&self, key: NativeCloseKey, generation: u64, target: &mut Option<SurfaceReconcileReadyPatch>, admitted_bytes: usize) -> Result<bool, &'static str> {
         if target.is_some() {
             return Ok(false);
         }
@@ -810,7 +807,7 @@ impl PatchTracker {
         Ok(true)
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn take_ready_patch(&self) -> Option<SurfaceReconcileReadyPatch> {
         let (key, generation) = self.ready_patch_key().unwrap()?;
         let mut target = None;
@@ -818,7 +815,7 @@ impl PatchTracker {
         target
     }
 
-    pub(crate) fn mark_rejected(&self, surface: &str, expected_generation: u64) -> bool {
+    pub fn mark_rejected(&self, surface: &str, expected_generation: u64) -> bool {
         let mut state = self.state.borrow_mut();
         let Some(index) = state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.surface.as_ref() == surface)) else { return false };
         let current_generation = state.slots[index].as_ref().expect("matched rejection surface").generation;
@@ -911,7 +908,7 @@ impl PatchTracker {
             .unwrap_or_default()
     }
 
-    pub(crate) fn preflight_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
+    pub fn preflight_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
         let state = self.state.try_borrow().map_err(|_| "patch close reservation is busy")?;
         if let Some(closing) = state.closing_instances.iter().flatten().find(|closing| closing.instance == key.instance()) {
             return if closing.key == key { Ok(()) } else { Err("patch close reservation belongs to another allocation") };
@@ -931,7 +928,7 @@ impl PatchTracker {
         Ok(())
     }
 
-    pub(crate) fn reserve_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
+    pub fn reserve_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
         let mut state = self.state.try_borrow_mut().map_err(|_| "patch close reservation is busy")?;
         if let Some(closing) = state.closing_instances.iter().flatten().find(|closing| closing.instance == key.instance()) {
             return if closing.key == key { Ok(()) } else { Err("patch close reservation belongs to another allocation") };
@@ -950,19 +947,19 @@ impl PatchTracker {
         Ok(())
     }
 
-    pub(crate) fn activate_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
+    pub fn activate_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
         let mut state = self.state.try_borrow_mut().map_err(|_| "patch close reservation is busy")?;
         let closing = state.closing_instances.iter_mut().flatten().find(|closing| closing.key == key).ok_or("exact patch close reservation missing")?;
         closing.active = true;
         Ok(())
     }
 
-    pub(crate) fn close_instance_complete(&self, key: NativeCloseKey) -> Result<bool, &'static str> {
+    pub fn close_instance_complete(&self, key: NativeCloseKey) -> Result<bool, &'static str> {
         let state = self.state.try_borrow().map_err(|_| "patch close receipt is busy")?;
         state.closing_instances.iter().flatten().find(|closing| closing.key == key).map(|closing| closing.complete).ok_or("exact patch close receipt missing")
     }
 
-    pub(crate) fn release_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
+    pub fn release_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
         let mut state = self.state.try_borrow_mut().map_err(|_| "patch close receipt is busy")?;
         let closing = state.closing_instances.iter_mut().find(|closing| closing.is_some_and(|closing| closing.key == key && closing.complete)).ok_or("exact patch close receipt is not terminal")?;
         *closing = None;
@@ -1210,7 +1207,8 @@ fn next_ready_index(state: &PatchTrackerState) -> Option<usize> {
 /// against the chosen output — so one slow surface serialized every other surface's publication. That
 /// is the term `📓️ui-turn-patch-batching-2026-09-15.md` §7.1 names: 18 of 25 measured boot turns had
 /// exactly ONE surface ready while the wire could already carry sixteen.
-pub(super) fn ready_output_is_admissible(ready_key: NativeCloseKey, ready_generation: u64, in_flight: impl Iterator<Item = (NativeCloseKey, u64)>) -> bool {
+#[doc(hidden)]
+pub fn ready_output_is_admissible(ready_key: NativeCloseKey, ready_generation: u64, in_flight: impl Iterator<Item = (NativeCloseKey, u64)>) -> bool {
     !in_flight.into_iter().any(|(key, generation)| key == ready_key && generation < ready_generation)
 }
 
@@ -1308,7 +1306,8 @@ fn pending_render_ready(slot: &SurfaceSlot) -> bool {
 #[path="🔁️retry/🧪️tests/🦀️.rs"]
 pub mod original_retry_laws;
 
-fn has_work(state: &PatchTrackerState) -> bool {
+#[doc(hidden)]
+pub fn has_work(state: &PatchTrackerState) -> bool {
     state.output_fault.is_some()
         || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some() || pending_render_ready(slot))
         || state.terminals.iter().any(Option::is_some)
@@ -1319,7 +1318,8 @@ fn has_work(state: &PatchTrackerState) -> bool {
         || state.ready.iter().any(Option::is_some)
 }
 
-fn next_generation(state: &PatchTrackerState) -> Option<u64> {
+#[doc(hidden)]
+pub fn next_generation(state: &PatchTrackerState) -> Option<u64> {
     if state.generation_exhausted {
         return None;
     }
@@ -1344,6 +1344,18 @@ fn surface_instance(surface: &str) -> Option<u32> {
     surface.split(':').next()?.parse().ok()
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub mod tests;
+#[cfg(test)]
+extern crate semio_framework_os_kernel as dsl;
+
+semio_framework_plugin_abi::component_persistent_local! {
+    /// 🩹️ One `PatchTracker` shared by every instance this actor hosts (surfaces are already
+    /// namespaced by their own `surface` string, which today embeds the instance — see
+    /// `render_surface`'s key).
+    // 🌉️ `thread_local!` initializer expressions run in a plain (non-const, non-async) context —
+    // bridged via `resolve_ready` since every `::new()` here is a pure `Self::default()`.
+    pub static PATCHES: PatchTracker = PatchTracker::new();
+}

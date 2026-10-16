@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import JSON5 from "json5";
 import schema from "../../🧬️schema/🎬️draw-list/🔣️.json";
 import themeSchema from "../../🧬️schema/🎨️theme-color-fields/🔣️.json";
-import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {readModuleTreeSource} from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import {readCatalogSources,renderCatalogArtifacts} from "../../../🖼️assets/🔣️icons/🏗️builder/📽️projection/🟦️.ts";
 import {RUNTIME_ASSET_CHANNELS,RUNTIME_ASSET_FILES,installRuntimeAssets,runtimeAssetDeliveries} from "../../🔌️runtime-assets/🟦️.ts";

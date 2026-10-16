@@ -5,7 +5,7 @@
 use super::mutation_laws_fixture::{AddCounter, AddCounterTwice, Counter, CounterMutation};
 use protocol::{Mutation, MutationLeaf, SemanticMutation};
 use crate::{DslValue, ToValue};
-use super::super::{mutation_fixture_ops, mutation_input_schema_failures, mutation_label_failures, mutation_payload_round_trip_failures};
+use super::{mutation_fixture_ops, mutation_input_schema_failures, mutation_label_failures, mutation_payload_round_trip_failures};
 
 #[test]
 fn input_schemas_follow_the_descriptor_rows() {
@@ -95,7 +95,7 @@ impl SemanticMutation<Counter> for Unpublished {
 }
 
 fn witnesses() -> Vec<CounterMutation> {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("editability fixture");
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("fixture").as_str()).expect("editability fixture");
     fixture["cases"].as_array().expect("cases").iter().map(|case| semio_framework_pack_json::from_json_str(&case["wire"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a counter witness")).collect()
 }
 
@@ -103,7 +103,7 @@ fn witnesses() -> Vec<CounterMutation> {
 /// input schema and cannot emit foreign steps — which the static `schema mutation-editability` gate reaches from source alone.
 #[test]
 fn every_witness_reaches_its_editability_verdict() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("editability fixture");
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("fixture").as_str()).expect("editability fixture");
     for (op, case) in witnesses().iter().zip(fixture["cases"].as_array().expect("cases")) {
         let verdict = match (Mutation::<Counter>::input_schema(op).is_some(), Mutation::<Counter>::may_emit_foreign_steps(op)) {
             (_, true) => "foreign",

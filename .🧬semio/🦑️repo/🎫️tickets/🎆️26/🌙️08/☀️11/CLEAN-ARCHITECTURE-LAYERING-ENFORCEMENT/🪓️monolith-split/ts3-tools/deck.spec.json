@@ -1,0 +1,52 @@
+{
+ "file": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎞️presentation-react-deck/📍️stage.tsx",
+ "label": "deck",
+ "childRoot": "🧰️framework/🛍️products/🎤️presentation/🧪️tests",
+ "deleteParent": true,
+ "children": [
+  {
+   "folder": "🧰️presentation-deck-helpers",
+   "doc": "/** 🧰️ Shared helpers of the presentation react deck suites: the test source locator, the global stylesheet text and the stock reveal auto-animate matcher host.\n *\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the module under test\n */",
+   "stmts": [
+    "12-36"
+   ]
+  },
+  {
+   "folder": "🎬️reveal-morph",
+   "doc": "/** 🎬️ The presentation react deck, reveal morph: resolving the reveal arrangement with its morph companions, and the reveal text morph pairing.\n *\n * @see ../🧰️presentation-deck-helpers/🟦️.tsx — the shared source locator and helpers\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the module under test\n */",
+   "stmts": [
+    "38-200",
+    "1595-1695"
+   ]
+  },
+  {
+   "folder": "🖼️deck-rendering",
+   "doc": "/** 🖼️ The presentation react deck, rendering: mounting `PresentationDeck`, intro morph DOM, auto-animate sheets, figure crop, zoom and scroll math, pdf subsets and ghost anchors.\n *\n * @see ../🧰️presentation-deck-helpers/🟦️.tsx — the shared source locator and helpers\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the module under test\n */",
+   "stmts": [
+    "202-1519"
+   ]
+  },
+  {
+   "folder": "🔗️url-and-json-preview",
+   "doc": "/** 🔗️ The presentation react deck, bookmarks and preview: syncing the slide url and rendering the JSON preview tree.\n *\n * @see ../🧰️presentation-deck-helpers/🟦️.tsx — the shared source locator and helpers\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the module under test\n */",
+   "stmts": [
+    "1521-1593",
+    "3535-3551"
+   ]
+  },
+  {
+   "folder": "📐️interaction-geometry",
+   "doc": "/** 📐️ The presentation react deck, interaction geometry: ephemeral layout, marquee rules, flow offsets, measured bounds, resize and enlarge math.\n *\n * @see ../🧰️presentation-deck-helpers/🟦️.tsx — the shared source locator and helpers\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the module under test\n */",
+   "stmts": [
+    "1697-2102"
+   ]
+  },
+  {
+   "folder": "🖱️interaction-dom",
+   "doc": "/** 🖱️ The presentation react deck, interaction DOM: selecting, dragging, resizing, enlarging and resetting dispositions on a mounted deck.\n *\n * @see ../🧰️presentation-deck-helpers/🟦️.tsx — the shared source locator and helpers\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the module under test\n */",
+   "stmts": [
+    "2104-3533"
+   ]
+  }
+ ]
+}

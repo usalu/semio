@@ -1,4 +1,4 @@
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 /** 🧾️ Carries a bounded expected publication identity without issuing reader custody. */
 export interface DistributionCompileReceiptV1{readonly version:1;readonly mode:"prototype"|"release";readonly owner:"os:distribution-witness";readonly manifestSha256:string}

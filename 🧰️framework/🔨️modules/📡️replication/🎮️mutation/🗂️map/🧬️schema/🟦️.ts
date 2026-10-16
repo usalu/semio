@@ -1,5 +1,5 @@
 /** 🗂️ Framework-owned map changes preserve value presence and sequential preconditions. */
-import { parseDslValue, type DslValue } from "../../../../🌱️value/🧬️schema/🟦️.ts";
+import { parseDslValue, type DslValue } from "@semio-tech/value-ts/schema";
 
 export type MapPresence = "any" | "present" | "absent" | "never";
 export type MapEntryOperation<V> = { kind: "set"; value: V } | { kind: "remove" } | { kind: "reject" };

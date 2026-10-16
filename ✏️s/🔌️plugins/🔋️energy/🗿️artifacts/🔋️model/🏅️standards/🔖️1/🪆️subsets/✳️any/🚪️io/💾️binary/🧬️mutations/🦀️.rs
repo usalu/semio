@@ -21,12 +21,6 @@ pub fn decode_op(bytes: &[u8]) -> Result<EnergyModelMutation, protocol::Protocol
     EnergyModelMutation::decode_op(bytes)
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
 mod native_codec {
 use crate::EnergyModelMutation;
 

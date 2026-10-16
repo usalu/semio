@@ -18,6 +18,7 @@ use semio_framework_trace::record::{TraceOutcome, TraceRecord};
 use directory::os_directory::io::text::access_policy::directory_access_permits;
 use semio_hub_session_routes::directory_commands::resolve_bearer_user;
 use semio_hub_ledgers::guard::session_access_roles;
+use semio_hub_directory::{AuthSessionDirectory, SpaceDirectory};
 
 //#region 🔖️Directory
 async fn acquire_artifact_creation_actor(state: &HubState, space_id: &str, token: Option<&str>) -> Result<(ArtifactCreationActorV1, Vec<SocketBindingGuardV1>), StatusCode> {

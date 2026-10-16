@@ -17,11 +17,11 @@ export const readHistory = async (): Promise<HistoryRow[]> => {
   let parent: string | null = null;
   return (await mirror())
     .filter((node) => !node.key.includes("::") && /(^|[\/␟\u001f])framework\.history\.(entry\.\d+|mutation\.[^\/␟\u001f]+)$/.test(node.key))
-    .map((node, index) => {
-      const match = node.key.match(/(?:^|[\/␟\u001f])framework\.history\.(entry|mutation)\.([^\/␟\u001f]+)$/)!;
-      const kind = match[1] as "entry" | "mutation";
+    .map((node, index): HistoryRow => {
+      const match=node.key.match(/(?:^|[\/␟\u001f])framework\.history\.(entry|mutation)\.([^\/␟\u001f]+)$/),kind=match?.[1],key=match?.[2];
+      if((kind!=="entry"&&kind!=="mutation")||key===undefined)throw Error("Actual history mirror identity required");
       if (kind === "entry") parent = node.key;
-      return { id: node.key, kind, key: match[2], label: node.label.replace(/\s+/g, " ").trim(), text: `${node.label} ${node.description}`.replace(/\s+/g, " ").trim().slice(0, 400), expandable: node.expanded !== null, expanded: node.expanded === "true", parent: kind === "mutation" ? parent : null, index, icon: "" };
+      return { id: node.key, kind, key, label: node.label.replace(/\s+/g, " ").trim(), text: `${node.label} ${node.description}`.replace(/\s+/g, " ").trim().slice(0, 400), expandable: node.expanded !== null, expanded: node.expanded === "true", parent: kind === "mutation" ? parent : null, index, icon: "" };
     });
 };
 
@@ -30,16 +30,16 @@ const reactReadHistory = () =>
     () => {
       const rows = Array.from(document.querySelectorAll("[id]")).filter((el) => /(^|[\/␟])framework\.history\.(entry\.\d+|mutation\.[^\/␟]+)$/.test(el.id));
       let parent: string | null = null;
-      return rows.map((el, index) => {
-        const match = el.id.match(/(?:^|[\/␟])framework\.history\.(entry|mutation)\.([^\/␟]+)$/)!;
+      return rows.map((el, index): HistoryRow => {
+        const match=el.id.match(/(?:^|[\/␟])framework\.history\.(entry|mutation)\.([^\/␟]+)$/),kind=match?.[1],key=match?.[2];
+        if((kind!=="entry"&&kind!=="mutation")||key===undefined)throw Error("Actual history DOM identity required");
         const labelEl = el.querySelector('[data-slot="tree-label"]') as HTMLElement | null;
         const first = labelEl?.querySelector("span") as HTMLElement | null;
-        const kind = match[1] as "entry" | "mutation";
         if (kind === "entry") parent = el.id;
         return {
           id: el.id,
           kind,
-          key: match[2],
+          key,
           label: (first?.innerText ?? labelEl?.innerText ?? "").replace(/\s+/g, " ").trim(),
           text: [(el as HTMLElement).innerText, el.getAttribute("title") ?? "", ...Array.from(el.querySelectorAll("[title]")).map((node) => node.getAttribute("title") ?? "")].join(" ").replace(/\s+/g, " ").trim().slice(0, 400),
           expandable: el.hasAttribute("aria-expanded"),

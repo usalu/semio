@@ -1,17 +1,28 @@
 //! 🛠️ Small runtime helpers the instance family names: turn grants, render section, addressed view, internal fault.
 
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use std::sync::atomic::AtomicU64;
+use semio_framework_ui_runtime::ComponentTree;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
+use semio_framework_value::{FromValue, ToValue};
+use std::collections::HashMap;
+use crate::PluginApp;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use serde::Serialize;
 // 🚫️async: E1 pure error constructor consumed pervasively by sync closures
 // (`.map_err`/`.ok_or_else`) — see R9.
-pub(super) fn plugin_internal_fault(message: impl Into<String>) -> Fault {
+#[doc(hidden)]
+pub fn plugin_internal_fault(message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), message)
 }
-pub(crate) fn debug_runtime_line(line: impl std::fmt::Display) {
+#[doc(hidden)]
+pub fn debug_runtime_line(line: impl std::fmt::Display) {
     if semio_framework_trace::runtime_diagnostics_enabled() {
         eprintln!("{line}");
     }
 }
-pub(super) fn addressed_action_view(view: &ViewModel, address: &semio_framework::manifest::ActionAddress) -> Result<ViewModel, Fault> {
+#[doc(hidden)]
+pub fn addressed_action_view(view: &ViewModel, address: &semio_framework::manifest::ActionAddress) -> Result<ViewModel, Fault> {
     let projected = view.for_window_instance(&address.window_instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown action window instance {}", address.window_instance_id)))?;
     if projected.active_window_kind_id.as_deref() != Some(address.window_kind_id.as_str()) {
         return Err(plugin_internal_fault(format!("action window instance {} has a different kind than {}", address.window_instance_id, address.window_kind_id)));
@@ -22,10 +33,11 @@ pub(super) fn addressed_action_view(view: &ViewModel, address: &semio_framework:
 /// Retained actor ingress (`AppCommand::Command`) uses this rule so undo/redo
 /// reach `dispatch_framework_reserved_action` when the chrome addresses a window that does not
 /// declare the verb (or is absent from `window_instances`).
-pub(crate) fn admit_addressed_action_view(view: &ViewModel, address: &semio_framework::manifest::ActionAddress) -> Result<ViewModel, Fault> {
+#[doc(hidden)]
+pub fn admit_addressed_action_view(view: &ViewModel, address: &semio_framework::manifest::ActionAddress) -> Result<ViewModel, Fault> {
     match addressed_action_view(view, address) {
         Ok(projected) => Ok(projected),
-        Err(_) if crate::reserved_jobs::is_framework_reserved_action_id(&address.action_id) => Ok(view.clone()),
+        Err(_) if semio_framework_plugin_job::reserved_jobs::is_framework_reserved_action_id(&address.action_id) => Ok(view.clone()),
         Err(fault) => Err(fault),
     }
 }
@@ -53,19 +65,22 @@ fn canonical_section_json<T: Serialize>(section: &HashMap<String, T>) -> String 
 /// 🛍️ App-STATIC and view-independent: the catalogue is the app's own registered operator set,
 /// already canonical JSON authored by the app, so it needs neither `view_state` nor the
 /// `HashMap` key-ordering pass the three window-scoped sections above go through.
-pub(crate) fn original_render_section<PA: PluginApp>(app: &mut PA, section: semio_framework::UiRefreshSection, view_state: &ViewModel) -> Result<ComponentTree, Fault> {
+#[doc(hidden)]
+pub fn original_render_section<PA: PluginApp>(app: &mut PA, section: semio_framework::UiRefreshSection, view_state: &ViewModel) -> Result<ComponentTree, Fault> {
     let payload = match section {
         semio_framework::UiRefreshSection::Engagements => canonical_section_json(&::semio_framework_async::poll::resolve_ready(app.window_engagements(view_state))),
         semio_framework::UiRefreshSection::Measures => canonical_section_json(&::semio_framework_async::poll::resolve_ready(app.window_measures(view_state))),
         semio_framework::UiRefreshSection::Tools => canonical_section_json(&::semio_framework_async::poll::resolve_ready(app.tool_measures(view_state))),
         semio_framework::UiRefreshSection::Catalogue => ::semio_framework_async::poll::resolve_ready(app.app_catalogue_json()),
     };
-    crate::window_surface::section_component_tree(section, &payload).map_err(|error| plugin_internal_fault(error.to_string()))
+    semio_framework_plugin_window_transient::section_component_tree(section, &payload).map_err(|error| plugin_internal_fault(error.to_string()))
 }
 /// 🧮️ Intersects two original authorities independently without creating new currency.
-pub(crate) fn original_plugin_turn_grant(policy:RetainedCloneGrant,remaining:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:policy.maximum_items.min(remaining.maximum_items),maximum_copy_bytes:policy.maximum_copy_bytes.min(remaining.maximum_copy_bytes),maximum_capacity_bytes:policy.maximum_capacity_bytes.min(remaining.maximum_capacity_bytes),maximum_release_bytes:policy.maximum_release_bytes.min(remaining.maximum_release_bytes),maximum_depth:policy.maximum_depth.min(remaining.maximum_depth)}}
+#[doc(hidden)]
+pub fn original_plugin_turn_grant(policy:RetainedCloneGrant,remaining:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:policy.maximum_items.min(remaining.maximum_items),maximum_copy_bytes:policy.maximum_copy_bytes.min(remaining.maximum_copy_bytes),maximum_capacity_bytes:policy.maximum_capacity_bytes.min(remaining.maximum_capacity_bytes),maximum_release_bytes:policy.maximum_release_bytes.min(remaining.maximum_release_bytes),maximum_depth:policy.maximum_depth.min(remaining.maximum_depth)}}
 /// 🧾️ What one host turn still owns after its units spent `spent`: every consumed axis shrinks, nesting depth is not consumed.
-pub(crate) fn remaining_plugin_turn_grant(turn:RetainedCloneGrant,spent:RetainedCloneProgress)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:turn.maximum_items.saturating_sub(spent.copied_items),maximum_copy_bytes:turn.maximum_copy_bytes.saturating_sub(spent.copied_bytes),maximum_capacity_bytes:turn.maximum_capacity_bytes.saturating_sub(spent.retained_capacity_bytes),maximum_release_bytes:turn.maximum_release_bytes.saturating_sub(spent.released_bytes),maximum_depth:turn.maximum_depth}}
+#[doc(hidden)]
+pub fn remaining_plugin_turn_grant(turn:RetainedCloneGrant,spent:RetainedCloneProgress)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:turn.maximum_items.saturating_sub(spent.copied_items),maximum_copy_bytes:turn.maximum_copy_bytes.saturating_sub(spent.copied_bytes),maximum_capacity_bytes:turn.maximum_capacity_bytes.saturating_sub(spent.retained_capacity_bytes),maximum_release_bytes:turn.maximum_release_bytes.saturating_sub(spent.released_bytes),maximum_depth:turn.maximum_depth}}
 
 /// 🐞️ `[TRACE]` last maintenance stage entered — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
 pub static LAST_MAINTENANCE_STAGE: AtomicU64 = AtomicU64::new(0);

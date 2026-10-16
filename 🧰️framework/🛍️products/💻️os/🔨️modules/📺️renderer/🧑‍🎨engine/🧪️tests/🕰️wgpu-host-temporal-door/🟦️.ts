@@ -1,7 +1,6 @@
 import Ajv2020 from "ajv/dist/2020.js";
 import { describe, expect, it } from "vitest";
-import schema from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🧬️schema/🔣️.json";
-import fixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🧪️tests/🧫️fixtures/🔣️.json";
+import { hostTemporalFormatSchema as schema, hostTemporalFormatFixture as fixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import {
   HOST_TEMPORAL_DATE_OPTIONS,
   HOST_TEMPORAL_DATE_TIME_OPTIONS,

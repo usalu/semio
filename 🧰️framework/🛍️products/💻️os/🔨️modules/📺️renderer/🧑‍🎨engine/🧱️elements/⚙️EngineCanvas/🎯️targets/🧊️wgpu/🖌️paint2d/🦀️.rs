@@ -151,7 +151,7 @@ pub fn text_editor_context_menu_target(scene: &UiComponentSceneNode, inner: Rect
 /// 🧪️ `pick_target_hits`, for the surface-context-menu law (this module's own tests never construct
 /// a live engine host, and the JSON shape is the contract that drifts).
 #[cfg(test)]
-pub fn pick_target_hits_for_test(json: &str) -> Vec<ui_wgpu::wgpu::ContextMenuHit> {
+pub fn pick_target_hits_for_test(json: &str) -> Vec<semio_framework_ui_layout::layout::ContextMenuHit> {
     pick_target_hits(json)
 }
 

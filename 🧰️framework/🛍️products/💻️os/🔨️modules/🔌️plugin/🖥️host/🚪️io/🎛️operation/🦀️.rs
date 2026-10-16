@@ -14,8 +14,7 @@ pub(crate) mod wasmtime;
 mod tests;
 
 mod return_types{pub use semio_framework_plugin_host_wit::actor_bindings::semio::framework::{effects,ui,types,pure};pub use semio_framework_plugin_host_wit::actor_bindings::exports::semio::framework::{reactor,codec};}
-#[path="../../../🚪️io/🛂️authority/📤️return/🦀️.rs"]
-pub(crate) mod return_walk;
+pub(crate) mod return_walk{semio_framework_plugin_guest_contract::return_walk_template!();}
 
 pub use wasmtime::{OperationHostStore, ReceiveError, allocation_kind, receive, receive_retained, register, request, return_bytes};
 pub use slot::{OperationReply, OperationRequest, OperationSlot};

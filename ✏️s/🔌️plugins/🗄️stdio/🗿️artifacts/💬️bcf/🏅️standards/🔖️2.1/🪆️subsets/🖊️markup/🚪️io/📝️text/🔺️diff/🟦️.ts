@@ -49,5 +49,5 @@ export const stdioBcf21MarkupDiffTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseBcfDiffText(value: unknown, at = "$"): BcfDiffText {
-  return stdioBcf21MarkupDiffTextGuardObject(value, `${at}`);
+  return stdioBcf21MarkupDiffTextGuardString(value, `${at}`);
 }

@@ -16,8 +16,8 @@ pub enum RasterStackContent {Pixel {width:Option<u32>,height:Option<u32>,image_k
 pub struct RasterStackLayer {pub id:String,pub visible:bool,pub opacity:f64,pub blend_mode:CompositeBlend,pub transform:RasterStackTransform,pub mask:Option<RasterStackMask>,pub content:RasterStackContent}
 pub struct RasterStackInput {pub layers:Vec<RasterStackLayer>,pub images:BTreeMap<String,Arc<RasterImage>>}
 pub struct RasterStackResult {pub image:RasterImage,pub origin:[f64;2],pub empty:bool}
-struct Preparation {image:Arc<RasterImage>,coverage:Arc<crate::retirement::MaskBytes>,offset:usize}
-struct Planner<'a> {source:&'a BTreeMap<String,Arc<RasterImage>>,images:BTreeMap<String,Arc<RasterImage>>,preparations:Vec<Preparation>,mask_indices:BTreeMap<String,usize>,mask_slots:Vec<usize>,ids:std::collections::BTreeSet<String>,bounds:[f64;4],commands:usize,coverage_total:usize}
+struct Preparation {pub image:Arc<RasterImage>,pub coverage:Arc<crate::retirement::MaskBytes>,offset:usize}
+struct Planner<'a> {pub source:&'a BTreeMap<String,Arc<RasterImage>>,pub images:BTreeMap<String,Arc<RasterImage>>,preparations:Vec<Preparation>,mask_indices:BTreeMap<String,usize>,mask_slots:Vec<usize>,ids:std::collections::BTreeSet<String>,bounds:[f64;4],pub commands:usize,coverage_total:usize}
 fn matrix(value:RasterStackTransform)->Result<CompositeAffine,PixelEditError>{
     let result=[value.a,value.b,value.c,value.d,value.x,value.y];inverse(result)?;Ok(result)
 }
@@ -87,7 +87,7 @@ impl Planner<'_> {
     }
 }
 /// 🧵️ Converts unique mask buffers within bounded grants before publishing a composite.
-pub struct RasterStackJob {pending:Option<CompositeInput>,composite:Option<CompositeJob>,composite_retirement:Option<CompositeRetirement>,output:Option<RasterImage>,completed:usize,done:bool,preparations:Vec<Preparation>,mask_slots:Vec<usize>,preparation:usize,prepared:usize,total:usize,origin:[f64;2],empty:bool,cancelled:bool}
+pub struct RasterStackJob {pending:Option<CompositeInput>,#[doc(hidden)] pub composite:Option<CompositeJob>,#[doc(hidden)] pub composite_retirement:Option<CompositeRetirement>,#[doc(hidden)] pub output:Option<RasterImage>,#[doc(hidden)] pub completed:usize,#[doc(hidden)] pub done:bool,preparations:Vec<Preparation>,mask_slots:Vec<usize>,preparation:usize,prepared:usize,#[doc(hidden)] pub total:usize,#[doc(hidden)] pub origin:[f64;2],#[doc(hidden)] pub empty:bool,cancelled:bool}
 impl RasterStackJob {
     pub fn new(input:RasterStackInput)->Result<Self,PixelEditError>{
         if input.images.len()>1024{return Err(PixelEditError::Invalid("Image count exceeds compositor budget"));}
@@ -128,6 +128,3 @@ impl RasterStackJob {
     }
     pub fn cancel(&mut self){self.cancelled=true;self.pending=None;self.composite=None;self.composite_retirement=None;self.output=None;self.preparations.clear();self.mask_slots.clear();}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

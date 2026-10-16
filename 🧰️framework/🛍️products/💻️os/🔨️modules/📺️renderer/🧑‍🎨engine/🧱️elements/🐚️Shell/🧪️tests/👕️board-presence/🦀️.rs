@@ -4,8 +4,9 @@
 //! roster becomes the overlays the chrome paints (`board_peer_overlays`) — held to the shared fixture
 //! `🧑‍🎨engine/🧫️fixtures/👕️canvas-presence/🔣️.json`, whose TypeScript runner holds React's board to it.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::{mouse_pointer, paint_component_pointer_documents, pointer_interaction, tree_pointer_record};
 use super::*;
-use crate::shell::section_fixtures::{numeric, peer};
+use semio_framework_os_renderer_wgpu_shell_windows::section_fixtures::{numeric, peer};
 use serde_json::Value;
 use store_sync::PresenceViewKind;
 
@@ -52,8 +53,8 @@ fn painted_board_with_input(window_id: &str, bounds: Rect, camera: &Value) -> (S
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.dock.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
     shell.dock.dock_tabs = ShellDock::default();
-    let scene = ui_wgpu::wgpu::Board2dScene::base("{}".into(), camera.to_string(), true);
-    let surface = ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Board2d, &scene).expect("bounded Board2d scene encodes");
+    let scene = semio_framework_ui_scene_plane::Board2dScene::base("{}".into(), camera.to_string(), true);
+    let surface = semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::Board2d, &scene).expect("bounded Board2d scene encodes");
     let records = vec![shell_input_tests::tree_pointer_record(1, window_id, ui_contract::Component::Surface(surface), &[], None)];
     let document = shell.windows.publish_surface_records(window_id, records).expect("board document publishes");
     shell.dock.dock_window_plan = vec![(window_id.to_string(), bounds)];
@@ -74,7 +75,7 @@ fn window_view_json(view: &PresenceWindowView) -> Value {
 
 #[test]
 fn a_painted_board_publishes_its_scene_camera_and_the_world_point_under_the_shell_pointer() {
-    let _serialized = crate::engine_canvas::engine_surface_law_guard();
+    let _serialized = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard();
     for case in fixture()["publish"].as_array().expect("publish cases").iter().map(under_own_window) {
         let mut shell = painted_board(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
         shell.directory.presence_pointer = case["pointer"].as_array().map(|pointer| (pointer[0].as_f64().expect("x") as f32, pointer[1].as_f64().expect("y") as f32));
@@ -85,7 +86,7 @@ fn a_painted_board_publishes_its_scene_camera_and_the_world_point_under_the_shel
 
 #[test]
 fn a_painted_board_paints_the_verified_roster_and_never_its_own_actor() {
-    let _serialized = crate::engine_canvas::engine_surface_law_guard();
+    let _serialized = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard();
     for case in fixture()["paint"].as_array().expect("paint cases").iter().map(under_own_window) {
         let mut shell = painted_board(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
         shell.directory.presence_peers = case["roster"].as_array().expect("roster").iter().map(peer).collect();
@@ -115,7 +116,7 @@ fn a_painted_board_paints_the_verified_roster_and_never_its_own_actor() {
 /// surface claims still becomes the presence pointer, so the heartbeat's window view is the fixture's expected view.
 #[test]
 fn a_pointer_the_renderer_routes_over_a_painted_board_is_the_presence_pointer_its_view_publishes() {
-    let _serialized = crate::engine_canvas::engine_surface_law_guard();
+    let _serialized = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard();
     let mut claimed = 0;
     for case in fixture()["publish"].as_array().expect("publish cases").iter().filter(|case| case["pointer"].is_array()).map(under_own_window) {
         let (shell, input) = painted_board_with_input(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);

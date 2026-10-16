@@ -223,14 +223,58 @@ export function renderCrateManifest(spec: ManifestSpec): string {
   return lines.join("\n").replace(/\n{3,}/gu, "\n\n").trimEnd() + "\n";
 }
 
-/** 🗂️ Adds members to the `[workspace] members` array in byte order, keeping the rest of the manifest untouched. */
+/** 🚪️ The `exclude-patterns` entry that hides a member directory from the repository's native member discovery, which skips any directory whose own path or whose ancestor matches a pattern; `undefined` when the member is visible. Cargo itself keeps an explicitly listed member even when `exclude` names it, so a hidden member builds with raw Cargo and is unknown to the launcher. */
+export function hidingExcludePattern(member: string, patterns: readonly string[]): string | undefined {
+  const segments = member.split("/");
+  for (let depth = 1; depth <= segments.length; depth++) {
+    const directory = segments.slice(0, depth).join("/");
+    const hit = patterns.find((pattern) => new Bun.Glob(pattern).match(directory) || new Bun.Glob(pattern).match(`${directory}/`) || (pattern.endsWith("/**") && new Bun.Glob(pattern.slice(0, -3)).match(directory)));
+    if (hit !== undefined) return hit;
+  }
+  return undefined;
+}
+
+/** 🚪️ Reads the exclusion list the repository's native discovery applies to a workspace manifest: `exclude-patterns` of `[workspace.metadata.semio.repository]`, else Cargo's `exclude`. */
+function admittedExclusions(workspace: { exclude?: string[]; metadata?: { semio?: { repository?: { "exclude-patterns"?: string[] } } } }): string[] {
+  const admission = workspace.metadata?.semio?.repository;
+  return admission === undefined ? workspace.exclude ?? [] : admission["exclude-patterns"] ?? [];
+}
+
+/** 🚪️ Lists workspace members that the repository's native discovery cannot see because an `exclude-patterns` entry hides them; an empty list means Cargo and the launcher agree on the member set. */
+export function workspaceAdmissionProblems(manifestText: string): string[] {
+  const workspace = (Bun.TOML.parse(manifestText) as { workspace?: { members?: string[]; exclude?: string[]; metadata?: { semio?: { repository?: { "exclude-patterns"?: string[] } } } } }).workspace;
+  if (!workspace) return ["manifest has no [workspace] table"];
+  const patterns = admittedExclusions(workspace);
+  return (workspace.members ?? []).flatMap((member) => { const hit = hidingExcludePattern(member, patterns); return hit === undefined ? [] : [`member ${member} is hidden from repository discovery by exclude pattern ${hit}`]; });
+}
+
+/** 🚪️ Removes from an array literal under `[workspace]` or its repository metadata every entry the predicate rejects, keeping the rest of the text untouched. */
+function dropArrayEntries(manifestText: string, key: string, hidden: (entry: string) => boolean): string {
+  const origin = Math.max(manifestText.indexOf("[workspace]"), 0);
+  const found = new RegExp(`(\\n[ \\t]*${key}\\s*=\\s*)\\[([\\s\\S]*?)\\]`, "u").exec(manifestText.slice(origin));
+  if (!found) return manifestText;
+  const start = origin + found.index;
+  const entries = [...found[2]!.matchAll(/"((?:[^"\\]|\\.)*)"/gu)].map((entry) => entry[1]!);
+  const kept = entries.filter((entry) => !hidden(entry));
+  if (kept.length === entries.length) return manifestText;
+  const indent = /^\n(\s*)"/u.exec(found[2]!)?.[1] ?? "  ";
+  const rendered = kept.length ? `[\n${kept.map((entry) => `${indent}"${entry}",`).join("\n")}\n]` : "[]";
+  return manifestText.slice(0, start) + found[1] + rendered + manifestText.slice(start + found[0].length);
+}
+
+/** 🗂️ Adds members to the `[workspace] members` array in byte order and lifts the exclusion entries that would hide an added member from the repository's native discovery, keeping the rest of the manifest untouched. */
 export function addWorkspaceMembers(manifestText: string, additions: readonly string[]): string {
   const match = /(\[workspace\][\s\S]*?\nmembers\s*=\s*)\[([\s\S]*?)\]/u.exec(manifestText);
   if (!match) throw new Error("Workspace manifest has no members array");
   const existing = [...match[2]!.matchAll(/"((?:[^"\\]|\\.)*)"/gu)].map((entry) => entry[1]!);
   const all = [...new Set([...existing, ...additions])].sort(compareBytes);
   const rendered = `[\n${all.map((entry) => `  "${entry}",`).join("\n")}\n]`;
-  return manifestText.slice(0, match.index) + match[1] + rendered + manifestText.slice(match.index + match[0].length);
+  const widened = manifestText.slice(0, match.index) + match[1] + rendered + manifestText.slice(match.index + match[0].length);
+  const workspace = (Bun.TOML.parse(widened) as { workspace: { exclude?: string[]; metadata?: { semio?: { repository?: { "exclude-patterns"?: string[] } } } } }).workspace;
+  const hides = (pattern: string): boolean => additions.some((member) => hidingExcludePattern(member, [pattern]) !== undefined);
+  const lifted = [...new Set([...(workspace.exclude ?? []), ...admittedExclusions(workspace)])].filter(hides);
+  if (!lifted.length) return widened;
+  return dropArrayEntries(dropArrayEntries(widened, "exclude", (entry) => lifted.includes(entry)), "exclude-patterns", (entry) => lifted.includes(entry));
 }
 
 /** 🔒️ Adds carved crates to the artifact lockfile and extends the artifact package's own dependency list. */

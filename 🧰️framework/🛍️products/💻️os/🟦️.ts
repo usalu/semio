@@ -12,11 +12,8 @@
  */
 // #endregion Header
 
-import { descriptorDigestEncodingV1, descriptorDigestV1 } from "./🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts";
-import { parseDirectorySpaceAdministrationPageV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
-import { fetchWithTimeout } from "@semio-tech/framework";
-import { parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
-import { emptyDirectoryReadModel, foldAll } from "./🔨️modules/📇️directory/🟦️.ts";
+import { parseDirectorySpaceAdministrationPageV1 } from "@semio-tech/framework/directory/io/text";
+import { emptyDirectoryReadModel, foldAll } from "@semio-tech/framework/directory";
 import {
   clonePackValue,
   decodeInvocationResultPacks,
@@ -31,7 +28,7 @@ import {
   packInt,
   packUInt,
   packValueToExactJson
-} from "./🔨️modules/🎁️packs/🟦️.ts";
+} from "@semio-tech/framework/packs";
 import {
   COMMAND_REJECTION_CODES_V1,
   commandAckOutcomeOfValueV1,
@@ -40,7 +37,7 @@ import {
   encodeDocumentArchiveBytes,
   hubCommandRejectionV1,
   localCommandRejectionV1
-} from "./🔨️modules/🪢️wire-contracts/🟦️.ts";
+} from "@semio-tech/framework/wire-contracts";
 import {
   BACKBONE_ENVELOPE_RETRY_WINDOW_MS,
   BACKBONE_WORKER_WIRE_MAGIC,
@@ -65,7 +62,7 @@ import {
   planWorkflow,
   readBackboneEnvelope,
   writeBackboneEnvelope
-} from "./🔨️modules/🧵️backbone/🟦️.ts";
+} from "@semio-tech/framework/backbone";
 import {
   admitGuestChannelVersion,
   APP_CHANNEL_VERSION,
@@ -80,7 +77,7 @@ import {
   encodeAppCommand,
   encodeAppFrame,
   faultMessages
-} from "./🔨️modules/🧾️app-channel/🟦️.ts";
+} from "@semio-tech/framework/app-channel";
 import {
   admitRemoteEnvelopes,
   DIRECTORY_HTTP_TIMEOUT_MS,
@@ -99,7 +96,7 @@ import {
   HUB_TRANSIENT_APPLY_REFUSAL_CODE,
   hubTransientApplyRefusalV1,
   noteAuthoredEnvelopeIds
-} from "./🔨️modules/📞️directory-client/🟦️.ts";
+} from "@semio-tech/framework/directory-client";
 
 export {
   type ActionWire,
@@ -135,7 +132,7 @@ export {
   packValueToExactJson,
   packWireNatural,
   viewContextWireValue
-} from "./🔨️modules/🎁️packs/🟦️.ts";
+} from "@semio-tech/framework/packs";
 
 export {
   type AppCommandValue,
@@ -169,7 +166,7 @@ export {
   type OperationCompletionV1,
   type OwnedDocumentMemberPackEntry,
   type WindowConfigPackEntry
-} from "./🔨️modules/🪢️wire-contracts/🟦️.ts";
+} from "@semio-tech/framework/wire-contracts";
 
 export {
   type ArtifactActorConfig,
@@ -257,7 +254,7 @@ export {
   wireLaneDataClass,
   type WorkflowDelivery,
   writeBackboneEnvelope
-} from "./🔨️modules/🧵️backbone/🟦️.ts";
+} from "@semio-tech/framework/backbone";
 
 export {
   admitGuestChannelVersion,
@@ -284,7 +281,7 @@ export {
   encodeAppFrame,
   faultDisplayMessage,
   faultMessages
-} from "./🔨️modules/🧾️app-channel/🟦️.ts";
+} from "@semio-tech/framework/app-channel";
 
 export {
   admitRemoteEnvelopes,
@@ -335,27 +332,28 @@ export {
   socketGrantProtocolsV1,
   type SocketGrantReceiptV1,
   type SocketGrantRequestPortV1
-} from "./🔨️modules/📞️directory-client/🟦️.ts";
+} from "@semio-tech/framework/directory-client";
 
-export type {RetainedCloneGrant} from "../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
-export { parseDirectorySessionAuthorityJsonV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts";
-export { directoryAdministrationCommandAllowedV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
-export { directoryCommandRequestJson } from "./🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
-export { canonicalDirectoryCommandV1, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, parseDirectoryCommandV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
-export { parseInstalledServiceContributionsV1, parseInstalledServiceOperationV1, parseInstalledServiceStatusV1, parseInstalledServiceHistoryStatusV1 } from "./🔨️modules/💡️inference/🔌️service/🟦️.ts";
-export type { InstalledServiceOperationV1, InstalledServiceStatusV1, InstalledServiceHistoryStatusV1 } from "./🔨️modules/💡️inference/🔌️service/🟦️.ts";
-export { type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
-export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-export type { BrowserActorUiPatchOfferV1, BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
+export type {RetainedCloneGrant} from "@semio-tech/value-ts/retained-clone/wire";
+export { parseDirectorySessionAuthorityJsonV1 } from "@semio-tech/framework/directory/io/text/session-authority-v1";
+export { directoryAdministrationCommandAllowedV1 } from "@semio-tech/framework/directory/io/text";
+export { directoryCommandRequestJson } from "@semio-tech/framework/directory/io/text";
+export { canonicalDirectoryCommandV1, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, parseDirectoryCommandV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
+export { parseInstalledServiceContributionsV1, parseInstalledServiceOperationV1, parseInstalledServiceStatusV1, parseInstalledServiceHistoryStatusV1 } from "@semio-tech/framework/inference/service";
+export type { InstalledServiceOperationV1, InstalledServiceStatusV1, InstalledServiceHistoryStatusV1 } from "@semio-tech/framework/inference/service";
+export { type DirectorySessionAuthorityV1 } from "@semio-tech/framework/directory/schema/session-authority-v1";
+export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1 } from "@semio-tech/framework/directory/schema";
+export type { BrowserActorUiPatchOfferV1, BrowserActorUiPatchResultV1 } from "@semio-tech/framework/browser-bundle/patch-handoff";
 //#region 🔖️BackboneWorkerProtocol
 /** 🪪️ Hub documents compare a plan against the complete {@link DocumentExecutionTargetLeaseFieldsV1}
  * of a locally installed execution target — catalog generation, both scope ids, descriptor digest,
  * every package/component/descriptor digest with byte lengths, artifact, parent dialect, surface,
  * grant, checkpoint and revalidation. A non-`react` renderer target is admitted only when the
  * worker owns a live private lease that verified those exact bytes. */
-export type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-export { DIRECTORY_COMMAND_OUTCOMES_V1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, directoryCommandErrorIsTransient, parseDirectoryCommandOutcomeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, sameLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "@semio-tech/framework/directory/schema";
+export { DIRECTORY_COMMAND_OUTCOMES_V1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, directoryCommandErrorIsTransient, parseDirectoryCommandOutcomeV1 } from "@semio-tech/framework/directory/schema";
+export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, sameLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+export { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1 } from "@semio-tech/framework/directory/schema";
 //#endregion 🔖️BackboneWorkerProtocol
 export type {
   AdminConnectionSnapshotV1,
@@ -409,15 +407,15 @@ export type {
   PublicSpaceViewV1,
   SpaceView,
   UserView,
-} from "./🔨️modules/📇️directory/🟦️.ts";
+} from "@semio-tech/framework/directory";
 export { decodeServerFrame, encodeServerFrame } from "@semio-tech/framework-replication";
-export { emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "./🔨️modules/📇️directory/🟦️.ts";
-export { parseDirectorySpaceAdministrationPageV1 } from "./🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+export { emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "@semio-tech/framework/directory";
+export { parseDirectorySpaceAdministrationPageV1 } from "@semio-tech/framework/directory/io/text";
 //#region 🔖️HubSignIn
 /** 🔐️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice AU2 — the browser-facing hub
  * sign-in contract (`POST /auth/sessions`, per that ticket's `📓️au1-hub-auth-sessions-and-rate-limit.md`
  * §1) and the end-user spaces surface contract, both pure and transport-free. Appended only. */
-export { HUB_AUTH_ERROR_SCHEMA_V1, HUB_CONNECTION_BOOK_MAX_ENTRIES, HUB_CONNECTION_BOOK_SCHEMA_V1, HUB_CONNECTION_BOOK_STORAGE_KEY_V1, HUB_SESSION_MINT_PATH_V1, HUB_SESSION_MINT_REQUEST_MAX_BYTES, HUB_SESSION_MINT_RESPONSE_MAX_BYTES, HUB_SESSION_ME_PATH_V1, HUB_SESSION_SIGN_OUT_PATH_V1, HUB_SIGN_IN_DEVICE_INSTANCE_MAX_BYTES, HUB_SIGN_IN_EMAIL_MAX_BYTES, HUB_SIGN_IN_EMAIL_MIN_BYTES, HUB_SIGN_IN_PASSWORD_MAX_BYTES, HUB_SIGN_IN_PASSWORD_MIN_BYTES, HUB_SIGN_IN_RATE_LIMIT_MAX_SECONDS, HUB_SIGN_IN_REQUEST_SCHEMA_V1, HUB_SIGN_IN_TEXT_V1, HUB_SIGN_IN_TIMEOUT_MS, LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1, hubAuthErrorRetryAfterSecondsV1, hubConnectionIdForOriginV1, hubDeviceInstanceIdV1, hubRetryAfterSecondsV1, hubSessionAllowsLocalWorkV1, hubSessionInitialStateV1, hubSessionMintRequestJsonV1, hubSessionNeedsReauthenticationV1, hubSignInErrorFromStatusV1, hubSignInErrorTextV1, hubSignInTextV1, localBootstrapHubConnectionV1, parseHubConnectionBookV1, parseHubOriginV1, parseHubSessionMintResultV1, readHubConnectionBookV1, reduceHubSessionV1, removeHubConnectionV1, runHubSignInV1, runHubSignOutV1, selectHubConnectionV1, selectedHubConnectionV1, serializeHubConnectionBookV1, upsertHubConnectionV1, validHubSignInEmailV1, validHubSignInPasswordV1, writeHubConnectionBookV1 } from "./🔨️modules/📇️directory/🔐️sign-in/🟦️.ts";
+export { HUB_AUTH_ERROR_SCHEMA_V1, HUB_CONNECTION_BOOK_MAX_ENTRIES, HUB_CONNECTION_BOOK_SCHEMA_V1, HUB_CONNECTION_BOOK_STORAGE_KEY_V1, HUB_SESSION_MINT_PATH_V1, HUB_SESSION_MINT_REQUEST_MAX_BYTES, HUB_SESSION_MINT_RESPONSE_MAX_BYTES, HUB_SESSION_ME_PATH_V1, HUB_SESSION_SIGN_OUT_PATH_V1, HUB_SIGN_IN_DEVICE_INSTANCE_MAX_BYTES, HUB_SIGN_IN_EMAIL_MAX_BYTES, HUB_SIGN_IN_EMAIL_MIN_BYTES, HUB_SIGN_IN_PASSWORD_MAX_BYTES, HUB_SIGN_IN_PASSWORD_MIN_BYTES, HUB_SIGN_IN_RATE_LIMIT_MAX_SECONDS, HUB_SIGN_IN_REQUEST_SCHEMA_V1, HUB_SIGN_IN_TEXT_V1, HUB_SIGN_IN_TIMEOUT_MS, LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1, hubAuthErrorRetryAfterSecondsV1, hubConnectionIdForOriginV1, hubDeviceInstanceIdV1, hubRetryAfterSecondsV1, hubSessionAllowsLocalWorkV1, hubSessionInitialStateV1, hubSessionMintRequestJsonV1, hubSessionNeedsReauthenticationV1, hubSignInErrorFromStatusV1, hubSignInErrorTextV1, hubSignInTextV1, localBootstrapHubConnectionV1, parseHubConnectionBookV1, parseHubOriginV1, parseHubSessionMintResultV1, readHubConnectionBookV1, reduceHubSessionV1, removeHubConnectionV1, runHubSignInV1, runHubSignOutV1, selectHubConnectionV1, selectedHubConnectionV1, serializeHubConnectionBookV1, upsertHubConnectionV1, validHubSignInEmailV1, validHubSignInPasswordV1, writeHubConnectionBookV1 } from "@semio-tech/framework/directory/sign-in";
 export type {
   HubConnectionBookV1,
   HubConnectionKindV1,
@@ -434,27 +432,18 @@ export type {
   HubSignInOutcomeV1,
   HubSignInResponseV1,
   HubSignInTransportV1,
-} from "./🔨️modules/📇️directory/🔐️sign-in/🟦️.ts";
-export { DIRECTORY_COMMANDS_PATH_V1, DIRECTORY_SPACES_PATH_V1, INVITE_LINK_FRAGMENT_V1, INVITE_TOKEN_MAX_BYTES, INVITE_TTL_CHOICES_SECS_V1, SPACE_NAME_MAX_BYTES, archiveSpaceCommandV1, createInviteCommandV1, createSpaceCommandV1, filterSpaceRowsV1, inviteLinkV1, inviteRedeemPathV1, inviteRedemptionErrorFromStatusV1, parseInviteTokenV1, spaceBrowserRowsUsableV1, spaceMemberPresenceV1, spaceRowInvitableV1, spaceRowWritableV1, spaceRowsV1 } from "./🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
-export type { InviteRedemptionErrorCodeV1, SpaceAccessV1, SpaceBrowserPhaseV1, SpaceMemberPresenceV1, SpaceRowV1 } from "./🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
+} from "@semio-tech/framework/directory/sign-in";
+export { DIRECTORY_COMMANDS_PATH_V1, DIRECTORY_SPACES_PATH_V1, INVITE_LINK_FRAGMENT_V1, INVITE_TOKEN_MAX_BYTES, INVITE_TTL_CHOICES_SECS_V1, SPACE_NAME_MAX_BYTES, archiveSpaceCommandV1, createInviteCommandV1, createSpaceCommandV1, filterSpaceRowsV1, inviteLinkV1, inviteRedeemPathV1, inviteRedemptionErrorFromStatusV1, parseInviteTokenV1, spaceBrowserRowsUsableV1, spaceMemberPresenceV1, spaceRowInvitableV1, spaceRowWritableV1, spaceRowsV1 } from "@semio-tech/framework/directory/spaces";
+export type { InviteRedemptionErrorCodeV1, SpaceAccessV1, SpaceBrowserPhaseV1, SpaceMemberPresenceV1, SpaceRowV1 } from "@semio-tech/framework/directory/spaces";
 //#endregion 🔖️HubSignIn
 //#region 🔖️HubFirstRun
 /** 🎓️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice D2 (G12 ranked item #12) — the hub
  * first-run walkthrough contract: one `IntroductionDefinition` covering sign in → create or join a
  * space → invite, in both owned locales, plus the local-only seen flag. Pure, transport-free, and
  * state-independent apart from the entry step. Appended only. */
-export { HUB_FIRST_RUN_ANCHORS_V1, HUB_FIRST_RUN_SEEN_VALUE_V1, HUB_FIRST_RUN_STAGES_V1, HUB_FIRST_RUN_STORAGE_KEY_V1, HUB_FIRST_RUN_TEXT_V1, hubFirstRunIntroductionV1, hubFirstRunSeenV1, hubFirstRunShouldStartV1, hubFirstRunStageV1, hubFirstRunStepIndexV1, hubFirstRunTextV1, markHubFirstRunSeenV1 } from "./🔨️modules/📇️directory/🎓️first-run/🟦️.ts";
-export type { HubFirstRunLocaleV1, HubFirstRunStageV1, HubFirstRunStateV1 } from "./🔨️modules/📇️directory/🎓️first-run/🟦️.ts";
+export { HUB_FIRST_RUN_ANCHORS_V1, HUB_FIRST_RUN_SEEN_VALUE_V1, HUB_FIRST_RUN_STAGES_V1, HUB_FIRST_RUN_STORAGE_KEY_V1, HUB_FIRST_RUN_TEXT_V1, hubFirstRunIntroductionV1, hubFirstRunSeenV1, hubFirstRunShouldStartV1, hubFirstRunStageV1, hubFirstRunStepIndexV1, hubFirstRunTextV1, markHubFirstRunSeenV1 } from "@semio-tech/framework/directory/first-run";
+export type { HubFirstRunLocaleV1, HubFirstRunStageV1, HubFirstRunStateV1 } from "@semio-tech/framework/directory/first-run";
 //#endregion 🔖️HubFirstRun
-
-//#region 🔖️Backbone
-//#region 🌐️BackboneEnvelopeIo
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️backbone-envelope-io/🟦️.ts");
-  await registerTests1(import.meta.vitest, { BACKBONE_ENVELOPE_RETRY_WINDOW_MS, readBackboneEnvelope, writeBackboneEnvelope }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🌐️BackboneEnvelopeIo
-//#endregion 🔖️Backbone
 
 //#region 🔖️MeshPackCodec
 if (import.meta.vitest) {
@@ -463,20 +452,7 @@ if (import.meta.vitest) {
 }
 //#endregion 🔖️MeshPackCodec
 
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { createTurnOutcomeBroadcast } = await import("@semio-tech/framework");
-  const { decodePresencePeer, encodePresencePeer } = await import("@semio-tech/framework-replication");
-  const { registerTests2 } = await import("./🧪️tests/🧪️backbone-envelope-io/🟦️.ts");
-  await registerTests2(import.meta.vitest, { APP_CHANNEL_VERSION, CHANNEL_MISMATCH_CODE, admitGuestChannelVersion, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️Tests
-
 //#region 🔖️Directory
-if (import.meta.vitest) {
-  const { registerTests3 } = await import("./🧪️tests/🧪️backbone-envelope-io/🟦️.ts");
-  await registerTests3(import.meta.vitest, { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, foldAll }, { directory: import.meta.dir, url: import.meta.url });
-}
 
 //#region 🔖️HubBinding
 //#region 🔌️DocumentLinkShortage
@@ -528,9 +504,5 @@ if (import.meta.vitest) {
 }
 //#endregion ⚔️ConcurrentWrite
 
-if (import.meta.vitest) {
-  const { registerTests4 } = await import("./🧪️tests/🧪️backbone-envelope-io/🟦️.ts");
-  await registerTests4(import.meta.vitest, { BACKBONE_WORKER_WIRE_MAGIC, DIRECTORY_HTTP_TIMEOUT_MS, DirectoryClient, HUB_HEALTHY_RESET_MS, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodePackValue, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodePackValue, fetchWithTimeout, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, parseDirectorySpaceAdministrationPageV1, parseDocumentBackboneMessage, decodeBackboneMessage, parseInboundDocumentBackboneMessage }, { directory: import.meta.dir, url: import.meta.url });
-}
 //#endregion 🔖️HubBinding
 //#endregion 🔖️Directory

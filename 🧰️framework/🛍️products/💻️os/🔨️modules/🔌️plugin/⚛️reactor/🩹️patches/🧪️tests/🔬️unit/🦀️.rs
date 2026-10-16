@@ -1,4 +1,11 @@
-use super::*;
+use semio_framework_ui_runtime::{ComponentTree, ComponentTreeProducer, ComponentTreeProducerStep, SURFACE_RECONCILE_ADMISSION_SLOTS, SurfaceReconcileOutputs, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileTerminal, SurfaceReconciler};
+use crate::{MountedReconcileGrant, MountedReconcileOwner, MountedTreeTerminal, PatchTracker, PatchTrackerState, READY_PATCH_CAPACITY, SurfaceSlot, TerminalSlot, has_work, next_generation, surface_instance};
+use semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey;
+use semio_framework_job::StepContext;
+use semio_framework_ui_contract as ui_contract;
+#[doc(hidden)]
+#[path = "../../../../🧪️testing/🎟️caller/🦀️.rs"]
+pub mod original_caller;
 use semio_framework_ui_runtime::TreeNode;
 
 thread_local! { static PANIC_AFTER_OUTPUT_TRANSFER: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
@@ -23,12 +30,14 @@ fn reject_current(tracker: &PatchTracker, surface: &str) {
     tracker.mark_rejected(surface, generation);
 }
 
-fn reserve(tracker: &PatchTracker, surface: ui_contract::SurfaceId) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
+#[doc(hidden)]
+pub fn reserve(tracker: &PatchTracker, surface: ui_contract::SurfaceId) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
     let key = NativeCloseKey::fixture(surface_instance(surface.as_ref()).expect("numeric test surface"), 1);
     tracker.reserve_mounted(surface, key)
 }
 
-fn leaf(key: &str, text: &str) -> ComponentTree {
+#[doc(hidden)]
+pub fn leaf(key: &str, text: &str) -> ComponentTree {
     let value = ui_contract::UiText::try_from_str(text).expect("bounded test text");
     let root = TreeNode::try_new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).unwrap_or_else(|_| panic!("bounded test tree"));
     ComponentTree::new(root)
@@ -82,7 +91,8 @@ fn close_test_patch(patch: ui_contract::UiPatch) {
     }
 }
 
-fn finish(tracker: &PatchTracker,cx:&mut semio_framework_job::StepContext<'_>) -> Option<ui_contract::UiPatch> {
+#[doc(hidden)]
+pub fn finish(tracker: &PatchTracker,cx:&mut semio_framework_job::StepContext<'_>) -> Option<ui_contract::UiPatch> {
     for _ in 0..4_096 {
         tracker.drive_one(cx).expect("original patch fixture semantic step");
         if let Some(owner) = tracker.take_ready_patch() {
@@ -143,7 +153,8 @@ fn acknowledge_one_publication(tracker: &PatchTracker, surface: &str,cx:&mut sem
     None
 }
 
-fn published(tracker: &PatchTracker, surface: &str,cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_ui_runtime::SurfaceReconcilePublishedPatch {
+#[doc(hidden)]
+pub fn published(tracker: &PatchTracker, surface: &str,cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_ui_runtime::SurfaceReconcilePublishedPatch {
     tracker.begin(surface.to_owned(), leaf("root", "published")).expect("admitted publication");
     for _ in 0..4_096 {
         tracker.drive_one(cx).expect("original patch fixture semantic step");
@@ -186,7 +197,7 @@ fn close_instance_to_empty(tracker: &PatchTracker, instance: u32,cx:&mut semio_f
 
 #[test]
 fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -216,7 +227,7 @@ fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation()
 
 #[test]
 fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -250,7 +261,7 @@ fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full(
 
 #[test]
 fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_and_box() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -285,7 +296,7 @@ fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_a
 
 #[test]
 fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owners() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -329,7 +340,7 @@ fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owner
 
 #[test]
 fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generation_and_callback_roots() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -384,7 +395,7 @@ fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generati
 
 #[test]
 fn mounted_output_admission_close_waits_for_the_original_uncommitted_grant() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -413,7 +424,7 @@ fn mounted_output_admission_close_waits_for_the_original_uncommitted_grant() {
 
 #[test]
 fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_overadmission() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -431,7 +442,7 @@ fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_ove
         let barrier = barrier.clone();
         let tx = tx.clone();
         workers.push(std::thread::spawn(move || {
-            let mut worker_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored concurrent instance caller");let mut worker_context=worker_caller.context();let cx=&mut worker_context;
+            let mut worker_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored concurrent instance caller");let mut worker_context=worker_caller.context();let cx=&mut worker_context;
             let tracker = PatchTracker::new();
             let mut surface = ui_contract::SurfaceId::try_from(format!("{instance}:concurrent")).unwrap();
             let key = NativeCloseKey::fixture(instance, 1);
@@ -487,7 +498,7 @@ fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_ove
 
 #[test]
 fn tracker_initialization_fits_the_component_stack_budget() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -504,7 +515,7 @@ fn tracker_initialization_fits_the_component_stack_budget() {
 
 #[test]
 fn mounted_path_advances_one_reconcile_opportunity_per_grant() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -522,7 +533,7 @@ fn mounted_path_advances_one_reconcile_opportunity_per_grant() {
 
 #[test]
 fn mounted_document_tree_publishes_nested_interactive_rows() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -583,7 +594,7 @@ fn mounted_document_tree_publishes_nested_interactive_rows() {
 
 #[test]
 fn mounted_settings_controls_publish_with_authored_fields() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -625,7 +636,7 @@ fn mounted_settings_controls_publish_with_authored_fields() {
 
 #[test]
 fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -683,7 +694,7 @@ fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
 
 #[test]
 fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -719,7 +730,7 @@ fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
 
 #[test]
 fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -758,7 +769,7 @@ fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
 
 #[test]
 fn mounted_sources_publish_every_window_and_panel_tree() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -803,7 +814,7 @@ fn mounted_sources_publish_every_window_and_panel_tree() {
 
 #[test]
 fn one_active_surface_does_not_wait_behind_sixty_three_empty_slots_between_steps() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -830,11 +841,11 @@ fn one_active_surface_does_not_wait_behind_sixty_three_empty_slots_between_steps
 
 #[test]
 fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
-    use super::super::pending::PendingPatchAuthority;
+    use semio_framework_plugin_reactor_lifecycle::PendingPatchAuthority;
     use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📨️pending/🧪️tests/🧫️fixtures/🩹️receipt.json")).unwrap();
     let surface = fixture["issued"]["surface"].as_str().unwrap();
@@ -895,7 +906,7 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
 
 #[test]
 fn published_owner_first_ack_rejects_early_stale_duplicate_wrong_instance_and_aba_without_authority_loss() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -930,7 +941,7 @@ fn published_owner_first_ack_rejects_early_stale_duplicate_wrong_instance_and_ab
 
 #[test]
 fn cap_plus_one_returns_the_exact_tree_owner() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -991,7 +1002,7 @@ fn release_resident_aggregate(held: Vec<ui_contract::UiResidentPermit>) {
 
 #[test]
 fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1061,7 +1072,7 @@ fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
 
 #[test]
 fn stale_generation_fault_is_publicly_retrievable() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1082,7 +1093,7 @@ fn stale_generation_fault_is_publicly_retrievable() {
 
 #[test]
 fn resize_storm_coalesces_to_one_deferred_surface_owner() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1108,7 +1119,7 @@ fn resize_storm_coalesces_to_one_deferred_surface_owner() {
 
 #[test]
 fn effects_publish_in_admission_order_even_when_later_tree_finishes_first() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1126,7 +1137,7 @@ fn effects_publish_in_admission_order_even_when_later_tree_finishes_first() {
 
 #[test]
 fn actor_close_retires_each_surface_and_old_generation_cannot_resume_reopened_slot() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1151,7 +1162,7 @@ fn actor_close_retires_each_surface_and_old_generation_cannot_resume_reopened_sl
 
 #[test]
 fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_stale_publish() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1198,7 +1209,7 @@ fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_st
 
 #[test]
 fn terminal_saturation_keeps_fault_job_in_its_surface_until_one_slot_is_freed() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1234,7 +1245,7 @@ fn terminal_saturation_keeps_fault_job_in_its_surface_until_one_slot_is_freed() 
 
 #[test]
 fn terminal_full_plus_matching_unadmitted_advances_capacity_before_conversion() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1249,7 +1260,7 @@ fn terminal_full_plus_matching_unadmitted_advances_capacity_before_conversion() 
 
 #[test]
 fn terminal_full_plus_matching_rejected_advances_capacity_before_conversion() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1266,7 +1277,7 @@ fn terminal_full_plus_matching_rejected_advances_capacity_before_conversion() {
 
 #[test]
 fn terminal_full_plus_matching_surface_advances_capacity_before_conversion() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1294,7 +1305,7 @@ fn terminal_full_plus_matching_surface_advances_capacity_before_conversion() {
 
 #[test]
 fn generation_max_is_issued_once_and_repeated_exhaustion_returns_exact_owners_without_mutation() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1323,7 +1334,7 @@ fn generation_max_is_issued_once_and_repeated_exhaustion_returns_exact_owners_wi
 
 #[test]
 fn terminal_saturation_does_not_consume_maximum_generation_before_exact_owner_reservation() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1365,7 +1376,7 @@ fn terminal_saturation_does_not_consume_maximum_generation_before_exact_owner_re
 
 #[test]
 fn abandoned_reconcile_job_closes_its_ready_output_so_the_tracker_can_idle() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1399,7 +1410,7 @@ fn abandoned_reconcile_job_closes_its_ready_output_so_the_tracker_can_idle() {
 
 #[test]
 fn a_closing_terminal_does_not_wait_behind_sixty_three_empty_slots_per_unit() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1422,7 +1433,7 @@ fn a_closing_terminal_does_not_wait_behind_sixty_three_empty_slots_per_unit() {
 
 #[test]
 fn a_deferred_surface_awaiting_the_hosts_acknowledgement_does_not_hold_more_work() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1483,7 +1494,7 @@ fn a_deferred_surface_awaiting_the_hosts_acknowledgement_does_not_hold_more_work
 /// with it, it also proves the released output returns to the fixed `ready` pool.
 #[test]
 fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1524,7 +1535,7 @@ fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
 /// wave B50's 7 843-turn streak with `sources=["reconcile"]`).
 #[test]
 fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retirement_ladder() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1564,7 +1575,7 @@ fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retire
 /// other half — that ordinary bodies are never refused at all.
 #[test]
 fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_handback_registry() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1600,7 +1611,7 @@ fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_ha
 /// so the count is the session's, not the unit's (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
 #[test]
 fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1643,7 +1654,7 @@ fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
 /// 26/09/02/PUZZLE-3D-END-TO-END wave B52 §2).
 #[test]
 fn a_node_record_wider_than_the_copy_grant_still_retires_its_document_to_terminal_empty() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -1694,7 +1705,7 @@ fn sized_body(key: &str, bytes: usize) -> TreeNode {
 /// MAXIMUM, never a price, and this law fixes the aggregate to the session's real occupancy.
 #[test]
 fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_at_once() {
-    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_caller=original_caller::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();

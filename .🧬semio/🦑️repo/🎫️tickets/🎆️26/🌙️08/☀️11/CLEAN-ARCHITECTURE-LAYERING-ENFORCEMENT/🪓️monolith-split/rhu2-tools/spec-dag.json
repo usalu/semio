@@ -1,0 +1,17 @@
+{
+ "moves": [
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/📤️selection/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/📤️selection/🟦️.ts"
+  }
+ ],
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/rhu2-snap-dag.json"
+}

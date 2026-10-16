@@ -18,3 +18,6 @@ path = "../../🦀️.rs"
 # of the format they reference (see `testOraclesDirName` in 🔣️taxonomy.json); the framework host
 # supplies only the protocol, the runner and the adapter API. If a dependency ever appears here, the
 # framework has started to know about an implementation.
+
+[dependencies]
+semio-framework-process-routing-workspace = { path = "../../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/📦️packages/🦀️rust" }

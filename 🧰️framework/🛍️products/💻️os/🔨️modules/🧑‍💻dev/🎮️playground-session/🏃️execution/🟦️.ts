@@ -1,5 +1,5 @@
 import { parseGeneratorPreviewProgressPolicyV1, serializeGeneratorPreviewProgressV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts";
-import { readPhysicalFileV1 } from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
+import { readPhysicalFileV1 } from "@semio-tech/framework/filesystem/observation";
 import { parseDeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🧬️schema/🟦️.ts";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";

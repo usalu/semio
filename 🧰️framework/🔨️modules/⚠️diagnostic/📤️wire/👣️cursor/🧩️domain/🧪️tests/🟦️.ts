@@ -3,10 +3,10 @@ import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {createRequire} from "node:module";
 import {Database} from "bun:sqlite";
-import type {IntrinsicValue} from "../../../../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
+import type {IntrinsicValue} from "@semio-tech/value-ts/schema/intrinsic";
 import {faultFromOriginalTurnFailure} from "../../../../🧾️retained/🟦️.ts";
 import {decodeFaultDomainControlled,encodeFaultDomainControlled} from "../../../../🎛️controlled/🟦️.ts";
-import type {ValueRefusalCodecControl} from "../../../../../🌱️value/⚠️refusal/🔁️codec/🟦️.ts";
+import type {ValueRefusalCodecControl} from "@semio-tech/value-ts/refusal/codec";
 import {ValueError} from "../../../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 test("Canonical Fault lends complete domain with exact original intrinsic u64 and octet owners",async()=>{
  const root=resolve(import.meta.dir,".."),law=JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(resolve(root,"🧬️schema/🔣️.json"),"utf8")),require=createRequire(import.meta.url);expect(new(require("ajv").default)({strict:true}).compile(schema)(law)).toBe(true);

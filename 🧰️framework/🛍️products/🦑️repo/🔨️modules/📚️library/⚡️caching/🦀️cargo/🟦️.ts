@@ -4,10 +4,10 @@ export { canonicalArchitectureEnvironment, type CanonicalExecutionEnvironment } 
 import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { admitNativeBuildPipelineV1, admitNativeBuildPlanV1, type NativeBuildGenerationV1, type NativeBuildJobV1, type NativeBuildPipelineV1, type NativeBuildPlanV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
-import { ownerEnvironmentV1 } from "../📦️artifacts/📋️native-orchestration/🟦️.ts";
+import { admitNativeBuildPipelineV1, admitNativeBuildPlanV1, type NativeBuildGenerationV1, type NativeBuildJobV1, type NativeBuildPipelineV1, type NativeBuildPlanV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/📋️contract/🟦️.ts";
+import { ownerEnvironmentV1 } from "../📦️artifacts/📋️native-orchestration/🌱️environment/🟦️.ts";
 import { repoCacheDirectory } from "../🟦️.ts";
-import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 
 /** 🔒️ The binding generator must have the same identity as the locked Rust crate. */
 export function wasmBindgenVersion(lock: string): string {

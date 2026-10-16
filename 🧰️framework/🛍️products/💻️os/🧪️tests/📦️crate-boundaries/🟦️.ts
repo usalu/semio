@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import TOML from "@iarna/toml";
-import { readRustSourceClosureV1, selectRustSourceV1 } from "../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import { readRustSourceClosureV1, selectRustSourceV1 } from "@semio-tech/process/artifacts/native-build/source";
 import { rustTokens } from "../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 const os = resolve(import.meta.dir, "../.."), workspace = resolve(os, "../../.."), read = (path: string) => readFileSync(resolve(os, path), "utf8");

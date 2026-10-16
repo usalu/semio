@@ -5,8 +5,7 @@ pub use semio_framework_value_control_contract as retained_clone;
 pub mod list;
 pub use list::*;
 #[cfg(test)]
-#[path="../../../🧪️testing/💾️allocator/🦀️.rs"]
-mod allocation_testing;
+use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
 

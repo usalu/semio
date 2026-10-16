@@ -5,7 +5,7 @@
 
 import { createContext, useCallback, useContext } from "react";
 import { formatKeybindingShortcut, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
-import { isIconName } from "@semio-tech/assets";
+import { isIconName } from "@semio-tech/framework/assets";
 import type { ContextMenuItemSpec, PluginContextMenuRequest } from "@semio-tech/framework";
 import { contextMenuGroupLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { wireLabel } from "../🌉️scene-host-contract/🟦️.ts";

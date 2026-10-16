@@ -1,3 +1,4 @@
+use semio_framework_os_renderer_wgpu_fixtures::shell::{host_test_apps, host_test_shell, test_app};
 use super::*;
 // 🩹️ `PanelTabKind` stopped being reachable through the shell module's own `use` list, and the
 // `📌️panel-state` fixture moved from `🧑‍🎨engine/🧫️fixtures/` into this element's own `🧫️fixtures/`
@@ -16,7 +17,7 @@ fn fresh_state() -> ShellState {
 fn spawned_documents_and_actions_keep_their_exact_owning_session() {
     let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️spawned-document-routing/🔣️.json")).unwrap();
     let session = |owner: &Value| {
-        let mut app = super::command_registry_tests::test_app(Vec::new(), Vec::new());
+        let mut app = test_app(Vec::new(), Vec::new());
         app.id = owner["appId"].as_str().unwrap().into();
         app.controller_id = owner["controllerId"].as_str().unwrap().into();
         let id = owner["windowId"].as_str().unwrap().to_string();
@@ -83,65 +84,6 @@ fn spawned_documents_and_actions_keep_their_exact_owning_session() {
     }
 }
 
-fn host_test_apps() -> (AppDefinition, AppDefinition) {
-    let mut home = super::command_registry_tests::test_app(Vec::new(), Vec::new());
-    home.id = "home".into();
-    home.controller_id = "space.home".into();
-    home.panel_tabs = vec![PanelTabDefinition { kind: PanelTabKind::App("home-library".into()), label: LocalizedLabel::data("Home Library"), group: PanelGroup::Display, body_key: Some("home.library".into()), children: vec![] }];
-    let mut studio = super::command_registry_tests::test_app(Vec::new(), Vec::new());
-    studio.id = "studio".into();
-    studio.controller_id = "space.studio".into();
-    studio.panel_tabs = vec![
-        PanelTabDefinition { kind: PanelTabKind::App("s-play-catalogue".into()), label: LocalizedLabel::data("Catalogue"), group: PanelGroup::Workbench, body_key: Some("s.play.catalogue".into()), children: vec![] },
-        PanelTabDefinition { kind: PanelTabKind::App("s-play-inspector".into()), label: LocalizedLabel::data("Inspector"), group: PanelGroup::Details, body_key: Some("s.play.inspector".into()), children: vec![] },
-        PanelTabDefinition {
-            kind: PanelTabKind::App("studio-settings".into()),
-            label: LocalizedLabel::data("Studio Settings"),
-            group: PanelGroup::Settings,
-            body_key: None,
-            children: vec![PanelTabDefinition { kind: PanelTabKind::App("studio-settings-leaf".into()), label: LocalizedLabel::data("Settings"), group: PanelGroup::Settings, body_key: Some("studio.settings".into()), children: vec![] }],
-        },
-    ];
-    (home, studio)
-}
-
-pub(super) fn host_test_shell() -> ShellState {
-    let (home, studio) = host_test_apps();
-    let manifest = semio_framework::PluginManifest {
-        plugin_id: "space".into(),
-        label: "Space".into(),
-        version: "1".into(),
-        apps: vec![home, studio.clone()],
-        examples: vec![],
-        capabilities: vec![],
-        topic_contributions: vec![],
-        commands: vec![],
-        artifact_kinds: vec![],
-        hosted_artifact_kinds: Vec::new(),
-        dependencies: vec![],
-        contributions: vec![],
-    };
-    let bridge = ProgramBridgeEntry::from_wasm("space".into(), None, None, std::path::PathBuf::from("missing-host-panel-guest.wasm"), manifest).expect("nonrunnable host bridge");
-    let mut shell = ShellState::new(vec![bridge], "space".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    static HOST: PluginHostConfig = PluginHostConfig { plugin_id: "space", landing_app_id: "home", host_app_id: "studio" };
-    shell.plugins.host_capability = Some(&HOST);
-    shell.plugins.space_mode = true;
-    let base = SpacePanelState {
-        active_panel_tab: "s-play-catalogue".into(),
-        spawned_apps: vec![
-            SpawnedAppEntry { id: "spawned-model".into(), plugin_id: "model".into(), instance_id: 41, app_id: "model@1/any#editor".into(), label: "Model".into(), breadcrumb: vec!["Workspace".into(), "Model".into()] },
-            SpawnedAppEntry { id: "spawned-note".into(), plugin_id: "note".into(), instance_id: 42, app_id: "note@1/any#editor".into(), label: "Note".into(), breadcrumb: vec!["Workspace".into(), "Note".into()] },
-        ],
-        active_spawned_id: Some("spawned-model".into()),
-    };
-    let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    view_state.active_mode_id = Some(studio.default_mode_id.clone());
-    view_state.active_window_kind_id = Some(studio.window_kinds.first().id.clone());
-    view_state.panel_json = Some(panel_json(&base).expect("strict base panel"));
-    shell.docs.session = Some(ActiveSession { plugin_id: "space".into(), instance_id: 77, app: studio, view_state });
-    shell
-}
-
 #[test]
 fn host_panel_json_codec_matches_the_neutral_fixture_and_rejects_invalid_carriage() {
     let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/📌️panel-state/🔣️.json")).expect("panel fixture");
@@ -165,7 +107,7 @@ fn host_panel_json_codec_matches_the_neutral_fixture_and_rejects_invalid_carriag
 fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_and_home_projection() {
     let mut shell = host_test_shell();
     let before = panel_state_from_view(&shell.docs.session.as_ref().unwrap().view_state).unwrap().unwrap();
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) }))
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": "s-play-inspector" }) }))
         .expect("configured leaf is host-owned");
     let after = panel_state_from_view(&shell.docs.session.as_ref().unwrap().view_state).unwrap().unwrap();
     assert_eq!(after.active_panel_tab, "s-play-inspector");
@@ -176,15 +118,15 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
 
     let accepted_json = shell.docs.session.as_ref().unwrap().view_state.panel_json.clone();
     let container_error =
-        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "studio-settings" }) })).unwrap_err();
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": "studio-settings" }) })).unwrap_err();
     assert_eq!(container_error, "host-panel.tab-is-not-configured-leaf");
     assert_eq!(shell.docs.session.as_ref().unwrap().view_state.panel_json, accepted_json);
-    let stale_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "missing" }) })).unwrap_err();
+    let stale_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": "missing" }) })).unwrap_err();
     assert_eq!(stale_error, "host-panel.tab-is-not-configured-leaf");
     let missing_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: None })).unwrap_err();
     assert_eq!(missing_error, "host-panel.invalid-tab-id");
 
-    let guest_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "foreign.controller".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) }))
+    let guest_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "foreign.controller".into(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": "s-play-inspector" }) }))
         .expect_err("unclaimed controller reaches the missing guest fixture");
     assert!(!guest_error.starts_with("host-panel."), "unclaimed route must expose the actual missing guest failure: {guest_error}");
 
@@ -196,7 +138,7 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
     home_view.panel_json = Some(panel_json(&home_panel).unwrap());
     shell.directory.directory_home = Some(DirectoryHomeProjection::new("space".into(), 88, home.clone(), home_view.clone()).expect("directory home projection"));
     shell.docs.session = Some(ActiveSession { plugin_id: "space".into(), instance_id: 88, app: home, view_state: home_view });
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.home".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "home-library" }) }))
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.home".into(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": "home-library" }) }))
         .expect("active host session owns its configured leaf");
     let restored = shell.directory.directory_home.as_ref().unwrap().active_session();
     let restored_panel = panel_state_from_view(&restored.view_state).unwrap().unwrap();
@@ -260,7 +202,7 @@ fn panel_default_width_is_uniform_and_wider_than_the_former_document_panel() {
 /// ↔️ The real panel walk publishes exactly React's resize edges and one compact-spacing hit rail.
 #[test]
 fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/↔️panel-resize/🔣️.json")).expect("panel resize fixture");
     let theme = Theme::default();
     assert_eq!(fixture["widthUiSpacing"], serde_json::json!(1));
@@ -324,7 +266,7 @@ fn fixture_group(group: &str) -> PanelGroup {
 /// `AppBuilder::try_build_definition` injects into every app, and one attached sync backbone.
 fn fixture_dock_shell() -> ShellState {
     let fixture = default_dock_fixture();
-    let mut app = super::command_registry_tests::test_app(Vec::new(), Vec::new());
+    let mut app = test_app(Vec::new(), Vec::new());
     app.id = "fixture-app".into();
     app.controller_id = "fixture.controller".into();
     app.panel_tabs = fixture["app"]["panelTabs"]
@@ -775,7 +717,7 @@ fn every_shell_owned_leaf_projects_into_retained_records() {
     let shell = fixture_dock_shell();
     let dock = SessionCtx::of(&mut shell).default_dock();
     for tab_id in shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs) {
-        if tab_id == crate::hub_connection::FRAMEWORK_HUB_PANEL_ID {
+        if tab_id == semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID {
             assert!(dock.locate(&tab_id).is_none(), "🧾️ Hub is the route-owned overlay React opens from its footer/command, never a dock substitute");
         } else {
             assert!(dock.locate(&tab_id).is_some(), "🧾️ {tab_id} publishes a body but no anchor declares it");
@@ -805,7 +747,7 @@ fn every_shell_owned_leaf_projects_into_retained_records() {
 /// that grows a `Tree`/`Image`/`ComponentScene` fails at publication rather than painting a hole.
 #[test]
 fn the_panel_assembler_refuses_an_unprojectable_node() {
-    let node = UiNode::Image(ui_wgpu::wgpu::UiImageNode { id: "x".into(), src: "y".into(), alt: None, presence: UiPresence::default(), menu: None });
+    let node = UiNode::Image(semio_framework_ui_declaration::ui::UiImageNode { id: "x".into(), src: "y".into(), alt: None, presence: UiPresence::default(), menu: None });
     let error = panel_ui_records("framework.settings.general", &node).expect_err("an image is not projectable by this assembler");
     assert!(error.contains("image"), "the refusal names the variant: {error}");
 }
@@ -929,7 +871,7 @@ fn the_mobile_panel_flattens_every_anchor_in_anchor_order() {
     let mut shell = fixture_dock_shell();
     shell.chrome.screen_w = 1280.0;
     assert!(!shell.chrome.mobile_panel_active(), "📱️ a desktop viewport keeps the eight anchors");
-    shell.chrome.screen_w = crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+    shell.chrome.screen_w = semio_framework_os_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
     assert!(shell.chrome.mobile_panel_active(), "📱️ the breakpoint itself is mobile (React's `max-width: 767px` is inclusive)");
     let ids: Vec<String> = SessionCtx::of(&mut shell).mobile_panel_tabs().into_iter().map(|tab| tab.id).collect();
     let expected: Vec<String> = fixture["mobilePanelTabs"]["ids"].as_array().expect("fixture mobile ids").iter().map(|id| id.as_str().expect("id").to_string()).collect();
@@ -1012,7 +954,7 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
             .expect("header toolbar")
             .children
             .iter()
-            .any(|node| matches!(node, UiNode::Button(button) if button.id.as_deref().is_some_and(|id| id.ends_with("-execute")) && matches!(button.presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled)))
+            .any(|node| matches!(node, UiNode::Button(button) if button.id.as_deref().is_some_and(|id| id.ends_with("-execute")) && matches!(button.presence.state, semio_framework_ui_layout::layout::UiState::Disabled)))
     };
     assert!(disabled(&shell), "🎛️ unstaged required argument blocks Execute");
     shell.commands.staged_command_args.entry(key).or_default().insert(arg_id, value);
@@ -1025,7 +967,7 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
 /// connected state and the composer is live.
 fn welcomed_shell() -> ShellState {
     let mut shell = fresh_state();
-    let welcome = crate::agent_bridge::GatewayToShell::Welcome { bridge_version: crate::agent_bridge::BRIDGE_VERSION, connection: "connection-1".into(), principal: "agent:local".into() };
+    let welcome = semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::Welcome { bridge_version: semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::BRIDGE_VERSION, connection: "connection-1".into(), principal: "agent:local".into() };
     shell.chrome.apply_agent_bridge_frame(&welcome.encode()).expect("a Welcome frame decodes");
     shell
 }
@@ -1072,7 +1014,7 @@ fn a_bridge_tool_call_frame_becomes_a_conversation_row_in_the_chat_panel() {
     let mut shell = welcomed_shell();
     assert!(chat_entry_ids(&shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs)).is_empty(), "💬️ no bridge activity, no rows");
 
-    let call = crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), arguments: "{\"artifactId\":\"doc-1\"}".into() };
+    let call = semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), arguments: "{\"artifactId\":\"doc-1\"}".into() };
     shell.chrome.apply_agent_bridge_frame(&call.encode()).expect("an AgentToolCall frame decodes");
     let running = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert_eq!(chat_entry_ids(&running), vec!["framework.chat.entry.toolCall.inv_7".to_string()], "💬️ the tool call is one addressable row");
@@ -1084,7 +1026,7 @@ fn a_bridge_tool_call_frame_becomes_a_conversation_row_in_the_chat_panel() {
     assert!(lines.contains(&"{\"artifactId\":\"doc-1\"}".to_string()), "💬️ and its real arguments: {lines:?}");
     assert!(panel_ui_records(FRAMEWORK_CHAT_PANEL_ID, &running).is_ok(), "💬️ the conversation projects as publishable panel records");
 
-    let result = crate::agent_bridge::GatewayToShell::AgentToolResult { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), ok: true, summary: "opened doc-1".into() };
+    let result = semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolResult { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), ok: true, summary: "opened doc-1".into() };
     shell.chrome.apply_agent_bridge_frame(&result.encode()).expect("an AgentToolResult frame decodes");
     let settled = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert_eq!(chat_entry_ids(&settled), vec!["framework.chat.entry.toolCall.inv_7".to_string()], "💬️ one row per invocation, never two");
@@ -1103,7 +1045,7 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
     let tool_name = fixture["invocation"]["toolName"].as_str().expect("tool name");
     let arguments = fixture["invocation"]["arguments"].as_str().expect("arguments");
     let mut shell = welcomed_shell();
-    shell.chrome.apply_agent_bridge_frame(&crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
+    shell.chrome.apply_agent_bridge_frame(&semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
     let control_id = format!("framework.chat.cancel.{invocation_id}");
     let action = chat_button_action(&shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs), &control_id).expect("a running call publishes its cancel control");
     assert_eq!(action.action, "cancelToolCall");
@@ -1111,7 +1053,7 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(action)).expect("framework owns cancellation");
     let frames = shell.chrome.take_agent_bridge_outbox();
     assert_eq!(frames.len(), 1);
-    assert_eq!(crate::agent_bridge::ShellToGateway::decode(&frames[0]).expect("cancel frame"), crate::agent_bridge::ShellToGateway::AgentCancel { invocation_id: invocation_id.into() });
+    assert_eq!(semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::decode(&frames[0]).expect("cancel frame"), semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::AgentCancel { invocation_id: invocation_id.into() });
     let cancelling = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert!(chat_button_action(&cancelling, &control_id).is_none(), "a cancelling row cannot send a duplicate control action");
     let mut cancelling_lines = Vec::new();
@@ -1120,7 +1062,7 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
 
     shell.chrome
         .apply_agent_bridge_frame(
-            &crate::agent_bridge::GatewayToShell::AgentToolResult {
+            &semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolResult {
                 invocation_id: invocation_id.into(),
                 tool_name: tool_name.into(),
                 ok: fixture["terminalResult"]["ok"].as_bool().expect("terminal ok"),
@@ -1136,12 +1078,12 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
     assert!(settled_lines.contains(&"Failed".to_string()) && settled_lines.iter().any(|line| line.contains("cancelled by user")), "the gateway result settles the row: {settled_lines:?}");
 
     let mut offline = welcomed_shell();
-    offline.chrome.apply_agent_bridge_frame(&crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
+    offline.chrome.apply_agent_bridge_frame(&semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
     offline.chrome.chrome_build.agent.note_socket_closed();
     let offline_action = chat_button_action(&offline.directory.build_agent_chat_ui(&offline.chrome, &offline.prefs), &control_id).expect("React leaves a running row's control mounted while its sender can refuse");
     semio_framework_async::block_on(ActionsCtx::of(&mut offline).dispatch_action(offline_action)).expect("framework owns cancellation");
     assert!(offline.chrome.take_agent_bridge_outbox().is_empty(), "a disconnected cancel changes and sends nothing");
-    assert!(matches!(&offline.chrome.chrome_build.agent.conversation[0], crate::agent_bridge::AgentConversationEntry::ToolCall { state: crate::agent_bridge::AgentToolCallState::Running, .. }));
+    assert!(matches!(&offline.chrome.chrome_build.agent.conversation[0], semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentConversationEntry::ToolCall { state: semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentToolCallState::Running, .. }));
 }
 
 /// 💬️ The composer: a turn typed here leaves as a real `ShellToGateway::AgentMessage` and is echoed
@@ -1162,8 +1104,8 @@ fn the_chat_composer_sends_one_agent_message_per_turn_and_keeps_an_unsendable_dr
     assert!(shell.directory.agent_chat_draft.is_empty(), "💬️ the draft clears on send");
     let outbox = shell.chrome.take_agent_bridge_outbox();
     assert_eq!(outbox.len(), 1, "💬️ exactly one frame per turn");
-    match crate::agent_bridge::ShellToGateway::decode(&outbox[0]).expect("the outbox frame decodes") {
-        crate::agent_bridge::ShellToGateway::AgentMessage { text, .. } => assert_eq!(text, "move it", "💬️ trimmed, React's own `trimmed`"),
+    match semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::decode(&outbox[0]).expect("the outbox frame decodes") {
+        semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::ShellToGateway::AgentMessage { text, .. } => assert_eq!(text, "move it", "💬️ trimmed, React's own `trimmed`"),
         other => panic!("💬️ expected an AgentMessage, got {other:?}"),
     }
     let panel = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);

@@ -1,15 +1,19 @@
+import {localHubHostPolicyV1,captureLocalHubStartV1,LocalHubHostLedgerV1} from "../🎛️host/🟦️.ts";
+import {checkResourceLeaseControl} from "@semio-tech/process/leases";
 import { LOCAL_SESSION_BROKER_REQUEST_MAX_BYTES, isLocalSessionTokenV1, LOCAL_SESSION_BROKER_FILE, LOCAL_SESSION_BROKER_SCHEMA, LOCAL_SESSION_SCHEMA, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1, type LocalSessionBrokerRecordV1, type LocalSessionV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
 
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { protectOwnerOnly } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, writeLocalFrame } from "../📡️framing/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../🛂authentication/🟦️.ts";
-import type { LocalHubRun } from "../🏃️execution/🟦️.ts";
+import {requireLocalHubRunV1,withLocalHubRunTaskV1,type LocalHubRun } from "../🏃️execution/🟦️.ts";
 
 /** 🔐️ Issues one authenticated client-class credential bound to the active local Hub run. */
-export async function issueLocalCredential(run: LocalHubRun, profileId: string, clientClass: LocalClientClass, sequence = 2, exchangeId = randomBytes(16).toString("hex")): Promise<Record<string, any>> {
+export function issueLocalCredential(run:LocalHubRun,profileId:string,clientClass:LocalClientClass,sequence=2,exchangeId=randomBytes(16).toString("hex")):Promise<Record<string,any>>{return withLocalHubRunTaskV1(run,()=>issueLocalCredentialLiveV1(run,profileId,clientClass,sequence,exchangeId));}
+
+async function issueLocalCredentialLiveV1(run:LocalHubRun,profileId:string,clientClass:LocalClientClass,sequence:number,exchangeId:string):Promise<Record<string,any>>{
   const now = Date.now();
   const issue = authenticatedFrame(run.channelKey, {
     schema: LOCAL_BOOTSTRAP_SCHEMA,
@@ -77,7 +81,7 @@ export const LOCAL_ADMIN_REQUEST_FILE = "admin-request";
 const LOCAL_ADMIN_REQUEST_POLL_MS = 5_000;
 
 export type LocalAdminCapabilityV1 = Readonly<{ schema: typeof LOCAL_ADMIN_CAPABILITY_SCHEMA; origin: string; capability: string; sessionId: string; expiresAt: number }>;
-export type LocalSessionBrokerV1 = Readonly<{ record: LocalSessionBrokerRecordV1; stop: () => void }>;
+export type LocalSessionBrokerV1 = Readonly<{ record: LocalSessionBrokerRecordV1 }>;
 
 /** 🧾️ Parses one admin capability file exactly. */
 export function parseLocalAdminCapabilityV1(value: unknown): LocalAdminCapabilityV1 {
@@ -101,99 +105,29 @@ export function parseLocalAdminCapabilityV1(value: unknown): LocalAdminCapabilit
   return Object.freeze({ ...(file as LocalAdminCapabilityV1) });
 }
 
-/** 🔐️ Starts the broker beside one owned run: issues credentials through the run's pipe one at a time, from
- * `firstSequence` on (the pipe's sequence counter belongs to its owner), and writes the record `0600` into `dataDir`.
- * With `adminProfileId` (a profile allowed `admin-relay`, whose subject the run declared an admin subject) it also keeps
- * the {@link LOCAL_ADMIN_CAPABILITY_FILE} there: issued once the broker starts and again whenever a caller creates
- * {@link LOCAL_ADMIN_REQUEST_FILE}; `stop` removes the file it wrote. */
-export function startLocalSessionBroker(run: LocalHubRun, dataDir: string, profiles: readonly LocalProfile[], firstSequence: number, adminProfileId?: string): LocalSessionBrokerV1 {
-  const hubOrigin = `http://127.0.0.1:${run.port}`;
-  const secret = randomBytes(32).toString("hex");
-  const secretBytes = Buffer.from(secret, "hex");
-  const profileIds = profiles.filter((profile) => profile.allowedClientClasses.includes("react-relay")).map((profile) => profile.profileId);
-  if (adminProfileId !== undefined && !profiles.some((profile) => profile.profileId === adminProfileId && profile.allowedClientClasses.includes("admin-relay"))) throw new Error(`local session broker: ${adminProfileId} is no admin-relay profile of this run`);
-  let sequence = firstSequence;
-  let tail: Promise<unknown> = Promise.resolve();
-  const adminPath = join(dataDir, LOCAL_ADMIN_CAPABILITY_FILE);
-  const adminRequestPath = join(dataDir, LOCAL_ADMIN_REQUEST_FILE);
-  let adminSessionId: string | null = null;
-  const issueAdmin = (profileId: string): Promise<void> => {
-    const work = tail.then(async () => {
-      const envelope = await issueLocalCredential(run, profileId, "admin-relay", sequence++);
-      const file = parseLocalAdminCapabilityV1({ schema: LOCAL_ADMIN_CAPABILITY_SCHEMA, origin: hubOrigin, capability: String(envelope.capability ?? ""), sessionId: String(envelope.sessionId ?? ""), expiresAt: Number(envelope.expiresAt) });
-      writeFileSync(adminPath, `${JSON.stringify(file)}\n`, { mode: 0o600 });
-      protectOwnerOnly(adminPath, "file");
-      adminSessionId = file.sessionId;
-    });
-    tail = work.catch(() => undefined);
-    return work;
-  };
-  const adminRequests =
-    adminProfileId === undefined
-      ? null
-      : setInterval(() => {
-          if (!existsSync(adminRequestPath)) return;
-          rmSync(adminRequestPath, { force: true });
-          void issueAdmin(adminProfileId).catch(() => undefined);
-        }, LOCAL_ADMIN_REQUEST_POLL_MS);
-  if (adminProfileId !== undefined) void issueAdmin(adminProfileId).catch(() => undefined);
-  const issue = (profileId: string): Promise<LocalSessionV1> => {
-    const work = tail.then(async () => {
-      const envelope = await issueLocalCredential(run, profileId, "react-relay", sequence++);
-      const token = String(envelope.capability ?? "");
-      const me = await fetch(`${hubOrigin}/auth/sessions/me`, { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10_000) });
-      const body = (await me.json()) as { readonly user_id?: string; readonly userId?: string };
-      return parseLocalSessionV1({ schema: LOCAL_SESSION_SCHEMA, profileId, token, userId: body.userId ?? body.user_id ?? "" });
-    });
-    tail = work.catch(() => undefined);
-    return work;
-  };
-  const server = Bun.serve({
-    hostname: "127.0.0.1",
-    port: 0,
-    async fetch(request) {
-      if (new URL(request.url).pathname !== "/session" || request.method !== "POST") return new Response(null, { status: 404 });
-      const bearer = Buffer.from((request.headers.get("authorization") ?? "").replace(/^Bearer /u, ""), "hex");
-      if (bearer.length !== secretBytes.length || !timingSafeEqual(bearer, secretBytes)) return new Response(null, { status: 401 });
-      const text = await request.text();
-      if (text.length > LOCAL_SESSION_BROKER_REQUEST_MAX_BYTES) return new Response(null, { status: 413 });
-      let profileId: string;
-      try {
-        profileId = parseLocalSessionRequestV1(JSON.parse(text));
-      } catch {
-        return new Response(null, { status: 400 });
-      }
-      if (!profileIds.includes(profileId)) return new Response(null, { status: 404 });
-      try {
-        return Response.json(await issue(profileId), { headers: { "cache-control": "no-store" } });
-      } catch {
-        return new Response(null, { status: 503 });
-      }
-    },
-  });
-  const record = parseLocalSessionBrokerRecordV1({ schema: LOCAL_SESSION_BROKER_SCHEMA, hubOrigin, runId: run.runId, port: server.port, secret, profiles: profileIds });
-  const path = join(dataDir, LOCAL_SESSION_BROKER_FILE);
-  writeFileSync(path, `${JSON.stringify(record)}\n`, { mode: 0o600 });
-  protectOwnerOnly(path, "file");
-  return Object.freeze({
-    record,
-    stop: () => {
-      server.stop(true);
-      secretBytes.fill(0);
-      if (adminRequests !== null) clearInterval(adminRequests);
-      try {
-        if (adminSessionId !== null && parseLocalAdminCapabilityV1(JSON.parse(readFileSync(adminPath, "utf8"))).sessionId === adminSessionId) rmSync(adminPath, { force: true });
-      } catch {
-        rmSync(adminPath, { force: true });
-      }
-      try {
-        const current = parseLocalSessionBrokerRecordV1(JSON.parse(readFileSync(path, "utf8")));
-        if (current.secret === secret) rmSync(path, { force: true });
-      } catch {
-        rmSync(path, { force: true });
-      }
-    },
-  });
+/** 🔐️ Holds the exact run data and joins accepted broker requests before its real server closes. */
+export function withLocalSessionBrokerV1<T>(run:LocalHubRun,profiles:readonly LocalProfile[],firstSequence:number,adminProfileId:string|undefined,body:(broker:LocalSessionBrokerV1)=>Promise<T>):Promise<T>{
+ requireLocalHubRunV1(run);profiles=captureLocalHubStartV1(profiles,{}).profiles;
+ return withLocalHubRunTaskV1(run,async(control,context)=>{
+  const dataDir=context.dataRoot,hubOrigin=`http://127.0.0.1:${run.port}`,secret=randomBytes(32).toString("hex"),secretBytes=Buffer.from(secret,"hex"),profileIds=profiles.filter(profile=>profile.allowedClientClasses.includes("react-relay")).map(profile=>profile.profileId),ledger=new LocalHubHostLedgerV1(),adminPath=join(dataDir,LOCAL_ADMIN_CAPABILITY_FILE),adminRequestPath=join(dataDir,LOCAL_ADMIN_REQUEST_FILE),path=join(dataDir,LOCAL_SESSION_BROKER_FILE),created=new Map<string,NonNullable<ReturnType<typeof lstatSync>>>();let sequence=firstSequence,tail:Promise<unknown>=Promise.resolve(),adminRequests:ReturnType<typeof setInterval>|undefined,server:ReturnType<typeof Bun.serve>|undefined,result:T|undefined;const failures:unknown[]=[];
+  const check=():void=>{checkResourceLeaseControl(control);},write=(target:string,value:unknown):void=>{check();const old=created.get(target);if(old){const current=lstatSync(target);if(!current.isFile()||current.isSymbolicLink()||current.nlink!==1||current.dev!==old.dev||current.ino!==old.ino)throw Error("Exact created broker record required");}writeFileSync(target,JSON.stringify(value)+"\n",{mode:0o600,flag:old?"w":"wx"});created.set(target,lstatSync(target));protectOwnerOnly(target,"file");};
+  const enqueue=<U>(operation:()=>Promise<U>):Promise<U>=>{const previous=tail,work=ledger.run(async()=>{await previous;check();return operation();});tail=work.then(()=>{},()=>{});return work;};
+  const next=():number=>{if(!Number.isSafeInteger(sequence)||sequence<2||sequence===Number.MAX_SAFE_INTEGER)throw Error("Finite broker sequence required");return sequence++;};
+  const issueAdmin=(profileId:string):Promise<void>=>enqueue(async()=>{const envelope=await issueLocalCredential(run,profileId,"admin-relay",next()),file=parseLocalAdminCapabilityV1({schema:LOCAL_ADMIN_CAPABILITY_SCHEMA,origin:hubOrigin,capability:String(envelope.capability??""),sessionId:String(envelope.sessionId??""),expiresAt:Number(envelope.expiresAt)});write(adminPath,file);});
+  const issue=(profileId:string):Promise<LocalSessionV1>=>enqueue(async()=>{const envelope=await issueLocalCredential(run,profileId,"react-relay",next()),token=String(envelope.capability??""),response=await fetch(`${hubOrigin}/auth/sessions/me`,{headers:{authorization:`Bearer ${token}`},signal:AbortSignal.any([control.signal,AbortSignal.timeout(10000)])}),reader=response.body?.getReader();if(!reader)throw Error("Broker session response body required");const chunks:Uint8Array[]=[];let bytes=0;try{for(;;){check();const row=await reader.read();if(row.done)break;bytes+=row.value.byteLength;if(bytes>LOCAL_SESSION_BROKER_REQUEST_MAX_BYTES||chunks.length>=localHubHostPolicyV1().maximumReadinessChunks)throw Error("Broker session response bound exceeded");chunks.push(row.value);}const value=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(Buffer.concat(chunks)));return parseLocalSessionV1({schema:LOCAL_SESSION_SCHEMA,profileId,token,userId:value.userId??value.user_id??""});}finally{reader.releaseLock();}});
+  try{
+   if(typeof body!=="function"||!Number.isSafeInteger(firstSequence)||firstSequence<2||adminProfileId!==undefined&&!profiles.some(profile=>profile.profileId===adminProfileId&&profile.allowedClientClasses.includes("admin-relay")))throw Error("Exact broker profiles and finite first sequence required");
+   server=Bun.serve({hostname:"127.0.0.1",port:0,fetch(request){return ledger.run(async()=>{
+    check();if(new URL(request.url).pathname!=="/session"||request.method!=="POST")return new Response(null,{status:404});const bearer=Buffer.from((request.headers.get("authorization")??"").replace(/^Bearer /u,""),"hex");if(bearer.length!==secretBytes.length||!timingSafeEqual(bearer,secretBytes))return new Response(null,{status:401});const reader=request.body?.getReader();if(!reader)return new Response(null,{status:400});const chunks:Uint8Array[]=[];let bytes=0;try{for(;;){check();const row=await reader.read();if(row.done)break;bytes+=row.value.byteLength;if(bytes>LOCAL_SESSION_BROKER_REQUEST_MAX_BYTES||chunks.length>=localHubHostPolicyV1().maximumReadinessChunks){await reader.cancel();return new Response(null,{status:413});}chunks.push(row.value);}}finally{reader.releaseLock();}let profileId:string;try{profileId=parseLocalSessionRequestV1(JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(Buffer.concat(chunks))));}catch{return new Response(null,{status:400});}if(!profileIds.includes(profileId))return new Response(null,{status:404});return Response.json(await issue(profileId),{headers:{"cache-control":"no-store"}});
+   }).catch(()=>new Response(null,{status:503}));}});
+   const record=parseLocalSessionBrokerRecordV1({schema:LOCAL_SESSION_BROKER_SCHEMA,hubOrigin,runId:run.runId,port:server.port,secret,profiles:profileIds});write(path,record);
+   if(adminProfileId!==undefined){await issueAdmin(adminProfileId);adminRequests=setInterval(()=>{if(!existsSync(adminRequestPath))return;try{check();const request=lstatSync(adminRequestPath);if(!request.isFile()||request.isSymbolicLink()||request.nlink!==1||request.size!==0)throw Error("Exact empty administrator request required");rmSync(adminRequestPath);void issueAdmin(adminProfileId).catch(()=>{});}catch(error){void ledger.run(async()=>{throw error;});}},LOCAL_ADMIN_REQUEST_POLL_MS);}
+   result=await body(Object.freeze({record}));
+  }catch(error){failures.push(error);}
+  if(adminRequests!==undefined)clearInterval(adminRequests);ledger.stop();try{await server?.stop(true);}catch(error){failures.push(error);}try{await ledger.drain();}catch(error){if(!failures.includes(error))failures.push(error);}ledger.close();secretBytes.fill(0);
+  for(const[target,identity]of created)try{const current=lstatSync(target);if(!current.isFile()||current.isSymbolicLink()||current.dev!==identity.dev||current.ino!==identity.ino)throw Error("Created broker record identity changed");rmSync(target);}catch(error){failures.push(error);}
+  if(failures.length===1)throw failures[0];if(failures.length)throw new AggregateError(failures,"Session broker body and accepted cleanup failed");return result as T;
+ });
 }
 
 //#endregion 🎫️SessionBroker

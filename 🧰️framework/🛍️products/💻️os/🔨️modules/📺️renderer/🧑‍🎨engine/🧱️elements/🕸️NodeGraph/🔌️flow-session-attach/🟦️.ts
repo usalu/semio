@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect } from "react";
-import { EASED_SURFACE_TRAILING_WINDOW_MS, createDemandFrameScheduler } from "@semio-tech/canvas-react-renderer";
+import { EASED_SURFACE_TRAILING_WINDOW_MS, createDemandFrameScheduler } from "@semio-tech/framework/canvas/react-renderer";
 import { nodeGraphActions } from "@semio-tech/framework";
 import { createFlowSession } from "../../🪪️WasmSessionLoader/🟦️.tsx";
 import { nodeGraphViewportActionArgs, parseNodeGraphSessionViewport } from "../🧰️graph-core/🟦️.ts";

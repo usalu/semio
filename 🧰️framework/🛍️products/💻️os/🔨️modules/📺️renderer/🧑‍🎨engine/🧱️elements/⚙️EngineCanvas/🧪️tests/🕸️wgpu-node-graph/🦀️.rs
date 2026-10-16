@@ -9,9 +9,13 @@
 //! this same host (`🧱️elements/🕸️NodeGraph/🟦️.tsx` — `nodeGraphSelectionActionArgs`,
 //! `nodeGraphHoverActionArgs`, `nodeGraphViewportActionArgs`).
 
+use semio_framework_os_renderer_wgpu_engine_attach::drop_engine_surface;
 use super::*;
 use semio_framework_os_kernel::Viewport2d;
-use ui_wgpu::wgpu::{InputState, NodeGraphInteractionDomain, NodeGraphScene, SurfaceKind, UiPresence};
+use semio_framework_ui_declaration::ui::SurfaceKind;
+use semio_framework_ui_layout::layout::UiPresence;
+use semio_framework_ui_scene_node_graph::{NodeGraphInteractionDomain, NodeGraphScene};
+use ui_wgpu::wgpu::InputState;
 
 const NODE_GRAPH_SCENE_FIXTURE: &str = include_str!("../🧫️fixtures/🕸️wgpu-node-graph/🔣️.json");
 
@@ -58,24 +62,6 @@ pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
         block_list: None,
         diff_view: None,
         event_feed: None,
-    }
-}
-
-/// 🧹️ Drains one attached surface through the registry's OWN retirement ladder. `FlowHostSnapshot`'s
-/// ordered maps refuse to drop unretired, so a plain `remove` panics inside the registry mutex and
-/// poisons it for every later lane — the ladder is the only correct teardown.
-pub(super) fn drop_engine_surface(surface_id: &str) {
-    let _ = take_engine_surface_registrations();
-    STAGED_ENGINE_SCENES.with(|cell| cell.borrow_mut().remove_surface(surface_id));
-    let Some(token) = ENGINE_SURFACES.with(|cell| cell.borrow_mut().token(surface_id)) else {
-        return;
-    };
-    assert_eq!(begin_engine_surface_close_token(token), Ok(true), "the attached surface begins closing");
-    let mut input = InputState::<ActionDescriptor>::default();
-    let mut turns = 0usize;
-    while !with_engine_close_context(1, |context| close_engine_surface_step(token, context, &mut input)) {
-        turns += 1;
-        assert!(turns < 262_144, "the attached surface reaches a fixed terminal witness");
     }
 }
 
@@ -332,7 +318,7 @@ fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
 fn projection_snapshot_rejects_invalid_node_graph_viewports() {
     let _serialized = engine_surface_law_guard();
     for camera in [[0.0, 0.0, 0.0], [f64::NAN, 0.0, 1.0], [0.0, f64::INFINITY, 1.0]] {
-        assert!(matches!(graph_projection_snapshot(Vec::new(), None, None, camera), Err(ui_wgpu::wgpu::BoundedActionFault::Structure)));
+        assert!(matches!(graph_projection_snapshot(Vec::new(), None, None, camera), Err(semio_framework_ui_action::BoundedActionFault::Structure)));
     }
 }
 

@@ -1,0 +1,4 @@
+[
+ {"sub":"./plugin-module","file":"🧩️plugin-module/🟦️.ts","emoji":"🧩️","sources":["🧰️framework/🔨️modules/🧩️plugin-module/🟦️.ts"]},
+ {"sub":"./plugin-module/hub-source/resolution","file":"🧩️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts","emoji":"🔍️","sources":["🧰️framework/🔨️modules/🧩️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts"]}
+]

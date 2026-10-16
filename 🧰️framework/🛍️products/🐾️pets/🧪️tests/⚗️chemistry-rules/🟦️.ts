@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/💗️feeling/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { CUES, type Cooling, type Feeling, type Menagerie, type Rapport, type Reaction, type Slug, type Species, type Trait } from "../../🧬️schema/🟦️.ts";
 import { type Chemistry, type Sighting, atRest, clickTrick, heldTicks, ladderOf, lastingTicks, nearby, reactionsOf, rungsOf, seen, showTrick, stateAfterTrick, stateAt, stateEnds, stepState, tricksFor, trialsOf, whimTrick } from "../../🔨️modules/💗️feeling/🟦️.ts";
 

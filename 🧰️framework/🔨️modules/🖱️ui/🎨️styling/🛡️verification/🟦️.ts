@@ -2,7 +2,7 @@ import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import schema from "./🧬️schema/🔣️.json";
 import { stylingSourceDataV1 } from "./📖️source-data/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 
 export type StylingScanScopeV1 = Readonly<{ roots: readonly string[] }>;
 export type StylingSourceManifestV1 = StylingScanScopeV1 & Readonly<{ files: readonly string[] }>;

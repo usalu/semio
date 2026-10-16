@@ -49,5 +49,5 @@ export const stdioEpwEnergyplusAnyInferenceTextGuardConstant = <T extends string
 //#endregion 🚪️Parsers
 
 export function parseEpwInferenceText(value: unknown, at = "$"): EpwInferenceText {
-  return stdioEpwEnergyplusAnyInferenceTextGuardObject(value, `${at}`);
+  return stdioEpwEnergyplusAnyInferenceTextGuardString(value, `${at}`);
 }

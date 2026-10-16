@@ -1,7 +1,7 @@
 /** 📸️ `Vdi3805Snapshot` wire twin: the persisted snapshot and every record it holds, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireLiteral, normWireMap, normWireNullable, normWireNumber, normWireObject, normWireOptional, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString, normWireTagged } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireLiteral, normWireMap, normWireNullable, normWireNumber, normWireObject, normWireOptional, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString, normWireTagged } from "@semio-tech/norm-js/registry/contract";
 
 export interface Vdi3805Snapshot {
   /** @state artifact */

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import Ajv from "ajv/dist/2020.js";
 import ts from "typescript";
 import { BundleScript } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import valueSchema from "../../../🌱️value/⚠️refusal/🧬️schema/🔣️.json" with { type: "json" };
+import { refusalSchema as valueSchema } from "@semio-tech/value-ts/refusal/schema";
 import schema from "../../🧬️schema/🎛️controlled/🔣️.json" with { type: "json" };
 import fixture from "../🧫️fixtures/🎛️controlled/🔣️.json" with { type: "json" };
 

@@ -1,4 +1,5 @@
 use super::*;
+use pack::record::{decode_document, encode_document, DecodeOptions, EncodeOptions};
 use std::collections::HashMap;
 
 use semio_framework_dsl_record::FieldSpec;
@@ -42,7 +43,7 @@ fn facade_encode_document_decode_document_round_trip() {
 }
 
 #[test]
-fn facade_content_hash_is_stable_across_two_encodes() {
+fn facade_stored_content_hash_is_stable_across_two_encodes() {
     let spec = sample_spec();
     let record = sample_record();
     let options = EncodeOptions::default();
@@ -53,8 +54,28 @@ fn facade_content_hash_is_stable_across_two_encodes() {
     // 🔒️ `encode_document` is a pure function of `(spec, record)` — byte-identical output.
     assert_eq!(bytes_a, bytes_b);
 
-    let hash_a = content_hash(&bytes_a).unwrap();
-    let hash_b = content_hash(&bytes_b).unwrap();
+    let hash_a = stored_content_hash(&bytes_a).unwrap();
+    let hash_b = stored_content_hash(&bytes_b).unwrap();
     assert_eq!(hash_a, hash_b);
 }
 //#endregion 🔖️Document
+
+//#region 🔖️Bridge
+#[test]
+fn bridge_document_and_record_body_bytes_equal_the_framework_owner_bytes() {
+    let spec = sample_spec();
+    let record = sample_record();
+    let options = EncodeOptions::default();
+
+    let owner_document = encode_document(&spec, &record, &options).unwrap();
+    assert_eq!(pack_rt::encode_document(&spec, &record, &options).unwrap(), owner_document);
+    let (decoded, report) = pack_rt::decode_document(&owner_document, &spec, &DecodeOptions::default()).unwrap();
+    assert_eq!(decoded.get(1), Some(&FieldValue::Text("Ada Lovelace".to_string())));
+    assert!(!report.schema_drift);
+
+    let owner_body = pack::record::encode_record_body(&spec, &record, &options).unwrap();
+    assert_eq!(pack_rt::encode_record_body(&spec, &record, &options).unwrap(), owner_body);
+    let (body_decoded, _report) = pack_rt::decode_record_body(&owner_body, &spec, &DecodeOptions::default()).unwrap();
+    assert_eq!(body_decoded.get(2), Some(&FieldValue::UInt(42)));
+}
+//#endregion 🔖️Bridge

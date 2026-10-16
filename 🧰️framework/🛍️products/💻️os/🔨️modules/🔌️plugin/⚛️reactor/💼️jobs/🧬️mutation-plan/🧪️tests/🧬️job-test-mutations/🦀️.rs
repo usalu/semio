@@ -6,7 +6,7 @@ use pack::snapshot::ArtifactPack;
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
 pub(crate) struct JobTestSnapshot {
-    pub(crate) value: i32,
+    pub value: i32,
 }
 
 impl ArtifactPack for JobTestSnapshot {
@@ -26,7 +26,7 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
 pub(crate) struct JobTestDiff {
-    deltas: Vec<i32>,
+    pub deltas: Vec<i32>,
 }
 
 impl protocol::DiffAlgebra<JobTestSnapshot> for JobTestDiff {
@@ -48,10 +48,13 @@ impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
     }
 }
 
+#[doc(hidden)]
 #[path = "../../🧪️testing/🧬️job-test-mutations/🧬️mutations/🦀️.rs"]
-pub(crate) mod mutations;
-pub(crate) use mutations::{AddValue, JobTestOp};
+pub mod mutations;
+pub use crate::mutation_plan::job_test_mutation_fixture::mutations::add_value::AddValue;
+pub(crate) use crate::mutation_plan::job_test_mutation_fixture::mutations::JobTestOp;
 
+#[doc(hidden)]
 #[path = "../🧬️job-test-mutations-unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion 🧬️JobTestMutations

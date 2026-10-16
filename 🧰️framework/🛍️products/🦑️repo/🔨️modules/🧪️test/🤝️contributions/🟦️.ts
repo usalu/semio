@@ -4,11 +4,11 @@
  */
 
 //#region 🔌️Adapters
-import { type Implementation, type TestEvidence } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type Implementation, type TestEvidence } from "@semio-tech/framework/test/adapter";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
-import { validateJsonSchemaSubset } from "../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import protocolSchema from "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
+import { testFixture as protocolSchema } from "@semio-tech/framework/test/schema";
 import { packagesForOwner } from "../🕸️dependencies/🟨️.mjs";
 import { type ComparisonProfileSpec, CORE_COMPARISON_PROFILES, isExcludedTestPath, testFilenameForKind, testLocationPath, testTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { isPlainObject } from "../🟰️comparison/🟦️.ts";

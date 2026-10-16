@@ -6,7 +6,9 @@ import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦�
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
 
-import { BundleScript, scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, scriptInvocationBudget,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,scriptInvocationEnvironment } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {compilerAdmissionBudgetV1} from "@semio-tech/process/compiler-capacity";
+import {checkResourceLeaseControl} from "@semio-tech/process/leases";
 import { readGraphOutputCatalog } from "../📇️catalog/🟦️.ts";
 import { renderGraphArtifacts } from "../📽️projection/🟦️.ts";
 import { graphOutputInventory, graphOutputNodes, writeGraphArtifacts } from "../📤️publication/🟦️.ts";
@@ -63,18 +65,24 @@ export const GRAPH_PACKAGES = ["manifest", "engine", "algorithms", "drawing", "d
 
 export class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const phaseControl=createIssuedResourceControlV1(this.invocation,"graph:tests",0);
     const { readCargoTestPolicyV1 } = await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts");
+    checkResourceLeaseControl(phaseControl);
     const { rest } = resolveTestLevel(segments);
-    await runOwnedCommand("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
-    await runCargoTestsV1({ manifestPath: resolve(this.repoRoot, "🧰️framework/Cargo.toml"), packages: GRAPH_PACKAGES, cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    const sourcePhase=createRequestedIssuedResourceControlV1(phaseControl,cmdBudgetMs());
+    await runOwnedCommand("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "tool:owner", compilerAdmissionBudgetV1(sourcePhase), {env:scriptInvocationEnvironment(this.invocation,process.env),signal:sourcePhase.signal});
+    checkResourceLeaseControl(sourcePhase);
+    await runCargoTestsV1({ manifestPath: resolve(this.repoRoot, "🧰️framework/Cargo.toml"), packages: GRAPH_PACKAGES, cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,phaseControl);
   }
 }
 
 /** 🧹️Zero-warning clippy gate over every graph crate: `cargo clippy --all-targets -- -D warnings`. */
 export class LintScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { runCargoLintV1, readCargoTestPolicyV1 } = await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts");
-    await runCargoLintV1({manifestPath:resolve(this.repoRoot,"🧰️framework/Cargo.toml"),packages:GRAPH_PACKAGES,cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    const phaseControl=createIssuedResourceControlV1(this.invocation,"graph:lint",0);
+    const { readCargoTestPolicyV1 } = await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts");
+    checkResourceLeaseControl(phaseControl);
+    await runCargoLintV1({manifestPath:resolve(this.repoRoot,"🧰️framework/Cargo.toml"),packages:GRAPH_PACKAGES,cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,phaseControl);
   }
 }
 

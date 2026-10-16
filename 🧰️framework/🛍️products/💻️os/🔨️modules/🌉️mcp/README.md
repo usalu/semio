@@ -16,7 +16,7 @@ bun ./📜️script.ts dev mcp stdio os          # what the client files launch 
 bun ./📜️script.ts dev mcp stdio os -- --folder <space> --scopes artifact.read,artifact.write
 ```
 
-A developer who wants the Streamable HTTP server starts it as a daemon task, on port 8792 (Nx target
+A developer who wants the Streamable HTTP server starts it as a daemon task, on port 8792 (build target
 `@semio-tech/framework-os-mcp-rs:dev`):
 
 ```bash

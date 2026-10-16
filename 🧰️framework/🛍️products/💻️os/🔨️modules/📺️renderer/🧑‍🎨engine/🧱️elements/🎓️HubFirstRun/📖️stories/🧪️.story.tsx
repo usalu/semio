@@ -10,7 +10,7 @@
 // #region 🔌️Adapters
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { HubFirstRun } from "@semio-tech/framework-renderer-react";
-import type { HubFirstRunStateV1 } from "@semio-tech/framework-os";
+import type { HubFirstRunStateV1 } from "@semio-tech/framework/directory/first-run";
 // #endregion 🔌️Adapters
 
 // #region 🎓️HubFirstRun

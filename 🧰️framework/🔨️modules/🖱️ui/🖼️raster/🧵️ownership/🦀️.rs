@@ -7,7 +7,5 @@ pub use identity::RasterContentIdentity;
 mod pool;
 pub use pool::*;
 #[cfg(test)]
-use semio_framework_trace_memory_testing as test_allocation;
-#[cfg(test)]
 #[global_allocator]
-static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;

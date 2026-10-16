@@ -1,5 +1,5 @@
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import policyData from"./🧬️schema/🔣️.json"with{type:"json"};
 const policy=Object.freeze({...policyData.definitions.Policy.const});
 import{PRINT_PDF_OPS_V1 as OPS,printPdfTransformV1,printPdfApplyV1,printPdfInverseV1,printPdfArrayV1,printPdfNumberV1,printPdfVectorV1,printPdfNameV1,printPdfRecordV1,printPdfGlyphsV1,requirePrintPdfOperatorFactsV1,type PrintPdfValueV1,type PrintPdfPageV1}from"../../../📦️artifacts/📖️pdf/🟦️.ts";

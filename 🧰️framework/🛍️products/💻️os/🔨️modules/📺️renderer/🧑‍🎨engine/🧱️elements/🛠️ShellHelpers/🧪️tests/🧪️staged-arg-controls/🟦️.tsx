@@ -14,9 +14,9 @@ import { Stepper } from "@semio-tech/ui-react";
 import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import "../../../🐚️Shell/🟦️.tsx";
 import { interactionSelectionIdsV1, renderStagedArgControl, stagedNumberDisplayText, stagedNumberFacetsV1, syncShellLabelLocale, type ResolvedActionArgDef, type StagedArgContextV1 } from "../../🟦️.tsx";
-import numberControls from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json";
-import numberFacets from "../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🧫️number-facets/🔣️.json";
-import type { ActionArgNumberFacets } from "../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { uiNumberControlsFixture as numberControls } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { manifestNumberFacetsFixture as numberFacets } from "../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+import type { ActionArgNumberFacets } from "@semio-tech/framework";
 import { uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 import { formatUiNumber } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
 
@@ -319,7 +319,7 @@ describe("🎛️ staged mutation-input controls", () => {
 
 import choiceLaw from "../🧫️fixtures/🎛️staged-arg-choices/🔣️.json";
 import { mutationInputDefs } from "@semio-tech/framework";
-import { semioSchemaAjvV1 } from "../../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 
 
 for (const locale of choiceLaw.locales) it(`renders staged mutation choices in ${locale} and refuses unsupported values`, () => {

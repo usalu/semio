@@ -1,9 +1,12 @@
 //#region 🧪️AddJobTestValueLaws
-use super::*;
+use crate::mutation_plan::job_test_mutation_fixture::mutations::add_value::AddValue;
+use crate::mutation_plan::job_test_mutation_fixture::{JobTestDiff, JobTestSnapshot};
+use crate::mutation_plan::job_test_mutation_fixture::mutations::JobTestOp;
 use protocol::{Mutation, MutationDiff, MutationLeaf};
 use store::OpBinary;
 
-fn vectors() -> serde_json::Value {
+#[doc(hidden)]
+pub fn vectors() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧪️testing/🧬️job-test-mutations/🔣️.json")).expect("neutral job vectors")
 }
 

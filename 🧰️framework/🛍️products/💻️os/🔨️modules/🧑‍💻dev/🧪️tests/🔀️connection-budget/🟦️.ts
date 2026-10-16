@@ -147,8 +147,8 @@ export async function runConnectionBudget(repoRoot: string, options: ConnectionB
     const muxModule = `/@fs${resolve(repoRoot, "🧰️framework/🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts")}`;
     const opened = await page.evaluate(
       async ({ muxModule, folders, fetches }) => {
-        const mux = (await import(muxModule)) as typeof import("../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts");
-        const channel = mux.pageStreamMuxChannelV1("/semio-stream-mux") as import("../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts").StreamMuxChannelV1;
+        const mux = (await import(muxModule)) as typeof import("@semio-tech/framework/io/stream-mux");
+        const channel = mux.pageStreamMuxChannelV1("/semio-stream-mux") as import("@semio-tech/framework/io/stream-mux").StreamMuxChannelV1;
         const before = channel.census();
         const rows = folders.map(() => ({ opened: [] as string[], notices: 0 }));
         const subscriptions = folders.map((folder, index) => channel.open("backbone.folder", `folder://${folder}`, { opened: (mode) => void rows[index]!.opened.push(mode), data: () => void (rows[index]!.notices += 1) }));

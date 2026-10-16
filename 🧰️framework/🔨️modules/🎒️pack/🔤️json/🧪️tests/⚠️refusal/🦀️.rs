@@ -1,6 +1,6 @@
 use super::*;
 use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueRefusalKind};
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../🌱️value/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(crate::text("../../🌱️value/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 #[test]
 fn controlled_json_refusal_preserves_real_kind_and_nested_path() {
     for row in fixture()["jsonCases"].as_array().unwrap() {

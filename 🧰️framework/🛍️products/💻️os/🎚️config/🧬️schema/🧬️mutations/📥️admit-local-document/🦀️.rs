@@ -4,7 +4,6 @@ use super::super::{absorb_keyed_rows, KeyedEdit};
 use super::retire_local_document::RetireLocalDocument;
 use super::LocalCatalogConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
-#[cfg(test)] use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema
@@ -166,13 +165,3 @@ pub fn inverse_local_catalog_config_mutation_steps(mutation: &LocalCatalogConfig
     })
 }
 //#endregion 🌉️MutationCodecBridge
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/📥️lists-a-persisted-studio-beside-an-imported-one/🦀️.rs"]
-mod tests_lists_a_persisted_studio_beside_an_imported_one;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

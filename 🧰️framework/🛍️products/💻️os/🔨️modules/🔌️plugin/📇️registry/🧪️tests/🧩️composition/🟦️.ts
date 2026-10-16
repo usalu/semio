@@ -128,8 +128,7 @@ test("actual injected catalog scope preserves all original export and diagnostic
  console.log("[DEBUG] actual injected catalog canonical scope os.plugin.registry exports7 owned diagnostics0");
 }, 300000);
 
-import publicationSchema from "../../../../🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json";
-import publicationCases from "../../../../🧑‍💻dev/🎮️playground-session/🧪️tests/🧫️fixtures/🔣️.json";
+import { devPlaygroundSessionSchema as publicationSchema, devPlaygroundSessionFixture as publicationCases } from "../../../../🧑‍💻dev/🧪️tests/🧫️fixtures/🟦️.ts";
 import { parsePlaygroundSessionPublicationRequestV1 } from "../../../../🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts";
 const publicationOracle = new Ajv({ strict: false }).compile(publicationSchema);
 for (const row of publicationCases.cases) test(`explicit session publication ${row.id}`, () => {

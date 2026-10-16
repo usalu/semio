@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import type { ActionBinding, BuiltNode } from "@semio-tech/framework";
-import { TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, toolRunPanelGroupRun, toolRunPanelNewRuns } from "../../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
+import { TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, toolRunPanelGroupRun, toolRunPanelNewRuns } from "@semio-tech/framework/tool-run";
 // #endregion 🔌️Adapters
 
 //#region ⏯️ToolRunPanel

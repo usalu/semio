@@ -1,4 +1,4 @@
-/** 🧭️ Tool-job coverage: segmented drain, reserved routes and bounded queues.
+/** 🛣️ Tool-job coverage: segmented drain, reserved routes and bounded queues.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { TOOL_JOB_PLUGIN_RESERVED_IDS, toolJobRustBlock } from "../📋️inventory/🟦️.ts";

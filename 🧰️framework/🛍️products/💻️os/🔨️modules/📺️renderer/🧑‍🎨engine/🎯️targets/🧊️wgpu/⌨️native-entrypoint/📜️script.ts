@@ -1,20 +1,21 @@
 #!/usr/bin/env bun
 import {readNativeCallerAuthorityV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {withPlaygroundSessionV1} from "../../../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts";
-import {createRequestedIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { createAssetHttpServerV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import {playgroundNativeHostArtifactV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
-import { pinExecutableArtifact } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
+import {withRepositoryExecutablePinV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📌️executable/🟦️.ts";
+import {compilerAdmissionBudgetV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { once } from "node:events";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import type { Server } from "node:http";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {runTool} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts";
-import {repositoryCargoPreparationStorageV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 import { nativeRendererBinary } from "../🏗️compiler/🦀️native/📜️script.ts";
@@ -31,29 +32,22 @@ export function nativeRunnerEnvironment(source: NodeJS.ProcessEnv): NodeJS.Proce
   }).concat([["SEMIO_DIRECT_CHILD_BENIGN", "preserved"]]));
 }
 
-/** 🧊️ Acquires the selected native host without locking its mutable producer output. */
-async function nativeExecutable(executable: string, cwd: string, signal: AbortSignal): Promise<string> {
-  if(!isAbsolute(executable))return executable;
-  const workspace=resolve(cwd),cache=join(workspace,".🧬semio/🦑️repo/⚡️cache");
-  return pinExecutableArtifact(resolve(executable),join(cache,"tools/native-executables",basename(executable)),"native-execution",{signal,leaseDirectory:join(workspace,".cache/framework/leases"),onWait:({elapsedMs})=>console.log(`[native] Waiting for executable publication (${elapsedMs}ms); Ctrl+C cancels`)});
-}
-
-/** 🏃️ Keeps the owning JavaScript event loop responsive while the native child runs. */
-export async function runNativeBinary(executable: string, args: readonly string[], environment: NodeJS.ProcessEnv, cwd = getWorkspaceRoot(), signal: AbortSignal = new AbortController().signal): Promise<void> {
-  const binary=await nativeExecutable(executable,cwd,signal);
-  await runTool(binary, [...args], cwd, signal, false, nativeRunnerEnvironment(environment),repositoryCargoPreparationStorageV1(process.cwd()));
+/** 🏃️ Carries actual phase authority through immutable acquisition and the complete owned child lifetime. */
+export async function runNativeBinary(executable:string,args:readonly string[],environment:NodeJS.ProcessEnv,cwd:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);const capturedArgs=Object.freeze([...args]),capturedEnvironment=Object.freeze({...environment});const execute=async(binary:string,control:ResourceLeaseControl)=>{requireIssuedResourceControlInvocationV1(control,invocation);requireIssuedResourceControlRefinementV1(phaseControl,control);const budget=compilerAdmissionBudgetV1(control);await runOwnedCommand(binary,[...capturedArgs],cwd,"native:execution",budget,{env:nativeRunnerEnvironment(capturedEnvironment),signal:control.signal,onProgress:async()=>{checkResourceLeaseControl(control);await control.publish({resource:"native:execution",mode:"shared",elapsedMs:0});checkResourceLeaseControl(control);await control.yieldContinuation();checkResourceLeaseControl(control);}});checkResourceLeaseControl(control);};
+ if(isAbsolute(executable))return withRepositoryExecutablePinV1({workspace:readNativeCallerAuthorityV1(invocation.capabilities).repositoryRoot,invocation,phaseControl,source:executable},execute);return execute(executable,phaseControl);
 }
 
 /** 🌐️ Starts one ready asset listener, runs the native consumer and closes all owned connections. */
-export async function runNativeSession(executable: string, args: readonly string[], environment: NodeJS.ProcessEnv, cwd: string, signal: AbortSignal, startAssets?: () => Server): Promise<void> {
-  signal.throwIfAborted();
+export async function runNativeSession(executable: string, args: readonly string[], environment: NodeJS.ProcessEnv, cwd:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,startAssets?: () => Server): Promise<void> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);const signal=phaseControl.signal;
   const server=startAssets?.();let failed=false;
   try {
-    if (server && !server.listening) await once(server, "listening", { signal });
+    if(server&&!server.listening){const stop=new AbortController(),remaining=checkResourceLeaseControl(phaseControl),timer=remaining===null?undefined:setTimeout(()=>stop.abort(Error("Native asset readiness phase exhausted")),remaining);try{await once(server,"listening",{signal:AbortSignal.any([signal,stop.signal])});checkResourceLeaseControl(phaseControl);}finally{if(timer)clearTimeout(timer);}}
     const address = server?.address();
     if (server && (!address || typeof address === "string")) throw new Error("Native asset server needs a TCP address");
     const env = { ...environment, ...(address && typeof address !== "string" ? { SEMIO_ASSET_BASE_URL: `http://127.0.0.1:${address.port}` } : {}) };
-    await runNativeBinary(executable, args, env, cwd, signal);
+    await runNativeBinary(executable,args,env,cwd,invocation,phaseControl);
   }catch(error){failed=true;throw error;}finally{
     const failures:unknown[]=[];if(server){try{server.closeAllConnections();}catch(error){failures.push(error);}try{await new Promise<void>((accept,refuse)=>server.close(error=>error?refuse(error):accept()));}catch(error){failures.push(error);}}if(!failed&&failures.length)throw failures[0];
   }
@@ -97,7 +91,7 @@ class RunScript extends BundleScript {
       // 🧭️ An explicit `--flag` is spelled FIRST, because the binary's `arg_value` reads the first
       // occurrence; the playground row then supplies the per-server defaults (`app`, `brand`) the wgpu
       // serve injects as `<meta name="semio-*">` for the browser.
-      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime, SEMIO_RUNTIME_ASSETS: repo }, repo,createRequestedIssuedResourceControlV1(runtimeControl,0,controller.signal).signal,row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
+      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime, SEMIO_RUNTIME_ASSETS: repo }, repo,this.invocation,createRequestedIssuedResourceControlV1(runtimeControl,0,controller.signal),row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
     } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
     });
     });
@@ -114,22 +108,24 @@ class McpScript extends BundleScript {
     const binary=playgroundNativeHostArtifactV1(this.repoRoot,row.mcpHost,profile as "prototype"|"release");
     if(!binary || !existsSync(binary))throw new Error("Missing Nx MCP owner artifact");
     const controller=new AbortController(),cancel=()=>controller.abort();
+    const phaseControl=createIssuedResourceControlV1(this.invocation,"native:mcp",0,controller.signal);
     process.once("SIGINT",cancel);process.once("SIGTERM",cancel);
-    try {await runTool(await nativeExecutable(binary,this.repoRoot,controller.signal),[transport,...args],this.repoRoot,controller.signal,false,process.env,repositoryCargoPreparationStorageV1(process.cwd()));}
+    try {await withRepositoryExecutablePinV1({workspace:this.repoRoot,invocation:this.invocation,phaseControl,source:binary},async(executable,actualControl)=>{await runOwnedCommand(executable,[transport,...args],this.repoRoot,"native:mcp",compilerAdmissionBudgetV1(actualControl),{env:process.env,signal:actualControl.signal});checkResourceLeaseControl(actualControl);});}
     finally {process.removeListener("SIGINT",cancel);process.removeListener("SIGTERM",cancel);}
   }
 }
 
 /** ⚖️ Runs the native scale consumer with only its binary and fixture prerequisites. */
 class ScaleScript extends BundleScript {
-  async run([profile, ...args]: string[]): Promise<void> {
+  async run([profile, ...args]:string[]):Promise<void> {
+    const phaseControl=createIssuedResourceControlV1(this.invocation,"native:scale",0);
     if(profile!=="prototype"&&profile!=="release")throw Error("Exact Native scale mode required");nativeRuntimeDirectory(this.repoRoot,"scale",profile);
     if (!args.length || args.length % 2 !== 0 || args.some((value, index) => index % 2 === 0 && !["--scale", "--scale-wasm", "--shards", "--report"].includes(value))) throw new Error("Native scale accepts --scale, --scale-wasm, --shards and --report value pairs");
     for (const flag of ["--scale", "--scale-wasm", "--report"]) if (args.filter(value => value === flag).length !== 1) throw new Error(`Native scale requires exactly one ${flag}`);
     const report=args[args.indexOf("--report")+1];if(!report)throw Error("Finite scale report required");mkdirSync(dirname(resolve(this.repoRoot,report)),{recursive:true});
     const controller = new AbortController(), cancel = () => controller.abort();
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-    try { await runNativeBinary(nativeRendererBinary(resolve(import.meta.dir, "../📦️packages/🦀️rust"), profile), args, process.env, this.repoRoot, controller.signal); }
+    try { await runNativeBinary(nativeRendererBinary(resolve(import.meta.dir, "../📦️packages/🦀️rust"), profile), args,process.env,this.repoRoot,this.invocation,createRequestedIssuedResourceControlV1(phaseControl,0,controller.signal)); }
     finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   }
 }

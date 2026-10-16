@@ -1,5 +1,5 @@
 import{BundleScript,ScriptRouter,receiveScriptProcessInvocation,createIssuedResourceControlV1}from"./../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandV1}from"./../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{captureOwnedCommandV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import{withPrintOperationV1,withPrintStorageTaskV1}from"./../../../📦️artifacts/🎛️operation/🟦️.ts";
 import{preparePrintMaterialV1,withPreparedPrintMaterialV1}from"./../../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
 import{printScratchOwnerV1}from"../../../📦️artifacts/🟦️.ts";

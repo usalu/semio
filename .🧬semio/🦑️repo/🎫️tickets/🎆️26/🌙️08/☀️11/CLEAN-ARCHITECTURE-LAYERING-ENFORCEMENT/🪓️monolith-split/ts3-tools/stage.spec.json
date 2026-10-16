@@ -1,0 +1,79 @@
+{
+ "file": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎪️stage/🧪️tests/🔬️unit/🟦️.ts",
+ "label": "stage-unit",
+ "sha1": "5e9b413b25b25b74039599a3b18f2f40786a6f9c",
+ "childRoot": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎪️stage/🧪️tests",
+ "deleteParent": true,
+ "children": [
+  {
+   "folder": "🧰️stage-helpers",
+   "doc": "/** 🎪️ Shared kit of the unit suite of the stage (the topics sit in the sibling folders `🚪️arrival-and-gaze`, `🚶️walking-and-encounters`, `🎬️frames-and-summoning`, `📏️distance-and-turning`, `👁️attention-and-gait`, `🧠️determinism-and-mind`, `🦾️body-and-gear` and `🪄️mischief-and-arithmetic`): the troupe, the meadow and the event builders. The suite checks: everything the owner asked of the pets, checked on the fold itself — slightly active by default, eyes that follow the pointer while standing still, blinking, walking along perches and riding a surface that moves, falling when a perch vanishes and landing, encounters that are affectionate for friends and small disputes (squabble → sulk → mending) for rivals, quiet and still, summon and leave, the events of the learner's hand, what an actor arrives with and stands on, determinism, and the rate, the wake and the fields a frame reports.\n *\n * Two menageries are played: the sample menagerie of the schema-conformance vectors (a walker, a hopper, a floater)\n * and the troupe of the stage-trace vectors (five blobs). Where a test needs a precise situation it writes the state\n * of an actor directly — the stage is a pure fold over plain data, so any valid state is a fair starting point.\n *\n * @see ../../🟦️.ts — the façade under test; the modules it folds are the `PARTS` whose arithmetic the last block reads\n * @see ../../../../🧫️fixtures/🧬️schema-conformance/🔣️.json — the sample menagerie\n * @see ../../../../🧫️fixtures/🎪️stage-trace/🔣️.json — the trace troupe\n */",
+   "stmts": [
+    "37-44",
+    "48-116",
+    "141-167",
+    "182-186"
+   ]
+  },
+  {
+   "folder": "🚪️arrival-and-gaze",
+   "doc": "/** 🚪️ Unit suite of the stage, arrival: opening the stage, what an actor arrives with, the default liveliness, the gaze and blinking.\n *\n * @see ../🧰️stage-helpers/🟦️.ts — the shared kit; ../../🟦️.ts — the façade under test\n */",
+   "stmts": [
+    "177-177",
+    "187-569"
+   ]
+  },
+  {
+   "folder": "🚶️walking-and-encounters",
+   "doc": "/** 🚶️ Unit suite of the stage, movement: walking along perches and riding a surface, falling and landing, and encounters between friends and rivals.\n *\n * @see ../🧰️stage-helpers/🟦️.ts — the shared kit; ../../🟦️.ts — the façade under test\n */",
+   "stmts": [
+    "571-940"
+   ]
+  },
+  {
+   "folder": "🎬️frames-and-summoning",
+   "doc": "/** 🎬️ Unit suite of the stage, frames: a time of concentration, a still stage, summoning and leaving, the learner's hand, what an actor arrives with and what a frame shows.\n *\n * @see ../🧰️stage-helpers/🟦️.ts — the shared kit; ../../🟦️.ts — the façade under test\n */",
+   "stmts": [
+    "942-1246"
+   ]
+  },
+  {
+   "folder": "📏️distance-and-turning",
+   "doc": "/** 📏️ Unit suite of the stage, spacing: keeping their distance, hopping between perches and turning round.\n *\n * @see ../🧰️stage-helpers/🟦️.ts — the shared kit; ../../🟦️.ts — the façade under test\n */",
+   "stmts": [
+    "1248-1559"
+   ]
+  },
+  {
+   "folder": "👁️attention-and-gait",
+   "doc": "/** 👁️ Unit suite of the stage, attention: attending to the pointer, a hopping gait and seeing through a pet.\n *\n * @see ../🧰️stage-helpers/🟦️.ts — the shared kit; ../../🟦️.ts — the façade under test\n */",
+   "stmts": [
+    "1561-1846"
+   ]
+  },
+  {
+   "folder": "🧠️determinism-and-mind",
+   "doc": "/** 🧠️ Unit suite of the stage, determinism and mind: determinism, the rate and the wake, and the mind of a pet (clicks, gestures, moods).\n *\n * @see ../🧰️stage-helpers/🟦️.ts — the shared kit; ../../🟦️.ts — the façade under test\n */",
+   "stmts": [
+    "168-168",
+    "1848-2249"
+   ]
+  },
+  {
+   "folder": "🦾️body-and-gear",
+   "doc": "/** 🦾️ Unit suite of the stage, body and gear: footings, the hand and the pointer, walls, ladders, ropes and what a pet holds.\n *\n * @see ../🧰️stage-helpers/🟦️.ts — the shared kit; ../../🟦️.ts — the façade under test\n */",
+   "stmts": [
+    "117-117",
+    "2251-2771"
+   ]
+  },
+  {
+   "folder": "🪄️mischief-and-arithmetic",
+   "doc": "/** 🪄️ Unit suite of the stage, mischief: a pet pushes the copy of a thing, and the arithmetic of the module.\n *\n * @see ../🧰️stage-helpers/🟦️.ts — the shared kit; ../../🟦️.ts — the façade under test\n */",
+   "stmts": [
+    "45-45",
+    "2773-3075"
+   ]
+  }
+ ]
+}

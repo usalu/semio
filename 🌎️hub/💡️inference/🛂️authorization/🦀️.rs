@@ -4,7 +4,7 @@ use semio_hub_inference::schema::InferenceIdentityV1;
 use semio_hub_inference::{InferenceErrorV1, InferenceOperationControlV1};
 use semio_hub_directory_contract::model::{SocketSessionBindingStatus, SpaceRole};
 use semio_hub_directory_dispatch::HubDirectories;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{AuthSessionDirectory, EventLog, UserDirectory};
 use directory::os_directory::DocumentScope;
 
 pub async fn check_live_inference_author(directory: &HubDirectories, identity: &InferenceIdentityV1, scope: &DocumentScope, now: impl Fn() -> i64, control: &InferenceOperationControlV1) -> Result<(), InferenceErrorV1> {

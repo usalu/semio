@@ -49,5 +49,5 @@ export const stdioStlAsciiAnySnapshotTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseStlSnapshotText(value: unknown, at = "$"): StlSnapshotText {
-  return stdioStlAsciiAnySnapshotTextGuardObject(value, `${at}`);
+  return stdioStlAsciiAnySnapshotTextGuardString(value, `${at}`);
 }

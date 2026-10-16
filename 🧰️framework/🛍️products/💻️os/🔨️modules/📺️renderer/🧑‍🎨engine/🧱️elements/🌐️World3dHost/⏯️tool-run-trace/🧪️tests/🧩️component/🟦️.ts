@@ -4,13 +4,13 @@
  * oracle for counts and for matrix composition). */
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
-import viewContextSchema from "../../../../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
-import { parseResolvedPluginViewState } from "../../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { manifestViewContextSchema as viewContextSchema } from "../../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+import { parseResolvedPluginViewState } from "@semio-tech/framework";
 import { Matrix4, Quaternion, Vector3, BoxGeometry, type InstancedMesh } from "three";
-import fixture from "../../../../../../../../../../🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/📼️trace-pages.json";
-import canvas2dLanes from "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json";
-import base64UrlVectors from "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/🧪️tests/🧫️fixtures/🔣️rfc4648-base64url-vectors.json";
-import { base64UrlDecode, base64UrlEncode } from "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/🟦️.ts";
+import { runTracePagesFixture as fixture } from "../../../../../../../../../../🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/🟦️.ts";
+import { canvas2dSceneLanesFixture as canvas2dLanes } from "../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { rfc4648Base64urlVectorsFixture as base64UrlVectors } from "../../../../../../../../../../🔨️modules/🚪️io/🧪️tests/🧫️fixtures/🟦️.ts";
+import { base64UrlDecode, base64UrlEncode } from "@semio-tech/framework/io/base64";
 import {
   encodeToolRunTraceDelta,
   toolRunHexToBytes,
@@ -21,8 +21,8 @@ import {
   TOOL_RUN_VERDICTS,
   type ToolRunTraceOp,
   type ToolRunTraceSubject,
-  type ToolRunVerdict,
-} from "../../../../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
+  type ToolRunVerdict
+} from "@semio-tech/framework/tool-run";
 import { resolveMeshStyle } from "../../../🟦️.tsx";
 import { createToolRunTraceInstancedMesh, publishToolRunTraceCursor, syncToolRunTraceInstancedMesh, toolRunTraceCapacity, toolRunTraceCursorViewState, toolRunTraceDataAttributes, toolRunTraceFade, ToolRunTraceRecordStore, TOOL_RUN_TRACE_METRICS } from "../../🟦️.tsx";
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { unsignedLebOracleV1 } from "../../../../../🔨️modules/🎒️pack/📐️format/🧪️tests/🔮️oracles/🔢️leb/🟦️.ts";
-import {verifyProducedWasmPackageV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import {verifyProducedWasmPackageV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -13,7 +14,7 @@ import Ajv, { type ValidateFunction } from "ajv";
 import { runCargo, runVitest, buildRepositoryWasmWebV1, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
+import { blake3Hex } from "../../../../../📦️packages/🟦️typescript/🔏️hash/🟦️.ts";
 
 /** 🧬️ A compiled owned-schema export, typed as a boolean runtime check so `assert` never narrows its validated subject to `unknown`. */
 type SchemaCheck = ((data: unknown) => boolean) & Pick<ValidateFunction, "errors">;
@@ -50,7 +51,7 @@ class MediaProjectionScript extends BundleScript {
     assert(projectionLaw.includes("fn workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"), "an exact native projection law is registered");
     console.log(`media contract presentation oracle: ${fixture.cases.length} document/binary/conversion vectors, ${denied} strict hostile denials; no native claim`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-host-workflow", target: { kind: "lib" }, laws: ["workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"] }, { package: "semio-framework-os-host-registry", target: { kind: "lib" }, laws: ["owned_artifact_kind_formats_survive_host_registry_projection"] }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-host-workflow", target: { kind: "lib" }, laws: ["workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"] }, { package: "semio-framework-os-host-registry", target: { kind: "lib" }, laws: ["owned_artifact_kind_formats_survive_host_registry_projection"] }] });
     console.log(`media contract presentation native assertions=${receipts.reduce((total, receipt) => total + receipt.assertions, 0)}; executables=${receipts.map((receipt) => receipt.sha256).join(",")}`);
   }
 }
@@ -138,7 +139,7 @@ class PersistenceContractScript extends BundleScript {
     assert(!source.includes("resolve_kernel_future") && !source.includes("resolve_ready") && !source.includes("ReplayShellCommand"));
     console.log(`persistence contract oracle: requests=${requests.size}, hostileRequests=${fixture.requestNegatives.length}, hostileEvents=${eventDenials}, traces=${fixture.traces.length}, accepted=${accepted}, rejected=${rejected}, durablePublications=${published}; no IO/runtime activation claim`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os", target: { kind: "lib" }, laws: ["persistence_contract_matches_neutral_scope_progress_and_terminal_traces", "persistence_contract_rejects_closed_fields_and_cross_scope_receipts"] }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os", target: { kind: "lib" }, laws: ["persistence_contract_matches_neutral_scope_progress_and_terminal_traces", "persistence_contract_rejects_closed_fields_and_cross_scope_receipts"] }] });
     assert.equal(receipts[0]!.assertions, 2);
     console.log(`persistence contract native assertions=${receipts[0]!.assertions}; executable=${receipts[0]!.sha256}`);
   }
@@ -176,7 +177,7 @@ class DocumentRetirementScript extends BundleScript {
     assert(!stdio.includes("trait RetireOwned:") && !stdio.includes("struct Bytes(Vec<u8>)"), "Stdio must consume the shared owner primitive");
     console.log(`owned retirement oracle: cases=${fixture.cases.length}, budgets=${fixture.budgets.length}, exactByteGrants=${grants}, declaredHostile=${fixture.hostile.length}; native pending`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["owned_retirement_matches_neutral_exact_byte_grants", "owned_retirement_rejects_false_terminal_and_preserves_shared_roots"] }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["owned_retirement_matches_neutral_exact_byte_grants", "owned_retirement_rejects_false_terminal_and_preserves_shared_roots"] }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }
@@ -238,13 +239,13 @@ class MemberOpenProtocolScript extends BundleScript {
     const sourceTests = readFileSync(join(base, "🧪️tests/🔬️unit/🦀️.rs"), "utf8");
     assert(sourceTests.includes("member_open_request_rejection_retains_exact_pages_and_identity"));
     assert(sourceTests.includes("member_open_input_framing_is_canonical_scoped_and_budgeted"));
-    const store = readFileSync(join(base, "../../🦀️.rs"), "utf8");
-    assert(store.includes('#[path = "🧪️tests/🔬️unit/🦀️.rs"]') && store.includes("mod tests;"));
-    const storeTests = readFileSync(join(base, "../../🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+    const store = readFileSync(join(base, "../../🧪️tests/🌆️bin-02/🦀️.rs"), "utf8");
+    assert(store.includes('#[path = "🔬️unit/🦀️.rs"]') && store.includes("mod store_unit_tests;"));
+    const storeTests = readFileSync(join(base, "../../🧪️tests/🌆️bin-02/🔬️unit/🦀️.rs"), "utf8");
     assert(storeTests.includes("member_open_partial_parse_and_initialization_owners_retire_exactly"));
     console.log(`[TRACE] member open request oracle: ${fixture.cases.length} admission cases, ${fixture.framing.length} framing cases, ${fixture.retention.length} declared retained-stage cases; rejected input bytes retained=${rejectedBytes}; typed parser/factory activation not claimed`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["member_open_request_rejection_retains_exact_pages_and_identity", "member_open_input_framing_is_canonical_scoped_and_budgeted", "member_open_partial_parse_and_initialization_owners_retire_exactly"] }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-store-member-open-tests", target: { kind: "lib" }, laws: ["member_open_request_rejection_retains_exact_pages_and_identity", "member_open_input_framing_is_canonical_scoped_and_budgeted"] }, { package: "semio-framework-os-store-tests-02", target: { kind: "lib" }, laws: ["member_open_partial_parse_and_initialization_owners_retire_exactly"] }] });
     assert.equal(receipts[0]!.assertions, 3);
   }
 }
@@ -429,7 +430,7 @@ class MemberHistoryInputScript extends BundleScript {
     for (const name of ["member_history_verification_retains_input_and_bounds_verified_handoff", "member_history_verification_rechecks_every_owner_transition_and_retires_exact_bytes"]) assert(nativeTests.includes(`fn ${name}`));
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("pub(crate) mod history;"), "retained history owner is deliberately unmounted; native coverage unavailable");
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["member_history_verification_retains_input_and_bounds_verified_handoff", "member_history_verification_rechecks_every_owner_transition_and_retires_exact_bytes"] }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-store-member-open-tests", target: { kind: "lib" }, laws: ["member_history_verification_retains_input_and_bounds_verified_handoff", "member_history_verification_rechecks_every_owner_transition_and_retires_exact_bytes"] }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }
@@ -497,7 +498,7 @@ class MemberHistoryIdScript extends BundleScript {
     assert(source.includes("fn is_complete(") && readFileSync(join(owner, "🧪️tests/🔬️unit/🦀️.rs"), "utf8").includes('fixture["completion"]'), "native completion query and exact neutral boundary binding are required");
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../../🦀️.rs"), "utf8").includes("pub(crate) mod identity;"), "semantic identity decoder remains unmounted");
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [law] }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [law] }] });
     assert.equal(receipts[0]!.assertions, 1);
   }
 }
@@ -589,7 +590,7 @@ class MemberHistoryRecordScript extends BundleScript {
     for (const law of laws) assert(source.includes(`fn ${law}`));
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("mod record;"), "dictionary record cursor remains unmounted");
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }
@@ -610,9 +611,10 @@ class MemberHistoryFoundationScript extends BundleScript {
       ["🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🦀️.rs", "pub(crate) mod identity;"],
     ];
     for (const [path, declaration] of mounts) assert(readFileSync(join(this.repoRoot, path!), "utf8").includes(declaration!));
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [
       { package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: ["format::retained::tests::retained_spr_verification_matches_neutral_commits_and_torn_prefixes", "format::retained::tests::retained_spr_verification_rejects_hostile_frames_without_publication"] },
-      { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["member_history_verification_retains_input_and_bounds_verified_handoff", "member_history_verification_rechecks_every_owner_transition_and_retires_exact_bytes", "retained_history_id_cursor_matches_neutral_bytes_and_refuses_unowned_resolution"] },
+      { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["retained_history_id_cursor_matches_neutral_bytes_and_refuses_unowned_resolution"] },
+      { package: "semio-framework-os-store-member-open-tests", target: { kind: "lib" }, laws: ["member_history_verification_retains_input_and_bounds_verified_handoff", "member_history_verification_rechecks_every_owner_transition_and_retires_exact_bytes"] },
     ] });
     assert.deepEqual(receipts.map(receipt => receipt.assertions), [2, 3]);
     console.log("[TRACE] retained history foundation: exactly5 native assertions; framing2 + private input2 + tagged-ID1; no dictionary/member factory/publication claim");
@@ -876,7 +878,7 @@ class MemberHistoryDictionaryScript extends BundleScript {
     assert(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🪪️id/🦀️.rs"), "utf8").includes("fn is_complete("), "record owner requires a non-poisoning tagged-ID completion query");
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("mod dictionary;"), "native dictionary owner laws require the coordinated parent mount");
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["member_history_dictionary_is_atomic_and_bounded_by_neutral_records", "member_history_dictionary_retains_every_denied_owner_until_exact_close"] }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-store-member-open-tests", target: { kind: "lib" }, laws: ["member_history_dictionary_is_atomic_and_bounded_by_neutral_records", "member_history_dictionary_retains_every_denied_owner_until_exact_close"] }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }
@@ -1011,10 +1013,10 @@ class MemberFactoryIdentityScript extends BundleScript {
     for (const law of laws) assert(tests.includes(`fn ${law}`));
     assert(tests.includes('fixture["semantic"]') && tests.includes('fixture["semanticLifecycle"]') && tests.includes("begin_dictionary"), "native selected schema law must traverse the actual dictionary owner and retain every denied input");
     const store = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
-    const storeTests = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+    const storeTests = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🍰️companion/🔬️unit/🦀️.rs"), "utf8");
     const generatedSource = storeTests.slice(storeTests.indexOf("pub enum RetainedTestMembers, RetainedTestMembersOpen {"), storeTests.indexOf("fn member_publication_fixture()"));
     assert.deepEqual([...generatedSource.matchAll(/\w+\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"\) =>/g)].map(match => match.slice(1)), fixture.generatedDeclarations);
-    assert(tests.includes("super::super::super::super::tests::RetainedTestMembers") && tests.includes("Generated::OPEN_DECLARATIONS"), "native laws must exercise the actual space_members macro expansion, not just hand-declared fixture factories");
+    assert(tests.includes("super::store_unit_tests::RetainedTestMembers") && tests.includes("Generated::OPEN_DECLARATIONS"), "native laws must exercise the actual space_members macro expansion, not just hand-declared fixture factories");
     assert(store.includes("const OPEN_DECLARATIONS:"), "selected identity requires the coordinated MemberFactory declaration API; staged source is not mounted authority");
     const macroFactory = store.slice(store.indexOf("impl $crate::os_store::MemberFactory for $enum_name"), store.indexOf("//#endregion SpaceMember"));
     for (const field of ["kind: $kind", "standard: $standard", "subset: $subset", "schema: $schema"]) assert(macroFactory.includes(field), `factory declaration must reuse its creation/open literal ${field}`);
@@ -1022,7 +1024,7 @@ class MemberFactoryIdentityScript extends BundleScript {
     assert(/const OPEN_DECLARATIONS:\s*&'static\s*\[MemberOpenDeclaration\]\s*=\s*&\[\];/.test(noMembers), "NoMembers has exactly the empty declaration table");
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("mod factory;"), "selected factory native laws require the coordinated mount");
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }
@@ -1110,7 +1112,7 @@ class PublicMemberOpenHandoffCheckScript extends PublicMemberOpenHandoffScript {
     if (segments.length) throw new Error("public-member-open-handoff-check accepts no arguments");
     this.proveSource();
     const laws = ["semio_member_factory_request_owned_open_admits_only_retained_flow"];
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-s-plugin-stdio", target: { kind: "test", name: "flow_retained_decode" }, laws }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-s-plugin-stdio", target: { kind: "test", name: "flow_retained_decode" }, laws }] });
     assert.equal(receipts.length, 1);
     assert.equal(receipts[0]!.assertions, 1);
   }

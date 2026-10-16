@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "stages",
+    "failures",
+    "request",
+    "snapshots",
+    "pending"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "request": {
+      "type": "object"
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "events",
+          "accept",
+          "initialState"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "accepted",
+                "observed",
+                "witnessed",
+                "detached",
+                "underlying",
+                "staged",
+                "published",
+                "attached",
+                "verified",
+                "settled",
+                null
+              ]
+            }
+          },
+          "accept": {
+            "type": "boolean"
+          },
+          "initialState": {
+            "enum": [
+              "mounted",
+              "inactive"
+            ]
+          }
+        }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "body",
+          "cleanup",
+          "ids"
+        ],
+        "properties": {
+          "body": {
+            "enum": [
+              "none",
+              "undefined",
+              "frozen"
+            ]
+          },
+          "cleanup": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "first",
+                "second",
+                "aggregate"
+              ]
+            }
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "undefined",
+                "body",
+                "first",
+                "second"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "snapshots": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "form",
+          "accept"
+        ],
+        "properties": {
+          "form": {
+            "enum": [
+              "plain",
+              "mutated",
+              "accessor",
+              "symbol",
+              "prototype"
+            ]
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "pending": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "admit"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "absent",
+              "directory",
+              "file",
+              "dangling-link",
+              "unreadable"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

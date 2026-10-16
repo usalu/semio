@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
 /** 📦️ gis-gismap Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
@@ -17,8 +18,8 @@ class OwnedVerifyScript extends BundleScript {
       const { proveGisMapInferenceClientV1 } = await import("../../💡️inference/🔌️client/🧪️tests/🟦️.ts");
       proveGisMapInferenceClientV1();
       if (segments[1] === "native") {
-        const { runExactCargoLaws } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, laws: ["inference_client::tests::production_manifest_installs_owner_transport_and_schema_vectors", "inference_client::tests::typed_owner_transport_preserves_proposal_binding_and_closed_geometry", "inference_client::tests::owner_reconcile_and_undo_preserve_exact_retry_identity_and_durable_tail"] }],progress(event) { console.log("GIS owner client " + event.stage + ": " + (event.law ?? "")); }});
+        const { runRepositoryExactCargoLaws } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, laws: ["inference_client::tests::production_manifest_installs_owner_transport_and_schema_vectors", "inference_client::tests::typed_owner_transport_preserves_proposal_binding_and_closed_geometry", "inference_client::tests::owner_reconcile_and_undo_preserve_exact_retry_identity_and_durable_tail"] }],progress(event) { console.log("GIS owner client " + event.stage + ": " + (event.law ?? "")); }});
       }
       return;
     }

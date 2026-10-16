@@ -37,7 +37,7 @@ import {
   type UiComponentSceneNode
 } from "@semio-tech/framework";
 import { openSurfaceContextMenu, useMapContextMenuSpecs, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
-import { nodeDragMoves, nodeDragRow } from "../../../../../../../../🔨️modules/🛠️tool-machine/🟦️.ts";
+import { nodeDragMoves, nodeDragRow } from "@semio-tech/framework/tool-machine";
 import {
   DEFAULT_NODE_GRAPH_VIEWPORT,
   nodeGraphConnectionIsValid,

@@ -56,3 +56,6 @@ path = "../../🧪️tests/🎒️mesh-pack-wire/🦀️.rs"
 [[test]]
 name = "flow_retirement_law"
 path = "../../🧪️tests/⚖️retirement-law/🦀️.rs"
+
+[dev-dependencies]
+semio-framework-test-typed-input-law = { path = "../../../../../../🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust" }

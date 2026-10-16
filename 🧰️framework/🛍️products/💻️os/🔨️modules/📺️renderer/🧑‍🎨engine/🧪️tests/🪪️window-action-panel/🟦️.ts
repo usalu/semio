@@ -1,7 +1,7 @@
 /** 🪪 Window action panel staging and the palette redirect and keybinding rule. */
 import utilityActionPolicy from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧰️utility-action-policy/🔣️.json";
 import utilityAssignmentCases from "../../🧱️elements/🐚️Shell/🧰️utility-assignment/🧪️tests/🧫️fixtures/🔣️.json";
-import initialWindowUtilityCases from "../../../../../../../🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧪️tests/🧫️fixtures/🔣️.json";
+import { manifestUtilitiesInitialFixture as initialWindowUtilityCases } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import { resolveUtilityActivationV1 as resolveAssignmentPress } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { createElement, useState, type ReactElement } from "react";
 import { parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";

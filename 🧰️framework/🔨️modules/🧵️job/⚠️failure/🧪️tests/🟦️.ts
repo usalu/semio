@@ -5,7 +5,7 @@ import {resolve} from "node:path";
 import Ajv from "ajv";
 import {applyPatch} from "fast-json-patch";
 import {Database} from "bun:sqlite";
-import type {IntrinsicValue} from "../../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
+import type {IntrinsicValue} from "@semio-tech/value-ts/schema/intrinsic";
 import type {ValueRefusalKind,ValueErrorRetainedProgress} from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 
 /** 📦️ Neutral admission rows preserve the whole domain source using an independent patch oracle. */
@@ -27,9 +27,9 @@ test("original domain fault transport preserves intrinsic source and separate re
 
 /** 🧯️ Independent original failure accounting preserves semantic and receipt causes without cloning. */
 test("original turn failure retains primary and receipt refusal",()=>{
- const base=resolve(import.meta.dirname,".."),repo=resolve(base,"../../../.."),read=(path:string)=>JSON.parse(readFileSync(path,"utf8")),ajv=new Ajv({strict:true,allErrors:true});
- ajv.addSchema(read(resolve(repo,"🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json")));
- ajv.addSchema(read(resolve(repo,"🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json")),"flow.original-retained-progress");
+ const base=resolve(import.meta.dirname,".."),repo=resolve(base,"../../../.."),read=(path:string|URL)=>JSON.parse(readFileSync(path,"utf8")),ajv=new Ajv({strict:true,allErrors:true});
+ ajv.addSchema(read(valueOrderedRetirementSchemaUrl));
+ ajv.addSchema(read(cloneWireProgressSchemaUrl),"flow.original-retained-progress");
  const corpus=read(resolve(base,"🧪️tests/🧫️fixtures/🔣️.json")),validate=ajv.compile(read(resolve(base,"🧬️schema/🔣️.json")));assert.equal(validate(corpus),true,JSON.stringify(validate.errors));let checks=1;
  for(const key of Object.keys(corpus)){const malformed={...corpus};delete malformed[key];assert.equal(validate(malformed),false);checks++;}assert.equal(validate({...corpus,alternateFailure:true}),false);checks++;
  for(const row of corpus.cases){const progress=row.primary.retainedProgress,excess=progress.copiedItems>row.grant.maximumItems||progress.copiedBytes>row.grant.maximumCopyBytes||progress.retainedCapacityBytes>row.grant.maximumCapacityBytes||progress.releasedBytes>row.grant.maximumReleaseBytes;const observed=applyPatch({primary:row.primary,receiptRefusal:null,recorded:{copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0}},[{op:"replace",path:"/recorded",value:progress},{op:"replace",path:"/receiptRefusal",value:excess?"invariantViolated":null}],true,false).newDocument;assert.deepEqual(observed.primary,row.primary);assert.deepEqual(observed.recorded,progress);assert.equal(observed.receiptRefusal,row.expectedReceiptKind);assert.deepEqual([...Buffer.from(row.primary.message)],[...new TextEncoder().encode(row.primary.message)]);checks+=4;}
@@ -41,7 +41,7 @@ test("original turn failure projects both distinct receipts on normal fault wire
  const diagnostic=await import("../../../⚠️diagnostic/🧾️retained/🟦️.ts"),{ValueError}=await import("../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts");
  const original=JSON.parse(readFileSync(resolve(import.meta.dirname,"🧫️fixtures/🔣️.json"),"utf8")).wire,primary=new ValueError(original.primary.kind,original.primary.message).withRetainedProgress(original.primary.retainedProgress),secondary=new ValueError(original.receiptRefusal.kind,original.receiptRefusal.message).withRetainedProgress(original.receiptRefusal.retainedProgress);
  const pair={primary:{kind:"value" as const,value:primary},receiptRefusal:secondary},fault=diagnostic.faultFromOriginalTurnFailure(pair),wire=JSON.parse(JSON.stringify(fault));assert.equal(fault.retainedProgress,primary.retainedProgress);assert.equal(fault.causes?.[0]?.retainedProgress,secondary.retainedProgress);assert.deepEqual(wire.causes,[{message:secondary.message,code:secondary.kind,retainedProgress:secondary.retainedProgress}]);assert.equal(wire.message,primary.message);assert.equal(wire.code,primary.kind);
- const repo=resolve(import.meta.dirname,"../../../../.."),schema=JSON.parse(readFileSync(resolve(repo,"🧰️framework/🔨️modules/⚠️diagnostic/🧬️schema/🎛️controlled/🔣️.json"),"utf8")),valueSchema=JSON.parse(readFileSync(resolve(repo,"🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧬️schema/🔣️.json"),"utf8"));const {default:Ajv2020}=await import("ajv/dist/2020");const validate=new Ajv2020({strict:true}).addSchema(valueSchema).compile(schema);assert.equal(validate(wire),true,JSON.stringify(validate.errors));console.log("[DEBUG] original failure wire distinctCauses=true distinctReceipts=true independentJSON=true strictSchema=true");
+ const repo=resolve(import.meta.dirname,"../../../../.."),schema=JSON.parse(readFileSync(diagnosticControlledSchemaUrl,"utf8")),valueSchema=JSON.parse(readFileSync(valueRefusalSchemaUrl,"utf8"));const {default:Ajv2020}=await import("ajv/dist/2020");const validate=new Ajv2020({strict:true}).addSchema(valueSchema).compile(schema);assert.equal(validate(wire),true,JSON.stringify(validate.errors));console.log("[DEBUG] original failure wire distinctCauses=true distinctReceipts=true independentJSON=true strictSchema=true");
 });
 
 /** 🧳️ A complete application diagnostic and its own causes survive the normal fault projection. */
@@ -52,7 +52,7 @@ test("original diagnostic primary preserves every canonical field and receipt ca
  const observed=faultFromOriginalTurnFailure({primary:{kind:"fault",fault:primary},receiptRefusal:secondary});
  const expected=applyPatch(primary,[{op:"add",path:"/causes/-",value:{message:secondary.message,code:secondary.kind,retainedProgress:secondary.retainedProgress}}],true,false).newDocument;
  assert.deepEqual(observed,expected);assert.equal(observed.scope,primary.scope);assert.equal(observed.span,primary.span);assert.equal(observed.source,primary.source);assert.equal(observed.params,primary.params);assert.equal(observed.causes?.[0],primary.causes[0]);assert.equal(observed.retainedProgress,primary.retainedProgress);assert.equal(observed.causes?.[1]?.retainedProgress,secondary.retainedProgress);
- const repo=resolve(import.meta.dirname,"../../../../.."),schema=JSON.parse(readFileSync(resolve(repo,"🧰️framework/🔨️modules/⚠️diagnostic/🧬️schema/🎛️controlled/🔣️.json"),"utf8"));const{default:Ajv2020}=await import("ajv/dist/2020");const validate=new Ajv2020({strict:true}).compile(schema);assert.equal(validate(observed),true,JSON.stringify(validate.errors));
+ const repo=resolve(import.meta.dirname,"../../../../.."),schema=JSON.parse(readFileSync(diagnosticControlledSchemaUrl,"utf8"));const{default:Ajv2020}=await import("ajv/dist/2020");const validate=new Ajv2020({strict:true}).compile(schema);assert.equal(validate(observed),true,JSON.stringify(validate.errors));
  console.log("[DEBUG] original diagnostic fullOriginCodeSeverityScopeSpanParamsRetryable=true originalCauses=true separateReceiptCause=true independentJSONPatch=true strictSchema=true");
 });
 
@@ -68,3 +68,6 @@ test("original failure wire retains independent context and receipt refusals",as
 });
 
 import "../📦️domain/🤝️closure/🧪️tests/🟦️.ts";
+import { diagnosticControlledSchemaUrl } from "../../../⚠️diagnostic/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueRefusalSchemaUrl } from "../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl, cloneWireProgressSchemaUrl } from "../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";

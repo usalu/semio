@@ -46,3 +46,4 @@ semio-s-artifact-block-3d-inferences = { workspace = true }
 semio-s-artifact-block-3d-mutations = { workspace = true }
 semio-s-plugin-block = { workspace = true, features = ["test-serde"] }
 serde_json = { workspace = true }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

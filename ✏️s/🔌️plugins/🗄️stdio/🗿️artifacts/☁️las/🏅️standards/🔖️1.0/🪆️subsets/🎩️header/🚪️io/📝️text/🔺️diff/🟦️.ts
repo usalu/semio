@@ -49,5 +49,5 @@ export const stdioLas10HeaderDiffTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseLasDiffText(value: unknown, at = "$"): LasDiffText {
-  return stdioLas10HeaderDiffTextGuardObject(value, `${at}`);
+  return stdioLas10HeaderDiffTextGuardString(value, `${at}`);
 }

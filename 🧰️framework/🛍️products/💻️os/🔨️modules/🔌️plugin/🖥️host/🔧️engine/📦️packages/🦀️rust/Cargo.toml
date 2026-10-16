@@ -50,3 +50,8 @@ wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "co
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+serde_json = { workspace = true }
+
+[[test]]
+name = "original_host_deadline"
+path = "../../../⏱️deadline/🧪️tests/🦀️.rs"

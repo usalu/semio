@@ -13,8 +13,12 @@ static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocatio
 #[path = "../../🌱️value/🧪️tests/📦️operation-pages/🦀️.rs"]
 mod operation_page_tests;
 
-#[path = "../../🌱️value/🧪️tests/🎞️intrinsic-media/🦀️.rs"]
-mod intrinsic_media_tests;
+mod intrinsic_media_tests {
+    semio_framework_pack_intrinsic_media_laws::intrinsic_media_wire_laws!(
+        include_str!("../../🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json"),
+        include_str!("../../🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json"),
+        include_str!("../../🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json"));
+}
 
 #[path = "../../🌱️value/🧪️tests/🫳️preflight/🦀️.rs"]
 mod borrowed_preflight_tests;

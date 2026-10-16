@@ -50,4 +50,6 @@ web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasEle
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
+semio-framework-ui-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio-framework-ui-scene-plane = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust" }
+semio-framework-ui-scene-views = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust" }

@@ -3,7 +3,7 @@ use crate::io::text::inferences::ChartTextOutput;
 
 #[test]
 fn semantic_chart_inference_owns_values_and_io_owns_native_text(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚪️inference-native-ownership/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🚪️inference-native-ownership/🔣️.json")).unwrap();
     let source=ChartSnapshot::from_value(DslValue::from(&fixture["snapshot"])).unwrap();
     let inference=crate::ChartInference::infer(&source).unwrap();
     assert!(inference.complete);assert_eq!(inference.chart.as_ref(),Some(&source));
@@ -21,7 +21,7 @@ use protocol::{Mutation,MutationDiff,DiffAlgebra,Inference};
 
 #[test]
 fn io_value_declarations_preserve_neutral_omission_null_and_unicode(){
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
+ let neutral:serde_json::Value=serde_json::from_str(crate::text("🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
  for row in neutral["cases"].as_array().unwrap(){let input=DslValue::from(&row["value"]);let output=match row["kind"].as_str().unwrap(){"mutation"=>ChangeChartValue::from_value(input).unwrap().to_value(),"edit"=>ChartEdit::from_value(input).unwrap().to_value(),"diff"=>ChartDiff::from_value(input).unwrap().to_value(),_=>unreachable!()};assert_eq!(serde_json::Value::from(output),row["value"]);}
  for row in neutral["refused"].as_array().unwrap(){let input=DslValue::from(&row["value"]);assert!(match row["kind"].as_str().unwrap(){"mutation"=>ChangeChartValue::from_value(input).is_err(),"edit"=>ChartEdit::from_value(input).is_err(),_=>unreachable!()});}
  eprintln!("[DEBUG] Print original native IO value declarations preserve seven neutral null/omission/unicode vectors and four refusals; independent Serde agrees");
@@ -29,15 +29,15 @@ fn io_value_declarations_preserve_neutral_omission_null_and_unicode(){
 
 #[test]
 fn semantic_chart_validation_borrows_authored_fields(){
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
+ let neutral:serde_json::Value=serde_json::from_str(crate::text("🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json")).unwrap();
  for row in neutral["validation"].as_array().unwrap(){let snapshot=ChartSnapshot{chart:DslValue::from(&row["chart"])};let before=serde_json::Value::from(&snapshot.chart);assert_eq!(crate::inferences::validate_chart(&snapshot).is_ok(),row["valid"].as_bool().unwrap(),"{row}");assert_eq!(serde_json::Value::from(&snapshot.chart),before);}
  eprintln!("[DEBUG] Print semantic validation borrowed seven neutral authored chart fields without changing input; independent Serde agrees");
 }
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🧬️chart-mutations/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🧬️chart-mutations/🔣️.json")).unwrap() }
 pub(crate) fn assets() -> &'static ChartSchemaAssets {
     static ASSETS: std::sync::OnceLock<ChartSchemaAssets> = std::sync::OnceLock::new();
-    ASSETS.get_or_init(|| ChartSchemaAssets::read(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap())
+    ASSETS.get_or_init(|| ChartSchemaAssets::read(crate::product_directory()).unwrap())
 }
 fn snapshot() -> ChartSnapshot { ChartSnapshot::from_value(DslValue::from(fixture()["snapshot"].clone())).unwrap() }
 
@@ -143,16 +143,16 @@ fn missing_language_is_diagnostic_data() {
 
 #[test]
 fn shared_result_schema_accepts_valid_and_invalid_native_outputs(){
-    let validator=semio_framework_schema_validator::OwnedJsonSchemaValidator::compile_with_documents(include_str!("../../🚪️io/📝️text/💡️inferences/🔣️.json"),&[]).unwrap();
+    let validator=semio_framework_schema_validator::OwnedJsonSchemaValidator::compile_with_documents(crate::text("🚪️io/📝️text/💡️inferences/🔣️.json"),&[]).unwrap();
     for base in [snapshot(),ChartSnapshot::default()]{let result=ChartTextOutput::render(&base).unwrap();validator.validate_json(&semio_framework_pack_json::to_json_string(&result)).unwrap();assert_eq!(ChartTextOutput::from_value(result.to_value()).unwrap(),result);}
 }
 
 #[test]
 fn css_paints_preserve_named_rgb_hsl_and_fractional_alpha(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧬️chart-mutations/🎨️paint.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🧬️chart-mutations/🎨️paint.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap(){let paint=inferences::paint::parse(case["input"].as_str().unwrap()).unwrap();assert_eq!(paint.hex,case["hex"].as_str().unwrap());assert!((paint.alpha-case["alpha"].as_f64().unwrap()).abs()<1e-12);if paint.alpha<1.0{assert!(paint.declaration().contains("\\SemioVizPaintAlpha"));}}
     for input in fixture["invalid"].as_array().unwrap(){assert!(inferences::paint::parse(input.as_str().unwrap()).is_err());}
-    let contract:serde_json::Value=serde_json::from_str(include_str!("../../🧬️schema/📸️snapshot/📊️chart/🎨️color/🔣️.json")).unwrap();
+    let contract:serde_json::Value=serde_json::from_str(crate::text("🧬️schema/📸️snapshot/📊️chart/🎨️color/🔣️.json")).unwrap();
     for (name,hex) in contract["x-semio-named-colors"].as_object().unwrap(){assert_eq!(inferences::paint::parse(name).unwrap().hex,hex.as_str().unwrap());}
     let mut authored=crate::tests::fixture()["snapshot"].clone();
     authored["chart"]["layers"][0]["encodings"]["fill"]=serde_json::json!({"value":"rgba(255,0,0,0.125)"});
@@ -215,7 +215,7 @@ fn emit_native_grammar_source(kind: &str, name: &str, source: &str) {
 #[test]
 fn native_chart_source_can_be_compiled_by_the_print_toolchain(){
     if std::env::var("SEMIO_PRINT_NATIVE_EMISSION").as_deref() != Ok("1") { return; }
-    let authored=include_str!("../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json");
+    let authored=crate::text("🧪️tests/🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json");
     let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(authored,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let inference=ChartTextOutput::render(&snapshot).unwrap();
     assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
@@ -236,7 +236,7 @@ fn canonical_customization_emits_neutral_mutation_vectors(){
 }
 #[test]
 fn typed_rows_preserve_null_strings_booleans_and_color_fallback_alpha(){
-    let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(include_str!("../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(crate::text("🧪️tests/🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let inference=ChartTextOutput::render(&snapshot).unwrap();
     assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
     assert!(inference.tikz.contains("{\\SemioVizNull{}}"));
@@ -253,7 +253,7 @@ mod sqlite_snapshot_tests;
 fn paged_chart_original_operation_keeps_exact_variants_policy_and_source_owner(){
     use protocol::os_spr::operation_bytes::{OwnedOperationBytes,OperationBytePreparation,OperationByteMeasurement,OperationByteCloseStep};
     use semio_framework_value::{NativeEncodeControl,NativeDecodeControl,Number};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧬️chart-mutations/📦️operation-pages.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🧬️chart-mutations/📦️operation-pages.json")).unwrap();
     let payload=fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize);
     let operation=ChangeChartValue{path:serde_json::from_value(fixture["path"].clone()).unwrap(),value:Some(DslValue::Array(vec![DslValue::String(payload),DslValue::uint(u64::MAX),DslValue::int(i64::MIN),DslValue::float(-0.0)]))};
     let expected=protocol::OpBinary::encode_op(&operation).unwrap();
@@ -310,7 +310,7 @@ fn canonical_option_descriptor_admission(){
 /// 🗺️ Authored structured spatial carriers require valid replay and native geometry emission in both languages.
 #[test]
 fn canonical_spatial_data_mutation_vectors(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeSpatialData"];let mut failures=Vec::new();
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeSpatialData"];let mut failures=Vec::new();
  for(appearance,language)in ["light","dark"].into_iter().flat_map(|appearance|["en","de"].into_iter().map(move|language|(appearance,language))){for(case,bad)in source["cases"].as_array().unwrap().iter().map(|case|(case,None)).chain(source["badCases"].as_array().unwrap().iter().map(|bad|(source["cases"].as_array().unwrap().iter().find(|case|case["id"]==bad["caseId"]).unwrap(),Some(bad)))){
   let id=format!("spatial-{}-{language}-{appearance}",bad.unwrap_or(case)["id"].as_str().unwrap());let mut authored=source["snapshot"].clone();authored["chart"]["language"]=serde_json::Value::String(language.into());authored["chart"]["theme"]=serde_json::json!({"appearance":appearance});let before=ChartSnapshot::from_value(DslValue::from(authored)).unwrap();let mut current=before.clone();let mut setup=true;
   let mutations=[serde_json::json!({"path":["tables"],"value":[case["table"].clone()]}),serde_json::json!({"path":["presets"],"value":[case["preset"].clone()]})];
@@ -325,7 +325,7 @@ fn canonical_spatial_data_mutation_vectors(){
 /// 🐝️ Neutral planar frame and closed control mutations produce source-bound Rust grammar in both themes.
 #[test]
 fn canonical_planar_frame_mutation_vectors(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeGeoPlanar"];let mut failures=Vec::new();
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeGeoPlanar"];let mut failures=Vec::new();
  for appearance in ["light","dark"]{for case in source["cases"].as_array().unwrap(){
   let mut authored=source["snapshot"].clone();authored["chart"]["language"]=case["language"].clone();authored["chart"]["theme"]=serde_json::json!({"appearance":appearance});let mut table=source["table"].clone();table["rows"]=serde_json::Value::Array(case["points"].as_array().unwrap().iter().map(|point|serde_json::json!({"x":point[0].clone(),"y":point[1].clone()})).collect());authored["chart"]["tables"]=serde_json::json!([table]);authored["chart"]["presets"]=serde_json::json!([{"kind":case["kind"].clone(),"options":{"points":source["table"]["name"].clone(),"radius":case["radius"].clone(),"bandwidth":case["bandwidth"].clone(),"gridWidth":16,"gridHeight":11,"gridOrigin":"0,0","gridCell":5,"hexScale":0.92,"heatOpacity":0.3,"thresholds":"","levels":case["levels"].clone(),"width":case["width"].clone(),"height":case["height"].clone(),"opacity":1,"lineWidth":".1mm"}}]);
   let before=ChartSnapshot::from_value(DslValue::from(authored)).unwrap();let mut current=before.clone();for key in ["gridWidth","gridHeight","gridOrigin","gridCell","hexScale","heatOpacity","thresholds","opacity","lineWidth"]{let value=if ["gridOrigin","thresholds"].contains(&key){serde_json::Value::String(case[key].as_array().unwrap().iter().map(|item|item.to_string()).collect::<Vec<_>>().join(","))}else{case[key].clone()};let options=current.chart.get("presets").unwrap().as_array().unwrap()[0].get("options").unwrap();if options.get(key)==Some(&DslValue::from(value.clone())){continue;}let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options",key],"value":value}))).unwrap();let outcome=mutation.diff(&current);assert!(outcome.messages().is_empty());let next=protocol::apply_diff(outcome.diff(),&current).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&current),&next).unwrap(),current);current=next;}
@@ -340,14 +340,14 @@ fn canonical_planar_frame_mutation_vectors(){
 /// 🧾️ Language-neutral scientific mode and resolved-record vectors pass canonical Rust mutation and inference admission.
 #[test]
 fn canonical_scientific_mode_record_admission_vectors(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeScientificAdmission"];let mut failures=Vec::new();
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeScientificAdmission"];let mut failures=Vec::new();
  for language in ["en","de"]{for case in source["cases"].as_array().unwrap(){let family=source["families"].as_array().unwrap().iter().find(|family|family["name"]==case["family"]).unwrap();let mut authored=source["snapshot"].clone();authored["chart"]["language"]=language.into();let mut options=case["options"].clone();options["mode"]=family["modes"][if options["mode"]==family["modes"][0]{1}else{0}].clone();authored["chart"]["presets"]=serde_json::json!([{"kind":case["kind"].clone(),"options":options}]);let before=ChartSnapshot::from_value(DslValue::from(authored)).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options","mode"],"value":case["options"]["mode"].clone()}))).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();let valid=case["valid"].as_bool().unwrap();if result.complete!=valid{failures.push(format!("{}-{language}: admitted={} expected={valid}: {:?}",case["id"],result.complete,result.diagnostics));}if valid&&result.complete{if let Some(root)=std::env::var_os("PRINT_NATIVE_SCIENTIFIC_ADMISSION_TIKZ"){let root=std::path::Path::new(&root);std::fs::create_dir_all(root).unwrap();std::fs::write(root.join(format!("{}-{language}.tex",case["id"].as_str().unwrap())),&result.tikz).unwrap();}}if !result.complete{assert!(result.tikz.is_empty());assert!(!result.diagnostics.is_empty());}}
  }assert!(failures.is_empty(),"{}",failures.join("\n"));eprintln!("[DEBUG] Scientific Rust admission{} neutral en/de mutation/inverse and accepted/rejected record cases passed",source["cases"].as_array().unwrap().len()*2);
 }
 /// 📏️ Declared scientific scale and shape controls match the same independent neutral admission corpus.
 #[test]
 fn canonical_scientific_scalar_admission_vectors(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧬️native-chart-grammar/🔣️.json")).unwrap();let cases=fixture["scientificScalarAdmission"]["vectors"]["cases"].as_array().unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧬️native-chart-grammar/🔣️.json")).unwrap();let cases=fixture["scientificScalarAdmission"]["vectors"]["cases"].as_array().unwrap();
  for language in ["en","de"]{for case in cases{let key=case["key"].as_str().unwrap();let initial=if key=="nodeShape"{serde_json::Value::String(if case["value"]=="circle"{"box"}else{"circle"}.into())}else{serde_json::json!(1)};let mut options=serde_json::json!({});options[key]=initial;let before=ChartSnapshot::from_value(DslValue::from(serde_json::json!({"chart":{"width":140,"height":120,"language":language,"layers":[],"presets":[{"kind":case["kind"].clone(),"options":options}]}}))).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options",key],"value":case["value"].clone()}))).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();assert_eq!(result.complete,case["valid"].as_bool().unwrap(),"{}-{language}: {:?}",case["id"],result.diagnostics);if !result.complete{assert!(result.tikz.is_empty());assert!(!result.diagnostics.is_empty());}}
  }eprintln!("[DEBUG] Scientific Rust scalar admission{} neutral EN/de mutation/inverse scale and shape cases passed",cases.len()*2);
 }
@@ -355,7 +355,7 @@ fn canonical_scientific_scalar_admission_vectors(){
 /// 🧠️ Neutral neural layer topology and endpoint contracts survive Rust canonical mutation and inverse replay.
 #[test]
 fn canonical_neural_architecture_incidence_vectors(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeNeuralTopologyControls"];let mut count=0;
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧬️native-chart-grammar/🔣️.json")).unwrap();let source=&fixture["nativeNeuralTopologyControls"];let mut count=0;
  for language in ["en","de"]{for entry in source["vectors"]["architectures"].as_array().unwrap(){let before=ChartSnapshot::from_value(DslValue::from(serde_json::json!({"chart":{"width":80,"height":50,"language":language,"layers":[],"presets":[{"kind":entry["kind"].clone(),"options":{"mode":"tensor"}}]}}))).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options","mode"],"value":entry["mode"].clone()}))).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();assert!(result.complete,"{}-{language}: {:?}",entry["kind"],result.diagnostics);if let Some(root)=std::env::var_os("PRINT_NATIVE_NEURAL_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("{}-{language}.tex",entry["kind"].as_str().unwrap())),result.tikz).unwrap();}count+=1;}
   let layers=source["custom"]["layers"].as_array().unwrap().iter().enumerate().map(|(index,row)|serde_json::json!({"layer":index+1,"units":row[0].clone(),"kind":row[1].clone(),"label":row[2].clone()})).collect::<Vec<_>>();let valid=[source["custom"]["links"].clone(),source["custom"]["empty"].clone()];for(links,accepted)in valid.iter().map(|value|(value,true)).chain(source["invalid"].as_array().unwrap().iter().map(|value|(value,false))){let before=ChartSnapshot::from_value(DslValue::from(serde_json::json!({"chart":{"width":80,"height":50,"language":language,"layers":[],"tables":[{"name":"neural-custom","columns":["layer","units","kind","label"],"rows":layers}],"presets":[{"kind":"feed-forward-neural-network","options":{"data":"neural-custom","links":"","connections":"full","mode":"rnn","directed":true}}]}}))).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options","links"],"value":links}))).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();assert_eq!(result.complete,accepted,"{language}/{links}: {:?}",result.diagnostics);if accepted{if let Some(root)=std::env::var_os("PRINT_NATIVE_NEURAL_TIKZ"){let id=if links.as_str()==Some(""){ "empty" }else{ "custom" };std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("{id}-{language}.tex")),result.tikz).unwrap();}}else{assert!(result.tikz.is_empty());assert!(!result.diagnostics.is_empty());}count+=1;}
   for connections in source["vectors"]["implicitConnections"].as_array().unwrap(){let before=ChartSnapshot::from_value(DslValue::from(serde_json::json!({"chart":{"width":80,"height":50,"language":language,"layers":[],"tables":[{"name":"neural-custom","columns":["layer","units","kind","label"],"rows":layers}],"presets":[{"kind":"feed-forward-neural-network","options":{"data":"neural-custom","connections":"residual","mode":"rnn","directed":true,"curvature":0}}]}}))).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options","connections"],"value":connections}))).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();assert!(result.complete,"{language}/{connections}: {:?}",result.diagnostics);if let Some(root)=std::env::var_os("PRINT_NATIVE_NEURAL_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("implicit-{}-{language}.tex",connections.as_str().unwrap())),result.tikz).unwrap();}count+=1;}
@@ -366,7 +366,7 @@ fn canonical_neural_architecture_incidence_vectors(){
 /// 📐️ Neutral construction windows preserve canonical Rust mutation, inverse replay and actual native source ownership.
 #[test]
 fn canonical_scientific_construction_window_vectors(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧬️native-chart-grammar/🔣️.json")).unwrap();let control=&fixture["scientificConstructionWindows"]["vectors"];let mut count=0;
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧬️native-chart-grammar/🔣️.json")).unwrap();let control=&fixture["scientificConstructionWindows"]["vectors"];let mut count=0;
  for(appearance,language)in[("light","en"),("dark","de")]{for(index,entry)in control["cases"].as_array().unwrap().iter().enumerate(){for mode in control["variants"].as_array().unwrap(){let mode=mode.as_u64().unwrap();let mut options=entry["options"].clone();options["points"]="O/0/0,Q/1/0,R/0/1".into();options["width"]=control["familyFrame"][0].clone();options["height"]=control["familyFrame"][1].clone();for key in["title","xlabel","ylabel","domain","range"]{options[key]="".into();}if mode!=3{options["axes"]=false.into();options["grid"]=false.into();}
   let before=ChartSnapshot::from_value(DslValue::from(serde_json::json!({"chart":{"width":control["canvas"][0].clone(),"height":control["canvas"][1].clone(),"language":language,"theme":{"appearance":appearance},"layers":[],"presets":[{"kind":entry["kind"].clone(),"options":options}]}}))).unwrap();let mut current=before.clone();let mut changes=vec![("points",entry["options"]["points"].clone())];
   if mode!=0&&mode!=3{changes.extend([("axes",true.into()),("grid",true.into()),("ticks",control["tickDivisions"][if mode==1{0}else{1}].clone()),("title","Cvtitle".into()),("xlabel","Cvx".into()),("ylabel","Cvy".into())]);for(key,enabled)in[("domain",[2,4,6].contains(&mode)),("range",[2,5,6].contains(&mode))]{if enabled{let mut values=control[key].as_array().unwrap().clone();if mode==6{values.reverse();}changes.push((key,values.iter().map(|value|value.to_string()).collect::<Vec<_>>().join(",").into()));}}}
@@ -378,7 +378,7 @@ fn canonical_scientific_construction_window_vectors(){
 #[test]
 fn chart_diff_text_and_binary_preserve_owned_edits() {
     use protocol::{DiffText,DiffBinary};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔺️diff-wire/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🔺️diff-wire/🔣️.json")).unwrap();
     for expected in fixture["cases"].as_array().unwrap() {
         let diff = ChartDiff::from_value(DslValue::from(expected.clone())).unwrap();
         let text = diff.print_diff();
@@ -398,12 +398,12 @@ fn runtime_schema_assets_equal_the_documents_once_compiled_into_the_crate() {
         assert_eq!((leaves.rust, leaves.typescript, leaves.json_schema, leaves.graphql, leaves.proto), (rust, typescript, json_schema, "", ""));
         serde_json::from_str::<serde_json::Value>(json_schema).expect("every schema leaf is JSON");
     };
-    facet(&assets.artifact, include_str!("../../🦀️.rs"), "", include_str!("../../🧬️schema/🔣️.json"));
-    facet(&assets.snapshot, include_str!("../../🧬️schema/📸️snapshot/🦀️.rs"), include_str!("../../🧬️schema/📸️snapshot/🟦️.ts"), include_str!("../../🧬️schema/📸️snapshot/🔣️.json"));
-    facet(&assets.diff, include_str!("../../🧬️schema/🔀️diff/🦀️.rs"), include_str!("../../🧬️schema/🔀️diff/🟦️.ts"), include_str!("../../🧬️schema/🔀️diff/🔣️.json"));
-    facet(&assets.mutations, include_str!("../../🧬️schema/🧬️mutations/🦀️.rs"), include_str!("../../🧬️schema/🧬️mutations/🟦️.ts"), include_str!("../../🧬️schema/🧬️mutations/🔣️.json"));
-    facet(&assets.inferences, include_str!("../../🧬️schema/💡️inferences/🦀️.rs"), include_str!("../../🧬️schema/💡️inferences/🟦️.ts"), include_str!("../../🧬️schema/💡️inferences/🔣️.json"));
-    assert_eq!(assets.inference_output_schema, include_str!("../../🚪️io/📝️text/💡️inferences/🔣️.json"));
+    facet(&assets.artifact, crate::text("🦀️.rs"), "", crate::text("🧬️schema/🔣️.json"));
+    facet(&assets.snapshot, crate::text("🧬️schema/📸️snapshot/🦀️.rs"), crate::text("🧬️schema/📸️snapshot/🟦️.ts"), crate::text("🧬️schema/📸️snapshot/🔣️.json"));
+    facet(&assets.diff, crate::text("🧬️schema/🔀️diff/🦀️.rs"), crate::text("🧬️schema/🔀️diff/🟦️.ts"), crate::text("🧬️schema/🔀️diff/🔣️.json"));
+    facet(&assets.mutations, crate::text("🧬️schema/🧬️mutations/🦀️.rs"), crate::text("🧬️schema/🧬️mutations/🟦️.ts"), crate::text("🧬️schema/🧬️mutations/🔣️.json"));
+    facet(&assets.inferences, crate::text("🧬️schema/💡️inferences/🦀️.rs"), crate::text("🧬️schema/💡️inferences/🟦️.ts"), crate::text("🧬️schema/💡️inferences/🔣️.json"));
+    assert_eq!(assets.inference_output_schema, crate::text("🚪️io/📝️text/💡️inferences/🔣️.json"));
     serde_json::from_str::<serde_json::Value>(assets.inference_output_schema).expect("the inference output schema is JSON");
     let descriptor = chart_artifact_schema_descriptor(assets);
     assert_eq!((descriptor.id, descriptor.facet_leaves()), ("framework.print.chart", [assets.artifact, assets.snapshot, assets.diff, assets.mutations]));

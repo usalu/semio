@@ -2,8 +2,7 @@
 use crate::{ArtifactRef,ArtifactDialect};
 use semio_framework_dsl_record::{DslField,FieldValue,RecordValue,Shape};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
-#[path="../../../../../../🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/🦀️.rs"]
-mod oracle;
+use semio_framework_dsl_record_ownership_oracle as oracle;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap()}
 fn reference(value:&serde_json::Value)->ArtifactRef{ArtifactRef{artifact_id:value["artifactId"].as_str().unwrap().into(),dialect:ArtifactDialect{artifact_kind:value["dialect"]["artifactKind"].as_str().unwrap().into(),standard:value["dialect"]["standard"].as_str().unwrap().into(),subset:value["dialect"]["subset"].as_str().unwrap().into()}}}
 #[test]

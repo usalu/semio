@@ -49,5 +49,5 @@ export const remodelRemodelingInferenceTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseRemodelingInferenceText(value: unknown, at = "$"): RemodelingInferenceText {
-  return remodelRemodelingInferenceTextGuardObject(value, `${at}`);
+  return remodelRemodelingInferenceTextGuardString(value, `${at}`);
 }

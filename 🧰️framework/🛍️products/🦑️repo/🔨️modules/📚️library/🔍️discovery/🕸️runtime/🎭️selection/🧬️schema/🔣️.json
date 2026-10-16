@@ -145,10 +145,10 @@
         },
         "cargoInvocations": {
           "type": "array",
-          "minItems": 1,
-          "maxItems": 65536,
+          "minItems": 2,
+          "maxItems": 33,
           "items": {
-            "$ref": "#/definitions/SelectedRuntimePhysicalClaimV1"
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/receipt/retention/reference/component.json"
           }
         },
         "browserActor": {
@@ -1623,29 +1623,6 @@
           "items": {
             "$ref": "#/definitions/RuntimeResourceReadInputV1"
           }
-        }
-      }
-    },
-    "RuntimeActorCargoSelectionV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "cargoPackage",
-        "componentPath",
-        "componentSha256"
-      ],
-      "properties": {
-        "cargoPackage": {
-          "type": "string",
-          "minLength": 1
-        },
-        "componentPath": {
-          "type": "string",
-          "minLength": 1
-        },
-        "componentSha256": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$"
         }
       }
     },

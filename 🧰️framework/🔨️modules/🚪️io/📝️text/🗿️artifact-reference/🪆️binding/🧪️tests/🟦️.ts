@@ -2,8 +2,8 @@
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import {parseArtifactRef} from "../../../../../🧬️schema/🗿️artifact-reference/🟦️.ts";
-import contract from "../../../../../🧬️schema/🗿️artifact-reference/🔣️.json";
+import {parseArtifactRef} from "@semio-tech/schema-ts/artifact-reference";
+import { artifactReferenceSchema as contract } from "@semio-tech/schema-ts/artifact-reference";
 import fixture from "./🧫️fixtures/🔣️.json";
 
 test("owned reference strings remain literal under schema and independent SQL admission",()=>{

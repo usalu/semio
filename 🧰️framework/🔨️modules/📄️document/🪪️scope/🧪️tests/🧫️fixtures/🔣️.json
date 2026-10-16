@@ -1,0 +1,291 @@
+{
+ "schema": "semio.test.document-scope-frontier/v1",
+ "rows": [
+  {
+   "label": "genesis",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 0,
+    "headEditId": "",
+    "lastCommitSeq": 0,
+    "chain": {
+     "length": 32,
+     "fill": 0,
+     "overrides": {}
+    }
+   },
+   "genesis": true,
+   "edited": false
+  },
+  {
+   "label": "edited",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 3,
+    "headEditId": "edit-3",
+    "lastCommitSeq": 3,
+    "chain": {
+     "length": 32,
+     "fill": 7,
+     "overrides": {}
+    }
+   },
+   "genesis": false,
+   "edited": true
+  },
+  {
+   "label": "edited with sparse nonzero chain",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 1,
+    "headEditId": "edit-1",
+    "lastCommitSeq": 1,
+    "chain": {
+     "length": 32,
+     "fill": 0,
+     "overrides": {
+      "31": 1
+     }
+    }
+   },
+   "genesis": false,
+   "edited": true
+  },
+  {
+   "label": "frontier of another document",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-2",
+    "headEditOrdinal": 3,
+    "headEditId": "edit-3",
+    "lastCommitSeq": 3,
+    "chain": {
+     "length": 32,
+     "fill": 7,
+     "overrides": {}
+    }
+   },
+   "genesis": false,
+   "edited": false
+  },
+  {
+   "label": "edited with all-zero chain",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 3,
+    "headEditId": "edit-3",
+    "lastCommitSeq": 3,
+    "chain": {
+     "length": 32,
+     "fill": 0,
+     "overrides": {}
+    }
+   },
+   "genesis": false,
+   "edited": false
+  },
+  {
+   "label": "genesis with an edit id",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 0,
+    "headEditId": "edit-0",
+    "lastCommitSeq": 0,
+    "chain": {
+     "length": 32,
+     "fill": 0,
+     "overrides": {}
+    }
+   },
+   "genesis": false,
+   "edited": false
+  },
+  {
+   "label": "genesis with a nonzero chain",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 0,
+    "headEditId": "",
+    "lastCommitSeq": 0,
+    "chain": {
+     "length": 32,
+     "fill": 0,
+     "overrides": {
+      "0": 1
+     }
+    }
+   },
+   "genesis": false,
+   "edited": false
+  },
+  {
+   "label": "chain one byte short",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 3,
+    "headEditId": "edit-3",
+    "lastCommitSeq": 3,
+    "chain": {
+     "length": 31,
+     "fill": 7,
+     "overrides": {}
+    }
+   },
+   "genesis": false,
+   "edited": false
+  },
+  {
+   "label": "chain byte above 255",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 3,
+    "headEditId": "edit-3",
+    "lastCommitSeq": 3,
+    "chain": {
+     "length": 32,
+     "fill": 7,
+     "overrides": {
+      "5": 256
+     }
+    }
+   },
+   "genesis": false,
+   "edited": false
+  },
+  {
+   "label": "commit sequence zero after edits",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 3,
+    "headEditId": "edit-3",
+    "lastCommitSeq": 0,
+    "chain": {
+     "length": 32,
+     "fill": 7,
+     "overrides": {}
+    }
+   },
+   "genesis": false,
+   "edited": false
+  },
+  {
+   "label": "fractional ordinal",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 1.5,
+    "headEditId": "edit-1",
+    "lastCommitSeq": 1,
+    "chain": {
+     "length": 32,
+     "fill": 7,
+     "overrides": {}
+    }
+   },
+   "genesis": false,
+   "edited": false
+  },
+  {
+   "label": "control character in the document id",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc\u0007"
+   },
+   "frontier": {
+    "documentId": "doc\u0007",
+    "headEditOrdinal": 3,
+    "headEditId": "edit-3",
+    "lastCommitSeq": 3,
+    "chain": {
+     "length": 32,
+     "fill": 7,
+     "overrides": {}
+    }
+   },
+   "genesis": false,
+   "edited": false
+  },
+  {
+   "label": "empty space id",
+   "scope": {
+    "spaceId": "",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 3,
+    "headEditId": "edit-3",
+    "lastCommitSeq": 3,
+    "chain": {
+     "length": 32,
+     "fill": 7,
+     "overrides": {}
+    }
+   },
+   "genesis": false,
+   "edited": false
+  },
+  {
+   "label": "edit id above 256 bytes",
+   "scope": {
+    "spaceId": "space-1",
+    "documentId": "doc-1"
+   },
+   "frontier": {
+    "documentId": "doc-1",
+    "headEditOrdinal": 3,
+    "headEditId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "lastCommitSeq": 3,
+    "chain": {
+     "length": 32,
+     "fill": 7,
+     "overrides": {}
+    }
+   },
+   "genesis": false,
+   "edited": false
+  }
+ ]
+}

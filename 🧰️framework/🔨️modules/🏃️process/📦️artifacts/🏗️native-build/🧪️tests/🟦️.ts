@@ -9,7 +9,7 @@ import { createHash } from "node:crypto";
 import Ajv from "ajv";
 import {runCargoRelayV1} from "../🌊️relay/🟦️.ts";
 import { BoundedDiagnosticsV1, buildCargoArtifacts, readCargoArtifactBuildPolicyV1, writeCompletedCargoInvocationProvenanceV1 } from "../🟦️.ts";
-import {CurrentPhysicalOwnerV1} from "../../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
+import {CurrentPhysicalOwnerV1} from "@semio-tech/framework/filesystem/observation/current";
 import {decodeCargoProvenanceV1} from "../🧾️receipt/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 

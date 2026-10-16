@@ -1,0 +1,48 @@
+{
+ "label": "bb4",
+ "children": [
+  {
+   "folder": "🧮️directory-client-helpers",
+   "doc": "/** 🧮️ Shared helpers of the directory client and backbone worker wire suites: the source locator of the package entry and the worker request and directory event types.\n *\n * @see ../../🟦️.ts — the package entry the suites read fixtures relative to\n */",
+   "stmts": [
+    "13-16",
+    "24-24"
+   ]
+  },
+  {
+   "folder": "🪪️document-backbone-worker-wire",
+   "doc": "/** 🪪️ Document backbone worker wire: admitting inference openings, requests and responses of the backbone worker.\n *\n * @see ../🧮️directory-client-helpers/🟦️.ts — the shared helpers\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "103-526"
+   ]
+  },
+  {
+   "folder": "📃️directory-client-pages",
+   "doc": "/** 📃️ Directory client pages: the canonical event page and the space administration page.\n *\n * @see ../🧮️directory-client-helpers/🟦️.ts — the shared helpers\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "88-101",
+    "528-624"
+   ]
+  },
+  {
+   "folder": "🔔️directory-client-stream",
+   "doc": "/** 🔔️ Directory client stream: scoped directory workflows over a fake web socket, socket grants and reconnects.\n *\n * @see ../🧮️directory-client-helpers/🟦️.ts — the shared helpers\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "18-23",
+    "26-33",
+    "62-87",
+    "626-1027"
+   ]
+  },
+  {
+   "folder": "⏱️directory-client-http",
+   "doc": "/** ⏱️ Directory client http: getJson and postJson timeout and abort.\n *\n * @see ../🧮️directory-client-helpers/🟦️.ts — the shared helpers\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "1029-1101"
+   ]
+  }
+ ],
+ "file": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/📍️stage4.ts",
+ "childRoot": "🧰️framework/🛍️products/💻️os/🧪️tests",
+ "deleteParent": true
+}

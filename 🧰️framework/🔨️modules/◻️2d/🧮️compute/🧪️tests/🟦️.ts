@@ -4,7 +4,7 @@ import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { engineKey, engineKeyPreimage } from "../🟦️.ts";
-import { blake3Hex } from "../../../🔏️hash/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework/hash";
 
 type Key = { id: string; engineId: string; inputHex: string; preimageHex: string; keyHex:string };
 type Operation = { op: "register"; engineId: string; mode: string } | { op: "derive"; key: string; handle: string } | { op: "read"; handle: string } | { op: "read-key"; key: string } | { op: "read-forged"; handle: string; engineId: string };

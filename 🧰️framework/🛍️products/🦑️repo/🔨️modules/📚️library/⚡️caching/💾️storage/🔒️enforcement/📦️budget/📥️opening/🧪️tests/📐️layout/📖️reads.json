@@ -1,0 +1,37 @@
+[
+  {
+    "read": "complete",
+    "closeFails": false,
+    "failed": false
+  },
+  {
+    "read": "partial",
+    "closeFails": false,
+    "failed": false
+  },
+  {
+    "read": "growth",
+    "closeFails": false,
+    "failed": true
+  },
+  {
+    "read": "short",
+    "closeFails": false,
+    "failed": true
+  },
+  {
+    "read": "complete",
+    "closeFails": true,
+    "failed": true
+  },
+  {
+    "read": "undefined",
+    "closeFails": true,
+    "failed": true
+  },
+  {
+    "read": "frozen",
+    "closeFails": true,
+    "failed": true
+  }
+]

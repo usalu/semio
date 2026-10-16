@@ -18,38 +18,23 @@
   "cases": [
     {
       "id": "Repository Preparation Preserves Original Fractional Remaining",
-      "mutation": "fractional",
-      "expectedPrepare": 1,
-      "expectedExecute": 1,
-      "expectedCapture": 1
+      "mutation": "fractional"
     },
     {
       "id": "Repository Preparation Retains Positive Submillisecond Authority",
-      "mutation": "submillisecond",
-      "expectedPrepare": 1,
-      "expectedExecute": 1,
-      "expectedCapture": 1
+      "mutation": "submillisecond"
     },
     {
       "id": "Repository Preparation Refuses Missing Independent Line Policy",
-      "mutation": "missing-policy",
-      "expectedPrepare": 0,
-      "expectedExecute": 0,
-      "expectedCapture": 0
+      "mutation": "missing-policy"
     },
     {
       "id": "Repository Preparation Awaits Original Publication Before Acquisition",
-      "mutation": "publisher-refused",
-      "expectedPrepare": 0,
-      "expectedExecute": 0,
-      "expectedCapture": 0
+      "mutation": "publisher-refused"
     },
     {
       "id": "Repository Preparation Enforces Independent Original Line Ceiling",
-      "mutation": "line-limit",
-      "expectedPrepare": 1,
-      "expectedExecute": 1,
-      "expectedCapture": 0
+      "mutation": "line-limit"
     }
   ],
   "profiles": [

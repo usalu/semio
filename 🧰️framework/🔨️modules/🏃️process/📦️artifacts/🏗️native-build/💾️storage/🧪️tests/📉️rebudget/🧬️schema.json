@@ -1,0 +1,61 @@
+{
+  "type": "array",
+  "minItems": 10,
+  "maxItems": 10,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "sequence",
+      "change",
+      "bytes",
+      "accepted"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "sequence": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "change": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer"
+          },
+          "phase": {
+            "type": "string"
+          }
+        }
+      },
+      "bytes": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "accepted": {
+        "type": "boolean"
+      },
+      "baseKind": {
+        "enum": [
+          "compiler-workspace"
+        ]
+      }
+    }
+  }
+}

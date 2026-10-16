@@ -14,7 +14,7 @@
  * `🖼️wire-turn/🟦️.ts` (`leftoverShellInvocationFrames`) is written for.
  * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-selection-roundtrip-2026-09-15.md`. */
 import { describe, expect, it } from "vitest";
-import fixture from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🕹️reserved-verb-answer/🔣️.json";
+import { reservedVerbAnswerFixture as fixture } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
 import { encodeAppFrame, encodePackValue } from "../../../../../🟦️.ts";
 import type { WireVariant } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { shellFrameAnswersACaller, wgpuInvocationFromFrames } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";

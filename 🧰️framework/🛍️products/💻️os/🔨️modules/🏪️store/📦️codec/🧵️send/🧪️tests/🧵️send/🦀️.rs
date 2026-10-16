@@ -13,7 +13,7 @@ async fn document_codec_native_send_compile_dsl_preserves_exact_snapshots() {
     let codec = artifact_codec::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap());
     for value in fixture["snapshots"].as_array().unwrap() {
         let snapshot: DemoSnapshot = serde_json::from_value(value.clone()).unwrap();
-        let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap(), "native-send", snapshot.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap(), "native-send", snapshot.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let text = print_document_text(&envelope).await.expect("exact schema-owned input");
         envelope.retire_unadopted();
         let future = (codec.compile_dsl)(&text.dsl, &text.ops);
@@ -31,7 +31,7 @@ async fn document_codec_native_send_print_mirror_preserves_exact_snapshots() {
     let codec = artifact_codec::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap());
     for value in fixture["snapshots"].as_array().unwrap() {
         let snapshot: DemoSnapshot = serde_json::from_value(value.clone()).unwrap();
-        let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap(), "native-send", snapshot.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap(), "native-send", snapshot.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let files = print_document_pack(&envelope).await.expect("exact schema-owned PACK input");
         envelope.retire_unadopted();
         let future = (codec.print_mirror)(&files.pack, &files.spr);

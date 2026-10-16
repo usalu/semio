@@ -500,17 +500,6 @@
       ]
     },
     {
-      "package": "semio-framework-pack-record-token",
-      "manifest": "../../🔨️modules/🎒️pack/🧬️schema/📡️record-token/📦️packages/🦀️rust/Cargo.toml",
-      "entry": "../../🔨️modules/🎒️pack/🧬️schema/📡️record-token/🦀️.rs",
-      "maximumActiveLines": 4000,
-      "forbiddenDependencies": [
-        "semio-framework-os-kernel",
-        "semio-framework-plugin",
-        "semio-framework"
-      ]
-    },
-    {
       "package": "semio-framework-os-store-message-ledger",
       "manifest": "🔨️modules/🏪️store/📒️ledger/📨️messages/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
@@ -1139,6 +1128,28 @@
       "manifest": "🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🔨️modules/🏪️store/🧰️test-support/🦀️.rs",
       "maximumActiveLines": 1500,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework"
+      ]
+    },
+    {
+      "package": "semio-framework-os-store-testing-doubles",
+      "manifest": "🔨️modules/🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🔨️modules/🏪️store/🧪️testing/🎭️doubles/🦀️.rs",
+      "maximumActiveLines": 1900,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework"
+      ]
+    },
+    {
+      "package": "semio-framework-os-store-testing-fixtures",
+      "manifest": "🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🔨️modules/🏪️store/🧪️testing/🦀️.rs",
+      "maximumActiveLines": 1700,
       "forbiddenDependencies": [
         "semio-framework-os-kernel",
         "semio-framework-plugin",

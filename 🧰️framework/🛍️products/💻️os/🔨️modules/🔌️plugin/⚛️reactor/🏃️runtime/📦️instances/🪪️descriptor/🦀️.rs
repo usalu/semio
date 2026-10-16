@@ -1,6 +1,14 @@
 //! 🪪️ Plugin bundle installation, manifest, descriptor extras and the wire mutation roster.
 
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use std::sync::atomic::AtomicU32;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest};
+use semio_framework_value::{FromValue, ToValue};
+use semio_framework_plugin_plugin_program::{Plugin, PluginDescriptorExtras, PluginProgram, encode_wire_serialized, wire_artifact_mutation_plan, wire_list_artifact_mutations};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 pub(super) static NEXT_INSTANCE_ID: AtomicU32 = AtomicU32::new(1);
 pub fn install_plugin_bundle<PA: PluginApp>(runtime: &PluginRuntime<PA>, bundle: Plugin<PA>) {
     *runtime.plugin.borrow_mut() = Some(bundle);
@@ -96,7 +104,7 @@ pub fn canonical_semantic_descriptor_bytes(bytes: &[u8]) -> Option<Vec<u8>> {
 pub async fn plugin_wire_list_artifact_mutations<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Vec<u8> {
     match runtime.plugin.borrow().as_ref() {
         Some(plugin) => Plugin::wire_list_artifact_mutations(plugin),
-        None => encode_wire_serialized(&Vec::<crate::artifact_registration::WireMutationRosterEntry>::new()),
+        None => encode_wire_serialized(&Vec::<semio_framework_plugin_decl_registry::artifact_registration::WireMutationRosterEntry>::new()),
     }
 }
 /// 🎯️ Plans only a mutation service frozen into the installed plugin assembly.

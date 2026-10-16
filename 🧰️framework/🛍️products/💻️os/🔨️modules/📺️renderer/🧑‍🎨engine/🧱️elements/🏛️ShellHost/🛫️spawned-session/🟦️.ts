@@ -3,12 +3,12 @@
  * 🧱️ Child hook module of {@link ../🟦️.tsx | ShellHost}: `useSpawnedSession` runs the original statements in order and returns the bindings later hooks and the render read; the parent merges them into the shared core object.
  */
 
-import { DOCUMENT_SERVICE_TOPIC_V1 } from "../../../../../💡️inference/🔌️service/🟦️.ts";
-import { admitDocumentServiceWireDeclarationV1 } from "../../../../../💡️inference/🔌️service/🚪️io/🟦️.ts";
+import { DOCUMENT_SERVICE_TOPIC_V1 } from "@semio-tech/framework/inference/service";
+import { admitDocumentServiceWireDeclarationV1 } from "@semio-tech/framework/inference/service/io";
 import { prepareDocumentSurfaceV1 } from "../🔀️surface-switch/📄️document/🟦️.ts";
 import { createAdmittedShellInstanceV1, shellDialogSessionIsCurrentV1 } from "../🗨️dialog-origin/🟦️.ts";
 import { type DocumentOpeningReceiptV1 } from "../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
-import { directorySessionAuthorityIsCurrentV1 } from "../../../../../📇️directory/🪪️session-refresh/🟦️.ts";
+import { directorySessionAuthorityIsCurrentV1 } from "@semio-tech/framework/directory/session-refresh";
 import { useCallback, useEffect, useRef } from "react";
 // #region 🔌️Adapters
 import {
@@ -24,7 +24,8 @@ import {
   type WindowEngagement,
   type WindowMeasure
 } from "@semio-tech/framework";
-import { decodePackWire, encodeBackboneWorkerRequest } from "@semio-tech/framework-os";
+import { decodePackWire } from "@semio-tech/framework/packs";
+import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { quiesceSessionWorkV1, shellHumanChangeRecoveryV1, surfaceSwitchBusyTextV1, type ShellHumanV1 } from "../🔀️surface-switch/🟦️.ts";
 import {
   focusedProgramKeyV1,
@@ -64,9 +65,9 @@ import {
 } from "../../🛠️ShellHelpers/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { isPluginInstanceRetiredV1, type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
-import { publishBrowserActorHostEffectsV1 } from "../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
-import { InferencePortOpeningMailboxV1 } from "../../../../../💡️inference/🚪️opening/🟦️.ts";
+import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "@semio-tech/framework/browser-bundle/action-handoff";
+import { publishBrowserActorHostEffectsV1 } from "@semio-tech/framework/browser-bundle/action-handoff/publication";
+import { InferencePortOpeningMailboxV1 } from "@semio-tech/framework/inference/opening";
 import { liveInstanceWindowFaultV1, windowFaultFromError } from "../🩺️fault/🟦️.ts";
 import { seededActiveWindowId } from "../🎚️shell-model/🟦️.tsx";
 import { encodeWindowActionInvocation } from "../📨️window-invocation/🟦️.ts";

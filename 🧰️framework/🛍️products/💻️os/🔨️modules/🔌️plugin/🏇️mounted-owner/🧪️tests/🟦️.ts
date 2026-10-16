@@ -3,7 +3,7 @@ import Ajv from "ajv/dist/2020.js";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Database } from "bun:sqlite";
-import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import contextSchema from "../🧬️schema/🧾️context/🔣️.json";

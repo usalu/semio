@@ -2,9 +2,9 @@ import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️proce
 import { discoverMutationInventoryProvidersV1, selectMutationInventoryProviderV1, type MutationInventoryProviderV1 } from "../🔌️providers/🟦️.ts";
 import { matchesTarget, readSelectors } from "../../🔍️discovery/🎛️selection/🟦️.ts";
 import { type MutationManifest, type RuntimeMutationInventory, compareInventories, loadOracleRegistry, surfaceCoordinate, writeRuntimeInventory } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {scriptInvocationEnvironment} from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
+import {scriptInvocationEnvironment} from "@semio-tech/process/routing/invocation/process";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync } from "node:fs";
 import { join, relative, sep } from "node:path";

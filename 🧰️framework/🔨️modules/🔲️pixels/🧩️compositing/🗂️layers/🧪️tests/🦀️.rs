@@ -1,7 +1,7 @@
 //! 🧪️ Shared raster-stack vectors independently checked against librsvg in TypeScript.
 use super::*;
 use serde_json::Value;
-fn fixture()->Value {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->Value {serde_json::from_str(crate::text("🧩️compositing/🗂️layers/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn transform(value:&Value)->RasterStackTransform {RasterStackTransform {x:value["x"].as_f64().unwrap(),y:value["y"].as_f64().unwrap(),a:value["a"].as_f64().unwrap(),b:value["b"].as_f64().unwrap(),c:value["c"].as_f64().unwrap(),d:value["d"].as_f64().unwrap()}}
 fn layer(value:&Value)->RasterStackLayer {
     let extent=|v:&Value|v.as_u64().map(|n|n as u32);

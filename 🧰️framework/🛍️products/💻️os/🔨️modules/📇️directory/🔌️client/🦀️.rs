@@ -511,7 +511,7 @@ pub struct DocumentSocketGrantReceiptV1 {
 /// 🔐 Receipt-free server-selected authority retained by a native document connection.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DocumentSocketAuthorityV1 {
-    pub(crate) admitted_lease: Option<DocumentExecutionTargetLeaseFieldsV1>,
+    #[doc(hidden)] pub admitted_lease: Option<DocumentExecutionTargetLeaseFieldsV1>,
     pub hub_origin: String,
     pub expires_at_unix_ms: u64,
     pub scope: DocumentScope,
@@ -698,7 +698,7 @@ pub fn encode_url_component(value: &str) -> String {
     encoded
 }
 
-const DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES: usize = 64 * 1024;
+#[doc(hidden)] pub const DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES: usize = 64 * 1024;
 const DIRECTORY_SCOPE_ID_MAX_BYTES: usize = 4 * 1024;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -728,7 +728,7 @@ fn emit_document_socket_grant_probe(path: &str) {
 fn emit_document_socket_grant_probe(_path: &str) {}
 
 #[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
-fn wall_now_ms() -> i64 {
+#[doc(hidden)] pub fn wall_now_ms() -> i64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| i64::try_from(duration.as_millis()).unwrap_or(i64::MAX))
 }
 
@@ -763,7 +763,7 @@ pub struct LocalHubCredential {
 }
 
 struct WipeBytes<'a> {
-    bytes: Vec<u8>,
+    #[doc(hidden)] pub bytes: Vec<u8>,
     observer: Option<&'a std::sync::atomic::AtomicUsize>,
 }
 
@@ -785,7 +785,7 @@ impl Drop for WipeBytes<'_> {
     }
 }
 
-fn read_local_hub_credential_frame<'a, R: std::io::Read>(pipe: &mut R, observer: Option<&'a std::sync::atomic::AtomicUsize>) -> Result<WipeBytes<'a>, DirectoryClientError> {
+#[doc(hidden)] pub fn read_local_hub_credential_frame<'a, R: std::io::Read>(pipe: &mut R, observer: Option<&'a std::sync::atomic::AtomicUsize>) -> Result<WipeBytes<'a>, DirectoryClientError> {
     let mut length = [0u8; 4];
     pipe.read_exact(&mut length).map_err(|_| DirectoryClientError::Unauthorized)?;
     let length = u32::from_be_bytes(length) as usize;
@@ -815,7 +815,7 @@ impl Drop for WipeDslValue<'_> {
     }
 }
 
-fn wipe_dsl_value(value: &mut DslValue) -> usize {
+#[doc(hidden)] pub fn wipe_dsl_value(value: &mut DslValue) -> usize {
     match value {
         DslValue::String(value) => wipe_string(value),
         DslValue::Bytes(value) => {
@@ -829,7 +829,7 @@ fn wipe_dsl_value(value: &mut DslValue) -> usize {
     }
 }
 
-fn decode_local_hub_credential(bytes: &[u8], expected_class: &str, observer: Option<&std::sync::atomic::AtomicUsize>) -> Result<LocalHubCredential, DirectoryClientError> {
+#[doc(hidden)] pub fn decode_local_hub_credential(bytes: &[u8], expected_class: &str, observer: Option<&std::sync::atomic::AtomicUsize>) -> Result<LocalHubCredential, DirectoryClientError> {
     let mut decoded = WipeDslValue { value: decode_json_bytes::<DslValue>(bytes)?, observer };
     let field = |name: &str| decoded.value.get(name).and_then(|value| value.as_str()).ok_or(DirectoryClientError::Unauthorized);
     let schema = field("schema")?;
@@ -919,12 +919,13 @@ impl LocalHubCredential {
         Ok(Self { hub_origin: hub_origin.to_string(), capability: capability.as_bytes().into() })
     }
 
-    #[cfg(test)]
-    pub(crate) fn test(hub_origin: &str, capability: &str) -> Self {
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    #[doc(hidden)] pub fn test(hub_origin: &str, capability: &str) -> Self {
         Self { hub_origin: hub_origin.to_string(), capability: capability.as_bytes().into() }
     }
 
-    pub(crate) fn capability(&self) -> Result<&str, DirectoryClientError> {
+    #[doc(hidden)] pub fn capability(&self) -> Result<&str, DirectoryClientError> {
         std::str::from_utf8(&self.capability).map_err(|_| DirectoryClientError::Unauthorized)
     }
 
@@ -1689,7 +1690,7 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
         DirectoryStreamTurn::ReconnectAt(reconnect_at_ms)
     }
 
-    fn track(&mut self, message: &DirectoryStreamMessage) {
+    #[doc(hidden)] pub fn track(&mut self, message: &DirectoryStreamMessage) {
         if !self.track_observed_frontier {
             return;
         }
@@ -1731,7 +1732,7 @@ pub mod native {
     const UREQ_HTTP_HEADER_BYTES: usize = 16 * 1024;
     const UREQ_HTTP_REQUEST_BODY_BYTES: usize = 16 * 1024 * 1024;
     const UREQ_HTTP_BODY_PAGE_BYTES: usize = 16 * 1024;
-    const UREQ_HTTP_READ_TIMEOUT_MS: u64 = 15_000;
+    #[doc(hidden)] pub const UREQ_HTTP_READ_TIMEOUT_MS: u64 = 15_000;
     const UREQ_HTTP_CONNECT_TIMEOUT_MS: u64 = 15_000;
     /// ⏱️ The overall bound of a request whose caller named no deadline: long enough for a loaded hub's slowest
     /// answer and a 64 MiB execution-target body, finite so the blocking IO thread it occupies is freed.
@@ -1744,16 +1745,13 @@ pub mod native {
         deadline_ms.map_or(UREQ_HTTP_UNBOUNDED_REQUEST_MS, |deadline| deadline.saturating_sub(now_ms).max(1))
     }
 
-    type UreqBodyReader = Box<dyn Read + Send + Sync + 'static>;
-
-    #[cfg(test)]
-    include!("🧪️tests/🔬️native-runtime-identity/🦀️.rs");
+    #[doc(hidden)] pub type UreqBodyReader = Box<dyn Read + Send + Sync + 'static>;
 
     pub struct UreqStreamingHttpTransport {
         agent: ureq::Agent,
-        compute: Arc<ComputePool>,
-        runtime: Arc<TokioHostRuntime>,
-        scope: ScopeHandle,
+        #[doc(hidden)] pub compute: Arc<ComputePool>,
+        #[doc(hidden)] pub runtime: Arc<TokioHostRuntime>,
+        #[doc(hidden)] pub scope: ScopeHandle,
     }
 
     impl UreqStreamingHttpTransport {
@@ -1762,7 +1760,7 @@ pub mod native {
         }
     }
 
-    struct UreqStreamingHttpBody {
+    #[doc(hidden)] pub struct UreqStreamingHttpBody {
         reader: Arc<Mutex<Option<UreqBodyReader>>>,
         cancellation: HttpBodyCancellationHandle,
         compute: Arc<ComputePool>,
@@ -1885,7 +1883,7 @@ pub mod native {
         Ok((HttpResponseHead { status, headers }, response.into_reader()))
     }
 
-    fn ureq_stream_read_page(reader: &Arc<Mutex<Option<UreqBodyReader>>>) -> Result<Option<Vec<u8>>, HttpPoolError> {
+    #[doc(hidden)] pub fn ureq_stream_read_page(reader: &Arc<Mutex<Option<UreqBodyReader>>>) -> Result<Option<Vec<u8>>, HttpPoolError> {
         let mut slot = reader.lock().map_err(|_| HttpPoolError::Transport("ureq HTTP body lock poisoned".into()))?;
         let body = slot.as_mut().ok_or_else(|| HttpPoolError::Transport("ureq HTTP body reached terminal ownership".into()))?;
         let mut page = vec![0u8; UREQ_HTTP_BODY_PAGE_BYTES];
@@ -2102,7 +2100,7 @@ pub mod native {
 
     /// 🚰️ One fresh [`HttpPool`] over the ureq streaming transport whose refill driver already runs on
     /// `runtime`'s worker pool every `refill_interval_ms`.
-    fn refilled_http_pool(runtime: &Arc<TokioHostRuntime>, scope: &ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, refill_interval_ms: u64) -> Arc<HttpPool> {
+    #[doc(hidden)] pub fn refilled_http_pool(runtime: &Arc<TokioHostRuntime>, scope: &ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, refill_interval_ms: u64) -> Arc<HttpPool> {
         let transport: Arc<dyn AsyncHttpTransport> = Arc::new(UreqStreamingHttpTransport::new(compute, runtime.clone(), scope.clone()));
         let http_pool = Arc::new(HttpPool::new_with_async_transport_now(transport, bytes_per_minute_cap, outstanding_cap));
         http_pool.spawn_refill_driver(runtime.worker_pool(), refill_interval_ms);
@@ -2226,9 +2224,6 @@ pub mod native {
         }
         Ok(TungsteniteConnection(socket))
     }
-
-    #[cfg(test)]
-    include!("🧪️tests/🔬️native-streaming/🦀️.rs");
 }
 
 /// 🌉️ Browser wgpu build seam: `web_sys::WebSocket`/`fetch` transport, kept coherent with
@@ -2391,12 +2386,6 @@ pub mod agent_delegations;
 mod execution_target_module;
 pub use execution_target_module::*;
 //#endregion 🧩️ExecutionTargetModule
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
 
 #[path = "🌐️document-http/🦀️.rs"]
 pub mod document_http;

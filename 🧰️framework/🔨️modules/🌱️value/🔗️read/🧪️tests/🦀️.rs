@@ -27,7 +27,7 @@ fn recover_source<A:crate::retirement::RetireOwned+Sync>(source:&mut crate::reta
 }
 #[test]
 fn typed_read_registry_retains_every_original_sparse_wrap_and_starvation_vector() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🔗️read/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap() {
         let(registry,p)=ReadOwnershipRegistry::<u64>::admit(RetainedCloneGrant {maximum_items:1,maximum_capacity_bytes:ReadOwnershipRegistry::<u64>::constructor_capacity_bytes(),maximum_depth:1,..Default::default()}).unwrap();assert_eq!(p.retained_capacity_bytes,ReadOwnershipRegistry::<u64>::constructor_capacity_bytes());
         let mut leases:Vec<_>=(0..row["issued"].as_u64().unwrap()).map(|v|Some(registry.try_issue(Arc::new(v),RetainedCloneGrant {maximum_items:1,maximum_depth:1,..Default::default()}).unwrap_or_else(|_|panic!("exact read issue")).0)).collect();
@@ -43,7 +43,7 @@ fn typed_read_registry_retains_every_original_sparse_wrap_and_starvation_vector(
 
 #[test]
 fn typed_read_registry_ctor_return_source_and_cancel_conserve_actual_heap_with_full_grants() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🔗️read/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for copy in law["workBytes"].as_array().unwrap(){for text in law["texts"].as_array().unwrap(){
         let copy=copy.as_u64().unwrap()as usize;let text=text.as_str().unwrap();let capacity=ReadOwnershipRegistry::<String>::constructor_capacity_bytes();
         for denied in [RetainedCloneGrant::default(),RetainedCloneGrant {maximum_items:1,maximum_capacity_bytes:capacity-1,maximum_depth:1,..Default::default()},RetainedCloneGrant {maximum_items:1,maximum_capacity_bytes:capacity,..Default::default()}]{let(refusal,heap)=observe_retirement_allocations(||ReadOwnershipRegistry::<String>::admit(denied));assert!(refusal.is_err());assert_eq!(heap,(0,0));}
@@ -62,7 +62,7 @@ fn typed_read_registry_ctor_return_source_and_cancel_conserve_actual_heap_with_f
 
 #[test]
 fn erased_read_authority_retains_typed_roots_and_every_alias_until_full_physical_closure() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🔗️read/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for count in law["authorityAliases"].as_array().unwrap(){for copy in law["workBytes"].as_array().unwrap(){
         let count=count.as_u64().unwrap()as usize;let copy=copy.as_u64().unwrap()as usize;let bytes=ReadAuthority::constructor_capacity_bytes::<String>();
         let g=RetainedCloneGrant {maximum_items:1,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()};let(refused,heap)=observe_retirement_allocations(||ReadAuthority::admit::<String>(RetainedCloneGrant {maximum_capacity_bytes:bytes-1,..g}));assert!(refused.is_err());assert_eq!(heap,(0,0));
@@ -81,7 +81,7 @@ fn erased_read_authority_retains_typed_roots_and_every_alias_until_full_physical
 
 #[test]
 fn erased_read_admission_preserves_original_pointer_and_cancelled_full_frame_receipts() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🔗️read/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for copy in law["workBytes"].as_array().unwrap(){for cancel in law["erasedCancelAt"].as_array().unwrap(){
         let copy=copy.as_u64().unwrap()as usize;let cancel=cancel.as_u64().unwrap()as usize;
         let((mut authority,p),heap)=observe_retirement_allocations(||ReadAuthority::admit::<String>(RetainedCloneGrant {maximum_items:1,maximum_capacity_bytes:ReadAuthority::constructor_capacity_bytes::<String>(),maximum_depth:1,..Default::default()}).unwrap());assert_eq!(heap,(p.retained_capacity_bytes,0));let mut births=heap.0;let mut released=0;
@@ -96,7 +96,7 @@ fn erased_read_admission_preserves_original_pointer_and_cancelled_full_frame_rec
 
 #[test]
 fn erased_read_authority_close_order_preserves_original_root_and_full_physical_receipts() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🔗️read/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for copy in law["workBytes"].as_array().unwrap(){for order in law["closeOrders"].as_array().unwrap(){
         let copy=copy.as_u64().unwrap()as usize;let order=order.as_str().unwrap();
         let((mut authority,p),heap)=observe_retirement_allocations(||ReadAuthority::admit::<String>(RetainedCloneGrant {maximum_items:1,maximum_capacity_bytes:ReadAuthority::constructor_capacity_bytes::<String>(),maximum_depth:1,..Default::default()}).unwrap());assert_eq!(heap,(p.retained_capacity_bytes,0));let mut births=heap.0;let mut released=0;
@@ -112,7 +112,7 @@ fn erased_read_authority_close_order_preserves_original_root_and_full_physical_r
 
 #[test]
 fn erased_read_source_retains_original_id_commit_authority_and_root_after_read_return(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let vector=&law["erasedSource"];
+    let law:serde_json::Value=serde_json::from_str(crate::text("🔗️read/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let vector=&law["erasedSource"];
     for copy in law["workBytes"].as_array().unwrap(){
         let copy=copy.as_u64().unwrap()as usize;let generation=vector["generation"].as_u64().unwrap();let revision=[vector["revisionOctet"].as_u64().unwrap()as u8;32];
         let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:ReadAuthority::constructor_capacity_bytes::<String>(),maximum_depth:1,..Default::default()};let((mut authority,receipt),heap)=observe_retirement_allocations(||ReadAuthority::admit::<String>(grant).unwrap());assert_eq!(heap,(receipt.retained_capacity_bytes,0));let(mut born,mut released)=(heap.0,heap.1);assert!(authority.publish_authority(generation,revision));

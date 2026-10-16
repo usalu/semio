@@ -9,9 +9,6 @@ pub struct ToolRunRecordReadLimits{
  pub maximum_file_bytes:u32,pub maximum_segment_bytes:u32,pub maximum_symbols:u32,pub maximum_depth:u16,pub maximum_items:u32,pub maximum_total_allocation_bytes:u32,pub maximum_symbol_utf8_bytes:u32,pub maximum_symbol_scalars:u32,pub maximum_cursor_allocation_bytes:u32,
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
 impl ToolRunRecordReadLimits{
  pub fn validate(self)->Result<(),ValueError>{if [self.maximum_file_bytes,self.maximum_segment_bytes,self.maximum_symbols,self.maximum_items,self.maximum_total_allocation_bytes,self.maximum_cursor_allocation_bytes].contains(&0)||self.maximum_depth==0||self.maximum_cursor_allocation_bytes>self.maximum_total_allocation_bytes{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original ToolRun record receiving bounds are invalid"))}Ok(())}
  pub fn record_body(self)->pack::record::RetainedRecordBodyReadLimits{pack::record::RetainedRecordBodyReadLimits{pack:pack::PackLimits{max_file_len:u64::from(self.maximum_file_bytes),max_segment_len:u64::from(self.maximum_segment_bytes),max_symbols:self.maximum_symbols,max_depth:self.maximum_depth,max_items:u64::from(self.maximum_items),max_total_alloc:u64::from(self.maximum_total_allocation_bytes)},maximum_symbol_utf8_bytes:self.maximum_symbol_utf8_bytes as usize,maximum_symbol_scalars:self.maximum_symbol_scalars as usize,maximum_allocation_bytes:self.maximum_cursor_allocation_bytes as usize}}

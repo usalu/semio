@@ -615,7 +615,7 @@ pub struct ProgramBridgeEntry {
 }
 
 /// 🧪️ A law's stand-in for a program's document doors: loading an archive and answering the history snapshot.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Clone, Copy)]
 pub struct ProgramFixtureDocument {
     pub load: fn(u32, &protocol::DocumentArchivePack) -> Result<(), String>,
@@ -1777,7 +1777,7 @@ use semio_framework_value::ToValue;
     if store::pack_rt::encode_wire_value(&value) != bytes || store::pack_rt::encode_wire_value(&package.to_value()) != bytes {
         return Err("hub execution-target descriptor is not its exact canonical package projection".into());
     }
-    if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || receipt.binds(plugin_id, &package.package_id, &receipt.wasm_sha256, &semio_framework_hash::sha256_hex(&bytes)).is_err() {
+    if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || receipt.binds(semio_framework_os_kernel::os_component_receipt::ComponentProfileV1::Release, plugin_id, &package.package_id, &receipt.wasm_sha256, &semio_framework_hash::sha256_hex(&bytes)).is_err() {
         return Err((format!("hub execution-target descriptor identity mismatch: {plugin_id}")).into());
     }
     ProgramBridgeEntry::from_wasm(plugin_id.to_string(), Some(package.package_id), Some(receipt.wasm_sha256.clone()), component.to_path_buf(), package.manifest)

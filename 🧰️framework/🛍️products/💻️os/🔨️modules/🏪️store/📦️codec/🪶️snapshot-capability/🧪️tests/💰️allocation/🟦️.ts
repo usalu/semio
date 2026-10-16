@@ -5,11 +5,11 @@ import { isUtf8 } from "node:buffer";
 
 import fixture from "./🧫️fixtures/🔣️.json";
 import Ajv from "ajv";
-import grantSchema from "../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 test("original snapshot producer spans debit four physical currencies without replenishing depth",()=>{
- const neutral=JSON.parse(readFileSync(resolve(import.meta.dir,"../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json"),"utf8"));const policy=neutral.producer;const validate=new Ajv({strict:true,allErrors:true}).compile(grantSchema);expect(validate(policy.walletGrant)).toBe(true);expect(validate(policy.remainingGrant)).toBe(true);expect(policy.custody).toBe("originalDestinationBeforeCopy");expect(policy.receipt).toBe("actualDestinationOnSuccessAndRefusal");expect(policy.publication).toBe("moveOriginal");
+ const neutral=JSON.parse(readFileSync(snapshotEncodeOwnerFixtureUrl,"utf8"));const policy=neutral.producer;const validate=new Ajv({strict:true,allErrors:true}).compile(grantSchema);expect(validate(policy.walletGrant)).toBe(true);expect(validate(policy.remainingGrant)).toBe(true);expect(policy.custody).toBe("originalDestinationBeforeCopy");expect(policy.receipt).toBe("actualDestinationOnSuccessAndRefusal");expect(policy.publication).toBe("moveOriginal");
  const db=new Database(":memory:");try{db.exec("CREATE TABLE producer_span(ordinal INTEGER PRIMARY KEY,items INTEGER NOT NULL,copy_bytes INTEGER NOT NULL,capacity_bytes INTEGER NOT NULL,release_bytes INTEGER NOT NULL)");for(const[index,span]of policy.receipts.entries())db.query("INSERT INTO producer_span VALUES(?,?,?,?,?)").run(index,span.copiedItems,span.copiedBytes,span.retainedCapacityBytes,span.releasedBytes);const remaining=db.query("SELECT ?1-SUM(items) AS maximumItems,?2-SUM(copy_bytes) AS maximumCopyBytes,?3-SUM(capacity_bytes) AS maximumCapacityBytes,?4-SUM(release_bytes) AS maximumReleaseBytes,?5 AS maximumDepth FROM producer_span").get(policy.walletGrant.maximumItems,policy.walletGrant.maximumCopyBytes,policy.walletGrant.maximumCapacityBytes,policy.walletGrant.maximumReleaseBytes,policy.walletGrant.maximumDepth);expect(remaining).toEqual(policy.remainingGrant);expect(policy.copyBytes).toBe(new TextEncoder().encode(neutral.copy).length);for(const axis of grantSchema.required){const missing={...policy.walletGrant};delete missing[axis];expect(validate(missing)).toBe(false);}}finally{db.close();}
  console.error("[DEBUG] Original producer neutral spans match independent SQLite subtraction and closed five-axis Ajv policy; native parser body accounting remains separately unqualified");
 });
@@ -81,11 +81,12 @@ test("independent SQLite preserves UTF-8 semantics separately from allocation st
   } finally { database.close(); }
 });
 
-import refusalFixture from "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
-import deflateFixture from "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/📡️codec/🔣️.json";
+import { refusalFixture } from "@semio-tech/value-ts/refusal/testing";
+import { errorCauseCodecFixture as deflateFixture } from "../../../../../../../../🔨️modules/🎒️pack/🧪️tests/🧫️fixtures/🟦️.ts";
 import {deflateRawSync,inflateRawSync} from "node:zlib";
 import {PackError} from "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🟦️.ts";
 import {ValueError} from "../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
+import { snapshotEncodeOwnerFixtureUrl } from "@semio-tech/framework/io/testing/fixtures";
 
 test("retained Deflate physical credit has an explicit closed ownership authority",()=>{
  const admission=deflateFixture.retainedAdmission;

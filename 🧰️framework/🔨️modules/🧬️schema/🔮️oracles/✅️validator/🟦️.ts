@@ -8,15 +8,15 @@ import { resolve } from "node:path";
 import Ajv, { type Options } from "ajv";
 import addFormats, { type FormatName } from "ajv-formats";
 import vocabulary from "../../🧬️vendor-annotation-vocabulary/🔣️.json" with { type: "json" };
-import manifestSchema from "../../../🛂️manifest/🧬️schema/🔣️.json" with { type: "json" };
-import formatPolicy from "../../✅️validator/🏷️format-policy/🔣️.json" with { type: "json" };
+import { manifestSchema } from "@semio-tech/framework/manifest/schema";
+import { formatPolicySchema as formatPolicy } from "@semio-tech/schema-validator-ts/format-policy";
 
 export const SEMIO_SCHEMA_VENDOR_VOCABULARY_V1 = vocabulary;
 
 /** 🧬️ The schema documents a vocabulary meta-schema `$ref`s (`x-semio-ui` → the manifest's `InputUi` export), added before the keywords compile. */
 export const SEMIO_SCHEMA_VENDOR_VOCABULARY_DOCUMENTS_V1: readonly { readonly $id: string }[] = [manifestSchema];
 
-/** 🏷️ The owned validator's pinned `format` policy (`ASSERTED_STRING_FORMATS` in `🧬️schema/✅️validator/🦀️.rs`): the asserted
+/** 🏷️ The owned validator's pinned `format` policy (`ASSERTED_STRING_FORMATS` in `🧬️schema/✅️validator/📃️string-format/🦀️.rs`): the asserted
  * string formats, checked by `ajv-formats`, and the proto-derived spellings that stay annotations and never reject. */
 export const SEMIO_SCHEMA_FORMAT_POLICY_V1: { readonly asserted: readonly FormatName[]; readonly annotation: readonly string[] } = { asserted: formatPolicy.asserted as FormatName[], annotation: formatPolicy.annotation };
 

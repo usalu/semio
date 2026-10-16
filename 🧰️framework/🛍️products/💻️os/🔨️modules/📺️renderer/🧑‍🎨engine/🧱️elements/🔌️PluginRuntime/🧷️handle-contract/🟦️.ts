@@ -24,19 +24,21 @@ import {
   type PluginViewState,
   type TopicContribution
 } from "@semio-tech/framework";
-import type { MediaExportHandle, MediaExportStatus } from "@semio-tech/framework-os";
+import type { MediaExportHandle, MediaExportStatus } from "@semio-tech/framework/wire-contracts";
 // #endregion 🔌️Adapters
 import {
   type AppDocumentIdentity,
   type DocumentArchiveLoadStatus,
-  type DocumentArchiveMergeV1,
   type DocumentArchivePack,
   type WindowConfigPackEntry
-} from "@semio-tech/framework-os";
-import { type ArtifactPresencePeer, type LocalInteractionCapture } from "@semio-tech/framework-replication";
-import { type PluginDispatchHintV1 } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
+} from "@semio-tech/framework/wire-contracts";
+import {
+  type DocumentArchiveMergeV1
+} from "@semio-tech/framework/app-channel";
+import { type ArtifactPresencePeer, type LocalInteractionCapture } from "@semio-tech/framework/replication";
+import { type PluginDispatchHintV1 } from "@semio-tech/framework";
 import type { IconName } from "@semio-tech/ui-react";
-import { type ActorDocumentMessagePortV1, type ActorDocumentSourceV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
+import { type ActorDocumentMessagePortV1, type ActorDocumentSourceV1 } from "@semio-tech/framework/backbone/binding";
 
 /** 🎭️ Renderer-side view state passed to program wasm calls — structurally mirrors `@semio-tech/framework`'s {@link PluginViewState}, kept as a distinct local alias since `ViewModel` is the established name used throughout this file. */
 export type ViewModel = PluginViewState;

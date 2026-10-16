@@ -49,5 +49,5 @@ export const spaceHomeSnapshotTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseSHomeSnapshotText(value: unknown, at = "$"): SHomeSnapshotText {
-  return spaceHomeSnapshotTextGuardObject(value, `${at}`);
+  return spaceHomeSnapshotTextGuardString(value, `${at}`);
 }

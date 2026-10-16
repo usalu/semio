@@ -46,7 +46,8 @@
         "ino",
         "size",
         "filesystemBytes",
-        "maximumPhysicalBytes"
+        "maximumPhysicalBytes",
+        "mountDirectory"
       ],
       "properties": {
         "version": {
@@ -80,6 +81,9 @@
           "type": "integer",
           "minimum": 33554432,
           "maximum": 1099511627776
+        },
+        "mountDirectory": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/platform/contract/mount/component.json"
         }
       }
     }

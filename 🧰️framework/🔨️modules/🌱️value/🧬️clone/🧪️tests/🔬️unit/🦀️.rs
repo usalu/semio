@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn original_dynamic_value_clone_cold_input_requires_original_authority(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(law["rootTransferCopyBytes"],0);
     let source=std::sync::Arc::new(DslValue::Null);let original=std::sync::Arc::as_ptr(&source);
     use crate::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneGrant};
@@ -14,7 +14,7 @@ fn original_dynamic_value_clone_cold_input_requires_original_authority(){
 use std::sync::Arc;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(crate::text("🧬️clone/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn limits() -> DslValueCloneLimits {
@@ -209,7 +209,7 @@ fn shared_value_clone_reservation_rejects_allocator_overcapacity_before_payload_
 
 #[test]
 fn shared_value_clone_intrinsic_octets_obey_copy_grants_and_exact_cancellation() {
-    let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json")).unwrap();
+    let neutral:serde_json::Value=serde_json::from_str(crate::text("🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json")).unwrap();
     let unit=neutral["cases"][5]["octets"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>();
     let value=DslValue::Bytes(unit.repeat(32768));
     let (actual,checkpoint)=clone_value(&value,DSL_VALUE_CLONE_CHUNK_BYTES);

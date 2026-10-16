@@ -1,7 +1,7 @@
 /** 🧺️ `Vdi3805Mutation` wire twin: the mutation aggregate, branch for branch as `./🔣️.json` spells it, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireExternal, type NormWireReader } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireExternal, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 import { parseRemoveGeometryConnection, type RemoveGeometryConnection } from "./✂️remove-geometry-connection/🧬️schema/🟦️.ts";
 import { type ChangeProductConfiguration, parseChangeProductConfiguration } from "./🎛️change-product-configuration/🧬️schema/🟦️.ts";
 import { type ChangeManufacturerFile, parseChangeManufacturerFile } from "./🏭️change-manufacturer-file/🧬️schema/🟦️.ts";

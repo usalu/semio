@@ -7,6 +7,7 @@ import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpac
 import { directorySocketGrantDecision, type DirectorySocketGrantVector } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧭️decision/🟦️.ts";
 import { assertSocketGrantNativeLawSources, socketGrantNativeLawPlan } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/📋️native-law-plan/🟦️.ts";
 import { runSocketGrantCheck } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts";
+import { hubScriptSourceFiles } from "../../🧪️testing/📜️script-sources/🟦️.ts";
 
 const originalController = new AbortController(), originalProgress: string[] = [];
 const originalInvocation = {policy:{version:1 as const,owner:"socket-grant-command-source",maximumElapsedMilliseconds:0},capabilities:{sourceFixture:true},control:{signal:originalController.signal,remainingMilliseconds:()=>null,publish:async(progress:{stage:string})=>{originalProgress.push(progress.stage);await new Promise<void>(done=>setImmediate(done));},yieldContinuation:async()=>{originalProgress.push("yield");await new Promise<void>(done=>setImmediate(done));}}};
@@ -49,14 +50,16 @@ function internalOwnerImports(path: string, owners: ReadonlySet<string>): string
     .sort();
 }
 
-function rootImportsForOwner(routerPath: string, ownerPath: string): readonly string[] {
-  const source = ts.createSourceFile(routerPath, readFileSync(routerPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+function rootImportsForOwner(ownerPath: string): readonly string[] {
   const owner = join(repoRoot, ownerPath);
-  return source.statements.flatMap((node) => {
-    if (!ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier) || !node.moduleSpecifier.text.startsWith(".")) return [];
-    if (resolve(dirname(routerPath), node.moduleSpecifier.text) !== owner) return [];
-    const bindings = node.importClause?.namedBindings;
-    return bindings && ts.isNamedImports(bindings) ? bindings.elements.map((element) => element.name.text) : [];
+  return hubScriptSourceFiles(repoRoot).flatMap((file) => {
+    const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    return source.statements.flatMap((node) => {
+      if (!ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier) || !node.moduleSpecifier.text.startsWith(".")) return [];
+      if (resolve(dirname(file), node.moduleSpecifier.text) !== owner) return [];
+      const bindings = node.importClause?.namedBindings;
+      return bindings && ts.isNamedImports(bindings) ? bindings.elements.map((element) => element.name.text) : [];
+    });
   });
 }
 
@@ -180,18 +183,17 @@ test("Rust oracle independently parses exact test declarations and hostile looka
 test("package, cache input and targets bind only the moved owners", () => {
   const routerPath = join(hubRoot, "📦️packages/🦀️rust/📜️script.ts");
   const router = readFileSync(routerPath, "utf8");
-  const routerAst = ts.createSourceFile(routerPath, router, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const declared = new Set<string>();
-  routerAst.forEachChild((node) => {
+  for (const file of hubScriptSourceFiles(repoRoot)) ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS).forEachChild((node) => {
     if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name) declared.add(node.name.text);
     if (ts.isVariableStatement(node)) for (const declaration of node.declarationList.declarations) if (ts.isIdentifier(declaration.name)) declared.add(declaration.name.text);
   });
   for (const owner of fixture.owners) {
     for (const declaration of owner.declarations) expect(declared.has(declaration), declaration).toBe(false);
-    if (owner.language === "typescript") expect(rootImportsForOwner(routerPath, owner.path), owner.path).toEqual(owner.rootImports);
+    if (owner.language === "typescript") expect([...new Set(rootImportsForOwner(owner.path))].sort(), owner.path).toEqual([...owner.rootImports].sort());
   }
-  expect(router).toContain(`.register("${fixture.routes.source.command}", HubSocketGrantCommandSourceScript)`);
-  expect(router).toContain(`.register("${fixture.routes.native.command}", SocketGrantCheckScript)`);
+  expect(router).toContain(`.registerLazy("${fixture.routes.source.command}", async () => (await import("../../🎛️commands/🚦️gate-commands/🟦️.ts")).HubSocketGrantCommandSourceScript)`);
+  expect(router).toContain(`.registerLazy("${fixture.routes.native.command}", async () => (await import("../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts")).SocketGrantCheckScript)`);
   const project = JSON.parse(readFileSync(join(hubRoot, "📦️packages/🦀️rust/📋️project.json"), "utf8"));
   expect(project.namedInputs.hubSocketGrantCommandSources).toEqual(fixture.routes.source.inputs);
   expect(project.targets[fixture.routes.source.target]?.inputs).toEqual(["hubSocketGrantCommandSources"]);

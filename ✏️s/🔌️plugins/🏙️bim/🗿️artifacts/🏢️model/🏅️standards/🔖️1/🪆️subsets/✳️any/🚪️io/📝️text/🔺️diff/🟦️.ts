@@ -49,5 +49,5 @@ export const bimModelDiffTextGuardConstant = <T extends string | number | boolea
 //#endregion 🚪️Parsers
 
 export function parseModelDiffText(value: unknown, at = "$"): ModelDiffText {
-  return bimModelDiffTextGuardObject(value, `${at}`);
+  return bimModelDiffTextGuardString(value, `${at}`);
 }

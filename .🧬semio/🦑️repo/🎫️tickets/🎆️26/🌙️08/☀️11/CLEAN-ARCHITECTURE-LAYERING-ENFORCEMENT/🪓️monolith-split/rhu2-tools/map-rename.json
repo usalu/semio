@@ -1,0 +1,18 @@
+{
+ "🧰️framework/🔨️modules/🧵️backbone/🟦️.ts": "🧰️framework/🔨️modules/🛰️backbone/🟦️.ts",
+ "🧰️framework/🔨️modules/🧵️backbone/🔗️binding/🟦️.ts": "🧰️framework/🔨️modules/🛰️backbone/🔗️binding/🟦️.ts",
+ "🧰️framework/🔨️modules/🧵️backbone/🪪️config-lane/🟦️.ts": "🧰️framework/🔨️modules/🛰️backbone/🪪️config-lane/🟦️.ts",
+ "🧰️framework/📦️packages/🟦️typescript/🧵️backbone/🟦️.ts": "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🟦️.ts",
+ "🧰️framework/📦️packages/🟦️typescript/🧵️backbone/🔗️binding/🟦️.ts": "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🔗️binding/🟦️.ts",
+ "🧰️framework/📦️packages/🟦️typescript/🧵️backbone/🪪️config-lane/🟦️.ts": "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🪪️config-lane/🟦️.ts",
+ "🧰️framework/🔨️modules/🌉️mcp/🐚️channel/🟦️.ts": "🧰️framework/🔨️modules/🤖️mcp/🐚️channel/🟦️.ts",
+ "🧰️framework/🔨️modules/🌉️mcp/🧵️bridge/🟦️.ts": "🧰️framework/🔨️modules/🤖️mcp/🧵️bridge/🟦️.ts",
+ "🧰️framework/📦️packages/🟦️typescript/🌉️mcp/🐚️channel/🟦️.ts": "🧰️framework/📦️packages/🟦️typescript/🤖️mcp/🐚️channel/🟦️.ts",
+ "🧰️framework/📦️packages/🟦️typescript/🌉️mcp/🧵️bridge/🟦️.ts": "🧰️framework/📦️packages/🟦️typescript/🤖️mcp/🧵️bridge/🟦️.ts",
+ "🧰️framework/🔨️modules/🧩️plugin-module/🟦️.ts": "🧰️framework/🔨️modules/🔌️plugin-module/🟦️.ts",
+ "🧰️framework/🔨️modules/🧩️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts": "🧰️framework/🔨️modules/🔌️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts",
+ "🧰️framework/🔨️modules/🧩️plugin-module/🌎️hub-source/🧬️schema/🔣️.json": "🧰️framework/🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🔣️.json",
+ "🧰️framework/🔨️modules/🧩️plugin-module/🌎️hub-source/🧬️schema/🟦️.ts": "🧰️framework/🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🟦️.ts",
+ "🧰️framework/📦️packages/🟦️typescript/🧩️plugin-module/🟦️.ts": "🧰️framework/📦️packages/🟦️typescript/🔌️plugin-module/🟦️.ts",
+ "🧰️framework/📦️packages/🟦️typescript/🧩️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts": "🧰️framework/📦️packages/🟦️typescript/🔌️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts"
+}

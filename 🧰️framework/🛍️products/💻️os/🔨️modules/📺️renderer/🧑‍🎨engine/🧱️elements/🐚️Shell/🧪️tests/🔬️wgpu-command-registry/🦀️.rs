@@ -1,59 +1,7 @@
+use semio_framework_os_renderer_wgpu_fixtures::shell::test_app;
 use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
 use super::*;
 use {semio_framework::ActionArgControl,semio_framework::ActionKind,semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::CommandDefinition,semio_framework::CommandOwnerAddress,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::PanelGroup,semio_framework::PanelTabDefinition,semio_framework::PanelTabKind,semio_framework::PluginManifest,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
-
-pub(super) fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<CommandDefinition>) -> AppDefinition {
-    AppDefinition {
-        id: "test-app".into(),
-        role: AppRole::Editor,
-        dialect: ArtifactDialect { artifact_kind: "s.test.app".into(), standard: "1".into(), subset: "*".into() },
-        label: LocalizedLabel::data("Test App"),
-        breadcrumb: vec!["semio".into(), "test".into()],
-        icon_id: None,
-        controller_id: "test".into(),
-        modes: Modes::one(ModeDefinition { id: "default".into(), label: LocalizedLabel::data("Default"), icon_id: "pencil".into(), tools: vec![], layout_id: None, commands: mode_commands }),
-        default_mode_id: "default".into(),
-        window_kinds: WindowKinds::try_from(vec![WindowKindDefinition {
-            initial_utility_id: None,
-            id: "main".into(),
-            label: LocalizedLabel::data("Main"),
-            body_key: "main.body".into(),
-            surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
-            icon_id: "app-window".into(),
-            options: Default::default(),
-            actions: vec![],
-            utilities: vec![],
-            interactions: vec![],
-            params_schema: None,
-            artifact_snapshot_schema: None,
-            input_event_schema: None,
-            output_schema: None,
-            capabilities: vec![],
-        }])
-        .expect("non-empty"),
-        panel_tabs: vec![PanelTabDefinition { kind: PanelTabKind::App("tab".into()), label: LocalizedLabel::data("Tab"), group: PanelGroup::Workbench, body_key: Some("tab.body".into()), children: vec![] }],
-        keybindings: vec![],
-        actions: vec![],
-        utilities: vec![],
-        tools: vec![],
-        commands,
-        interactions: vec![],
-        named_layouts: vec![],
-        default_layout: None,
-        terminologies: vec!["de".into()],
-        terminology_breadcrumbs: HashMap::new(),
-        introduction: None,
-        tutorials: Vec::new(),
-        dialogs: Vec::new(),
-        media_inputs: Vec::new(),
-        media_outputs: Vec::new(),
-        artifact_kinds: Vec::new(),
-        config: semio_framework_async::block_on(semio_framework::ConfigSpec::empty()),
-        command_grammar: semio_framework_async::block_on(semio_framework::CommandGrammar::empty()),
-        io: semio_framework::AppIo::default(),
-        fault_notices: Vec::new(),
-    }
-}
 
 fn test_shell_state() -> ShellState {
     ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
@@ -63,8 +11,8 @@ fn test_shell_state() -> ShellState {
 fn window_action_context_nested_menu_actions_preserve_the_clicked_window() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔬️window-action-context/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let spec = ui_wgpu::wgpu::ContextMenuItemSpec { id: "nested".into(), action: Some("setValue".into()), args: (!case["args"].is_null()).then(|| semio_framework::DslValue::from(&case["args"])), ..Default::default() };
-        let group = ui_wgpu::wgpu::ContextMenuItemSpec { id: "group".into(), children: Some(vec![spec]), ..Default::default() };
+        let spec = semio_framework_ui_layout::layout::ContextMenuItemSpec { id: "nested".into(), action: Some("setValue".into()), args: (!case["args"].is_null()).then(|| semio_framework::DslValue::from(&case["args"])), ..Default::default() };
+        let group = semio_framework_ui_layout::layout::ContextMenuItemSpec { id: "group".into(), children: Some(vec![spec]), ..Default::default() };
         let mut items = vec![shell_context_menu_item_from_spec(group, "test", false)];
         scope_context_menu_items(&mut items, fixture["clickedWindowId"].as_str().unwrap());
         let actual: Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(items[0].children[0].action.as_ref().unwrap().args.as_ref().unwrap()).to_string()).unwrap();
@@ -87,7 +35,7 @@ fn window_action_context_fallback_uses_the_clicked_window_kind() {
     let right = fixture["clickedWindowId"].as_str().unwrap();
     shell.windows.active_window_id = Some(left.into());
     shell.dock.dock.root =
-        crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance(left, "left-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft), DockStackTab::instance(right, "right-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft)], active: left.into() };
+        semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance(left, "left-kind", semio_framework_ui_layout::layout::WindowStackCorner::TopLeft), DockStackTab::instance(right, "right-kind", semio_framework_ui_layout::layout::WindowStackCorner::TopLeft)], active: left.into() };
     shell.dock.dock_drop_bodies = vec![(Vec::new(), Rect::new(100.0, 0.0, 100.0, 100.0), right.into())];
     shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     let mut input = InputState::<ActionDescriptor>::default();
@@ -170,8 +118,6 @@ fn directory_page_json(after: u64, through: u64, has_more: bool, _receipt_seed: 
     semio_framework_pack_json::to_json_string(&page)
 }
 
-
-
 #[cfg(not(target_arch = "wasm32"))]
 fn directory_test_context() -> OperationContext {
     OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root_now(), capability: None }
@@ -179,7 +125,7 @@ fn directory_test_context() -> OperationContext {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn directory_test_runner(since: u64) -> std::sync::Arc<ShellDirectoryRunner> {
-    let pool = crate::renderer_worker_pool();
+    let pool = semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool();
     let runtime = std::sync::Arc::new(TokioHostRuntime::with_pool(pool.clone()));
     let scope = runtime.open_scope_now(ScopeOwner::Service("directory-bootstrap-law"), None);
     let compute = std::sync::Arc::new(ComputePool::with_pool(1, pool.clone()));
@@ -523,9 +469,9 @@ fn directory_home_bootstrap_retries_cancels_and_rebootstraps_without_cursor_loss
         let pending_epoch = home.bootstrap.bootstrap_epoch();
         let page_cancel = CancelToken::root_now();
         let (late_tx, late_rx) = std::sync::mpsc::channel::<ShellDirectoryPageResult>();
-        let page_task = ShellPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Io, std::future::pending::<()>());
+        let page_task = ShellPoolFuture::spawn(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, std::future::pending::<()>());
         let (late_home_tx, late_home_rx) = std::sync::mpsc::channel::<ShellDirectoryHomePublicationResult>();
-        let home_task = ShellPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Io, std::future::pending::<()>());
+        let home_task = ShellPoolFuture::spawn(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, std::future::pending::<()>());
         home.page_cancel = Some(page_cancel.clone());
         home.page_rx = Some(late_rx);
         home.page_task = Some(page_task.clone());
@@ -706,7 +652,7 @@ fn command_panel_fixture_maps_every_owner_to_actionable_tree_rows() {
 fn resolved_zero_argument_command_executes_once_and_a_stale_key_is_rejected() {
     let mut shell = test_shell_state();
     shell.dock.layout_override = Some(shell.dock.dock.to_window_layout());
-    let execute = |value: &str| ActionDescriptor { controller_id: "framework".into(), action: "executeResolvedCommand".into(), args: crate::action_args_json!({ "value": value }) };
+    let execute = |value: &str| ActionDescriptor { controller_id: "framework".into(), action: "executeResolvedCommand".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) };
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(execute("stale:os.resetDock"))).expect("stale key is a no-op");
     assert!(shell.dock.layout_override.is_some());
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(execute("os:os.resetDock"))).expect("live reset executes");
@@ -726,7 +672,7 @@ fn argument_command_ingress_toggles_only_a_live_owner_qualified_form() {
     assert_eq!(shell.commands.expanded_command_id.as_deref(), Some(key.as_str()));
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(action)).expect("second toggle closes");
     assert_eq!(shell.commands.expanded_command_id, None);
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setCommandExpanded".into(), args: crate::action_args_json!({ "value": "mode:retired:stale" }) }))
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setCommandExpanded".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": "mode:retired:stale" }) }))
         .expect("stale toggle is a no-op");
     assert_eq!(shell.commands.expanded_command_id, None);
 }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
@@ -21,20 +22,22 @@ class OwnershipScript extends BundleScript {
 /** 🪆️ Runs every canonical generic record, notation and native construction law. */
 class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const {rest} = resolveTestLevel(segments);
-    await runCargoTestsV1({manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-dsl-record"], cwd: this.root, extraArgs: rest}, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-dsl-record"], cwd: this.root, extraArgs: rest}, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 
 /** 🫴️ Qualifies the neutral original typed receiving contract under one exact invocation. */
 class OriginalReceivingScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
   const mode=segments[0];if(segments.length!==1||(mode!=="source"&&mode!=="native"))throw Error("test-original-receiving requires source or native");
   {
    const source=resolve(this.root,"../../🫴️receiving/🧪️tests/🟦️.ts");
    await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
    await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
-  }if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-dsl-record"],cwd:this.root,extraArgs:["--offline","--lib","original_typed_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+  }if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-dsl-record"],cwd:this.root,extraArgs:["--offline","--lib","original_typed_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }
 }
 const router = new ScriptRouter(import.meta.dir).register("test-original-receiving",OriginalReceivingScript).register("test-ownership", OwnershipScript).register("test-native", NativeScript);

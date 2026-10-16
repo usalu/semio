@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-framework-os-renderer-wgpu-contracts/testkit", "semio-framework-os-renderer-wgpu-scene-state/testkit"]
+
 [dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-media-slots = { path = "../../../🎥️media-slots/📦️packages/🦀️rust" }
@@ -35,4 +38,6 @@ serde = { version = "1.0.219", features = ["derive"] }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 
 [dev-dependencies]
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-scene-views = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }

@@ -19,7 +19,8 @@
 //! | `example-picker-dismiss` (`escape`) | `engagementAbort` | unchanged |
 //! | `role-viewer` / `role-editor` | `setActiveExample` + guest `registerBrushMesh` | window/panel swap |
 
-use super::command_registry_tests::test_app;
+use semio_framework_os_renderer_wgpu_fixtures::shell::test_app;
+use test_app;
 use super::*;
 use semio_framework::manifest::Keybinding;
 use ui_wgpu::wgpu::InputState;

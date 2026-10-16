@@ -1,12 +1,14 @@
+import {readNativeStorageReservationPolicyV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {readViteRuntimeChannelsV1,viteRuntimeEnvironmentV1,withoutViteRuntimeEnvironmentV1,type ViteRuntimeChannelV1} from "./📥️environment/🏃️runtime/🟦️.ts";
 import {withViteOptimizerDrainV1} from "./🏗️compiler/💧️drain/🟦️.ts";
 import {projectViteCommandEnvironmentV1,viteCommandChildEnvironmentV1} from "./📥️environment/🟦️.ts";
-import { compilerAdmissionBudgetV1, acquireCompilerCapacityLeaseV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { compilerAdmissionBudgetV1, withCompilerCapacityScopeV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptResourceProcessEnvironmentV1,requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildModeEnvironment, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { withCompilerState } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts";
 import {withViteStorageV1,viteWriterResourceV1} from "./💾️storage/🟦️.ts";
-import {acquireResourceLease} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {acquireResourceLease,checkResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import storageSchema from "./💾️storage/🧬️schema/🔣️.json" with {type:"json"};
@@ -46,7 +48,7 @@ export type ViteArtifactBuild = {
 
 /** 🌐️ Bundles one site and publishes its complete deliverable only after Vite succeeds. */
 export async function buildViteArtifact(options: ViteArtifactBuild): Promise<string> {
-  requireIssuedResourceControlInvocationV1(options.control,options.invocation);const phase = createRequestedIssuedResourceControlV1(options.control,options.timeoutMs ?? 600_000,options.signal);
+  requireIssuedResourceControlInvocationV1(options.control,options.invocation);const authoredEnvironment=withoutViteRuntimeEnvironmentV1({...options.environment},process.platform),phase = createRequestedIssuedResourceControlV1(options.control,options.timeoutMs ?? 600_000,options.signal);
   phase.signal.throwIfAborted();
   if(options.args?.length)throw Error("Vite build arguments must be authored in the owned configuration");
   const mode = options.mode ?? readBuildMode(options.environment?.SEMIO_BUILD_MODE ?? readNativeCallerAuthorityV1(options.invocation.capabilities).original.buildMode);requireViteBuildIntentV1(options.invocation,mode,options.workspace);const require = createRequire(join(options.workspace, "package.json"));
@@ -54,8 +56,8 @@ export async function buildViteArtifact(options: ViteArtifactBuild): Promise<str
     if(options.artifactInputs?.some(request=>request.path===layout.output))throw Error("Vite output cannot also be an artifact input");
     return withViteArtifactInputsV1({workspace:options.workspace,invocation:options.invocation,store,control:storePhase,requests:options.artifactInputs??[]},async control=>{
     const state = { root: layout.state, owner: options.owner, compiler: `vite:${require("vite/package.json").version}:bun:${process.versions.bun}`, configuration: JSON.stringify([options.config, readFileSync(options.config, "utf8")]), mode };
-    await withCompilerState({ ...state, environment:{...store.environment,...options.environment,TMPDIR:store.environment.TMPDIR,TMP:store.environment.TMP,TEMP:store.environment.TEMP}, control, leaseDirectory: join(options.workspace, ".cache/b/l/m/data"), files: ["deps/_metadata.json"] }, async (directory, compilerEnvironment) => {
-      const writer=await acquireResourceLease({directory:join(options.workspace,".cache/b/l/m/data"),resource:viteWriterResourceV1(options.owner),mode:"exclusive",signal:control.signal,control});try{
+    await withCompilerState({ ...state, environment:{...withoutViteRuntimeEnvironmentV1({...store.environment,...authoredEnvironment},process.platform),TMPDIR:store.environment.TMPDIR,TMP:store.environment.TMP,TEMP:store.environment.TEMP}, control, storage:store.storage,storageControl:store.control, files: ["deps/_metadata.json"] }, async (directory, compilerEnvironment,control) => {
+      const writer=await acquireResourceLease({directory:readNativeStorageReservationPolicyV1(store.storage,store.control).leaseDirectory,resource:viteWriterResourceV1(options.owner),mode:"exclusive",signal:control.signal,control});try{
       requireNativeStoragePathV1(store.root,directory);await store.recheck();const cli = join(dirname(require.resolve("vite/package.json")), "bin/vite.js");
       console.log(`Bundling ${options.owner}`);
       try {
@@ -86,14 +88,14 @@ export type ViteService = {
 };
 
 /** 🖥️ Describes one isolated compiler process without mutating another live service's environment. */
-export interface ViteCommandServiceV1{readonly invocation:ScriptInvocation;readonly control:CompilerAdmissionControl;readonly root:string;readonly config:string;readonly mode:BuildMode;readonly host:string;readonly port:number;readonly signal:AbortSignal;readonly environment:Readonly<Record<string,string|undefined>>;readonly artifactInputs?:readonly RepositoryArtifactRequestV1[];readonly strictPort?:boolean}
+export interface ViteCommandServiceV1{readonly runtimeChannels:readonly ViteRuntimeChannelV1[];readonly invocation:ScriptInvocation;readonly control:CompilerAdmissionControl;readonly root:string;readonly config:string;readonly mode:BuildMode;readonly host:string;readonly port:number;readonly signal:AbortSignal;readonly environment:Readonly<Record<string,string|undefined>>;readonly artifactInputs?:readonly RepositoryArtifactRequestV1[];readonly strictPort?:boolean}
 
 /** 🧵️ Holds paid compiler, exact input readers and bounded cache until its isolated Vite child joins. */
 export async function serveViteCommandV1(options:ViteCommandServiceV1):Promise<void>{
- requireIssuedResourceControlInvocationV1(options.control,options.invocation);const invocation=options.invocation,signal=options.signal,phase=createRequestedIssuedResourceControlV1(options.control,0,signal),mode=options.mode,root=options.root,config=options.config,host=options.host,port=options.port,strictPort=options.strictPort!==false,workspace=requireViteBuildIntentV1(invocation,mode),authority=readNativeCallerAuthorityV1(invocation.capabilities);if(!Number.isSafeInteger(port)||port<1||port>65535||!host||host.length>253||host.includes("\0"))throw Error("Explicit Vite command listener required");const owner="vite-command-service:"+root,artifactInputs=readViteArtifactInputsV1(options.artifactInputs??[]),projection=projectViteCommandEnvironmentV1({version:1,mode,platform:process.platform,layers:[{...process.env},{...options.environment}]}),environment=projection.environment;
+ requireIssuedResourceControlInvocationV1(options.control,options.invocation);const invocation=options.invocation,signal=options.signal,phase=createRequestedIssuedResourceControlV1(options.control,0,signal),mode=options.mode,root=options.root,config=options.config,host=options.host,port=options.port,strictPort=options.strictPort!==false,workspace=requireViteBuildIntentV1(invocation,mode),authority=readNativeCallerAuthorityV1(invocation.capabilities);if(!Number.isSafeInteger(port)||port<1||port>65535||!host||host.length>253||host.includes("\0"))throw Error("Explicit Vite command listener required");const owner="vite-command-service:"+root,artifactInputs=readViteArtifactInputsV1(options.artifactInputs??[]),runtimeChannels=readViteRuntimeChannelsV1(options.runtimeChannels),projection=projectViteCommandEnvironmentV1({version:1,mode,platform:process.platform,layers:[{...process.env},{...options.environment}]}),environment=projection.environment;
  return withRepositoryCacheStoreV1(workspace,"dependencies",invocation,phase,(_dependencies,dependencyPhase)=>withViteStorageV1(workspace,mode,owner,invocation,dependencyPhase,(store,layout,_temporary,storePhase)=>withViteArtifactInputsV1({workspace,invocation,store,control:storePhase,requests:artifactInputs},async control=>{
   const require=createRequire(join(workspace,"package.json")),cli=join(dirname(require.resolve("vite/package.json")),"bin/vite.js"),state={root:layout.state,owner,compiler:`vite:${require("vite/package.json").version}:bun:${process.versions.bun}`,configuration:JSON.stringify([config,readFileSync(config,"utf8"),projection.digest]),mode};
-  await withCompilerState({...state,environment,control,leaseDirectory:join(workspace,".cache/b/l/m/data"),files:["deps/_metadata.json"]},async(directory,compilerEnvironment)=>{requireNativeStoragePathV1(store.root,directory);const child=viteCommandChildEnvironmentV1({version:1,mode,platform:process.platform,directory,environment:compilerEnvironment});requireNativeStoragePathV1(store.root,child.temporary);await store.recheck();await mkdir(child.temporary,{recursive:true});requireNativeStoragePathV1(store.root,child.temporary);await store.recheck();await runOwnedCommand(process.execPath,[cli,"--mode",mode,"--config",config,"--configLoader","runner","--host",host,"--port",String(port),...(strictPort?["--strictPort"]:[]),"--clearScreen","false"],root,owner,compilerAdmissionBudgetV1(control),{env:child.environment,signal:control.signal,output:authority.transport,onProgress:async()=>{await control.publish({resource:owner,mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}});await store.recheck();});
+  await withCompilerState({...state,environment,control,storage:store.storage,storageControl:store.control,files:["deps/_metadata.json"]},async(directory,compilerEnvironment,control)=>{requireNativeStoragePathV1(store.root,directory);const child=viteCommandChildEnvironmentV1({version:1,mode,platform:process.platform,directory,environment:compilerEnvironment});requireNativeStoragePathV1(store.root,child.temporary);await store.recheck();await mkdir(child.temporary,{recursive:true});requireNativeStoragePathV1(store.root,child.temporary);await store.recheck();await runOwnedCommand(process.execPath,[cli,"--mode",mode,"--config",config,"--configLoader","runner","--host",host,"--port",String(port),...(strictPort?["--strictPort"]:[]),"--clearScreen","false"],root,owner,compilerAdmissionBudgetV1(control),{env:scriptResourceProcessEnvironmentV1(control,{...child.environment,...viteRuntimeEnvironmentV1(runtimeChannels)}),signal:control.signal,output:authority.transport,onProgress:async()=>{await control.publish({resource:owner,mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}});await store.recheck();});
  })));
 }
 
@@ -109,15 +111,15 @@ export async function serveVite(options: ViteService): Promise<void> {
   const { createServer } = await import("vite");
   const require = createRequire(join(workspace,"package.json"));
   const state = { root: layout.state, owner, compiler: `vite:${require("vite/package.json").version}:bun:${process.versions.bun}`, configuration: JSON.stringify([options.config, readFileSync(options.config, "utf8")]), mode };
-  try { await withCompilerState({ ...state, environment:store.environment, capacity: false, control, leaseDirectory: join(workspace, ".cache/b/l/m/data"), files: ["snapshot/.semio-artifact.json"] }, async directory => { if (existsSync(join(directory, "snapshot"))) await cp(join(directory, "snapshot"), cache, { recursive: true }); await rm(join(cache, ".semio-artifact.json"), { force: true }); }); }
+  try { await withCompilerState({ ...state, environment:store.environment, capacity: false, control, storage:store.storage,storageControl:store.control, files: ["snapshot/.semio-artifact.json"] }, async directory => { if (existsSync(join(directory, "snapshot"))) await cp(join(directory, "snapshot"), cache, { recursive: true }); await rm(join(cache, ".semio-artifact.json"), { force: true }); }); }
   catch (error) { await rm(cache, { recursive: true, force: true }); throw error; }
   const listener = createHttpServer(), sockets = new Set<Socket>();
   listener.on("connection", socket => { sockets.add(socket); socket.once("close", () => sockets.delete(socket)); });
   let server: Awaited<ReturnType<typeof createServer>> | undefined;
   const failures:unknown[]=[],pending=new Set<Promise<unknown>>();let accepting=true,interrupt!:()=>void;const interrupted=new Promise<void>(done=>{interrupt=done;});
   try {
-    await withCompilerState({ ...state, environment:store.environment, control, leaseDirectory: join(workspace, ".cache/b/l/m/data"), files: ["snapshot/.semio-artifact.json"] }, async () => {
-    server = await createServer({ mode, dev: { preTransformRequests: false }, cacheDir: cache, root: options.root, configFile: options.config, configLoader: options.configLoader ?? "runner", server: { preTransformRequests: false, host: options.host, port: options.port, strictPort: true, open: false, middlewareMode: { server: listener }, hmr: { server: listener } }, plugins: session ? [{
+    await withCompilerState({ ...state, environment:store.environment, control, storage:store.storage,storageControl:store.control, files: ["snapshot/.semio-artifact.json"] }, async (_directory,_environment,control) => {
+    control.signal.throwIfAborted();server = await createServer({ mode, dev: { preTransformRequests: false }, cacheDir: cache, root: options.root, configFile: options.config, configLoader: options.configLoader ?? "runner", server: { preTransformRequests: false, host: options.host, port: options.port, strictPort: true, open: false, middlewareMode: { server: listener }, hmr: { server: listener } }, plugins: session ? [{
     name: "semio-service-readiness",
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
@@ -128,7 +130,7 @@ export async function serveVite(options: ViteService): Promise<void> {
       });
     },
     }] : [] });
-    await Promise.all(Object.values(server.environments).map(environment => environment.depsOptimizer?.scanProcessing));
+    await Promise.all(Object.values(server.environments).map(environment => environment.depsOptimizer?.scanProcessing));checkResourceLeaseControl(control);
     });
     if (!server) throw Error("Vite service initialization did not produce a server");
     for (const environment of Object.values(server.environments)) {
@@ -137,8 +139,7 @@ export async function serveVite(options: ViteService): Promise<void> {
       const admitted = <T>(operation: () => Promise<T>): Promise<T> => {
         if(!accepting||pending.size>=storageSchema.definitions.Protocol.const.maximumPendingTransforms)throw Error("Vite accepted transform admission closed or capacity exceeded");
         const task=withRequestedIssuedResourceControlV1(control,600_000,async phase=>{
-        const lease = await acquireCompilerCapacityLeaseV1({ directory: join(workspace, ".cache/b/l/m/data"), control: phase, environment: store.environment });
-        return withViteOptimizerDrainV1(async()=>{phase.signal.throwIfAborted();return operation();},()=>Object.values(environment.depsOptimizer?.metadata.discovered ?? {}).map(dependency=>dependency.processing),()=>lease.release());
+        return withCompilerCapacityScopeV1({directory:readNativeStorageReservationPolicyV1(store.storage,store.control).leaseDirectory,control:phase,environment:store.environment},async(_,phase)=>withViteOptimizerDrainV1(async()=>{phase.signal.throwIfAborted();return operation();},()=>Object.values(environment.depsOptimizer?.metadata.discovered ?? {}).map(dependency=>dependency.processing),()=>{checkResourceLeaseControl(phase);}));
         });pending.add(task);void task.then(()=>{pending.delete(task);},error=>{pending.delete(task);accepting=false;if(!failures.includes(error))failures.push(error);interrupt();});return task;
       };
       environment.transformRequest = (...args) => {
@@ -173,10 +174,10 @@ export async function serveVite(options: ViteService): Promise<void> {
     if(server){const drained=await Promise.allSettled(Object.values(server.environments).map(async environment=>{await environment.waitForRequestsIdle();await environment.depsOptimizer?.scanProcessing;}));for(const row of drained)if(row.status==="rejected")failures.push(row.reason);}
     try {
       const stopped=await Promise.allSettled([closed,Promise.resolve().then(()=>server?.close())]);for(const row of stopped)if(row.status==="rejected")failures.push(row.reason);
-      if (!failures.length && server && !control.signal.aborted) await withRequestedIssuedResourceControlV1(control,30000,snapshotControl=>withCompilerState({ ...state, capacity: false, control:snapshotControl, leaseDirectory: join(workspace, ".cache/b/l/m/data"), files: ["snapshot/.semio-artifact.json"] }, async directory => {
-        const files = await collectArtifactFiles(cache,snapshotControl.signal);
+      if (!failures.length && server && !control.signal.aborted) await withRequestedIssuedResourceControlV1(control,30000,snapshotControl=>withCompilerState({ ...state, capacity: false, control:snapshotControl, storage:store.storage,storageControl:store.control, files: ["snapshot/.semio-artifact.json"] }, async (directory,_environment,actualPhase) => {
+        const files = await collectArtifactFiles(cache,actualPhase.signal);
         requireNativeStoragePathV1(store.root,directory);await store.recheck();
-        await withRepositoryArtifactDestinationV1({workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:snapshotControl,directory:join(directory,"snapshot")},destination=>stageRepositoryArtifacts(destination,"vite-service:optimizer",files));
+        await withRepositoryArtifactDestinationV1({workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:actualPhase,directory:join(directory,"snapshot")},destination=>stageRepositoryArtifacts(destination,"vite-service:optimizer",files));
       }));
     }catch(error){failures.push(error);}finally{try{await rm(cache,{recursive:true,force:true});}catch(error){failures.push(error);}}
     if(failures.length>1)throw new AggregateError(failures,"Vite request drainage, listener close or cache cleanup failed");if(failures.length)throw failures[0];

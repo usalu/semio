@@ -1,7 +1,7 @@
 import { test } from "bun:test";
 import vectors from '../../../🧫️fixtures/💡️inferences/📦️size/📏️overall-size/🔣️.json' with { type: 'json' };
 import { inferGltfOverallSize } from '../../../../🧬️schema/💡️inferences/📦️size/📏️overall-size/🟦️.ts';
-import type { GltfTsGeometryContext } from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts';
+import type { GltfTsGeometryContext } from '../../../../🧬️schema/💡️inferences/🔨️geometry-kernel/🟦️.ts';
 test("original GLTF 💡️inferences/📦️size/📏️overall-size vectors", () => {
 for (const vector of vectors.vectors) {
   const context = vector.context as GltfTsGeometryContext;

@@ -1,6 +1,6 @@
 import {emptyNativeCatalogV1,readNativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import {componentPackageReceiptSource} from "../../../../../🔌️plugin/📥️receipt/🟦️.ts";
-import { publishedPageUrl } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { publishedPageUrl } from "../../../../../../../../🔨️modules/🖼️assets/🌐️published-page/🟦️.ts";
 import { admitWgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import { admitWgpuPluginModules, prepareWgpuPluginModules, assertWgpuPluginPlan, type WgpuPluginModule } from "../🧩️plugin-modules/🟦️.ts";
 import { BrowserMediaRegistry, type BrowserMediaCommand } from "../../../🎬️media/🌐️browser/🟦️.ts";

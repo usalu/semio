@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases"],
+  "properties": {
+    "version": {"const": 1},
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["scope", "failure", "expectedNewEffects", "expectedSiblingCompletions"],
+        "properties": {
+          "scope": {"enum": ["process", "signal"]},
+          "failure": {"enum": ["error", "undefined"]},
+          "expectedNewEffects": {"const": 0},
+          "expectedSiblingCompletions": {"const": 1}
+        }
+      }
+    }
+  }
+}

@@ -3997,7 +3997,7 @@
       "https://json.schemas.assets.semio-tech.com/s/block/block5d/mutation/update-part3d/schema.json": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-part3d/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/block/block5d/mutations.json": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/s/block/block5d/snapshot.json": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
-      "https://json.schemas.assets.semio-tech.com/s/block/shared/document.json": "✏️s/🔌️plugins/🧱️block/🧬️schema/🧱️shared/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/s/block/shared/document.json": "✏️s/🔌️plugins/🧱️block/🧬️schema/🧱️document-fields/🔣️.json",
       "urn:semio:s:block:catalog:conformance": "✏️s/🔌️plugins/🧱️block/🗂️catalog/🧬️schema/🔣️.json"
     },
     "✏️s/🔌️plugins/🪐️space": {
@@ -4487,7 +4487,7 @@
     },
     "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference": {
       "semio.framework.inference.original-plan": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧬️schema/🧭️plan/🔣️.json",
-      "semio.os.installed-service-operation/v1": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🔣️.json"
+      "semio.os.installed-service-operation/v1": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧬️schema/🔣️.json"
     },
     "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory": {
       "https://json.schemas.assets.semio-tech.com/framework/os/directory/document-http/testing/reply-node-bounds/schema.json": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧪️testing/📤️reply-node-bounds/🧬️schema/🔣️.json",
@@ -4632,7 +4632,7 @@
       "https://json.schemas.assets.semio-tech.com/os/plugin/registry/component.json": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/os/plugin/registry/deployment/component.json": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/os/plugin/registry/descriptor-verification/component.json": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🧬️schema/🔣️.json",
-      "https://json.schemas.assets.semio-tech.com/os/plugin/registry/hub-source/component.json": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/os/plugin/registry/hub-source/component.json": "🧰️framework/🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/os/plugin/registry/publication/schema.json": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/os/plugin/registry/rebuild/component.json": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json",

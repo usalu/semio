@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "cases": [
+    {"kind": "requested", "parentMilliseconds": 20000, "requestedMilliseconds": 40, "waitMilliseconds": 80, "expectedAborted": true, "expectedInherited": false, "expectedRejected": true},
+    {"kind": "inherited", "parentMilliseconds": 40, "requestedMilliseconds": 0, "waitMilliseconds": 80, "expectedAborted": true, "expectedInherited": true, "expectedRejected": true},
+    {"kind": "ancestor", "parentMilliseconds": 40, "requestedMilliseconds": 40000, "waitMilliseconds": 80, "expectedAborted": true, "expectedInherited": false, "expectedRejected": true},
+    {"kind": "retired", "parentMilliseconds": 20000, "requestedMilliseconds": 40, "waitMilliseconds": 80, "expectedAborted": false, "expectedInherited": false, "expectedRejected": false},
+    {"kind": "alias", "parentMilliseconds": 20000, "requestedMilliseconds": 40, "waitMilliseconds": 80, "expectedAborted": false, "expectedInherited": false, "expectedRejected": false},
+    {"kind": "descendant", "parentMilliseconds": 20000, "requestedMilliseconds": 40, "waitMilliseconds": 80, "expectedAborted": false, "expectedInherited": false, "expectedRejected": false},
+    {"kind": "cancelled", "parentMilliseconds": 20000, "requestedMilliseconds": 1000, "waitMilliseconds": 0, "expectedAborted": true, "expectedInherited": false, "expectedRejected": true},
+    {"kind": "draining", "parentMilliseconds": 20000, "requestedMilliseconds": 40, "waitMilliseconds": 80, "expectedAborted": true, "expectedInherited": false, "expectedRejected": true}
+  ]
+}

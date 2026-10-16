@@ -80,10 +80,10 @@ fn submit_probe_step(pool: &Arc<WorkerPool>, root: PathBuf, cancelled: Arc<Atomi
 pub struct OwnedFileChangeWatcher {
     pool: Arc<WorkerPool>,
     root: PathBuf,
-    cancelled: Arc<AtomicBool>,
+    #[doc(hidden)] pub cancelled: Arc<AtomicBool>,
     sender: mpsc::SyncSender<Result<Vec<FileStamp>, String>>,
     receiver: mpsc::Receiver<Result<Vec<FileStamp>, String>>,
-    previous: Option<Vec<FileStamp>>,
+    #[doc(hidden)] pub previous: Option<Vec<FileStamp>>,
     in_flight: bool,
     next_probe_at: Instant,
     wake: Arc<dyn Fn() + Send + Sync>,
@@ -134,7 +134,3 @@ impl Drop for OwnedFileChangeWatcher {
 }
 
 //#endregion 👁️Watcher
-
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️file-watcher-unit/🦀️.rs"]
-mod tests;

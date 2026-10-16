@@ -51,7 +51,7 @@ pub mod standards {
                         pub mod curvature;
                         #[path = "../../🏗️dag-assembly/🦀️.rs"]
                         pub mod dag_assembly;
-                        #[path = "../../🔨️geometry-core/🦀️.rs"]
+                        #[path = "../../🔨️geometry-kernel/🦀️.rs"]
                         pub mod geometry_core;
                         #[path = "../../⚖️mass-distribution/🦀️.rs"]
                         pub mod mass_distribution;

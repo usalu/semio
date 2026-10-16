@@ -49,5 +49,5 @@ export const stdioBcf21MarkupInferenceTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseBcfInferenceText(value: unknown, at = "$"): BcfInferenceText {
-  return stdioBcf21MarkupInferenceTextGuardObject(value, `${at}`);
+  return stdioBcf21MarkupInferenceTextGuardString(value, `${at}`);
 }

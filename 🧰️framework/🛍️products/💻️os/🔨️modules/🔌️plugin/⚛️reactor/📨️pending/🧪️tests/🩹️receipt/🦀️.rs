@@ -1,24 +1,30 @@
-use super::*;
+use semio_framework::kernel::ActorUiPatchReceipt;
+use crate::PendingPatchAuthority;
+use semio_framework_ui_contract::{UiPatch, self as ui_contract};
 
-fn receipt(row: &serde_json::Value) -> ActorUiPatchReceipt {
+#[doc(hidden)]
+pub fn receipt(row: &serde_json::Value) -> ActorUiPatchReceipt {
     ActorUiPatchReceipt {
         lifetime: semio_framework::kernel::ActorInstanceLifetime { activation_generation: row["activation"].as_u64().unwrap(), instance_id: row["instance"].as_u64().unwrap() as u32, guest_lifetime: row["guest"].as_u64().unwrap() },
         patch_sequence: row["sequence"].as_u64().unwrap(),
     }
 }
 
-fn patch(row: &serde_json::Value) -> UiPatch {
+#[doc(hidden)]
+pub fn patch(row: &serde_json::Value) -> UiPatch {
     UiPatch { surface: ui_contract::SurfaceId::try_from(row["surface"].as_str().unwrap()).unwrap(), base_revision: ui_contract::UiRevision(0), revision: ui_contract::UiRevision(row["revision"].as_u64().unwrap()), ops: Default::default() }
 }
 
 /// 📤️ One turn's publication. It is ONE call: a patch that reached the turn handback leaves the guest
 /// on the same turn that put it there (`📓️reactor-reconcile-spin-2026-09-14.md` §3), so a second call
 /// here would be a second host round trip in production.
-fn take(pending: &mut PendingPatchAuthority) -> UiPatch {
+#[doc(hidden)]
+pub fn take(pending: &mut PendingPatchAuthority) -> UiPatch {
     pending.take_one(65536).unwrap().unwrap()
 }
 
-fn close(pending: &mut PendingPatchAuthority) {
+#[doc(hidden)]
+pub fn close(pending: &mut PendingPatchAuthority) {
     for _ in 0..1024 {
         if pending.close_instance_step(7, 1, 4096).unwrap().complete {
             return;
@@ -44,7 +50,7 @@ fn reactor_issued_patch_ack_and_rejection_match_neutral_exact_tuple() {
                 assert!(pending.apply_issued_ack(issued, &patch.surface.0, patch.revision.0, 65536, |_| panic!("external patch has no reconciler")).unwrap());
             }
             if !row["live"].as_bool().unwrap() {
-                let key = super::super::instance_lifetime::NativeCloseKey::fixture(7, 1);
+                let key = crate::instance_lifetime::NativeCloseKey::fixture(7, 1);
                 pending.reserve_close_instance(key).unwrap();
                 pending.activate_close_instance(key).unwrap();
             }

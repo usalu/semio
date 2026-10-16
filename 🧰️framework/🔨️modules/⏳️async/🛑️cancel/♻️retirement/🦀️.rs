@@ -8,7 +8,7 @@ pub enum CancelTokenRetirementBlocked{SharedAlias,WeakAlias,RegisteredWaiter,Wai
 #[derive(Debug)]
 pub enum CancelTokenRetirementError{Blocked(CancelTokenRetirementBlocked),Refused(ValueError)}
 /// 🪢️ Keeps original cancellation custody after refusal and never recursively drops an ancestor.
-pub struct CancelTokenRetirement{current:ManuallyDrop<Option<CancelToken>>,node:ManuallyDrop<Option<CancelNode>>}
+pub struct CancelTokenRetirement{#[doc(hidden)] pub current:ManuallyDrop<Option<CancelToken>>,#[doc(hidden)] pub node:ManuallyDrop<Option<CancelNode>>}
 impl CancelTokenRetirement{
     /// 🧳️ Transfers the original small token into inline custody, separately from retirement work.
     pub fn from_token(token:CancelToken)->Self{Self{current:ManuallyDrop::new(Some(token)),node:ManuallyDrop::new(None)}}
@@ -73,6 +73,3 @@ impl RetirementCursor for Cursor{
     fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
     fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

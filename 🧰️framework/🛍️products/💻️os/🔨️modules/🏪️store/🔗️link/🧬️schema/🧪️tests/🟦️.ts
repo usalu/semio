@@ -8,7 +8,7 @@ import fixture from "./🔣️.json" with {type:"json"};
 import fixtureSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 import schema from "../🔣️.json" with {type:"json"};
 import blobSchema from "../../../📦️blob/🧬️schema/🔣️.json" with {type:"json"};
-import referenceSchema from "../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json" with {type:"json"};
+import { artifactReferenceSchema as referenceSchema } from "@semio-tech/schema-ts/artifact-reference";
 test("durable link schema owns its full native codec independently of Store",()=>{
  expect(new Ajv({strict:true}).compile(fixtureSchema)(fixture)).toBe(true);
  const root=join(import.meta.dir,".."),manifest=TOML.parse(readFileSync(join(root,"📦️packages/🦀️rust/Cargo.toml"),"utf8")) as any;

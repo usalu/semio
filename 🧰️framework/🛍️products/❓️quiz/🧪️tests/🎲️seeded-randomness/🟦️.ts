@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🎲️randomness/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { Mt19937, fnv1a32, runSeed, shuffle, uniformIndex } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://🎲️seeded-randomness/🔣️.json";

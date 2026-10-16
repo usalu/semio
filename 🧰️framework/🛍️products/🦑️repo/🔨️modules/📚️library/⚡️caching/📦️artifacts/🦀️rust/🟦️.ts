@@ -34,7 +34,7 @@ export async function runArtifactRustPackagesTests(cargoNames: readonly string[]
 export type ArtifactTwinSelfTest = { readonly name: string; readonly run: () => number };
 
 /** 📦️ Runs an independently owned Rust artifact package through the shared Nx-native contract. */
-export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string, options: { readonly packages?: readonly string[]; readonly twins?: readonly ArtifactTwinSelfTest[]; readonly commands?: Readonly<Record<string, ScriptCommand>>; readonly testCommands?: Readonly<Record<string, ScriptCommand>>; readonly snapshotSqliteTests?: readonly string[]; readonly snapshotSqliteTestBudgetMs?: number; readonly snapshotSqliteTestGroups?: readonly (readonly string[])[] } = {}): Promise<void> {
+export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string, options: { readonly packages?: readonly string[]; readonly testPackages?: readonly string[]; readonly twins?: readonly ArtifactTwinSelfTest[]; readonly commands?: Readonly<Record<string, ScriptCommand>>; readonly testCommands?: Readonly<Record<string, ScriptCommand>>; readonly snapshotSqliteTests?: readonly string[]; readonly snapshotSqliteTestBudgetMs?: number; readonly snapshotSqliteTestGroups?: readonly (readonly string[])[] } = {}): Promise<void> {
   return receiveScriptProcessInvocation(process.env, async original => {
   if (options.snapshotSqliteTestBudgetMs !== undefined && (!Number.isSafeInteger(options.snapshotSqliteTestBudgetMs) || options.snapshotSqliteTestBudgetMs <= 0)) throw new Error("Owned SQLite snapshot test budget must be a positive safe integer");
   const snapshotSources = options.snapshotSqliteTests?.map(path => resolve(packageRoot, path)) ?? [];
@@ -64,7 +64,7 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
         return;
       }
       for (const twin of options.twins ?? []) console.log(`[TRACE] ${twin.name}-twin checks=${twin.run()}`);
-      await runArtifactRustPackagesTests(options.packages ?? [cargoName], this.repoRoot, segments, this.invocation);
+      await runArtifactRustPackagesTests(options.testPackages ?? options.packages ?? [cargoName], this.repoRoot, segments, this.invocation);
     }
   }
   class CanonicalArchitectureScript extends BundleScript {
@@ -76,7 +76,7 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
     async run(segments: string[]): Promise<void> {
       const mode = segments[0];
       if (segments.length > 1 || (mode !== undefined && mode !== "source" && mode !== "native")) throw new Error("Unknown owned SQLite snapshot command");
-      if (mode !== "source") await runArtifactRustTests(cargoName, this.repoRoot, ["--lib", "sqlite_snapshot_", "--no-fail-fast"], this.invocation);
+      if (mode !== "source") for (const testPackage of options.testPackages ?? [cargoName]) await runArtifactRustTests(testPackage, this.repoRoot, ["--lib", "sqlite_snapshot_", "--no-fail-fast"], this.invocation);
       if (mode !== "native") {
         const { runRepositoryTestCommand } = await import("../../../🟦️.ts");
         for (const group of snapshotGroups) await runRepositoryTestCommand(process.execPath, ["test", ...group], { cwd: this.repoRoot, budgetMs: scriptInvocationBudget(this.invocation, options.snapshotSqliteTestBudgetMs ?? 0), signal: this.invocation.control.signal });

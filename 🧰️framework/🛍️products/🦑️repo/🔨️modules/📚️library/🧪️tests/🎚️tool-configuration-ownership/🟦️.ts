@@ -62,7 +62,7 @@ describe("Tool configuration ownership", () => {
     expect(new Set(fixture.owners.map(({ id }) => id)).size).toBe(12);
     expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(12);
     expect(fixture.removedShims).toHaveLength(2);
-    expect(fixture.consumers).toHaveLength(22);
+    expect(fixture.consumers).toHaveLength(23);
     expect(fixture.projectInputs).toHaveLength(8);
   });
 

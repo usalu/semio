@@ -134,6 +134,35 @@ fn retained_value_stack_refuses_subexact_allocation_and_closes_partial_roots_exa
 }
 
 #[test]
+fn retained_value_retirement_demands_quote_the_pending_byte_then_the_frames_then_the_backing() {
+    use semio_framework_pack_format_retained::RetainedPackCloseStep;
+    let limits = PackLimits { max_file_len: 64, max_segment_len: 16, max_symbols: 1, max_depth: 8, max_items: 8, max_total_alloc: 64 };
+    let requested = usize::from(limits.max_depth) * 8 * size_of::<Expect>();
+    let mut cursor = RetainedValueCursor::try_new(limits, requested).expect("value stack credits");
+    let exact = cursor.next_allocation_bytes().expect("stack demand").expect("stack allocation");
+    assert!(cursor.reserve_allocation(exact).expect("exact stack allocation").progressed);
+    assert_eq!(cursor.grant().expect("first root"), None);
+    assert_eq!(cursor.grant().expect("second root"), None);
+    cursor.admit_byte(0, 0).expect("pending record count");
+    let pending = cursor.retirement_demands();
+    assert_eq!((pending.copy_bytes, pending.release_bytes, pending.depth), (size_of::<(u64, u8)>(), 0, 1));
+    assert_eq!(cursor.close_step(1, 0).expect("pending close"), RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    let frames = cursor.retirement_demands();
+    assert_eq!((frames.copy_bytes, frames.release_bytes, frames.depth), (size_of::<Expect>(), 0, 1));
+    while cursor.next_release_allocation_bytes().is_none() {
+        assert!(matches!(cursor.close_step(1, 0).expect("frame close"), RetainedPackCloseStep::Pending { released_bytes: 0, .. }));
+    }
+    let release = cursor.next_release_allocation_bytes().expect("stack release demand");
+    let backing = cursor.retirement_demands();
+    assert_eq!((backing.copy_bytes, backing.release_bytes, backing.depth), (0, release, 1));
+    assert_eq!(cursor.close_step(1, release).expect("exact stack release"), RetainedPackCloseStep::Pending { released_items: 0, released_bytes: release });
+    assert_eq!(cursor.close_step(1, 0).expect("terminal stack close"), RetainedPackCloseStep::Complete);
+    assert!(cursor.terminal_is_empty());
+    let terminal = cursor.retirement_demands();
+    assert_eq!((terminal.copy_bytes, terminal.release_bytes, terminal.depth), (0, 0, 0));
+}
+
+#[test]
 fn retained_record_body_zero_grants_preserve_unopened_cancellation() {
     let limits = PackLimits { max_file_len: 64, max_segment_len: 8, max_symbols: 1, max_depth: 1, max_items: 1, max_total_alloc: 64 };
     let mut cursor = RetainedRecordBodyCursor::try_new(limits, 1, 1, 1, 64 * 1024).expect("unopened record-body credits");
@@ -419,7 +448,7 @@ fn retained_record_body_fault_is_inline_sticky_and_closes_exactly() {
     let before = (cursor.offset, cursor.pending, cursor.allocated_bytes());
     let expected = PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-utf8", offset: 2, detail: "invalid leading byte" };
     for _ in 0..2 {
-        let (quote, requested, released) = crate::test_allocation::observe_backing(|| cursor.source_step_demands());
+        let (quote, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| cursor.source_step_demands());
         assert_eq!(quote, Err(expected.clone()));
         assert_eq!((requested, released), (0, 0));
         assert!(cursor.fault.is_none());

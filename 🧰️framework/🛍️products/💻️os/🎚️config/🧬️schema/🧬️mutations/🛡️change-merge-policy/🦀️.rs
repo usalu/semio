@@ -108,13 +108,3 @@ pub fn inverse_merge_policy_config_mutation_steps(mutation: &MergePolicyConfigMu
     })
 }
 //#endregion 🔖️Mutation
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🪪️tightens-the-authority-to-vigilant/🦀️.rs"]
-mod tests_tightens_the_authority_to_vigilant;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

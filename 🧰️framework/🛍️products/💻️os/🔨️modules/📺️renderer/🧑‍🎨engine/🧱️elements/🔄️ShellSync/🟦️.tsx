@@ -17,7 +17,7 @@
 import { type ReactElement } from "react";
 import { Button, Icon, Input, Popover, PopoverAnchor, PopoverContent, useLabel, type IconName } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type Conflict, type UtilityNode } from "@semio-tech/framework";
-import { type ArtifactSyncStatus, type FrameworkSyncUtilityLeaf } from "@semio-tech/framework-os";
+import { type ArtifactSyncStatus, type FrameworkSyncUtilityLeaf } from "@semio-tech/framework/backbone";
 import { type SyncCardKind } from "../🐚️Shell/🟦️.tsx";
 import { UtilityTree, groupUtilityNodesByCategory } from "../🎛️UtilityTree/🟦️.tsx";
 // #endregion 🔌️Adapters

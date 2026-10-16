@@ -32,7 +32,7 @@ assert.equal(testingSchemaExists(new URL("../../🧬️schema/🎟️contributio
  assert.ok(work.includes("retire_flow_extension_registries_step(cx.retained_grant())"));assert.ok(work.includes("flow_contributions_registry_receipt(cx,maintenance)?"));assertions+=2;
  assert.ok(work.indexOf("flow_contributions_registry_receipt(cx,maintenance)?")<work.indexOf("set_contributions::install(payload, session)"));assertions++;
  assert.ok(work.includes("flow.registry-retirement-full"));assert.ok(work.includes("flow-contributions-retirement"));assertions+=2;
- const owner=source.match(/struct FlowContributionsWork\s*\{([^}]+)\}/)![1];assert.deepEqual([...owner.matchAll(/^\s*(\w+)\s*:/gm)].map(match=>match[1]),fixture.ownerFields);assertions++;
+ const owner=source.match(/struct FlowContributionsWork\s*\{([^}]+)\}/)?.[1];assert(owner,"Actual contribution owner fields required");assert.deepEqual([...owner.matchAll(/^\s*(\w+)\s*:/gm)].map(match=>match[1]),fixture.ownerFields);assertions++;
  assert.ok(work.includes("semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(original)"));assertions++;
  assert.ok(work.includes("fn close_step(&mut self, grant:semio_framework_value::RetainedCloneGrant)"));assertions++;
  assert.ok(work.includes("owner.step(grant)"));assert.ok(work.includes("owner.terminal_is_empty()"));assertions+=2;
@@ -42,7 +42,7 @@ assert.equal(testingSchemaExists(new URL("../../🧬️schema/🎟️contributio
  assert.ok(instance.includes("session.retirement_step(child)"));assert.ok(instance.includes("session.close_step(child)"));assertions+=2;
  assert.ok(instance.includes("fn retirement_demands"));assert.ok(instance.includes("maximum_depth:grant.maximum_depth-1"));assertions+=2;
  assert.equal(instance.includes("maximum_items: usize, maximum_bytes: usize"),false);assertions++;
- const fields=source.match(/struct FlowInstanceOperationOwner\s*\{([^}]+)\}/)![1];assert.deepEqual([...fields.matchAll(/^\s*(\w+)\s*:/gm)].map(match=>match[1]),fixture.instanceOwnerFields);assertions++;
+ const fields=source.match(/struct FlowInstanceOperationOwner\s*\{([^}]+)\}/)?.[1];assert(fields,"Actual instance operation fields required");assert.deepEqual([...fields.matchAll(/^\s*(\w+)\s*:/gm)].map(match=>match[1]),fixture.instanceOwnerFields);assertions++;
  for(const mutant of [receiver.replace("cx.consume_retained(progress)","cx.consume_retained(Default::default())"),receiver.replace("error.retained_progress()","Default::default()"),receiver.replace("progress==Default::default()","true")]){assert.equal(mutant.includes("cx.consume_retained(progress)")&&mutant.includes("error.retained_progress()")&&mutant.includes("progress==Default::default()"),false);assertions++;}
  console.log("[DEBUG] original Flow contributions receiving cases="+fixture.cases.length+" assertions="+assertions+" canonicalGrantAjv=true schemaAuthority=absent SQLiteReference=true sourceReceivingOnly=true");
 }

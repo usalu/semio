@@ -1,0 +1,159 @@
+{
+ "crate_dir": "🧰️framework/🔨️modules/🔲️pixels",
+ "lib_name": "semio_framework_pixels",
+ "companion_dir": "🧰️framework/🔨️modules/🔲️pixels/🧪️tests/🥣️companion",
+ "doc": "//! 🥣️ Companion tests of pixels: PNG and JPEG codecs, editing, sampling, coverage, compositing and the retirement of raster leases.\n//!\n//! 🧭️ The root laws are mounted flat; each module's laws sit below a wrapper of the same name that restates the module's imports, so the laws that share witnesses through `crate::retirement::tests` keep their paths.",
+ "preamble": [
+  "pub use semio_framework_pixels::*;",
+  "pub use semio_framework_pixels::testkit::deflate;",
+  "",
+  "use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};",
+  "",
+  "pub fn product_directory() -> &'static Path {",
+  "    static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();",
+  "    DIRECTORY.get_or_init(|| Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../..\"))",
+  "}",
+  "",
+  "fn leaked(relative: &str) -> &'static [u8] {",
+  "    static READ: OnceLock<Mutex<HashMap<String, &'static [u8]>>> = OnceLock::new();",
+  "    let mut read = READ.get_or_init(Default::default).lock().unwrap();",
+  "    read.entry(relative.to_owned()).or_insert_with(|| {",
+  "        let path = product_directory().join(relative);",
+  "        Box::leak(std::fs::read(&path).unwrap_or_else(|error| panic!(\"test input {}: {error}\", path.display())).into_boxed_slice())",
+  "    })",
+  "}",
+  "",
+  "pub fn text(relative: &str) -> &'static str {",
+  "    std::str::from_utf8(leaked(relative)).unwrap_or_else(|error| panic!(\"test input {relative} is not UTF-8: {error}\"))",
+  "}",
+  "",
+  "pub fn bytes(relative: &str) -> &'static [u8] {",
+  "    leaked(relative)",
+  "}",
+  "",
+  "//#region Tests",
+  "#[path = \"../🔬️unit/🦀️.rs\"]",
+  "mod tests;",
+  "//#endregion Tests",
+  ""
+ ],
+ "modules": [
+  {
+   "name": "retirement",
+   "emoji": "♻",
+   "folder": "retirement",
+   "lib_file": "♻️retirement/🦀️.rs",
+   "tests": "♻️retirement/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::retirement::*",
+   "doc": "The raster and mask lease retirement laws and the allocation witnesses the other laws share.",
+   "pub_tests": true
+  },
+  {
+   "name": "editing",
+   "emoji": "✍",
+   "folder": "editing",
+   "lib_file": "✍️editing/🦀️.rs",
+   "tests": "✍️editing/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::editing::*",
+   "doc": "The pixel editing and selection laws."
+  },
+  {
+   "name": "affine_sampling",
+   "emoji": "↗",
+   "folder": "affine-sampling",
+   "lib_file": "🎨️sampling/↗️affine/🦀️.rs",
+   "tests": "🎨️sampling/↗️affine/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::affine_sampling::*",
+   "doc": "The affine sampling laws."
+  },
+  {
+   "name": "png_encoding",
+   "emoji": "📷",
+   "folder": "png-encoding",
+   "lib_file": "📷️png/✍️encode/🦀️.rs",
+   "tests": "📷️png/✍️encode/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::png_encoding::*",
+   "doc": "The PNG encoder laws."
+  },
+  {
+   "name": "png_decoding",
+   "emoji": "🧱",
+   "folder": "png-decoding",
+   "lib_file": "📷️png/📥️decode/🦀️.rs",
+   "tests": "📷️png/📥️decode/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::png_decoding::*",
+   "doc": "The PNG decoder laws.",
+   "extra": [
+    "pub use semio_framework_pixels::png_decoding::testkit::*;"
+   ]
+  },
+  {
+   "name": "jpeg_decoding",
+   "emoji": "📸",
+   "folder": "jpeg-decoding",
+   "lib_file": "📸️jpeg/📥️decode/🦀️.rs",
+   "tests": "📸️jpeg/📥️decode/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::jpeg_decoding::*",
+   "doc": "The JPEG decoder laws.",
+   "extra": [
+    "pub use semio_framework_pixels::jpeg_decoding::testkit::*;"
+   ]
+  },
+  {
+   "name": "image_decoding",
+   "emoji": "🖼",
+   "folder": "image-decoding",
+   "lib_file": "🖼️image/📥️decode/🦀️.rs",
+   "tests": "🖼️image/📥️decode/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::image_decoding::*",
+   "doc": "The format-sniffing image decoder laws."
+  },
+  {
+   "name": "coverage",
+   "emoji": "🖊",
+   "folder": "coverage",
+   "lib_file": "🖊️coverage/🦀️.rs",
+   "tests": "🖊️coverage/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::coverage::*",
+   "doc": "The coverage rasterization laws.",
+   "extra": [
+    "pub use semio_framework_pixels::coverage::testkit::*;"
+   ]
+  },
+  {
+   "name": "compositing",
+   "emoji": "🧩",
+   "folder": "compositing",
+   "lib_file": "🧩️compositing/🦀️.rs",
+   "tests": "🧩️compositing/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::compositing::*",
+   "doc": "The compositing laws."
+  },
+  {
+   "name": "frames",
+   "emoji": "📐",
+   "folder": "frames",
+   "lib_file": "🧩️compositing/📐️frames/🦀️.rs",
+   "tests": "🧩️compositing/📐️frames/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::compositing::frames::*",
+   "doc": "The compositing frame laws.",
+   "super_path": "crate::compositing"
+  },
+  {
+   "name": "layers",
+   "emoji": "🗂",
+   "folder": "layers",
+   "lib_file": "🧩️compositing/🗂️layers/🦀️.rs",
+   "tests": "🧩️compositing/🗂️layers/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_pixels::compositing::layers::*",
+   "doc": "The raster layer stack laws.",
+   "super_path": "crate::compositing",
+   "extra": [
+    "use crate::compositing::CompositeBlend;",
+    "use crate::editing::{PixelEditError, PixelProgress};",
+    "use crate::RasterImage;",
+    "use std::{collections::BTreeMap, sync::Arc};"
+   ]
+  }
+ ]
+}

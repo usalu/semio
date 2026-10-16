@@ -1,8 +1,16 @@
 /** 📽️ Repo CLI owns its Go projection of the neutral entity-kind catalog. */
-import type { EntityCatalogSource } from "../../../../../../../🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts";
+import { join } from "node:path";
+import type { EntityCatalogSource } from "@semio-tech/schema-ts/entity-kinds/source";
 
+/** 🐹️ The Repo CLI Go package that owns the projection, relative to the repository root. */
+export const REPO_CLI_GO = join("🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client", "⌨️cli");
 export const GENERATOR_ID = "repo-entity-kinds";
 export const REFRESH_COMMAND = "bun repo run @semio-tech/repo-client:generate-entity-kinds";
+
+/** 📋️ Plans only the Go projection owned by this Repo CLI. */
+export function repoEntityKindTarget(repoRoot: string, source: EntityCatalogSource): { readonly path: string; readonly content: string } {
+  return { path: join(repoRoot, REPO_CLI_GO, "🏷️entity-kinds/🐹️.go"), content: emitGo(source) };
+}
 
 //#region 🔖️emit-go
 export function emitGo(source: EntityCatalogSource): string {

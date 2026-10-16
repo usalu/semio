@@ -1,7 +1,7 @@
 /** 🧮️ `replace-part-number-rule` wire twin: the leaf payload `ReplacePartNumberRule`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireObject, type NormWireReader, normWireRequired } from "../../../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireObject, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
 import { parsePartNumberRule, type PartNumberRule } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ReplacePartNumberRule {

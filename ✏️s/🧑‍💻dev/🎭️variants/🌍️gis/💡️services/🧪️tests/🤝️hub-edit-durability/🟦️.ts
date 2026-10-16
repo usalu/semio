@@ -1,6 +1,10 @@
-import {receiveScriptProcessInvocation} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
-import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
+import{mcpJsonPathV1,mcpJsonArrayV1}from"../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📋️data/🟦️.ts";
+import{withDelegatedMcpClientSessionV1,withMcpDelegationCleanupV1}from"../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📦️published/🟦️.ts";
+import{withPublishedLocalHubHostV1,startLocalHub,waitForReadiness,finishLocalHub,freeLoopbackPort}from"../../../../../../../🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import{withMaterializedTrustedCatalogBundleV1}from"../../../../../../../🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import{TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES,trustedBootstrapSelectPackages}from"../../../../../../../🌎️hub/🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
+import {receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 /** 🤝️ The hub-edit-durability gate: is every accepted hub edit durable collaboration state?
  *
  * Fixture `🌉️mcp/🧫️fixtures/🤝️hub-edit-durability/🔣️.json` names the lanes. Each lane commits one
@@ -14,32 +18,21 @@ import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
  * the hub's head (the edits of every lane before it), never the document's last checkpoint.
  *
  * The gate owns its hub (a restart is part of the law), its human, its space and its document, and needs no setup
- * (zero-touch): it boots the Nx-staged development `os-hub` on a free loopback port over a copy of the development
- * hub's data root, whose trusted catalog it first makes current (published when absent or stale — note is in the
- * development package set); its human is the hub's own local-bootstrap profile, issued a session over the launcher
- * pipe, so no password exists anywhere. Every run creates a fresh space through the directory's own `create-space`
- * command and a fresh note through the hub's server-owned creation transaction, so the document always matches the
- * catalog generation the hub serves. It writes its acceptance record (`mcp-hub-edit-durability`, en + de) through
- * `publishAcceptanceCheckResult`. Optional overrides by environment:
- *
- *   OS_MCP_HUB_BINARY    the `os-hub` executable to boot (default: `os-hub:build-dev`, staged by Nx)
- *   OS_MCP_HUB_DATA_DIR  a published catalog root with note in its generation, used as is (copied, never mutated)
- *                        (default: the development hub root, `OS_HUB_DATA` or `.🧬semio/🌐hub/hub-dev`, made current)
- *   OS_MCP_HUB_PORT      loopback port (default: a free one)
- *   SEMIO_TEST_ARTIFACT_DIR  where the run copy of the data directory lives (default: tmpdir)
+ * (zero-touch): it retains a genuine published Hub Host and current trusted catalog inside paid
+ * Diagnostics, then restarts that same owned Hub. The actual MCP published reader and private
+ * credential remain held through each protocol session. Only OS_MCP_HUB_PORT selects a loopback
+ * port; executable and data-directory environment overrides grant no custody.
  */
-import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { McpClientSession, mcpServerEntries, requireMcpBinary } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { mcpServerEntries } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
-import { serviceHubCatalogPublisher } from "../../📇️catalog/📣️publisher/🟦️.ts";
-import { devHubStatusTextV1, devHubLocaleV1, devLocalHubDataDir, ensureCurrentTrustedCatalogV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts";
 import { decodePresencePeer, decodeServerFrame, encodeClientFrame } from "../../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 
-import { createSpaceCommandV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
+import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
 
 await receiveScriptProcessInvocation(process.env,async original=>{
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
@@ -56,19 +49,14 @@ function findWorkspaceRoot(start: string): string {
 const repoRoot = findWorkspaceRoot(here);
 const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🤝️hub-edit-durability/🔣️.json"), "utf8"));
 const hubRoot = join(repoRoot, readdirSync(repoRoot).find((name) => existsSync(join(repoRoot, name, "🚀️local-bootstrap", "🏃️execution", "🟦️.ts")))!);
-const { startLocalHub, waitForReadiness, finishLocalHub, freeLoopbackPort, hubDevBinaryPath } = await import(join(hubRoot, "🚀️local-bootstrap", "🏃️execution", "🟦️.ts"));
 const { issueLocalCredential } = await import(join(hubRoot, "🚀️local-bootstrap", "🔐️credential-issuance", "🟦️.ts"));
 
 const startedAt = new Date();
-const PROFILE = { profileId: "developer", subject: "local-developer-hub-edit-durability", displayName: "Local Developer", allowedClientClasses: ["native", "mcp", "react-relay"] };
-const signal = original.control.signal;
-const BINARY = process.env.OS_MCP_HUB_BINARY || hubDevBinaryPath(join(hubRoot, "📦️packages", "🦀️rust"));
-const SOURCE = process.env.OS_MCP_HUB_DATA_DIR || devLocalHubDataDir(repoRoot);
-if (!process.env.OS_MCP_HUB_DATA_DIR && (await ensureCurrentTrustedCatalogV1(SOURCE, serviceHubCatalogPublisher(original,repoRoot), { signal, report: (status) => console.log(devHubStatusTextV1(status, devHubLocaleV1())) })) === "cancelled") process.exit(1);
+const PROFILE:import("../../../../../../../🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts").LocalProfile = { profileId: "developer", subject: "local-developer-hub-edit-durability", displayName: "Local Developer", allowedClientClasses: ["native", "mcp", "react-relay"] };
+const incomingPhase=createIssuedResourceControlV1(original,"mcp:hub-edit-durability",120000);
+return withPublishedLocalHubHostV1(original,incomingPhase,(host,context)=>withMaterializedTrustedCatalogBundleV1(host,context.control,trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES),async(_receipt,phaseControl)=>{
 const PORT = process.env.OS_MCP_HUB_PORT ? Number(process.env.OS_MCP_HUB_PORT) : await freeLoopbackPort();
-const ORIGIN = `http://127.0.0.1:${PORT}`;
-if (!existsSync(BINARY) || !existsSync(SOURCE)) throw new Error(`hub-edit-durability-check found no hub binary or data root (${BINARY}, ${SOURCE})`);
-
+const ORIGIN = `http://127.0.0.1:${PORT}`,dataDir=context.dataRoot;
 type Row = { readonly step: string; readonly ok: boolean; readonly detail: string };
 const rows: Row[] = [];
 const row = (step: string, ok: boolean, detail: string) => {
@@ -76,28 +64,25 @@ const row = (step: string, ok: boolean, detail: string) => {
   console.log(`${ok ? "PASS" : "FAIL"}  ${step} — ${detail}`);
 };
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const hub = async (method: string, path: string, token?: string, body?: unknown) => {
-  const response = await fetch(`${ORIGIN}${path}`, { method, headers: { ...(body === undefined ? {} : { "content-type": "application/json" }), ...(token ? { authorization: `Bearer ${token}` } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(60_000) });
+const hub = (method: string, path: string, token?: string, body?: unknown) => withRequestedIssuedResourceControlV1(phaseControl,60000,async actual=>{
+  const response = await fetch(`${ORIGIN}${path}`, { method, headers: { ...(body === undefined ? {} : { "content-type": "application/json" }), ...(token ? { authorization: `Bearer ${token}` } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: actual.signal });
   const text = await response.text();
   let json: any;
   try {
     json = JSON.parse(text);
   } catch {}
   return { status: response.status, text, json };
-};
+});
 
-const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR ?? serviceMcpTestArtifactRoot();
-mkdirSync(artifactBase, { recursive: true });
-const dataDir = join(mkdtempSync(join(artifactBase, "hub-edit-durability-")), "hub");
-cpSync(SOURCE, dataDir, { recursive: true, filter: (path) => !path.includes(".semio-wal-writer") });
 const bootHub = async () => {
-  const run = await startLocalHub(repoRoot, join(hubRoot, "📦️packages", "🦀️rust"), [PROFILE], { port: PORT, dataDir, binaryPath: BINARY, capture: true });
+  const run = await startLocalHub(host,[PROFILE],{port:PORT,capture:true});
   try {
     return { run, readiness: await waitForReadiness(run, false, fixture.budgets.readinessMs) };
   } catch (error) {
     const tail = run.output().slice(-4_096).replaceAll(run.channelKey.toString("hex"), "<channel-key-redacted>");
-    await finishLocalHub(run).catch(() => undefined);
-    throw new Error(`${error instanceof Error ? error.message : String(error)}\nlast hub output:\n${tail}`);
+    void tail;
+    try{await finishLocalHub(run);}catch(cleanup){throw new AggregateError([error,cleanup],"Hub readiness and terminal cleanup failed");}
+    throw error;
   }
 };
 
@@ -135,41 +120,35 @@ async function documentSocket(token: string, spaceId: string, documentId: string
  * the fixture gesture once. */
 async function agentLane(token: string, spaceId: string, known: string, label: string, beforeInvoke: (documentId: string, surfaceId: string) => Promise<void>) {
   const delegation = await hub("POST", "/auth/agent-delegations", token, { schema: "semio.hub.auth.agent-delegation-create/v1", spaceId, agentLabel: label, audience: "edit", ttlSecs: 900 });
-  const credentialPath = join(mkdtempSync(join(serviceMcpTestArtifactRoot(), "semio-hub-edit-durability-")), "agent-credential.json");
-  writeFileSync(credentialPath, `${JSON.stringify({ schema: "semio.hub.agent-credential/v1", hubOrigin: ORIGIN, spaceId, audience: "edit", token: delegation.json?.token })}\n`, { mode: 0o600 });
-  chmodSync(credentialPath, 0o600);
-  const declared = mcpServerEntries(repoRoot).semio;
-  const scopes = declared?.args.includes("--scopes") ? String(declared.args[declared.args.indexOf("--scopes") + 1]) : "workspace.read,artifact.write";
-  const session = new McpClientSession({ command: requireMcpBinary(repoRoot), args: ["stdio", "--scopes", scopes] }, ["--hub", ORIGIN, "--space", spaceId, "--credential-file", credentialPath, "--no-bridge"], repoRoot);
-  try {
+  return withMcpDelegationCleanupV1(async()=>{
+  const declared=mcpServerEntries(repoRoot).semio,scopes=declared?.args.includes("--scopes")?String(declared.args[declared.args.indexOf("--scopes")+1]):"workspace.read,artifact.write";
+  return withDelegatedMcpClientSessionV1(original,phaseControl,{hubOrigin:ORIGIN,spaceId,token:String(delegation.json?.token),scopes},async session=>{
     await session.request("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "semio-hub-edit-durability", version: "1" } });
-    session.notify("notifications/initialized", {});
+    await session.notify("notifications/initialized", {});
     const listed = await session.request("resources/read", { uri: "semio://workspace/artifacts" });
-    const artifacts = (JSON.parse(String(listed.result?.contents?.[0]?.text ?? "{}")).artifacts ?? []) as any[];
+    const artifacts = (JSON.parse(String(mcpJsonPathV1(listed.result,["contents",0,"text"]) ?? "{}")).artifacts ?? []) as any[];
     const documentId = known || String((artifacts.find((entry) => String(entry?.schema ?? entry?.artifactSchema ?? entry?.descriptor?.artifactSchema ?? "").startsWith(fixture.document.schemaPrefix)) ?? artifacts[0])?.scope?.documentId ?? "");
     const opened = await session.call("artifact_open", { artifactId: documentId });
-    const surfaceId = String(opened.structuredContent?.sessionDocument?.surfaceId ?? "");
+    const surfaceId = String(mcpJsonPathV1(opened.structuredContent,["sessionDocument","surfaceId"]) ?? "");
     await beforeInvoke(documentId, surfaceId);
     const search = await session.call("capabilities_search", { query: "add a block", kind: ["mutation"] });
     const capabilityId = String(((search.structuredContent?.results ?? []) as any[]).map((hit) => String(hit.capabilityId ?? hit.id)).find((id) => id.endsWith(fixture.gesture.capabilitySuffix)) ?? "");
     const prepared = await session.call("action_prepare", { capabilityId, input: fixture.gesture.input });
     const invoked = await session.call("action_invoke", { preparedActionHandle: prepared.structuredContent?.preparedHandle });
-    return { ok: opened.isError !== true && invoked.structuredContent?.status === "SUCCEEDED", detail: `${capabilityId} open=${opened.isError !== true} status=${invoked.structuredContent?.status ?? JSON.stringify(invoked.structuredContent ?? prepared.structuredContent).slice(0, 200)}`, documentId, surfaceId, cursor: Number(prepared.structuredContent?.expectedRevision?.cursor ?? -1) };
-  } finally {
-    session.stop();
-    await hub("POST", `/auth/agent-delegations/${encodeURIComponent(String(delegation.json?.delegationId ?? ""))}/revoke`, token).catch(() => undefined);
-  }
+    return { ok: opened.isError !== true && invoked.structuredContent?.status === "SUCCEEDED", detail: `${capabilityId} open=${opened.isError !== true} status=${invoked.structuredContent?.status ?? JSON.stringify(invoked.structuredContent ?? prepared.structuredContent).slice(0, 200)}`, documentId, surfaceId, cursor: Number(mcpJsonPathV1(prepared.structuredContent,["expectedRevision","cursor"]) ?? -1) };
+  });},async()=>{const revoked=await hub("POST", `/auth/agent-delegations/${encodeURIComponent(String(delegation.json?.delegationId ?? ""))}/revoke`, token);if(revoked.status!==204)throw Error("MCP agent delegation revocation refused: "+revoked.status);});
 }
 
 let current = await bootHub();
 row("0 the gate's own hub is ready", current.readiness?.status === "ready" && current.readiness?.features?.mcpWorkspace === true, `${ORIGIN} status=${current.readiness?.status} data=${dataDir}`);
 const sockets: WebSocket[] = [];
+let failed=false,failure:unknown;
 try {
   const token = String((await issueLocalCredential(current.run, PROFILE.profileId, "react-relay")).capability ?? "");
   const me = await hub("GET", "/auth/sessions/me", token);
   row("1 the human holds a session issued over the hub's local-bootstrap pipe", me.status === 200 && token.length > 0, `HTTP ${me.status}`);
   const spaceName = `Hub edit durability ${randomBytes(4).toString("hex")}`;
-  const spaceCommand = await fetch(`${ORIGIN}/directory/commands`, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}`, origin: ORIGIN }, body: directoryCommandRequestJson(sealDirectoryCommandRequestV1(randomBytes(16).toString("hex"), createSpaceCommandV1(spaceName, "atelier", "private"))), signal: AbortSignal.timeout(60_000) });
+  const spaceCommand = await fetch(`${ORIGIN}/directory/commands`, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token}`, origin: ORIGIN }, body: directoryCommandRequestJson(sealDirectoryCommandRequestV1(randomBytes(16).toString("hex"), createSpaceCommandV1(spaceName, "atelier", "private"))), signal: phaseControl.signal });
   const spaceId = String((await hub("GET", "/directory/spaces", token)).json?.find((entry: any) => entry?.space?.name === spaceName && entry?.access === "author")?.space?.id ?? "");
   row("1b the human creates the gate's own space", spaceCommand.status === 202 && spaceId.length > 0, `HTTP ${spaceCommand.status} space=${spaceId}`);
   const creations = `/spaces/${encodeURIComponent(spaceId)}/artifact-creations`;
@@ -253,11 +232,15 @@ try {
   sockets.push(rejoin.socket);
   row("10 after the restart a fresh joiner's catch-up carries every lane", committed.length === fixture.expectations.distinctMutationIds && committed.every((id) => rejoin.catchUp.has(id)), `catchUp=${rejoin.catchUp.size} missing=${JSON.stringify(committed.filter((id) => !rejoin.catchUp.has(id)))}`);
 } catch (error) {
+  failed=true;failure=error;
   row("gate", false, error instanceof Error ? error.stack ?? error.message : String(error));
 } finally {
-  for (const socket of sockets) socket.close();
-  await finishLocalHub(current.run).catch(() => undefined);
+  const cleanupErrors:unknown[]=[];
+  for (const socket of sockets)try{socket.close();}catch(error){cleanupErrors.push(error);}
+  try{await finishLocalHub(current.run);}catch(error){cleanupErrors.push(error);}
+  if(cleanupErrors.length)throw new AggregateError(failed?[failure,...cleanupErrors]:cleanupErrors,"Hub durability terminal cleanup failed");
 }
+if(failed)throw failure;
 const red = rows.filter((entry) => !entry.ok);
 console.log(`hub-edit-durability-check: ${rows.length - red.length}/${rows.length} rows green (${ORIGIN}, data ${dataDir})`);
 const redSteps = red.map((entry) => entry.step.split(" ")[0]).join(",");
@@ -274,6 +257,7 @@ publishAcceptanceCheckResult(
     },
   }),
 );
-process.exit(red.length === 0 ? 0 : 1);
+if(red.length)throw Error("Hub edit durability rows failed");
 
+}));
 });

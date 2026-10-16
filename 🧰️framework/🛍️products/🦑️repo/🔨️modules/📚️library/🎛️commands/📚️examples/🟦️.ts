@@ -1,4 +1,4 @@
-/** 🧭️ `examples` command: lists and verifies plugin example units.
+/** 📖️ `examples` command: lists and verifies plugin example units.
  * @see 📜️script.ts
  */
 import { loadTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";

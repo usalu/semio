@@ -79,5 +79,6 @@ semio-framework-async-macros = { path = "../../../../../../../🧰️framework/�
 # hosts anything — and because `target_arch = "wasm32"` is TRUE for wasip2, a bare arch gate
 # would not exclude it. Leaving it unconditional linked the host's `resvg`/`usvg`/`rustybuzz`/
 # `fontdb`/`png`/`gif` tail into the shipped component. Mirrors 🧩️puzzle's existing split.
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }

@@ -200,7 +200,7 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
 }
 
 #[doc(hidden)]
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub fn test_original_pending_child_group_closure<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
     let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||PendingChildGroupPublication::<A>::new(original(),vec![ChildEmit::open("original","child",0)],Some(protocol::TransactionRef{id:"t".repeat(8192),tool:"original-tool".into()})).unwrap());
     let mut born=heap.requested_bytes;let mut released=heap.released_bytes;let pointer=owner.artifact_mutations.as_ptr();owner.begin_close();let mut turns=0;

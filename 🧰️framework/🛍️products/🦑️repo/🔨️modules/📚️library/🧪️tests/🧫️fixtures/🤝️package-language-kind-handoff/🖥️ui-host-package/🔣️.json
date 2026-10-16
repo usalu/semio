@@ -100,10 +100,6 @@
     "script": "../../🧪️tests/🌐️browser-host/🟨️.js",
     "sourcePath": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🧪️tests/🌐️browser-host/🟨️.js"
   },
-  "abi": {
-    "sourcePath": "🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
-    "libRelativePath": "../../🌉️abi/🦀️.rs"
-  },
   "project": {
     "name": "@semio-tech/ui-host-rs",
     "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
@@ -112,7 +108,6 @@
     "namedInputs": {
       "default": [
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
         "sharedGlobals"
       ]
     },
@@ -311,6 +306,13 @@
     ]
   ],
   "internalDependencies": [
+    {
+      "table": [
+        "dependencies"
+      ],
+      "name": "semio-framework-abi",
+      "path": "../../../../🌉️abi/📦️packages/🦀️rust"
+    },
     {
       "table": [
         "dependencies"

@@ -6,6 +6,8 @@ import JSON5Codec from "json5";
 import { parse as parseJsonDocument, type ParseError } from "jsonc-parser";
 import TOML from "@iarna/toml";
 import { createToken, Lexer } from "chevrotain";
+import { diagnosticFaultFixtureUrl } from "../../../⚠️diagnostic/🧪️tests/🧫️fixtures/🟦️.ts";
+import { readModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const JSON5: Readonly<{parse(text: string): unknown}> = JSON5Codec;
 
@@ -76,7 +78,7 @@ test("the existing independent lexer produces the declared significant token and
 });
 
 test("canonical diagnostic projections preserve the shared language-neutral fault schema and Serde oracle", () => {
-  const fixture = JSON.parse(read("🧰️framework/🔨️modules/⚠️diagnostic/🧪️tests/🧫️fixtures/🧯️fault/🔣️.json"));
+  const fixture = JSON.parse(readFileSync(diagnosticFaultFixtureUrl, "utf8"));
   for (const row of fixture.cases) {
     expect(JSON5.parse(JSON.stringify(row.expected))).toEqual(row.expected);
     expect(parseJsonDocument(JSON.stringify(row.expected))).toEqual(row.expected);
@@ -94,7 +96,7 @@ test("actual neutral packages expose canonical lexical and diagnostic ownership"
   const library = read("🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/🦀️.rs");
   for (const path of ["🔤️token/🦀️.rs", "🔍️lexer/🦀️.rs", "🎖️trust/🦀️.rs", "📖️grammar/🦀️.rs", "🗣️idiom/🦀️.rs"]) expect(library).toContain(path);
   expect(library).toContain("pub use semio_framework_diagnostic::{TextError,Limits,TextSpan");
-  const grammar = read("🧰️framework/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs");
+  const grammar = readModuleTreeSource(resolve(root, "🧰️framework/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs"));
   expect(grammar).toContain("pub fn compile(grammar: &GrammarFile, registry: &FragmentRegistry, macros: Vec<MacroMatcher>) -> Result<Self, TextError>");
   expect(grammar).toContain("unregistered grammar fragment");
 });

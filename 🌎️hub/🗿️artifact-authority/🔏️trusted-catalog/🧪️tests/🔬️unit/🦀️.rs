@@ -464,7 +464,7 @@ fn an_aborted_catalog_verification_leaves_no_interpretation_for_the_runtime_to_w
 
 #[test]
 fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
-    let fixture: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("../🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let encoded = row["rawHex"].as_str().unwrap();
         let bytes: Vec<_> = (0..encoded.len()).step_by(2).map(|index| u8::from_str_radix(&encoded[index..index + 2], 16).unwrap()).collect();
@@ -2336,7 +2336,7 @@ const EDITORS_WITHOUT_A_DOCUMENT: [(&str, &str); 3] = [
 ];
 
 /// 🔗️ The `(artifact kind, schema)` pairs each hub-LINKED package owns: the committed registries the hub's linked native
-/// providers and the publisher's `linkedCodecRegistry` read (`🌎️hub/📦️packages/🦀️rust/📜️script.ts`).
+/// providers and the publisher's `linkedCodecRegistry` read (`🌎️hub/🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts`).
 fn linked_codec_registries() -> std::collections::BTreeMap<&'static str, BTreeSet<(String, String)>> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../✏️s/🔌️plugins");
     let pairs = |path: &str, kind: &str, schema: &str| -> BTreeSet<(String, String)> {

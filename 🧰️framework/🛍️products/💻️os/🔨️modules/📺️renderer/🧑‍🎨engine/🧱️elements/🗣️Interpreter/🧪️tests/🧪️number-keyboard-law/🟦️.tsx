@@ -3,7 +3,7 @@
  * design §18 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): each `keys` row through its physical key (a Home/End without
  * its bound stays the caret's), each `typed` row read back to its stored value, each `limits` row refused visibly or dispatched.
  * The dispatched intents are the oracle: what the guest receives is what the law says. */
-import numberControls from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json";
+import { uiNumberControlsFixture as numberControls } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { uiNumberFieldKey, type SliderKey } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 
 type TestSource = { readonly url: string };

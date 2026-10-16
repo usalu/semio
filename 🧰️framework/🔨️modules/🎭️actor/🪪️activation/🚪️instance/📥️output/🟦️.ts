@@ -1,4 +1,4 @@
-import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../../../🌱️value/💾️resident/🟦️.ts";
+import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "@semio-tech/value-ts/resident";
 
 //#region 🧬️OutputReservation
 export type OwnedActorTurnOutputState = { readonly capacity: number; readonly sequence: string; readonly phase: "reserved" | "pending" | "returned" | "cancelled"; readonly retained: boolean };

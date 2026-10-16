@@ -21,11 +21,11 @@ import {
   type DocumentOpeningReceiptV1
 } from "../🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { type ArtifactCreationCatalogMountV1 } from "../🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
-import { type DirectorySessionRefreshV1 } from "../../../../../📇️directory/🪪️session-refresh/🟦️.ts";
-import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AgentCredentialInstallUnavailableV1, parseAgentCredentialInstallReceiptV1 } from "../../../../../📇️directory/🤖️delegations/🟦️.ts";
-import { HubSessionPortClientV1 } from "../../../../../📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts";
-import { LOCAL_HUB_SESSION_ENDPOINT_V1, parseLocalHubSessionAnswerV1 } from "../../../../../📇️directory/🎫️local-session/🟦️.ts";
-import { readHubSessionCapabilityV1, writeHubSessionCapabilityV1, type HubSessionCapabilityV1 } from "../../../../../📇️directory/🔐️sign-in/🟦️.ts";
+import { type DirectorySessionRefreshV1 } from "@semio-tech/framework/directory/session-refresh";
+import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AgentCredentialInstallUnavailableV1, parseAgentCredentialInstallReceiptV1 } from "@semio-tech/framework/directory/delegations";
+import { HubSessionPortClientV1 } from "@semio-tech/framework/directory/session-refresh/session-port";
+import { LOCAL_HUB_SESSION_ENDPOINT_V1, parseLocalHubSessionAnswerV1 } from "@semio-tech/framework/directory/local-session";
+import { readHubSessionCapabilityV1, writeHubSessionCapabilityV1, type HubSessionCapabilityV1 } from "@semio-tech/framework/directory/sign-in";
 import {
   useCallback,
   useEffect,
@@ -46,34 +46,50 @@ import {
   type Severity
 } from "@semio-tech/framework";
 import {
+  type DocumentScope
+} from "@semio-tech/framework/document/scope";
+import {
+  BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
+  DOCUMENT_ARCHIVE_MAXIMUM_BYTES,
+  encodeDocumentArchiveBytes,
+  type DocumentArchivePack,
+  type DocumentArchiveLoadStatus
+} from "@semio-tech/framework/wire-contracts";
+import {
   type BackboneWorkerResponse,
   type BrowserActorUiMountedV1,
   decodeBackboneMessage,
-  BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
-  DOCUMENT_ARCHIVE_MAXIMUM_BYTES,
   encodeBackboneWorkerRequest,
-  encodeDocumentArchiveBytes,
-  type DirectorySessionAuthorityV1,
   type PersistenceBinding,
-  type DirectoryEvent,
-  parseDirectorySpaceListEntryV1,
+  type ResolvedArtifactOpeningRelay
+} from "@semio-tech/framework/backbone";
+import {
+  type DirectorySessionAuthorityV1
+} from "@semio-tech/framework/directory/schema/session-authority-v1";
+import {
+  type DirectoryEvent
+} from "@semio-tech/framework/directory/schema";
+import {
+  parseDirectorySpaceListEntryV1
+} from "@semio-tech/framework/directory-client";
+import {
   parseDirectoryCommandReceiptV1,
   sealDirectoryCommandRequestV1,
-  directoryCommandRequestJson,
-  hubDeviceInstanceIdV1,
-  type DocumentScope,
-  type DocumentArchivePack,
-  type DocumentArchiveLoadStatus,
-  type InstalledServiceHistoryStatusV1,
-  type ResolvedArtifactOpeningRelay
-} from "@semio-tech/framework-os";
+  directoryCommandRequestJson
+} from "@semio-tech/framework/directory/io/text";
+import {
+  hubDeviceInstanceIdV1
+} from "@semio-tech/framework/directory/sign-in";
+import {
+  type InstalledServiceHistoryStatusV1
+} from "@semio-tech/framework/inference/service";
 // #endregion 🔌️Adapters
-import { DOCUMENT_BACKBONE_RETENTION_LIMITS } from "@semio-tech/framework-replication";
+import { DOCUMENT_BACKBONE_RETENTION_LIMITS } from "@semio-tech/framework/replication";
 import { SpaceDirectoryHistoryV1 } from "../📇️space-directory/🟦️.ts";
 import { shellIdentityResolutionV1 } from "../🔀️surface-switch/🟦️.ts";
 import { programHistoryKeyV1, withProgramEntriesV1 } from "../🪟️spawned-program/🟦️.ts";
 import { EMPTY_LOCAL_CATALOG_V1 } from "../🗂️local-catalog/🟦️.ts";
-import { type Identity, type LocalCatalog } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { type Identity, type LocalCatalog } from "@semio-tech/framework/config/mutations";
 import {
   builtinUiThemes,
   type ElementsSurfaceDevice,
@@ -97,15 +113,15 @@ import {
   type UiRefreshCache
 } from "../../🛠️ShellHelpers/🟦️.tsx";
 import { type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
-import { BrowserActorActionMailboxV1 } from "../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
-import { InferencePortOpeningMailboxV1 } from "../../../../../💡️inference/🚪️opening/🟦️.ts";
+import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "@semio-tech/framework/backbone/binding";
+import { BrowserActorActionMailboxV1 } from "@semio-tech/framework/browser-bundle/action-handoff/requests";
+import { InferencePortOpeningMailboxV1 } from "@semio-tech/framework/inference/opening";
 import { type InferencePortOwnerV1 } from "../🪪️host-bootstrap/🟦️.tsx";
 import { reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressUiStateV1 } from "../🌱️artifact-creation/🟦️.tsx";
 import { closeDirectoryHomeOwnerV1, type DirectoryBootstrapUiState, type DirectoryHomeOwnerV1 } from "../📇️directory-bootstrap/🟦️.tsx";
 import { agentBridgeOfferScopeFromDelegationsV1, useAgentBridge, type AgentAppCommandHandler, type AgentBridgeOfferScopeV1 } from "../../🔗️AgentBridge/🟦️.tsx";
-import { shellAppFault } from "../../../../../🌉️mcp/🐚️channel/🟦️.ts";
-import type { BridgeInstanceRef } from "../../../../../🌉️mcp/🧵️bridge/🟦️.ts";
+import { shellAppFault } from "@semio-tech/framework/mcp/channel";
+import type { BridgeInstanceRef } from "@semio-tech/framework/mcp/bridge";
 import type { ReduceResult, ShellCommand } from "../../../../../🖥️shell/🟦️.ts";
 import { LOCAL_SESSION_RECLAIM_INTERVAL_MS } from "../🎚️shell-model/🟦️.tsx";
 import { hubBootstrapOriginV1, hubSessionStorageV1, readViteSEnv } from "../🔐️identity-binding/🟦️.ts";

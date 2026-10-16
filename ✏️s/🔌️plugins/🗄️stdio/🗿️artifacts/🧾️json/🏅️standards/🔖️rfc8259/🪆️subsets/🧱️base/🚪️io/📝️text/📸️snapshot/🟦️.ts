@@ -49,5 +49,5 @@ export const stdioJsonRfc8259BaseSnapshotTextGuardConstant = <T extends string |
 //#endregion 🚪️Parsers
 
 export function parseJsonSnapshotText(value: unknown, at = "$"): JsonSnapshotText {
-  return stdioJsonRfc8259BaseSnapshotTextGuardObject(value, `${at}`);
+  return stdioJsonRfc8259BaseSnapshotTextGuardString(value, `${at}`);
 }

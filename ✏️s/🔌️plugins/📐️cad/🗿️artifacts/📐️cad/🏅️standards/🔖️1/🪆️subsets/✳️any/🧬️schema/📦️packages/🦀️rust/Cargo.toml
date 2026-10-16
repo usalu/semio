@@ -72,3 +72,6 @@ semio-s-artifact-cad-cad-testing = { workspace = true }
 semio-s-artifact-cad-cad-viewer = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-framework-test-typed-input-law = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }

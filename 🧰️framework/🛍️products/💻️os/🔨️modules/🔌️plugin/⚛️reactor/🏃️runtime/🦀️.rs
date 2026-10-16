@@ -36,56 +36,39 @@ use std::mem::{size_of_val};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering};
 use semio_framework_ui_layout::layout::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
-#[path = "📥️staging/♻️reactor-lifecycle/🛎️app-cell/🦀️.rs"]
-mod life_app_cell;
+use semio_framework_plugin_reactor_lifecycle::life_app_cell as life_app_cell;
 pub use life_app_cell::*;
-#[path = "📥️staging/♻️reactor-lifecycle/🧹️cleanup-vocabulary/🦀️.rs"]
-mod life_cleanup_vocabulary;
+use semio_framework_plugin_reactor_lifecycle::life_cleanup_vocabulary as life_cleanup_vocabulary;
 pub use life_cleanup_vocabulary::*;
-#[path = "📥️staging/♻️reactor-lifecycle/🗃️instance-registry/🦀️.rs"]
-mod life_instance_registry;
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry as life_instance_registry;
 pub use life_instance_registry::*;
-#[path = "📥️staging/♻️reactor-lifecycle/🧯️cleanup-pumps/🦀️.rs"]
-mod life_cleanup_pumps;
+use semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps as life_cleanup_pumps;
 pub use life_cleanup_pumps::*;
-#[path = "📦️instances/🖼️wire-frames/🦀️.rs"]
-mod inst_wire_frames;
+use semio_framework_plugin_runtime_instances::inst_wire_frames as inst_wire_frames;
 pub use inst_wire_frames::*;
-#[path = "📦️instances/🪪️descriptor/🦀️.rs"]
-mod inst_descriptor;
+use semio_framework_plugin_runtime_instances::inst_descriptor as inst_descriptor;
 pub use inst_descriptor::*;
-#[path = "📦️instances/🚪️opening/🦀️.rs"]
-mod inst_opening;
+use semio_framework_plugin_runtime_instances::inst_opening as inst_opening;
 pub use inst_opening::*;
-#[path = "📦️instances/🔁️cleanup-turns/🦀️.rs"]
-mod inst_cleanup_turns;
+use semio_framework_plugin_runtime_instances::inst_cleanup_turns as inst_cleanup_turns;
 pub use inst_cleanup_turns::*;
-#[path = "🧰️ops/🛡️wire-limits/🦀️.rs"]
-mod ops_wire_limits;
+use semio_framework_plugin_runtime_ops::ops_wire_limits as ops_wire_limits;
 pub use ops_wire_limits::*;
-#[path = "🧰️ops/📄️document/🦀️.rs"]
-mod ops_document;
+use semio_framework_plugin_runtime_ops::ops_document as ops_document;
 pub use ops_document::*;
-#[path = "🧰️ops/🎞️media/🦀️.rs"]
-mod ops_media;
+use semio_framework_plugin_runtime_ops::ops_media as ops_media;
 pub use ops_media::*;
-#[path = "🧰️ops/🖥️surface-render/🦀️.rs"]
-mod ops_surface_render;
+use semio_framework_plugin_runtime_ops::ops_surface_render as ops_surface_render;
 pub use ops_surface_render::*;
-#[path = "🧰️ops/📥️ingress/🦀️.rs"]
-mod ops_ingress;
+use semio_framework_plugin_runtime_ops::ops_ingress as ops_ingress;
 pub use ops_ingress::*;
-#[path = "🧰️ops/🧾️typed-operations/🦀️.rs"]
-mod ops_typed_operations;
+use semio_framework_plugin_runtime_ops::ops_typed_operations as ops_typed_operations;
 pub use ops_typed_operations::*;
-#[path = "🔄️exchange/🔀️plugin-exchange/🦀️.rs"]
-mod exch_plugin_exchange;
+use semio_framework_plugin_runtime_exchange::exch_plugin_exchange as exch_plugin_exchange;
 pub use exch_plugin_exchange::*;
-#[path = "📥️staging/🔌️reactor-app/🛠️runtime-helpers/🦀️.rs"]
-mod app_runtime_helpers;
+use semio_framework_plugin_reactor_app::app_runtime_helpers as app_runtime_helpers;
 pub use app_runtime_helpers::*;
-#[path = "../../🧩️extension/🛬️lifted/🏃️runtime/🦀️.rs"]
-mod extension_runtime_lift;
+use semio_framework_plugin_extension::extension_runtime_lift as extension_runtime_lift;
 pub use extension_runtime_lift::*;
 pub use semio_framework_plugin_plugin_program::plugin_runtime::*;
 use crate::reserved_job_outcomes::CleanupTurn;

@@ -1,7 +1,7 @@
 import { test } from "bun:test";
 import vectors from '../../../🧫️fixtures/💡️inferences/📏️proportion/🖼️aspect-ratios/🔣️.json' with { type: 'json' };
 import { inferGltfAspectRatios } from '../../../../🧬️schema/💡️inferences/📏️proportion/🖼️aspect-ratios/🟦️.ts';
-import type { GltfTsGeometryContext } from '../../../../🧬️schema/💡️inferences/🔨️geometry-core/🟦️.ts';
+import type { GltfTsGeometryContext } from '../../../../🧬️schema/💡️inferences/🔨️geometry-kernel/🟦️.ts';
 
 test("original GLTF 💡️inferences/📏️proportion/🖼️aspect-ratios vectors", () => {
 for (const vector of vectors.vectors) {

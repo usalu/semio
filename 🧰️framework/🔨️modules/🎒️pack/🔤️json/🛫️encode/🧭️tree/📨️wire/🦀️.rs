@@ -11,7 +11,7 @@ fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum
 /// 🧾️ Physical receipt accompanies every optional output, including denied or metadata-only turns.
 pub struct ArtifactCanonicalJsonTreeWireStep{pub output:Option<Vec<u8>>,pub progress:RetainedCloneProgress}
 /// 🧳️ The same typed root is measured and written without a value projection or payload clone.
-pub struct ArtifactCanonicalJsonTreeWireCursor<T:Tree+RetireOwned>{original:ManuallyDrop<Option<T>>,original_close:ManuallyDrop<Option<ControlledRetirement<T>>>,source:ManuallyDrop<Option<RetainedCloneSource<T>>>,projection:ManuallyDrop<Option<RetainedOwnedProjection<dyn Tree>>>,tree:ManuallyDrop<Option<ArtifactCanonicalJsonTreeCursor>>,wire:ManuallyDrop<Vec<u8>>,scratch:[u8;64],length:usize,written:usize,phase:u8,closing:bool}
+pub struct ArtifactCanonicalJsonTreeWireCursor<T:Tree+RetireOwned>{original:ManuallyDrop<Option<T>>,original_close:ManuallyDrop<Option<ControlledRetirement<T>>>,#[doc(hidden)] pub source:ManuallyDrop<Option<RetainedCloneSource<T>>>,projection:ManuallyDrop<Option<RetainedOwnedProjection<dyn Tree>>>,tree:ManuallyDrop<Option<ArtifactCanonicalJsonTreeCursor>>,#[doc(hidden)] pub wire:ManuallyDrop<Vec<u8>>,scratch:[u8;64],#[doc(hidden)] pub length:usize,written:usize,#[doc(hidden)] pub phase:u8,#[doc(hidden)] pub closing:bool}
 impl<T:Tree+RetireOwned> ArtifactCanonicalJsonTreeWireCursor<T>{
  /// 📥️ Transfers only an existing source header into inline custody; no backing is allocated here.
  pub fn new(original:T)->Self{Self{original:ManuallyDrop::new(Some(original)),original_close:ManuallyDrop::new(None),source:ManuallyDrop::new(None),projection:ManuallyDrop::new(None),tree:ManuallyDrop::new(None),wire:ManuallyDrop::new(Vec::new()),scratch:[0;64],length:0,written:0,phase:0,closing:false}}
@@ -77,6 +77,12 @@ impl<T:Tree+RetireOwned> ArtifactCanonicalJsonTreeWireCursor<T>{
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.begin_close();let demand=self.close_demands(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(Default::default())}self.close_one(grant)}
 }
 impl<T:Tree+RetireOwned> Drop for ArtifactCanonicalJsonTreeWireCursor<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original canonical wire dropped before complete paid source and partial output closure")}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    use super::*;
+    pub fn refuses(reason:&'static str) ->ValueError {
+        super::refuses(reason)
+    }
+}

@@ -1678,7 +1678,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     ///
     /// 🎞️ CW3: direct blake3 (same primitive `crate::os_pack::ContentHash` uses) replaces the
     /// old `framework_hash::hash_bytes` String hash — `crate::os_spr::PayloadHash` is
-    /// now `[u8; 32]`, not a hex string. NOT `crate::os_pack::content_hash`, which reads a pack
+    /// now `[u8; 32]`, not a hex string. NOT `crate::os_pack::stored_content_hash`, which reads a pack
     /// FILE's footer rather than hashing arbitrary bytes. 🎯️ B2: hashes the real
     /// `OpBinary` encoding, not a JSON serialization — two ops that encode identically
     /// via `encode_op()` but differ in JSON shape (or vice versa) must hash identically.

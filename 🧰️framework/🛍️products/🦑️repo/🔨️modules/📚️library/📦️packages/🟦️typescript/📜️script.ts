@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
-import { typecheckProject } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import { typecheckRepositoryProjectV1 } from "../../🏗️build/🟦️typescript/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -31,8 +33,8 @@ import { WorkspacePublicationScript } from "../../🗂️workspaces/🏃️execu
  * coordinator therefore keeps its own `tsconfig.json` next to its `next.config.ts`, and both are checked. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, stateRoot: resolve(this.repoRoot, ".cache", "framework"), leaseDirectory: resolve(this.repoRoot, ".cache", "b", "l", "m", "data"), invocation: this.invocation, cwd: this.root, project: "../../../../tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000 });
-    await typecheckProject({ workspace: this.repoRoot, stateRoot: resolve(this.repoRoot, ".cache", "framework"), leaseDirectory: resolve(this.repoRoot, ".cache", "b", "l", "m", "data"), invocation: this.invocation, cwd: this.root, project: "../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "../../../../tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 
@@ -987,7 +989,7 @@ class FixtureOwnershipTestScript extends BundleScript {
     
     
     
-      const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },nativeEnv: { RUST_MIN_STACK: "268435456" },progress: event => console.log(`fixture-ownership ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`),groups: [
+      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },nativeEnv: { RUST_MIN_STACK: "268435456" },progress: event => console.log(`fixture-ownership ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`),groups: [
           { package: "semio-framework-surface-paint", target: { kind: "lib" }, laws: [
             "paint_stroke_refuses_locked_layers_and_locked_ancestors",
           ] },

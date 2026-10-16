@@ -1,6 +1,6 @@
 import {withRepositoryToolingStoreV1} from "../../📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {withRepositoryPublishedCargoExecutableV1} from "../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
-import {withResourceLeases,checkResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {withResourceLeases,checkResourceLeaseControl} from "@semio-tech/process/leases";
 import {scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {type CargoDependencyNetworkV1} from "./../../📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import {readBuildMode,type BuildMode} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -137,8 +137,8 @@ export async function staleDashboard(root:string,mode:BuildMode):Promise<string|
 /** 🧊️ Publishes immutable executable bytes and one atomic native installation record. */
 export async function installDashboard(packageRoot:string,root:string,options:DashboardExecutionOptions,sources?:DashboardSources):Promise<string> {
  const mode=readBuildMode(options.mode),control=options.control,name=process.platform==="win32"?"semio.exe":"semio",recorded=sources??await captureDashboardSources(packageRoot,root);compilerAdmissionBudgetV1(control);if(validateJsonSchemaSubset(installationSchema.properties.sources,recorded).length)throw Error("Dashboard installation source ownership refused");
- const {pinExecutableArtifact}=await import("../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts");
- return withRepositoryToolingStoreV1(options.workspace,options.invocation,control,async tools=>withRepositoryPublishedCargoExecutableV1(join(packageRoot,"Cargo.toml"),name,options.workspace,mode,options.invocation,async artifact=>{
+ const {pinExecutableArtifact}=await import("@semio-tech/process/artifact-publication");
+ return withRepositoryToolingStoreV1(options.workspace,options.invocation,control,async tools=>withRepositoryPublishedCargoExecutableV1(join(packageRoot,"Cargo.toml"),name,options.workspace,mode,options.invocation,control,async (artifact,control)=>{
   const executable=await pinExecutableArtifact(artifact.path,join(tools.root,"dashboard-cli",mode),`dashboard-installation:${mode}`,{control,signal:control.signal,leaseDirectory:join(options.workspace,".cache/b/l/m/data"),onWait:async progress=>{compilerAdmissionBudgetV1(control);await control.publish(progress);await control.yieldContinuation();}});await tools.recheck();const path=slashes(relative(options.workspace,executable));if(isAbsolute(path)||path.startsWith("../"))throw Error("Dashboard installation must stay inside workspace");const target=manifest(root,mode),temporary=target+"."+process.pid+".tmp";mkdirSync(dirname(target),{recursive:true});writeFileSync(temporary,JSON.stringify({version:3,platform:process.platform,mode,path,sources:recorded,digest:artifact.receipt.digest,bytes:artifact.receipt.bytes,permissions:artifact.receipt.permissions})+"\n");compilerAdmissionBudgetV1(control);renameSync(temporary,target);return executable;
  }));
 }

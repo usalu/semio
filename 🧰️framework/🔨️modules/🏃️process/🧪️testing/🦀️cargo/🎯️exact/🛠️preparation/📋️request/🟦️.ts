@@ -1,0 +1,5 @@
+import type{ExactCargoLawPreparationV1}from"../🟦️.ts";
+import schema from"./🧬️schema/🔣️.json";
+const boundedKeys=Object.freeze([...schema.definitions.BoundedEnvironmentKeys.const]);
+/** 📋️ Captures command and environment DATA while preserving the actual paid namespace values. */
+export function projectExactCargoPreparationV1(descriptor:ExactCargoLawPreparationV1,args:readonly string[],source:Readonly<Record<string,string|undefined>>={}):Readonly<{command:string;args:readonly string[];cwd:string;environment:Readonly<Record<string,string>>;maximumOutputLines:number}>{const environment:Record<string,string>={};for(const[key,value]of Object.entries(source))if(value!==undefined)environment[key]=value;for(const[key,value]of Object.entries(descriptor.environment))environment[key]=value;for(const key of boundedKeys){const value=source[key];if(value!==undefined)environment[key]=value;}return Object.freeze({command:descriptor.command,args:Object.freeze([...descriptor.args,...args]),cwd:descriptor.cwd,environment:Object.freeze(environment),maximumOutputLines:descriptor.maximumOutputLines});}

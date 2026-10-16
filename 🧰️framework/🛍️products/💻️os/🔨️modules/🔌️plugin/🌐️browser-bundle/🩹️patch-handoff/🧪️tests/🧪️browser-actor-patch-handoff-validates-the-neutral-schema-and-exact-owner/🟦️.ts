@@ -1,6 +1,10 @@
+import * as ModuleUnderTest from "../../../../../../../../🔨️modules/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "browserActorUiPatchOwnerMatchesV1" | "captureBrowserActorUiPatchV1" | "parseBrowserActorUiPatchOfferV1" | "parseBrowserActorUiPatchResultV1">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../../../🔨️modules/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"), "browserActorUiPatchOwnerMatchesV1" | "captureBrowserActorUiPatchV1" | "parseBrowserActorUiPatchOfferV1" | "parseBrowserActorUiPatchResultV1">, source: TestSource): Promise<void> {
   const { browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1 } = dependencies;
 
   const { expect, it } = vitest;
@@ -38,3 +42,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../🟦️.ts")).href;
+const moduleUnderTestDirectory = resolve(import.meta.dirname, "../..");
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { browserActorUiPatchOwnerMatchesV1: ModuleUnderTest.browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1: ModuleUnderTest.captureBrowserActorUiPatchV1, parseBrowserActorUiPatchOfferV1: ModuleUnderTest.parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1: ModuleUnderTest.parseBrowserActorUiPatchResultV1 }, { directory: moduleUnderTestDirectory, url: moduleUnderTestUrl });

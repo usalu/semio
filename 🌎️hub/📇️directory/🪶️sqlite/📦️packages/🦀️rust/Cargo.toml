@@ -4,7 +4,7 @@ name = "semio-hub-directory-sqlite"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "HubDirectory over SQLite (rusqlite)"
+description = "Hub directory capabilities over SQLite (rusqlite)"
 
 [package.metadata.semio]
 role = "hub"

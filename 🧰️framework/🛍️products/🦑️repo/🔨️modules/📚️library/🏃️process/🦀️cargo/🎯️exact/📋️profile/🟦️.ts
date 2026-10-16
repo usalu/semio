@@ -1,0 +1,3 @@
+import{buildModePolicy,readBuildMode}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+/** 🎚️ Projects canonical caller intent without allowing child arguments to replace it. */
+export function repositoryExactCargoProfileV1(value:unknown,groups:readonly (readonly string[])[]):Readonly<{mode:"prototype"|"release";profile:string}>{const mode=readBuildMode(value);for(const args of groups)if(args.some(arg=>arg==="--release"||arg==="--profile"||arg.startsWith("--profile=")))throw Error("Exact Cargo profile belongs to the original caller build mode");return Object.freeze({mode,profile:buildModePolicy(mode).cargoProfile});}

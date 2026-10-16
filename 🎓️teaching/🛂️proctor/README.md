@@ -302,7 +302,7 @@ The binary itself takes `proctor serve`, `proctor check <catalog>`, `proctor reb
 `proctor prune --older-than <age> [--dry-run]`; the last five are the
 [operator verbs](#operate-health-backup-restore-erase-prune). Anything else prints the usage and exits `2`.
 
-Every nx target but `build`, `test` and `capacity` builds the binary and runs a private copy of it from the git-ignored
+Every build target but `build`, `test` and `capacity` builds the binary and runs a private copy of it from the git-ignored
 `.🧬semio/🎓️teaching/proctor-bin/` (one copy per run, deleted when it exits; a copy left behind by a killed launcher is
 removed by the next run). A running dev proctor therefore never holds Cargo's own `proctor` executable, which Windows
 would otherwise refuse to replace, so builds, tests, `check` and `rebuild` never contend with it.

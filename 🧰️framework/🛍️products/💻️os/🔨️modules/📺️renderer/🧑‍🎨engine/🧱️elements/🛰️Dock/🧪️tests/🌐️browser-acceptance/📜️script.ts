@@ -24,7 +24,7 @@ const fixturePath = join(import.meta.dir, "../🧫️fixtures/🌐️browser-acc
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as {
   version: number;
   target: { plugin: string; urls: Record<Renderer, string>; viewport: { width: number; height: number }; minimumWindows: number; minimumStacks: number; tabsPerSelectedStack: number; dragThresholdPx: number };
-  selectors: Record<string, string>;
+  selectors: typeof import("../🧫️fixtures/🌐️browser-acceptance/🔣️.json")["selectors"];
   template: { mime: string; displayCategoryId: string; rowSuffix: string; selectionId: string; semantic: { projection: string; direction: number[]; up: number[]; vectorTolerance: number }; neutralPayload: { windowKindId: string; templateId: string } };
   cases: DockCase[];
   widgets: { locales: string[]; selectors: Record<string, string>; localeStorage: { key: string; schema: string; mutation: string }; cases: WidgetCase[] };

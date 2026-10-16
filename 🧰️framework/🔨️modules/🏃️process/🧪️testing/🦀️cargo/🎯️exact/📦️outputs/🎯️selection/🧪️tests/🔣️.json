@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "value": {
+        "version": 1,
+        "receiptIndex": 0
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "version": 1,
+        "receiptIndex": 63
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "version": 1,
+        "receiptIndex": 64
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "receiptIndex": -1
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "receiptIndex": 0.5
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 2,
+        "receiptIndex": 0
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "receiptIndex": "0"
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "receiptIndex": 0,
+        "root": "unowned"
+      },
+      "accepted": false
+    }
+  ]
+}

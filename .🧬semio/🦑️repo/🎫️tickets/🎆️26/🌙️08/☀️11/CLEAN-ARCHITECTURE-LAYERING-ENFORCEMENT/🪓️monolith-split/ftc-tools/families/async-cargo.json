@@ -1,0 +1,23 @@
+{
+ "parent_manifest": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+ "companion_dir": "🧰️framework/🔨️modules/⏳️async/🧪️tests/🥣️companion",
+ "name": "semio-framework-async-tests",
+ "id": "async-tests",
+ "role": "framework",
+ "description": "Companion tests of async: cancellation, scopes, combinators, publication, native worker pool, parking, maintenance and deferred wake laws",
+ "project": "@semio-tech/framework-async-tests-rs",
+ "features": [
+  "testkit",
+  "entrypoint"
+ ],
+ "carry": [
+  "semio-framework-trace",
+  "semio-framework-value"
+ ],
+ "extra": [
+  "parking_lot = \"=0.12.5\"",
+  "semio-framework-async-macros = { path = \"../../../../✨️macros/📦️packages/🦀️rust\" }",
+  "serde = { version = \"1.0.228\", features = [\"derive\"] }",
+  "serde_json = \"1.0\""
+ ]
+}

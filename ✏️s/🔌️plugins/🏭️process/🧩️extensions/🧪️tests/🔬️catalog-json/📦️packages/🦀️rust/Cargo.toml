@@ -1,0 +1,25 @@
+[workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
+
+[package]
+name = "semio-s-plugin-process-catalog-json-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Independent serde_json oracle of the process machine catalog JSON, shared by the process extension crates"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_plugin_process_catalog_json_oracle"
+path = "../../🦀️.rs"
+
+[dependencies]
+serde_json = "1"
+semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

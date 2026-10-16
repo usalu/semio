@@ -11,6 +11,3 @@ pub fn resolve_ready<F: std::future::Future>(fut: F) -> F::Output {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

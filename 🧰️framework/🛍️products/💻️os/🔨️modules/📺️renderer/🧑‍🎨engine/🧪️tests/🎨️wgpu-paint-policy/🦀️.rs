@@ -2,8 +2,7 @@
 
 use std::path::PathBuf;
 
-#[path = "../../../../../../../🔨️modules/🖱️ui/🧪️testing/🎨️paint-policy/🦀️.rs"]
-mod paint_policy;
+use semio_framework_ui_testing_paint_policy as paint_policy;
 
 const SCAN_ROOTS: &[&str] = &["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer"];
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
@@ -414,7 +415,7 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
 class InferenceServiceReceivingCheckScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const {rest}=resolveTestLevel(segments);
-    await runVitest(this.root,["--testNamePattern","gis map inference port",...rest],"../../💡️inference/🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root,["--testNamePattern","gis map inference port",...rest],"../../../../../../🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🎚️config/🟦️.ts");
   }
 }
 
@@ -431,7 +432,7 @@ class GisMapInferencePortCheckScript extends BundleScript {
         .map(([key, value]) => `${key}=${value}`)
         .join(" ")}`,
     );
-    if (browser) await runVitest(this.root, ["--testNamePattern", "gis map inference port", ...rest], "../../💡️inference/🧪️tests/🎚️config/🟦️.ts");
+    if (browser) await runVitest(this.root, ["--testNamePattern", "gis map inference port", ...rest], "../../../../../../🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🎚️config/🟦️.ts");
     if(presentation) await runVitest(this.root,rest,"../../💡️inference/🧪️tests/🎚️config/📺️renderer/🟦️.ts");
     console.log("gis-map-inference-port-check: no WGPU map rendering, no external model provider and no two-user process journey is run or claimed here.");
   }
@@ -565,7 +566,7 @@ class ColdDocumentPairBrowserCheckScript extends BundleScript {
     await runVitest(
       this.root,
       ["--testNamePattern", "(?:mounted GIS map probe|browser document first open (?:verifies server assets without a prior installed target|rejects hostile assets and retired owners before socket authority)|browser document actor (?:reservation activates only after an exact current socket Session|transfers one verified cold pair only after lifecycle ACK and exact page receipts)|browser document peers refetch the same exact pair after scoped rebootstrap|browser actor patch handoff validates the neutral schema)", ...rest],
-      "../../💡️inference/🧪️tests/🎚️config/🟦️.ts",
+      "../../../../../../🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🎚️config/🟦️.ts",
     );
     console.log(`cold-document-pair-browser-check: peer-checks=${checks}`);
   }
@@ -591,8 +592,8 @@ class TileCheckScript extends BundleScript {
     const { proveGisMapTilesV1 } = await import("../../🗺️tiles/🧪️tests/🟦️.ts");
     console.log(`gis-map-tiles: laws=${await proveGisMapTilesV1(root)} passed`);
     if (args.includes("--native")) {
-      const { runExactCargoLaws } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },cwd: this.repoRoot,groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, laws: ["tile_coordinates::tests::portable_tile_coordinates_and_ranges_match_json_and_geo_oracles"] }],progress: event => console.log(`gis-map-tiles ${event.stage} ${event.law ?? ""}`)});
+      const { runRepositoryExactCargoLaws } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },cwd: this.repoRoot,groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, laws: ["tile_coordinates::tests::portable_tile_coordinates_and_ranges_match_json_and_geo_oracles"] }],progress: event => console.log(`gis-map-tiles ${event.stage} ${event.law ?? ""}`)});
     }
   }
 }

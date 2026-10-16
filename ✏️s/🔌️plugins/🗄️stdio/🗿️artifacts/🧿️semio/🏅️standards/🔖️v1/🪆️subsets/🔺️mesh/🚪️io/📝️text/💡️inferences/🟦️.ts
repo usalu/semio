@@ -49,5 +49,5 @@ export const stdioSemioV1MeshInferenceTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseSemioMeshInferenceText(value: unknown, at = "$"): SemioMeshInferenceText {
-  return stdioSemioV1MeshInferenceTextGuardObject(value, `${at}`);
+  return stdioSemioV1MeshInferenceTextGuardString(value, `${at}`);
 }

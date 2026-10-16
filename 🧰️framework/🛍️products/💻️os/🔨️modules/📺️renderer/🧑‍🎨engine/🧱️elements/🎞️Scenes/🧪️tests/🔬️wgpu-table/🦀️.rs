@@ -1,5 +1,8 @@
 use super::*;
-use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, TableScene};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_scene_views::TableScene;
+use semio_framework_ui_text::FontAtlas;
+use ui_wgpu::wgpu::InputState;
 
 fn table_scene(surface_id: &str, table: TableScene) -> UiComponentSceneNode {
     UiComponentSceneNode {
@@ -216,7 +219,7 @@ fn table_key_action(key: &str) -> ui_wgpu::wgpu::KeyAction {
 /// whose addressed cell changes kind invalidates the retained focus address.
 #[test]
 fn table_stepper_keyboard_matches_the_shared_react_oracle_and_revalidates_the_live_cell() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/⌨️table-stepper-keyboard/🔣️.json"))).expect("Table stepper keyboard fixture");
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/⌨️table-stepper-keyboard/🔣️.json"))).expect("Table stepper keyboard fixture");
     let cell = &fixture["cell"];
     let action = &fixture["action"];
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
@@ -291,7 +294,7 @@ fn row_buttons_dispatch_their_own_action_and_menu_placement_buttons_are_not_row_
 
 #[test]
 fn table_button_accessibility_uses_visible_row_placement_geometry_and_exact_action() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📊️Table/🧫️fixtures/🔘️button-accessibility/🔣️.json"))).expect("Table button accessibility fixture");
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧱️elements/📊️Table/🧪️tests/🧫️fixtures/🔘️button-accessibility/🔣️.json"))).expect("Table button accessibility fixture");
     let host_id = fixture["hostId"].as_str().unwrap();
     let table = TableScene::base(fixture["columns"].to_string(), Value::Array(vec![fixture["row"].clone()]).to_string());
     let node = table_scene(host_id, table);
@@ -325,7 +328,7 @@ fn table_button_accessibility_uses_visible_row_placement_geometry_and_exact_acti
 
 #[test]
 fn segmented_table_controls_share_fractional_paint_pointer_and_clipped_accessibility_geometry() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📊️Table/🧫️fixtures/🔘️button-accessibility/🔣️.json"))).expect("Table button geometry fixture");
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧱️elements/📊️Table/🧪️tests/🧫️fixtures/🔘️button-accessibility/🔣️.json"))).expect("Table button geometry fixture");
     let rect = |value: &Value| Rect::new(value["x"].as_f64().unwrap() as f32, value["y"].as_f64().unwrap() as f32, value["width"].as_f64().unwrap() as f32, value["height"].as_f64().unwrap() as f32);
     for case in fixture["geometryCases"].as_array().expect("geometry cases") {
         let cell_rect = rect(&case["cellRect"]);
@@ -358,7 +361,7 @@ fn row_without_an_id_is_keyed_by_its_ordinal() {
 
 #[test]
 fn editable_text_cell_matches_the_shared_fixture_and_preserves_conflicting_drafts() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📊️Table/🧫️fixtures/✏️editable-text/🔣️.json"))).expect("editable table fixture");
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧱️elements/📊️Table/🧪️tests/🧫️fixtures/✏️editable-text/🔣️.json"))).expect("editable table fixture");
     let rows = json!([{ "id": "r1", "value": fixture["cell"] }]).to_string();
     let node = table_scene("editable-table", TableScene::base(columns_json(&[("value", "Value", false)]), rows));
     let target = table_editable_text_focus_target(&node, Rect::new(0.0, 0.0, 400.0, 300.0), 200.0, row_center_y(0), UiDriverDrag::Handle).expect("editable cell focus");
@@ -475,7 +478,7 @@ fn transfer_table(surface_id: &str, controller_id: &str, row_drag_mime: Option<&
 
 #[test]
 fn shared_fixture_drivers_gate_table_transfer_to_handle_or_surface_geometry() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared transfer fixture");
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared transfer fixture");
     let source = &fixture["table"]["source"];
     let node = transfer_table(source["surfaceId"].as_str().unwrap(), "controller.table-a", source["mime"].as_str(), None);
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
@@ -495,7 +498,7 @@ fn shared_fixture_drivers_gate_table_transfer_to_handle_or_surface_geometry() {
 #[test]
 fn shared_fixture_table_transfer_crosses_windows_and_revalidates_mime_payload_and_generation() {
     cancel_scene_list_transfer();
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared transfer fixture");
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared transfer fixture");
     let source_fixture = &fixture["table"]["source"];
     let destination_fixture = &fixture["table"]["destination"];
     let source = transfer_table(source_fixture["surfaceId"].as_str().unwrap(), "controller.table-a", source_fixture["mime"].as_str(), None);

@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/📐️trigonometry/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { atanTurns, clamp, cosTurns, fastNegExp, lerp, sinTurns, smoothstep } from "../../🔨️modules/📐️trigonometry/🟦️.ts";
 
 const VECTORS = "shared://📐️turn-trigonometry/🔣️.json";

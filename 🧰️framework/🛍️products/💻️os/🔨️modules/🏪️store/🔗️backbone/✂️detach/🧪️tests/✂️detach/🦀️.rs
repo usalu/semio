@@ -14,7 +14,7 @@ async fn observe_refusal(case_id: &str) {
             maximum_depth: policy["maximumDepth"].as_u64().unwrap() as usize,
         }
     };
-    let mut store = super::super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "detach-refusal", DemoSnapshot { n: Some(4) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("actor:detach-fixture".into())).await.expect("real initialized Store");
+    let mut store = semio_framework_os_store_engine::lifted_store::ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "detach-refusal", DemoSnapshot { n: Some(4) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("actor:detach-fixture".into())).await.expect("real initialized Store");
     store.install_document_store_owners_exact(demo_closable_store_owners());
     let (mut local, peer) = MemoryBackbone::pair("detach-local", "detach-peer").await;
     let payload_byte = u8::try_from(fixture["payload"]["byte"].as_u64().unwrap()).unwrap();

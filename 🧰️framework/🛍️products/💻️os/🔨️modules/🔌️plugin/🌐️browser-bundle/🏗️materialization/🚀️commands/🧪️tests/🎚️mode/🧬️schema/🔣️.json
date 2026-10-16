@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Component Browser Publication Mode Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "readers"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "profile",
+          "accept"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "profile": {
+            "enum": [
+              "prototype",
+              "release",
+              "wasm-prototype",
+              "wasm-release",
+              "dev",
+              "host-tool",
+              "test",
+              "unknown"
+            ]
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "readers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "owner",
+          "selection"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "owner": {
+            "enum": [
+              "withComponentModelV1",
+              "verifyModel"
+            ]
+          },
+          "selection": {
+            "enum": [
+              "mode",
+              "intent.mode"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

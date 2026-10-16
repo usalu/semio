@@ -1,0 +1,14 @@
+# Primary File Observation Control Audit
+
+Read-only inspection of the actual general Core filesystem observation implementation, adjacent descriptor helper, control test Source, schema and language-neutral fixture on 2026-10-16. No tests or physical operations were run by this auditor; Root’s reported RED/GREEN results remain Root’s evidence.
+
+No actionable Source defect found within the requested scope.
+
+- Limits and callback method references are destructured before the first await. Subsequent mutation of maxBytes/maxWork/chunkBytes or methods does not replace the captured authority. Callback invocation uses `.call(control)`, preserving the original receiver.
+- Only actual filesystem promises are wrapped by the `filesystem` adapter: lstat/open/stat/read/close failures become `FileObservationErrorV1("io")`. Cancellation/deadline/progress callbacks execute outside that adapter, so exact callback Error identity and thrown undefined propagate rather than becoming io.
+- The unchanged descriptor helper’s discriminated `{value}`/`{error}` outcome preserves body failure, including undefined, while always awaiting close. Close failure is returned when the body succeeded. This establishes body-before-close precedence by Source, not an independently run dual-failure test.
+- The descriptor is enrolled immediately after successful open without another await. All reads and identity recensus occur inside its body. Completion progress runs after the descriptor close resolves, and its trailing check enforces cancellation/deadline after that close. The tests explicitly cover complete-phase cancellation/deadline and Error/undefined progress failure.
+- Temporary chunk bytes are wiped in outer finally for success and failure. Retained output stays owned locally until complete progress and postclose checks succeed; failures wipe it. Successful output transfer clears the local reference so caller-owned returned bytes survive. Hash-internal state is not explicitly wiped; no claim that the implementation erases Node crypto internals is made.
+- Work admission uses the captured maxima before open and budgets five non-read filesystem operations plus ceil(total/chunkBytes) reads. Zero-length files still allocate only one temporary byte. Read allocation remains behind byte/work admission.
+
+The corpus has 16 cases exercised for both read and observe in isolated received-Original children. It schema-validates control DATA with Ajv, compares expected category with SQLite, checks receiver identity in callbacks, and independently compares success SHA256 with Noble/WebCrypto. Its close-order and temporary-wipe claims are primarily Source inspection: the shown control corpus does not inject an ordinary filesystem close failure or directly observe zeroing of internal buffers. These are limits of evidence, not discovered implementation failures.

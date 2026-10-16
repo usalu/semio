@@ -1,3 +1,4 @@
+import{createNativeWindowsSystemGrantV1}from"../📥️invocation/🟦️.ts";
 import executionPolicy from "../🔣️policy.json";
 import nativeSchema from "../📥️invocation/🧬️schema/🔣️.json";
 import type {NativeOwnerCapabilities} from "../📥️invocation/🟦️.ts";
@@ -33,7 +34,7 @@ export interface NativeNxCallerCapabilitiesV1 {
  readonly arguments:readonly string[];
  readonly selection:readonly string[];
  readonly buildMode:"prototype"|"release";
- readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"]}>;
+ readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];windowsSystem?:NativeOwnerCapabilities["windowsSystem"]}>;
  readonly launches?:readonly (readonly string[])[];
 }
 
@@ -43,7 +44,7 @@ export function createNativeNxCallerCapabilitiesV1(root:string,arguments_:readon
  const canonical=canonicalArchitectureEnvironment(root,environment),offline=canonical.CARGO_NET_OFFLINE??"false";
  if(offline!=="true"&&offline!=="false")throw Error("Original Cargo network selection refused");
  const buildMode=environment.SEMIO_BUILD_MODE??"prototype";
- const capabilities={workspaceRoot:resolve(root),arguments:[...arguments_],selection:["nx",...selected],buildMode:buildMode as "prototype"|"release",native:{artifactDirectory:canonical.CARGO_TARGET_DIR!,transport:executionPolicy.transport,child:executionPolicy.child,network:{offline:offline==="true"}},launches:launches.map(args=>["nx",...args])};
+ const windowsSystem=createNativeWindowsSystemGrantV1(),capabilities={workspaceRoot:resolve(root),arguments:[...arguments_],selection:["nx",...selected],buildMode:buildMode as "prototype"|"release",native:{artifactDirectory:canonical.CARGO_TARGET_DIR!,transport:executionPolicy.transport,child:executionPolicy.child,network:{offline:offline==="true"},...(windowsSystem?{windowsSystem}:{})},launches:launches.map(args=>["nx",...args])};
  if(arguments_[0]!=="nx"||validateJsonSchemaSubset(callerSchema,capabilities).length||!capabilities.launches.some(args=>JSON.stringify(args)===JSON.stringify(capabilities.selection)))throw Error("Original bootstrap launch declaration refused");
  return capabilities;
 }

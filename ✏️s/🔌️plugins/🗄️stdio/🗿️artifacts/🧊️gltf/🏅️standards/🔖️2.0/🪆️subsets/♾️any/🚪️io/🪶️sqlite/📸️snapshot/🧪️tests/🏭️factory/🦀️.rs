@@ -6,5 +6,5 @@ fn sqlite_snapshot_gltf_actual_factory_exposes_owned_provider_and_structural_has
     let codec = (crate::native_codecs()[0].codec)();
     assert!(codec.snapshot_sqlite.is_some());
     let spec = <GltfSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("owned GLTF record spec");
-    assert_eq!(codec.pack_schema_hash, store::schema_hash(&spec));
+    assert_eq!(codec.pack_schema_hash, pack::record::schema_hash(&spec));
 }

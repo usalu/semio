@@ -49,5 +49,5 @@ export const stdioSemioV1AudioInferenceTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseSemioAudioInferenceText(value: unknown, at = "$"): SemioAudioInferenceText {
-  return stdioSemioV1AudioInferenceTextGuardObject(value, `${at}`);
+  return stdioSemioV1AudioInferenceTextGuardString(value, `${at}`);
 }

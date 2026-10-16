@@ -36,6 +36,7 @@ semio-s-artifact-procedural-2d-mut-generations = { workspace = true }
 semio-s-artifact-procedural-2d-mut-synapses = { workspace = true }
 semio-s-artifact-procedural-2d-mut-widgets = { workspace = true }
 semio-s-artifact-procedural-2d-mutations = { workspace = true }
+semio-s-procedural-core-generation-sqlite-native = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

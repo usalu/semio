@@ -86,6 +86,7 @@ class Plan:
         self.base_real = set(_uo.BASE_REAL)
         self._skip_files = set()
         self.host_exports = {}
+        self.host_unit_files = {}
 
     # ownership helpers -----------------------------------------------------------------------------------------
     def owner(self, part):
@@ -118,7 +119,7 @@ class Plan:
         if st.kind == "mod" and not st.inline:
             child = node.mods.get(st.name)
             if child is not None and not getattr(child, "missing", False) and child.parts:
-                if self.owner(child.parts[0]) != K:
+                if self.owner(child.parts[0]) != K and not rel(child.parts[0].file).startswith(SHARED_FIXTURES):
                     return "remove"
             return "keep"
         if st.kind == "mod" and st.inline:
@@ -330,6 +331,9 @@ class Plan:
             tgt = tr.W.resolve_path(node, path)
             if tgt is None or tgt.kind in ("unresolved", "cycle"):
                 tr.notes.append(("unresolved-use", "::".join(path), 0))
+                new_entries.append((path, alias, False))
+                continue
+            if path[0] not in ("crate", "self", "super") and tr.shared_fixture(tgt):
                 new_entries.append((path, alias, False))
                 continue
             p = tr.emit(tgt)
@@ -592,6 +596,9 @@ Plan.finalize = finalize
 HUB_OF_WP = {3: "👥️wp3-owners", 4: "⚛️wp4-reactor", 5: "⏯️wp5-features"}
 
 
+SHARED_FIXTURES = ("🧪️testing/🎟️caller/",)
+
+
 def host_path(self, K):
     wp = Wd.O.CR[K]["wp"]
     return PLUG + "/🪝️mounts/" + HUB_OF_WP[wp] + "/🧪️test-hosts/" + Wd.O.CR[K]["emoji"] + K + "/🦀️.rs"
@@ -608,6 +615,20 @@ def unit_closure_parts(self, u):
         seeds = R.unit_ids(self, u.node, u.part, u.st)
         return [p for n in M.walk(self.W.mono) for p in n.parts if p.node is seeds[0][0] or p.host_part is seeds[0][1]]
     return [p for n in M.walk(self.W.mono) for p in n.parts if p.file in u.files]
+
+
+def use_heads(st, clean):
+    """scope names a `use` statement starts from (a module alias or `super::<module>`), which the unit needs bound in its host"""
+    out = set()
+    for path, alias, glob in P.use_entries(st, clean):
+        if not path or path[0] in ("crate", "self"):
+            continue
+        if path[0] == "super":
+            if len(path) > 1 and path[1] != "super":
+                out.add(path[1])
+        else:
+            out.add(path[0])
+    return out
 
 
 def host_text(self, K, flipped):
@@ -630,6 +651,8 @@ def host_text(self, K, flipped):
                 for st in P.statements(p.text, p.clean, p.lo, p.hi):
                     if st.kind != "use":
                         ids |= set(IDENT.findall(p.clean[st.start:st.end]))
+                    else:
+                        ids |= use_heads(st, p.clean)
                 decl |= self.declared(p.node, parts)
             decl |= {it.name for it in u.node.items if it.part is u.part and any(s.start <= it.stmt.start < s.end for s in u.stmts)}
         else:
@@ -637,6 +660,8 @@ def host_text(self, K, flipped):
             for st in P.statements(p.text, p.clean, p.lo, p.hi):
                 if st.kind != "use":
                     ids |= set(IDENT.findall(p.clean[st.start:st.end]))
+                else:
+                    ids |= use_heads(st, p.clean)
             decl |= self.declared(p.node, parts)
         tr = TR.Tr(self.W, self.LY, "FACADE", flipped=flipped)
         scope_node = u.node if u.kind in ("include", "stmts") else (R.unit_ids(self, u.node, u.part, u.st)[0][0])
@@ -672,14 +697,24 @@ def host_text(self, K, flipped):
                 p = tr.emit(r) if r is not None else None
                 if p:
                     lines += TR.group_uses([(p, None if p[-1] == t else t, False)], "", "")
-        if u.kind == "stmts":
-            text = "\n".join(R.rebase_paths(u.part.text[s.start:s.end], os.path.dirname(u.part.file), os.path.dirname(hp)) for s in u.stmts)
-        else:
-            text = u.part.text[u.st.start:u.st.end]
-            text = R.rebase_paths(text, os.path.dirname(u.part.file), os.path.dirname(hp))
+        unit = f"{K.replace('-', '_')}_unit_{n}"
+        hdir = os.path.dirname(hp)
+        udir = hdir + f"/🧱️unit-{n}"
+
+        def render(new_dir):
+            if u.kind == "stmts":
+                return "\n".join(R.rebase_paths(u.part.text[s.start:s.end], os.path.dirname(u.part.file), new_dir) for s in u.stmts)
+            return R.rebase_paths(u.part.text[u.st.start:u.st.end], os.path.dirname(u.part.file), new_dir)
+
         exported = sorted({it.name for p in parts for it in p.node.items if it.part is p and it.kind in ("fn", "struct", "enum", "const", "static", "type", "trait") and (it.vis or "").startswith("pub") and (u.kind != "stmts" or p is not u.part or any(s.start <= it.stmt.start < s.end for s in u.stmts))})
-        self.host_exports[(K, f"{K.replace('-', '_')}_unit_{n}")] = exported
-        body.append(f"#[cfg(test)]\npub(crate) mod {K.replace('-', '_')}_unit_{n} {{\n" + "".join("    " + l + "\n" for l in "\n".join(lines).split("\n") if l.strip()) + "    " + text.replace("\n", "\n    ") + "\n}\n")
+        self.host_exports[(K, unit)] = exported
+        head = "\n".join(l for l in "\n".join(lines).split("\n") if l.strip())
+        if re.search(r"#\[\s*path\s*=", render(hdir)):
+            self.host_unit_files.setdefault(K, {})[udir + "/🦀️.rs"] = f"//! 🧪️ Unit {n} of the facade test host of `{K}`: out of line because its `#[path]` mounts must not pass through a module directory that does not exist.\n\n" + (head + "\n\n" if head else "") + render(udir) + "\n"
+            body.append(f'#[cfg(test)]\n#[path = "🧱️unit-{n}/🦀️.rs"]\npub(crate) mod {unit};\n')
+            continue
+        text = render(hdir)
+        body.append(f"#[cfg(test)]\npub(crate) mod {unit} {{\n" + "".join("    " + l + "\n" for l in head.split("\n") if l.strip()) + "    " + text.replace("\n", "\n    ") + "\n}\n")
     doc = f"//! 🧪️ Facade test host of `{K}`: the cfg(test) units that name higher layers or facade fixtures and therefore cannot run inside the crate.\n\n"
     return doc + "\n".join(body)
 

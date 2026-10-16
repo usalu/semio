@@ -1,4 +1,3 @@
-/// <reference types="vitest/importMeta" />
 /** 🎛️ The activation registry: manifest-only records seeded from a catalog, activation with LRU and memory-pressure suspension, resume from a checkpoint, capability grant intersection and the default asset fetchers.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
@@ -12,7 +11,7 @@ import {
   type ShardEventEnvelope
 } from "../../🎭️actor/📮️shard-client/🟦️.ts";
 import { fetchPackageAssets, type PackageAssetDeclaration } from "../📦️package-assets/🟦️.ts";
-import { OwnedResidentLedger } from "../../🌱️value/💾️resident/🟦️.ts";
+import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../../🎭️actor/🧵️turn-scheduler/🟦️.ts";
 import { ON_EXTENSION_REQUEST_ACTIVATION_PREFIX, type PluginCatalog } from "../📚️plugin-catalog/🟦️.ts";
 import { activationEventEnvelope, type ActivationReason } from "../🚦️activation-reason/🟦️.ts";
@@ -581,15 +580,5 @@ export class ActivationRegistry {
   }
   //#endregion 📈️RuntimeMetrics
 }
-
-//#region 🧪️RuntimeMetricsTests
-/** 🧪️ Kept inside the `🐚️ActivationRegistry` region on purpose — this file's other test blocks
- * (`🧪️ExpandPluginRegistryTests`/`🧪️IoRouterTests`) live at end-of-file, but this packet's
- * `path_scope` is this region only, and a peer holds `🔖️IoRouter` (must stay byte-identical). */
-if (import.meta.vitest) {
-  const { registerTests3 } = await import("../🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests3(import.meta.vitest, { ActivationRegistry, DEFAULT_MAX_RESIDENT_ACTORS, OwnedResidentLedger, RUNTIME_METRICS_PUBLISH_INTERVAL_MS, ShardClient, intersectCapabilityGrants, residentActorCapFromMemory, runtimeMetricsDue }, { directory: (await import("node:path")).dirname((await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url))), url: import.meta.url });
-}
-//#endregion 🧪️RuntimeMetricsTests
 //#endregion 🐚️ActivationRegistry
 // #endregion 🎠️Kernel

@@ -1127,7 +1127,7 @@
     {
       "id": "hub-hash",
       "mode": "direct-import",
-      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🌎️hub/🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts",
       "requiredTokens": [
         "blake3Hex",
         "🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
@@ -1189,7 +1189,7 @@
     {
       "id": "os-root-hash",
       "mode": "direct-import",
-      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/✍️wal-checks/🟦️.ts",
       "requiredTokens": [
         "blake3Hex",
         "🔏️hash/🟦️.ts"

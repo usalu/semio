@@ -1,4 +1,6 @@
+/// <reference types="@webgpu/types" />
 /** 🎨️ Actual Three/WebGPU pixel comparison for the shared World3d shading fixture. */
+import{oraclePixelDeltaV1,oracleSamplerV1,oracleSurfaceCasesV1,oracleBrowserDataPreludeV1}from"./📋️data/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020.js";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -198,7 +200,7 @@ function renderSceneShadingS2(fixture: any) {
   camera.updateMatrixWorld();
   camera.updateProjectionMatrix();
   const rows: any[] = [];
-  const standardGeometry = (center = [0, 0, 0]) => {
+  const standardGeometry = (center:readonly[number,number,number] = [0, 0, 0]) => {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute([
       center[0] - 1.5, center[1] - 1.5, center[2],
@@ -473,7 +475,7 @@ async function renderWgpuShading(input: any) {
         { binding: 1, resource: device.createSampler({ compare: "less-equal" }) },
       ],
     }),
-  ]);
+  ] as const);
   const camera = new THREE.PerspectiveCamera(fixture.scene.camera.fov, width / height, 0.01, 100);
   camera.coordinateSystem = THREE.WebGPUCoordinateSystem;
   camera.up.fromArray(fixture.scene.camera.up);
@@ -623,8 +625,10 @@ async function renderWgpuShading(input: any) {
         const opacity = specification.opacity ?? 1;
         const pipelineIndex = opacity < 1 ? 1 : 0;
         pass.setPipeline(pipelines[pipelineIndex]);
-        pass.setBindGroup(0, groups[pipelineIndex][0]);
-        pass.setBindGroup(1, groups[pipelineIndex][1]);
+        const selectedGroups=groups[pipelineIndex];
+        if(!selectedGroups)throw Error("Actual pipeline bind groups required");
+        pass.setBindGroup(0, selectedGroups[0]);
+        pass.setBindGroup(1, selectedGroups[1]);
         pass.setVertexBuffer(0, vertex);
         pass.setVertexBuffer(1, instance);
         pass.setIndexBuffer(indices, "uint32");
@@ -1067,9 +1071,9 @@ async function renderReferenceVisualWgpu(input: any) {
           const halfWidth = planeWidth * 0.5 * 1.002;
           const halfHeight = planeHeight * 0.5 * 1.002;
           const color = [...linear(theme[outlineSemantic].hex), outlineOpacity];
-          const points = [[-halfWidth, -halfHeight, 0], [halfWidth, -halfHeight, 0], [halfWidth, halfHeight, 0], [-halfWidth, halfHeight, 0]];
+          const points:readonly[readonly[number,number,number],readonly[number,number,number],readonly[number,number,number],readonly[number,number,number]] = [[-halfWidth, -halfHeight, 0], [halfWidth, -halfHeight, 0], [halfWidth, halfHeight, 0], [-halfWidth, halfHeight, 0]];
           const vertices: number[] = [];
-          for (const [from, to] of [[0, 1], [1, 2], [2, 3], [3, 0]]) vertices.push(...points[from], ...color, ...points[to], ...color);
+          for (const [from, to] of [[0, 1], [1, 2], [2, 3], [3, 0]] as const) vertices.push(...points[from], ...color, ...points[to], ...color);
           device.queue.writeBuffer(line, 0, new Float32Array(vertices));
           const outlinePass = encoder.beginRenderPass({
             colorAttachments: [{ view: outputView, loadOp: "load", storeOp: "store" }],
@@ -1278,7 +1282,9 @@ export async function runReferenceVisualOracle(repoRoot: string, outputDirectory
     ],
   });
   if (!build.success) throw new Error(build.logs.map(String).join("\n"));
-  const javascript = await build.outputs[0].text();
+  const bundle=build.outputs[0];
+  if(!bundle)throw Error("Successful oracle bundle output required");
+  const javascript = await bundle.text();
   if (output) await writeFile(join(output, "oracle.js"), javascript);
   const playwrightSpecifier = "playwright";
   const { chromium } = (await import(playwrightSpecifier)) as typeof import("playwright");
@@ -1309,7 +1315,7 @@ export async function runReferenceVisualOracle(repoRoot: string, outputDirectory
       throw new Error("Reference visual pixel identities differ from the recorded fixture");
     const differences = result.rows.map((row: any) => {
       const expected = expectedRows.find((value: any) => value.id === row.id)?.rgba8;
-      return { id: row.id, actual: row.rgba8, expected, delta: expected ? row.rgba8.map((value: number, index: number) => value - expected[index]) : null };
+      return { id: row.id, actual: row.rgba8, expected, delta: expected ? oraclePixelDeltaV1(row.rgba8,expected) : null };
     });
     result.differences = differences;
     if (output) {
@@ -1534,7 +1540,9 @@ async function runGridVisualOracle(repoRoot: string, outputDirectory: string | u
     } }],
   });
   if (!build.success) throw new Error(build.logs.map(String).join("\n"));
-  const javascript = await build.outputs[0].text();
+  const bundle=build.outputs[0];
+  if(!bundle)throw Error("Successful oracle bundle output required");
+  const javascript = await bundle.text();
   if (output) await writeFile(join(output, "oracle.js"), javascript);
   const playwrightSpecifier = "playwright";
   const { chromium } = (await import(playwrightSpecifier)) as typeof import("playwright");
@@ -1562,7 +1570,7 @@ async function runGridVisualOracle(repoRoot: string, outputDirectory: string | u
     if (fixture.pixelOracle.status === "recorded" && JSON.stringify(result.rows.map((row: any) => row.id)) !== JSON.stringify(expectedRows.map((row: any) => row.id))) throw new Error("Grid pixel case identities differ from the recorded fixture");
     const differences = result.rows.map((row: any) => {
       const expected = expectedRows.find((value: any) => value.id === row.id)?.rgba8;
-      return { id: row.id, point: row.point, actual: row.rgba8, expected, delta: expected ? row.rgba8.map((value: number, index: number) => value - expected[index]) : null };
+      return { id: row.id, point: row.point, actual: row.rgba8, expected, delta: expected ? oraclePixelDeltaV1(row.rgba8,expected) : null };
     });
     result.differences = differences;
     if (output) {
@@ -1627,7 +1635,9 @@ export async function runSceneShadingOracle(
     ],
   });
   if (!build.success) throw new Error(build.logs.map(String).join("\n"));
-  const javascript = await build.outputs[0].text();
+  const bundle=build.outputs[0];
+  if(!bundle)throw Error("Successful oracle bundle output required");
+  const javascript = await bundle.text();
   if (output) await writeFile(join(output, "oracle.js"), javascript);
   const browser = await chromium.launch({ headless: true, args: ["--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
   try {
@@ -1678,7 +1688,7 @@ export async function runSceneShadingOracle(
       throw new Error("Pixel case identities differ from the recorded fixture: " + JSON.stringify(result.rows.map((row: any) => row.id)) + " != " + JSON.stringify(expectedRows.map((row: any) => row.id)));
     const differences = result.rows.map((row: any) => {
       const expected = expectedRows.find((value: any) => value.id === row.id)?.rgba8;
-      return { id: row.id, actual: row.rgba8, expected, delta: expected ? row.rgba8.map((value: number, index: number) => value - expected[index]) : null };
+      return { id: row.id, actual: row.rgba8, expected, delta: expected ? oraclePixelDeltaV1(row.rgba8,expected) : null };
     });
     result.differences = differences;
     if (output) await writeFile(join(output, "pixels.json"), JSON.stringify(result, null, 2));
@@ -1744,8 +1754,8 @@ function renderAuthoredSurfaceReference(input: any) {
         const texture = new THREE.DataTexture(new Uint8Array(bytes as number[]), ...(row.mapSizes?.[role] ?? [1,1]), THREE.RGBAFormat);
         texture.colorSpace = role === "baseColor" || role === "emissive" ? THREE.SRGBColorSpace : THREE.NoColorSpace;
         texture.flipY = false;
-        const field=({baseColor:"baseColorTexture",metallicRoughness:"metallicRoughnessTexture",normal:"normalTexture",occlusion:"occlusionTexture",emissive:"emissiveTexture"} as Record<string,string>)[role];texture.channel=row.textureCoordinates?.[field!] ?? 0;
-        const sampler=row.textureSamplers?.[field!] ?? {};const wraps={33071:THREE.ClampToEdgeWrapping,33648:THREE.MirroredRepeatWrapping,10497:THREE.RepeatWrapping};const filters={9728:THREE.NearestFilter,9729:THREE.LinearFilter,9984:THREE.NearestMipmapNearestFilter,9985:THREE.LinearMipmapNearestFilter,9986:THREE.NearestMipmapLinearFilter,9987:THREE.LinearMipmapLinearFilter};texture.wrapS=wraps[sampler.wrapS ?? 33071];texture.wrapT=wraps[sampler.wrapT ?? 33071];texture.magFilter=filters[sampler.magFilter ?? 9728];texture.minFilter=filters[sampler.minFilter ?? 9728];texture.generateMipmaps=(sampler.minFilter ?? 9728)>=9984;
+        const sampler=oracleSamplerV1(role,row.textureSamplers);texture.channel=row.textureCoordinates?.[sampler.field] ?? 0;
+        const wraps={33071:THREE.ClampToEdgeWrapping,33648:THREE.MirroredRepeatWrapping,10497:THREE.RepeatWrapping};const filters={9728:THREE.NearestFilter,9729:THREE.LinearFilter,9984:THREE.NearestMipmapNearestFilter,9985:THREE.LinearMipmapNearestFilter,9986:THREE.NearestMipmapLinearFilter,9987:THREE.LinearMipmapLinearFilter};texture.wrapS=wraps[sampler.wrapS];texture.wrapT=wraps[sampler.wrapT];texture.magFilter=filters[sampler.magFilter];texture.minFilter=filters[sampler.minFilter];texture.generateMipmaps=sampler.minFilter>=9984;
         texture.needsUpdate = true;
         maps.push(texture);
         if (role === "baseColor") material.map = texture;
@@ -1788,7 +1798,7 @@ async function runAuthoredSurfaceOracle(repoRoot: string, output: string): Promi
   const validate = new Ajv2020({ allErrors: true }).compile(schema);
   if (!validate(surface)) throw new Error(JSON.stringify(validate.errors));
   const fixture = JSON.parse(await readFile(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🎨️scene-shading/🔣️.json"), "utf8"));
-  fixture.textureCases = surface.pixelCases.map((row: any) => ({ ...row, preserveVertexColor: true, emissiveIntensity: 0 }));
+  fixture.textureCases = oracleSurfaceCasesV1(surface).map(row => ({ ...row, preserveVertexColor: true, emissiveIntensity: 0 }));
   const shaderDirectory = join(output, "native-shader");
   await mkdir(shaderDirectory, { recursive: true });
   await runOwnedCommand("bun", ["repo", "run", "@semio-tech/ui-rs:test", "--", "wgpu-engine", "long", "--offline", "a_native_gpu_context_creates_every_pipeline_without_a_validation_error"], repoRoot, "authored-surface-native-shader", 1200000, { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: shaderDirectory, NEXTEST_SUCCESS_OUTPUT: "immediate" } });
@@ -1799,7 +1809,7 @@ async function runAuthoredSurfaceOracle(repoRoot: string, output: string): Promi
   const syntax = typescript.createSourceFile("World3dHost.tsx", materialSource, typescript.ScriptTarget.Latest, true, typescript.ScriptKind.TSX);
   const declarations = syntax.statements.filter((statement) => typescript.isFunctionDeclaration(statement) && ["surfaceTuple", "worldSurfaceMaterial"].includes(statement.name?.text ?? ""));
   if (declarations.length !== 2) throw new Error("Production material constructor declarations were not found");
-  const source = 'import * as THREE from "three";\nconst {MeshStandardMaterial, DoubleSide, FrontSide} = THREE;\n' + declarations.map((declaration) => declaration.getText(syntax)).join("\n") + '\nglobalThis.renderReference = ' + renderAuthoredSurfaceReference.toString() + ';\nglobalThis.renderNative = ' + renderWgpuTextured.toString();
+  const source = oracleBrowserDataPreludeV1()+'import * as THREE from "three";\nconst {MeshStandardMaterial, DoubleSide, FrontSide} = THREE;\n' + declarations.map((declaration) => declaration.getText(syntax)).join("\n") + '\nglobalThis.renderReference = ' + renderAuthoredSurfaceReference.toString() + ';\nglobalThis.renderNative = ' + renderWgpuTextured.toString();
   const build = await Bun.build({ entrypoints: ["semio-authored-surface"], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" }, plugins: [{ name: "authored-surface", setup(builder) {
     builder.onResolve({ filter: /^semio-authored-surface$/ }, () => ({ path: "semio-authored-surface", namespace: "oracle" }));
     builder.onResolve({ filter: /^three$/ }, () => ({ path: Bun.resolveSync("three", repoRoot) }));
@@ -1815,13 +1825,15 @@ async function runAuthoredSurfaceOracle(repoRoot: string, output: string): Promi
     page.on("console", (message) => console.log("[DEBUG] surface-browser " + message.text()));
     await page.route("https://semio-parity.invalid/**", (route) => route.fulfill({ contentType: "text/html", body: "<!doctype html><html><body></body></html>" }));
     await page.goto("https://semio-parity.invalid/");
-    await page.addScriptTag({ type: "module", content: await build.outputs[0].text() });
+    const bundle=build.outputs[0];
+    if(!bundle)throw Error("Successful oracle bundle output required");
+    await page.addScriptTag({ type: "module", content: await bundle.text() });
     await page.waitForFunction(() => typeof (globalThis as any).renderNative === "function");
     const input = { fixture, shader,mipShader, authored: true };
     const reference = await page.evaluate((input) => (globalThis as any).renderReference(input), input);
     const native = await page.evaluate((input) => (globalThis as any).renderNative(input), input);
     if (errors.length) throw new Error(errors.join("\n"));
-    const differences = native.rows.map((row: any) => { const expected = reference.rows.find((value: any) => value.id === row.id)?.rgba8; return { id: row.id, actual: row.rgba8, expected, delta: row.rgba8.map((value: number, index: number) => value - expected[index]) }; });
+    const differences = native.rows.map((row: any) => { const expected = reference.rows.find((value: any) => value.id === row.id)?.rgba8; return { id: row.id, actual: row.rgba8, expected, delta: oraclePixelDeltaV1(row.rgba8,expected) }; });
     await writeFile(join(output, "pixels.json"), JSON.stringify({ reference, native, differences, shaderSha256: createHash("sha256").update(shader).digest("hex") }, null, 2));
     await writeFile(join(output, "report.md"), "# Authored Surface Pixels\n\nActual production native WGSL and production React material constructor against installed Three.\n\n| Case | Native RGBA8 | Three RGBA8 | Delta |\n| --- | --- | --- | --- |\n" + differences.map((row: any) => `| ${row.id} | ${row.actual} | ${row.expected} | ${row.delta} |`).join("\n") + "\n");
     console.log("[DEBUG] authored-surface actual pixels " + JSON.stringify(differences));

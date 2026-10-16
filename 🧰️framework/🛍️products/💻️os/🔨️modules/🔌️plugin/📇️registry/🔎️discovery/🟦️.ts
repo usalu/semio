@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import type { AreaState, DiscoveredPackage, RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { canonicalPrimaryFilenameForKind, declaredComponentKind, declaredComponentDeploymentDirectoryV1, discoverCatalogPackages, getWorkspaceRoot, loadCatalogTaxonomy, registryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import type { AreaState, DiscoveredPackage, RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, declaredComponentKind, discoverCatalogPackages, loadCatalogTaxonomy, registryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { declaredComponentDeploymentDirectoryV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { decodeRegistryDescriptorV1, REGISTRY_HOST_APP_CHANNEL_VERSION, StaleChannelDescriptorError } from "../🧬️schema/🟦️.ts";
 import { runtimeComponentClosure } from "../../../../../🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 

@@ -49,5 +49,5 @@ export const stdioJsonRfc8259BaseDiffTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseJsonDiffText(value: unknown, at = "$"): JsonDiffText {
-  return stdioJsonRfc8259BaseDiffTextGuardObject(value, `${at}`);
+  return stdioJsonRfc8259BaseDiffTextGuardString(value, `${at}`);
 }

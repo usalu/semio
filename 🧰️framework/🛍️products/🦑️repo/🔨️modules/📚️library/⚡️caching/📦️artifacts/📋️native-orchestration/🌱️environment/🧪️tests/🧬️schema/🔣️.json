@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "policies",
+    "generation"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policies": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "process",
+          "cargo",
+          "wasm"
+        ]
+      }
+    },
+    "generation": {
+      "type": "boolean"
+    }
+  }
+}

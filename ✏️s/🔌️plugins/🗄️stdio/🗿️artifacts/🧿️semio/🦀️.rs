@@ -6,8 +6,7 @@
 #![allow(long_running_const_eval)]
 
 #[cfg(test)]
-#[path = "../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
-pub(crate) mod snapshot_test_backing;
+pub(crate) use semio_framework_io_sqlite_snapshot_testing_backing as snapshot_test_backing;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

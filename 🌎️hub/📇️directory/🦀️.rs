@@ -1,8 +1,10 @@
-//! 🗄️ Backend-agnostic os-hub identity/tenancy directory. `HubDirectory` is the single seam every
-//! persistence backend (sqlite/postgres/neo4j — see the sibling `🪶️sqlite`/`🐘️postgres`/`🌐️neo4j`
+//! 🗄️ Backend-agnostic os-hub identity/tenancy directory. The capability traits of `🔌️port`
+//! (`UserDirectory`, `SpaceDirectory`, `EventLog`, …) are the seam every persistence backend
+//! (sqlite/postgres/neo4j — see the sibling `🪶️sqlite`/`🐘️postgres`/`🌐️neo4j`
 //! component folders, each `#[cfg(feature = "…")]`-gated) implements; `bin.rs` never sees a driver
-//! type (sqlx/neo4rs/rusqlite), only this trait and the DTOs in `model` — satisfies the "external
-//! libraries stay behind an interface" rule for a trait three backends must share.
+//! type (sqlx/neo4rs/rusqlite), only these traits and the DTOs in `model` — satisfies the "external
+//! libraries stay behind an interface" rule for traits three backends must share. A caller bounds
+//! itself on exactly the capabilities it uses, for example `D: SpaceDirectory + EventLog`.
 //!
 //! 🎯️ Design choice (split from the pre-CW6 `HubStorage`): document persistence (snapshots,
 //! operations) and content-addressed blobs are no longer this crate's concern — `db::Database`
@@ -92,5 +94,5 @@ pub mod backend_corpus;
 #[path = "🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs"]
 mod socket_grant_oracle;
 
-pub use port::HubDirectory;
+pub use port::{AdminOperationDirectory, AgentDelegationDirectory, ArtifactCasDirectory, ArtifactCreationDirectory, AuthSessionDirectory, CredentialDirectory, DocumentDirectory, EventLog, InviteDirectory, PrincipalAuthority, ProjectionRebuild, ReceiptDirectory, ShareTokenDirectory, SpaceDirectory, SyncSessionDirectory, UserDirectory};
 pub use wire::{DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, MemoryArtifactProjection, capped_socket_session_binding, checkpoint_identity_input, directory_projection_rejection_v1, directory_projection_space_v1, document_genesis_completion_v1, document_index_projection_v1, frontier_strictly_advances, published_artifact_checkpoint, validate_checkpoint_index_v1, validate_checkpoint_shape, validate_document_descriptor, validate_document_genesis_append_v1, validate_published_checkpoint_lineage, validate_retention_shape, validate_verified_checkpoint_append};

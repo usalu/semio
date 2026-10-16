@@ -1,4 +1,4 @@
-/** 🧭️ `stdio` command family: ledger and structural gates.
+/** 📟️ `stdio` command family: ledger and structural gates.
  * @see 📜️script.ts
  */
 import { orchestratorBudgetOpts, runCmd, semioBuildParallelFlag } from "../../📦️packages/🟦️typescript/🟦️.ts";

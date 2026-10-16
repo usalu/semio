@@ -7,6 +7,7 @@
     "default": [
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🪪️consumer-cell/🦀️.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/💾️resident/🦀️.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/🧫️fixtures/🔣️.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json",

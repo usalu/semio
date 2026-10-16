@@ -1,0 +1,3 @@
+// #region 🧲️Header
+/** 🎤️ `@semio-tech/presentation` — render-independent declarative presentation model (reveal.js-oriented morph ids). The model is split into the child folders next to this file; this entry publishes exactly the names the package exported before the split, so `@semio-tech/presentation` keeps its public surface. */
+// #endregion 🧲️Header

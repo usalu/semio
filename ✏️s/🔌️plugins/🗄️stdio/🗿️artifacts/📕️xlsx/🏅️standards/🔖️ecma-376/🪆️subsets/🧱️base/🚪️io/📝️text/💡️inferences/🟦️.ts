@@ -49,5 +49,5 @@ export const stdioXlsxEcma376BaseInferenceTextGuardConstant = <T extends string 
 //#endregion 🚪️Parsers
 
 export function parseXlsxInferenceText(value: unknown, at = "$"): XlsxInferenceText {
-  return stdioXlsxEcma376BaseInferenceTextGuardObject(value, `${at}`);
+  return stdioXlsxEcma376BaseInferenceTextGuardString(value, `${at}`);
 }

@@ -22,7 +22,7 @@ import{readFile}from"node:fs/promises";
 import{readFileSync,existsSync}from"node:fs";
 import{resolve,dirname,relative}from"node:path";
 import TOML from"@iarna/toml";
-import{readRustSourceClosureV1}from"../../../../../🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import{readRustSourceClosureV1}from"@semio-tech/process/artifacts/native-build/source";
 const renderOwnerRoots=[".","🎨️shaders","🎮️execution/🔌️device","🔧️pipeline/🏭️factory","🔧️pipeline/🎬️execution","🕸️mesh","🖼️raster","../../../🖌️render/🔌️device","../../../../🏗️mesh-engine/🎯️component-references"];
 const supportedCfgs=[["target_arch=aarch64","target_os=macos","target_env=","target_pointer_width=64","unix"],["target_arch=x86_64","target_os=linux","target_env=gnu","target_pointer_width=64","unix"],["target_arch=x86_64","target_os=windows","target_env=msvc","target_pointer_width=64","windows"],["target_arch=wasm32","target_os=unknown","target_env=","target_pointer_width=32"],["target_arch=wasm32","target_os=wasi","target_env=p2","target_pointer_width=32"]];
 test("WGPU complete actual owner feature/test closures obey ordinary Source bounds",async()=>{

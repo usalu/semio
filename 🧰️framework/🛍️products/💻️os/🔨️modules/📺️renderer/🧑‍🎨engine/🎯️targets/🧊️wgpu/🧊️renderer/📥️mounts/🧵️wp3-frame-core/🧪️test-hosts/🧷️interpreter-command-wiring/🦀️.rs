@@ -110,21 +110,21 @@ use semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::FOCU
 use semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::FOCUSED_TABLE_EDITABLE_TEXT;
 use semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::FOCUSED_TABLE_STEPPER;
 use semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::FOCUSED_TEXT_EDITOR;
+use semio_framework_ui_arena::NodeId;
+#[cfg(all(not(target_arch = "wasm32"), test))]
+use semio_framework_ui_declaration::ui::UiComponentSceneNode;
+use semio_framework_ui_declaration::ui::UiNode;
+use semio_framework_ui_layout::layout::ActionDescriptor;
+#[cfg(all(not(target_arch = "wasm32"), test))]
+use semio_framework_ui_layout::layout::UiPresence;
+use semio_framework_ui_theme::geometry::Rect;
+#[cfg(all(not(target_arch = "wasm32"), test))]
+use semio_framework_ui_theme::Theme;
 use serde_json::Value;
 use ui_contract::SurfaceId;
 #[cfg(all(not(target_arch = "wasm32"), test))]
 use ui_contract::UiDocumentLease;
-use ui_wgpu::wgpu::ActionDescriptor;
 use ui_wgpu::wgpu::DragPayload;
-use ui_wgpu::wgpu::NodeId;
-use ui_wgpu::wgpu::Rect;
-#[cfg(all(not(target_arch = "wasm32"), test))]
-use ui_wgpu::wgpu::Theme;
-#[cfg(all(not(target_arch = "wasm32"), test))]
-use ui_wgpu::wgpu::UiComponentSceneNode;
-use ui_wgpu::wgpu::UiNode;
-#[cfg(all(not(target_arch = "wasm32"), test))]
-use ui_wgpu::wgpu::UiPresence;
 
 #[path = "../../../../../../../🧱️elements/🗣️Interpreter/🧪️tests/🔬️wgpu-ui-command-wiring/🦀️.rs"]
 mod tests;

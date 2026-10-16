@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
@@ -20,15 +21,17 @@ class SourceScript extends BundleScript{
 /** ⏱️ Executes the actual owned generic IO native laws with original bounded compiler custody. */
 class NativeScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
   const {rest}=resolveTestLevel(segments);if(rest.length)throw Error("test-native accepts only an execution level");
-  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-control"],cwd:this.root,extraArgs:["--lib","--no-fail-fast","--","--nocapture"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation);
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-control"],cwd:this.root,extraArgs:["--lib","--no-fail-fast","--","--nocapture"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation,cargoPhase);
  }
 }
 /** 🧾️ Executes all original receiving allocator laws in their actual generic native owner. */
 class ReceivingScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
   if(segments.length)throw Error("test-snapshot-receiving-native accepts no arguments");
-  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-control"],cwd:this.root,extraArgs:["--lib","original_receiving_","--no-fail-fast","--","--nocapture"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation);
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-control"],cwd:this.root,extraArgs:["--lib","original_receiving_","--no-fail-fast","--","--nocapture"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation,cargoPhase);
  }
 }
 const router=new ScriptRouter(import.meta.dir).register("test-source",SourceScript).register("test-native",NativeScript).register("test-snapshot-receiving-native",ReceivingScript);

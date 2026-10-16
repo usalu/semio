@@ -59,7 +59,7 @@ export async function registerUiCloseAndJobAdmissionTests(vitest: PluginRuntimeV
       const census = [1, 64, 4_096].map((payloadPerItem) => {
         const ladder = createRetainedUiCloseLadderV1(2);
         for (const item of items) {
-          for (let step = 0; step < payloadPerItem; step += 1) expect(ladder.admit({ phase: payload[step % payload.length], bytes: 1 })).toBeNull();
+          for(let step=0;step<payloadPerItem;step++){const phase=payload[step%payload.length];if(phase===undefined)throw Error("Actual owned close phase required");expect(ladder.admit({phase,bytes:1})).toBeNull();}
           expect(ladder.admit({ phase: item, bytes: 128 })).toBeNull();
         }
         return ladder.turns;

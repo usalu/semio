@@ -1,0 +1,251 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/state/component.json",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "purpose": "development",
+        "owner": "development:local-state",
+        "dataOwner": "development:local-data",
+        "filesystemBytes": 1073741824,
+        "maximumBackingBytes": 1074790400,
+        "metadataBytes": 1048576,
+        "chargeBytes": 1075838976,
+        "maximumPending": 32,
+        "maximumRecordBytes": 4096,
+        "directory": "persistent/development",
+        "binding": "persistent-development.json",
+        "intent": "persistent-development.pending.json",
+        "dataDirectory": "data"
+      }
+    },
+    "Binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "allocation",
+        "owner",
+        "bytes",
+        "directory",
+        "policy",
+        "receipt",
+        "dev",
+        "ino",
+        "size"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "allocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "owner": {
+          "type": "string",
+          "pattern": "^development:local-state:[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "const": 1075838976
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "policy": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "receipt": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1074790400
+        }
+      }
+    },
+    "Intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "allocation",
+        "directory",
+        "policy"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "allocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "policy": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "RecoveryObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "charge",
+        "binding",
+        "intent",
+        "directoryPresent"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "charge": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "owner",
+                "kind",
+                "bytes",
+                "phase"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "owner": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "kind": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "phase": {
+                  "enum": [
+                    "reserved",
+                    "committed",
+                    "retiring"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "binding": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "intent": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "directoryPresent": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DataBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "allocation",
+        "policy",
+        "directory",
+        "dev",
+        "ino"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "allocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "policy": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "RecordTransaction": {
+      "const": {
+        "version": 1,
+        "temporarySuffix": ".new",
+        "publication": "same-volume-link-no-replace",
+        "maximumRecordBytes": 4096,
+        "dataBinding": "data.binding.json",
+        "states": [
+          "absent",
+          "prefix",
+          "synced",
+          "linked",
+          "published"
+        ],
+        "metadataCapabilityRequired": true,
+        "directorySyncBackends": {
+          "darwin": "native-directory-descriptor",
+          "linux": "native-directory-descriptor",
+          "win32": "native-volume-cim-flush"
+        }
+      }
+    }
+  }
+}

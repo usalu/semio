@@ -1,4 +1,4 @@
-import type { PixelSelectionSpanV1 } from "../../../../../../../../🔨️modules/🔲️pixels/🎯️selection/🟦️.ts";
+import type { PixelSelectionSpanV1 } from "@semio-tech/framework/pixels/selection";
 /** 🧭️ Paint surface coordinates and compact selection transport. */
 export type PixelLayer = { id: string; name: string; visible: boolean; locked:boolean; width: number; height: number; imageKey: string | null; matrix: readonly number[]; target:"pixels"|"mask"; maskRevision?:string };
 /** 🖌️ Captures only the target properties that keep an in-flight gesture valid. */

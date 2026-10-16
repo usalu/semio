@@ -49,5 +49,5 @@ export const stdioJpgJfif101DocumentDiffTextGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseJpgDiffText(value: unknown, at = "$"): JpgDiffText {
-  return stdioJpgJfif101DocumentDiffTextGuardObject(value, `${at}`);
+  return stdioJpgJfif101DocumentDiffTextGuardString(value, `${at}`);
 }

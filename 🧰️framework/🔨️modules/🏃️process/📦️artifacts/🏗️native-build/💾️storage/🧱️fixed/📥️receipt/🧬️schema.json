@@ -1,0 +1,156 @@
+{
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumBytes": 8192,
+        "maximumLines": 8,
+        "maximumPathUnits": 256,
+        "bufferUnits": 305,
+        "deniedAttributes": 19968
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "directory",
+        "receipt",
+        "directoryDevice",
+        "directoryInode",
+        "receiptDevice",
+        "receiptInode",
+        "receiptBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "receipt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "directoryDevice": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "directoryInode": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "receiptDevice": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "receiptInode": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "receiptBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        }
+      }
+    },
+    "Facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directoryDevice",
+        "directoryInode",
+        "receiptDevice",
+        "receiptInode",
+        "receiptBytes",
+        "volume",
+        "mount",
+        "filesystem"
+      ],
+      "properties": {
+        "directoryDevice": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "directoryInode": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "receiptDevice": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "receiptInode": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "receiptBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "volume": {
+          "type": "string",
+          "pattern": "^\\\\\\\\\\?\\\\Volume\\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\}\\\\$"
+        },
+        "mount": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "filesystem": {
+          "const": "NTFS"
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "operation",
+        "directory",
+        "receipt",
+        "before",
+        "after",
+        "returnValue",
+        "closed"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "operation": {
+          "const": "sync-preparation"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "receipt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "before": {
+          "$ref": "#/definitions/Facts"
+        },
+        "after": {
+          "$ref": "#/definitions/Facts"
+        },
+        "returnValue": {
+          "const": 0
+        },
+        "closed": {
+          "const": true
+        }
+      }
+    }
+  }
+}

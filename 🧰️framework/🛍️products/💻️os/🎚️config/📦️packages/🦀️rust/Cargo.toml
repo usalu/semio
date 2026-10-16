@@ -17,6 +17,9 @@ workspace = true
 name = "semio_framework_os_config"
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-pack = { path = "../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
@@ -31,7 +34,3 @@ serde_json = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-
-[dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-async-macros = { workspace = true }

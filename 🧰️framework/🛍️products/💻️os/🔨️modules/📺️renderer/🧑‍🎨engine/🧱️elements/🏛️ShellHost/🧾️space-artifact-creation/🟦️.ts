@@ -17,13 +17,17 @@ import {
   encodeArtifactKindChoice
 } from "@semio-tech/framework";
 import {
+  type DocumentScope
+} from "@semio-tech/framework/document/scope";
+import {
   type BackboneWorkerRequest,
-  type BackboneWorkerResponse,
+  type BackboneWorkerResponse
+} from "@semio-tech/framework/backbone";
+import {
   type DirectoryCommand,
   type DirectoryCommandErrorCodeV1,
-  type DirectoryCommandReceiptV1,
-  type DocumentScope
-} from "@semio-tech/framework-os";
+  type DirectoryCommandReceiptV1
+} from "@semio-tech/framework/directory/schema";
 // #endregion 🔌️Adapters
 import { type IconName } from "@semio-tech/ui-react";
 import { type ActiveSession, type LoadedProgramState } from "../../🐚️Shell/🟦️.tsx";

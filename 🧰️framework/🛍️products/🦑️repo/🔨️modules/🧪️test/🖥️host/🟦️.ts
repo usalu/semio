@@ -16,9 +16,9 @@
 //#region 🔌️Adapters
 import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
-import { type AdapterOutcome, type TestAdapter, type TestCasePlan } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterOutcome, type TestAdapter, type TestCasePlan } from "@semio-tech/framework/test/adapter";
 import { receiveScriptProcessInvocation,withIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type { ResourceLeaseControl } from "../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 import { testLevelBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { type ResultArtifact, type TestResult, contentDigestOf, currentPlatform, digest, makeAdapterContext, projectionHash, registeredHandler, repoRootFromHere, setDigest, testId, validateRegistration } from "../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters

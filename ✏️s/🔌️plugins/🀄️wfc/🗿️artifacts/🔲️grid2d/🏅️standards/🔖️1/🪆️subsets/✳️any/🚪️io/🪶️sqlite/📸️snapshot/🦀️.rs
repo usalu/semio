@@ -58,7 +58,7 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
 }
 }
 
-#[path="../../../../../../../../../🪶️sqlite/🎨️bitmap/🦀️.rs"]mod bitmap;
+use semio_s_wfc_sqlite_bitmap as bitmap;
 const BITMAP_TABLES:bitmap::Tables=bitmap::Tables{bitmap:"wfc_grid2d_bitmap",pixel:"wfc_grid2d_bitmap_pixel",literal:"wfc_grid2d_bitmap_literal_scalar"};
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
 /** 🏠️ Exact local-only interaction capture and restore contracts; schema lives in `🧬️schema`. */
-import type { DomainSelection, SelectionMode } from "../../../🕹️interaction/🟦️.ts";
+import type { DomainSelection, SelectionMode } from "@semio-tech/framework/interaction";
 
 //#region 🧬️Contract
 export type LocalInteractionState = {

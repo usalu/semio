@@ -27,13 +27,7 @@ pub async fn apply_run_operation_checked(document: &RunArtifact, operation: RunM
     protocol::apply_diff(&diff, document).map_err(|error| messages.into_iter().chain([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]).collect())
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🏃️run/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-mod sqlite_semantic_tests;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;

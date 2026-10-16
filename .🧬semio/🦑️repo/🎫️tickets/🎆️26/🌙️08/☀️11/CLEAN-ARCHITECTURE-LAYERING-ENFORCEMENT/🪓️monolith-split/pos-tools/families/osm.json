@@ -1,0 +1,13 @@
+{
+"name": "osm",
+"crates": [
+"semio-framework-os-kernel"
+],
+"base": {
+"rev": "HEAD",
+"crates": [
+"semio-framework-os-kernel"
+]
+},
+"note": "OS-SERVICES-MCP-SPLITS (modules of the kernel crate)"
+}

@@ -393,7 +393,7 @@ export function worldCameraPoseApproxEqual(a: WorldCameraState, b: WorldCameraSt
   const vectorClose = (x?: readonly number[], y?: readonly number[]): boolean => {
     if (!x || !y) return x === y;
     if (x.length !== y.length) return false;
-    return x.every((value, index) => Math.abs(value - y[index]) <= epsilon);
+    return x.every((value,index)=>{const other=y[index];return other!==undefined&&Math.abs(value-other)<=epsilon;});
   };
   return vectorClose(a.position, b.position) && vectorClose(a.target, b.target) && Math.abs(a.zoom - b.zoom) <= epsilon;
 }

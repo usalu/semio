@@ -5,10 +5,9 @@ import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { drawSceneNode } from "../../🎨️paint/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020.js";
 import {JSDOM} from "jsdom";
-import catalogFixture from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧊️wgpu/📝️text/🎨️catalog/🔣️.json";
-import catalogSchema from "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📝️text/🧬️schema/🎨️catalog/🔣️.json";
+import { wgpuTextCatalogFixture as catalogFixture, wgpuTextCatalogSchema as catalogSchema } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import fixture from "../🧫️fixtures/🎨️paint/🔣️.json";
-import { paintDrawingScene, type PathSegment, type StrokeStyle } from "../../../../../../../../../🔨️modules/◻️2d/🟦️.ts";
+import { paintDrawingScene, type PathSegment, type StrokeStyle } from "@semio-tech/framework/2d";
 
 function context() {
   vi.stubGlobal("Path2D", class { constructor(readonly svg?: string) {} });

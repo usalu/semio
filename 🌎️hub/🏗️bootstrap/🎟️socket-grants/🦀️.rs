@@ -10,7 +10,7 @@ use directory::os_directory::access_policy::{DirectoryAccessActionV1, DirectoryA
 use semio_hub_directory_contract::model::{AuthSessionKind, DirectoryPrincipalV1, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole};
 use directory::os_directory::DocumentScope;
 use semio_hub_directory_dispatch::HubDirectories;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{AuthSessionDirectory, ShareTokenDirectory};
 use semio_hub_directory_contract::SocketGrantCapability;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};

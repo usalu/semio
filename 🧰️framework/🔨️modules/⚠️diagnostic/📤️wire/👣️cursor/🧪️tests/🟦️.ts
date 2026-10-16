@@ -1,5 +1,5 @@
 import {decodeFaultSourceControlled,encodeFaultSourceControlled} from "../../../🎛️controlled/🟦️.ts";
-import type {ValueRefusalCodecControl} from "../../../../🌱️value/⚠️refusal/🔁️codec/🟦️.ts";
+import type {ValueRefusalCodecControl} from "@semio-tech/value-ts/refusal/codec";
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";

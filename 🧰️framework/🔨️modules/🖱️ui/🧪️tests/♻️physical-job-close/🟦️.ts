@@ -5,9 +5,9 @@ import {dirname,resolve} from "node:path";
 import Parser from "web-tree-sitter";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
-import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/🟦️.ts";
-import grant from "../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
-import ownedAdmission from "../../../🧵️job/🚪️admission/📦️owned/🧬️schema/🔣️.json";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import { orderedRetirementSchema as grant } from "@semio-tech/value-ts/ordered/retirement/schema";
+import { jobAdmissionOwnedSchema as ownedAdmission } from "../../../🧵️job/🧪️tests/🧫️fixtures/🟦️.ts";
 import invocation from "../../📋️clipboard/🎟️invocation/🧬️schema/🔣️.json";
 import { readModuleTreeSource, sliceModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 

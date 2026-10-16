@@ -10,7 +10,6 @@ pub use diff::*;
 mod tests;
 
 #[cfg(test)]
-#[path="../../../../../🌱️value/🧪️testing/💾️allocator/🦀️.rs"]
-mod allocation_testing;
+use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;

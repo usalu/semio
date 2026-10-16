@@ -13,8 +13,8 @@ impl std::error::Error for ImageDecodeError{}
 semio_framework_value::artifact_retire_leaf!(ImageDecodeProgress);
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ImageDecodeJob{
- source_identity:usize,source_length:usize,jpeg_source:bool,max_bytes:usize,max_pixels:usize,max_chunks:usize,phase:&'static str,source:BinarySourceJob,source_progress:BinarySourceProgress,
- work:u64,pixels:usize,total_pixels:usize,bytes:Vec<u8>,png:Option<PngDecodeJob>,jpeg:Option<JpegDecodeJob>,output:RasterImage,cancelled:bool,failed:Option<ImageDecodeError>,
+ source_identity:usize,source_length:usize,jpeg_source:bool,#[doc(hidden)] pub max_bytes:usize,#[doc(hidden)] pub max_pixels:usize,max_chunks:usize,#[doc(hidden)] pub phase:&'static str,#[doc(hidden)] pub source:BinarySourceJob,source_progress:BinarySourceProgress,
+ #[doc(hidden)] pub work:u64,#[doc(hidden)] pub pixels:usize,total_pixels:usize,#[doc(hidden)] pub bytes:Vec<u8>,png:Option<PngDecodeJob>,jpeg:Option<JpegDecodeJob>,#[doc(hidden)] pub output:RasterImage,cancelled:bool,#[doc(hidden)] pub failed:Option<ImageDecodeError>,
 }
 impl ImageDecodeJob{
  pub fn new(input:ImageDecodeInput<'_>)->Result<Self,ImageDecodeError>{
@@ -47,6 +47,3 @@ impl ImageDecodeJob{
  pub fn result(&self)->Result<&RasterImage,ImageDecodeError>{self.check()?;if self.phase!="complete"{return Err(ImageDecodeError::Incomplete);}Ok(&self.output)}
  pub fn take_result(&mut self,grant:RetainedCloneGrant)->Result<Option<(RasterImage,RetainedCloneProgress)>,ImageDecodeError>{self.result()?;if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<RasterImage>()||grant.maximum_depth==0{return Ok(None);}self.phase="transferred";Ok(Some((std::mem::take(&mut self.output),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RasterImage>(),..Default::default()})))}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

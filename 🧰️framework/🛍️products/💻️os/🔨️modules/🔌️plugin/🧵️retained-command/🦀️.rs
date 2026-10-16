@@ -1,33 +1,40 @@
-use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
-use crate::app_views::{AppOperationContext, InteractionHoverState};
-use crate::app_contract::ArtifactApp;
-use crate::tool_contract::ArtifactOwnedToolJobContext;
-use crate::tool_contract::ArtifactToolCompletion;
-use crate::media_contract::ArtifactDownloadOutput;
-use crate::app_emission::{Emit, EphemeralEmit};
-use crate::history_view::HistoryView;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+use semio_framework_job_publication::{RetainedJobPublication, JobPublicationKind};
+use semio_framework_plugin_decl_views::{AppOperationContext, InteractionHoverState};
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobContext;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletion;
+use semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
+use semio_framework_plugin_decl_views::history_view::HistoryView;
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::Fault;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
 use semio_framework_job_fault_publication::RetainedFaultPublication;
 use std::sync::Arc;
-use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retirement::controlled::ControlledRetirement};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_os_kernel as store;
-use crate::owned_context::ArtifactOwnedContextHandle;
+use semio_framework_plugin_decl_app::ArtifactOwnedContextHandle;
 use std::mem::MaybeUninit;
 
+#[doc(hidden)]
 #[path="♻️metadata/🦀️.rs"]
-mod metadata_retirement;
+pub mod metadata_retirement;
+#[doc(hidden)]
 #[path="🎟️admission/🦀️.rs"]
-mod admission;
-pub use admission::ArtifactRetainedAdmissionRefusal;
+pub mod admission;
+pub use crate::admission::ArtifactRetainedAdmissionRefusal;
+#[doc(hidden)]
 #[path="📸️checkpoint/👣️cursor/🦀️.rs"]
-mod checkpoint_cursor;
-pub use checkpoint_cursor::ArtifactCommandCheckpointCursor;
+pub mod checkpoint_cursor;
+pub use crate::checkpoint_cursor::ArtifactCommandCheckpointCursor;
 #[path="🔗️read/🦀️.rs"]
 mod snapshot_read_donor;
-pub use snapshot_read_donor::ArtifactCommandSnapshotRead;
+pub use crate::snapshot_read_donor::ArtifactCommandSnapshotRead;
 
 //#region 🔖️Work
 pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = 512;
@@ -41,11 +48,11 @@ const ARTIFACT_COMMAND_CHECKPOINT_MAGIC: [u8; 4] = *b"ARC1";
 struct ArtifactCommandCheckpoint<'a> {
     work_phase: bool,
     raw_page_cursor: u64,
-    raw_bytes: u64,
+    pub raw_bytes: u64,
     work_progress: u64,
     context_digest: u64,
     workspace_identity: u64,
-    work: &'a [u8],
+    pub work: &'a [u8],
 }
 
 fn encode_artifact_command_checkpoint(checkpoint: ArtifactCommandCheckpoint<'_>, target: &mut [u8]) -> Result<usize, Fault> {
@@ -222,10 +229,10 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
 }
 
 pub struct BoundedArtifactCommandWork<A: ArtifactApp> {
-    pub(crate) tool_id: &'static str,
-    reducer: ArtifactCommandReducer<A>,
-    extent: ArtifactCommandExtent<A>,
-    consumed: bool,
+    pub tool_id: &'static str,
+    pub reducer: ArtifactCommandReducer<A>,
+    pub extent: ArtifactCommandExtent<A>,
+    pub consumed: bool,
 }
 
 impl<A: ArtifactApp> BoundedArtifactCommandWork<A> {
@@ -334,18 +341,18 @@ enum ArtifactCommandPublication {
 }
 
 pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
-    command: Option<A::Command>,
+    pub command: Option<A::Command>,
     command_received:bool,
-    snapshot: Option<Arc<A::Snapshot>>,
-    snapshot_read: std::cell::RefCell<Option<store::os_store::snapshot_read::SnapshotRead<A::Snapshot>>>,
-    config: Option<Arc<A::Config>>,
-    history: Option<Arc<HistoryView>>,
-    interaction_state: Option<Arc<protocol::InteractionState>>,
-    interaction_hover: Option<Arc<InteractionHoverState>>,
-    context: Option<ArtifactOwnedContextHandle<A>>,
-    operation: Option<AppOperationContext>,
-    pub(crate) completion: Option<ArtifactToolCompletion<A>>,
-    command_id: fn(&A::Command) -> &'static str,
+    pub snapshot: Option<Arc<A::Snapshot>>,
+    pub snapshot_read: std::cell::RefCell<Option<store::os_store::snapshot_read::SnapshotRead<A::Snapshot>>>,
+    pub config: Option<Arc<A::Config>>,
+    pub history: Option<Arc<HistoryView>>,
+    pub interaction_state: Option<Arc<protocol::InteractionState>>,
+    pub interaction_hover: Option<Arc<InteractionHoverState>>,
+    pub context: Option<ArtifactOwnedContextHandle<A>>,
+    pub operation: Option<AppOperationContext>,
+    pub completion: Option<ArtifactToolCompletion<A>>,
+    pub command_id: fn(&A::Command) -> &'static str,
     maximum_raw_bytes: usize,
     maximum_work_items: usize,
     work: Option<Box<dyn ArtifactCommandWork<A>>>,
@@ -395,7 +402,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         for input in[&mut self.checkpoint_input,&mut self.raw_input]{if let Some(owner)=input.as_mut(){if owner.terminal_is_empty(){input.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Ok(match owner.close_step(grant)?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}}
         if let Some(download)=self.download.take(){match ControlledRetirement::new(download){Ok(owner)=>self.download_retirement=Some(owner),Err((error,original))=>{self.download=Some(original);return Err(error.into())}}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
         if let Some(owner)=self.download_retirement.as_mut(){if owner.terminal_is_empty(){self.download_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(owner.step(grant))}
-        if let Some(emit)=self.emit.as_mut(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return match emit.close_child_one(child)?{Some(crate::PluginLifecycleStep::Progress(progress)|crate::PluginLifecycleStep::Complete(progress))=>Ok(InteractiveJobCloseStep::Pending{progress}),Some(crate::PluginLifecycleStep::Blocked{..}|crate::PluginLifecycleStep::AwaitingInput{..})=>Ok(InteractiveJobCloseStep::Blocked),None=>Err(Self::unadmitted_input().into())}}
+        if let Some(emit)=self.emit.as_mut(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return match emit.close_child_one(child)?{Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)|semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress))=>Ok(InteractiveJobCloseStep::Pending{progress}),Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{..}|semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput{..})=>Ok(InteractiveJobCloseStep::Blocked),None=>Err(Self::unadmitted_input().into())}}
         if self.ephemeral.is_some(){return Err(Self::unadmitted_input().into())}
         if let Some(work)=self.work.as_mut(){if !work.terminal_is_empty(){return work.close_step(cx)}let bytes=work.terminal_frame_release_bytes().ok_or_else(Self::unadmitted_input)?;self.work.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})}
         if self.input_retirement.is_some(){return Self::controlled_close_step(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.input_retirement,grant))}
@@ -413,7 +420,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         if let Some(owner)=self.completion_retirement.as_mut(){if owner.terminal_is_empty(){self.completion_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(owner.step(grant))}
         Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
     }
-    fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+    pub fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if !self.publication.terminal_is_empty(){return self.publication.retirement_demands();}
         if !self.fault_publication.terminal_is_empty(){return self.fault_publication.retirement_demands();}
         if let Some(cursor)=self.checkpoint_capture.as_ref().filter(|cursor|!cursor.terminal_is_empty()){return Ok(cursor.retirement_demands());}
@@ -463,7 +470,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         Self::from_payload(payload, Some(input), Some(checkpoint))
     }
 
-    fn from_payload(payload: ArtifactRetainedCommandPayload<A>, raw_input: Option<RetainedToolWireInput>, checkpoint_input: Option<RetainedToolWireInput>) -> Self {
+    pub fn from_payload(payload: ArtifactRetainedCommandPayload<A>, raw_input: Option<RetainedToolWireInput>, checkpoint_input: Option<RetainedToolWireInput>) -> Self {
         let (raw,admission_refusal)=match (payload.admission_refusal,raw_input.as_ref()) {
             (None,Some(input))=>admission::admit_raw(input.declared_bytes(),payload.maximum_raw_bytes),
             (refusal,_)=>(Vec::new(),refusal),
@@ -523,14 +530,14 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         }
     }
 
-    fn metadata(cx: &mut StepContext<'_>) -> Result<bool, ValueError> {
+    pub fn metadata(cx: &mut StepContext<'_>) -> Result<bool, ValueError> {
         let grant = cx.retained_grant();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(false); }
         cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
         Ok(true)
     }
 
-    fn receive_step(cx: &mut StepContext<'_>, step: Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, ValueError> {
+    pub fn receive_step(cx: &mut StepContext<'_>, step: Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, ValueError> {
         match step {
             Ok(step) => { cx.consume_retained(step.progress())?; Ok(step) }
             Err(error) => { cx.consume_retained(error.retained_progress())?; Err(error) }
@@ -565,7 +572,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         Ok(())
     }
 
-    fn checkpoint<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    pub fn checkpoint<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if self.checkpoint_capture.is_none() {
             if !Self::metadata(cx)? { return Ok(None); }
             let work = self.work.as_ref().ok_or_else(Self::unadmitted_input)?;
@@ -626,17 +633,17 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         self.work.as_ref().is_none_or(|work| work.reports_progress())
     }
 
-    fn checkpoint_due(&mut self) {
+    pub fn checkpoint_due(&mut self) {
         self.checkpoint_pending = self.reports_progress();
     }
 
-    fn preview(&mut self, bytes: &'static [u8]) {
+    pub fn preview(&mut self, bytes: &'static [u8]) {
         if self.reports_progress() {
             self.pending_publication = Some(ArtifactCommandPublication::Static { kind: JobPublicationKind::Preview, bytes });
         }
     }
 
-    fn fault(&mut self, bytes: &'static [u8]) {
+    pub fn fault(&mut self, bytes: &'static [u8]) {
         self.phase = ArtifactRetainedCommandPhase::Fault;
         self.pending_publication = Some(ArtifactCommandPublication::Static { kind: JobPublicationKind::Fault, bytes });
     }
@@ -646,8 +653,8 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         self.fault = Some(fault);
     }
 
-    #[cfg(test)]
-    fn test_pending_emit_shape(&self) -> Option<(usize, usize, Vec<String>)> {
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn test_pending_emit_shape(&self) -> Option<(usize, usize, Vec<String>)> {
         self.emit.as_ref().map(|emit| (emit.child_emits.len(), emit.artifact_mutations.len(), emit.child_emits.iter().map(|child| child.child_id.clone()).collect()))
     }
 }
@@ -661,7 +668,7 @@ pub fn reducer_fault_detail(fault: &Fault) -> Vec<u8> {
 }
 
 impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
-    fn advance_original<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    pub fn advance_original<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if cx.is_cancelled() { return JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into); }
         if cx.should_yield() || cx.retained_grant().maximum_items == 0 || cx.retained_grant().maximum_depth == 0 { return Ok(None); }
         if self.publication_delivered { self.retire_publication(cx)?; return Ok(None); }
@@ -814,9 +821,9 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                     let progress = match &step { Ok(step) => step.progress(), Err(fault) => fault.retained_progress() };
                     cx.consume_retained(progress)?;
                     match step {
-                        Ok(crate::child_emit_preparation::ChildEmitPreparationStep::Ready(progress)) if progress == RetainedCloneProgress::default() => {}
-                        Ok(crate::child_emit_preparation::ChildEmitPreparationStep::Ready(_) | crate::child_emit_preparation::ChildEmitPreparationStep::Pending(_)) => { cx.consume_fuel(1); return Ok(None); }
-                        Ok(crate::child_emit_preparation::ChildEmitPreparationStep::Refused(fault, _)) | Err(fault) => { self.reducer_fault(fault); return Ok(None); }
+                        Ok(semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Ready(progress)) if progress == RetainedCloneProgress::default() => {}
+                        Ok(semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Ready(_) | semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Pending(_)) => { cx.consume_fuel(1); return Ok(None); }
+                        Ok(semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep::Refused(fault, _)) | Err(fault) => { self.reducer_fault(fault); return Ok(None); }
                     }
                 }
                 if !Self::metadata(cx)? { return Ok(None); }
@@ -882,10 +889,10 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
         let grant=cx.retained_grant();let demand=self.close_demands(grant.maximum_copy_bytes)?;
         let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{
             let step=self.close_one_original(same,loan)?;
-            let step=match step{InteractiveJobCloseStep::Pending{progress}=>crate::PluginLifecycleStep::Progress(progress),InteractiveJobCloseStep::Blocked=>crate::PluginLifecycleStep::Blocked{reason:"original retained command awaits child custody"},InteractiveJobCloseStep::Complete{progress}=>crate::PluginLifecycleStep::Complete(progress)};
+            let step=match step{InteractiveJobCloseStep::Pending{progress}=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress),InteractiveJobCloseStep::Blocked=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{reason:"original retained command awaits child custody"},InteractiveJobCloseStep::Complete{progress}=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress)};
             Ok((step,self.terminal_is_empty()))
         })?;
-        Ok(match step{crate::PluginLifecycleStep::Progress(progress)=>InteractiveJobCloseStep::Pending{progress},crate::PluginLifecycleStep::Complete(progress)=>InteractiveJobCloseStep::Complete{progress},crate::PluginLifecycleStep::Blocked{..}|crate::PluginLifecycleStep::AwaitingInput{..}=>InteractiveJobCloseStep::Blocked})
+        Ok(match step{semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)=>InteractiveJobCloseStep::Pending{progress},semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress)=>InteractiveJobCloseStep::Complete{progress},semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{..}|semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput{..}=>InteractiveJobCloseStep::Blocked})
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -924,8 +931,9 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
 }
 //#endregion 🧵️Job
 
-#[cfg(test)]
-pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
+#[doc(hidden)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
+pub fn test_raw_allocation_close<A: ArtifactApp>() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🚪️raw-allocation-close.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut raw = Vec::with_capacity(case["capacity"].as_u64().unwrap() as usize);
@@ -1003,7 +1011,13 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub mod tests;
                                      
+
+#[path = "🛬️lifted/🏛️reserved/🦀️.rs"]
+pub mod reserved_route_capacity_lift;
+#[path = "🔄️full-operation/🦀️.rs"]
+pub mod typed_operation;

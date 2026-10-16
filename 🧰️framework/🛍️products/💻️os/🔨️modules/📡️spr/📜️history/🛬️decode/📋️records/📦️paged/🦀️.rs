@@ -16,6 +16,3 @@ impl<T> RetainedHistoryPagedRecords<T>{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.records.terminal_is_empty()&&self.receipt.is_none()}
 }
 impl<T> Drop for RetainedHistoryPagedRecords<T>{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original paged History index abandoned native records");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.records)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

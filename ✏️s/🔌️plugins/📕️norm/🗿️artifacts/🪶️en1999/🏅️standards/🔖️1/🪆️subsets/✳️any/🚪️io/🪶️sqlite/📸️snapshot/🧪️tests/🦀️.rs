@@ -1,5 +1,4 @@
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};

@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "names",
+          "entries",
+          "fault",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "names": {
+            "type": "array",
+            "maxItems": 9,
+            "items": {
+              "enum": [
+                "storage-events.jsonl",
+                ".fseventsd",
+                "foreign.bin"
+              ]
+            }
+          },
+          "entries": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "storage-events.jsonl": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "dev",
+                  "nlink"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "file",
+                      "directory",
+                      "symlink"
+                    ]
+                  },
+                  "dev": {
+                    "enum": [
+                      101,
+                      102
+                    ]
+                  },
+                  "nlink": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2
+                  }
+                }
+              },
+              ".fseventsd": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "dev",
+                  "nlink"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "file",
+                      "directory",
+                      "symlink"
+                    ]
+                  },
+                  "dev": {
+                    "enum": [
+                      101,
+                      102
+                    ]
+                  },
+                  "nlink": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2
+                  }
+                }
+              }
+            }
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "undefined",
+              "frozen"
+            ]
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

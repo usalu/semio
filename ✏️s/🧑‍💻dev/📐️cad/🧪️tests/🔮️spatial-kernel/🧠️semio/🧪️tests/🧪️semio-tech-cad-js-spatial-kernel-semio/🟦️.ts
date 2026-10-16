@@ -1,7 +1,7 @@
 import Ajv from "ajv";
 import { core } from "../../../../../📦️packages/🟦️typescript/🟦️.ts";
 import { BrepjsKernel } from "../../../🧱️brepjs/🟦️.ts";
-import { Model } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { Model } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
 import { applyModelDiff } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import type { SemioTestDependencies } from "../../🟦️.ts";
 import type { Vec3 } from "@semio-tech/framework-3d-js";

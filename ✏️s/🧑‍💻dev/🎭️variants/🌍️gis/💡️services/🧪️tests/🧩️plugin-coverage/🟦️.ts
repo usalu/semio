@@ -1,4 +1,7 @@
-import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+import{mcpJsonPathV1,mcpJsonArrayV1}from"../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📋️data/🟦️.ts";
+import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{withDelegatedMcpClientSessionV1,withMcpDelegationCleanupV1}from"../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📦️published/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
 /** 🧩️ The plugin-coverage lane-parity sweep: every installed plugin package over the semio MCP.
  *
@@ -29,12 +32,14 @@ import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, writeFil
 import { randomBytes } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { AcceptancePreconditionMissing, hubCredentialFromEnv, isAcceptancePreconditionMissing, McpClientSession, requireMcpBinary, spawnRawMcp } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { AcceptancePreconditionMissing, hubCredentialFromEnv, isAcceptancePreconditionMissing, requireMcpBinary, spawnRawMcp } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 
-import { createSpaceCommandV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
+import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
+await receiveScriptProcessInvocation(process.env,async original=>{
+const phaseControl=createIssuedResourceControlV1(original,"mcp:plugin-coverage",120000);
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 function findWorkspaceRoot(start: string): string {
   for (let current = start, depth = 0; depth < 32; depth += 1) {
@@ -258,15 +263,15 @@ async function hubLane(hub: string): Promise<void> {
   const credential = hubCredentialFromEnv();
   const rowsHubPath = join(outDir, "coverage-hub-rows.jsonl");
   writeFileSync(rowsHubPath, "");
-  const http = async (method: string, path: string, token?: string, body?: string): Promise<{ status: number; json: any }> => {
-    const response = await fetch(`${hub}${path}`, { method, headers: { ...(body === undefined ? {} : { "content-type": "application/json" }), ...(token ? { authorization: `Bearer ${token}` } : {}) }, ...(body === undefined ? {} : { body }) });
+  const http = async (method: string, path: string, token?: string, body?: string): Promise<{ status: number; json: any }> => withRequestedIssuedResourceControlV1(phaseControl,0,async actual=>{
+    const response = await fetch(`${hub}${path}`, { method, headers: { ...(body === undefined ? {} : { "content-type": "application/json" }), ...(token ? { authorization: `Bearer ${token}` } : {}) }, ...(body === undefined ? {} : { body }),signal:actual.signal });
     const text = await response.text();
     try {
       return { status: response.status, json: JSON.parse(text) };
     } catch {
       return { status: response.status, json: null };
     }
-  };
+  });
   const signIn = await http("POST", "/auth/sessions", undefined, JSON.stringify({ schema: "semio.hub.auth.credential-sign-in/v1", email: credential.email, password: credential.password, deviceInstanceId: `coverage${randomBytes(12).toString("hex")}`, clientClass: "browser" }));
   const token = String(signIn.json?.token ?? "");
   if (!token) throw new AcceptancePreconditionMissing(`the human cannot sign in at ${hub} (HTTP ${signIn.status})`);
@@ -296,12 +301,10 @@ async function hubLane(hub: string): Promise<void> {
     await Promise.all(window.map(settle));
     pending.push(...window);
   }
+  const failing:string[]=[],undeclared:string[]=[],shellOnly:string[]=[],table:string[]=[];
   const delegation = await http("POST", "/auth/agent-delegations", token, JSON.stringify({ schema: "semio.hub.auth.agent-delegation-create/v1", spaceId, agentLabel: "Coverage agent", audience: "edit", ttlSecs: 3_600 }));
   if (delegation.status !== 201) throw new Error(`the agent delegation was refused: HTTP ${delegation.status}`);
-  const credentialPath = join(mkdtempSync(join(serviceMcpTestArtifactRoot(), "semio-mcp-coverage-hub-")), "agent-credential.json");
-  writeFileSync(credentialPath, `${JSON.stringify({ schema: "semio.hub.agent-credential/v1", hubOrigin: hub, spaceId, audience: "edit", token: delegation.json.token })}\n`, { mode: 0o600 });
-  chmodSync(credentialPath, 0o600);
-  const session = new McpClientSession({ command: requireMcpBinary(repoRoot), args: ["stdio", "--scopes", "workspace.read,artifact.write,inference.execute"] }, ["--hub", hub, "--space", spaceId, "--credential-file", credentialPath, "--no-bridge", "--auto-approve", "all"], repoRoot);
+  await withMcpDelegationCleanupV1(()=>withDelegatedMcpClientSessionV1(original,phaseControl,{hubOrigin:hub,spaceId,token:String(delegation.json.token),scopes:"workspace.read,artifact.write,inference.execute",autoApprove:true},async session=>{
   const head = async (documentId: string): Promise<number> => Number((await http("GET", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}`, token)).json?.head_seq ?? -1);
   const headAbove = async (documentId: string, floor: number): Promise<number> => {
     for (const deadline = Date.now() + 10_000; Date.now() < deadline; await new Promise((resolve) => setTimeout(resolve, 250))) {
@@ -310,14 +313,11 @@ async function hubLane(hub: string): Promise<void> {
     }
     return head(documentId);
   };
-  const failing: string[] = [];
-  const undeclared: string[] = [];
-  const shellOnly: string[] = [];
-  const table: string[] = [];
+  let failed=false,failure:unknown;
   try {
     const initialized = await session.request("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "semio-plugin-coverage-hub", title: "plugin coverage, hub lane", version: "1" } });
     if (initialized.error) throw new Error(`the delegated gateway refused to initialize: ${JSON.stringify(initialized.error).slice(0, 300)}`);
-    session.notify("notifications/initialized", {});
+    await session.notify("notifications/initialized", {});
     for (const entry of pending) {
       const artifactKind = String(entry.kind?.dialect?.artifactKind ?? "");
       const documentId = String(entry.creation?.ready?.artifactId ?? "");
@@ -331,8 +331,8 @@ async function hubLane(hub: string): Promise<void> {
         const plugin = pluginOf(entry.kind);
         const found = await session.call("capabilities_search", { query: plugin, owner: plugin, artifactKind, kind: ["mutation"], limit: 100 });
         const described: any[] = [];
-        for (const hit of found.structuredContent?.results ?? []) {
-          const answer = await session.call("capabilities_describe", { capabilityId: hit.capabilityId });
+        for (const hit of mcpJsonArrayV1(found.structuredContent?.results)) {
+          const answer = await session.call("capabilities_describe", { capabilityId: mcpJsonPathV1(hit,["capabilityId"]) });
           if (!answer.isError && answer.structuredContent) described.push(answer.structuredContent);
         }
         const candidates = described.filter((capability: any) => capability?.artifactKind === artifactKind).sort(candidateOrder);
@@ -349,7 +349,7 @@ async function hubLane(hub: string): Promise<void> {
           const before = await head(documentId);
           const prepared = await session.call("action_prepare", { capabilityId: capability.id, input }, CALL_MS);
           if (prepared.isError) {
-            attempts.push(prepared.structuredContent?.details?.faultCode === AGENT_LANE_UNCARRIED ? `${capability.id}: ${NOT_FOR_AGENTS} (runs only from the shell)` : `${capability.id}: prepare ${prepared.structuredContent?.code} ${String(prepared.structuredContent?.message ?? "").slice(0, 120)}`);
+            attempts.push(mcpJsonPathV1(prepared.structuredContent,["details","faultCode"]) === AGENT_LANE_UNCARRIED ? `${capability.id}: ${NOT_FOR_AGENTS} (runs only from the shell)` : `${capability.id}: prepare ${prepared.structuredContent?.code} ${String(prepared.structuredContent?.message ?? "").slice(0, 120)}`);
             continue;
           }
           const invoked = await session.call("action_invoke", { preparedActionHandle: prepared.structuredContent?.preparedHandle }, CALL_MS);
@@ -384,11 +384,12 @@ async function hubLane(hub: string): Promise<void> {
       table.push(`| ${row.kindId} | ${artifactKind} | ${row.create} | ${row.open ?? "-"} | ${row.openMs ?? "-"} | ${row.mutate ?? "-"} ${row.verb ? String(row.verb).split(".").at(-1) : ""} | ${row.undo ?? "-"} | ${row.redo ?? "-"} | ${String(row.export ?? "-").slice(0, 60)} |`);
       log(`hub ${row.kindId} create=${row.create} open=${row.open} (${row.openMs ?? "-"} ms) mutate=${row.mutate} undo=${row.undo ?? "-"} redo=${row.redo ?? "-"} export=${String(row.export ?? "-").slice(0, 60)}`);
     }
-  } finally {
-    session.stop();
-    writeFileSync(join(outDir, "coverage-hub-gateway-stderr.txt"), `${session.stderrLines().join("\n")}\n`);
-    await http("POST", `/auth/agent-delegations/${encodeURIComponent(String(delegation.json.delegationId))}/revoke`, token).catch(() => undefined);
+  } catch(error){failed=true;failure=error;throw error;} finally {
+    const errors:unknown[]=[];
+    try{writeFileSync(join(outDir, "coverage-hub-gateway-stderr.txt"), `${session.stderrLines().join("\n")}\n`);}catch(error){errors.push(error);}
+    if(errors.length)throw new AggregateError(failed?[failure,...errors]:errors,"MCP coverage and delegation cleanup failed");
   }
+  }),async()=>{const revoked=await http("POST", `/auth/agent-delegations/${encodeURIComponent(String(delegation.json.delegationId))}/revoke`, token);if(revoked.status!==204)throw Error("MCP coverage delegation revocation refused: "+revoked.status);});
   const header = "| kind id | artifact kind | create | open | open ms | mutate | undo | redo | export |\n|---|---|---|---|---|---|---|---|---|";
   writeFileSync(join(outDir, "coverage-hub-table.md"), `${header}\n${table.join("\n")}\n`);
   console.log(`${header}\n${table.join("\n")}`);
@@ -409,3 +410,5 @@ async function hubLane(hub: string): Promise<void> {
   );
   if (failing.length > 0) process.exitCode = 1;
 }
+
+});

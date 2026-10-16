@@ -1,4 +1,4 @@
-import {scriptCompilerAdmissionControlV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -141,13 +141,13 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
         stage,
         {...control,compiler:scriptCompilerAdmissionControlV1(this.invocation,"fresh:gis-cold",Math.floor(control.remainingMs()))},
         (lease) =>
-          lease.consume(async (component) => {
+          lease.consume(async (component,phaseControl) => {
             const componentSha256 = createHash("sha256").update(component).digest("hex");
             const stagedComponent = readFileSync(join(stage, "component.wasm"));
             const descriptor = readFileSync(join(stage, "descriptor.semio"));
             const descriptorSha256 = createHash("sha256").update(descriptor).digest("hex");
             if (createHash("sha256").update(stagedComponent).digest("hex") !== componentSha256) throw new Error("leased GIS component differs from staged component");
-            const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000), listMilliseconds: 120_000, lawMilliseconds: 300_000 }, cwd: this.repoRoot, groups: [
+            const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, control:phaseControl, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000), listMilliseconds: 120_000, lawMilliseconds: 300_000 }, cwd: this.repoRoot, groups: [
                 {
                   package: "semio-hub-gis",
                   target: { kind: "test", name: "component_cold_map_patch" },

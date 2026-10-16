@@ -19,7 +19,7 @@ import { OwnedShellDialog, type OwnedShellDialogProps } from "../../🧱️eleme
 import { createInstance as createTranslationOracle } from "i18next";
 import type { DialogDefinition } from "@semio-tech/framework";
 import { unresolvedActionArgs } from "@semio-tech/framework";
-import choiceFixture from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧪️tests/🧫️fixtures/🔽️choices/🔣️.json";
+import { argumentResolutionChoicesFixture as choiceFixture } from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧪️tests/🧫️fixtures/🟦️.ts";
 import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";

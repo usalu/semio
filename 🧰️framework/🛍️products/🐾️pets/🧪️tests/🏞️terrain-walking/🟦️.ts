@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🏞️terrain/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { nearestPerch, perchAt, perchesOf, strideTo } from "../../🔨️modules/🏞️terrain/🟦️.ts";
 import type { Perch, Point, Rect, Surface } from "../../🧬️schema/🟦️.ts";
 

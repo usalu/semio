@@ -178,7 +178,7 @@
             {
               "const": {
                 "language": "rust",
-                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs",
                 "symbols": [
                   "member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog",
                   "member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal",
@@ -475,7 +475,7 @@
             {
               "properties": {
                 "path": {
-                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs"
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs"
                 }
               },
               "type": "object"

@@ -1,8 +1,9 @@
 import retirementSchema from "./🧬️schema/♻️retirement.json" with {type:"json"};
+import cleanupLeaseSchema from"./🧹️cleanup/🧬️schema/🔣️.json";
 import metadataSchema from "./📦️metadata/🧬️schema/🔣️.json" with {type:"json"};
 import {captureResourceLeaseCandidateV1,requireResourceLeaseCandidateV1,readOwnedResourceLeaseV1,resourceLeaseBusyV1,resourceLeaseRetirementNamesV1,finishResourceLeaseCleanupV1,ResourceLeaseAdmissionFinalizerV1,type ResourceLeaseDatabaseV1} from "./♻️retirement/🟦️.ts";
 import { createHash } from "node:crypto";
-import {requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,readAcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from "../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type {AcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 import { lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, statfsSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -11,7 +12,7 @@ import queueSchema from "./🧬️schema/📜️ticket.json" with { type: "json"
 import custodySchema from "./🧬️schema/🎟️custody.json" with {type:"json"};
 import retentionSchema from "./🧬️schema/🎟️retention.json" with {type:"json"};
 import boundedSchema from "./📦️bounded/🧬️schema/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 
 export type ResourceAccess = { readonly resource: string; readonly mode: "shared" | "exclusive" };
 export type LeaseWait = ResourceAccess & { readonly elapsedMs: number };
@@ -55,7 +56,8 @@ export function resourceLeasePathV1(directory: string, resource: string, ticket?
   return path;
 }
 
-function remaining(options: LeaseOptions, started: number): number {
+function remaining(options: LeaseOptions, started: number,cleanup?:CleanupLeaseScope): number {
+  if(cleanup){const available=checkAcceptedPhysicalCleanupV1(cleanup.enrollment);if(options.control||options.signal!==readAcceptedPhysicalCleanupV1(cleanup.enrollment).cleanupSignal||options.directory!==cleanup.directory||options.resource!==cleanup.resource&&options.resource!==admissionResource)throw Error("Exact accepted cleanup lease request required");return Math.min(available,options.timeoutMs===undefined?Infinity:options.timeoutMs-(Date.now()-started));}
   options.signal.throwIfAborted();
   if (options.control && options.control.signal !== options.signal) throw Error("Original lease signal identity required");
   const original = options.control ? checkResourceLeaseControl(options.control) : null;
@@ -64,8 +66,8 @@ function remaining(options: LeaseOptions, started: number): number {
   return Math.min(original ?? Infinity, requested);
 }
 
-async function waitProgress(options: LeaseOptions, progress: LeaseWait, started: number): Promise<void> {
-  remaining(options, started);
+async function waitProgress(options: LeaseOptions, progress: LeaseWait, started: number,cleanup?:CleanupLeaseScope): Promise<void> {
+  remaining(options, started,cleanup);
   if (options.control) {
     await options.control.publish(progress); remaining(options, started);
     await options.control.yieldContinuation(); remaining(options, started);
@@ -77,6 +79,27 @@ async function waitProgress(options: LeaseOptions, progress: LeaseWait, started:
 export type ResourceLease = ResourceAccess & { release(): void };
 type IssuedResourceLeaseV1={readonly path:string;readonly directory:string;readonly resource:string;readonly database:LeaseDatabase;readonly signal:AbortSignal;readonly control:ResourceLeaseControl|undefined;readonly mode:ResourceAccess["mode"];live:boolean};
 const originalLeases=new WeakMap<ResourceLease,IssuedResourceLeaseV1>();
+declare const cleanupLeaseBrand:unique symbol,cleanupWriterBrand:unique symbol;
+/** 🛟️ Carries only a privately retained exact preexisting kernel guard into its birth-funded cleanup. */
+export type AcceptedResourceLeaseCleanupV1=Readonly<{[cleanupLeaseBrand]:true}>;
+/** 🔏️ Authorizes no ordinary resource control and has no releasing port. */
+export type AcceptedResourceLeaseCleanupWriterV1=Readonly<{[cleanupWriterBrand]:true}>;
+type CleanupLeaseScope={enrollment:AcceptedPhysicalCleanupV1;original:IssuedResourceLeaseV1;directory:string;resource:string;path:string;dev:number;ino:number;directoryDev:number;directoryIno:number;used:boolean;active:boolean;lease?:ResourceLease};
+const unresolvedCleanupWriters=new Set<CleanupLeaseScope>();
+const cleanupLimits=Object.freeze({...cleanupLeaseSchema.definitions.Protocol.const}),cleanupLoans=new WeakMap<AcceptedResourceLeaseCleanupV1,CleanupLeaseScope>(),cleanupWriters=new WeakMap<AcceptedResourceLeaseCleanupWriterV1,CleanupLeaseScope>(),cleanupEnrollments=new WeakMap<AcceptedPhysicalCleanupV1,Set<CleanupLeaseScope>>();
+function cleanupLeaseIdentity(scope:CleanupLeaseScope):void{const directory=lstatSync(scope.directory);if(!directory.isDirectory()||directory.isSymbolicLink()||directory.dev!==scope.directoryDev||directory.ino!==scope.directoryIno)throw Error("Original cleanup lease directory required");const row=lstatSync(scope.path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.dev!==scope.dev||row.ino!==scope.ino||row.size>cleanupLimits.maximumDatabaseBytes)throw Error("Original cleanup lease database identity required");}
+function relatedCleanupControls(leaseControl:ResourceLeaseControl,bodyControl:ResourceLeaseControl):void{try{requireIssuedResourceControlRefinementV1(leaseControl,bodyControl);}catch{requireIssuedResourceControlRefinementV1(bodyControl,leaseControl);}}
+/** 🧷️ Captures actual custody before cleanup; copied leases, foreign controls and late captures grant nothing. */
+export function acceptResourceLeaseCleanupV1(lease:ResourceLease,directory:string,resource:string,leaseControl:ResourceLeaseControl,bodyControl:ResourceLeaseControl,enrollment:AcceptedPhysicalCleanupV1):AcceptedResourceLeaseCleanupV1{requireAcceptedPhysicalCleanupControlV1(enrollment,bodyControl);checkResourceLeaseControl(bodyControl);checkResourceLeaseControl(leaseControl);relatedCleanupControls(leaseControl,bodyControl);const issued=originalLeases.get(lease),loans=cleanupEnrollments.get(enrollment)??new Set<CleanupLeaseScope>();if(!issued?.live||issued.control!==leaseControl||issued.signal!==leaseControl.signal||issued.directory!==resolve(directory)||issued.resource!==resource||issued.path!==resourceLeasePathV1(directory,resource)||lease.resource!==issued.resource||lease.mode!==issued.mode||loans.size>=cleanupLimits.maximumLoans||[...loans].some(row=>row.original===issued))throw Error("Exact original lease cleanup enrollment required");const row=lstatSync(issued.path),folder=lstatSync(issued.directory),scope:CleanupLeaseScope={enrollment,original:issued,directory:issued.directory,resource:issued.resource,path:issued.path,dev:row.dev,ino:row.ino,directoryDev:folder.dev,directoryIno:folder.ino,used:false,active:false};cleanupLeaseIdentity(scope);const token=Object.freeze({})as AcceptedResourceLeaseCleanupV1;loans.add(scope);cleanupEnrollments.set(enrollment,loans);cleanupLoans.set(token,scope);return token;}
+/** 🛡️ Requires the actual exclusive guard acquired solely for this exact nonrenewable cleanup loan. */
+export function requireAcceptedResourceLeaseCleanupWriterV1(proof:AcceptedResourceLeaseCleanupWriterV1,loan:AcceptedResourceLeaseCleanupV1):void{const scope=cleanupLoans.get(loan),writer=cleanupWriters.get(proof),issued=scope?.lease?originalLeases.get(scope.lease):undefined;if(!scope||writer!==scope||!scope.active||scope.original.live||!issued?.live||issued.mode!=="exclusive"||issued.control!==undefined||issued.signal!==readAcceptedPhysicalCleanupV1(scope.enrollment).cleanupSignal||issued.directory!==scope.directory||issued.resource!==scope.resource||issued.path!==scope.path)throw Error("Actual accepted cleanup writer required");checkAcceptedPhysicalCleanupV1(scope.enrollment);cleanupLeaseIdentity(scope);}
+/** 🪢️ Keeps an already held exact guard useful only to its original physical cleanup owner. */
+export function requireAcceptedResourceLeaseRetainedCleanupV1(loan:AcceptedResourceLeaseCleanupV1,enrollment:AcceptedPhysicalCleanupV1,binding:Readonly<{directory:string;resource:string;mode:"shared"|"exclusive"}>):void{const scope=cleanupLoans.get(loan),issued=scope?.original;if(!scope||scope.enrollment!==enrollment||!issued?.live||scope.used||scope.active||issued.directory!==resolve(binding.directory)||issued.resource!==binding.resource||issued.mode!==binding.mode)throw Error("Actual retained cleanup lease required");checkAcceptedPhysicalCleanupV1(enrollment);cleanupLeaseIdentity(scope);}
+/** 🔒️ Reacquires only its released original guard, joining the exact cleanup callback before descriptor release. */
+export function withAcceptedResourceLeaseCleanupWriterV1<T>(loan:AcceptedResourceLeaseCleanupV1,body:(proof:AcceptedResourceLeaseCleanupWriterV1)=>Promise<T>):Promise<T>{const scope=cleanupLoans.get(loan);if(!scope)throw Error("Actual accepted cleanup lease required");return withAcceptedPhysicalCleanupOperationV1(scope.enrollment,()=>withCleanupWriter(loan,body));}
+/** 🧱️ Retains actual exclusion on unresolved terminal failure without exposing a release or renewed clock. */
+export function withAcceptedResourceLeaseCleanupRetirementWriterV1<T>(loan:AcceptedResourceLeaseCleanupV1,body:(proof:AcceptedResourceLeaseCleanupWriterV1)=>Promise<T>):Promise<T>{const scope=cleanupLoans.get(loan);if(!scope)throw Error("Actual accepted cleanup lease required");return withAcceptedPhysicalCleanupOperationV1(scope.enrollment,()=>withCleanupWriter(loan,body,true));}
+async function withCleanupWriter<T>(loan:AcceptedResourceLeaseCleanupV1,body:(proof:AcceptedResourceLeaseCleanupWriterV1)=>Promise<T>,retainFailure=false):Promise<T>{const scope=cleanupLoans.get(loan);if(!scope||scope.used||scope.original.live||typeof body!=="function"||retainFailure&&unresolvedCleanupWriters.size>=cleanupLimits.maximumUnresolvedWriters)throw Error("Released original cleanup lease required");const remaining=checkAcceptedPhysicalCleanupV1(scope.enrollment);cleanupLeaseIdentity(scope);scope.used=true;scope.lease=await acquireResourceLeaseBody({directory:scope.directory,resource:scope.resource,mode:"exclusive",signal:readAcceptedPhysicalCleanupV1(scope.enrollment).cleanupSignal,timeoutMs:remaining,maximumDatabaseBytes:cleanupLimits.maximumDatabaseBytes},scope);scope.active=true;const proof=Object.freeze({})as AcceptedResourceLeaseCleanupWriterV1;cleanupWriters.set(proof,scope);let failed=false,failure:unknown,value:T|undefined;try{requireAcceptedResourceLeaseCleanupWriterV1(proof,loan);value=await body(proof);requireAcceptedResourceLeaseCleanupWriterV1(proof,loan);}catch(error){failed=true;failure=error;}try{await closeAcceptedPhysicalCleanupChildrenV1(scope.enrollment);}catch(error){if(!failed){failed=true;failure=error;}}scope.active=false;if(failed&&retainFailure){unresolvedCleanupWriters.add(scope);throw failure;}try{scope.lease!.release();}catch(error){if(failed&&!Object.is(failure,error))throw new AggregateError([failure,error],"Accepted cleanup work and exact guard release failed");throw error;}if(failed)throw failure;return value as T;}
 declare const writerProofBrand:unique symbol;
 /** 🎟️ Carries no release port and resolves only to its privately retained exclusive transaction. */
 export type ResourceLeaseWriterProofV1=Readonly<{readonly [writerProofBrand]:true}>;
@@ -91,7 +114,7 @@ export function requireResourceLeaseWriterProofV1(proof:ResourceLeaseWriterProof
 }
 /** 🛟️ Checks still-retained exclusion only within its exact already accepted cleanup phase. */
 export function requireAcceptedPhysicalCleanupWriterProofV1(proof:ResourceLeaseWriterProofV1,binding:Readonly<{directory:string;resource:string;path:string}>,bodyControl:ResourceLeaseControl,enrollment:AcceptedPhysicalCleanupV1):void{
- requireAcceptedPhysicalCleanupControlV1(enrollment,bodyControl);checkAcceptedPhysicalCleanupV1(enrollment);const held=writerProofs.get(proof),issued=held?.issued,facts=readAcceptedPhysicalCleanupV1(enrollment);if(!held||!issued?.live||issued.mode!=="exclusive"||issued.control!==bodyControl||issued.signal!==bodyControl.signal||issued.directory!==resolve(binding.directory)||issued.resource!==binding.resource||issued.path!==binding.path||facts.resource!==binding.resource||held.lease.mode!==issued.mode||held.lease.resource!==issued.resource)throw Error("Exact retained cleanup writer proof required");
+ requireAcceptedPhysicalCleanupDescendantV1(enrollment,bodyControl);checkAcceptedPhysicalCleanupV1(enrollment);const held=writerProofs.get(proof),issued=held?.issued,facts=readAcceptedPhysicalCleanupV1(enrollment);if(!held||!issued?.live||issued.mode!=="exclusive"||issued.control!==bodyControl||issued.signal!==bodyControl.signal||issued.directory!==resolve(binding.directory)||issued.resource!==binding.resource||issued.path!==binding.path||facts.resource!==binding.resource||held.lease.mode!==issued.mode||held.lease.resource!==issued.resource)throw Error("Exact retained cleanup writer proof required");
 }
 /** 🪪️ Requires the exact live system transaction issued for this original catalog writer. */
 export function requireResourceLeaseCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued?.live||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||issued.mode!=="exclusive"||lease.mode!==issued.mode||lease.resource!==resource)throw Error("Original live catalog writer custody required");}
@@ -157,21 +180,21 @@ function initialize(database: LeaseDatabase, resource: string): void {
 export function requireResourceLeaseReadCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued?.live||issued.mode!=="shared"||issued.control!==control||issued.directory!==resolve(directory)||issued.resource!==resource||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||lease.mode!==issued.mode||lease.resource!==resource)throw Error("Original live resource reader custody required");}
 
 /** 🔒️ Waits cancellably for shared or exclusive access; release only after the protected operation stops. */
-async function acquireUngatedResourceLease(options: LeaseOptions,started:number,onUnclosed?:(database:LeaseDatabase)=>void): Promise<ResourceLease> {
+async function acquireUngatedResourceLease(options: LeaseOptions,started:number,onUnclosed?:(database:LeaseDatabase)=>void,cleanup?:CleanupLeaseScope): Promise<ResourceLease> {
   options=Object.freeze({...options});
   options.signal.throwIfAborted();
   if (typeof options.resource !== "string" || !options.resource.length || options.resource.length > 4096 || options.resource.includes("\0")) throw new Error("Invalid lease resource");
   if (!["shared", "exclusive"].includes(options.mode)) throw new Error("Invalid resource access mode");
   if (options.timeoutMs !== undefined && (!Number.isFinite(options.timeoutMs) || options.timeoutMs < 0)) throw new Error("Invalid resource lease timeout");
-  remaining(options, started);
+  remaining(options, started,cleanup);
   const maximumPages=options.maximumDatabaseBytes===undefined?undefined:resourceLeaseMaximumPagesV1(options.maximumDatabaseBytes),path=databasePath(options.directory,options.resource);
   if(maximumPages!==undefined){try{if(lstatSync(path).size>options.maximumDatabaseBytes!)throw Error("Original bootstrap SQLite exceeds capacity");}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}}
   const database = await openDatabase(path);
   let nextProgress = 0, acquired = false,failed=false,failure:unknown;
   try {
-    remaining(options,started);database.exec("PRAGMA busy_timeout = 0; PRAGMA trusted_schema = OFF");
+    remaining(options,started,cleanup);database.exec("PRAGMA busy_timeout = 0; PRAGMA trusted_schema = OFF");
     for (;;) {
-      const budget = remaining(options, started);
+      const budget = remaining(options, started,cleanup);
       if (options.timeoutMs !== 0 && budget <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
       try {
     if(maximumPages!==undefined){database.exec("PRAGMA page_size=4096");if(database.read("PRAGMA page_size")?.page_size!==4096||Number(database.read(`PRAGMA max_page_count=${maximumPages}`)?.max_page_count)!==maximumPages)throw Error("Actual bootstrap SQLite page cap refused");}
@@ -180,7 +203,7 @@ async function acquireUngatedResourceLease(options: LeaseOptions,started:number,
         database.exec(options.mode === "exclusive" ? "BEGIN EXCLUSIVE" : "BEGIN");
         const row = database.read("SELECT version, resource FROM semio_resource_lease WHERE id = 1");
         if (row?.version !== 1 || row.resource !== options.resource || database.read("PRAGMA application_id")?.application_id !== APPLICATION_ID) throw new Error("Resource lease identity mismatch");
-        if (remaining(options, started) <= 0 && options.timeoutMs !== 0) throw new Error(`Resource lease timed out: ${options.resource}`);
+        if (remaining(options, started,cleanup) <= 0 && options.timeoutMs !== 0) throw new Error(`Resource lease timed out: ${options.resource}`);
         acquired = true;
         let released = false;
         const issued:IssuedResourceLeaseV1={path,directory:resolve(options.directory),resource:options.resource,database,control:options.control,signal:options.signal,live:true,mode:options.mode};const lease:ResourceLease={ resource: options.resource, mode: options.mode, release() {
@@ -193,14 +216,14 @@ async function acquireUngatedResourceLease(options: LeaseOptions,started:number,
         if (code.code !== "SQLITE_BUSY" && code.errcode !== 5 && code.errno !== 5) throw error;
       }
       const elapsedMs = Date.now() - started;
-      if (remaining(options, started) <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
+      if (remaining(options, started,cleanup) <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
       if (elapsedMs >= nextProgress) {
         const progress = { resource: options.resource, mode: options.mode, elapsedMs };
-        await waitProgress(options, progress, started);
+        await waitProgress(options, progress, started,cleanup);
         nextProgress = elapsedMs + 1000;
       }
-      await delay(Math.max(1, Math.min(40, remaining(options, started))), undefined, { signal: options.signal });
-      remaining(options, started);
+      await delay(Math.max(1, Math.min(40, remaining(options, started,cleanup))), undefined, { signal: options.signal });
+      remaining(options, started,cleanup);
     }
   } catch(error){failed=true;failure=error;throw error;} finally { if (!acquired) finishResourceLeaseCleanupV1(failed,failure,[()=>{try{database.close();}catch(error){onUnclosed?.(database);throw error;}}]); }
 }
@@ -210,15 +233,16 @@ function requireAdmission(gate:ResourceLease,directory:string,exclusive=false):v
 const admissionFinalizer=new ResourceLeaseAdmissionFinalizerV1<ResourceLease>();
 function protectAdmission(gate:ResourceLease,database:LeaseDatabase):void{admissionFinalizer.protect(gate,database);}
 function releaseAdmission(gate:ResourceLease|undefined):void{admissionFinalizer.release(gate);}
-async function directoryAdmission(options:LeaseOptions,mode:ResourceAccess["mode"],started:number):Promise<ResourceLease>{admissionFinalizer.retry();return acquireUngatedResourceLease({...options,resource:admissionResource,mode,maximumDatabaseBytes:retirementSchema.properties.maximumDatabaseBytes.const},started);}
-async function acquireUnderAdmission(options:LeaseOptions,gate:ResourceLease,started:number):Promise<ResourceLease>{requireAdmission(gate,options.directory);return acquireUngatedResourceLease(options,started,database=>protectAdmission(gate,database));}
+async function directoryAdmission(options:LeaseOptions,mode:ResourceAccess["mode"],started:number,cleanup?:CleanupLeaseScope):Promise<ResourceLease>{admissionFinalizer.retry();return acquireUngatedResourceLease({...options,resource:admissionResource,mode,maximumDatabaseBytes:retirementSchema.properties.maximumDatabaseBytes.const},started,undefined,cleanup);}
+async function acquireUnderAdmission(options:LeaseOptions,gate:ResourceLease,started:number,cleanup?:CleanupLeaseScope):Promise<ResourceLease>{requireAdmission(gate,options.directory);return acquireUngatedResourceLease(options,started,database=>protectAdmission(gate,database),cleanup);}
 function closeDatabase(database:LeaseDatabase,gate?:ResourceLease):void{try{database.close();}catch(error){if(gate)protectAdmission(gate,database);throw error;}}
 function releaseUnderAdmission(lease:ResourceLease|undefined,gate:ResourceLease):void{if(!lease)return;try{lease.release();}catch(error){protectAdmission(gate,originalLeases.get(lease)!.database);throw error;}}
 
 /** 🚪️ Fences every opener until actual identity SELECT or failed connection close settles. */
-export async function acquireResourceLease(options:LeaseOptions):Promise<ResourceLease>{
- options=Object.freeze({...options});options.signal.throwIfAborted();if(options.resource===admissionResource)throw Error("Directory admission resource is reserved");if(typeof options.resource!=="string"||!options.resource.length||options.resource.length>4096||options.resource.includes("\0"))throw Error("Invalid lease resource");if(!["shared","exclusive"].includes(options.mode))throw Error("Invalid resource access mode");if(options.timeoutMs!==undefined&&(!Number.isFinite(options.timeoutMs)||options.timeoutMs<0))throw Error("Invalid resource lease timeout");const started=Date.now();remaining(options,started);let gate:ResourceLease|undefined,lease:ResourceLease|undefined,failed=false,failure:unknown;
- try{gate=await directoryAdmission(options,"shared",started);lease=await acquireUnderAdmission(options,gate,started);}catch(error){failed=true;failure=error;if(error instanceof Error&&error.message==="Resource lease timed out: "+admissionResource)failure=Error("Resource lease timed out: "+options.resource);}
+export function acquireResourceLease(options:LeaseOptions):Promise<ResourceLease>{return acquireResourceLeaseBody(options);}
+async function acquireResourceLeaseBody(options:LeaseOptions,cleanup?:CleanupLeaseScope):Promise<ResourceLease>{
+ options=Object.freeze({...options});options.signal.throwIfAborted();if(options.resource===admissionResource)throw Error("Directory admission resource is reserved");if(typeof options.resource!=="string"||!options.resource.length||options.resource.length>4096||options.resource.includes("\0"))throw Error("Invalid lease resource");if(!["shared","exclusive"].includes(options.mode))throw Error("Invalid resource access mode");if(options.timeoutMs!==undefined&&(!Number.isFinite(options.timeoutMs)||options.timeoutMs<0))throw Error("Invalid resource lease timeout");const started=Date.now();remaining(options,started,cleanup);let gate:ResourceLease|undefined,lease:ResourceLease|undefined,failed=false,failure:unknown;
+ try{gate=await directoryAdmission(options,"shared",started,cleanup);if(cleanup)cleanupLeaseIdentity(cleanup);lease=await acquireUnderAdmission(options,gate,started,cleanup);}catch(error){failed=true;failure=error;if(error instanceof Error&&error.message==="Resource lease timed out: "+admissionResource)failure=Error("Resource lease timed out: "+options.resource);}
  try{releaseAdmission(gate);}catch(error){if(!failed){failed=true;failure=error;}try{lease?.release();}catch{if(gate&&lease)protectAdmission(gate,originalLeases.get(lease)!.database);}}
  if(failed)throw failure;return lease!;
 }
@@ -356,3 +380,6 @@ export async function withResourceLeases<T>(options: Omit<LeaseOptions, "resourc
     return await operation();
   } finally { for (const lease of leases.reverse()) lease.release(); }
 }
+
+/** 🧷️ Authenticates a preaccepted exact image anchor without renewing its stopped ordinary control. */
+export function requireResourceLeaseCleanupContinuationV1(lease:ResourceLease,loan:AcceptedResourceLeaseCleanupV1,enrollment:AcceptedPhysicalCleanupV1):boolean{const scope=cleanupLoans.get(loan),issued=originalLeases.get(lease);if(!scope||scope.enrollment!==enrollment||scope.original.mode!=="exclusive"||scope.used||scope.active||!issued||issued.directory!==scope.directory||issued.resource!==scope.resource||issued.path!==scope.path||lease.resource!==issued.resource||lease.mode!==issued.mode)throw Error("Exact preaccepted lease continuation required");checkAcceptedPhysicalCleanupV1(enrollment);cleanupLeaseIdentity(scope);return issued.live;}

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "storeMilliseconds": 5000,
+  "compilerMilliseconds": 120000,
+  "cases": [
+    {
+      "id": "compiler-worker",
+      "title": "release authorizer compiler consumes exact funded snapshot bytes in actual Node"
+    },
+    {
+      "id": "snapshot-node",
+      "title": "captured authorizer bytes survive later Source edits and match independent esbuild and Node"
+    }
+  ],
+  "publications": [
+    {
+      "id": "relative-only",
+      "resolutions": []
+    },
+    {
+      "id": "private-workspace",
+      "resolutions": [
+        {
+          "specifier": "@semio-tech/fixture",
+          "path": "packages/fixture/entry.ts"
+        }
+      ]
+    }
+  ]
+}

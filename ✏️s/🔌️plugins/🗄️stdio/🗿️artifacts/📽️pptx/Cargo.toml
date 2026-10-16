@@ -14,20 +14,18 @@ members = [
     "📦️packages/🦀️rust",
 ]
 exclude = [
-  "**/🏅️standards/**",
-  "**/👽️guest/**",
-  "**/🔮️oracles/**",
-  "**/🏭️bridge/**",
-  "🔮️oracles/📦️packages/🦀️rust"
+    "**/🏭️bridge/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+    "🔮️oracles/📦️packages/🦀️rust",
 ]
 
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
-  "**/🏅️standards/**",
   "**/👽️guest/**",
   "**/🔮️oracles/**",
-  "**/🏭️bridge/**"
+  "**/🏭️bridge/**",
 ]
 member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 

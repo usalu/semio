@@ -1,0 +1,11 @@
+import {readFileSync} from "node:fs";
+import {execFileSync} from "node:child_process";
+import {readRustSourceClosureV1} from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+const ROOT = "/Users/ueli/Documents/semio";
+const rustc = execFileSync("rustup", ["which", "rustc"], {encoding: "utf8"}).trim();
+const host = execFileSync(rustc, ["--print", "cfg"], {encoding: "utf8"}).trim().split("\n").map(v => v.replace(/=(".*")$/u, (_, q) => "=" + JSON.parse(q)));
+const read = async (p: string) => { try { return readFileSync(p); } catch (e) { if ((e as NodeJS.ErrnoException).code === "ENOENT") return null; throw e; } };
+const dir = ROOT + "/🎓️teaching/🛂️proctor/📦️packages/🦀️rust";
+const entry = ROOT + "/🎓️teaching/🛂️proctor/🧪️tests/🌐️end-to-end/🦀️.rs";
+const inputs = await readRustSourceClosureV1([entry], ROOT, [...host, "debug_assertions", "test"], read, {manifestDirectory: dir, generated: () => undefined});
+console.log(["teaching-proctor end_to_end test target", "files", inputs.length, "bytes", inputs.reduce((s, i) => s + i.bytes, 0), "lines", inputs.reduce((s, i) => s + i.activeLines, 0)].join("\t"));

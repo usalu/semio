@@ -43,3 +43,4 @@ semio-s-artifact-norm-en1992-mutations = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

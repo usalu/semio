@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/cache/retirement/component.json",
+  "$ref": "#/definitions/Entry",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumEntries": 6,
+        "maximumEntryBytes": 2048,
+        "maximumJournalBytes": 12288,
+        "maximumPathUnits": 256,
+        "stages": [
+          "requested",
+          "drained",
+          "child-empty",
+          "child-retired",
+          "parent-retired",
+          "complete"
+        ],
+        "directorySyncPlatforms": [
+          "darwin",
+          "linux"
+        ]
+      }
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "parentAllocation",
+        "workspaceAllocation",
+        "bindingSha256",
+        "imageReceiptSha256",
+        "policySha256",
+        "kind"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "parentAllocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "workspaceAllocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "bindingSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "imageReceiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "policySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "kind": {
+          "const": "compiler-state"
+        }
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "identity",
+        "stage",
+        "previousSha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "identity": {
+          "$ref": "#/definitions/Identity"
+        },
+        "stage": {
+          "enum": [
+            "requested",
+            "drained",
+            "child-empty",
+            "child-retired",
+            "parent-retired",
+            "complete"
+          ]
+        },
+        "previousSha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}
+

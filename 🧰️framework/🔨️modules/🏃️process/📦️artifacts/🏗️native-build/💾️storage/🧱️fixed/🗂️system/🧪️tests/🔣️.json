@@ -1,0 +1,104 @@
+{
+  "cases": [
+    {
+      "windows": "C:\\Windows",
+      "system": "C:\\Windows\\System32",
+      "accepted": true
+    },
+    {
+      "windows": "D:\\Windows",
+      "system": "D:\\Windows\\System32",
+      "accepted": true
+    },
+    {
+      "windows": "E:\\窓𐐀",
+      "system": "E:\\窓𐐀\\System32",
+      "accepted": true
+    },
+    {
+      "windows": "F:",
+      "system": "F:\\System32",
+      "accepted": true
+    },
+    {
+      "windows": "F:\\",
+      "system": "F:\\System32",
+      "accepted": true
+    },
+    {
+      "windows": "C:\\Windows",
+      "system": "D:\\System32",
+      "accepted": false
+    },
+    {
+      "windows": "C:\\Windows",
+      "system": "C:\\Windows\\..\\System32",
+      "accepted": false
+    },
+    {
+      "windows": "Windows",
+      "system": "C:\\Windows\\System32",
+      "accepted": false
+    },
+    {
+      "windows": "\\\\host\\Windows",
+      "system": "\\\\host\\Windows\\System32",
+      "accepted": false
+    },
+    {
+      "windows": "C:\\Windows",
+      "system": "C:/Windows/System32",
+      "accepted": false
+    },
+    {
+      "windows": "C:\\Windows",
+      "system": "C:\\Windows\\System32\u0000foreign",
+      "accepted": false
+    },
+    {
+      "windows": "C:\\Windows",
+      "system": "C:\\Windows",
+      "accepted": false
+    },
+    {
+      "windows": "C:\\Windows ",
+      "system": "C:\\Windows \\System32",
+      "accepted": false
+    },
+    {
+      "windows": "C:\\Windows.",
+      "system": "C:\\Windows.\\System32",
+      "accepted": false
+    }
+  ],
+  "ffi": [
+    "value",
+    "zero",
+    "oversize",
+    "no-nul",
+    "invalid-utf16",
+    "close-fault",
+    "primary-undefined"
+  ],
+  "commands": [
+    "information",
+    "inactive",
+    "deactivate",
+    "activate",
+    "format"
+  ],
+  "controls": [
+    "actual",
+    "copied",
+    "stopped"
+  ],
+  "nodeReceivers": [
+    "actual",
+    "missing",
+    "copied"
+  ],
+  "terminalSnapshots": [
+    "captured",
+    "missing"
+  ]
+}

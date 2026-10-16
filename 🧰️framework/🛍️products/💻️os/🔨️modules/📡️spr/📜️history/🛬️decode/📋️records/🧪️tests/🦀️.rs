@@ -1,6 +1,6 @@
 use super::*;
 struct Record{id:Option<String>,payload:Option<Vec<u8>>}
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(operation)}
 fn receive_receipt<T>(owner:&mut RetainedHistoryRecords<T>,grant:RetainedCloneGrant,born:usize,released:usize){let(received,progress)=owner.take_receipt().unwrap();assert_eq!(received,grant);assert!(progress.fits(grant));assert_eq!(progress.copied_bytes,0);assert_eq!((born,released),(progress.retained_capacity_bytes,progress.released_bytes));}
 fn close_record(record:&mut Record,grant:RetainedCloneGrant){
  let(result,born,released)=observe(||::protocol::codec::RetainedWireFieldDecode::admit_received_text(&mut record.id,grant).unwrap());assert_eq!((born,released),(0,0));let mut id=result.unwrap();assert_eq!(id.take_receipt().unwrap(),(grant,RetainedCloneProgress{copied_items:1,..Default::default()}));let(_,born,released)=observe(||id.close_step(grant).unwrap());let(received,progress)=id.take_receipt().unwrap();assert_eq!(received,grant);assert_eq!((born,released),(progress.retained_capacity_bytes,progress.released_bytes));assert!(progress.fits(grant));assert!(id.terminal_is_empty());

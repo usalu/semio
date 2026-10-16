@@ -19,7 +19,7 @@ fn close(owner: &mut BuiltTreeRetirement) {
 fn fixture_projection_retires_exact_tree_before_return_error_or_panic() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌲️fixture-projection/🔣️.json")).unwrap();
     assert_eq!(fixture["reservedPages"], UI_BUILT_CHILD_RETIRE_SLOTS);
-    let payloads: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let payloads: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧬️contract/🏗️builder/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let foreign: UiValue = serde_json::from_value(fixture["foreign"].clone()).unwrap();
     for mode in fixture["cases"].as_array().unwrap() {
         let mode = mode.as_str().unwrap();

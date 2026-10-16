@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { loadCatalogTaxonomy as loadTaxonomy, subsetIdForDirectoryName } from "../../🔍️discovery/🟦️.ts";
@@ -35,7 +36,7 @@ export class CleanMechanismNewScript extends Script {
       console.error("   or: bun ./📜️script.ts new standard <artifact-root> <new-standard-dir>");
       console.error("   or: bun ./📜️script.ts new subset <standard-root> <new-subset-dir> [--dry-run]");
       console.error("   or: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--family-crate] [--dry-run]");
-      console.error("   or: bun ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--explain] [--no-test-rewrites] [--mutation-families=off|on|auto] [--backup=<dir>] [--verify [--oracle] [--keep] --sandbox=<dir>] | --check-applied [--keep] --sandbox=<dir>");
+      console.error("   or: bun ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--explain] [--no-test-rewrites] [--mutation-families=off|on|auto] [--backup=<dir>] [--verify [--oracle] [--keep] --sandbox=<dir>] | --check-applied [--base=<git-ref>] [--samples=<count>] [--keep] --sandbox=<dir>");
       console.error("   or: bun ./📜️script.ts new leaves <rust-file> [--dry-run] [--json-schema]   (serve typescript/graphql/proto facet companions, and with --json-schema the JSON Schema leaves, from their documents)");
       process.exit(1);
       return;
@@ -44,7 +45,7 @@ export class CleanMechanismNewScript extends Script {
     const rest = segments.slice(1);
     const flags = new Set(rest.filter((arg) => arg.startsWith("--")));
     const knownFlags = new Set(["--verify", "--check-applied", "--oracle", "--dry-run", "--composite", "--text", "--binary", "--typescript", "--graphql", "--protobuf", "--json-schema", "--no-test-rewrites", "--family-crate", "--keep", "--explain"]);
-    for (const flag of flags) if (!knownFlags.has(flag) && !flag.startsWith("--backup=") && !flag.startsWith("--sandbox=") && !flag.startsWith("--mutation-families=")) throw new Error(`new ${kind}: unknown option ${flag}`);
+    for (const flag of flags) if (!knownFlags.has(flag) && !flag.startsWith("--backup=") && !flag.startsWith("--sandbox=") && !flag.startsWith("--base=") && !flag.startsWith("--samples=") && !flag.startsWith("--mutation-families=")) throw new Error(`new ${kind}: unknown option ${flag}`);
     const dryRun = flags.has("--dry-run");
     const positional = rest.filter((a) => !a.startsWith("--"));
     const repoRoot = this.root;
@@ -108,9 +109,21 @@ export class CleanMechanismNewScript extends Script {
       const sandbox = [...flags].find((flag) => flag.startsWith("--sandbox="))?.slice("--sandbox=".length);
       if (!sandbox) throw new Error("new crates --check-applied needs --sandbox=<dir> (a directory outside the repository)");
       const { verifyAppliedLayout } = await import("../📦️crate-tree/🧫️sandbox/🟦️.ts");
-      const report = await verifyAppliedLayout(this.root, dirname(dirname(packageDir)), resolve(sandbox), "HEAD", flags.has("--keep"));
-      console.log(JSON.stringify(report, null, 2));
-      if (Object.values(report.layout).some((row) => row.onlyCombined > 0)) { process.exit(1); return; }
+      const { workspaceAdmissionProblems } = await import("../📦️crate-tree/📝️render/🟦️.ts");
+      const { sharedMountFiles } = await import("../📦️crate-tree/🔬️verify/🟦️.ts");
+      const base = [...flags].find((flag) => flag.startsWith("--base="))?.slice("--base=".length) ?? "HEAD";
+      const artifactDir = dirname(dirname(packageDir));
+      const samples = Number([...flags].find((flag) => flag.startsWith("--samples="))?.slice("--samples=".length) ?? 12);
+      if (!Number.isInteger(samples) || samples < 1) throw new Error("new crates --samples expects a positive integer");
+      const report = await verifyAppliedLayout(this.root, artifactDir, resolve(sandbox), base, flags.has("--keep"), samples);
+      const admission = workspaceAdmissionProblems(readFileSync(join(this.root, artifactDir, "Cargo.toml"), "utf8"));
+      const pluginDir = artifactDir.split("/").slice(0, 3).join("/");
+      const manifests = execFileSync("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", "ls-files", "-co", "--exclude-standard", "-z", "--", pluginDir], { cwd: this.root, maxBuffer: 1 << 28 }).toString("utf8").split("\0").filter((path) => path.endsWith("/Cargo.toml"));
+      const reached = sharedMountFiles(this.root, manifests, (manifest) => manifest.startsWith(`${artifactDir}/`));
+      const shared = reached.filter((entry) => entry.file.startsWith(`${pluginDir}/`));
+      const sharedForeign = reached.filter((entry) => !entry.file.startsWith(`${pluginDir}/`)).map((entry) => entry.file);
+      console.log(JSON.stringify({ base, ...report, admission, shared, sharedForeign }, null, 2));
+      if (admission.length || shared.length || Object.values(report.layout).some((row) => row.onlyCombined > 0)) { process.exit(1); return; }
       return;
     }
     const mode = [...flags].find((flag) => flag.startsWith("--mutation-families="))?.slice("--mutation-families=".length) ?? "auto";

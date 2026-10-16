@@ -1,10 +1,11 @@
 /** 🧹️ Strict cross-language nested-value retirement laws; source oracle only. */
 import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
-import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { valueOrderedRetirementSchemaUrl, valueTypeSchemaUrl } from "../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const ownerSchema=await Bun.file(new URL("../../🧬️schema/🔣️.json",import.meta.url)).json();
-const grantSchema=await Bun.file(new URL("../../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
+const grantSchema=await Bun.file(valueOrderedRetirementSchemaUrl).json();
 const ajv=semioSchemaAjvV1({allErrors:true}).addSchema(grantSchema).addSchema(ownerSchema);
 const validateGrant=ajv.compile({$ref:ownerSchema.$id+"#/$defs/Grant"});
 const validateDemand=ajv.compile({$ref:ownerSchema.$id+"#/$defs/Demand"});
@@ -21,7 +22,7 @@ assert(!validateFrontier({...typed.frontier,maximumBytes:4096}));
 const validateInput=ajv.compile({$ref:ownerSchema.$id+"#/$defs/InputBinding"});
 const inputReceipt={progress:{copiedItems:1,copiedBytes:0,retainedCapacityBytes:64,releasedBytes:0,complete:false},dictionary:null};
 assert(validateInput(inputReceipt));
-for(const field of Object.keys(inputReceipt.progress)){const refused=structuredClone(inputReceipt);delete refused.progress[field];assert(!validateInput(refused));}
+for(const field of Object.keys(inputReceipt.progress)){const refused=structuredClone(inputReceipt);Reflect.deleteProperty(refused.progress,field);assert(!validateInput(refused));}
 assert(!validateInput({dictionary:null}));
 assert(!validateInput({...inputReceipt,maximumBytes:4096}));
 assert(validateInput({...inputReceipt,dictionary:{original:{text:"Grüße"}}}));
@@ -40,7 +41,7 @@ function bytesOf(value:unknown):number {return typeof value==="string"?Buffer.by
 
 const finite=await Bun.file(new URL("../🧫️fixtures/🧬️finite-fields/🔣️.json",import.meta.url)).json();
 const finiteSchema=await Bun.file(new URL("../../../🧬️schema/🔣️.json",import.meta.url)).json();
-const typeSchema=await Bun.file(new URL("../../../../../../../../🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json",import.meta.url)).json();
+const typeSchema=await Bun.file(valueTypeSchemaUrl).json();
 ajv.addSchema(typeSchema).addSchema(finiteSchema);
 const validateSchema=ajv.compile({$ref:finiteSchema.$id+"#/$defs/Schema"});const validateOperator=ajv.compile({$ref:finiteSchema.$id+"#/$defs/OperatorInfo"});
 assert(validateSchema(finite.schema),JSON.stringify(validateSchema.errors));assert(validateOperator(finite.operator),JSON.stringify(validateOperator.errors));

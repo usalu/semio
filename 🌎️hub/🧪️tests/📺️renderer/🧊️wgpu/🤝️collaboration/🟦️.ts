@@ -1,4 +1,4 @@
-import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 /** 🤝️ Two humans collaborate on ONE hub document through the wgpu shells — the wasm32 browser shell and the native winit
  * shell — and across shell TYPES with the React `s` shell; an AI agent's edit is rendered, not only decoded.
  *

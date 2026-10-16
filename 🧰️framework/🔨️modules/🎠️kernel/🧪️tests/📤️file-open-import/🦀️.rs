@@ -1,5 +1,5 @@
 //! 📤️ The `Effect::RequestFileOpen` import law, driven by the language-agnostic fixture
-//! `🧫️fixtures/📤️file-open-import/🔣️.json` that `🎠️kernel/🟦️.ts`'s TypeScript twin drives too.
+//! `🧫️fixtures/📤️file-open-import/🔣️.json` that `🎠️kernel/🗄️file-open-import/🟦️.ts`'s TypeScript twin drives too.
 //!
 //! The defects this pins, all measured on 6118 for ticket 26/09/09/PROCEDURAL-3D-END-TO-END:
 //!   1. the wgpu door dropped `request-file-open` outright (`unmapped effect … dropped`), so

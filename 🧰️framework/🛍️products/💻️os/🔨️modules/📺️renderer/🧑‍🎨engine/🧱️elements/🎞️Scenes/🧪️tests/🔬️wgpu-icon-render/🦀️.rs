@@ -26,7 +26,7 @@ fn a_refused_icon_subject_leaves_rendering_without_faulting_the_world_snapshot()
 #[test]
 fn icon_frame_geometry_matches_the_actual_react_host() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️IconRenderHost/🧪️tests/🧫️fixtures/🖼️frame-presentation/🔣️.json")).unwrap();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::shaped_default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::shaped_default();
     let theme = Theme::default();
     for sample in fixture["cases"].as_array().unwrap() {
         let bounds = Rect::new(0.0, 0.0, sample["container"][0].as_f64().unwrap() as f32, sample["container"][1].as_f64().unwrap() as f32);
@@ -71,12 +71,12 @@ fn icon_camera_matches_the_shared_three_projection_contract() {
         assert_eq!(actual["projectionFrame"], "preserveCamera");
         let spec: semio_framework_ui_viewport::Viewport3dProjectionSpec = serde_json::from_value(actual["projection"].clone()).unwrap();
         let vector = |field: &str| ui_wgpu::wgpu::Vec3::new(actual[field][0].as_f64().unwrap() as f32, actual[field][1].as_f64().unwrap() as f32, actual[field][2].as_f64().unwrap() as f32);
-        let camera = ui_wgpu::wgpu::Camera3d { position: vector("position"), target: vector("target"), up: vector("up"), zoom: actual["zoom"].as_f64().unwrap() as f32, ..Default::default() };
-        let matrix = ui_wgpu::wgpu::projection_spec_view_proj(&camera, spec, width as f32, height as f32);
-        let centre = ui_wgpu::wgpu::projection_spec_project_point(matrix, spec, camera.target, width as f32, height as f32).unwrap();
+        let camera = semio_framework_ui_scene_camera::Camera3d { position: vector("position"), target: vector("target"), up: vector("up"), zoom: actual["zoom"].as_f64().unwrap() as f32, ..Default::default() };
+        let matrix = semio_framework_ui_scene_camera::projection_spec_view_proj(&camera, spec, width as f32, height as f32);
+        let centre = semio_framework_ui_scene_camera::projection_spec_project_point(matrix, spec, camera.target, width as f32, height as f32).unwrap();
         assert!((f64::from(centre[0]) - width / 2.0).abs() < 0.001 && (f64::from(centre[1]) - height / 2.0).abs() < 0.001, "{} centred target", sample["id"]);
         if sample["request"]["camera"]["projection"] == "orthographic" {
-            let next = ui_wgpu::wgpu::projection_spec_project_point(matrix, spec, ui_wgpu::wgpu::Vec3::new(camera.target.x + 1.0, camera.target.y, camera.target.z), width as f32, height as f32).unwrap();
+            let next = semio_framework_ui_scene_camera::projection_spec_project_point(matrix, spec, ui_wgpu::wgpu::Vec3::new(camera.target.x + 1.0, camera.target.y, camera.target.z), width as f32, height as f32).unwrap();
             assert!((f64::from(next[0] - centre[0]) - expected["previewZoom"].as_f64().unwrap()).abs() < 0.001, "{} preview scaling", sample["id"]);
         }
     }
@@ -90,8 +90,8 @@ fn frame_border_is_two_px_and_badge_uses_background_token() {
     let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
     let frame = Rect::new(20.0, 20.0, 160.0, 160.0);
 
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
@@ -120,8 +120,8 @@ fn frame_border_is_two_px_and_badge_uses_background_token() {
 fn an_ellipse_shot_border_follows_both_ellipse_perimeters() {
     let request: IconRenderRequestFields = serde_json::from_str(r#"{"assetUrl":"mesh://x","format":"png","camera":{"position":[0,0,5],"target":[0,0,0]},"width":256,"height":128,"shape":"ellipse"}"#).unwrap();
     let frame = Rect::new(0.0, 50.0, 400.0, 200.0);
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
@@ -145,10 +145,10 @@ fn an_ellipse_shot_border_follows_both_ellipse_perimeters() {
 
 #[test]
 fn rectangular_icon_foreground_clips_to_its_content_and_restores_the_parent() {
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let parent = Rect::new(190.0, 0.0, 15.0, 300.0);
     draw.push_scissor(parent);
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
@@ -218,8 +218,8 @@ fn icon_render_profile_matches_react_png_shadows_and_svg_face_lighting() {
 fn icon_render_status_line_paints_inside_the_frame() {
     let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
     let frame = Rect::new(20.0, 20.0, 160.0, 160.0);
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();

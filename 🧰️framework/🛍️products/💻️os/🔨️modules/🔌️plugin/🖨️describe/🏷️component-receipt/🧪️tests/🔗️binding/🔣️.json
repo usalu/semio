@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "receipt": "prototype",
+      "expected": "prototype",
+      "changed": "none",
+      "accept": true
+    },
+    {
+      "receipt": "prototype",
+      "expected": "release",
+      "changed": "none",
+      "accept": false
+    },
+    {
+      "receipt": "release",
+      "expected": "prototype",
+      "changed": "none",
+      "accept": false
+    },
+    {
+      "receipt": "release",
+      "expected": "release",
+      "changed": "none",
+      "accept": true
+    },
+    {
+      "receipt": "prototype",
+      "expected": "prototype",
+      "changed": "pluginId",
+      "accept": false
+    },
+    {
+      "receipt": "prototype",
+      "expected": "prototype",
+      "changed": "packageId",
+      "accept": false
+    },
+    {
+      "receipt": "prototype",
+      "expected": "prototype",
+      "changed": "wasmSha256",
+      "accept": false
+    },
+    {
+      "receipt": "prototype",
+      "expected": "prototype",
+      "changed": "semanticDescriptorSha256",
+      "accept": false
+    },
+    {
+      "receipt": "release",
+      "expected": "release",
+      "changed": "pluginId",
+      "accept": false
+    },
+    {
+      "receipt": "release",
+      "expected": "release",
+      "changed": "packageId",
+      "accept": false
+    },
+    {
+      "receipt": "release",
+      "expected": "release",
+      "changed": "wasmSha256",
+      "accept": false
+    },
+    {
+      "receipt": "release",
+      "expected": "release",
+      "changed": "semanticDescriptorSha256",
+      "accept": false
+    }
+  ]
+}

@@ -161,7 +161,7 @@ impl NativeIoValue {
 
 //#endregion 📂️Schema
 
-fn native_io_close_grant() -> RetainedCloneGrant {
+#[doc(hidden)] pub fn native_io_close_grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 }
 }
 
@@ -172,7 +172,7 @@ fn native_io_child_demands(mut demand: RetirementDemand) -> Result<RetirementDem
 
 //#region 👷️Job
 
-enum NativeIoState {
+#[doc(hidden)] pub enum NativeIoState {
     Pending(NativeIoRequest),
     Reading { file: File, writer: semio_framework_job::RetainedJobPayloadWriter },
     ReadingBuffered { file: File, writer: semio_framework_job::RetainedJobPayloadWriter, bytes: [u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES], length: usize },
@@ -190,8 +190,8 @@ enum NativeIoState {
 enum NativeIoCloseTarget { FaultWriter, ClearFaultWriter, FaultDetail, ClearFaultDetail, Writer, Paths, Modified, Path, Extension, RejectedPath, RejectedModified, Error, FinishState, ResultValue, ResultError, ClearResult, Complete }
 
 pub struct NativeIoJob {
-    state: NativeIoState,
-    result: Option<Result<NativeIoValue, String>>,
+    #[doc(hidden)] pub state: NativeIoState,
+    #[doc(hidden)] pub result: Option<Result<NativeIoValue, String>>,
     closing: bool,
     fault_writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
     fault_cursor: usize,
@@ -593,7 +593,7 @@ fn process_resident_bytes() -> Option<u64> {
 }
 
 #[cfg(target_os = "macos")]
-fn process_resident_bytes() -> Option<u64> {
+#[doc(hidden)] pub fn process_resident_bytes() -> Option<u64> {
     #[repr(C)]
     struct TimeValue {
         seconds: i32,
@@ -625,7 +625,3 @@ fn process_resident_bytes() -> Option<u64> {
 }
 
 //#endregion 📊️ProcessMemory
-
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️native-io-unit/🦀️.rs"]
-mod tests;

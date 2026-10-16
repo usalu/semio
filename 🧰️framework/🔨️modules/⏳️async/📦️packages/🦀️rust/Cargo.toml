@@ -19,17 +19,27 @@ path = "🦀️.rs"
 
 [features]
 # 🧪️ Turns on the `testkit::ManualRuntime` `HostAsyncRuntime` test double for downstream crates
-# (packets R2/R4) to unit-test against without linking tokio. Always available under `cfg(test)`
-# for this crate's own test suite regardless of this feature.
+# (packets R2/R4) to unit-test against without linking tokio, the `schema_metadata` projection and
+# the `internals` hooks the companion crate `semio-framework-async-tests` drives.
 testkit = []
 # 🚪️ Gates `block_on` to approved process entry points (a CLI `main`) and test/testkit consumers —
-# always available under `cfg(test)` for this crate's own suite regardless of this feature, same
-# shape as `testkit`. See `block_on`'s doc for why interactive-reachable code must never enable this.
+# the companion crate `semio-framework-async-tests` enables it, same shape as `testkit`. See
+# `block_on`'s doc for why interactive-reachable code must never enable this.
 entrypoint = []
+# 🕸️ Compiles the cooperative `wasm_pool` natively (it is always compiled for `wasm32`) so the companion
+# crate `semio-framework-async-wasm-pool-tests` can drive it; `serde` parses its JSON test corpus.
+wasm-pool-host = ["dep:serde"]
 
 [dependencies]
 semio-framework-trace = { workspace = true }
 semio-framework-value = { workspace = true }
+
+# 🧪️ `🤝️cooperative`'s fixture-driven suite parses a JSON test corpus; no shipped type in this crate
+# derives Serialize/Deserialize (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
+# ARTIFACTS`, `serde-off-guest-path.md` — every prior derive was dead, zero repo-wide call sites), so
+# `serde` is optional and only the `wasm-pool-host` feature turns it on; it never reaches the
+# `wasm32-wasip2` guest link path.
+serde = { version = "1.0.228", features = ["derive"], optional = true }
 
 # 🌉️ Browser-only `pub mod browser` (JS `Promise`/`JsValue` bridge — `spawn_local`/
 # `future_to_promise`/`JsFuture`). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"`
@@ -40,14 +50,3 @@ semio-framework-value = { workspace = true }
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
-
-[dev-dependencies]
-parking_lot = "=0.12.5"
-semio-framework-async-macros = { path = "../../✨️macros/📦️packages/🦀️rust" }
-# 🧪️ `🤝️cooperative`'s `#[cfg(test)]` fixture-driven suite parses a JSON test corpus; no shipped
-# type in this crate derives Serialize/Deserialize any more (ticket `26/09/01/RUNTIME-DEPENDENCY-
-# ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`, `serde-off-guest-path.md` — every prior derive was dead,
-# zero repo-wide call sites), so both crates are test-only and never reach the `wasm32-wasip2` guest
-# link path.
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0"

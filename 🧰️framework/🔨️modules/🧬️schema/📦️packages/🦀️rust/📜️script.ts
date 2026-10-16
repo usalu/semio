@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -13,10 +14,11 @@ import { CheckScript, GenerateScript, PreviewGeneratedScript } from "../../🏷�
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const Contract = contractTests.get(segments[0] ?? "");
     if (Contract) return await new Contract(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-schema"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-schema"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
     await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🩹️fragment-validation-oracle/🟦️.ts")], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
   }
 }
@@ -25,7 +27,7 @@ class TestScript extends BundleScript {
 class SubsetContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("test subset-contract accepts no arguments");
-    const { proveJsonSchemaSubsetContractV1 } = await import("../../✅️validator/🧪️tests/🟦️.ts");
+    const { proveJsonSchemaSubsetContractV1 } = await import("../../✅️validator/📦️packages/🟦️typescript/🧪️testing/🟦️.ts");
     console.log("schema-subset-contract: " + await proveJsonSchemaSubsetContractV1() + " vectors passed");
   }
 }

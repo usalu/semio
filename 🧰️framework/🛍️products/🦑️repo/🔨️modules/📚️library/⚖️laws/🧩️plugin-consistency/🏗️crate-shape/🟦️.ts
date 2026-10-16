@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: region format, manifest region, struct naming, mod layout and SDK mechanism rules.
+/** 🪚️ Wave 4 plugin consistency policy: region format, manifest region, struct naming, mod layout and SDK mechanism rules.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { policyTestModSpans } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";

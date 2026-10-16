@@ -1,17 +1,24 @@
+import {LocalHubHostLedgerV1,localHubHostPolicyV1} from "../../🚀️local-bootstrap/🎛️host/🟦️.ts";
 import type { CompilerAdmissionControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptResourceProcessEnvironmentV1,scriptInvocationEnvironment,requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { resolveTestLevel, atTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { devHubCatalogBootstrapPublisherV1 } from "../../🚀️local-bootstrap/👷️dev-owner/🟦️.ts";
+import {AsyncLocalStorage} from "node:async_hooks";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
+import {withMaterializedTrustedCatalogBundleV1,validateAndPublishTrustedStdioGisCandidate} from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import {trustedBootstrapSelectPackages} from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 /** 🧩️ Semantic collaboration verification owner. */
 
 import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
-import { spawnSync } from "node:child_process";
+import {spawn,type ChildProcess} from "node:child_process";
+import {openSync,fstatSync,writeSync,closeSync} from "node:fs";
+import {checkResourceLeaseControl} from "@semio-tech/process/leases";
+import {terminateOwnedChildTree} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 import { connect, createServer, type AddressInfo, type Socket } from "node:net";
 
@@ -42,7 +49,7 @@ import { awaitChildExit, awaitHttpOk, awaitTcpReady } from "../../../🧰️fram
 
 import { spaceE2eAssert } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts";
 
-import { finishLocalHub, startLocalHub, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, type LocalHubRun } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { withBuiltLocalHubHostV1,withLocalHubHostTaskV1,stopLocalHubV1,waitForReadiness,waitForLocalHubExitV1,type LocalHubHostV1,type LocalHubHostContextV1,finishLocalHub, startLocalHub, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, type LocalHubRun } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 
 import type { LocalProfile } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 
@@ -234,17 +241,11 @@ function collabExternalHub(baseUrl: string | undefined): CollabExternalHub | nul
  * socket is excluded by path, since its command relay is a different lane entirely. */
 type CollabCommandFrameCounter = { count: number };
 
-/** 📁️ Ticket folder — scratch logs/screenshots for this lane's own probes, per the worker-brief. */
-function collabOutDir(): string {
-  const override = process.env.S_COLLAB_OUT;
-  if (override && override.length > 0) {
-    mkdirSync(override, { recursive: true });
-    return override;
-  }
-  const dir = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS");
-  mkdirSync(dir, { recursive: true });
-  return dir;
-}
+type CollabScopeV1={readonly host:LocalHubHostV1;readonly context:LocalHubHostContextV1;readonly servers:Set<CollabDevServerV1>;readonly ledger:LocalHubHostLedgerV1;live:boolean;serverBirths:number};
+const collabScopesV1=new AsyncLocalStorage<CollabScopeV1>();
+function collabScopeV1(){const scope=collabScopesV1.getStore();if(!scope)throw Error("Actual retained collaboration Host required");return scope;}
+/** 📁️ Resolves diagnostics only within the actual retained Host callback. */
+function collabOutDir():string{const directory=join(collabScopeV1().context.diagnosticsRoot,"collaboration");mkdirSync(directory,{recursive:true});return directory;}
 
 /** 🔌️ Resolves one collab-e2e port: an explicit env override, else the first free port in
  * `[COLLAB_E2E_PORT_MIN, COLLAB_E2E_PORT_MAX]` not already claimed by an earlier call this run. */
@@ -263,138 +264,27 @@ function collabScanPort(envVar: string, taken: Set<number>): number {
   throw new Error(`collab e2e: no free port in ${COLLAB_E2E_PORT_MIN}-${COLLAB_E2E_PORT_MAX} for ${envVar}`);
 }
 
-/** 🗄️ The hub's `OS_HUB_DATA` for this run: a fresh directory by default, so the event-sourced directory this scenario
- * asserts against starts empty and STEP 1's "a NEW row appeared" is a real claim. Only its `trusted-catalog/` is copied,
- * from the ONE canonical collaboration catalog root the hub's own `os-hub:trusted-catalog-bootstrap` publishes
- * ({@link ensureCurrentTrustedCatalogV1}; built once, republished only when the current hub could not load it, reused by every
- * later run) — never spaces, documents, sessions or presence.
- * `S_COLLAB_HUB_DATA` overrides the whole directory for a deliberate warm-state run.
- *
- * Both branches return a REALPATH: the hub's trusted-catalog loader opens its root component by component with
- * `O_NOFOLLOW`, and macOS's `TMPDIR` lives under the `/var` → `private/var` symlink. */
-async function collabHubDataDir(): Promise<string> {
-  const explicit = process.env.S_COLLAB_HUB_DATA;
-  if (explicit) {
-    mkdirSync(explicit, { recursive: true });
-    return realpathSync(explicit);
-  }
-  const dir = realpathSync(mkdtempSync(join(realpathSync(tmpdir()), "semio-collab-hub-")));
-  const canonical = join(repoRoot, ".🧬semio", "🌐hub", "collab-catalog");
-  await ensureCurrentTrustedCatalogV1(canonical, devHubCatalogBootstrapPublisherV1(repoRoot), { packages: LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, report: (status) => console.log(devHubStatusTextV1(status, devHubLocaleV1())) });
-  cpSync(join(canonical, "trusted-catalog"), join(dir, "trusted-catalog"), { recursive: true });
-  console.log(`[collab-e2e] seeded the hub's trusted catalog from ${canonical}`);
-  return dir;
+/** 🗄️ Exposes the actual retained Host data for the scoped scenario and its same-data restart. */
+async function collabHubDataDir():Promise<string>{return collabScopeV1().context.dataRoot;}
+
+type CollabHubHandle=Readonly<{child:LocalHubRun["child"];run:LocalHubRun;adminCapability:string;kill:()=>Promise<void>}>;
+/** 🚀️ Boots only the actual retained Host and joins its closed termination operation. */
+async function collabStartHub(host:LocalHubHostV1,port:number,label:"boot"|"restart"):Promise<CollabHubHandle>{
+ const scope=collabScopeV1();if(scope.host!==host)throw Error("Exact collaboration Host required");
+ return withLocalHubHostTaskV1(host,scope.context.control,async()=>{
+  const profile:LocalProfile={profileId:"collab-boot",subject:"collab-boot",displayName:"Collab Boot",allowedClientClasses:["native","mcp","react-relay","admin-relay"]},logPath=join(collabOutDir(),`hub-${label}.log`),run=await startLocalHub(host,[profile],{port,adminSubjects:["semio.local.bootstrap/v1:collab-boot"],capture:true,credentialSignIn:true});
+  await waitForReadiness(run,false,COLLAB_E2E_HUB_BOOT_BUDGET_MS);
+  const envelope=await issueLocalCredential(run,"collab-boot","admin-relay"),adminCapability=String(envelope.capability??"");
+  if(!adminCapability.startsWith("session.v1."))throw Error("collab e2e: admin-relay envelope missing session capability");
+  const overview=await awaitHttpOk(`http://127.0.0.1:${port}/admin/api/overview`,{deadlineMs:30000,intervalMs:500,init:{headers:{authorization:`Bearer ${adminCapability}`},signal:scope.context.control.signal},isDead:()=>run.child.exitCode!==null});
+  writeFileSync(logPath,run.output()||"readyz+admin ok\n","utf8");if(overview!=="ready")throw Error(`admin overview not ready — see ${logPath}`);
+  return Object.freeze({child:run.child,run,adminCapability,kill:async()=>{await stopLocalHubV1(run,"graceful");await finishLocalHub(run);}});
+ });
 }
 
-/** 🚀️ Boots `os-hub` through local-bootstrap (FD 3) with password sign-in, an
- * admin-subject profile, and a live `admin-relay` session for operator surfaces. */
-type CollabHubHandle = SpawnDaemonHandle & {
-  readonly run: LocalHubRun;
-  readonly adminCapability: string;
-};
-
-async function collabStartHub(port: number, dataDir: string, logPath: string): Promise<CollabHubHandle> {
-  process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
-  const hubPkg = join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust");
-  const profile: LocalProfile = {
-    profileId: "collab-boot",
-    subject: "collab-boot",
-    displayName: "Collab Boot",
-    allowedClientClasses: ["native", "mcp", "react-relay", "admin-relay"],
-  };
-  let run: LocalHubRun;
-  try {
-    run = await startLocalHub(repoRoot, hubPkg, [profile], {
-      port,
-      dataDir,
-      binaryPath: collabHubBinaryPath(),
-      adminSubjects: ["semio.local.bootstrap/v1:collab-boot"],
-      capture: false,
-    });
-  } catch (error) {
-    writeFileSync(logPath, error instanceof Error ? `${error.message}\n` : String(error), "utf8");
-    throw error;
-  }
-  const baseUrl = `http://127.0.0.1:${port}`;
-  const readiness = await awaitHttpOk(`${baseUrl}/readyz`, {
-    deadlineMs: COLLAB_E2E_HUB_BOOT_BUDGET_MS,
-    intervalMs: 500,
-    isDead: () => run.child.exitCode !== null,
-  });
-  if (readiness === "dead") {
-    writeFileSync(logPath, run.output(), "utf8");
-    await finishLocalHub(run);
-    throw new Error(`hub exited early (code ${run.child.exitCode}) — see ${logPath}`);
-  }
-  if (readiness !== "ready") {
-    writeFileSync(logPath, run.output(), "utf8");
-    await finishLocalHub(run);
-    throw new Error(`hub did not become ready on port ${port} within ${COLLAB_E2E_HUB_BOOT_BUDGET_MS}ms — see ${logPath}`);
-  }
-  const envelope = await issueLocalCredential(run, "collab-boot", "admin-relay");
-  const adminCapability = String(envelope.capability ?? "");
-  if (!adminCapability.startsWith("session.v1.")) {
-    await finishLocalHub(run);
-    throw new Error(`collab e2e: admin-relay envelope missing session capability`);
-  }
-  const overview = await awaitHttpOk(`${baseUrl}/admin/api/overview`, {
-    deadlineMs: 30_000,
-    intervalMs: 500,
-    init: { headers: { authorization: `Bearer ${adminCapability}` } },
-    isDead: () => run.child.exitCode !== null,
-  });
-  writeFileSync(logPath, run.output() || `readyz+admin ok capability=${adminCapability.slice(0, 24)}…\n`, "utf8");
-  if (overview !== "ready") {
-    await finishLocalHub(run);
-    throw new Error(`admin overview not ready after issuing admin-relay session — see ${logPath}`);
-  }
-  return {
-    child: run.child,
-    run,
-    adminCapability,
-    kill: () => {
-      try {
-        run.pipe.end();
-      } catch {
-        void 0;
-      }
-      if (run.child.pid) run.child.kill();
-      void finishLocalHub(run);
-    },
-  };
-}
-
-
-/** 🗄️ Resolves the staged or cargo-cache `os-hub` binary used for credential provisioning and live boots. */
-function collabHubBinaryPath(): string {
-  const name = process.platform === "win32" ? "os-hub.exe" : "os-hub";
-  const explicit = process.env.S_COLLAB_HUB_BINARY;
-  if (explicit && existsSync(explicit)) return explicit;
-  const staged = join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "dist", "build-dev", name);
-  const cached = join(repoRoot, ".🧬semio", "🦑️repo", "⚡️cache", "cargo", "target", "debug", name);
-  const binaryPath = existsSync(staged) ? staged : cached;
-  if (!existsSync(binaryPath)) throw new Error(`collab e2e: no os-hub binary (looked at ${staged} and ${cached})`);
-  return binaryPath;
-}
-
-
-function collabProvisionCredentials(dataDir: string): Readonly<Record<string, string>> {
-  const binaryPath = collabHubBinaryPath();
-  const provisioned: Record<string, string> = {};
-  for (const account of [
-    { email: COLLAB_E2E_USER1_EMAIL, password: COLLAB_E2E_USER1_PASSWORD, display: COLLAB_E2E_USER1_DISPLAY },
-    { email: COLLAB_E2E_USER2_EMAIL, password: COLLAB_E2E_USER2_PASSWORD, display: COLLAB_E2E_USER2_DISPLAY },
-  ]) {
-    const result = spawnSync(binaryPath, ["credential", "set", "--email", account.email, "--display-name", account.display], {
-      env: { ...process.env, OS_HUB_DATA: dataDir },
-      input: account.password,
-      encoding: "utf8",
-    });
-    if (result.status !== 0) throw new Error(`collab e2e: \`os-hub credential set\` failed for ${account.email}: ${result.stderr}`);
-    provisioned[account.email] = result.stdout.trim();
-  }
-  console.log(`[collab-e2e] provisioned ${COLLAB_E2E_USER1_EMAIL}=${provisioned[COLLAB_E2E_USER1_EMAIL]} ${COLLAB_E2E_USER2_EMAIL}=${provisioned[COLLAB_E2E_USER2_EMAIL]}`);
-  return provisioned;
+/** 🔑️ Uses the genuine retained executable and phase for finite credential input. */
+async function collabProvisionCredentials():Promise<Readonly<Record<string,string>>>{
+ const{host,context}=collabScopeV1();return withLocalHubHostTaskV1(host,context.control,async actual=>{const provisioned:Record<string,string>={};for(const account of[{email:COLLAB_E2E_USER1_EMAIL,password:COLLAB_E2E_USER1_PASSWORD,display:COLLAB_E2E_USER1_DISPLAY},{email:COLLAB_E2E_USER2_EMAIL,password:COLLAB_E2E_USER2_PASSWORD,display:COLLAB_E2E_USER2_DISPLAY}]){const output=await captureOwnedCommandResultV1(actual.binaryPath,["credential","set","--email",account.email,"--display-name",account.display],actual.workspace,{control:actual.control,env:{...actual.environment,OS_HUB_DATA:actual.dataRoot},input:{version:1,text:account.password},output:{maximumBytes:65536,maximumLines:512}});if(output.status!==0||output.signal!==null)throw Error("Credential operator child failed: "+output.stderr);provisioned[account.email]=output.stdout.trim();}return Object.freeze(provisioned);});
 }
 
 /** 🔐️ Signs one browser context in as one human, through the shell's own hub workspace — the same
@@ -461,26 +351,22 @@ function collabServeLane(): "dev" | "release" {
  * previous `script.ts dev` spawn exited 1 with `unknown command "dev"` before a single byte was served,
  * which is what made every step report "blocked — shells did not boot". `S_HUB_URL` is baked into this
  * server's bundle at Vite `define`-time, so it must be in the SERVE process's env, not the activation's. */
-async function collabStartUserDevServer(opts: { readonly port: number; readonly hubUrl: string; readonly user: string; readonly dataDir: string; readonly logPath: string }): Promise<SpawnDaemonHandle> {
-  const devScript = join(repoRoot, COLLAB_E2E_DEV_SCRIPT);
-  const logStream = createWriteStream(opts.logPath);
-  const daemon = spawnDaemon("bun", [devScript, "serve", "s", "react", collabServeLane()], {
-    cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
-    env: { ...process.env, SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_VITE_HMR: "0", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_DATA_DIR: opts.dataDir, S_LOCAL_ONLY: "1" },
-    stdio: "pipe",
-  });
-  daemon.child.stdout?.pipe(logStream);
-  daemon.child.stderr?.pipe(logStream);
-  const outcome = await awaitTcpReady("127.0.0.1", opts.port, {
-    deadlineMs: COLLAB_E2E_DEV_BOOT_BUDGET_MS,
-    intervalMs: 500,
-    isDead: () => daemon.child.exitCode !== null,
-  });
-  if (outcome === "ready") return daemon;
-  if (outcome === "dead") throw new Error(`dev server for ${opts.user} exited early (code ${daemon.child.exitCode}) — see ${opts.logPath}`);
-  daemon.kill();
-  logStream.end();
-  throw new Error(`dev server for ${opts.user} did not open port ${opts.port} within ${COLLAB_E2E_DEV_BOOT_BUDGET_MS}ms — see ${opts.logPath}`);
+declare const collabDevServerBrand:unique symbol;
+type CollabDevServerV1=Readonly<{readonly[collabDevServerBrand]:true}>;
+type CollabDevServerScopeV1={readonly owner:CollabScopeV1;readonly child:ChildProcess;readonly terminal:Promise<void>;readonly logPath:string;readonly descriptor:number;readonly dev:number;readonly ino:number;failure?:Readonly<{error:unknown}>;readonly cleanup:unknown[];terminationRequested:boolean;closed:boolean;stop?:Promise<void>;timer?:ReturnType<typeof setInterval>;deadline?:ReturnType<typeof setTimeout>;abort:()=>void;expectedStop:boolean};
+const collabDevServersV1=new WeakMap<CollabDevServerV1,CollabDevServerScopeV1>();
+async function finishCollabDevServerV1(token:CollabDevServerV1):Promise<void>{const scope=collabDevServersV1.get(token);if(!scope)throw Error("Actual collaboration server required");if(scope.stop)return scope.stop;scope.expectedStop=true;scope.stop=(async()=>{const failures:unknown[]=[];try{if(!scope.closed)terminateOwnedChildTree(scope.child);}catch(error){failures.push(error);}await scope.terminal;if(scope.failure)failures.unshift(scope.failure.error);failures.push(...scope.cleanup);scope.owner.servers.delete(token);if(failures.length===1)throw failures[0];if(failures.length)throw new AggregateError(failures,"Collaboration server terminal and cleanup failed");})();void scope.stop.catch(()=>{});return scope.stop;}
+/** ▶️ Owns only the two fixed collaboration serve children within their actual Host/Diagnostics lifetime. */
+async function collabStartUserDevServer(opts:{readonly port:number;readonly hubUrl:string;readonly user:string}):Promise<CollabDevServerV1>{
+ const owner=collabScopeV1(),context=owner.context,index=opts.user===COLLAB_E2E_USER1_EMAIL?1:opts.user===COLLAB_E2E_USER2_EMAIL?2:0;if(!owner.live||!index||owner.servers.size>=localHubHostPolicyV1().maximumDevelopmentServers||owner.serverBirths>=localHubHostPolicyV1().maximumDevelopmentServerBirths||!Number.isSafeInteger(opts.port)||opts.port<1||opts.port>65535)throw Error("Finite actual collaboration server request required");owner.serverBirths++;
+ return owner.ledger.run(()=>withLocalHubHostTaskV1(owner.host,context.control,async actual=>{
+  const declaration=readNativeCallerAuthorityV1(actual.invocation.capabilities),dataDir=join(collabOutDir(),`user${index}`),logPath=join(collabOutDir(),`user${index}-dev.log`),fd=openSync(logPath,"wx",0o600),identity=fstatSync(fd),args=[join(repoRoot,COLLAB_E2E_DEV_SCRIPT),"serve","s","react",collabServeLane()];let child:ChildProcess;try{checkResourceLeaseControl(actual.control);child=spawn(process.execPath,args,{cwd:join(repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),env:scriptResourceProcessEnvironmentV1(actual.control,{...actual.environment,SEMIO_PLUGIN:"s",SEMIO_RENDERER:"react",SEMIO_VITE_HMR:"0",S_OS_PORT:String(opts.port),S_HUB_URL:opts.hubUrl,S_DATA_DIR:dataDir,S_LOCAL_ONLY:"1"}),stdio:["ignore","pipe","pipe"],detached:process.platform!=="win32",shell:false});}catch(error){try{closeSync(fd);}catch(close){throw new AggregateError([error,close],"Collaboration server birth and descriptor close failed");}throw error;}
+  let done!:()=>void;const token=Object.freeze({})as CollabDevServerV1,terminal=new Promise<void>(accept=>done=accept),scope:CollabDevServerScopeV1={owner,child,terminal,logPath,descriptor:fd,dev:identity.dev,ino:identity.ino,closed:false,cleanup:[],terminationRequested:false,abort:()=>{},expectedStop:false},fail=(error:unknown):void=>{scope.failure??={error};if(scope.terminationRequested)return;scope.terminationRequested=true;try{terminateOwnedChildTree(child);}catch(close){scope.cleanup.push(close);}};
+  child.once("error",fail);child.once("close",(status,signal)=>{scope.closed=true;clearInterval(scope.timer);clearTimeout(scope.deadline);actual.control.signal.removeEventListener("abort",scope.abort);if(!scope.expectedStop&&(status!==0||signal!==null))scope.failure??={error:Error("Collaboration server failed: "+String(status??signal))};try{const current=fstatSync(fd);if(current.dev!==identity.dev||current.ino!==identity.ino)throw Error("Exact collaboration log descriptor required");}catch(error){scope.cleanup.push(error);}try{closeSync(fd);}catch(error){scope.cleanup.push(error);}done();});
+  owner.servers.add(token);collabDevServersV1.set(token,scope);scope.abort=()=>fail(actual.control.signal.reason);actual.control.signal.addEventListener("abort",scope.abort,{once:true});scope.timer=setInterval(()=>{try{checkResourceLeaseControl(actual.control);}catch(error){fail(error);}},50);scope.timer.unref();scope.deadline=setTimeout(()=>fail(Error("Authored collaboration child deadline exceeded")),declaration.child.maximumElapsedMilliseconds);scope.deadline.unref();let bytes=0,lines=0;
+  const output=(chunk:Buffer):void=>{if(scope.failure)return;try{checkResourceLeaseControl(actual.control);bytes+=chunk.length;for(const byte of chunk)if(byte===10)lines++;if(bytes>declaration.transport.maximumBytes||lines>declaration.transport.maximumLines)throw Error("Collaboration server output capacity exceeded");let written=0;while(written<chunk.length){const count=writeSync(fd,chunk,written,chunk.length-written);if(count<1)throw Error("Collaboration log short write");written+=count;}}catch(error){fail(error);}};child.stdout?.on("data",output);child.stderr?.on("data",output);
+  const outcome=await awaitTcpReady("127.0.0.1",opts.port,{deadlineMs:COLLAB_E2E_DEV_BOOT_BUDGET_MS,intervalMs:500,isDead:()=>{checkResourceLeaseControl(actual.control);return scope.closed;}});checkResourceLeaseControl(actual.control);if(scope.failure)throw scope.failure.error;if(outcome!=="ready")throw Error(`Collaboration server ${opts.user} did not become ready: ${outcome}`);return token;
+ }));
 }
 
 //#region 🔖️CollabE2eDom
@@ -1251,10 +1137,10 @@ async function collabRunRestartStep(opts: {
   try {
     const editor1 = collabTextEditor(opts.user1);
     const hasEditor = (await editor1.count()) > 0;
-    liveHub.kill();
+    await liveHub.kill();
     // 🧵️ We hold the hub's own `child` handle — await its `exit` event via 🔖️PollHelpers's
     // `awaitChildExit` instead of polling `exitCode` (THE RULE above). Same 30s budget as before.
-    const exited = await awaitChildExit(liveHub.child, 30_000);
+    const terminal = await waitForLocalHubExitV1(liveHub.run), exited = terminal.status!==null||terminal.signal!==null?"exited":"pending";
     spaceE2eAssert(exited === "exited", "hub process did not exit within 30s of being killed");
     const portFreed = await awaitTcpReady("127.0.0.1", opts.hubPort, { deadlineMs: 30_000, intervalMs: 250, mode: "closed" });
     spaceE2eAssert(portFreed === "ready", `port ${opts.hubPort} never freed up after the hub exited`);
@@ -1263,7 +1149,7 @@ async function collabRunRestartStep(opts: {
       await editor1.click();
       await editor1.type(inFlightMarker);
     }
-    liveHub = await collabStartHub(opts.hubPort, opts.hubDataDir, join(collabOutDir(), "🧪️3-c-hub-restart.txt"));
+    liveHub = await collabStartHub(collabScopeV1().host,opts.hubPort,"restart");
     await opts.user2.reload({ waitUntil: "domcontentloaded" });
     await collabOpenSpace(opts.user2, opts.spaceId!);
     await collabWaitForRow(opts.user2, "artifact", opts.artifactId, 60_000);
@@ -1530,7 +1416,7 @@ async function collabRunCollaborationBehaviours(opts: {
  * react dev servers, two independent Playwright browser contexts, the 10-step scenario, and teardown of
  * every spawned process (hub + both dev servers + browser) even on failure. Writes `STEP n: PASS/FAIL`
  * lines plus a final summary, and sets a non-zero exit code if any step failed. */
-async function runCollabE2eVerify(opts: { readonly invocation:ScriptInvocation; readonly phaseControl:CompilerAdmissionControl; readonly hub: string | undefined; readonly locale: CollabLocale; readonly check: string }): Promise<void> {
+async function runCollabE2eVerifyOwnedV1(opts: { readonly invocation:ScriptInvocation; readonly phaseControl:CompilerAdmissionControl; readonly hub: string | undefined; readonly locale: CollabLocale; readonly check: string }): Promise<void> {
   requireIssuedResourceControlInvocationV1(opts.phaseControl,opts.invocation);
   if(readNativeCallerAuthorityV1(opts.invocation.capabilities).repositoryRoot!==repoRoot)throw Error("Actual collaboration workspace required");
   const startedAt = new Date();
@@ -1543,40 +1429,29 @@ async function runCollabE2eVerify(opts: { readonly invocation:ScriptInvocation; 
   console.log(`[collab-e2e] ports: hub=${hubPort}${external ? " (external)" : ""} user1=${user1Port} user2=${user2Port}`);
 
   const hubDataDir = external ? "" : await collabHubDataDir();
-  const user1DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u1-"));
-  const user2DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u2-"));
+  const user1DataDir = join(outDir,"user1");mkdirSync(user1DataDir);
+  const user2DataDir = join(outDir,"user2");mkdirSync(user2DataDir);
 
   const passwords: Readonly<Record<string, string>> = external
     ? external.passwords
-    : (collabProvisionCredentials(hubDataDir), { [COLLAB_E2E_USER1_EMAIL]: COLLAB_E2E_USER1_PASSWORD, [COLLAB_E2E_USER2_EMAIL]: COLLAB_E2E_USER2_PASSWORD });
+    : (await collabProvisionCredentials(), { [COLLAB_E2E_USER1_EMAIL]: COLLAB_E2E_USER1_PASSWORD, [COLLAB_E2E_USER2_EMAIL]: COLLAB_E2E_USER2_PASSWORD });
 
   let hubDaemon: CollabHubHandle | undefined;
-  let user1Daemon: SpawnDaemonHandle | undefined;
-  let user2Daemon: SpawnDaemonHandle | undefined;
+  let user1Daemon: CollabDevServerV1 | undefined;
+  let user2Daemon: CollabDevServerV1 | undefined;
   let browser: import("playwright").Browser | undefined;
   let relays: readonly [CollabLinkRelay, CollabLinkRelay] | undefined;
   const results: CollabStepOutcome[] = [];
   const record = collabRecorder(results);
 
-  const teardown = async (): Promise<void> => {
-    try {
-      await browser?.close();
-    } catch {
-      // 🏁️ Best-effort.
-    }
-    for (const relay of relays ?? []) await relay.close();
-    for (const daemon of [user1Daemon, user2Daemon, hubDaemon]) {
-      try {
-        daemon?.kill();
-      } catch {
-        // 🏁️ Best-effort — a teardown failure must never mask the real run's outcome.
-      }
-    }
+  const teardown=async():Promise<void>=>{
+   const failures:unknown[]=[];try{await browser?.close();}catch(error){failures.push(error);}for(const relay of relays??[])try{await relay.close();}catch(error){failures.push(error);}for(const daemon of[user1Daemon,user2Daemon])if(daemon)try{await finishCollabDevServerV1(daemon);}catch(error){failures.push(error);}if(hubDaemon)try{await hubDaemon.kill();}catch(error){failures.push(error);}if(failures.length===1)throw failures[0];if(failures.length)throw new AggregateError(failures,"Collaboration browser, relays and child cleanup failed");
   };
+  let primary:{error:unknown}|undefined;
 
   try {
     if (!external) try {
-      hubDaemon = await collabStartHub(hubPort, hubDataDir, join(outDir, "🧪️3-c-hub-boot.txt"));
+      hubDaemon = await collabStartHub(collabScopeV1().host,hubPort,"boot");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[collab-e2e] hub failed to boot — every scenario step is reported FAIL: ${message}`);
@@ -1614,8 +1489,8 @@ async function runCollabE2eVerify(opts: { readonly invocation:ScriptInvocation; 
     try {
       relays = [await collabStartLinkRelay(hubBaseUrl), await collabStartLinkRelay(hubBaseUrl)];
       [user1Daemon, user2Daemon] = await Promise.all([
-        collabStartUserDevServer({ port: user1Port, hubUrl: relays[0].url, user: COLLAB_E2E_USER1_EMAIL, dataDir: user1DataDir, logPath: join(outDir, "🧪️3-c-user1-dev.txt") }),
-        collabStartUserDevServer({ port: user2Port, hubUrl: relays[1].url, user: COLLAB_E2E_USER2_EMAIL, dataDir: user2DataDir, logPath: join(outDir, "🧪️3-c-user2-dev.txt") }),
+        collabStartUserDevServer({ port: user1Port, hubUrl: relays[0].url, user: COLLAB_E2E_USER1_EMAIL }),
+        collabStartUserDevServer({ port: user2Port, hubUrl: relays[1].url, user: COLLAB_E2E_USER2_EMAIL }),
       ]);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -1697,9 +1572,7 @@ async function runCollabE2eVerify(opts: { readonly invocation:ScriptInvocation; 
     const ignorableGpuFragments = ["NoCompatibleDevice"];
     const criticalErrors = pageErrors.filter((message) => !ignorableGpuFragments.some((fragment) => message.includes(fragment)));
     if (criticalErrors.length > 0) console.warn(`[collab-e2e] page errors observed (not a step on their own, informational): ${criticalErrors.join(" | ")}`);
-  } finally {
-    await teardown();
-  }
+  }catch(error){primary={error};throw error;}finally{try{await teardown();}catch(error){if(primary&&!Object.is(primary.error,error))throw new AggregateError([primary.error,error],"Collaboration body and teardown failed");throw error;}}
 
   const passed = results.filter((outcome) => outcome.pass === true).length;
   const skipped = results.filter((outcome) => outcome.pass === null).length;
@@ -1723,6 +1596,13 @@ async function runCollabE2eVerify(opts: { readonly invocation:ScriptInvocation; 
     }),
   );
   if (status !== "pass") process.exitCode = 1;
+}
+
+/** 🏠️ Keeps actual Host, catalog and diagnostics owners around the complete collaboration scenario. */
+async function runCollabE2eVerify(opts:Parameters<typeof runCollabE2eVerifyOwnedV1>[0]):Promise<void>{
+ requireIssuedResourceControlInvocationV1(opts.phaseControl,opts.invocation);
+ for(const key of["S_COLLAB_OUT","S_COLLAB_HUB_DATA","S_COLLAB_HUB_BINARY"])if(process.env[key]!==undefined)throw Error("Collaboration paths belong to the actual retained Host owner");
+ return withBuiltLocalHubHostV1(opts.invocation,opts.phaseControl,(host,context)=>withMaterializedTrustedCatalogBundleV1(host,context.control,trustedBootstrapSelectPackages(LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES),async(receipt,phase)=>{await validateAndPublishTrustedStdioGisCandidate(host,phase,receipt);return withLocalHubHostTaskV1(host,phase,actual=>{const scope:CollabScopeV1={host,context:actual,servers:new Set(),ledger:new LocalHubHostLedgerV1(),live:true,serverBirths:0};return collabScopesV1.run(scope,async()=>{const failures:unknown[]=[];try{await runCollabE2eVerifyOwnedV1({...opts,phaseControl:actual.control});}catch(error){failures.push(error);}scope.live=false;scope.ledger.stop();try{await scope.ledger.drain();}catch(error){if(!failures.includes(error))failures.push(error);}scope.ledger.close();for(const server of scope.servers)try{await finishCollabDevServerV1(server);}catch(error){if(!failures.includes(error))failures.push(error);}if(failures.length===1)throw failures[0];if(failures.length)throw new AggregateError(failures,"Collaboration body and accepted server cleanup failed");});});}));
 }
 
 /** 🚪️ `verify collab [--hub <url>] [--locale en|de]` — the two-human React collaboration journey against the hub `--hub` names

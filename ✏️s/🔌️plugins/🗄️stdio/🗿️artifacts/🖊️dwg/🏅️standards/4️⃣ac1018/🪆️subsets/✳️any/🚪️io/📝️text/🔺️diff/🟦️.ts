@@ -49,5 +49,5 @@ export const stdioDwgAc1018AnyDiffTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseDwgDiffText(value: unknown, at = "$"): DwgDiffText {
-  return stdioDwgAc1018AnyDiffTextGuardObject(value, `${at}`);
+  return stdioDwgAc1018AnyDiffTextGuardString(value, `${at}`);
 }

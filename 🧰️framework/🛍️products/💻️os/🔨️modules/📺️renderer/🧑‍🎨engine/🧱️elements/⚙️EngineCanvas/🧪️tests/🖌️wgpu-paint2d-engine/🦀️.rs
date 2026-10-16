@@ -7,9 +7,14 @@
 //! under the `"layers"` domain, `dispatch("setCamera", { camera })`; `🧱️elements/✏️TextEditor/🟦️.tsx` —
 //! the `textEdit`/`textSelect` pair every keystroke commits).
 
-use super::node_graph_attach_tests::{action_fields, drop_engine_surface};
+use super::node_graph_attach_tests::action_fields;
+use semio_framework_os_renderer_wgpu_engine_attach::drop_engine_surface;
 use super::*;
-use ui_wgpu::wgpu::{InputState, Paint2dScene, SurfaceKind, TextEditorScene, UiPresence};
+use semio_framework_ui_declaration::ui::SurfaceKind;
+use semio_framework_ui_layout::layout::UiPresence;
+use semio_framework_ui_scene_plane::Paint2dScene;
+use semio_framework_ui_scene_views::TextEditorScene;
+use ui_wgpu::wgpu::InputState;
 
 fn empty_scene(surface_id: &str, controller_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
@@ -271,7 +276,7 @@ fn text_editor_window_attaches_the_editor_host_and_a_key_commits_the_react_actio
     let fields = action_fields(edit);
     assert_eq!(fields.iter().find(|(key, _)| key == "text").map(|(_, value)| value.as_str()), Some("alpha!"), "the edit carries the current document in the authored action field");
     assert_eq!(fields.iter().find(|(key, _)| key == "surfaceId").map(|(_, value)| value.as_str()), Some(surface_id));
-    assert_eq!(fields.iter().find(|(key, _)| key == ui_wgpu::wgpu::TEXT_EDITOR_TYPING_BUFFER_ARG).map(|(_, value)| value.as_str()), Some(surface_id), "a live typed edit names its buffer, so the window folds it into ONE typing run");
+    assert_eq!(fields.iter().find(|(key, _)| key == semio_framework_ui_scene_views::TEXT_EDITOR_TYPING_BUFFER_ARG).map(|(_, value)| value.as_str()), Some(surface_id), "a live typed edit names its buffer, so the window folds it into ONE typing run");
     let select = actions.iter().find(|action| action.action == "textSelect").expect("textSelect");
     let select_fields = serde_json::to_value(select.args.as_ref().unwrap()).expect("selection args");
     assert_eq!(select_fields, json!({ "surfaceId": surface_id, "start": 6, "end": 6 }));
@@ -282,7 +287,7 @@ fn text_editor_window_attaches_the_editor_host_and_a_key_commits_the_react_actio
 #[test]
 fn text_editor_explicit_draft_preserves_local_text_until_apply_or_discard() {
     let _serialized = engine_surface_law_guard();
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/✏️TextEditor/🧫️fixtures/📝️explicit-draft/🔣️.json"))).expect("neutral explicit draft fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../✏️TextEditor/🧪️tests/🧫️fixtures/📝️explicit-draft/🔣️.json")).expect("neutral explicit draft fixture");
     let law = &fixture["cases"][1];
     let id = "text-editor-explicit-draft";
     drop_engine_surface(id);
@@ -337,7 +342,7 @@ fn text_editor_explicit_draft_preserves_local_text_until_apply_or_discard() {
 #[test]
 fn text_editor_large_explicit_draft_pages_cancel_and_refusal_without_losing_text() {
     let _serialized = engine_surface_law_guard();
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/✏️TextEditor/🧫️fixtures/📝️explicit-draft/🔣️.json"))).expect("neutral explicit draft fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../✏️TextEditor/🧪️tests/🧫️fixtures/📝️explicit-draft/🔣️.json")).expect("neutral explicit draft fixture");
     let id = "text-editor-large-explicit-draft";
     drop_engine_surface(id);
     let initial = "a".repeat(65_535);
@@ -395,7 +400,7 @@ fn text_editor_refuses_the_keys_the_shell_owns() {
 #[test]
 fn text_editor_renderer_keys_match_the_actual_react_fixture() {
     let _serialized = engine_surface_law_guard();
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json"))).expect("neutral keyboard fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).expect("neutral keyboard fixture");
     for law in fixture["rendererKeys"].as_array().expect("renderer keys") {
         let id = law["id"].as_str().unwrap();
         drop_engine_surface(id);
@@ -482,7 +487,7 @@ fn text_editor_host_signals_end_the_typing_run_with_the_corpus_reasons() {
     for row in corpus["hostSignals"].as_array().expect("host signals") {
         let (signal, commit) = (row["signal"].as_str().expect("signal"), row["commit"].as_str().expect("commit"));
         if signal == "idle" {
-            assert_eq!((commit, ui_wgpu::wgpu::TEXT_EDITOR_TYPING_IDLE_MS), ("idle", 750), "the idle bound ends the run as `idle`");
+            assert_eq!((commit, semio_framework_ui_scene_views::TEXT_EDITOR_TYPING_IDLE_MS), ("idle", 750), "the idle bound ends the run as `idle`");
             continue;
         }
         let id = format!("text-editor-signal-{signal}");
@@ -545,7 +550,7 @@ fn text_editor_outbox_pages_a_large_document_into_one_ordered_edit_and_selection
 #[test]
 fn text_editor_receipts_match_the_neutral_first_latest_refusal_and_read_only_laws() {
     let _serialized = engine_surface_law_guard();
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/✏️TextEditor/🧫️fixtures/📮️delivery/🔣️.json"))).expect("neutral delivery fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../✏️TextEditor/🧪️tests/🧫️fixtures/📮️delivery/🔣️.json")).expect("neutral delivery fixture");
     for law in fixture["cases"].as_array().expect("delivery cases") {
         let id = law["id"].as_str().unwrap();
         drop_engine_surface(id);
@@ -626,7 +631,7 @@ fn text_editor_scene_echoes_never_overwrite_newer_unsent_local_text() {
 
 #[test]
 fn text_editor_delivery_state_matches_the_neutral_local_echo_ledger() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/✏️TextEditor/🧫️fixtures/🔁️local-echo/🔣️.json"))).expect("neutral local echo fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../✏️TextEditor/🧪️tests/🧫️fixtures/🔁️local-echo/🔣️.json")).expect("neutral local echo fixture");
     for law in fixture["cases"].as_array().unwrap() {
         let id = law["id"].as_str().unwrap();
         let mut state = TextEditorDeliveryState::default();
@@ -679,7 +684,7 @@ fn text_editor_delivery_state_matches_the_neutral_local_echo_ledger() {
 #[test]
 fn text_editor_production_key_route_replays_chromiums_neutral_typing_sequences() {
     let _serialized = engine_surface_law_guard();
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json"))).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).unwrap();
     for law in fixture["sequences"].as_array().unwrap() {
         let id = law["id"].as_str().unwrap();
         drop_engine_surface(id);
@@ -890,7 +895,7 @@ fn text_editor_phase_four_binding_retires_the_closed_host_and_preserves_its_sibl
     let _serialized = engine_surface_law_guard();
     let text = |id: &str| ENGINE_SURFACES.with(|cell| cell.borrow().get(id).and_then(|entry| entry.editor.as_ref()).map(|host| host.text().to_owned()));
     use super::engine_surface_attach_tests::{close_retained_surface_fixture, paint_retained_surface_in_window};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).unwrap();
     let law = &fixture["hostLifecycle"];
     let window_a = law["closingWindow"].as_str().unwrap();
     let window_b = law["siblingWindow"].as_str().unwrap();
@@ -993,7 +998,7 @@ fn paint2d_mask_stroke_publishes_one_paint_stroke_at_the_shared_target(){
 
 //#region ✍️EditorSceneDocumentLaws
 /// 🧫️ The editor engine's own canonical scene corpus (`framework.editor.canonical-scene/v1`).
-const EDITOR_CANONICAL_SCENE_CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧬️scene/🧫️fixtures/🔣️.json"));
+const EDITOR_CANONICAL_SCENE_CORPUS: &str = include_str!("../../../../../../../../../🔨️modules/✍️editor/🧬️scene/🧪️tests/🧫️fixtures/🔣️.json");
 
 /// 🔁️ The UI contract scene that carries one canonical scene's members the way a producer publishes them — each as an
 /// encoded `*Json` string — with the host's own settings members beside the engine's.

@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-artifact-procedural-3d-geometry-construction-support"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Fixture-driven support of the construction computes: shape inputs from other widgets and analytic expectations; the catalogue and the registry lookup are passed in by the caller"
+
+[package.metadata.semio]
+role = "test"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-3d-brep-curve = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-3d-brep-surface = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-oracle-support = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+serde_json = { workspace = true }

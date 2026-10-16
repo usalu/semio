@@ -1,6 +1,5 @@
 //! ⚡️ Complete building energy subject and actual declaration-owned SQLite I/O laws.
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 #[test]

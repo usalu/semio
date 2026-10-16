@@ -1,6 +1,6 @@
 import progressSchema from"./🧬️schema/🔣️.json"with{type:"json"};
 const progressLimit=progressSchema.properties.total.maximum;
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 /** 📮️ Keeps event observation and actual worker termination behind a first-party effect interface. */
 export interface PrintWorkerPortV1{subscribe(ports:Readonly<{message(value:unknown):void;failure(reason:unknown):void;exit(code:number):void}>):()=>void;terminate():Promise<void>}
 /** 🧵️ Joins complete output, actual exit and accepted termination without replacing a primary Error or undefined. */

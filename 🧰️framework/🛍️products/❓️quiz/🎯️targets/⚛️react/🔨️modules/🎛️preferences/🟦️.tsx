@@ -26,7 +26,7 @@ import { BodyButton, CardAction, CardIcon, PageFrame, QuizCard, Segments, cn, ty
 import { PRESENCE_ANCHORS } from "../👥️presence/🟦️.tsx";
 import { OTHERS_CHOICES, type OthersChoice } from "../🗳️crowd/🟦️.tsx";
 import { PET_CHOICES, PetsPlay, effectivePetMode, usePetCast, usePetsForced, usePetsReduced, type PetChoice, type PetLiveliness } from "../🐾️pets/🟦️.tsx";
-import { HOME_PAGES } from "../🧭️session/🟦️.ts";
+import { HOME_PAGES } from "../🧭️session/🧮️state/🟦️.ts";
 
 /** 🌓️ A colour theme choice. */
 export type ThemeChoice = "system" | "light" | "dark";

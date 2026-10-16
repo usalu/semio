@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 
 import fixture from "./🧫️fixtures/🔣️.json";
 import {hostContinuations} from "../../../../⏳️async/🪃️continuation/🟦️.ts";
-import {NativeDecodeControl} from "../../../../🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
 import {parseSqliteDatabaseSchemaControlled} from "../../🟦️.ts";
 import {artifactSqliteCheckpoint} from "../../🧩️artifact/🟦️.ts";
 

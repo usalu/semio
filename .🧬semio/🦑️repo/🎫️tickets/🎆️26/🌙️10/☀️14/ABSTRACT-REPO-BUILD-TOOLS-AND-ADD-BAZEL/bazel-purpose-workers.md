@@ -15,3 +15,7 @@ Core owns worker/schema authorship; High owns test driver/parity helper. All thr
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/📜️script.ts`: SHA256 `2bbc16a6db0cbc5c3b2831928838b078eff4a18ed57172eaf4bc99ace2b45d76`, absolute UTF16 length142.
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🟦️.ts`: SHA256 `5aa58a5d0786cff19a3eff298b5bf4c12a2b728ffb75bf6e86b0c0bda165304d`, absolute UTF16 length136.
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🧪️purpose.json`: SHA256 `0e0383bed9f1067813eb96855d5806ca4f9ef65df5da16aa7dbd9c1e22b8056f`, absolute UTF16 length135.
+
+## Later Runtime Correction — 2026-10-16 12:54 UTC
+
+The earlier worker account above is historical. Actual Configuration48721 showed that current owned capture intentionally projects its genuine control's wire over the helper's structural capability/deadline substitution. Its release build/restore completed, but expected purpose SHA differed; Offline did not run. Current independent finite purpose design and authorized Source work are recorded in bazel-purpose-authority-classification.md and pending-qualification-current.md. No statement above qualifies the later current worker, installed parity or full public aggregate.

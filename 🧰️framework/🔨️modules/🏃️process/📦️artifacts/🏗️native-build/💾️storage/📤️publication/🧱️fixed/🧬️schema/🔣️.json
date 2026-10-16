@@ -1,0 +1,171 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:native-fixed-publication:v1",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "actions": [
+          "information",
+          "detach",
+          "inactive",
+          "attach",
+          "verify"
+        ],
+        "metadata": [
+          "pending",
+          "published",
+          "settled"
+        ],
+        "platforms": [
+          "linux",
+          "win32"
+        ]
+      }
+    },
+    "LinuxMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "device",
+        "source",
+        "backing",
+        "offset",
+        "sizelimit"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "device": {
+          "type": "string",
+          "pattern": "^7:[0-9]+$"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^/dev/loop[0-9]+$"
+        },
+        "backing": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "offset": {
+          "const": "0"
+        },
+        "sizelimit": {
+          "const": "0"
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "change",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "win32"
+          ]
+        },
+        "change": {
+          "enum": [
+            "none",
+            "offset",
+            "sizelimit",
+            "backing",
+            "bytes",
+            "image",
+            "extra",
+            "volume",
+            "disk",
+            "partition"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ObservationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "effect",
+        "accepted",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "win32"
+          ]
+        },
+        "effect": {
+          "enum": [
+            "mounted",
+            "inactive",
+            "duplicate",
+            "missing-association",
+            "foreign-mount",
+            "offset",
+            "observer",
+            "changed-mapping",
+            "short-footer",
+            "wrong-image",
+            "wrong-volume",
+            "changed-footer"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "kind": {
+          "enum": [
+            "mounted",
+            "inactive"
+          ]
+        }
+      }
+    },
+    "Inactive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "state",
+        "image"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "state": {
+          "const": "inactive"
+        },
+        "image": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    }
+  }
+}

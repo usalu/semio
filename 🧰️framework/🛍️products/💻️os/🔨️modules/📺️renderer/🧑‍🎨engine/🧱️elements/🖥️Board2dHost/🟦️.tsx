@@ -23,7 +23,7 @@ import {
   getActiveCataloguePointerDragData,
 } from "@semio-tech/ui-react";
 import { STYLING_METRICS, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import { type DemandFrameSchedulerV1, createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/canvas-react-renderer";
+import { type DemandFrameSchedulerV1, createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/framework/canvas/react-renderer";
 import { GestureRecognizer, applyPinchToCamera, type ComponentSceneHostProps, type Board2dScene, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type Board2dWasmSession, type Board2dPeer, type BoardPeerScope, BoardSessionFactoryContext, createBoardPeerScope } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { createCoalescingActionDispatcher } from "../🛠️ShellHelpers/🟦️.tsx";

@@ -12,7 +12,7 @@ import {
   organizeContextMenu,
   resolveWindowActions
 } from "@semio-tech/framework";
-import { documentRuntimeKeyV1 } from "@semio-tech/framework-os";
+import { documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
 import { modeLayoutStacksV1, type WindowScopeLayoutNodeV1 } from "../⌨️window-scope/🟦️.ts";
 import { spawnedIdOfWindowInstanceV1, spawnedProgramWindowInstancesV1 } from "../🪟️spawned-program/🟦️.ts";
 // #region 🔌️Adapters

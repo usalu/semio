@@ -62,3 +62,4 @@ semio-s-artifact-process-process3d-editor = { workspace = true }
 semio-s-artifact-process-process3d-inferences = { workspace = true }
 semio-s-artifact-process-process3d-mutations = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

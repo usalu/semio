@@ -3351,6 +3351,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-native-build-compiler-resources"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+]
+
+[[package]]
 name = "semio-framework-number"
 version = "0.1.0"
 
@@ -3486,6 +3493,13 @@ dependencies = [
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+]
+
+[[package]]
+name = "semio-framework-os-flow-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-flow-flow",
 ]
 
 [[package]]
@@ -4317,6 +4331,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -4383,13 +4398,10 @@ name = "semio-framework-os-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
- "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-pack-record-token",
  "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
@@ -4405,6 +4417,13 @@ dependencies = [
  "semio-framework-os-pack",
  "semio-framework-pack-source",
  "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-os-playbook-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-playbook-playbook",
 ]
 
 [[package]]
@@ -5025,15 +5044,16 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
+ "semio-framework-pack-schema-index",
  "semio-framework-replication-codec",
  "semio-framework-value",
 ]
 
 [[package]]
-name = "semio-framework-pack-record-token"
+name = "semio-framework-pack-schema-index"
 version = "0.1.0"
 dependencies = [
- "semio-framework-pack",
+ "semio-framework-dsl-record",
  "semio-framework-value",
 ]
 
@@ -5421,6 +5441,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-app-builder",
  "semio-framework-plugin-decl-app",
@@ -6919,6 +6940,7 @@ name = "semio-framework-ui-backend-webgpu"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
+ "semio-framework-abi",
  "semio-framework-ui-render",
  "semio-framework-value",
  "wgpu",
@@ -7651,6 +7673,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "syn 2.0.119",
 ]
 
@@ -8028,6 +8051,7 @@ dependencies = [
  "semio-s-artifact-procedural-2d-mut-synapses",
  "semio-s-artifact-procedural-2d-mut-widgets",
  "semio-s-artifact-procedural-2d-mutations",
+ "semio-s-procedural-core-generation-sqlite-native",
 ]
 
 [[package]]
@@ -9018,6 +9042,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-mut-transforms",
  "semio-s-artifact-procedural-3d-mut-widgets",
  "semio-s-artifact-procedural-3d-mutations",
+ "semio-s-procedural-core-generation-sqlite-native",
 ]
 
 [[package]]
@@ -12191,9 +12216,23 @@ dependencies = [
 name = "semio-s-procedural-core-generation-sqlite"
 version = "0.1.0"
 dependencies = [
- "semio-framework-artifact-flow-flow",
- "semio-framework-artifact-playbook-playbook",
+ "semio-framework-os-flow-contract",
  "semio-framework-os-kernel",
+ "semio-framework-os-playbook-contract",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-s-procedural-core-generation-sqlite-native"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-os-flow-contract",
+ "semio-framework-os-kernel",
+ "semio-framework-os-playbook-contract",
+ "semio-framework-pack",
  "semio-framework-value",
 ]
 
@@ -12201,7 +12240,7 @@ dependencies = [
 name = "semio-s-procedural-core-semantic-ui"
 version = "0.1.0"
 dependencies = [
- "semio-framework-artifact-playbook-playbook",
+ "semio-framework-os-playbook-contract",
  "semio-framework-plugin",
  "semio-framework-ui",
  "semio-framework-ui-locale",

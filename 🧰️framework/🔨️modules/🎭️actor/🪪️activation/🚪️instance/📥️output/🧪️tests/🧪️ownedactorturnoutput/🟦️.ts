@@ -3,7 +3,7 @@ import type { OwnedActorTurnOutput as OwnedActorTurnOutputHandle, OwnedActorTurn
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../🌱️value/💾️resident/🟦️.ts"), "OwnedResidentLedger"> & Pick<typeof import("../../🟦️.ts"), "OwnedActorTurnOutput" | "OwnedActorTurnOutputs" | "cancelEmpty">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("@semio-tech/value-ts/resident"), "OwnedResidentLedger"> & Pick<typeof import("../../🟦️.ts"), "OwnedActorTurnOutput" | "OwnedActorTurnOutputs" | "cancelEmpty">, source: TestSource): Promise<void> {
   const { OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedResidentLedger, cancelEmpty } = dependencies;
 
   const { describe, expect, it, vi } = vitest;
@@ -141,7 +141,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: fixture } = await import("../🧫️fixtures/🔣️.json");
       const { default: schema } = await import("../../🧬️schema/🔣️.json");
       const { default: lifetimeSchema } = await import("../../../../../🚪️lifetime/🧬️schema/🔣️.json");
-      const { default: valueSchema } = await import("../../../../../../🌱️value/🧬️schema/🔣️.json");
+      const { valueSchema } = await import("@semio-tech/value-ts/schema");
       const { default: Ajv } = await import("ajv");
       const { produce } = await import("immer");
       const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(schema).getSchema(`${schema.$id}#/$defs/Output`)!;
@@ -191,7 +191,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: fixture } = await import("../🧫️fixtures/🔣️.json");
       const { default: schema } = await import("../../🧬️schema/🔣️.json");
       const { default: lifetimeSchema } = await import("../../../../../🚪️lifetime/🧬️schema/🔣️.json");
-      const { default: valueSchema } = await import("../../../../../../🌱️value/🧬️schema/🔣️.json");
+      const { valueSchema } = await import("@semio-tech/value-ts/schema");
       const { default: Ajv } = await import("ajv");
       const { produce } = await import("immer");
       const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(schema).getSchema(`${schema.$id}#/$defs/Output`)!;

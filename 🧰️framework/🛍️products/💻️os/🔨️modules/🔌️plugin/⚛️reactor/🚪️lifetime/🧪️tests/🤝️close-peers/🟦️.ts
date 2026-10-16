@@ -27,7 +27,7 @@ test("the close owner drives its peers through the port in the closed order", ()
 });
 
 test("the port names exactly the ten close steps and the lifecycle names no higher static", () => {
-  const port = body(lifetime, "pub(crate) trait ClosePeers");
+  const port = body(lifetime, "pub trait ClosePeers");
   expect([...port.matchAll(/fn ([a-z_]+)\(&self/gu)].map(match => match[1])).toEqual(vector.port);
   const code = lifetime.replace(/\/\/[^\n]*/gu, "");
   for (const name of vector.forbiddenInLifecycle) expect(code.includes(name), name).toBe(false);

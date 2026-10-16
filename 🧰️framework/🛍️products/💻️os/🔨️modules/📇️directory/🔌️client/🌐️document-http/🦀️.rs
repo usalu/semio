@@ -9,7 +9,7 @@ use semio_framework_async::OperationContext;
 #[derive(Clone)]
 pub struct CompiledDocumentHttpPortV1 {
     declaration: DocumentHttpPortDeclarationV1,
-    schemas: Vec<(OwnedJsonSchemaValidator, OwnedJsonSchemaValidator)>,
+    #[doc(hidden)] pub schemas: Vec<(OwnedJsonSchemaValidator, OwnedJsonSchemaValidator)>,
 }
 
 impl CompiledDocumentHttpPortV1 {
@@ -101,7 +101,3 @@ fn request(operation: &DocumentHttpOperationV1, input: &semio_framework_pack_jso
     let after = operation.cursor_field.as_ref().map(|field| input.get(field).and_then(semio_framework_pack_json::Value::as_u64).ok_or(DocumentHttpPortCodeV1::Invalid)).transpose()?;
     Ok(DocumentHttpRequestV1 { method: if operation.method == "GET" { HttpMethod::Get } else { HttpMethod::Post }, segments, after, body: operation.send_body.then_some(bytes), request_max_bytes: operation.request_max_bytes, response_max_bytes: operation.response_max_bytes })
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

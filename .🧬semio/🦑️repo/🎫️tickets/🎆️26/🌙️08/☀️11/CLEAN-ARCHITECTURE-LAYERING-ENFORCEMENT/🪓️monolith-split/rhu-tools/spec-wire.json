@@ -1,0 +1,7 @@
+{
+  "moves": [
+    {"from": "🧰️framework/🛍️products/💻️os/🔨️modules/🪢️wire-contracts/🟦️.ts", "to": "🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts"},
+    {"from": "🧰️framework/🛍️products/💻️os/🔨️modules/🧾️app-channel/🟦️.ts", "to": "🧰️framework/🔨️modules/🧾️app-channel/🟦️.ts"}
+  ],
+  "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/rhu-snap-wire.json"
+}

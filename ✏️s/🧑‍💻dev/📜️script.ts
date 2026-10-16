@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
 import {readFileSync} from "node:fs";
 import { receiveScriptProcessInvocation } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -70,19 +71,21 @@ class McpClientEndToEndScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const flag = args.indexOf("--folder");
     if (flag >= 0 && !args[flag + 1]) throw new Error("usage: mcp-client-e2e [--folder <path>]");
-    const { mkdtempSync } = await import("node:fs");
-    const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
-    const { requireMcpBinary, runMcpClientEndToEnd } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts");
+    const { runMcpClientEndToEnd } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts");
+    const { withMcpClientWorkspaceV1 } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🎫️session/📦️published/🟦️.ts");
     const { SPECIFIC_MCP_CLIENT_E2E_PINS_V1 } = await import("./🤝️mcp-client-e2e/🟦️.ts");
-    const folder = flag >= 0 ? join(this.repoRoot, args[flag + 1] as string) : mkdtempSync(join(tmpdir(), "semio-mcp-client-e2e-"));
-    console.log(`[mcp-client-e2e] binary ${requireMcpBinary(this.repoRoot)}`);
-    console.log(`[mcp-client-e2e] workspace folder ${folder}`);
-    const steps = await runMcpClientEndToEnd(this.repoRoot, folder, SPECIFIC_MCP_CLIENT_E2E_PINS_V1);
-    for (const step of steps) console.log(`${step.ok ? "PASS" : "FAIL"}  ${step.step} — ${step.detail}`);
-    const failed = steps.filter((step) => !step.ok);
-    console.log(`mcp-client-e2e: ${steps.length - failed.length}/${steps.length} steps green over the two real .mcp.json servers.`);
-    if (failed.length > 0) throw new Error(`mcp-client-e2e: ${failed.length} step(s) red: ${failed.map((step) => step.step).join(", ")}`);
+    const phase=createIssuedResourceControlV1(this.invocation,"mcp:client-e2e",120000);
+    const run=async(folder:string,control:import("../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl)=>{
+      console.log(`[mcp-client-e2e] workspace folder ${folder}`);
+      const steps=await runMcpClientEndToEnd(this.repoRoot,folder,SPECIFIC_MCP_CLIENT_E2E_PINS_V1,this.invocation,control);
+      for(const step of steps)console.log(`${step.ok?"PASS":"FAIL"}  ${step.step} — ${step.detail}`);
+      const failed=steps.filter(step=>!step.ok);
+      console.log(`mcp-client-e2e: ${steps.length-failed.length}/${steps.length} steps green over the two real .mcp.json servers.`);
+      if(failed.length)throw Error(`mcp-client-e2e: ${failed.length} step(s) red: ${failed.map(step=>step.step).join(", ")}`);
+    };
+    const selected=args[flag+1];
+    if(flag>=0){if(!selected)throw Error("Selected MCP workspace required");await run(join(this.repoRoot,selected),phase);}else await withMcpClientWorkspaceV1(this.invocation,phase,run);
   }
 }
 const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("mcp-client-e2e", McpClientEndToEndScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication",CatalogPublicationScript).register("catalog-publication-test",CatalogPublicationTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript);

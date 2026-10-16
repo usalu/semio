@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {join} from "node:path";
 import {runRepositoryPublishedCargoExecutableV1} from "../../../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
-import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { runDeclaredRustBuildV1 } from "../../../../📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -29,7 +30,7 @@ class TestScript extends BundleScript {
 class RunScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     await runDeclaredRustBuildV1(this.repoRoot,"@semio-tech/repo-coordinator-rs",this.root,this.invocation);
-    process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(this.root,"Cargo.toml"),"semio-repo-coordinator"+(process.platform==="win32"?".exe":""),segments,this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),this.invocation);
+    process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(this.root,"Cargo.toml"),"semio-repo-coordinator"+(process.platform==="win32"?".exe":""),segments,this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:published-execution",0));
   }
 }
 

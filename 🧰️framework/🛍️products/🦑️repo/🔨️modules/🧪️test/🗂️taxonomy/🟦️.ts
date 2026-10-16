@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type Implementation, IMPLEMENTATIONS } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type Implementation, IMPLEMENTATIONS } from "@semio-tech/framework/test/adapter";
 import { readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { getSemioRoot } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";

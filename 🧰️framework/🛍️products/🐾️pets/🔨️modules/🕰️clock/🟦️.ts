@@ -18,7 +18,10 @@ import { spawn } from "../👥️population/🟦️.ts";
 import { meet, pair } from "../💞️sociability/🟦️.ts";
 import { feel, remove, settle, stand, type Draft } from "../📝️draft/🟦️.ts";
 import { arrivalTick, beatTick, pairingTick, prankTick, sampling } from "../🗓️schedule/🟦️.ts";
-import { PUFF_TICKS, cling, fly, scoot, slip, stride, travel, tripOf } from "../🚶️locomotion/🟦️.ts";
+import { fly, scoot, slip, stride } from "../🚶️locomotion/🏃️motion/🟦️.ts";
+import { PUFF_TICKS } from "../🚶️locomotion/📐️constants/🟦️.ts";
+import { cling, travel } from "../🚶️locomotion/🧳️trips/🟦️.ts";
+import { tripOf } from "../🚶️locomotion/🪜️outings/🟦️.ts";
 
 //#region 🔖️Constants
 const FADE_STEP = 0.0625;

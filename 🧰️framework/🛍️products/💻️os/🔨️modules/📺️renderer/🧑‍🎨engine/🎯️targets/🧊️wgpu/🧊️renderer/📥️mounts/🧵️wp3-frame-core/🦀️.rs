@@ -80,12 +80,6 @@ pub(crate) use semio_framework_os_renderer_wgpu_browser_worker::*;
 mod runtime_publication_tests_host;
 //#endregion 🧵️FrameCoreTestHosts
 //#region 🧵️FrameCoreTestHosts
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🔬️wgpu-frame-job-unit/🦀️.rs"]
-mod tests_host;
-#[cfg(test)]
-#[path = "../../../🧵️frame-job/📬️outcome/🧪️tests/🦀️.rs"]
-mod original_outcome_tests_host;
 //#endregion 🧵️FrameCoreTestHosts
 //#region 🧵️FrameCoreTestHosts
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -93,15 +87,6 @@ mod original_outcome_tests_host;
 mod native_socket_sqlite_tests_host;
 //#endregion 🧵️FrameCoreTestHosts
 //#region 🧵️FrameCoreTestHosts
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🔬️wgpu-winit-app-p3c/🦀️.rs"]
-mod p3c_tests_host;
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🔬️wgpu-winit-app-callback-latency/🦀️.rs"]
-mod callback_latency_tests_host;
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🔢️frame-generation-hold/🦀️.rs"]
-mod frame_generation_hold_tests_host;
 //#endregion 🧵️FrameCoreTestHosts
 //#region 🧵️FrameCoreOsHostTestHost
 #[cfg(test)]

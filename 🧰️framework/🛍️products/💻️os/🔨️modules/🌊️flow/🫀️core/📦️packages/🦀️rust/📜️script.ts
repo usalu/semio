@@ -96,7 +96,7 @@ class SourceTestScript extends BundleScript {
     await import("../../../🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts");
     await import("../../../🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js");
     const { testFlowOpenOwnership } = await import("../../../🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts");
-    const fixture = JSON.parse(readFileSync(join(FAMILY_RS_DIR, "../../🕸️wasm/🧪️tests/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(FAMILY_RS_DIR, "../../🕸️wasm/🧪️tests/🧫️fixtures/🧑‍🤝‍🧑browser-runtime/🔣️.json"), "utf8"));
     await testFlowOpenOwnership(fixture.openFailure);
   }
 }

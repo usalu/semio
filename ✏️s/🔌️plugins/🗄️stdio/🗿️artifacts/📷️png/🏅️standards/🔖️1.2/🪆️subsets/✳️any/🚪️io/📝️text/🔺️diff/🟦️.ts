@@ -49,5 +49,5 @@ export const stdioPng12AnyDiffTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parsePngDiffText(value: unknown, at = "$"): PngDiffText {
-  return stdioPng12AnyDiffTextGuardObject(value, `${at}`);
+  return stdioPng12AnyDiffTextGuardString(value, `${at}`);
 }

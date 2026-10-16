@@ -2,19 +2,20 @@ import {gisMapInferenceRequestToJson} from "../../🏅️standards/🔖️1/🪆
 import { GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, gisMapInferenceCodeFromStatusV1, gisMapInferencePortTerminalV1, idleGisMapInferencePortStatusV1, parseGisMapInferenceApprovalReceiptV1, parseGisMapApprovalUndoReceiptV1, parseGisMapInferenceEventPageV1, parseGisMapInferenceJobReceiptV1, reduceGisMapInferencePortV1, sealGisMapApprovalUndoRequestV1, sealGisMapInferenceApprovalRequestV1, sealGisMapInferenceJobRequestV1, type GisMapApprovalHistoryStatusV1, type GisMapApprovalUndoReceiptV1, type GisMapInferenceApprovalReceiptV1, type GisMapInferenceJobRequestV1, type GisMapInferencePortCodeV1, type GisMapInferencePortEventV1, type GisMapInferencePortStatusV1 } from "../🧬️schema/🟦️.ts";
 import { parseInferenceReconcilePayloadV1 } from "../🔎️reconcile/🟦️.ts";
 import { JOB_RECONCILE_REQUEST_SCHEMA_V1, parseJobReconcileRequestV1, parseJobReconcileResultV1 } from "@semio-tech/framework/job/reconcile/schema";
-import { DirectoryHttpError, type DocumentScope, type BackboneWorkerResponse, type DocumentExecutionTargetLeaseFieldsV1 } from "@semio-tech/framework-os";
+import type { DocumentScope } from "@semio-tech/framework/document/scope";
+import { DirectoryHttpError, type DocumentServiceLeaseFieldsV1, type DocumentServiceWorkerHostV1, type DocumentServiceWorkerMessageV1 } from "@semio-tech/framework/inference/service/worker-host";
 import type { FetchTimeoutResponse } from "@semio-tech/framework";
-import type { DocumentServiceWorkerHostV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import type { InstalledServiceDriverV1, InstalledServiceOperationV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts";
+import type { InstalledServiceOperationV1 } from "@semio-tech/framework/inference/service";
 type ArtifactState = NonNullable<ReturnType<DocumentServiceWorkerHostV1["artifactState"]>>;
 type VerifiedColdDocumentPair = NonNullable<ArtifactState["verifiedColdPair"]>;
 type DocumentBrowserActorReservation = NonNullable<ArtifactState["browserActorReservation"]>;
 type BrowserSessionOperationFenceV1 = NonNullable<ReturnType<DocumentServiceWorkerHostV1["captureBrowserSessionOperationFence"]>>;
+type InferencePortStatusMessageV1 = Readonly<{ kind: "inference-port-status"; operationEpoch: number; scope: DocumentScope; status: Readonly<{ owner: string; serviceId: string; payload: unknown }> }>;
 
 /** 🌍 Installs GIS lifecycle behavior over the framework document/session authority port. */
 export function createGisMapInferenceWorkerV1(host: DocumentServiceWorkerHostV1) {
  const { artifactScope, artifactState, bytesHex, captureBrowserSessionOperationFence, sameBrowserSessionOperationFence, documentRuntimeKeyV1, SOCKET_GRANT_REQUEST_TIMEOUT_MS } = host;
- const post = (message: unknown) => host.post({ ...(message as Record<string, unknown>), owner: "gis", serviceId: "s.gis.gismap.inference" } as BackboneWorkerResponse);
+ const post = (message: DocumentServiceWorkerMessageV1) => host.post({ ...message, owner: "gis", serviceId: "s.gis.gismap.inference" });
 //#region 💡️Inference
 /** 💡️ One private request owner and bounded poll timer. A verified writable lease admits it;
  * cancel/reconcile cleanup outlives document retirement. Unknown outcomes retain the original
@@ -35,7 +36,7 @@ type InferenceOperationV1 = {
   readonly sessionEpoch: number;
   readonly sessionFence: BrowserSessionOperationFenceV1;
   readonly clientInstanceId: string;
-  readonly leaseFields: DocumentExecutionTargetLeaseFieldsV1;
+  readonly leaseFields: DocumentServiceLeaseFieldsV1;
   readonly transport: ReturnType<DocumentServiceWorkerHostV1["bindDocumentService"]>;
   request: Readonly<GisMapInferenceJobRequestV1> | null;
   closeRequested: boolean;
@@ -268,10 +269,10 @@ function retainInferenceApprovalUndo(operation: InferenceOperationV1, receipt: G
 
 /** 🔭️ Observation seam mirroring {@link executionTargetStatusObserver}: a harness without a worker
  * scope still sees the exact bounded payload the renderer would receive. */
-let inferencePortStatusObserver: ((status: Extract<BackboneWorkerResponse, { kind: "inference-port-status" }>) => void) | null = null;
+let inferencePortStatusObserver: ((status: InferencePortStatusMessageV1) => void) | null = null;
 
 function postInferencePortStatus(operation: InferenceOperationV1): void {
-  const status: Extract<BackboneWorkerResponse, { kind: "inference-port-status" }> = { kind: "inference-port-status", operationEpoch: operation.operationEpoch, scope: operation.scope, status: { owner: "gis", serviceId: "s.gis.gismap.inference", payload: operation.status } };
+  const status: InferencePortStatusMessageV1 = { kind: "inference-port-status", operationEpoch: operation.operationEpoch, scope: operation.scope, status: { owner: "gis", serviceId: "s.gis.gismap.inference", payload: operation.status } };
   inferencePortStatusObserver?.(status);
   post(status);
 }

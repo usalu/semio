@@ -22,7 +22,7 @@ import {
   type TutorialUiSnapshot,
   type TutorialVideoCue
 } from "@semio-tech/framework";
-import { type LocalInteractionState } from "@semio-tech/framework-replication";
+import { type LocalInteractionState } from "@semio-tech/framework/replication";
 import {
   TutorialCaptions,
   type TutorialClockPort,
@@ -146,7 +146,7 @@ function diffTutorialUiSnapshot(prev: TutorialUiSnapshot, next: TutorialUiSnapsh
  * new keyframe when the live pose hasn't meaningfully moved since the last sample. */
 function tutorialCameraPoseEquals(a: TutorialCameraState, b: TutorialCameraState): boolean {
   if (a.kind !== b.kind) return false;
-  if (a.kind === "orbit" && b.kind === "orbit") return a.position.every((value, index) => Math.abs(value - b.position[index]) < 1e-4) && a.target.every((value, index) => Math.abs(value - b.target[index]) < 1e-4);
+  if (a.kind === "orbit" && b.kind === "orbit") return a.position.every((value,index)=>{const other=b.position[index];return other!==undefined&&Math.abs(value-other)<1e-4;}) && a.target.every((value,index)=>{const other=b.target[index];return other!==undefined&&Math.abs(value-other)<1e-4;});
   if (a.kind === "canvas" && b.kind === "canvas") return Math.abs(a.x - b.x) < 1e-4 && Math.abs(a.y - b.y) < 1e-4 && Math.abs(a.zoom - b.zoom) < 1e-4;
   return false;
 }

@@ -6,7 +6,7 @@ import findUp from "find-up";
 import Ajv from "ajv";
 import { findWorkspaceRoot } from "../../🟦️.ts";
 import corpus from "./🧫️fixtures/🔣️.json";
-import bootstrapCorpus from "../../../../../🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧪️tests/🧫️fixtures/🔣️.json";
+import { nativeBootstrapFixture as bootstrapCorpus } from "@semio-tech/framework/products/repo/modules/native/bootstrap/testing/fixtures";
 import schema from "../🧬️schema/🔣️.json";
 
 const root = findWorkspaceRoot(import.meta.dir), host = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test");

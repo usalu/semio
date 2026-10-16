@@ -4,7 +4,7 @@ import{withCompiledPrintProbeV1}from"../../🔨️modules/🖨️tectonic-templa
 import {mkdirSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {parseProbeJsonLines} from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
-import {defineTestAdapter} from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import {defineTestAdapter} from "@semio-tech/framework/test/adapter";
 import fixtures from "./🔣️.json";
 import customization from "./⚙️.json";
 

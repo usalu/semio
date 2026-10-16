@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

@@ -19,10 +19,10 @@ fn byte(v:f64)->u8{v.clamp(0.0,255.0).round()as u8}
 /// ⏱️ Exact image boundary coverage with one source-cell visit per reduction work unit.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct AffineImageJob{
- source:Option<RasterLease>,output:RasterImage,coverage:Option<CoverageJob>,mask:Option<CoverageMask>,inverse:Option<[f64;6]>,determinant:f64,filter:AffineSampling,
- phase:&'static str,at:usize,work:u64,cancelled:bool,failed:Option<AffineImageError>,sampled:usize,sample_total:usize,active:bool,x:usize,y:usize,left:usize,right:usize,bottom:usize,
+ #[doc(hidden)] pub source:Option<RasterLease>,#[doc(hidden)] pub output:RasterImage,#[doc(hidden)] pub coverage:Option<CoverageJob>,#[doc(hidden)] pub mask:Option<CoverageMask>,inverse:Option<[f64;6]>,determinant:f64,filter:AffineSampling,
+ #[doc(hidden)] pub phase:&'static str,#[doc(hidden)] pub at:usize,#[doc(hidden)] pub work:u64,cancelled:bool,#[doc(hidden)] pub failed:Option<AffineImageError>,sampled:usize,sample_total:usize,active:bool,x:usize,y:usize,left:usize,right:usize,bottom:usize,
  quad:[[f64;2];4],scratch_a:[[f64;2];12],scratch_b:[[f64;2];12],sums:[f64;4],
- coverage_retirement:Option<CoverageRetirement>,
+ #[doc(hidden)] pub coverage_retirement:Option<CoverageRetirement>,
 }
 impl AffineImageJob{
  pub fn new(input:AffineImageInput)->Result<Self,AffineImageError>{
@@ -78,6 +78,3 @@ impl AffineImageJob{
 }
 semio_framework_value::artifact_retire_leaf!(AffineSampling);
 physical_work_retirement!(AffineImageRetirement,AffineImageJob,AffineImageError,invalid);
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

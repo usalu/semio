@@ -26,7 +26,7 @@ import {
   resolvePluginRegistryId,
   panelViewContext
 } from "@semio-tech/framework";
-import { DEV_STREAM_ROUTES } from "@semio-tech/framework-os";
+import { DEV_STREAM_ROUTES } from "@semio-tech/framework/backbone";
 import { resolveBootPrimaryAppV1 } from "../🔀️surface-switch/🟦️.ts";
 import { type UiStatus } from "@semio-tech/ui-react";
 import { type LoadedProgramState, resolvePluginCanvasStatus, upsertLoadedProgramV1 } from "../../🐚️Shell/🟦️.tsx";
@@ -49,11 +49,11 @@ import {
 // #endregion 🔌️Adapters
 import { onPluginInstancesLost, PluginBootShardLostError, type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { isShardLostError } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { streamMuxWatchV1 } from "../../../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
+import { streamMuxWatchV1 } from "@semio-tech/framework/io/stream-mux";
 import { MODULE_EXTENSION_ROUTE } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT, type HubPluginSourceV1 } from "../../../../../🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
-import { hubCatalogClosureV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1 } from "../../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
-import type { TrustedPluginModuleIndexEntryV1 } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
+import { hubCatalogClosureV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
+import type { TrustedPluginModuleIndexEntryV1 } from "@semio-tech/framework/plugin-module";
 import pluginModuleStoreWorkerUrl from "../../../../../🔌️plugin/📇️registry/🌎️hub-source/👷️service-worker/🟦️.ts?worker&url";
 import { resolveRequiredHostApps } from "../🪪️host-bootstrap/🟦️.tsx";
 import { commandStallWatch, registerProgramExtensionV1 } from "../../🔌️PluginRuntime/🟦️.tsx";

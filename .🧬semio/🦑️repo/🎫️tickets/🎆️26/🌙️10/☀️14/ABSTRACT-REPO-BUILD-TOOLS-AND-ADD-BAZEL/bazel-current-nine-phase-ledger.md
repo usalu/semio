@@ -1,4 +1,8 @@
-# Current Individual Bazel Phase Ledger
+# Current Qualification Status
+
+Latest separately scoped evidence: Services42863 1/3 and Refusals43703 1/29 passed under capture42558; Cancellation48160 1/30 passed under fresh capture48054. Configuration48721 then failed its purpose wire/capability assertion after actual build/restore; Offline was not born. All custody closed. These do not form a single current nine-phase or public aggregate pass. Exact retained scopes/design: bazel-post-reconciliation-readiness.md and bazel-purpose-authority-classification.md.
+
+# Historical Individual Bazel Phase Ledger
 
 These nine separately launched actual permanent `test bazel <phase>` dispatches each terminated zero under a fresh ordinary CLI policy0, with the unchanged 120000 ms phase child cap and exact incoming wire. Their parent explicitly selected Bazel before birth. Every accepted child and Tools/dependencies/products shared custody scope settled before the next launch. This is individual phase evidence across necessary Source corrections, not one atomic Source batch, a no-argument aggregate, or package-alias selected graph admission.
 

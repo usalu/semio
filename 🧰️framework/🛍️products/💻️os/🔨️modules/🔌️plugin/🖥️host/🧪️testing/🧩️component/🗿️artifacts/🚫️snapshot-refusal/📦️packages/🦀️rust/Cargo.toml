@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../../../../../.."
+name = "semio-framework-plugin-host-test-component-refusal"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Fixture-only refusal artifact of the neutral host test component: typed snapshot, empty mutation vocabulary and the compiled refusal routes"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-host-test-component-refusal"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-pack = { path = "../../../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../../../../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-os-kernel.workspace = true
+semio-framework-value-derive.workspace = true

@@ -19,6 +19,10 @@
   "chargeFile": "compiler-state.json",
   "intentFile": "compiler-state.intent.json",
   "volumeDirectory": "v",
-  "initialCompilerFloorBytes": 4294967296,
-  "minimumAvailableBytes": 1073741824
+  "minimumAvailableBytes": 1073741824,
+  "initialParentFloorBytes": 4294967296,
+  "owner": "repo:compiler-state:prototype",
+  "workspaceOwner": "repo:compiler:prototype",
+  "workspaceFile": "compiler-prototype.json",
+  "outputDirectory": "b/p"
 }

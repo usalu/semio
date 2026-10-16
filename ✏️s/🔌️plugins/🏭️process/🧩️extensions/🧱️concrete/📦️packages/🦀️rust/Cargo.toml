@@ -26,3 +26,4 @@ semio-s-artifact-process-process3d-model = { workspace = true }
 [dev-dependencies]
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-s-plugin-process-catalog-json-oracle = { path = "../../../🧪️tests/🔬️catalog-json/📦️packages/🦀️rust" }

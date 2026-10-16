@@ -30,7 +30,7 @@ pub enum AuthOutcome {
 }
 
 /// 🎭️ THE declared-policy roles of one authenticated session holding `role` in a space (its ceiling-capped role,
-/// [`HubDirectory::principal_role`]): a human session is signed in plus its membership role; an agent session holds
+/// [`PrincipalAuthority::principal_role`]): a human session is signed in plus its membership role; an agent session holds
 /// only its agent role — `agent-editor` under an author ceiling, `agent-reader` under a spectator one — so no grant the
 /// policy writes for humans (space creation, administration, delegation, preferences) ever reaches an agent.
 pub fn session_access_roles(session_kind: AuthSessionKind, role: Option<SpaceRole>) -> Vec<DirectoryAccessRoleV1> {

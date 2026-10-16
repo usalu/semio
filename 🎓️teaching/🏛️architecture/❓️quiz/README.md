@@ -193,7 +193,7 @@ device stays there until the proctor has it: a learner who clears the browser's 
 scores every run itself, so the leaderboard never trusts a device.
 
 The gate proves it in a real browser in both topologies (`🧪️tests/📴️proctor-away`, `🧪️tests/🛟️proctor-faults`); the
-unit proofs are in the quiz product (`🚶️learner-journey`, `🫡️deputy-decisions`, `📬️outbox-delivery`,
+unit proofs are in the quiz product (`🚶️journey-and-tabs`, `🧩️deputy-and-contract`, `🏔️challenge-session`, `🧷️run-truth`, `🫡️deputy-decisions`, `📬️outbox-delivery`,
 `🤝️wire-version`).
 
 ## Proof of concept by hand

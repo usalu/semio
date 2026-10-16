@@ -10,6 +10,7 @@
   },
   "bundleKind": "library",
   "devDependencies": {
+    "@semio-tech/framework": "workspace:*",
     "@semio-tech/process": "workspace:*"
   }
 }

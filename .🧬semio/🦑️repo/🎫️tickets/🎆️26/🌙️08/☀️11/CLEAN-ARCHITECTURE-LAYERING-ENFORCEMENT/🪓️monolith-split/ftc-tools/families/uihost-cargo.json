@@ -1,0 +1,20 @@
+{
+ "parent_manifest": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+ "companion_dir": "🧰️framework/🔨️modules/🖱️ui/🖥️host/🧪️tests/🥣️companion",
+ "name": "semio-framework-ui-host-tests",
+ "id": "ui-host-tests",
+ "role": "framework",
+ "description": "Companion tests of ui-host: event normalization, event queue admission and the input byte buffer",
+ "project": "@semio-tech/framework-ui-host-tests-rs",
+ "features": [
+  "testkit"
+ ],
+ "carry": [
+  "semio-framework-abi",
+  "ui_render",
+  "serde_json"
+ ],
+ "extra": [
+  "winit = { version = \"0.30.12\", default-features = false, features = [\"rwh_06\"] }"
+ ]
+}

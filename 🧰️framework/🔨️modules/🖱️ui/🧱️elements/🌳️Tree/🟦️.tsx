@@ -3556,7 +3556,7 @@ export const Tree = (({
       if (controlledSelectedIds === undefined) {
         setUncontrolledSelectedIds(normalizedIds);
       }
-      onSelectionChange?.(normalizedIds, normalizedIds.map((id) => itemMap[id]).filter(Boolean));
+      onSelectionChange?.(normalizedIds, normalizedIds.map((id) => itemMap[id]).filter((item):item is TreeDataItem=>item!==undefined));
     },
     [controlledSelectedIds, itemMap, onSelectionChange, selectionMode],
   );
@@ -3649,7 +3649,7 @@ export const Tree = (({
       event.stopPropagation();
       const currentSelectedIds = selectionStoreRef.current.getSelectedIds();
       const nextDraggedIds = currentSelectedIds.includes(item.id) ? [...currentSelectedIds] : [item.id];
-      const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter(Boolean);
+      const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter((item):item is TreeDataItem=>item!==undefined);
       setDraggedIds(nextDraggedIds);
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData(treeDefaultDragMimeKind, JSON.stringify(nextDraggedIds));
@@ -3678,7 +3678,7 @@ export const Tree = (({
   const handleDragEnd = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
       const sourceIds = draggedIds.length > 0 ? draggedIds : [item.id];
-      const sourceItems = sourceIds.map((id) => itemMap[id]).filter(Boolean);
+      const sourceItems = sourceIds.map((id) => itemMap[id]).filter((item):item is TreeDataItem=>item!==undefined);
       dragAndDropController?.onDragEnd?.({ items: sourceItems, sourceItem: item, section });
       setDraggedIds([]);
       setDropPreview(null);
@@ -4141,6 +4141,7 @@ export function buildControlTree(controls: ControlDef[], filterText: string, fol
     let pathAccum = "";
     for (let i = 0; i < segments.length - 1; i++) {
       const seg = segments[i];
+      if(seg===undefined)throw Error("Actual control path segment required");
       pathAccum = pathAccum ? `${pathAccum}/${seg}` : seg;
       if (!current[seg]) {
         current[seg] = {
@@ -4151,9 +4152,10 @@ export function buildControlTree(controls: ControlDef[], filterText: string, fol
           children: {},
         };
       }
-      current = current[seg].children!;
+      const node=current[seg];if(!node?.children)throw Error("Control path cannot traverse a leaf");current=node.children;
     }
     const lastSeg = segments[segments.length - 1];
+    if(lastSeg===undefined)throw Error("Actual control leaf required");
     current[lastSeg] = {
       kind: "control",
       key: leafKey,

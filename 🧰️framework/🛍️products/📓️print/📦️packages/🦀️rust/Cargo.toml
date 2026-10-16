@@ -29,8 +29,3 @@ semio-framework-schema-validator = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-
-[dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-async-macros = { workspace = true }
-serde_json = { workspace = true }

@@ -13,7 +13,7 @@
 // #region 🔌️Adapters
 import { cleanup, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it } from "vitest";
-import { type ArtifactSyncStatus } from "@semio-tech/framework-os";
+import { type ArtifactSyncStatus } from "@semio-tech/framework/backbone";
 import { posix } from "node:path";
 import { HubConnectionIndicator, SyncAttachCard, hubConnectionSummaryV1, syncAttachTargetV1, syncStatusLabelV1, type HubLinkV1, type HubSessionPresenceV1, type SyncStatusTextsV1 } from "../../🟦️.tsx";
 import hubSummary from "../🧫️fixtures/📶️hub-connection-summary.json";

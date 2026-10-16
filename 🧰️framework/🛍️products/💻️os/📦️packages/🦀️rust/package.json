@@ -13,6 +13,7 @@
     "test-directory-descriptor-digest-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-os-kernel:test-directory-descriptor-digest-native"
   },
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "crc-32": "^1.2.2"
   }
 }

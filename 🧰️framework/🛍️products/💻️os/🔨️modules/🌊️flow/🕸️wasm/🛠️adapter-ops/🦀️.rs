@@ -4,15 +4,15 @@ use super::*;
 
 impl FlowDomainAdapter {
     pub fn attach_surface(&mut self, args: &FlowArguments) -> Result<Vec<u8>, FlowFailure> {
-        let id = SurfaceId::try_new(u32_integer(args, "surface")?).map_err(surface_abi_failure)?;
-        let generation = SurfaceGeneration::try_new(u32_integer(args, "surfaceGeneration")?).map_err(surface_abi_failure)?;
+        let id = SurfaceId::try_new(u32_integer(args, "surface")?).map_err(abi_failure)?;
+        let generation = SurfaceGeneration::try_new(u32_integer(args, "surfaceGeneration")?).map_err(abi_failure)?;
         if let Some(current) = self.surface {
             return Err(FlowFailure::new(if current.id == id && current.generation == generation { AbiErrorCode::Busy } else { AbiErrorCode::StaleGeneration }, "Flow surface requires exact close before replacement"));
         }
         let width = u32_integer(args, "width")?;
         let height = u32_integer(args, "height")?;
         let dpr = number(args, "dpr")?;
-        let metrics = CanvasMetrics::try_new(width, height, dpr as f32).map_err(surface_abi_failure)?;
+        let metrics = CanvasMetrics::try_new(width, height, dpr as f32).map_err(abi_failure)?;
         self.width = width;
         self.height = height;
         self.dpr = dpr;
@@ -22,8 +22,8 @@ impl FlowDomainAdapter {
     }
 
     pub fn apply_surface_status(&mut self, args: &FlowArguments) -> Result<Vec<u8>, FlowFailure> {
-        let id = SurfaceId::try_new(u32_integer(args, "surface")?).map_err(surface_abi_failure)?;
-        let generation = SurfaceGeneration::try_new(u32_integer(args, "surfaceGeneration")?).map_err(surface_abi_failure)?;
+        let id = SurfaceId::try_new(u32_integer(args, "surface")?).map_err(abi_failure)?;
+        let generation = SurfaceGeneration::try_new(u32_integer(args, "surfaceGeneration")?).map_err(abi_failure)?;
         let current = self.surface.as_mut().ok_or_else(|| abi_failure(AbiErrorCode::UnknownHandle))?;
         if current.id != id {
             return Err(abi_failure(AbiErrorCode::UnknownHandle));
@@ -50,7 +50,7 @@ impl FlowDomainAdapter {
     }
 
     pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) -> Result<(), FlowFailure> {
-        let metrics = CanvasMetrics::try_new(width, height, dpr as f32).map_err(surface_abi_failure)?;
+        let metrics = CanvasMetrics::try_new(width, height, dpr as f32).map_err(abi_failure)?;
         self.width = width;
         self.height = height;
         self.dpr = dpr;

@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "fault": "none",
+      "allowed": true
+    },
+    {
+      "fault": "symlink",
+      "allowed": false
+    },
+    {
+      "fault": "foreign-device",
+      "allowed": false
+    },
+    {
+      "fault": "changed-name",
+      "allowed": false
+    },
+    {
+      "fault": "descriptor",
+      "allowed": false
+    },
+    {
+      "fault": "sync-undefined",
+      "allowed": false
+    },
+    {
+      "fault": "sync-frozen",
+      "allowed": false
+    },
+    {
+      "fault": "cancelled",
+      "allowed": false
+    },
+    {
+      "fault": "expired",
+      "allowed": false
+    }
+  ]
+}

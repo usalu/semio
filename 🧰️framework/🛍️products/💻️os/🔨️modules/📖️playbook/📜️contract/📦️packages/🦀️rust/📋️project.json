@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/framework-os-playbook-contract-rs",
+  "tags": [
+    "lang:rust",
+    "role:product",
+    "family:os-playbook"
+  ]
+}

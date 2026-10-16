@@ -49,5 +49,5 @@ export const stdioTxtUtf8AnySnapshotTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseTxtSnapshotText(value: unknown, at = "$"): TxtSnapshotText {
-  return stdioTxtUtf8AnySnapshotTextGuardObject(value, `${at}`);
+  return stdioTxtUtf8AnySnapshotTextGuardString(value, `${at}`);
 }

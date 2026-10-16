@@ -1,0 +1,327 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-energy-model-1/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/pfb-orig/energy-test/🦀️.rs",
+ "descendants": [],
+ "chunks": [
+  {
+   "name": "kinds",
+   "folder": "🏷️kinds",
+   "doc": "🏷️ Catalog ids of every declared mutation kind, the unobservable list and the committed demo document.",
+   "segments": [
+    {
+     "lines": [
+      16,
+      328
+     ]
+    }
+   ],
+   "reexport": "private",
+   "glob": false
+  },
+  {
+   "name": "building",
+   "folder": "🏠️building",
+   "doc": "🏠️ Committed specification vectors of the building kinds: model, site, run period, zones, spaces, surfaces and surface boundaries.",
+   "glob": false,
+   "uses": [
+    "use super::Vector;"
+   ],
+   "reexport": false,
+   "segments": [
+    {
+     "lines": [
+      344,
+      1153
+     ]
+    }
+   ],
+   "before": [
+    "//#region 🔖️Fixtures",
+    "pub(super) const BUILDING_VECTORS: &[Vector] = &["
+   ],
+   "after": [
+    "];",
+    "//#endregion 🔖️Fixtures"
+   ],
+   "replace": [
+    [
+     "../🧫️fixtures/",
+     "../../🧫️fixtures/"
+    ]
+   ],
+   "separator": "\n",
+   "drop": [
+    [
+     343,
+     343
+    ]
+   ]
+  },
+  {
+   "name": "openings",
+   "folder": "🪟️openings",
+   "doc": "🪟️ Committed specification vectors of the opening kinds: fenestration, glazing, shading surfaces, shading devices and surface connections.",
+   "glob": false,
+   "uses": [
+    "use super::Vector;"
+   ],
+   "reexport": false,
+   "segments": [
+    {
+     "lines": [
+      1154,
+      1603
+     ]
+    }
+   ],
+   "before": [
+    "//#region 🔖️Fixtures",
+    "pub(super) const OPENING_VECTORS: &[Vector] = &["
+   ],
+   "after": [
+    "];",
+    "//#endregion 🔖️Fixtures"
+   ],
+   "replace": [
+    [
+     "../🧫️fixtures/",
+     "../../🧫️fixtures/"
+    ]
+   ],
+   "separator": "\n"
+  },
+  {
+   "name": "fabric",
+   "folder": "🪨️fabric-and-gains",
+   "doc": "🪨️ Committed specification vectors of the fabric and gain kinds: materials, finishes, constructions and the people, lighting and equipment gains.",
+   "glob": false,
+   "uses": [
+    "use super::Vector;"
+   ],
+   "reexport": false,
+   "segments": [
+    {
+     "lines": [
+      1604,
+      2323
+     ]
+    }
+   ],
+   "before": [
+    "//#region 🔖️Fixtures",
+    "pub(super) const FABRIC_VECTORS: &[Vector] = &["
+   ],
+   "after": [
+    "];",
+    "//#endregion 🔖️Fixtures"
+   ],
+   "replace": [
+    [
+     "../🧫️fixtures/",
+     "../../🧫️fixtures/"
+    ]
+   ],
+   "separator": "\n"
+  },
+  {
+   "name": "airflow",
+   "folder": "💨️airflow-and-controls",
+   "doc": "💨️ Committed specification vectors of the airflow and control kinds: infiltration, leakage, ventilation, thermostats, humidistats and ideal loads.",
+   "glob": false,
+   "uses": [
+    "use super::Vector;"
+   ],
+   "reexport": false,
+   "segments": [
+    {
+     "lines": [
+      2324,
+      3115
+     ]
+    }
+   ],
+   "before": [
+    "//#region 🔖️Fixtures",
+    "pub(super) const AIRFLOW_VECTORS: &[Vector] = &["
+   ],
+   "after": [
+    "];",
+    "//#endregion 🔖️Fixtures"
+   ],
+   "replace": [
+    [
+     "../🧫️fixtures/",
+     "../../🧫️fixtures/"
+    ]
+   ],
+   "separator": "\n"
+  },
+  {
+   "name": "zone_systems",
+   "folder": "🔧️zone-systems",
+   "doc": "🔧️ Committed specification vectors of the zone system kinds: zone equipment, daylight, sizing, room air, setpoints, air loops, plant loops and outdoor air.",
+   "glob": false,
+   "uses": [
+    "use super::Vector;"
+   ],
+   "reexport": false,
+   "segments": [
+    {
+     "lines": [
+      3116,
+      3979
+     ]
+    }
+   ],
+   "before": [
+    "//#region 🔖️Fixtures",
+    "pub(super) const ZONE_SYSTEM_VECTORS: &[Vector] = &["
+   ],
+   "after": [
+    "];",
+    "//#endregion 🔖️Fixtures"
+   ],
+   "replace": [
+    [
+     "../🧫️fixtures/",
+     "../../🧫️fixtures/"
+    ]
+   ],
+   "separator": "\n"
+  },
+  {
+   "name": "power",
+   "folder": "🔌️power-and-plant",
+   "doc": "🔌️ Committed specification vectors of the power and plant kinds: load centers, PV, batteries, hot water, solar thermal, refrigeration, water systems and faults.",
+   "glob": false,
+   "uses": [
+    "use super::Vector;"
+   ],
+   "reexport": false,
+   "segments": [
+    {
+     "lines": [
+      3980,
+      4879
+     ]
+    }
+   ],
+   "before": [
+    "//#region 🔖️Fixtures",
+    "pub(super) const POWER_VECTORS: &[Vector] = &["
+   ],
+   "after": [
+    "];",
+    "//#endregion 🔖️Fixtures"
+   ],
+   "replace": [
+    [
+     "../🧫️fixtures/",
+     "../../🧫️fixtures/"
+    ]
+   ],
+   "separator": "\n"
+  },
+  {
+   "name": "schedules",
+   "folder": "📆️schedules-and-layers",
+   "doc": "📆️ Committed specification vectors of the schedule and layer kinds: space lists, enclosures, schedules, time series, window layers and finishes.",
+   "glob": false,
+   "uses": [
+    "use super::Vector;"
+   ],
+   "reexport": false,
+   "segments": [
+    {
+     "lines": [
+      4880,
+      5689
+     ]
+    }
+   ],
+   "before": [
+    "//#region 🔖️Fixtures",
+    "pub(super) const SCHEDULE_VECTORS: &[Vector] = &["
+   ],
+   "after": [
+    "];",
+    "//#endregion 🔖️Fixtures"
+   ],
+   "replace": [
+    [
+     "../🧫️fixtures/",
+     "../../🧫️fixtures/"
+    ]
+   ],
+   "separator": "\n",
+   "drop": [
+    [
+     5690,
+     5690
+    ]
+   ]
+  },
+  {
+   "name": "oracle",
+   "folder": "🔮️oracle-role",
+   "doc": "🔮️ Oracle role: the committed after and before snapshots read literally as the forward and inverse reference answers.",
+   "segments": [
+    {
+     "lines": [
+      5702,
+      5718
+     ]
+    }
+   ],
+   "reexport": "private"
+  },
+  {
+   "name": "subject",
+   "folder": "🎯️subject-role",
+   "doc": "🎯️ Subject role: this repository's own mutation report checked against the committed vectors, gated behind the sut feature.",
+   "segments": [
+    {
+     "lines": [
+      5720,
+      5720
+     ]
+    },
+    {
+     "lines": [
+      5723,
+      5847
+     ],
+     "dedent": 4
+    },
+    {
+     "lines": [
+      5849,
+      5849
+     ]
+    }
+   ],
+   "drop": [
+    [
+     5721,
+     5722
+    ],
+    [
+     5848,
+     5848
+    ]
+   ],
+   "mountAttrs": [
+    "#[cfg(feature = \"sut\")]"
+   ],
+   "separator": "\n",
+   "reexport": false,
+   "glob": false
+  }
+ ],
+ "compareReplace": [
+  [
+   "../../🧫️fixtures/",
+   "../🧫️fixtures/"
+  ]
+ ]
+}

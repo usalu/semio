@@ -125,11 +125,11 @@ impl ComponentReceiptV1 {
         Ok(())
     }
 
-    /// 🔗️ Requires a valid shipped receipt naming exactly this package, these component bytes and this semantic descriptor.
-    pub fn binds(&self, plugin_id: &str, package_id: &str, wasm_sha256: &str, semantic_descriptor_sha256: &str) -> Result<(), ComponentReceiptRefusalV1> {
+    /// 🔗️ Requires a valid receipt naming exactly this selected profile, package, component and semantic descriptor.
+    pub fn binds(&self, profile: ComponentProfileV1, plugin_id: &str, package_id: &str, wasm_sha256: &str, semantic_descriptor_sha256: &str) -> Result<(), ComponentReceiptRefusalV1> {
         self.validate()?;
-        if !self.profile.shipped() {
-            return Err(ComponentReceiptRefusalV1("does not name shipped release bytes"));
+        if self.profile != profile {
+            return Err(ComponentReceiptRefusalV1("names another selected profile"));
         }
         if self.plugin_id != plugin_id || self.package_id != package_id {
             return Err(ComponentReceiptRefusalV1("names another package"));

@@ -49,5 +49,5 @@ export const stdioPly10AnyInferenceTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parsePlyInferenceText(value: unknown, at = "$"): PlyInferenceText {
-  return stdioPly10AnyInferenceTextGuardObject(value, `${at}`);
+  return stdioPly10AnyInferenceTextGuardString(value, `${at}`);
 }

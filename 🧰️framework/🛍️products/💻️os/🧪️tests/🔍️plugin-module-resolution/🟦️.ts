@@ -7,8 +7,9 @@ import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { PLUGIN_MODULE_SOURCES_V1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
-import { decodeTrustedPluginModuleBundleV1, trustedPluginModuleSourceOfEntryV1, validateTrustedPluginModuleIndexV1, type TrustedPluginModuleFileV1 } from "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
+import { PLUGIN_MODULE_SOURCES_V1 } from "@semio-tech/framework/plugin-module/hub-source/schema";
+import { decodeTrustedPluginModuleBundleV1, validateTrustedPluginModuleIndexV1 } from "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
+import { trustedPluginModuleSourceOfEntryV1, type TrustedPluginModuleFileV1 } from "@semio-tech/framework/plugin-module";
 import {
   hubCatalogClosureV1,
   hubCatalogOnlyPluginsV1,
@@ -17,12 +18,12 @@ import {
   localPluginModuleRootV1,
   parseHubProgramIdV1,
   resolvePluginModuleSourceV1,
-} from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+} from "@semio-tech/framework/plugin-module/hub-source/resolution";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧪️tests/🧫️fixtures/🔍️resolution/🔣️.json");
-const storeSchema = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🔣️.json");
+const storeSchema = here("../../../../🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🔣️.json");
 const hubSchema = here("../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json");
 const hexBytes = (value: string) => Uint8Array.from(value.match(/../gu) ?? [], (pair) => Number.parseInt(pair, 16));
 const ajv = semioSchemaAjvV1({ strict: false, allErrors: true }).addSchema({ ...hubSchema, $ref: undefined }).addSchema(storeSchema);

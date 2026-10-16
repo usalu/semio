@@ -1075,7 +1075,7 @@
     "✏️s/🔌️plugins/🀄️wfc/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.toml": "runtime",
-    "✏️s/🔌️plugins/🌀️procedural/🫀️core/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.toml": "runtime",

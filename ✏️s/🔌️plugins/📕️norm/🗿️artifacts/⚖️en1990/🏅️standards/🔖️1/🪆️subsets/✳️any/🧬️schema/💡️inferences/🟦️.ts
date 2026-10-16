@@ -1,7 +1,7 @@
 /** 💡️ `En1990Inference` wire twin: the derived reading of the document, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireBoolean, normWireInteger, normWireNumber, normWireObject, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireBoolean, normWireInteger, normWireNumber, normWireObject, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface En1990Inference {
   outline: En1990Outline;

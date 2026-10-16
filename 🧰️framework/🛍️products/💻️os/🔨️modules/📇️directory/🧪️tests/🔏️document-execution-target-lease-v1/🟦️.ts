@@ -14,7 +14,7 @@ test("the lease corpus binds both peers to one framework contract witness", () =
 });
 
 test("a lease package is admitted only with the shipped receipt binding its exact component and semantic descriptor", async () => {
-  const { parseDocumentExecutionTargetLeaseFieldsV1 } = await import("../../🧬️schema/🟦️.ts");
+  const { parseDocumentExecutionTargetLeaseFieldsV1 } = await import("../../🧬️schema/🔏️document-open/🟦️.ts");
   const { default: Ajv } = await import("ajv");
   const corpus = fixture<{ manifest: Record<string, any>; componentReceiptCases: { id: string; path: string[] | null; value: unknown; accepted: boolean }[] }>("🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json");
   const directorySchema = fixture("🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json") as { $id: string };

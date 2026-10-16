@@ -49,5 +49,5 @@ export const stdioStepAp214BaseSnapshotTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseStepSnapshotText(value: unknown, at = "$"): StepSnapshotText {
-  return stdioStepAp214BaseSnapshotTextGuardObject(value, `${at}`);
+  return stdioStepAp214BaseSnapshotTextGuardString(value, `${at}`);
 }

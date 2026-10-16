@@ -49,5 +49,5 @@ export const stdioAvi10HdrlInferenceTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseAviInferenceText(value: unknown, at = "$"): AviInferenceText {
-  return stdioAvi10HdrlInferenceTextGuardObject(value, `${at}`);
+  return stdioAvi10HdrlInferenceTextGuardString(value, `${at}`);
 }

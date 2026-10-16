@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: structural rules over the Shape V2 taxonomy tree.
+/** 🗺️ Wave 4 plugin consistency policy: structural rules over the Shape V2 taxonomy tree.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { canonicalFilenameForKind, canonicalPrimaryFilenameForKind, createFixedContractResolver, discoverPackages, fixedFilenameContractIdsForPath, loadTaxonomy, semanticDirectoryKindId, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";

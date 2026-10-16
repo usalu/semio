@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {existsSync} from "node:fs";
 import Ajv from "ajv";
 import fixture from "./nested-io.json";
-import contract from "../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
+import { orderedRetirementSchema as contract } from "@semio-tech/value-ts/ordered/retirement/schema";
 
 test("Nested IO original physical grant and native custody witness match canonical Ajv and independent JSON",()=>{
  expect(existsSync(new URL("../🧬️schema/💰️wallet.json",import.meta.url))).toBe(false);

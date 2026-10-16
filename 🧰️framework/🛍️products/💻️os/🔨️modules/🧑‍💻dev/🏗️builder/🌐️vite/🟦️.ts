@@ -220,7 +220,7 @@ return {
       entry: options.browserEntry,
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
-    managedWasmPackagesVitePluginV1((renderer==="wgpu"?[]:frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:buildMode,facet:command==="build"?"distribution":sourceEngineFacet})).map(({packageName,root,entry,files})=>({packageName,root,entry,files}))),
+    managedWasmPackagesVitePluginV1((renderer==="wgpu"?[]:frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:buildMode,facet:command==="build"?"distribution":sourceEngineFacet})).map(({packageName,root,entry,files,entrypoint})=>({packageName,root,entry,files,entrypoint}))),
     playgroundFlowWasmDevStubPlugin(repoRoot,flowBrowserDeliveryV1(repoRoot,repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:buildMode,command})),
     semioServiceWorkerScopeVitePlugin(),
     semioDescriptorRouteGuardVitePlugin([

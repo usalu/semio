@@ -4,6 +4,7 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
     "⚙️engine/📦️packages/🦀️rust",
+    "🪶️sqlite/🎨️bitmap/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",

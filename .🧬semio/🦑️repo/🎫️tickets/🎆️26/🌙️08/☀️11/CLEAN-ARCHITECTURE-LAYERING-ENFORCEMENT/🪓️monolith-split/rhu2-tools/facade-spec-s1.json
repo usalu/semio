@@ -1,0 +1,9 @@
+[
+ {"sub":"./browser-bundle/action-handoff","file":"🌐️browser-bundle/🎯️action-handoff/🟦️.ts","emoji":"🎯️","sources":["🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/🟦️.ts"]},
+ {"sub":"./browser-bundle/action-handoff/requests","file":"🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts","emoji":"📮️","sources":["🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts"]},
+ {"sub":"./browser-bundle/action-handoff/publication","file":"🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts","emoji":"📤️","sources":["🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts"]},
+ {"sub":"./browser-bundle/patch-handoff","file":"🌐️browser-bundle/🩹️patch-handoff/🟦️.ts","emoji":"🩹️","sources":["🧰️framework/🔨️modules/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"]},
+ {"sub":"./browser-bundle/child/schema","file":"🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts","emoji":"🧬️","sources":["🧰️framework/🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts"]},
+ {"sub":"./inference/opening","file":"💡️inference/🚪️opening/🟦️.ts","emoji":"🚪️","sources":["🧰️framework/🔨️modules/💡️inference/🚪️opening/🟦️.ts"]},
+ {"sub":"./assets/published-page","file":"🖼️assets/🌐️published-page/🟦️.ts","emoji":"🌐️","sources":["🧰️framework/🔨️modules/🖼️assets/🌐️published-page/🟦️.ts"]}
+]

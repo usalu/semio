@@ -55,13 +55,13 @@ pub struct CursorRevisionRecord {
 
 #[derive(Clone)]
 pub struct CursorRevisionAccumulator {
-    pub(crate) identity_digest: [u8; 32],
-    pub(crate) applied: semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
-    pub(crate) redo: semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
-    pub(crate) applied_tail_chains: Option<([u8; 32], EditDigestChains)>,
-    pub(crate) mutation_positions: protocol::HistoryFoldIndex<MutationId, (usize, usize, [u8; 32])>,
-    pub(crate) indexed_edits: protocol::HistoryFoldIndex<[u8; 32], (usize, usize)>,
-    pub(crate) unit_flags: protocol::HistoryFoldIndex<([u8; 32], usize), bool>,
+    pub identity_digest: [u8; 32],
+    pub applied: semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
+    pub redo: semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
+    pub applied_tail_chains: Option<([u8; 32], EditDigestChains)>,
+    pub mutation_positions: protocol::HistoryFoldIndex<MutationId, (usize, usize, [u8; 32])>,
+    pub indexed_edits: protocol::HistoryFoldIndex<[u8; 32], (usize, usize)>,
+    pub unit_flags: protocol::HistoryFoldIndex<([u8; 32], usize), bool>,
 }
 
 /// 📍️ The first applied and redo positions whose ids changed since [`ArtifactStore::bump`] last mirrored both stacks into the
@@ -133,7 +133,7 @@ impl CursorRevisionAccumulator {
     /// 🥽️ What an edit's revision identity covers: its value without `sequenceNumber`. That member is where the edit stands
     /// in ONE replica's ledger — a remote merge renumbers it, a reload derives it from the stored order — so two replicas
     /// holding the same edit at different positions, and a replica and its own reload, name the same edit (design §22.28).
-    pub(crate) fn revision_value<Mutation: ToValue>(edit: &Edit<Mutation>) -> DslValue {
+    pub fn revision_value<Mutation: ToValue>(edit: &Edit<Mutation>) -> DslValue {
         match edit.to_value() {
             DslValue::Object(mut members) => {
                 members.retain(|(key, _)| key != "sequenceNumber");
@@ -152,7 +152,7 @@ impl CursorRevisionAccumulator {
     }
 
     /// 🔏️ [`Self::edit_digest`], continuing `known` chains when the edit only grew since they were taken (an amend).
-    pub(crate) fn edit_digest_extending<Mutation: ToValue>(edit: &Edit<Mutation>, known: Option<EditDigestChains>) -> ([u8; 32], Option<EditDigestChains>) {
+    pub fn edit_digest_extending<Mutation: ToValue>(edit: &Edit<Mutation>, known: Option<EditDigestChains>) -> ([u8; 32], Option<EditDigestChains>) {
         if edit.forwards.len() <= 1 {
             let encoded = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&Self::revision_value(edit))).into_bytes();
             return (Self::hash_record(b"edit", &[edit.id.as_bytes(), &encoded]), None);

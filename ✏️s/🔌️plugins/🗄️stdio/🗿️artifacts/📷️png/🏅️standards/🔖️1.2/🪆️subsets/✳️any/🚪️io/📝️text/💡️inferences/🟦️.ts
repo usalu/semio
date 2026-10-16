@@ -49,5 +49,5 @@ export const stdioPng12AnyInferenceTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parsePngInferenceText(value: unknown, at = "$"): PngInferenceText {
-  return stdioPng12AnyInferenceTextGuardObject(value, `${at}`);
+  return stdioPng12AnyInferenceTextGuardString(value, `${at}`);
 }

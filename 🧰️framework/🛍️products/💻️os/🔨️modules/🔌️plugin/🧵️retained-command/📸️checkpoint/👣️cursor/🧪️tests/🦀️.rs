@@ -1,5 +1,7 @@
 //! 📸️ Same original app workspace and ARC1 bytes survive independent denials and paid metadata closure.
-use super::*;
+use crate::checkpoint_cursor::ArtifactCommandCheckpointCursor;
+use std::mem::MaybeUninit;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 #[test]
 fn original_command_checkpoint_cursor_preserves_every_arc1_byte_and_zero_copy_metadata(){

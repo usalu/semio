@@ -1,3 +1,4 @@
+import"../../🌱️environment/🧪️tests/🟦️.ts";
 import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
 import {resolve,join,dirname} from "node:path";
@@ -5,7 +6,7 @@ import Ajv from "ajv";
 import ts from "typescript";
 import {nativeOwnerTestManifestRequestV1} from "../../🗺️owner-test-manifests/🟦️.ts";
 const root=resolve(import.meta.dir,"../../../../../../../../../../"),owner=resolve(import.meta.dir,"../.."),general=join(root,"🧰️framework/📦️packages/🦀️rust/📜️script.ts"),processOwner=join(root,"🧰️framework/🔨️modules/🏃️process"),source=readFileSync(general,"utf8");
-const fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🗺️owner-test-manifests/🔣️.json"),"utf8")) as {cases:{id:string;args:string[];valid:boolean;testManifests?:string[]}[]},schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🗺️owner-test-manifests/🔣️.json"),"utf8")),oracle=new Ajv({strict:true,allErrors:true}).compile(schema);
+const fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🗺️owner-test-manifests/🔣️.json"),"utf8")) as {cases:{id:string;args:string[];valid:boolean;testManifests?:string[]}[]},schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🗺️owner-test-manifests/🔣️.json"),"utf8")),oracle=new Ajv({strict:true,allErrors:true}).compile(schema);
 test("explicit manifest requests agree with the independent closed-schema oracle",()=>{
  for(const row of fixture.cases){let request;try{request=nativeOwnerTestManifestRequestV1(row.args);}catch{}expect(Boolean(request)).toBe(row.valid);if(request){expect(oracle(request)).toBe(true);expect(request.testManifests).toEqual(row.testManifests!);}console.log(`[DEBUG] native-manifest-request ${row.id} admitted=${Boolean(request)}`);}
  const admitted=nativeOwnerTestManifestRequestV1(fixture.cases[0]!.args);expect(oracle({...admitted,unexpected:true})).toBe(false);

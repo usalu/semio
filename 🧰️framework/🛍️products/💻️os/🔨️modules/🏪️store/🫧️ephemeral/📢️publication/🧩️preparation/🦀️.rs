@@ -21,12 +21,12 @@ pub trait ArtifactEphemeralPreparationTask<P, M>: ErasedSnapshotRetirement {
 /// 🏗️ Domain construction supplies its task; Store retains base, mutation and result ownership.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct ArtifactEphemeralTaskPreparationFactory<P: Send + Sync + 'static, M: Send + 'static> {
-    preflight: fn(&M) -> Result<ArtifactStoreOneItemFootprint, String>,
+    pub preflight: fn(&M) -> Result<ArtifactStoreOneItemFootprint, String>,
     create_task: fn(&P, &M) -> Result<Box<dyn ArtifactEphemeralPreparationTask<P, M>>, String>,
     #[factory_child]
     state_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
     #[factory_child]
-    mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,
+    pub mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,
 }
 
 impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralTaskPreparationFactory<P, M> {
@@ -90,7 +90,7 @@ pub struct ArtifactEphemeralTaskPreparation<P, M> {
 }
 
 impl<P, M> ArtifactEphemeralTaskPreparation<P, M> {
-    pub(super) fn new(
+    pub fn new(
         request: ArtifactEphemeralOneItemPreparationRequest<P, M>,
         task: Box<dyn ArtifactEphemeralPreparationTask<P, M>>,
         state_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
@@ -12,9 +13,10 @@ import {cmdBudgetMs} from "../../../../🏃️process/📦️packages/🟦️typ
 /** 🚪️ Runs every native vocabulary law without selecting a test name. */
 class NativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const{rest}=resolveTestLevel(segments);
     if(rest.length)throw Error("test-native accepts only an execution level");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-ui-viewport"],cwd:this.root,extraArgs:["--all-targets","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-ui-viewport"],cwd:this.root,extraArgs:["--all-targets","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 /** 🪆️ Checks canonical owner bindings against independent schema and SQLite fields. */

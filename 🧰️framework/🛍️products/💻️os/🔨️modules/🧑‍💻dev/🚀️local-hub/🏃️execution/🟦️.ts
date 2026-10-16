@@ -1,23 +1,9 @@
 import { terminateOwnedProcessTree } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV, DEV_LOCAL_HUB_PROVIDER_ENV, parseDevLocalHubProviderV1, type DevLocalHubProviderV1 } from "../🧬️schema/🟦️.ts";
 
 export const DEV_LOCAL_HUB_READINESS_STALL_BOUND_MS = 300_000;
 
-import { requestLocalBrokerSession } from "../../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts";
-/** 🚀️ Zero-touch loopback development hub for `dev s`: ONE detached owner per hub port and data root holds the hub's
- * local-bootstrap pipe and its session broker, and every `s` serve — single-user rows and both two-user rows — signs in
- * through that broker. Which dashboard command reaches a clean data root first (`▶️start`, a `dev s` row, the compound rows) no
- * longer decides who can sign in, and stopping one UI never takes the hub away from another.
- *
- * Only the DEFAULT hub is ever started here. A hub named explicitly (`S_HUB_URL`, or a hub url a caller passes) belongs to
- * whoever runs it, so a serve only JOINS it: it waits, saying so, and gives up after {@link DEV_HUB_JOIN_BOUND_MS} with a
- * typed outcome. Two serves pointed at a W2 hub that was still booting each started a hub of their own on its port (26/09/26
- * 15:03, both bound 7800 at 15:41 and forced the real one to restart). Starting is guarded by an owner lease per port and
- * per data root ({@link claimDevHubLeaseV1}), so two serves never start two hubs and a hub that has not bound yet is owned.
- * The owner republishes a catalog the current hub cannot load ({@link devHubCatalogFreshnessV1}) instead of crashing on it.
- * Contracts: `🧑‍💻dev/🧬️schema/🔣️.json` `DevHubLeaseV1`, `DevHubCatalogHeaderV1`, `DevHubCatalogPointerV1`; laws
- * `🧑‍💻dev/🧪️tests/🚀️local-hub` over `🧑‍💻dev/🧫️fixtures/🚀️local-hub.json`.
- * @see ../../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts */
+
+/** 🧭️ Neutral development role, status, catalog and serve models. Actual persistent session lifetime belongs to ../🎫️session/🟦️.ts; service activation belongs to its independently authored application owner. */
 
 import { spawn, type ChildProcess } from "node:child_process";
 import { closeSync, existsSync, linkSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -38,7 +24,6 @@ export const DEV_HUB_JOIN_BOUND_MS = 120_000;
 /** 📣️ How often a waiting serve says it is still waiting. */
 export const DEV_HUB_STATUS_INTERVAL_MS = 10_000;
 
-export type DevLocalHubSession = Readonly<{ hubUrl: string; dataDir: string; profileId: string; userId: string }>;
 
 //#region 🔖️Status
 /** 🌐️ How a serve relates to a hub: `own` — the zero-touch default hub this checkout may start; `join` — a hub named
@@ -403,99 +388,8 @@ function ownerLogBytes(dataDir: string): number {
   }
 }
 
-/** 🚀️ Starts the detached owner for `dataDir` (its output goes to `<dataDir>/local-hub.log`). */
-async function stopDevLocalHubOwner(child: ChildProcess): Promise<void> {
-  if (child.pid === undefined || child.exitCode !== null || child.signalCode !== null) return;
-  terminateOwnedProcessTree(child.pid);
-  const deadline = Date.now() + 2_000;
-  while (child.exitCode === null && child.signalCode === null && Date.now() < deadline) await new Promise<void>((done) => setTimeout(done, 20));
-  if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
-}
-
-async function spawnDevLocalHubOwner(repoRoot: string, hubUrl: string, dataDir: string, provider: DevLocalHubProviderV1 | null, children: Map<number, ChildProcess>, signal?: AbortSignal): Promise<number | null> {
-  if (provider === null || signal?.aborted) return null;
-  mkdirSync(dataDir, { recursive: true });
-  protectOwnerOnly(dataDir, "directory");
-  const log = openSync(join(dataDir, DEV_LOCAL_HUB_LOG_FILE), "a", 0o600);
-  let child: ChildProcess;
-  try {
-    child = spawn(provider.owner.program, [...provider.owner.args, hubUrl, dataDir], { cwd: repoRoot, env: { ...process.env, OS_HUB_DATA: dataDir }, stdio: ["ignore", log, log], detached: true, shell: false });
-  } catch { return null; }
-  finally { closeSync(log); }
-  const started = await new Promise<boolean>((done) => {
-    const finish = (accepted: boolean) => { clearTimeout(timer); signal?.removeEventListener("abort", cancelled); done(accepted); };
-    const cancelled = () => finish(false);
-    const timer = setTimeout(cancelled, 5_000);
-    child.once("spawn", () => finish(!signal?.aborted));
-    child.on("error", () => finish(false));
-    signal?.addEventListener("abort", cancelled, { once: true });
-    if (signal?.aborted) cancelled();
-  });
-  if (!started || child.pid === undefined || signal?.aborted) { await stopDevLocalHubOwner(child); return null; }
-  const pid = child.pid;
-  children.set(pid, child);
-  child.once("exit", () => children.delete(pid));
-  child.unref();
-  return pid;
-}
-
-/** 🔌️ The real world of {@link ownDevHubV1} and {@link joinDevHubV1}, reporting in the terminal's language. */
-export function devHubWorldV1(repoRoot: string, locale: DevHubLocaleV1 = devHubLocaleV1(), provider: DevLocalHubProviderV1 | null = null): DevHubWorldV1 {
-  const children = new Map<number, ChildProcess>();
-  return {
-    ready: hubReady,
-    portInUse: (port) => isDevPortInUse("127.0.0.1", port),
-    now: () => Date.now(),
-    sleep: (ms) => new Promise<void>((resolveDelay) => setTimeout(resolveDelay, ms)),
-    report: (status) => (status.kind === "gave-up" || status.kind === "port-taken" ? console.warn : console.log)(devHubStatusTextV1(status, locale)),
-    spawnOwner: (hubUrl, dataDir, signal) => spawnDevLocalHubOwner(repoRoot, hubUrl, dataDir, provider, children, signal),
-    stopOwner: async (pid) => { const child = children.get(pid); if (child) await stopDevLocalHubOwner(child); },
-    alive: isPidAliveV1,
-    logBytes: ownerLogBytes,
-  };
-}
-//#endregion 🔖️Join
-
-/** 🗄️ The development hub data root: `OS_HUB_DATA`, else the repository's `hub-dev` root. */
-export function devLocalHubDataDir(repoRoot: string, env: NodeJS.ProcessEnv = process.env): string {
-  return resolve(env.OS_HUB_DATA ?? join(repoRoot, ".🧬semio", "🌐hub", "hub-dev"));
-}
-
-/** 🌐️ Brings up the default loopback development hub, or joins the one named by `hubUrl` / `S_HUB_URL`, and proves a
- * session for this serve's profile through the owner's broker. `null` when local-only was asked for, when an explicit hub
- * did not answer within its bound, or when no default hub came up; a hub someone else operates (no broker for this data
- * root) is joined without a session, and the shell's own sign-in stays available. `S_HUB_URL` names the hub this process
- * serves with only once one answers: a serve that continues local-first hands its Vite no hub, so the shell never proxies
- * `/_semio/hub/*` (its trusted plugin catalog first) to a hub that is not there (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-
- * EDITING follow-up 3: `GET /_semio/hub/trusted-catalog/plugin-modules` answered 500 at every boot of a hub-less serve). */
-export async function ensureDevLocalHub(
-  repoRoot: string,
-  options: { readonly hubUrl?: string; readonly dataDir?: string; readonly profileId?: string; readonly world?: DevHubWorldV1; readonly joinBoundMs?: number; readonly provider?: DevLocalHubProviderV1; readonly signal?: AbortSignal } = {},
-): Promise<DevLocalHubSession | null> {
-  if (process.env.S_LOCAL_ONLY === "1" || process.env.S_LOCAL_ONLY === "true") {
-    delete process.env.S_HUB_URL;
-    return null;
-  }
-  const explicit = options.hubUrl ?? process.env.S_HUB_URL;
-  const role = devHubRoleV1(explicit);
-  const hubUrl = (role === "join" ? explicit! : DEV_LOCAL_HUB_DEFAULT_URL).trim().replace(/\/+$/u, "");
-  const dataDir = options.dataDir ?? devLocalHubDataDir(repoRoot);
-  const provider = options.provider ?? (process.env[DEV_LOCAL_HUB_PROVIDER_ENV] ? parseDevLocalHubProviderV1(JSON.parse(process.env[DEV_LOCAL_HUB_PROVIDER_ENV]!)) : null);
-  const profileId = options.profileId ?? process.env[DEV_LOCAL_HUB_PROFILE_ENV] ?? provider?.defaultProfileId ?? "";
-  const world = options.world ?? devHubWorldV1(repoRoot, devHubLocaleV1(), provider);
-  delete process.env.S_HUB_URL;
-  const up = role === "join" ? (await joinDevHubV1(hubUrl, world, options.joinBoundMs ?? DEV_HUB_JOIN_BOUND_MS, DEV_HUB_STATUS_INTERVAL_MS, options.signal)).kind === "joined" : await ownDevHubV1(hubUrl, dataDir, devHubLeaseRootV1(repoRoot), world, options.signal);
-  if (!up || options.signal?.aborted) return null;
-  const session = await requestLocalBrokerSession(dataDir, hubUrl, profileId, options.signal).catch(() => null);
-  if (options.signal?.aborted) return null;
-  process.env.S_HUB_URL = hubUrl;
-  if (session === null) {
-    world.report({ kind: "no-broker", hubUrl, dataDir });
-    return { hubUrl, dataDir, profileId, userId: "" };
-  }
-  world.report({ kind: "session", hubUrl, userId: session.userId, profileId });
-  return { hubUrl, dataDir, profileId, userId: session.userId };
-}
+/** 🗂️ Observes an old test fixture location only; it grants no persistent state or process custody. */
+export function devLocalHubDataDir(repoRoot:string,env:NodeJS.ProcessEnv=process.env):string{return resolve(env.OS_HUB_DATA??join(repoRoot,".🧬semio","🌐hub","hub-dev"));}
 
 //#region 🔖️DevServeOwnership
 /** 🛎️ How long {@link ensureDevServe} waits for a serve it started to answer (a cold `s` Vite boot measured 55 s under a

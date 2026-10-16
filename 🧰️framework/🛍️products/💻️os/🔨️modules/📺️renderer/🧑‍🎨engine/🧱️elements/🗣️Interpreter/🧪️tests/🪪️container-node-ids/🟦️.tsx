@@ -1,3 +1,4 @@
+import { loadUiSurfaceLifetimeFixture, loadSurfaceHostRetentionFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 type TestSource = { readonly url: string };
 
 /** 🪪️ Every interpreted container carries its authored stable DOM id — including the two wrapper roles
@@ -13,7 +14,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { cleanup, fireEvent, render } = await import("@semio-tech/ui-react/test");
   const { createElement } = await import("react");
-  const { default: lifetime } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🪟️surface-lifetime/🔣️.json");
+  const lifetime = await loadUiSurfaceLifetimeFixture();
 
   type AnyRecord = Record<string, any>;
 
@@ -133,7 +134,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   //#region 🪪️RetainedSurfaceHost
-  const { default: retention } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🪪️surface-host-retention.json");
+  const retention = await loadSurfaceHostRetentionFixture();
   const { uiSiblingReactKeys, uiChildReactKeys } = dependencies;
 
   /** 🪪️ Projects one fixture body onto the authored `BuiltNode` tree the shell loads into a window's
@@ -198,7 +199,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { builtNodeToSnapshot } = await import("../../../📃️UiDocumentStore/🟦️.tsx");
       const { act } = await import("react");
       const store = new UiDocumentStore(retention.surface);
-      const load = (index: number) => act(() => { store.loadSnapshot(builtNodeToSnapshot(retention.surface, builtFromFixture(retention.refreshes[index].body) as any)); });
+      const load=(index:number)=>{const refresh=retention.refreshes[index];if(!refresh)throw Error("Authored container refresh required");return act(()=>{store.loadSnapshot(builtNodeToSnapshot(retention.surface,builtFromFixture(refresh.body) as any));});};
       load(0);
       const view = render(createElement(UiNodeView, { store, id: store.getState().root, context: { store, onAction: () => {}, onIntent: () => {} } }));
       const canvasAt = () => document.getElementById(retention.expected.canvasDomId);
@@ -210,10 +211,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const firstHost = hostAt();
       expect(firstCanvas, "the canvas container must render under its authored DOM id").not.toBeNull();
       expect(firstHost, "the node-graph host must render under the surface node").not.toBeNull();
-      const mintedAt = (index: number) => String(retention.expected.surfaceNodeIdByRefresh[index] - 1);
+      const mintedAt=(index:number)=>{const id=retention.expected.surfaceNodeIdByRefresh[index];if(id===undefined)throw Error("Authored surface node identity required");return String(id-1);};
       expect(firstCanvas!.getAttribute("data-ui-node-id")).toBe(mintedAt(0));
       for (let index = 1; index < retention.refreshes.length; index += 1) {
-        const refresh = retention.refreshes[index];
+        const refresh = retention.refreshes[index];if(!refresh)throw Error("Authored container refresh required");
         load(index);
         // 🪪️ The refresh REACHED the DOM — the minted id on the very element under test moved. Without
         // this the identity assertions below would pass on a render that never happened.

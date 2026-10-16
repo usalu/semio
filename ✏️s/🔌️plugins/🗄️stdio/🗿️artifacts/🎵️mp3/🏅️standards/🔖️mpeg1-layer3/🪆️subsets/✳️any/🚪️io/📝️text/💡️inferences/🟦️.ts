@@ -49,5 +49,5 @@ export const stdioMp3Mpeg1layer3AnyInferenceTextGuardConstant = <T extends strin
 //#endregion 🚪️Parsers
 
 export function parseMp3InferenceText(value: unknown, at = "$"): Mp3InferenceText {
-  return stdioMp3Mpeg1layer3AnyInferenceTextGuardObject(value, `${at}`);
+  return stdioMp3Mpeg1layer3AnyInferenceTextGuardString(value, `${at}`);
 }

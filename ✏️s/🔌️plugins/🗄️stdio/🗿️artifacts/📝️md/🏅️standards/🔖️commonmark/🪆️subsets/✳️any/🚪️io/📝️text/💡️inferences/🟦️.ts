@@ -49,5 +49,5 @@ export const stdioMdCommonmarkAnyInferenceTextGuardConstant = <T extends string 
 //#endregion 🚪️Parsers
 
 export function parseMdInferenceText(value: unknown, at = "$"): MdInferenceText {
-  return stdioMdCommonmarkAnyInferenceTextGuardObject(value, `${at}`);
+  return stdioMdCommonmarkAnyInferenceTextGuardString(value, `${at}`);
 }

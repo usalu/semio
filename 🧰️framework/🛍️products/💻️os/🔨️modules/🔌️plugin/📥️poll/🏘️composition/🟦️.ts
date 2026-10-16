@@ -1,4 +1,4 @@
-import type { ResidentCapacity } from "../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
+import type { ResidentCapacity } from "@semio-tech/value-ts/resident";
 
 type Counts<T extends number | bigint> = { readonly bytes: T; readonly slots: T; readonly owners: T };
 type Capacity<T extends number | bigint> = Counts<T> & { readonly control: Counts<T> };
@@ -30,10 +30,3 @@ export function pluginPollCompositionToWit(value: unknown): PluginPollCompositio
 
 /** 🏘️ Checks WIT u64 values before host conversion; equal configuration never certifies private composition identity. */
 export function pluginPollCompositionFromWit(value: unknown): ResidentCapacity { return mapCapacity(value, hostCount); }
-
-//#region 🧪️CompositionMapping
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️pluginpollcompositionwit-preserves-the-canonical-six-scalars-and-exact-n/🟦️.ts");
-  await registerTests1(import.meta.vitest, { pluginPollCompositionFromWit, pluginPollCompositionToWit }, { url: import.meta.url });
-}
-//#endregion 🧪️CompositionMapping

@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type SubsetTarget, type MutationOutcomeClass, type EngineFamily, type EvidenceInvariants, MUTATION_OUTCOME_CLASSES } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type SubsetTarget, type MutationOutcomeClass, type EngineFamily, type EvidenceInvariants, MUTATION_OUTCOME_CLASSES } from "@semio-tech/framework/test/adapter";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { digest } from "../🔢️digests/🟦️.ts";

@@ -77,7 +77,7 @@ pub enum UiDirtySection {
 /// answered `patched=0`, and the flow window was re-minted eight times for nothing
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md` §7).
 /// These predicates are that shell's half of the same law, driven by the same fixture
-/// (`🧫️fixtures/🐢️ui-dirty-scope/🔣️.json`) as the TypeScript twin in `🎠️kernel/🟦️.ts`.
+/// (`🧫️fixtures/🐢️ui-dirty-scope/🔣️.json`) as the TypeScript twin in `🎠️kernel/🎯️ui-dirty-scope/🟦️.ts`.
 impl UiDirtyScope {
     /// 🚫️ Nothing to re-render at all — the caller must not even open a refresh pass.
     pub fn asks_for_nothing(&self) -> bool {

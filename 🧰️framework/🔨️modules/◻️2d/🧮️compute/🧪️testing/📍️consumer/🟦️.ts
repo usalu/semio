@@ -5,7 +5,7 @@ export interface ComputeConsumerDescriptor{version:1;id:string;source:string;man
 /** 📖️ Reads only the caller-declared source coordinates. */
 export interface ComputeConsumerAccess{read(path:string):string;dependencies(manifest:string):readonly string[];}
 import schema from "../../🧬️schema/📍️consumer/🔣️.json";
-import {validateJsonSchemaSubset} from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 /** ✅️ Verifies direct canonical bindings without discovering any product owner. */
 export function verifyComputeConsumer(descriptor:ComputeConsumerDescriptor,access:ComputeConsumerAccess):{directDependency:true;bindings:readonly ComputeFamilyName[]}{
  if(validateJsonSchemaSubset(schema,descriptor).length)throw Error("Invalid compute consumer descriptor");

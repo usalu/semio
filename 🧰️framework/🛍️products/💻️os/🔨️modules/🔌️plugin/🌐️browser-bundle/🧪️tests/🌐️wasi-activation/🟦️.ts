@@ -82,7 +82,7 @@ export async function testBrowserWasiActivation(repoRoot: string, invocation: Sc
     assert.equal(classifyGuestLogLine(row.channel, row.text), row.level);
     assert.equal(Boolean(validateMaintenance(row.text)), row.channel === "stderr" && row.level === "debug" && !row.text.startsWith("[TRACE]"));
   }
-  const { DOCUMENT_BROWSER_ACTOR_INTERFACES } = await import("../../../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts");
+  const { DOCUMENT_BROWSER_ACTOR_INTERFACES } = await import("../../../../../../../🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts");
   const program = ts.createProgram([join(testSourceDirectory, "../../🌐️wasi/🟦️.ts")], { noEmit: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, lib: ["lib.es2023.d.ts", "lib.esnext.disposable.d.ts", "lib.dom.d.ts"], types: [], skipLibCheck: true });
   const diagnostics = ts.getPreEmitDiagnostics(program);
   assert.equal(diagnostics.length, 0, ts.formatDiagnosticsWithColorAndContext(diagnostics, { getCanonicalFileName: path => path, getCurrentDirectory: () => testSourceDirectory, getNewLine: () => "\n" }));

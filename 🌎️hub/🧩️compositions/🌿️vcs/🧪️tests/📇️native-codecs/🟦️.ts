@@ -1,3 +1,4 @@
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"@semio-tech/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -105,7 +106,7 @@ export class NativeCodecCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveVcsNativeCodecReceipts(this.repoRoot);
     if (process.argv.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-hub-vcs", target: { kind: "test", name: "native_codecs" }, laws: ["vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_factory_substitution", "vcs_native_receipt_closure_denies_every_hostile_row_including_the_retired_document_kind"] }], progress(event) { console.log(`vcs-native-codecs ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-hub-vcs", target: { kind: "test", name: "native_codecs" }, laws: ["vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_factory_substitution", "vcs_native_receipt_closure_denies_every_hostile_row_including_the_retired_document_kind"] }], progress(event) { console.log(`vcs-native-codecs ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
     for (const receipt of receipts) console.log(`vcs-native-codec-receipt: ${JSON.stringify(receipt)}`);
     console.log("vcs-native-codec-check: exact=1 literal-codecs=1; no hub catalog activation, provider link or client mount");
   }

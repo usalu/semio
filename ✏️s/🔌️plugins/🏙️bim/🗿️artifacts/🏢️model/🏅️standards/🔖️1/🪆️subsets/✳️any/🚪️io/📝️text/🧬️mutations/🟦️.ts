@@ -49,5 +49,5 @@ export const bimModelMutationsTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseModelMutationsText(value: unknown, at = "$"): ModelMutationsText {
-  return bimModelMutationsTextGuardObject(value, `${at}`);
+  return bimModelMutationsTextGuardString(value, `${at}`);
 }

@@ -30,6 +30,7 @@ testkit = ["semio-hub-artifact-authority/testkit", "semio-hub-document-routes/te
 [dev-dependencies]
 semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }
 semio-hub-artifact-creation = { workspace = true }
+semio-hub-directory = { workspace = true }
 semio-hub-directory-contract = { workspace = true }
 semio-hub-document-routes = { workspace = true, features = ["testkit"] }
 semio-hub-inference = { workspace = true, features = ["testkit", "integration-fixtures"] }

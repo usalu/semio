@@ -27,3 +27,4 @@ semio-framework-value-native-encoding = { path="../../../🛫️encode/📦️pa
 
 [dev-dependencies]
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

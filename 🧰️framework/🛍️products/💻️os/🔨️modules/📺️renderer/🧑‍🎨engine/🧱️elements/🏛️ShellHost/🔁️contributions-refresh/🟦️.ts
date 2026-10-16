@@ -53,7 +53,7 @@ import {
 import { retireSkippedWindowBodies } from "../🪟️mounted-window-refresh/🟦️.ts";
 import { createContributionsPublisher, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 import { guestIngressGenerationV1 } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { hopTrace } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { hopTrace } from "@semio-tech/framework/trace";
 import { seededActiveWindowId } from "../🎚️shell-model/🟦️.tsx";
 import { appCommandTakesPageRun, appOwnsCommand, encodeAppCommandInvocation } from "../📨️window-invocation/🟦️.ts";
 import { traceCommitToNextFrame } from "../🔌️extension-runtime/🟦️.ts";

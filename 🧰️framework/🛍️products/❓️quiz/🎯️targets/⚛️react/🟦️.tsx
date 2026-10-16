@@ -41,7 +41,9 @@ import { applyLocale, localized, preferredLocale, quizText, titled, type QuizLab
 import { browserStorageArea, localStore, type LocalStore, type StorageArea } from "./🔨️modules/💾️persistence/🟦️.ts";
 import { ProctorClient, RETRY_TIMING, proctorTransport, type ProctorConnect, type RetryTiming } from "./🔨️modules/🛂️proctor/🟦️.ts";
 import { Deputy, type QuizMaterial } from "./🔨️modules/🫡️deputy/🟦️.ts";
-import { QuizSession, type QuizConnection, type QuizNotice, type QuizState, type QuizStep } from "./🔨️modules/🧭️session/🟦️.ts";
+import { QuizSession } from "./🔨️modules/🧭️session/🟦️.ts";
+import { type QuizConnection } from "./🔨️modules/🧭️session/📋️session-model/🟦️.ts";
+import { type QuizNotice, type QuizState, type QuizStep } from "./🔨️modules/🧭️session/🧮️state/🟦️.ts";
 import { LanguageChoice, LanguageSwitch, PreferencesPanelCard, effectiveIconMotion, everyLanguage, readPreferences, textScale, withPets, writePreferences, type QuizPreferences } from "./🔨️modules/🎛️preferences/🟦️.tsx";
 import { IntroductionScreen } from "./🔨️modules/👋️introduction/🟦️.tsx";
 import { IdentityScreen, noticeProblem } from "./🔨️modules/🪪️identity/🟦️.tsx";
@@ -100,8 +102,31 @@ export { Outbox, coalesce, coalescingKey, commandRun } from "./🔨️modules/�
 export type { OutboxActivity, OutboxEntry, OutboxOptions, OutboxStatus } from "./🔨️modules/📮️outbox/🟦️.ts";
 export { Deputy, REVISED, materialRevision } from "./🔨️modules/🫡️deputy/🟦️.ts";
 export type { HeldLearner, QuizMaterial } from "./🔨️modules/🫡️deputy/🟦️.ts";
-export { DEFAULT_BOARD, DEPUTY_PATIENCE_MS, EMPTY_TRAIL, HOME_PAGES, PROJECTION_GRACE_MS, QuizSession, TRAIL_LIMIT, boardKey, evolveQuizState, initialQuizState, lastSubmittedRunOf, mergeRunViews, openChallengeOf, openRunOf, overallLeaderboard, restoreQuizState, runAwards, sameStep, shownLeaderboard, stepAbove, stepAfter, stepBefore } from "./🔨️modules/🧭️session/🟦️.ts";
-export type { BoardChoice, HeldLeaderboard, QuizClientEvent, QuizConnection, QuizLearner, QuizNotice, QuizSessionOptions, QuizSnapshot, QuizState, QuizStep, QuizTrail, RefreshOutcome, SessionFailure, SubmissionPhase } from "./🔨️modules/🧭️session/🟦️.ts";
+export {
+  DEFAULT_BOARD,
+  EMPTY_TRAIL,
+  HOME_PAGES,
+  TRAIL_LIMIT,
+  boardKey,
+  evolveQuizState,
+  initialQuizState,
+  lastSubmittedRunOf,
+  mergeRunViews,
+  openChallengeOf,
+  openRunOf,
+  overallLeaderboard,
+  runAwards,
+  sameStep,
+  shownLeaderboard,
+  stepAbove,
+  stepAfter,
+  stepBefore,
+} from "./🔨️modules/🧭️session/🧮️state/🟦️.ts";
+export { DEPUTY_PATIENCE_MS, PROJECTION_GRACE_MS } from "./🔨️modules/🧭️session/📋️session-model/🟦️.ts";
+export { QuizSession } from "./🔨️modules/🧭️session/🟦️.ts";
+export { restoreQuizState } from "./🔨️modules/🧭️session/💾️restore/🟦️.ts";
+export type { BoardChoice, HeldLeaderboard, QuizClientEvent, QuizLearner, QuizNotice, QuizState, QuizStep, QuizTrail } from "./🔨️modules/🧭️session/🧮️state/🟦️.ts";
+export type { QuizConnection, QuizSessionOptions, QuizSnapshot, RefreshOutcome, SessionFailure, SubmissionPhase } from "./🔨️modules/🧭️session/📋️session-model/🟦️.ts";
 export { NAVIGATION_WAYS, NavigationControls, addressPage, navigationWays, placeName, stepAddress, useAddress } from "./🔨️modules/🚏️navigation/🟦️.tsx";
 export type { NavigationWay } from "./🔨️modules/🚏️navigation/🟦️.tsx";
 export { EveryLanguage, LOCALE_NAMES, LanguageChoice, LanguageSwitch, PreferencesCard, PreferencesPage, PreferencesPanel, PreferencesPanelCard, TEXT_SIZES, THEME_CHOICES, challengeOf, effectiveIconMotion, everyLanguage, readPreferences, textScale, withChallenge, withIcons, writePreferences } from "./🔨️modules/🎛️preferences/🟦️.tsx";

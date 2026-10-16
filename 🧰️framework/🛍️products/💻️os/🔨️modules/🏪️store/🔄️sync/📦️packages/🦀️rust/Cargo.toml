@@ -43,6 +43,7 @@ semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-process-routing-workspace = { path = "../../../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 tokio = { version = "1", default-features = false, features = ["sync", "macros"] }

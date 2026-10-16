@@ -32,6 +32,7 @@ semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 serde = { workspace = true }
+semio-framework-os-space-sqlite-cells = { path = "../../../../🪶️sqlite/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
@@ -40,3 +41,7 @@ semio-framework-job = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
 serde_json = { workspace = true }
+semio-framework-test-typed-input-law = { path = "../../../../../../../../🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust" }
+semio-framework-os-space-testing-sqlite-preflight = { path = "../../../../🧪️tests/🪶️sqlite/📏️preflight/📦️packages/🦀️rust" }
+semio-framework-os-space-testing-sqlite-oracle = { path = "../../../../🧪️tests/🪶️sqlite/🔬️oracle/📦️packages/🦀️rust" }
+semio-framework-os-space-testing-sqlite-native-caller = { path = "../../../../🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust" }

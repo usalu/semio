@@ -24,7 +24,10 @@ for (const row of examples.cases) test(row.id, () => {
   try {
     put(taxonomyPath, original);
     for (const path of row.features) put(path + "/" + featureName, "Feature: Illustrative specimen\n");
-    for (const child of row.children) mkdirSync(join(root, child.case, child.name), { recursive: true });
+    for (const child of row.children) {
+      mkdirSync(join(root, child.case, child.name), { recursive: true });
+      for (const file of (child as { files?: string[] }).files ?? []) put(join(child.case, child.name, file), "");
+    }
     const physical = glob.sync("**/" + featureName, { cwd: root, onlyFiles: true, followSymbolicLinks: false });
     const oracle = physical.filter(path => {
       const parts = path.split("/"), at = parts.length - 3;

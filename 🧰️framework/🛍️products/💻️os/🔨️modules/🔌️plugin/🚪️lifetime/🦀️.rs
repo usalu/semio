@@ -1,18 +1,29 @@
 //#region 🚪️RuntimeInstanceCloseAuthority
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use std::cell::Cell;
+use semio_framework::{Fault, FaultFrom};
+use semio_framework_value::{FromValue, ToValue};
+use std::sync::atomic::Ordering;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_plugin_program::PluginProgram;
+use crate::life_instance_registry::{PluginRuntime, RuntimeCloseWorkerState};
+use crate::life_app_cell::RuntimeAppCell;
+use crate::life_cleanup_vocabulary::{RuntimeCloseStatus, runtime_cleanup_fault};
+use crate::life_cleanup_pumps::{checked_runtime_close_generation, plugin_begin_instance_close};
+use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 
 /// 🪪️ Captures the exact app allocation; a reused numeric ID cannot acquire this close authority.
 pub struct PluginInstanceCloseLease<PA: PluginApp> {
-    instance_id: u32,
-    cell: std::sync::Weak<RuntimeAppCell<PA>>,
-    admitted: Option<std::sync::Arc<RuntimeCloseWorkerState<PA>>>,
-    terminal: Cell<bool>,
+    pub instance_id: u32,
+    pub cell: std::sync::Weak<RuntimeAppCell<PA>>,
+    pub admitted: Option<std::sync::Arc<RuntimeCloseWorkerState<PA>>>,
+    pub terminal: Cell<bool>,
 }
 
 impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
     pub(crate) fn allocation_identity(&self) -> (u32, usize) { (self.instance_id, self.cell.as_ptr().cast::<()>() as usize) }
 
-    pub(in super::super) fn from_cell(instance_id: u32, cell: &std::sync::Arc<RuntimeAppCell<PA>>) -> Self {
+    pub fn from_cell(instance_id: u32, cell: &std::sync::Arc<RuntimeAppCell<PA>>) -> Self {
         Self { instance_id, cell: std::sync::Arc::downgrade(cell), admitted: None, terminal: Cell::new(false) }
     }
 

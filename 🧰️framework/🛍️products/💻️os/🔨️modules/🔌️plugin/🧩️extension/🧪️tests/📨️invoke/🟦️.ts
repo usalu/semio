@@ -4,13 +4,14 @@ import {resolve} from "node:path";
 import Ajv from "ajv";
 import {applyPatch} from "fast-json-patch";
 import { readPluginRuntimeSource } from "../../../⚛️reactor/🏃️runtime/📖️source-text/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl, cloneWireProgressSchemaUrl } from "../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 📨️ The original invoke caller owns pending raw bytes and lends one unchanged scheduler wallet. */
 export function extensionInvokeCallerOracle(repoRoot:string):number{
  const root=resolve(repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"),read=(path:string)=>readFileSync(resolve(root,path),"utf8");
  const ajv=new Ajv({strict:true,allErrors:true});
- ajv.addSchema(JSON.parse(readFileSync(resolve(repoRoot,"🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json"),"utf8")));
- ajv.addSchema(JSON.parse(readFileSync(resolve(repoRoot,"🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json"),"utf8")),"flow.original-retained-progress");
+ ajv.addSchema(JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8")));
+ ajv.addSchema(JSON.parse(readFileSync(cloneWireProgressSchemaUrl,"utf8")),"flow.original-retained-progress");
  const fixture=JSON.parse(read("🧩️extension/🧪️tests/🧫️fixtures/📨️invoke/🔣️.json")),validate=ajv.compile(JSON.parse(read("🧩️extension/🧬️schema/📨️invoke/🔣️.json")));
  let assertions=0;assert.equal(validate(fixture),true,JSON.stringify(validate.errors));assertions++;
  for(const key of Object.keys(fixture)){const invalid={...fixture};delete invalid[key];assert.equal(validate(invalid),false);assertions++;}

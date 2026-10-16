@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-dock = { path = "../../../🛰️dock/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-fixtures = { path = "../../../🧰️fixtures/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-actions = { path = "../../../🔀️shell-actions/📦️packages/🦀️rust" }
@@ -66,7 +67,9 @@ semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modul
 semio-framework-time-travel = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-trace = { workspace = true }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-ui-scene-camera = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
 semio-framework-ui-viewport = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
@@ -104,4 +107,7 @@ winit = { version = "0.30.12", default-features = false, features = ["rwh_06", "
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }

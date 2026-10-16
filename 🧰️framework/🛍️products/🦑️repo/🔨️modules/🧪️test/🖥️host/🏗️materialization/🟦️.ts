@@ -1,7 +1,7 @@
 import {repositoryTestArtifactEnvironmentV1} from "../../💾️storage/🟦️.ts";
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { REPO_TEST_DOMAIN_REL, REPO_TEST_RUST_PACKAGE_REL, REPO_TEST_PYTHON_HOST_REL, REPO_TEST_DOTNET_PACKAGE_REL, type MaterializedHost } from "../../🧱️contract/🟦️.ts";
-import { type Implementation, type TestRole } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type Implementation, type TestRole } from "@semio-tech/framework/test/adapter";
 import { type DiscoveredCase, type OracleHostPackage, agentCacheRoot, digest, loadOracleRegistry, markOutputDir, markRunComplete, oracleHostModule, oracleHostPackagesFor, subjectHostPackagesFor, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";

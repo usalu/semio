@@ -1,4 +1,4 @@
-/** 🧭️ `publish`, `components` and `release` commands.
+/** 📦️ `publish`, `components` and `release` commands.
  * @see 📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";

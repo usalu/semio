@@ -49,5 +49,5 @@ export const stdioGif89aBaseDiffTextGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseGifDiffText(value: unknown, at = "$"): GifDiffText {
-  return stdioGif89aBaseDiffTextGuardObject(value, `${at}`);
+  return stdioGif89aBaseDiffTextGuardString(value, `${at}`);
 }

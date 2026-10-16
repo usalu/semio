@@ -1249,6 +1249,10 @@ pub async fn fetch_font_bytes(url: &str) -> Result<Vec<u8>, String> {
     }
 }
 
+#[cfg(any(test, feature = "testkit"))]
+#[path = "../../🧪️testing/🔤️text-reference/🦀️.rs"]
+pub mod text_reference;
+
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️targets-wgpu-text-unit/🦀️.rs"]
 mod tests;

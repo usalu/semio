@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "cases": [
+    {"kind": "read", "failure": "error", "expectedNewEffects": 0, "expectedRefusals": 2, "expectedSiblingCompletions": 1},
+    {"kind": "read", "failure": "undefined", "expectedNewEffects": 0, "expectedRefusals": 2, "expectedSiblingCompletions": 1},
+    {"kind": "replace", "failure": "error", "expectedNewEffects": 0, "expectedRefusals": 2, "expectedSiblingCompletions": 0},
+    {"kind": "replace", "failure": "undefined", "expectedNewEffects": 0, "expectedRefusals": 2, "expectedSiblingCompletions": 0}
+  ]
+}

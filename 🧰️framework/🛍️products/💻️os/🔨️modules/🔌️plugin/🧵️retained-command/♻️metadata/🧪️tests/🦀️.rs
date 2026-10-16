@@ -1,13 +1,16 @@
-use super::*;
-use crate::history_view::AlternativeView;
-use crate::history_view::CommandView;
-use crate::history_view::HistoryView;
-use crate::history_view::InverseAction;
-use crate::history_view::MutationView;
-use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+use semio_framework_plugin_decl_views::AppOperationContext;
+use semio_framework_plugin_decl_views::history_view::AlternativeView;
+use semio_framework_plugin_decl_views::history_view::CommandView;
+use semio_framework_plugin_decl_views::history_view::HistoryView;
+use semio_framework_plugin_decl_views::history_view::InverseAction;
+use semio_framework_plugin_decl_views::history_view::MutationView;
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 
-fn drain<T:RetireOwned+Clone+PartialEq+std::fmt::Debug>(value:T,source_bytes:usize){
+#[doc(hidden)]
+pub fn drain<T:RetireOwned+Clone+PartialEq+std::fmt::Debug>(value:T,source_bytes:usize){
  let before=value.clone();let(mut owner,allocation)=observe(||ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("{error}")));assert_eq!((allocation.requested_bytes,allocation.released_bytes),(0,0));let mut born=0;let mut released=0;
  for _ in 0..100000{
   if owner.terminal_is_empty(){break;}

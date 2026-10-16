@@ -1,11 +1,5 @@
 //! 📦️ Standalone package for relational SQLite artifact snapshot interchange.
 
-#[cfg(test)]
-pub(crate) use semio_framework_trace_memory_testing as test_allocation;
-
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
 
 #[path = "../../🦀️.rs"]
 mod component;
@@ -22,5 +16,11 @@ pub use component::{
 pub(crate) mod sqlite_snapshot {pub use super::component::*;}
 #[path="../../🫴️receiving/🦀️.rs"]
 pub mod receiving;
-#[cfg(test)]
-pub(crate) use semio_framework_io_control as original_control;
+/// 🪝️ Test hook of the companion crate `semio-framework-io-sqlite-snapshot-tests`: the private snapshot modules, public only behind the `testkit` feature.
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub mod component {
+        pub use crate::component::*;
+    }
+}

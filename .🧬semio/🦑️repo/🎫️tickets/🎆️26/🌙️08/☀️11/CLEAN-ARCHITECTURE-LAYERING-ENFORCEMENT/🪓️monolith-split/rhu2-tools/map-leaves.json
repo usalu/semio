@@ -1,0 +1,5 @@
+{
+ "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/💾️resident/🟦️.ts": "🧰️framework/🔨️modules/🖼️canvas/💾️renderer-resident/🟦️.ts",
+ "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧵️work/🟦️.ts": "🧰️framework/🔨️modules/🖼️canvas/🧵️renderer-work/🟦️.ts",
+ "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧵️work/🔣️stock.json": "🧰️framework/🔨️modules/🖼️canvas/🧵️renderer-work/🔣️stock.json"
+}

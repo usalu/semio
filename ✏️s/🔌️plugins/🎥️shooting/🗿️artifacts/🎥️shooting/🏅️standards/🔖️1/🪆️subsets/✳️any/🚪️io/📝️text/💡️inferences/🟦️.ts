@@ -49,5 +49,5 @@ export const shootingShootingInferenceTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseShootingInferenceText(value: unknown, at = "$"): ShootingInferenceText {
-  return shootingShootingInferenceTextGuardObject(value, `${at}`);
+  return shootingShootingInferenceTextGuardString(value, `${at}`);
 }

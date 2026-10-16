@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: subset conformance and artifact viewer and editor rules.
+/** 🔖️ Wave 4 plugin consistency policy: subset conformance and artifact viewer and editor rules.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { canonicalFilenameForKind, canonicalPrimaryFilenameForKind, loadTaxonomy, schemaFacetFormatEntries, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";

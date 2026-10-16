@@ -20,23 +20,13 @@ import {
   type ReactNode
 } from "@semio-tech/framework/ui/targets/react";
 // #endregion 🔌️Adapters
-import {
-  listAttributeDefinitionsForModelDefinitionEntity,
-  attributeDefinitionEditorKind,
-  attributeDefinitionValueOptions,
-  derivePropertyValue,
-  listApplicablePropertyDefinitionsForModelDefinition,
-  computeStat,
-  formatStatOutputValue,
-  listStatDefinitionsForModelDefinition,
-  objectsForStatCompute,
-  statDefinitionAppliesToScope,
-  validateAttributeValue,
-  type AttributeDefinitionSpec,
-  Model,
-  type SelectionTarget,
-  type SpatialObjectRecord
-} from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type SpatialObjectRecord } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type AttributeDefinitionSpec } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎨️typology/🟦️.ts";
+import { computeStat, formatStatOutputValue, listStatDefinitionsForModelDefinition, objectsForStatCompute, statDefinitionAppliesToScope } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📊️stats/🟦️.ts";
+import { Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { listAttributeDefinitionsForModelDefinitionEntity, attributeDefinitionEditorKind, attributeDefinitionValueOptions, validateAttributeValue } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
+import { derivePropertyValue, listApplicablePropertyDefinitionsForModelDefinition } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧾️primitive-document/🟦️.ts";
+import { type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import { type SpatialKernel } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { primaryAttributeSelectionTarget } from "../../🎬️actions/🟦️.ts";
 import { cadFieldClass, ENUM_FIELD_NONE_VALUE } from "../🎨️style/🟦️.ts";

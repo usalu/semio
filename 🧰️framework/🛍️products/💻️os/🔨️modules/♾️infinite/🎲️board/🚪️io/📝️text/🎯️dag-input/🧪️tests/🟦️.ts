@@ -2,9 +2,9 @@
 import {expect,test} from "bun:test";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../../🧬️schema/🎯️dag-input/🔣️.json";
-import {decodeDagSelectionJson,decodeDagChannelsJson,decodeDagNodeStatusesJson,decodeDagHoverJson,type DagTextDecodeControl} from "../🟦️.ts";
-import {NativeDecodeControl} from "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {semioSchemaAjvV1} from "../../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {decodeDagSelectionJson,decodeDagChannelsJson,decodeDagNodeStatusesJson,decodeDagHoverJson,type DagTextDecodeControl} from "@semio-tech/framework/infinite/board/io/text/dag-input";
+import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
+import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
 
 const readers={selection:decodeDagSelectionJson,channels:decodeDagChannelsJson,statuses:decodeDagNodeStatusesJson,hover:decodeDagHoverJson};
 function control(maximum=65536,observe:()=>boolean=()=>true):DagTextDecodeControl{return {syntax:{maximumBytes:65536,maximumNodes:4096,maximumDepth:16,chunk:7,cancelled:()=>false,progress:()=>{},yield:async()=>{}},ownership:new NativeDecodeControl(maximum,observe)}}
@@ -40,7 +40,7 @@ test("DAG physical strings preserve literal map identities and refuse non-Unicod
 });
 
 import selectionFixture from "../../../../🔌️ports/➡️directed/🕸️dag/🧪️tests/🧫️fixtures/🎯️selected-json.json";
-import {DagSelectionJsonCursor,DagSelectionTextError,type DagSelectionTextGrant} from "../📤️selection/🟦️.ts";
+import {DagSelectionJsonCursor,DagSelectionTextError,type DagSelectionTextGrant} from "@semio-tech/framework/infinite/board/io/text/dag-input/selection";
 
 test("retained selection physical cursor preserves original neutral bytes and every guard frontier",()=>{
  const grant:DagSelectionTextGrant={fuel:1,nowMilliseconds:1,deadlineMilliseconds:8,cancelled:false,interrupted:false};let grants=0,refusals=0;

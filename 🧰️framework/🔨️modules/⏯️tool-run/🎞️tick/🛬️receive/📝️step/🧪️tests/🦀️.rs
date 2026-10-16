@@ -1,16 +1,24 @@
 //! 🧪️ Original9-byte argument groups enter final native storage with conserved birth and every interruption.
 use super::*;
+use pack::record::RetainedRecordBodySourceDecode;
+use pack::record::RetainedRecordBodyToken;
+use pack::record::RetainedValueContainer;
+use pack::record::RetainedValueToken;
+use semio_framework_value::RetainedCloneGrant;
+use semio_framework_value::RetainedCloneProgress;
+use semio_framework_value::RetirementDemand;
 use crate::ToolRunReceivingLimits;
 use protocol::codec::{RetainedWireByteSource,OriginalWireSourceIdentity};
+fn funds(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items>0&&g.maximum_depth>=d.depth&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes}
 struct Pages<'a>{bytes:&'a[u8],identity:OriginalWireSourceIdentity}
 impl RetainedWireByteSource for Pages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{self.identity}fn byte_at(&self,index:usize)->Option<u8>{self.bytes.chunks(7).nth(index/7)?.get(index%7).copied()}}
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
 fn hex(text:&str)->Vec<u8>{text.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 #[test]
 fn original_typed_step_receiving_preserves_final_native_arguments_and_every_interruption(){
- let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let bytes=hex(law["bodyHex"].as_str().unwrap());let source=Pages{identity:OriginalWireSourceIdentity{address:bytes.as_ptr()as usize,extent:bytes.len(),authority:Some((42,7))},bytes:&bytes};
+ let law:serde_json::Value=serde_json::from_str(crate::fixture_text("🎞️tick/🛬️receive/📝️step/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let bytes=hex(law["bodyHex"].as_str().unwrap());let source=Pages{identity:OriginalWireSourceIdentity{address:bytes.as_ptr()as usize,extent:bytes.len(),authority:Some((42,7))},bytes:&bytes};
  let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:17,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};let metadata=RetainedCloneGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..g};
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎞️ticks.json")).unwrap();let reference=crate::ToolRunTick::decode(&hex(corpus["ticks"][0]["hex"].as_str().unwrap())).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(crate::fixture_text("🧪️tests/🧫️fixtures/🎞️ticks.json")).unwrap();let reference=crate::ToolRunTick::decode(&hex(corpus["ticks"][0]["hex"].as_str().unwrap())).unwrap();
  for stop in law["interruptAfter"].as_array().unwrap(){let stop=stop.as_u64().unwrap()as usize;let(mut lower,mut physical)=observe(||RetainedRecordBodySourceDecode::admit(&source,(0,bytes.len()),ToolRunReceivingLimits::REPORTS.tick.record_body(),g).unwrap().unwrap());lower.take_receipt().unwrap();
   let((mut typed,progress),heap)=observe(||ToolRunStepReceiving::admit(&lower,g).unwrap());assert_eq!(heap,(0,0));assert_eq!(typed.take_receipt().unwrap(),(g,progress));
   let(mut other,heap)=observe(||RetainedRecordBodySourceDecode::admit(&source,(1,bytes.len()),ToolRunReceivingLimits::REPORTS.tick.record_body(),g).unwrap().unwrap());assert_eq!(heap,(0,0));other.take_receipt().unwrap();assert_eq!(other.source_identity(),lower.source_identity());assert_ne!(other.original_range(),lower.original_range());let mut offered=Some(RetainedRecordBodyToken::Value(RetainedValueToken::Begin{kind:RetainedValueContainer::Record,count:4}));let before=offered;let(denied,heap)=observe(||typed.receive(&other,&mut offered,g));assert!(denied.is_err());assert_eq!(heap,(0,0));assert_eq!(offered,before);assert!(typed.receipt().is_none());drop(denied);other.cancel();while !other.terminal_is_empty(){let(_,heap)=observe(||other.close_step(g).unwrap());let(issued,p)=other.take_receipt().unwrap();assert_eq!(issued,g);assert!(p.fits(g));assert_eq!((p.retained_capacity_bytes,p.released_bytes),heap);physical.0+=heap.0;physical.1+=heap.1;}let(_,heap)=observe(||drop(other));assert_eq!(heap,(0,0));

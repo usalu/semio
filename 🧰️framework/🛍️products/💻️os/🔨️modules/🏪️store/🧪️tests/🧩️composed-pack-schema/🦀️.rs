@@ -69,7 +69,7 @@ fn snapshot(row: &serde_json::Value) -> ComposedSnapshot {
 }
 
 fn graph_json(spec: &semio_framework_dsl_record::RecordSpec) -> serde_json::Value {
-    serde_json::from_str(&semio_framework_pack_json::to_string(&crate::os_pack::PackSchemaGraph::of(spec).to_json())).expect("graph json")
+    serde_json::from_str(&semio_framework_pack_json::to_string(&pack::record::PackSchemaGraph::of(spec).to_json())).expect("graph json")
 }
 
 fn link_record_producer()->semio_framework_dsl_record::RecordSpecProducer {
@@ -119,21 +119,21 @@ fn derived_graph_matches_the_language_agnostic_fixture() {
 fn pack_schema_hash_is_pinned_and_matches_an_independent_blake3() {
     let fixture = fixture();
     let spec = ComposedSnapshot::__dsl_spec();
-    let canonical = crate::os_pack::PackSchemaGraph::of(&spec).canonical_bytes();
+    let canonical = pack::record::PackSchemaGraph::of(&spec).canonical_bytes();
     assert_eq!(hex(&canonical), fixture["canonicalHex"].as_str().unwrap());
     let expected = fixture["schemaHash"].as_str().unwrap();
-    assert_eq!(hex(&crate::os_pack::schema_hash(&spec)), expected);
+    assert_eq!(hex(&pack::record::schema_hash(&spec)), expected);
     assert_eq!(blake3::hash(&canonical).to_hex().to_string(), expected);
 }
 
 #[test]
 fn pack_schema_hash_differs_when_the_structure_differs() {
     let fixture = fixture();
-    let composed = crate::os_pack::schema_hash(&ComposedSnapshot::__dsl_spec());
-    let without_links = crate::os_pack::schema_hash(&ComposedWithoutLinks::__dsl_spec());
-    let renamed_child = crate::os_pack::schema_hash(&ComposedRenamedChild::__dsl_spec());
-    let renamed_link_role = crate::os_pack::schema_hash(&with_link_spec(renamed_role_link_producer()));
-    assert_eq!(crate::os_pack::schema_hash(&with_link_spec(link_record_producer())), composed);
+    let composed = pack::record::schema_hash(&ComposedSnapshot::__dsl_spec());
+    let without_links = pack::record::schema_hash(&ComposedWithoutLinks::__dsl_spec());
+    let renamed_child = pack::record::schema_hash(&ComposedRenamedChild::__dsl_spec());
+    let renamed_link_role = pack::record::schema_hash(&with_link_spec(renamed_role_link_producer()));
+    assert_eq!(pack::record::schema_hash(&with_link_spec(link_record_producer())), composed);
     assert_ne!(composed, without_links);
     assert_ne!(composed, renamed_child);
     assert_ne!(composed, renamed_link_role);
@@ -149,13 +149,13 @@ fn derived_codec_round_trips_composed_children_and_links_byte_exactly() {
     for row in fixture["documents"].as_array().unwrap() {
         let document = snapshot(&row["snapshot"]);
         let spec = ComposedSnapshot::__dsl_spec();
-        let bytes = crate::os_pack::encode_document(&spec, &document.__dsl_to_record(), &PackEncodeOptions::default()).expect("encode composed snapshot");
+        let bytes = semio_framework_os_pack::record::encode_document(&spec, &document.__dsl_to_record(), &PackEncodeOptions::default()).expect("encode composed snapshot");
         assert_eq!(hex(&bytes), row["packHex"].as_str().unwrap(), "{}", row["name"]);
-        let (record, report) = crate::os_pack::decode_document(&bytes, &spec, &PackDecodeOptions::default()).expect("decode composed snapshot");
+        let (record, report) = semio_framework_os_pack::record::decode_document(&bytes, &spec, &PackDecodeOptions::default()).expect("decode composed snapshot");
         assert!(report.unknown_field_ids.is_empty() && !report.schema_drift);
         let decoded = ComposedSnapshot::__dsl_from_record(&record).expect("record to snapshot");
         assert_eq!(decoded, document);
-        assert_eq!(crate::os_pack::encode_document(&spec, &decoded.__dsl_to_record(), &PackEncodeOptions::default()).expect("re-encode"), bytes);
-        assert!(crate::os_pack::decode_document(&bytes, &ComposedWithoutLinks::__dsl_spec(), &PackDecodeOptions::default()).expect("narrow decode").1.schema_drift);
+        assert_eq!(semio_framework_os_pack::record::encode_document(&spec, &decoded.__dsl_to_record(), &PackEncodeOptions::default()).expect("re-encode"), bytes);
+        assert!(semio_framework_os_pack::record::decode_document(&bytes, &ComposedWithoutLinks::__dsl_spec(), &PackDecodeOptions::default()).expect("narrow decode").1.schema_drift);
     }
 }

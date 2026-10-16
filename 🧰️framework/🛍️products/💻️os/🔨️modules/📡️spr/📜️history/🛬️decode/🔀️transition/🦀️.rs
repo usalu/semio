@@ -7,7 +7,7 @@ use std::mem::ManuallyDrop;
 pub struct RetainedHistoryTransitionPartial{pub id:Option<String>,pub actor_text:Option<String>,pub actor:Option<SharedUtf8>,pub hlt:Option<(u64,u64,u64)>,pub dependencies:Option<Vec<String>>,pub pending_dependency:Option<String>,pub payload:Option<Vec<u8>>,pub observed:Option<String>}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum RetainedHistoryTransitionStep{Blocked,Progress,Ready,Fault,Closed}
-pub struct RetainedHistoryTransitionDecode{source:OriginalWireSourceIdentity,control_identity:(u64,Option<u64>),limits:HistoryReadLimits,end:usize,position:usize,phase:u8,next_phase:u8,id_target:u8,format:u8,remaining:usize,closing:bool,closed:bool,partial:ManuallyDrop<Option<RetainedHistoryTransitionPartial>>,id:ManuallyDrop<Option<RetainedHistoryIdDecode>>,dependencies:ManuallyDrop<Option<RetainedHistoryRecords<String>>>,field:ManuallyDrop<Option<RetainedWireFieldDecode>>,fault:ManuallyDrop<Option<ValueError>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>}
+#[doc(hidden)] pub struct RetainedHistoryTransitionDecode{source:OriginalWireSourceIdentity,control_identity:(u64,Option<u64>),limits:HistoryReadLimits,end:usize,position:usize,#[doc(hidden)] pub phase:u8,next_phase:u8,id_target:u8,format:u8,remaining:usize,closing:bool,closed:bool,partial:ManuallyDrop<Option<RetainedHistoryTransitionPartial>>,id:ManuallyDrop<Option<RetainedHistoryIdDecode>>,dependencies:ManuallyDrop<Option<RetainedHistoryRecords<String>>>,field:ManuallyDrop<Option<RetainedWireFieldDecode>>,fault:ManuallyDrop<Option<ValueError>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>}
 fn fault(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn metadata()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 fn nested(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.depth=d.depth.checked_add(1).ok_or_else(||fault("original transition depth overflows"))?;Ok(d)}
@@ -54,6 +54,3 @@ impl RetainedHistoryTransitionDecode{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.partial.is_none()&&self.id.is_none()&&self.field.is_none()&&self.dependencies.is_none()&&self.fault.is_none()&&self.receipt.is_none()}
 }
 impl Drop for RetainedHistoryTransitionDecode{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original transition abandoned native custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.partial);ManuallyDrop::drop(&mut self.id);ManuallyDrop::drop(&mut self.dependencies);ManuallyDrop::drop(&mut self.field);ManuallyDrop::drop(&mut self.fault)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-pub(crate) mod tests;

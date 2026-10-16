@@ -1,3 +1,5 @@
+import {registerBuildTestLawV1} from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { mkdtempSync, readdirSync, readFileSync } from "node:fs";
@@ -33,9 +35,10 @@ test("timeline rows are schema-first and agree with Ajv", () => {
   for (const row of fixture.timeline.invalid) expect(validate(row)).toBe(false);
 });
 
-test("machine CPU utilisation follows the vectors and the platform memory counters are readable", async () => {
+registerBuildTestLawV1("machine CPU utilisation follows the vectors and the platform memory counters are readable","sdk-fence", async original => {
+  const control=scriptCompilerAdmissionControlV1(original,"telemetry:memory",0);
   for (const row of fixture.cpu) expect(cpuPercentV1(row.previous, row.next)).toBe(row.percent);
-  const memory = await memoryCountersV1();
+  const memory = await memoryCountersV1(control);
   if (process.platform === "darwin" || process.platform === "linux") { expect(memory.availableBytes).toBeGreaterThan(0); expect(memory.swappedOutBytes).not.toBeNull(); }
 });
 
@@ -52,11 +55,12 @@ test("idle windows carry their dominant cause; relink fan-out counts every compo
   expect(relinkFanOutV1(fixture.critical.units as UnitRecordV1[])).toEqual(fixture.fanOut);
 });
 
-test("the report renders every section and the timeline sampler writes schema-valid rows", async () => {
+registerBuildTestLawV1("the report renders every section and the timeline sampler writes schema-valid rows","sdk-fence", async original => {
+  const control=scriptCompilerAdmissionControlV1(original,"telemetry:timeline",0);
   const critical = criticalPathV1(fixture.critical.units as UnitRecordV1[], fixture.critical.runs);
   const report = renderBuildReportV1({ title: "Release build law", startedMs: 0, endedMs: 600, timeline: fixture.idle.rows as TimelineRowV1[], units: fixture.critical.units as UnitRecordV1[], runs: fixture.critical.runs, stages: [{ component: "k", stage: "stage", readyMs: 500, startMs: 500, endMs: 550, ok: true }], passes: [{ id: "pass-0", manifest: "/w/Cargo.toml", profile: "p", target: "host", startMs: 0, endMs: 500, exit: 0, failed: [] }], critical });
   for (const heading of fixture.report.headings) expect(report).toContain(heading);
-  const path = join(mkdtempSync(join(artifacts, "t-")), "timeline.jsonl"), sampler = startTimelineV1({ path, intervalMs: 50, counters: () => ({ rustcRunning: 0, admissionWaiting: 0, rustcRssBytes: 0, frozen: false, tokensHeld: 0, stagesRunning: 0, stagesWaiting: 0 }) });
+  const path = join(mkdtempSync(join(artifacts, "t-")), "timeline.jsonl"), sampler = startTimelineV1({ control,path, intervalMs: 50, counters: () => ({ rustcRunning: 0, admissionWaiting: 0, rustcRssBytes: 0, frozen: false, tokensHeld: 0, stagesRunning: 0, stagesWaiting: 0 }) });
   await Bun.sleep(400);
   const rows = await sampler.stop();
   expect(rows.length).toBeGreaterThanOrEqual(2);

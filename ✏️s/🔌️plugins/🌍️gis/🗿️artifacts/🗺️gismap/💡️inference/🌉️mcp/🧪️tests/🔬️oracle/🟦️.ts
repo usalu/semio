@@ -253,7 +253,7 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
 
   const visibility = fixture.visibility as Array<{ role: string; readEvents: boolean; readProposal: boolean; approve: boolean; expectedCode: string | null }>;
   const owners = visibility.filter((row) => row.readEvents || row.readProposal || row.approve);
-  must(owners.length === 1 && owners[0].role === "author-owner", "exactly one role may observe a job");
+  must(owners.length === 1 && owners[0]?.role === "author-owner", "exactly one role may observe a job");
   for (const row of visibility.filter((candidate) => candidate.role !== "author-owner")) must(row.expectedCode === "inference.denied", `${row.role} is not denied`);
 
   let lifecycle = 0;
@@ -316,13 +316,14 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   must(preview(fixturePreview), `the corpus preview was rejected: ${JSON.stringify(preview.errors)}`);
   must(fixturePreview.jobId === jobId && fixturePreview.proposalHash === proposalHash, "the corpus preview is not bound to the sample job and its proposal digest");
   must(fixturePreview.regionId === `inference-${jobId}`, "the preview region id is not derived from the job alone");
-  const [firstX, firstY] = fixturePreview.ring[0];
-  const [lastX, lastY] = fixturePreview.ring[4];
+  const first=fixturePreview.ring[0],last=fixturePreview.ring[4];if(!first||!last)throw Error("Actual closed preview corners required");
+  const [firstX,firstY]=first,[lastX,lastY]=last;
+  const points=fixturePreview.ring.map(point=>{const [x,y]=point;if(x===undefined||y===undefined)throw Error("Actual preview coordinates required");return [x,y] as const;});
   must(firstX === lastX && firstY === lastY, "the preview ring is not closed");
-  const lonMin = Math.min(...fixturePreview.ring.map((point) => point[0]));
-  const lonMax = Math.max(...fixturePreview.ring.map((point) => point[0]));
-  const latMin = Math.min(...fixturePreview.ring.map((point) => point[1]));
-  const latMax = Math.max(...fixturePreview.ring.map((point) => point[1]));
+  const lonMin = Math.min(...points.map(point=>point[0]));
+  const lonMax = Math.max(...points.map(point=>point[0]));
+  const latMin = Math.min(...points.map(point=>point[1]));
+  const latMax = Math.max(...points.map(point=>point[1]));
   must(
     JSON.stringify(fixturePreview.ring) === JSON.stringify([[lonMin, latMin], [lonMax, latMin], [lonMax, latMax], [lonMin, latMax], [lonMin, latMin]]),
     "the preview ring is not the axis-aligned corner order the hub publishes",

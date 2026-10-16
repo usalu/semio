@@ -1,10 +1,13 @@
+import {preparePlaygroundSourceFixtureV1,type PlaygroundPreparationTargetV1} from "../🧊️preparation/🟦️.ts";
+import {type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
 /** 🧊️ Runs the actual preparation/activation commands with controlled publishers under native Nx. */
-export async function testWgpuLiveActivation(workspace: string, output: string): Promise<void> {
+export async function testWgpuLiveActivation(workspace: string, output: string, invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️live-activation/🔣️.json"), "utf8"));
   const activationModule = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts");
   const { developmentRuntimeRoot } = await import(activationModule);
@@ -15,24 +18,24 @@ export async function testWgpuLiveActivation(workspace: string, output: string):
   assert.throws(() => developmentRuntimeRoot(output, fixture.variant, fixture.profile, "unknown"), /renderer/i);
   const root = mkdtempSync(join(output, "wgpu-live-")), owner = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
   const put = (path: string, text: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
-  const project = (path: string, name: string) => put(join(path, "📋️project.json"), JSON.stringify({ name, targets: { wasm: {configurations:{prototype:{env:{SEMIO_BUILD_MODE:"prototype"}},release:{env:{SEMIO_BUILD_MODE:"release"}}}} } }));
-  for (const [path, name] of [["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "surface"], ["🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "editor"], ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", "flow"], ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript", "renderer"]]) project(path!, name!);
   put(join(owner, "package.json"), JSON.stringify({ name: fixture.project, private: true }));
-  put("component/Cargo.toml", `[package]\nname = "sample"\nversion = "0.1.0"\n[package.metadata.component]\npackage = "semio:${fixture.plugin}"\n[package.metadata.semio]\nrole = "plugin"\n[[package.metadata.semio.playground]]\nvariant = "${fixture.variant}"\n`);
-  const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
-  const targets = await cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner);
+  const { cacheInternals, libraryBootstrap } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
+  await libraryBootstrap;
+  const {contracts,catalogContributions,context,check}=preparePlaygroundSourceFixtureV1(workspace,root,invocation,phaseControl);
+  const targets:Record<string,PlaygroundPreparationTargetV1> = await cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner, contracts, catalogContributions, context);
+  check();
   for (const profile of ["prototype", "release"]) assert.ok(targets[`prepare-${fixture.variant}-wgpu-${profile}`].dependsOn.includes(`renderer:wasm`), "The renderer prerequisite must select the matching compilation profile");
   for (const profile of ["prototype", "release"]) for (const command of ["serve", "dev"]) {
     const target = targets[`${command}-${fixture.variant}-wgpu-${profile}`];
-    assert.equal(target.options.command, `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${fixture.variant} ${profile}`, "The server must consume the completed profile through its narrow leaf");
+    assert.equal(target.options.command, `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${fixture.variant} ${profile} --port 4321`, "The server must consume the completed profile through its narrow leaf");
     assert.deepEqual(target.dependsOn, [`activate-${fixture.variant}-wgpu-${profile}`]);
     assert.equal(target.cache, false);
     assert.equal(target.continuous, true);
   }
   const prepare = `prepare-${fixture.variant}-wgpu-${fixture.profile}`, activate = `activate-${fixture.variant}-wgpu-${fixture.profile}`;
-  assert.equal(targets[prepare].cache, true);
+  assert.equal(targets[prepare].cache, false);
   assert.equal(targets[activate].cache, false, "Live installation and reload publication must execute after every preparation/cache restoration");
-  assert.deepEqual(targets[activate].outputs, [`{projectRoot}/dist/runtime/wgpu/${fixture.profile}/${fixture.variant}`], "Uncached activation still owns its complete live output namespace");
+  assert.deepEqual(targets[activate].outputs, [`{workspaceRoot}/.cache/b/p/m/browser/${fixture.profile}/runtime/wgpu/${fixture.variant}`], "Uncached activation still owns its complete live output namespace");
   assert.deepEqual(targets[activate].dependsOn, [prepare]);
   const ts = require("typescript"), activationOwner = dirname(activationModule);
   const definitions: readonly (readonly [string, readonly string[]])[] = [["🧰️preparation/🟦️.ts", ["PreparationScript"]], ["🏃️execution/🟦️.ts", ["ActivationScript"]], ["📥️installation/🟦️.ts", ["activationFilesDigest", "publishActivatedExtension"]]] as const;

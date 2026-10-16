@@ -396,5 +396,303 @@
       },
       "accepted": false
     }
+  ],
+  "windowsSystem": [
+    {
+      "name": "Windows captures actual OS directories",
+      "platform": "win32",
+      "authored": "none",
+      "accepted": true
+    },
+    {
+      "name": "Windows exact authored facts agree with OS",
+      "platform": "win32",
+      "authored": "exact",
+      "accepted": true
+    },
+    {
+      "name": "Windows foreign authored paths refuse",
+      "platform": "win32",
+      "authored": "foreign",
+      "accepted": false
+    },
+    {
+      "name": "Windows extra fields refuse",
+      "platform": "win32",
+      "authored": "extra",
+      "accepted": false
+    },
+    {
+      "name": "Windows other version refuses",
+      "platform": "win32",
+      "authored": "version",
+      "accepted": false
+    },
+    {
+      "name": "Linux has no Windows facts",
+      "platform": "linux",
+      "authored": "none",
+      "accepted": true
+    },
+    {
+      "name": "macOS has no Windows facts",
+      "platform": "darwin",
+      "authored": "none",
+      "accepted": true
+    },
+    {
+      "name": "Linux cannot assert Windows authority",
+      "platform": "linux",
+      "authored": "exact",
+      "accepted": false
+    }
+  ],
+  "neutralRoles": [
+    {
+      "name": "nx prototype uses neutral role",
+      "value": {
+        "tool": "nx",
+        "workspaceRoot": "/repo",
+        "arguments": [
+          "repo",
+          "run",
+          "example:build"
+        ],
+        "selection": [
+          "repo",
+          "run",
+          "example:build"
+        ],
+        "buildMode": "prototype",
+        "native": {
+          "artifactDirectory": "/repo/artifacts",
+          "transport": {
+            "maximumBytes": 8192,
+            "maximumLines": 32
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 1000
+          },
+          "network": {
+            "offline": true
+          }
+        },
+        "launches": [
+          [
+            "repo",
+            "run",
+            "example:build"
+          ]
+        ]
+      },
+      "role": "build-orchestration"
+    },
+    {
+      "name": "nx release uses neutral role",
+      "value": {
+        "tool": "nx",
+        "workspaceRoot": "/repo",
+        "arguments": [
+          "repo",
+          "run",
+          "example:build"
+        ],
+        "selection": [
+          "repo",
+          "run",
+          "example:build"
+        ],
+        "buildMode": "release",
+        "native": {
+          "artifactDirectory": "/repo/artifacts",
+          "transport": {
+            "maximumBytes": 8192,
+            "maximumLines": 32
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 1000
+          },
+          "network": {
+            "offline": true
+          }
+        },
+        "launches": [
+          [
+            "repo",
+            "run",
+            "example:build"
+          ]
+        ]
+      },
+      "role": "build-orchestration"
+    },
+    {
+      "name": "bazel prototype uses neutral role",
+      "value": {
+        "tool": "bazel",
+        "workspaceRoot": "/repo",
+        "arguments": [
+          "repo",
+          "run",
+          "example:build"
+        ],
+        "selection": [
+          "repo",
+          "run",
+          "example:build"
+        ],
+        "buildMode": "prototype",
+        "native": {
+          "artifactDirectory": "/repo/artifacts",
+          "transport": {
+            "maximumBytes": 8192,
+            "maximumLines": 32
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 1000
+          },
+          "network": {
+            "offline": true
+          }
+        },
+        "launches": [
+          [
+            "repo",
+            "run",
+            "example:build"
+          ]
+        ]
+      },
+      "role": "build-orchestration"
+    },
+    {
+      "name": "bazel release uses neutral role",
+      "value": {
+        "tool": "bazel",
+        "workspaceRoot": "/repo",
+        "arguments": [
+          "repo",
+          "run",
+          "example:build"
+        ],
+        "selection": [
+          "repo",
+          "run",
+          "example:build"
+        ],
+        "buildMode": "release",
+        "native": {
+          "artifactDirectory": "/repo/artifacts",
+          "transport": {
+            "maximumBytes": 8192,
+            "maximumLines": 32
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 1000
+          },
+          "network": {
+            "offline": true
+          }
+        },
+        "launches": [
+          [
+            "repo",
+            "run",
+            "example:build"
+          ]
+        ]
+      },
+      "role": "build-orchestration"
+    },
+    {
+      "name": "private Nx bridge projects neutral role",
+      "value": {
+        "workspaceRoot": "/repo",
+        "arguments": [
+          "nx",
+          "--version"
+        ],
+        "selection": [
+          "--version"
+        ],
+        "buildMode": "prototype",
+        "native": {
+          "artifactDirectory": "/repo/artifacts",
+          "transport": {
+            "maximumBytes": 8192,
+            "maximumLines": 32
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 1000
+          },
+          "network": {
+            "offline": true
+          }
+        }
+      },
+      "role": "build-orchestration"
+    },
+    {
+      "name": "native owner keeps its domain role",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        },
+        "buildMode": "prototype"
+      },
+      "role": "native-owner-command"
+    }
+  ],
+  "issuedPhases": [
+    {
+      "name": "ordinary actual parent phase",
+      "effect": "ordinary",
+      "accepted": true,
+      "maximumMilliseconds": 500
+    },
+    {
+      "name": "copy actual parent phase",
+      "effect": "copy",
+      "accepted": false,
+      "maximumMilliseconds": 500
+    },
+    {
+      "name": "foreign actual parent phase",
+      "effect": "foreign",
+      "accepted": false,
+      "maximumMilliseconds": 500
+    },
+    {
+      "name": "cancelled actual parent phase",
+      "effect": "cancelled",
+      "accepted": false,
+      "maximumMilliseconds": 500
+    },
+    {
+      "name": "expired actual parent phase",
+      "effect": "expired",
+      "accepted": false,
+      "maximumMilliseconds": 30
+    }
   ]
 }

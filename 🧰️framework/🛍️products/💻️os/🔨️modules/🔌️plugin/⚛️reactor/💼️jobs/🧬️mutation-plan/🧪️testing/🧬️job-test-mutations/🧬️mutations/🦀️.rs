@@ -1,10 +1,11 @@
 //#region 🧬️JobTestOperationRoster
-use super::{JobTestDiff, JobTestSnapshot};
+use crate::mutation_plan::job_test_mutation_fixture::{JobTestDiff, JobTestSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
+#[doc(hidden)]
 #[path = "➕️add-value/🦀️.rs"]
-mod add_value;
-pub(crate) use add_value::AddValue;
+pub mod add_value;
+pub use crate::mutation_plan::job_test_mutation_fixture::mutations::add_value::AddValue;
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(deny_unknown_fields)]

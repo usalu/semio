@@ -36,3 +36,4 @@ semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", 
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

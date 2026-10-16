@@ -278,7 +278,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     }
 
     /// 🎯️ The DSL shapes whose VALUE is a [`semio_framework_dsl_record::FieldValue::Tuple`] even though the
-    /// pack's packed-numeric wire form (`TAG_PACKED_F64`/`TAG_PACKED_VARINT`, `🎒️pack/🌱️value/🦀️.rs`
+    /// pack's packed-numeric wire form (`TAG_PACKED_F64`/`TAG_PACKED_VARINT`, `🎒️pack/🌱️value/📝️record-encode/🦀️.rs`
     /// `encode_seq`) carries no tuple-vs-list marker of its own: a coordinate (`@x,y,z`), a direction,
     /// a dimension triple and a range are each a small tuple of floats. The whole-pack decoder spells
     /// exactly this set in its own `is_tuple_shape`; this RETAINED decoder knew only `Shape::Tuple`, so

@@ -49,5 +49,5 @@ export const stdioPdf14BaseInferenceTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parsePdfInferenceText(value: unknown, at = "$"): PdfInferenceText {
-  return stdioPdf14BaseInferenceTextGuardObject(value, `${at}`);
+  return stdioPdf14BaseInferenceTextGuardString(value, `${at}`);
 }

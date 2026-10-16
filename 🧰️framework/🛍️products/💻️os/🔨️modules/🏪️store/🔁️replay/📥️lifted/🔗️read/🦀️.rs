@@ -32,7 +32,7 @@ pub struct ArtifactStoreStringVectorRetirement {
 }
 
 impl ArtifactStoreStringVectorRetirement {
-    pub(crate) fn new(values: impl Into<semio_framework_os_vcs::HistoryPageStack<String>>) -> Self {
+    pub fn new(values: impl Into<semio_framework_os_vcs::HistoryPageStack<String>>) -> Self {
         Self { values: std::mem::ManuallyDrop::new(Some(values.into())), active: std::mem::ManuallyDrop::new(None) }
     }
 }

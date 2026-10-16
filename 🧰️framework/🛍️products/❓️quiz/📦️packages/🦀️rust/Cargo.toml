@@ -17,14 +17,13 @@ workspace = true
 name = "quiz"
 path = "🦀️.rs"
 
+[features]
+# 🪝️ Compiles the `testkit` hooks of the modules (forwarders of module-private helpers) for the companion crate `semio-framework-quiz-tests`.
+testkit = []
+
 [dependencies]
 semio-framework-quiz-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }
 serde = { workspace = true }
 # 🎯️ `float_roundtrip`: quiz documents are read correctly rounded, as `JSON.parse` and Python read them (`3.828e26` is
 # otherwise read one double low, and the twins' sheets and verdicts part).
 serde_json = { workspace = true, features = ["float_roundtrip"] }
-
-[dev-dependencies]
-semio-framework-quiz-schema = { path = "../../🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
-# 🔮️ Third-party oracle of the handle tables: NFC, NFKC and the composition of pairs.
-unicode-normalization = "0.1.25"

@@ -1,8 +1,8 @@
 /** 🏛️ Retains exact catalog declarations independently from installed codec capabilities. */
-import type {DocumentOpenArtifactV1,DocumentOpenPackageV1,DocumentOpenSurfaceV1,DocumentOpenGrantV1} from "../../../📇️directory/🧬️schema/🟦️.ts";
-import type {DocumentOpenBrowserActorV1} from "../../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
-import {parseDocumentOpenBrowserActorV1} from "../../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
-import {parseDocumentOpenPackageV1} from "../../../📇️directory/🧬️schema/🟦️.ts";
+import type { DocumentOpenArtifactV1, DocumentOpenPackageV1, DocumentOpenSurfaceV1, DocumentOpenGrantV1 } from "@semio-tech/framework/directory/schema";
+import type {DocumentOpenBrowserActorV1} from "@semio-tech/framework/directory/schema/browser-actor";
+import {parseDocumentOpenBrowserActorV1} from "@semio-tech/framework/directory/schema/browser-actor";
+import { parseDocumentOpenPackageV1 } from "../../../📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
 export type ArtifactCatalogNativeIdentity={kind:"typed";owner:string}|{kind:"guest";pluginId:string;packageHash:string;schema:string};
 export type ArtifactCatalogCapability={kind:"unlinkedGuest"}|{kind:"linked";nativeIdentity:ArtifactCatalogNativeIdentity;sqliteSchema:string|null;factory:string|null};
 export interface ArtifactCatalogTarget{parentDialect:string;surface:DocumentOpenSurfaceV1;grant:DocumentOpenGrantV1;browserActor:DocumentOpenBrowserActorV1}

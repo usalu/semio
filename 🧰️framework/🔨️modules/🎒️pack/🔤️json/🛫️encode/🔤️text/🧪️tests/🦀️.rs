@@ -12,7 +12,7 @@ fn close(cursor:&mut ArtifactCanonicalJsonTextCursor<'_>) {
 }
 #[test]
 fn canonical_native_paged_text_cursor_matches_serde_and_exact_granted_cancellation() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(crate::text("🛫️encode/🔤️text/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         for field in ["keyChunks","valueChunks"] {
             let text:String=row[field].as_array().unwrap().iter().map(|value|value.as_str().unwrap()).collect();

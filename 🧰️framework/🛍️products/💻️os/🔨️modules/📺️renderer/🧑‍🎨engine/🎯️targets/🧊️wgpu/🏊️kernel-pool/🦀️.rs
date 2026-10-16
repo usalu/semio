@@ -10,7 +10,7 @@ use semio_framework_actor::{
 };
 use semio_framework_os_renderer_wgpu_contracts::ProgramFault;
 use semio_framework_os_renderer_wgpu_host_base::{actor_budget_from_turn_budget, log_debug, renderer_worker_pool, run_renderer_io, KernelPoolFuture};
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_renderer_wgpu_kernel_protocol::CANCELLED_KERNEL_TURNS;
 use semio_framework_os_renderer_wgpu_kernel_protocol::{
     decode_actor_turn_result, extension_index, find_wasm_artifact, install_job_progress_acknowledge, job_progress_presentation_bridge, kernel_request_interleavable, mounted_product_replay_profile, mounted_product_replay_recovery_registry,

@@ -1,8 +1,7 @@
 //! 🏃️ Rust native host runner. A generated cache-local crate links the committed
 //! `../🏃️runner/🦀️.rs` adapter and calls [`run_main`]; nothing else about the Rust host is generated.
 
-#[path = "../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/🦀️.rs"]
-mod workspace_identity;
+use semio_framework_process_routing_workspace as workspace_identity;
 
 /// 🏠️ Admits only a declared package workspace with regular build authority.
 fn is_repository_root(path: &Path) -> Result<bool, String> {

@@ -1,10 +1,11 @@
 import type { BuildGraphV1 } from "../🕸️graph/🟦️.ts";
-import { checkScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, advanceScriptInvocation, createIssuedResourceControlV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { checkScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, advanceScriptInvocation, createRequestedIssuedResourceControlV1, requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand, captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import cachePolicy from "../../⚡️caching/🔣️policy.json";
 import ownership from "../../🗂️workspaces/🔣️policy.json";
 import { watch } from "node:fs";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 
 /** 🔎️ Reads portable options without crossing the task argument boundary. */
 export function buildOptionV1(args:readonly string[],name:string,short?:string):string|undefined {
@@ -74,36 +75,34 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
   return {bail:!head.includes("--bail=false"),verbose:enabled(["--verbose"])||process.env.SEMIO_BUILD_VERBOSE==="true",outputStyle:(buildOptionV1(head,"output")??buildOptionV1(head,"output-style")) as "stream"|"stream-without-prefixes"|"static"|undefined,tasks,args:operation==="exec"?[]:[...forwarded],...(parallel?{parallel}:{}),skipCache:enabled(["--skip-cache"]),skipRemoteCache:enabled(["--skip-remote-cache"]),excludeDependencies:enabled(["--exclude-dependencies","--exclude-task-dependencies"])};
 }
 
-/** 👁️ Watches source events with bounded reruns and original cancellation. */
-export async function watchBuildInvocationV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation,options:{initial?:boolean}={}):Promise<void> {
-  const controller=new AbortController(),control=createIssuedResourceControlV1(invocation,"build:watch",0,controller.signal);
+/** 👁️ Watches source events beneath the exact active issued phase through descendant drainage. */
+export async function watchBuildInvocationV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{initial?:boolean}={}):Promise<void> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
+  const controller=new AbortController(),control=createRequestedIssuedResourceControlV1(phaseControl,0,controller.signal),check=()=>checkResourceLeaseControl(control);
   const boundary=args.indexOf("--"),command=boundary<0?[]:args.slice(boundary+1);
   if(!command.length)throw Error("Expected repo watch --projects=<projects> -- <command>");
-  checkScriptInvocation(invocation);
-  const {watchBuildChildArgumentsV1,buildWatchChangesEnvironmentV1,watchBuildChangeLimitsV1}=await import("./👁️watch/🟦️.ts"),child=watchBuildChildArgumentsV1(root,command);
-  checkScriptInvocation(invocation);
-  if(child){const {readOwnedBuildInvocationV1}=await import("../📥️caller/🟦️.ts");readOwnedBuildInvocationV1(root,invocation,child);}
+  const {watchBuildChildArgumentsV1,buildWatchChangesEnvironmentV1,watchBuildChangeLimitsV1}=await import("./👁️watch/🟦️.ts");check();const child=watchBuildChildArgumentsV1(root,command);
+  if(child){const {readOwnedBuildInvocationV1}=await import("../📥️caller/🟦️.ts");check();readOwnedBuildInvocationV1(root,invocation,child);check();}
   const names=selectBuildProjectsV1(graph,(buildOptionV1(args,"projects","p")??"").split(",").filter(Boolean),(buildOptionV1(args,"exclude")??"").split(",").filter(Boolean)),changed=new Set<string>();
-  let pending:ReturnType<typeof setTimeout>|undefined,running=Promise.resolve(),busy=false,stopped=false,failure:{error:unknown}|undefined,finish:(()=>void)|undefined;
-  const flush=()=>{if(stopped||busy||!changed.size)return;const files=[...changed];changed.clear();busy=true;running=Promise.resolve().then(async()=>{if(stopped)return;checkScriptInvocation(invocation);const changes={files,projects:names};
-   if(child){const {runOwnedBuildChildInvocationV1}=await import("../📥️caller/📤️child/🟦️.ts");checkScriptInvocation(invocation);await runOwnedBuildChildInvocationV1(root,child,invocation,changes,control);}
-   else{await advanceScriptInvocation(invocation,"build:watch","running");await runOwnedCommand(command[0]!,command.slice(1),root,"build:watch",scriptInvocationBudget(invocation,0),{signal:control.signal,env:scriptInvocationEnvironment(invocation,{...process.env,...buildWatchChangesEnvironmentV1(changes)}),onProgress:()=>advanceScriptInvocation(invocation,"build:watch","running")});}
-   checkScriptInvocation(invocation);
-  }).catch(error=>{if(!invocation.control.signal.aborted)failure??={error};controller.abort(failure?.error??invocation.control.signal.reason);stopped=true;finish?.();}).finally(()=>{busy=false;if(!stopped&&changed.size){pending=setTimeout(flush,200);}});};
-  const watcher=watch(root,{recursive:true},(_event,filename)=>{
-    if(stopped||!filename)return;const path=filename.toString().replaceAll("\\","/");
+  let pending:ReturnType<typeof setTimeout>|undefined,deadline:ReturnType<typeof setTimeout>|undefined,running=Promise.resolve(),busy=false,stopped=false,failure:{error:unknown}|undefined,finish:(()=>void)|undefined;
+  const stop=()=>{stopped=true;finish?.();},error=(error:unknown)=>{failure??={error};controller.abort(error);stop();},armDeadline=()=>{const remaining=check();if(remaining!==null)deadline=setTimeout(()=>{try{armDeadline();}catch(fault){error(fault);}},Math.max(1,Math.ceil(remaining)));},progress=async()=>{check();await advanceScriptInvocation(invocation,"build:watch","running");check();};
+  const flush=()=>{if(stopped||busy||!changed.size)return;const files=[...changed];changed.clear();busy=true;running=Promise.resolve().then(async()=>{if(stopped)return;check();const changes={files,projects:names};
+   if(child){const {runOwnedBuildChildInvocationV1}=await import("../📥️caller/📤️child/🟦️.ts");check();await runOwnedBuildChildInvocationV1(root,child,invocation,control,changes);check();}
+   else{await progress();const milliseconds=compilerAdmissionBudgetV1(control);await runOwnedCommand(command[0]!,command.slice(1),root,"build:watch",scriptInvocationBudget(invocation,milliseconds),{signal:control.signal,env:scriptInvocationEnvironment(invocation,{...process.env,...buildWatchChangesEnvironmentV1(changes)}),onProgress:progress});check();}
+  }).catch(error=>{failure??={error};controller.abort(failure.error);stop();}).finally(()=>{busy=false;if(!stopped&&changed.size)pending=setTimeout(flush,200);});};
+  check();const watcher=watch(root,{recursive:true},(_event,filename)=>{
+    if(stopped||!filename)return;try{check();}catch(fault){error(fault);return;}const path=filename.toString().replaceAll("\\","/");
     if(path.split("/").some(part=>[...cachePolicy.generatedDirectories,".git",".🧬semio","temp"].includes(part)))return;
     if(path.split("/").some((part,index,parts)=>ownership.collections.names.includes(part)&&parts[index-1]!==ownership.collections.moduleMember))return;
     const selected=names.some(name=>graph.projects[name]!.root==="."||path.startsWith(graph.projects[name]!.root+"/")),global=args.some(argument=>argument==="--include-global-files"||argument==="--include-global-files=true")&&!Object.values(graph.projects).some(project=>project.root!=="."&&path.startsWith(project.root+"/"));
     if(!selected&&!global)return;
-    if(path.length>watchBuildChangeLimitsV1.path||!changed.has(path)&&changed.size>=watchBuildChangeLimitsV1.files){failure??={error:Error("Bounded watch source event set required")};controller.abort(failure.error);stop();return;}
+    if(path.length>watchBuildChangeLimitsV1.path||!changed.has(path)&&changed.size>=watchBuildChangeLimitsV1.files){error(Error("Bounded watch source event set required"));return;}
     changed.add(path);if(pending)clearTimeout(pending);pending=setTimeout(flush,200);
   });
-  const stop=()=>{stopped=true;finish?.();},error=(error:Error)=>{failure??={error};controller.abort(error);stop();};
   try{
-   await new Promise<void>(done=>{finish=done;invocation.control.signal.addEventListener("abort",stop,{once:true});watcher.once("error",error);if(invocation.control.signal.aborted)stop();else if(options.initial){changed.add(".");flush();}});
-  }finally{stopped=true;invocation.control.signal.removeEventListener("abort",stop);watcher.removeListener("error",error);try{watcher.close();}catch(error){failure??={error};}if(pending)clearTimeout(pending);await running;}
-  if(failure)throw failure.error;if(!invocation.control.signal.aborted)checkScriptInvocation(invocation);
+   await new Promise<void>(done=>{finish=done;control.signal.addEventListener("abort",stop,{once:true});watcher.once("error",error);if(control.signal.aborted)stop();else{armDeadline();if(options.initial){changed.add(".");flush();}}});
+  }finally{stopped=true;control.signal.removeEventListener("abort",stop);watcher.removeListener("error",error);try{watcher.close();}catch(fault){failure??={error:fault};controller.abort(fault);}if(pending)clearTimeout(pending);if(deadline)clearTimeout(deadline);await running;}
+  if(failure)throw failure.error;if(!control.signal.aborted)check();
 }
 
 /** 🚦️ Refuses unsupported backend flags before publishing or executing any task. */

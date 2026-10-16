@@ -1,15 +1,16 @@
 //#region ➕️AddJobTestValue
-use super::JobTestOp;
-use super::super::{JobTestDiff, JobTestSnapshot};
+use crate::mutation_plan::job_test_mutation_fixture::mutations::JobTestOp;
+use crate::mutation_plan::job_test_mutation_fixture::{JobTestDiff, JobTestSnapshot};
 
 // 🌱️ `Serialize`/`Deserialize` stay for `MutationKind`'s own (untouched) supertrait bound;
 // `ToValue`/`FromValue` are `CompositeMutationKind`'s (see that trait's own doc) — both coexist.
+#[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct AddValue {
-    pub(crate) delta: i32,
+pub struct AddValue {
+    pub delta: i32,
 }
 
 impl protocol::MutationKind<JobTestSnapshot, JobTestOp> for AddValue {
@@ -38,7 +39,8 @@ impl protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp> for AddValue {
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "../../../../🧪️tests/🧬️job-test-mutations-mutations-add-value-unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion ➕️AddJobTestValue

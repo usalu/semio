@@ -57,3 +57,4 @@ calamine = { version = "0.36.1", default-features = false }
 csv = "1"
 zip = { version = "6", default-features = false, features = ["deflate"] }
 semio-s-artifact-stdio-xlsx-base = { workspace = true }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

@@ -1,5 +1,8 @@
 use super::*;
-use ui_wgpu::wgpu::{BlockListScene, DrawList, FontAtlas, IconAtlas, InputState};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_scene_views::BlockListScene;
+use semio_framework_ui_text::FontAtlas;
+use ui_wgpu::wgpu::InputState;
 
 fn block_list_scene(surface_id: &str, controller_id: &str, steps: Value, palette: Value) -> UiComponentSceneNode {
     UiComponentSceneNode {
@@ -30,11 +33,11 @@ fn block_list_scene(surface_id: &str, controller_id: &str, steps: Value, palette
 }
 
 fn shared_fixture() -> Value {
-    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared scene-list transfer fixture")
+    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared scene-list transfer fixture")
 }
 
 fn presentation_fixture() -> Value {
-    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧩️block-list-presentation/🔣️.json"))).expect("shared block-list presentation fixture")
+    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧩️block-list-presentation/🔣️.json"))).expect("shared block-list presentation fixture")
 }
 
 #[test]

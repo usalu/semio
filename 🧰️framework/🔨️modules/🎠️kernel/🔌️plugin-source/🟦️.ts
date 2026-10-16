@@ -1,4 +1,3 @@
-/// <reference types="vitest/importMeta" />
 /** 🔌️ Plugin sources: the development, bundled and extension sources, their events, module acquisition and multiplexing.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
@@ -247,10 +246,3 @@ export function multiplexPluginSources(...sources: readonly PluginSource[]): Plu
 }
 //#endregion 🔌️PluginSource
 // #endregion 🎠️Kernel
-
-//#region 🧪️SharedWatchStreamTests
-if (import.meta.vitest) {
-  const { registerTests6 } = await import("../🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests6(import.meta.vitest, { createBundledPluginSource, createDevPluginSource, createExtensionSource }, { directory: (await import("node:path")).dirname((await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url))), url: import.meta.url });
-}
-//#endregion 🧪️SharedWatchStreamTests

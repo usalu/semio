@@ -1,3 +1,7 @@
+import * as ModuleUnderTest from "../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts"), "AllowAllCapabilities" | "EffectBackbone" | "MESSAGE_ENDPOINT_VARIANT_FIELDS" | "RecordingBackboneOverflowReporter" | "backboneMessageEndpoint" | "bridgeBackboneWorkerInbound" | "createBackboneWorkerTransport" | "decodeBackboneGuestMessage" | "encodeBackboneGuestMessage">, source: TestSource): Promise<void> {
@@ -302,3 +306,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   //#endregion 🧬️ParityTests
 
 }
+
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts")).href;
+const moduleUnderTestDirectory = resolve(import.meta.dirname, "../../🔨️modules/🔌️plugin/⚡️effect-backbone");
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { AllowAllCapabilities: ModuleUnderTest.AllowAllCapabilities, EffectBackbone: ModuleUnderTest.EffectBackbone, MESSAGE_ENDPOINT_VARIANT_FIELDS: ModuleUnderTest.MESSAGE_ENDPOINT_VARIANT_FIELDS, RecordingBackboneOverflowReporter: ModuleUnderTest.RecordingBackboneOverflowReporter, backboneMessageEndpoint: ModuleUnderTest.backboneMessageEndpoint, bridgeBackboneWorkerInbound: ModuleUnderTest.bridgeBackboneWorkerInbound, createBackboneWorkerTransport: ModuleUnderTest.createBackboneWorkerTransport, decodeBackboneGuestMessage: ModuleUnderTest.decodeBackboneGuestMessage, encodeBackboneGuestMessage: ModuleUnderTest.encodeBackboneGuestMessage }, { directory: moduleUnderTestDirectory, url: moduleUnderTestUrl });

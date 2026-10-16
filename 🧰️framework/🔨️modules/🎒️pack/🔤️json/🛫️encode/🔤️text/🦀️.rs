@@ -60,13 +60,13 @@ pub fn canonical_escape(byte:u8,escape:&mut[u8;6])->usize {
 use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 #[derive(Debug)]
 pub struct ArtifactCanonicalJsonTextCursor<'a> {
-    text:Option<ArtifactCanonicalJsonText<'a>>,
+    #[doc(hidden)] pub text:Option<ArtifactCanonicalJsonText<'a>>,
     chunk:usize,
     offset:usize,
-    pending:Option<u8>,
+    #[doc(hidden)] pub pending:Option<u8>,
     escape_index:usize,
-    phase:u8,
-    closing:bool,
+    #[doc(hidden)] pub phase:u8,
+    #[doc(hidden)] pub closing:bool,
 }
 #[derive(Clone,Copy,Debug)]
 pub struct ArtifactCanonicalJsonTextStep {pub step:RetainedCloneStep,pub written_bytes:usize}
@@ -114,6 +114,3 @@ impl<'a> ArtifactCanonicalJsonTextCursor<'a> {
     }
 }
 impl Drop for ArtifactCanonicalJsonTextCursor<'_> {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native JSON text cursor requires terminal close");}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

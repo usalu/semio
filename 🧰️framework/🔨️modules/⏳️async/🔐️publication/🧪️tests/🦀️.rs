@@ -26,7 +26,7 @@ fn isolated_observation(name: &str, variable: &str, value: &str) -> (bool, std::
 }
 
 fn corpus() -> Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(crate::text("🔐️publication/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 struct Observer {
@@ -232,7 +232,7 @@ fn independent_mutex_observes_the_same_admission_subtraces() {
 
 
 fn checkpoint_corpus() -> Value {
-    serde_json::from_str(include_str!("../🛂️checkpoint/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(crate::text("🔐️publication/🛂️checkpoint/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn run_checkpoint_case(row: &Value) -> Value {

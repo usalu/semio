@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "none",
+      "policies": [],
+      "generation": false
+    },
+    {
+      "id": "process",
+      "policies": [
+        "process"
+      ],
+      "generation": false
+    },
+    {
+      "id": "cargo",
+      "policies": [
+        "cargo"
+      ],
+      "generation": false
+    },
+    {
+      "id": "wasm",
+      "policies": [
+        "wasm"
+      ],
+      "generation": false
+    },
+    {
+      "id": "all",
+      "policies": [
+        "process",
+        "cargo",
+        "wasm"
+      ],
+      "generation": false
+    },
+    {
+      "id": "generation",
+      "policies": [
+        "process",
+        "cargo",
+        "wasm"
+      ],
+      "generation": true
+    }
+  ]
+}

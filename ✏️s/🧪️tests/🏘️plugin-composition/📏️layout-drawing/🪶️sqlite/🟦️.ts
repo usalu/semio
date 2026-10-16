@@ -59,10 +59,10 @@ test("Layout native JSON obeys unsigned numeric schema without inventing decimal
 import dictionaryFixture from "../../../../🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧾️dictionary/🔣️.json";
 
 import {parseLayoutArtifact} from "../../../../🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
-import type{IntrinsicValue}from "../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
-import dictionaryNativeSchema from "../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🔣️.json";
-import{questionDictionaryNativeJson,questionDictionaryFromNativeJson}from"../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🪪️native-json/🟦️.ts";
-import{parseMediaPayload}from"../../../../../🧰️framework/🔨️modules/🛂️manifest/🎞️media/🟦️.ts";
+import type{IntrinsicValue}from "@semio-tech/value-ts/schema";
+import { dictionarySchema as dictionaryNativeSchema } from "@semio-tech/value-ts/dictionary";
+import{questionDictionaryNativeJson,questionDictionaryFromNativeJson}from"@semio-tech/value-ts/dictionary/native-json";
+import{parseMediaPayload}from"@semio-tech/framework/manifest/media";
 import unsignedFixture from"../../../../🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧾️dictionary/🔢️unsigned/🔣️.json";
 
 const dictionaryValue=(source:unknown):IntrinsicValue=>{

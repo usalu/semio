@@ -22,8 +22,7 @@ fn sqlite_snapshot_csv_receiving_original_subset_validation_uses_both_original_c
 use store::os_store::serialization::ArtifactSqliteSnapshotHost as _;
 use std::cell::Cell;
 use std::sync::atomic::{AtomicUsize,Ordering as AtomicOrdering};
-#[path="../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-mod heap;
+use semio_framework_trace_memory_testing as heap;
 #[global_allocator]
 static CSV_RECEIVING_HEAP:heap::RequestedAllocator=heap::RequestedAllocator;
 fn policy()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}

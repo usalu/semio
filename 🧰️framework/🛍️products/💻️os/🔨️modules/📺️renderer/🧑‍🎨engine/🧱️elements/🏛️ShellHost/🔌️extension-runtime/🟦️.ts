@@ -4,12 +4,12 @@
  */
 
 import { SemioFaultError, type Effect, type Fault, type InvocationResponse } from "@semio-tech/framework";
-import { encodePackValue } from "@semio-tech/framework-os";
+import { encodePackValue } from "@semio-tech/framework/packs";
 import { type ActiveSession, type LoadedProgramState, type SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
 import { resolveManifestLabel, beginCancellableExtensionRequest } from "../../🛠️ShellHelpers/🟦️.tsx";
 import { type PluginExtensionCompletion, serializePerActor } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { isShardLostError } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { hopTrace, type HopTraceDetail } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { hopTrace, type HopTraceDetail } from "@semio-tech/framework/trace";
 import { commandStallBandTextV1, commandStallHeldSecondsV1, type CommandStallV1 } from "../../🔌️PluginRuntime/⏱️command-stall/🟦️.ts";
 
 //#region FrameworkOsShell

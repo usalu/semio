@@ -2,7 +2,7 @@ import{resolveOriginalTurnInputSource}from"../../🎟️retained-turn/🔎️sou
 import {existsSync as testingSchemaExists} from "node:fs";
 /** 📄️ Original checkpoint publication follows separate page and ledger turns. */
 import Ajv from "ajv";
-import grantSchema from "../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {applyPatch} from "fast-json-patch";

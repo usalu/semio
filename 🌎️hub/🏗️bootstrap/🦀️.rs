@@ -1,5 +1,5 @@
 //! OS hub backend — thin axum shell over `db::Database` (document authority + content-addressed
-//! blobs) and `HubDirectory` (identity/tenancy), speaking `protocol_wire`'s binary frames over
+//! blobs) and the hub directory capability traits (identity/tenancy), speaking `protocol_wire`'s binary frames over
 //! WebSocket.
 //!
 //! The WebSocket endpoint speaks `protocol_wire`'s binary lane-tagged `ClientFrame`/`ServerFrame`
@@ -24,7 +24,7 @@ use semio_hub_artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOpe
 use semio_hub_auth::rate_limit::HubRateLimiterV1;
 use semio_hub_auth::CredentialSignInPolicyV1;
 use semio_hub_directory_service::{DirectoryService, HubVerifiedCheckpointPublisher};
-use semio_hub_directory::{HubDirectory, ProjectionRebuildControl};
+use semio_hub_directory::{AgentDelegationDirectory, ArtifactCasDirectory, ProjectionRebuildControl, SyncSessionDirectory};
 use semio_hub_directory_contract::{IdentityAssertionVerifier, IdentityVerificationControl, LocalBootstrapTransport, SessionCapability};
 #[cfg(feature="integration-fixtures")]
 use semio_hub_inference_runtime::InferenceCheckpointTestGateV1;

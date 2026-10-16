@@ -1,8 +1,9 @@
+import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { createHash } from "node:crypto";
 import { lstatSync } from "node:fs";
 import { isAbsolute, join, relative } from "node:path";
 import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import type { ComponentReceiptV1 } from "../🏷️component-receipt/🧬️schema/🟦️.ts";
+import type { ComponentReceiptV1 } from "../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
 export type FreshComponentRequestV1 = Readonly<{
   pluginId: string;
   cargoPackage: string;
@@ -31,7 +32,7 @@ export type FreshBuildControlV1 = Readonly<{
 }>;
 
 export type FreshComponentLeaseV1 = Readonly<{
-  consume<T>(derive: (component: Uint8Array<ArrayBuffer>) => Promise<T>): Promise<T>;
+  consume<T>(derive: (component: Uint8Array<ArrayBuffer>, phaseControl: ResourceLeaseControl) => Promise<T>): Promise<T>;
 }>;
 
 export type FreshComponentProducedV1<T> = Readonly<{

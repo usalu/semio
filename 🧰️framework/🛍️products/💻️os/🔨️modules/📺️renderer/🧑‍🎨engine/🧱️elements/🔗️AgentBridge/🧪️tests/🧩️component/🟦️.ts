@@ -10,12 +10,14 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import Ajv from "ajv";
 import { type AgentBridgeConfig, type BridgeOfferFetch, AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_OFFER_SCHEMA_V1, agentBridgeOfferAnswerV1, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, useAgentBridge, useDiscoveredAgentBridgeConfig, applyInboundShellCommand, bridgeProtocols, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, parseAgentBridgeOffer, encodeJsonPayload } from "../../🟦️.tsx";
-import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "../../../../../../🌉️mcp/🧵️bridge/🟦️.ts";
+import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
 import { answerAgentAppCommand, NO_ARTIFACT_ROUTE_MESSAGE } from "../../🟦️.tsx";
 import { BRIDGE_HANDSHAKE_DEADLINE_MS, BRIDGE_UNANSWERED_ATTEMPTS, type AgentBridgeStatus, type AgentBridgeVersionMismatch } from "../../🟦️.tsx";
-import { BRIDGE_VERSION } from "../../../../../../🌉️mcp/🧵️bridge/🟦️.ts";
-import { shellAppFault } from "../../../../../../🌉️mcp/🐚️channel/🟦️.ts";
-import { decodeChannelBase64, decodeShellAppCommand, encodeChannelBase64, shellAppFrameToJson, type ShellAppFrameV1 } from "../../../../../../🌉️mcp/🐚️channel/🟦️.ts";
+import { BRIDGE_VERSION } from "@semio-tech/framework/mcp/bridge";
+import { shellAppFault } from "@semio-tech/framework/mcp/channel";
+import { decodeChannelBase64, decodeShellAppCommand, encodeChannelBase64, shellAppFrameToJson, type ShellAppFrameV1 } from "@semio-tech/framework/mcp/channel";
+import { documentInferencePortFixtureUrl } from "../../../../../../🖥️shell/🧪️tests/🧫️fixtures/🟦️.ts";
+import { policyApprovalWithdrawalFixtureUrl, channelAppPayloadsFixtureUrl } from "../../../../../../🌉️mcp/🧪️tests/🧫️fixtures/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -461,7 +463,7 @@ describe("buildShellStateFrame", () => {
 describe("AgentBridge inference state parity", () => {
   it("starts from the neutral Shell state and applies the exact inference port command", async () => {
     const { default: equal } = await import("fast-deep-equal");
-    const fixture = JSON.parse(readFileSync(join(here, "../../../../../../🖥️shell/🧪️tests/🧫️fixtures/💡️set-document-inference-port.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(documentInferencePortFixtureUrl, "utf8"));
     const state = createDefaultShellState();
     expect(equal(state, fixture.state)).toBe(true);
     expect(state).toEqual(fixture.state);
@@ -648,7 +650,7 @@ describe("useAgentBridge agentReply", () => {
 /** 🪦️ Replays `🌉️mcp/🛡️policy/🧫️fixtures/🪦️approval-withdrawal.json`'s `retiredAffordances` through the
  * real hook over a fake socket: the same frames the gateway sends end every approval as pending,
  * resolved or withdrawn-with-its-reason, and a withdrawn one leaves nothing waiting. */
-const withdrawalLaw = JSON.parse(readFileSync(join(here, "../../../../../../🌉️mcp/🛡️policy/🧪️tests/🧫️fixtures/🪦️approval-withdrawal.json"), "utf8")) as {
+const withdrawalLaw = JSON.parse(readFileSync(policyApprovalWithdrawalFixtureUrl, "utf8")) as {
   readonly retiredAffordances: readonly { readonly name: string; readonly frames: readonly Record<string, string>[]; readonly state: string; readonly withdrawal: string | null; readonly pending: number }[];
 };
 
@@ -700,7 +702,7 @@ describe("useAgentBridge approval withdrawal", () => {
  * own headless interpreter. Two banks, one fixture file: these laws read the same
  * `🐚️channel/🧫️fixtures/🗿️app-payloads.json` the Rust side's own tests assert against, so a drift in
  * either codec is red here AND there, never a dropped mutation at runtime. */
-const appPayloadFixtures = JSON.parse(readFileSync(join(here, "../../../../../../🌉️mcp/🐚️channel/🧪️tests/🧫️fixtures/🗿️app-payloads.json"), "utf8")) as readonly {
+const appPayloadFixtures = JSON.parse(readFileSync(channelAppPayloadsFixtureUrl, "utf8")) as readonly {
   readonly direction: "gateway_to_shell" | "shell_to_gateway";
   readonly kind: string;
   readonly payload: Record<string, unknown>;

@@ -18,9 +18,9 @@ Cargo isolated-store settlement releases its real resource owner and invokes exa
 
 Schema/corpus were authored before production. The first direct permanent ordinary law failed at missing retirement API before opening any test SQLite database (RED). Current private permanent ordinary law passes thirteen ownership/physical countermodels plus three close-fault rows, using Ajv and independent native SQLite agreement and actual locks. Close-fault rows include undefined and frozen primaries with two native-close refusals, plus fail-once then completed-close replay with one actual gate release. All private law directories are removed after settlement.
 
-Selected strict TypeScript run over leases root, ordinary law, canonical opening and Cargo launcher returned exit0 with an empty `🗑️generated/ordinary-retirement-strict.log`. This check precedes the last small idempotency/corpus expansion and will be rerun when Source is held.
+Final selected strict TypeScript run65427 over leases root, ordinary law, canonical opening and Cargo launcher returned exit0 with an empty `🗑️generated/ordinary-retirement-strict.log`, after the final internal claim-release quarantine helper. Read-only diff checking returned0 with fsmonitor disabled after its default daemon failure. Held Source fingerprints for all nine owned/shared files are retained in `🗑️generated/ordinary-retirement-source.json`.
 
-Core independently reports all eight actual Bun/Node concurrency rows returned0 and all owned children/private roots closed, while correcting a test expectation that ordinary exact retirement should remove queue-claim material (it intentionally excludes it). Core is adding a Node retirement-adapter row using its same-wire owned child. Core and Low final review remain required. This document is not canonical runtime or full-filesystem recovery qualification.
+Core independently reports all eight actual Bun/Node concurrency rows returned0 and all owned children/private roots closed, while correcting a test expectation that ordinary exact retirement should remove queue-claim material (it intentionally excludes it). Core is adding a Node retirement-adapter row using its same-wire owned child. Low reviewed the final slice and narrow internal claim-release helper with no remaining blocker. Core is rerunning its final nine scenarios after the last helper; its prior nine scenarios already returned0, including actual Node exact retirement and recreation. This document is not canonical runtime or full-filesystem recovery qualification.
 
 ## Files Owned in This Slice
 
@@ -35,3 +35,15 @@ Core independently reports all eight actual Bun/Node concurrency rows returned0 
 - LIB/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts
 
 Root owns tooling Source closure capture, readerSources declarations, SDK enrollment and later authorized physical runs. No declarations are guessed here.
+
+## Final Narrow Safety Deltas
+
+Ordinary GC retains metadata headroom only when its exact known file already exists; it does not create a new 4 MiB reserve in arbitrary generic/Cargo directories. Claims GC retains its existing authentic reserve creation lifecycle. Without existing headroom an unlink capacity failure stays a refusal. The internal claims target release port pins the exact gate and issued database if close fails, both during retirement and final cleanup. Low independently reviewed this narrow delta as clean.
+
+The nonwaiting canonical maintenance attempt is optional: genuine native providers return acquired:false on a legitimate peer reader, close the requesting reader, and the wrapper reopens shared custody without running retirement. Low withdrew an earlier mandatory-EX concern after rereading the actual native provider contract. Unrelated maintenance failures still propagate.
+
+## Combined Held Snapshot
+
+Core final nine actual scenarios16994 returned0 after the final internal claims release helper. This includes real independent SQLite BEGIN EXCLUSIVE busy on live identity and success on idle identity, genuine Node exact retirement/recreation, exact opened-waiter/cancellation boundaries and raw claim-reader exclusion. Core focused strict20329 returned0 in 3.993s. Core reports every accepted child awaited and every private generated root removed. Core also reviewed current production gate/claims ordering without a new blocker. No canonical image or SDK recovery qualification is inferred.
+
+The final ordinary permanent law rerun on held production Source is retained as `🗑️generated/ordinary-retirement-runtime.log`; it returned0 with its thirteen countermodels and three close-fault rows.

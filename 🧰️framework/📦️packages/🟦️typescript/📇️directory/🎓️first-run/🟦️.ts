@@ -1,0 +1,3 @@
+/** 🎓️ SDK entry `@semio-tech/framework/directory/first-run`: explicit public surface of the framework module that plugins build on. */
+export { HUB_FIRST_RUN_ANCHORS_V1, HUB_FIRST_RUN_INTRODUCTION_ID_V1, HUB_FIRST_RUN_SEEN_VALUE_V1, HUB_FIRST_RUN_STAGES_V1, HUB_FIRST_RUN_STORAGE_KEY_V1, HUB_FIRST_RUN_TEXT_V1, hubFirstRunIntroductionV1, hubFirstRunSeenV1, hubFirstRunShouldStartV1, hubFirstRunStageV1, hubFirstRunStateFromV1, hubFirstRunStepIndexV1, hubFirstRunTextV1, markHubFirstRunSeenV1 } from "../../../../🔨️modules/📇️directory/🎓️first-run/🟦️.ts";
+export type { HubFirstRunLocaleV1, HubFirstRunStageV1, HubFirstRunStateV1 } from "../../../../🔨️modules/📇️directory/🎓️first-run/🟦️.ts";

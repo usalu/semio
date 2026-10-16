@@ -28,8 +28,8 @@ import {
   hostArmedViewContext,
   panelViewContext
 } from "@semio-tech/framework";
-import { encodeBackboneWorkerRequest } from "@semio-tech/framework-os";
-import { type LocalInteractionState } from "@semio-tech/framework-replication";
+import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
+import { type LocalInteractionState } from "@semio-tech/framework/replication";
 import {
   focusedProgramKeyV1,
   focusedProgramV1,
@@ -85,7 +85,7 @@ import {
 } from "../../🛠️ShellHelpers/🟦️.tsx";
 import { timeTravelIndicatorTextV1, TimeTravelWindowIndicator } from "../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
-import type { BridgeInstanceRef } from "../../../../../🌉️mcp/🧵️bridge/🟦️.ts";
+import type { BridgeInstanceRef } from "@semio-tech/framework/mcp/bridge";
 import { TutorialRecorder } from "../🎬️tutorial-recorder/🟦️.tsx";
 import { pluginInstallConcurrency } from "../🔌️extension-runtime/🟦️.ts";
 import type { ShellCoreAfterPluginLifecycle } from "../🚀️plugin-lifecycle/🟦️.ts";
@@ -519,7 +519,8 @@ export function useFocusAndInput(core: ShellCoreAfterPluginLifecycle) {
       const index = interactions.findIndex((interaction, i) => !completed.includes(i) && matches(interaction));
       if (index < 0) return;
       if (step.ordered && index !== completed.length) return;
-      const celebrateId = celebrateOverride ?? interactions[index].celebrate ?? step.introduce;
+      const interaction=interactions[index];if(!interaction)return;
+      const celebrateId = celebrateOverride ?? interaction.celebrate ?? step.introduce;
       if (celebrateId && scope.rootRef.current) celebrateElements(elementIdSelector(celebrateId), CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
       introductionCompletedInteractionsRef.current = [...completed, index];
       dispatch({ type: "COMPLETE_INTRODUCTION_INTERACTION", index });

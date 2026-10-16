@@ -11,10 +11,10 @@ import { readFileSync, readdirSync, statSync } from "fs";
 import { join, relative } from "path";
 // #endregion 🔌️Adapters
 
-import { replaceScopes } from "@/lib/persistence";
-import { requireAuth, isAuthError } from "@/lib/authentication";
-import { publishEvent } from "@/lib/event";
-import { buildScopesForFile } from "@/lib/source-index";
+import { replaceScopes } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
+import { requireAuth, isAuthError } from "@semio-tech/framework/products/repo/modules/server/library/authentication";
+import { publishEvent } from "@semio-tech/framework/products/repo/modules/server/library/event";
+import { buildScopesForFile } from "@semio-tech/framework/products/repo/modules/server/library/source-index";
 
 const REPO_ROOT = process.env.COMPOSE_SERVER_REPO_ROOT || process.cwd();
 

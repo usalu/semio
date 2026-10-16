@@ -15,8 +15,8 @@ use semio_hub_artifact_authority::chunk_cas::ArtifactCasReservation;
 use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEventBody};
 use semio_hub_artifact_creation::{ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1};
 use semio_hub_directory_contract::model::{AuthSessionIssue, AuthSessionKind};
-use semio_hub_directory_contract::{HubClock, NewDirectoryEvent};
-use semio_hub_directory_sqlite::{SqliteDirectory, now_ms};
+use semio_hub_directory_contract::{HubClock, NewDirectoryEvent, now_ms};
+use semio_hub_directory_sqlite::SqliteDirectory;
 use directory::os_identity::time_ordered_id;
 
 struct GenesisFixture {
@@ -279,7 +279,7 @@ mod quick {
     use super::*;
 use semio_hub_artifact_creation::{ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, DocumentGenesisCommitV1};
 use directory::os_directory::{ArtifactHash, DirectoryEventBody};
-use semio_hub_directory_sqlite::now_ms;
+use semio_hub_directory_contract::now_ms;
 
     #[tokio::test]
     async fn genesis_neutral_transactions_are_atomic_replayable_and_authorized() {
@@ -424,7 +424,7 @@ use semio_hub_directory_sqlite::now_ms;
 
 mod long {
     use super::*;
-use semio_hub_directory_sqlite::now_ms;
+use semio_hub_directory_contract::now_ms;
 
     #[tokio::test]
     async fn genesis_accepted_only_recovery_has_no_prepared_or_public_side_effects() {

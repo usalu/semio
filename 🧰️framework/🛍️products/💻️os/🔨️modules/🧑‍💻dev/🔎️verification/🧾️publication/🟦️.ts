@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import { isAbsolute, join, win32, resolve } from "node:path";
-import { parseDocumentOpenIntentV1, parseDocumentExecutionTargetLeaseFieldsV1, type DocumentOpenIntentV1, type DocumentExecutionTargetLeaseFieldsV1, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "../../../📇️directory/🧬️schema/🟦️.ts";
-import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
-import {observePhysicalFileV1,readPhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
+import { parseDocumentOpenIntentV1, parseDocumentExecutionTargetLeaseFieldsV1, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "../../../📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+import { type DocumentOpenIntentV1, type DocumentExecutionTargetLeaseFieldsV1, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema";
+import { blake3Hex } from "@semio-tech/framework/hash";
+import {observePhysicalFileV1,readPhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "@semio-tech/framework/filesystem/observation";
 
 export type ProtectedActorByteClaimV1 = Readonly<{sha256:string;byteLength:number}>;
 export type ProtectedActorResponseInputV1 = Readonly<{asset:string;url:string;method:string;status:number;authenticated:boolean;intent:unknown;body:Uint8Array}>;

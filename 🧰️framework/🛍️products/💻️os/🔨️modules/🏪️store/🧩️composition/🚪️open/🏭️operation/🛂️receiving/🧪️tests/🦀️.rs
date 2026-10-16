@@ -3,7 +3,7 @@ use protocol::codec::{HistoryReadLimits, RetainedWireByteSource};
 use semio_framework_os_store_member_open::receiving::MemberHistoryReceiving;
 use semio_framework_value::native_decoding::allocation::NativeForwardedDecodeReceipt;
 use semio_framework_os_spr::history::RetainedHistorySourceStep;
-use super::super::super::tests::OriginalMemberCaller;
+use semio_framework_os_store_testing_doubles::OriginalMemberCaller;
 use semio_framework_os_store_owned_schema_decode::{OwnedSchemaDecodePages, OwnedSchemaDecodePage, OwnedSchemaDecodeCredits};
 use protocol::codec::OriginalWireSourceIdentity;
 

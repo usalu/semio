@@ -1,0 +1,7 @@
+/** 🧫 The job module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
+export const jobRetirementPayloadFixtureUrl = new URL("../../♻️retirement/📄️payload/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url);
+export { default as jobWorkGrantSchema } from "../../🏃️work/🎟️grant/🧬️schema/🔣️.json" with { type: "json" };
+export { default as jobAdmissionOwnedSchema } from "../../🚪️admission/📦️owned/🧬️schema/🔣️.json" with { type: "json" };
+export { default as jobCloseDemandFixture } from "./📏️close-demand/🔣️.json" with { type: "json" };
+export const jobSnapshotSchemaUrl = new URL("../../📥️snapshot/🧬️schema/🔣️.json", import.meta.url);
+export const jobCloseDemandFixtureUrl = new URL("./📏️close-demand/🔣️.json", import.meta.url);

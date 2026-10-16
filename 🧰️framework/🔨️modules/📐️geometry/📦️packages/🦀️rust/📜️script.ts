@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, resolve } from "node:path";
@@ -13,9 +14,10 @@ const ORACLES = ["three", "shapely"] as const;
 /** 🧪️ `semio-framework-geometry` tests: `test [level]` runs the cargo suites (kurbo and parry3d oracles included); `test oracle [three|shapely]` runs the third-party oracle suites on the committed fixtures: `three` (vitest) and `shapely` (pytest, covering `semio-framework-2d` regions). @see 🧪️tests/🏙️aec-oracles */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     if (segments[0] !== "oracle") {
       const { rest } = resolveTestLevel(segments);
-      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-geometry"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-geometry"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
       return;
     }
     const { rest } = resolveTestLevel(segments.slice(1));

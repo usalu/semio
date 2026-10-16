@@ -9,7 +9,7 @@ if (import.meta.vitest && driver) {
   const { registerGisDocumentOpenTests } = await import("../🧪️tests/🗺️document-open/🟦️.ts");
   const { registerGisPeerRebootstrapTests } = await import("../🧪️tests/🔁️peer-rebootstrap/🟦️.ts");
   const { registerGisDirectoryLaneTests } = await import("../🧪️tests/🛤️directory-lane/🟦️.ts");
-  const { workerLawSourceV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/📚️worker-law-suites/🟦️.ts");
+  const { workerLawSourceV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts");
   const dependencies = documentWorkerTestDependenciesV1();
   const models = await import("../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts");
   const testSeams = Object.defineProperties({}, { ...Object.getOwnPropertyDescriptors(dependencies.testSeams), ...Object.getOwnPropertyDescriptors(driver.test) });

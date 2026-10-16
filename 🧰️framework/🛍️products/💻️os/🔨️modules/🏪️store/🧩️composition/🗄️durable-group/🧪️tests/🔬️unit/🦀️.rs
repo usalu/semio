@@ -1,5 +1,5 @@
-use super::fixture_mutations::demo::{DemoMutation, SetN};
-use super::tests::{DemoOneItemPreparationFactory, DemoSnapshot, demo_closable_store_owners};
+use semio_framework_os_store_testing_fixtures::demo::DemoMutation; use semio_framework_os_store_testing_fixtures::demo::SetN;
+use semio_framework_os_store_testing_doubles::DemoOneItemPreparationFactory; use semio_framework_os_store_testing_fixtures::DemoSnapshot; use semio_framework_os_store_testing_doubles::demo_closable_store_owners;
 use std::sync::Arc;
 use pack::snapshot::ArtifactDsl;
 use semio_framework_os_store_engine::lifted_store::ArtifactStore;

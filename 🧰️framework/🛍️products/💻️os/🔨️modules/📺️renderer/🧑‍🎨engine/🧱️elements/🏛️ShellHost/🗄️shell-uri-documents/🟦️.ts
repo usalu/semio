@@ -17,14 +17,18 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { spaceIndexOf, resolveUiDirtyScope } from "@semio-tech/framework";
 // #region 🔌️Adapters
 import {
+  type DocumentScope
+} from "@semio-tech/framework/document/scope";
+import {
+  encodeDocumentArchiveBytes,
+  type DocumentArchivePack
+} from "@semio-tech/framework/wire-contracts";
+import {
   type BackboneWorkerRequest,
   encodeBackboneWorkerRequest,
-  encodeDocumentArchiveBytes,
   type PersistenceBinding,
-  type DocumentScope,
-  type DocumentArchivePack,
   documentRuntimeKeyV1
-} from "@semio-tech/framework-os";
+} from "@semio-tech/framework/backbone";
 import { SpaceDirectoryHistoryV1 } from "../📇️space-directory/🟦️.ts";
 import { shellSessionRouteV1 } from "../🔀️surface-switch/🟦️.ts";
 import { spawnedProgramViewStateV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type SpawnProgramRefusalReasonV1 } from "../🪟️spawned-program/🟦️.ts";
@@ -44,8 +48,8 @@ import {
 } from "../../🛠️ShellHelpers/🟦️.tsx";
 // #endregion 🔌️Adapters
 import { commitLocalFoldersConfigMutationV1, localFolderReconnectOfferV1, readLocalFolderBindingsV1, type LocalFolderIdentityV1 } from "../📎️local-folders/🟦️.tsx";
-import { attachLocalFolder, detachLocalFolder, type LocalFolderBinding, type LocalFolderBindings } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
-import { documentOpeningDeadlineMs } from "../../../../../🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import { attachLocalFolder, detachLocalFolder, type LocalFolderBinding, type LocalFolderBindings } from "@semio-tech/framework/config/mutations";
+import { documentOpeningDeadlineMs } from "@semio-tech/framework/browser-bundle/child/schema";
 import { reduceBootstrapUiState, reduceExecutionTargetUiState, retainInferencePortOwnerAfterCloseV1 } from "../🪪️host-bootstrap/🟦️.tsx";
 import { type SyncAttachTargetV1 } from "../../🔄️ShellSync/🟦️.tsx";
 import { encodeWindowActionInvocation } from "../📨️window-invocation/🟦️.ts";

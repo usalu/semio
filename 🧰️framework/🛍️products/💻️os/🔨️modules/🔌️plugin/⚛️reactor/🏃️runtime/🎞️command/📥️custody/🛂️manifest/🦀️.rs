@@ -1,27 +1,45 @@
 //! 🛂️ Original manifest source, grammar and moved fields remain retained until paid return.
-use super::*;
-use semio_framework_job::{OriginalCallerSourceLoan,OriginalTurnFailure,StepContext};
-use store::os_pack::intrinsic::{RetainedIntrinsicBody,RetainedIntrinsicInput};
-use semio_framework_value::{DslValue,RetainedCloneProgress,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
-use std::mem::{ManuallyDrop,size_of};
+use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_views::media_contract::{ArtifactMediaExportHandle, ArtifactMediaExportPoll};
+use crate::ops_ingress::DOCUMENT_COMMAND_ACTION_IDS;
+use semio_framework::{Fault, FaultFrom, ViewModel};
+use semio_framework_value::{FromValue, ToValue};
+use semio_framework::kernel::InvocationResult;
+use semio_framework::manifest::{CommandAddress as ManifestCommandAddress, CommandOwnerAddress as ManifestCommandOwnerAddress};
+use semio_framework_plugin_plugin_program::{Plugin, PluginProgram, decode_wire_serialized};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use serde_json::Value;
+use crate::ops_typed_operations::drive_self_waking_ready;
+use crate::ops_wire_limits::find_instance;
+use semio_framework_plugin_runtime_instances::inst_wire_frames::{instance_actor, with_instances_turn_mut};
+use semio_framework_job::{OriginalCallerSourceLoan, OriginalTurnFailure, StepContext};
+use store::os_pack::intrinsic::{RetainedIntrinsicBody, RetainedIntrinsicInput};
+use semio_framework_value::{DslValue, RetainedCloneProgress, ValueError, ValueRefusalKind};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use std::mem::{ManuallyDrop, size_of};
 
 pub(crate) struct OriginalManifestCommandReceiving{
- identity:(semio_framework_job::OperationId,semio_framework_job::Generation),parent:usize,recipient:usize,clock:fn()->Option<u64>,deadline:u64,source:(usize,usize),
+ pub identity:(semio_framework_job::OperationId,semio_framework_job::Generation),pub parent:usize,pub recipient:usize,pub clock:fn()->Option<u64>,deadline:u64,source:(usize,usize),
  loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,returning:bool,parser:ManuallyDrop<Option<RetainedIntrinsicBody<'static>>>,raw_failure:ManuallyDrop<Option<OriginalCommandPackFailure>>,
  parsed:ManuallyDrop<Option<DslValue>>,args:ManuallyDrop<Option<DslValue>>,fields:[Option<String>;6],kind:u8,phase:u8,action:ManuallyDrop<Option<semio_framework::manifest::ActionAddress>>,action_close:ManuallyDrop<Option<ControlledRetirement<semio_framework::manifest::ActionAddress>>>,injection_source:ManuallyDrop<Option<DslValue>>,injection:ManuallyDrop<Option<Vec<(String,DslValue)>>>,injection_cursor:usize,injection_key:Option<String>,injection_value:Option<String>,injection_text:ManuallyDrop<Option<Vec<u8>>>,injection_text_close:ManuallyDrop<Option<ControlledRetirement<Vec<u8>>>>,address:ManuallyDrop<Option<ManifestCommandAddress>>,fault:ManuallyDrop<Option<Fault>>,closing:ManuallyDrop<Option<ControlledRetirement<DslValue>>>,fault_close:ManuallyDrop<Option<ControlledRetirement<Fault>>>,address_close:ManuallyDrop<Option<ControlledRetirement<ManifestCommandAddress>>>,result:ManuallyDrop<Option<InvocationResult>>,finished:bool,
 }
-fn refusal(message:&'static str)->OriginalTurnFailure{ValueError::literal(ValueRefusalKind::InvalidValue,message).into()}
-fn paid(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
+#[doc(hidden)]
+pub fn refusal(message:&'static str)->OriginalTurnFailure{ValueError::literal(ValueRefusalKind::InvalidValue,message).into()}
+#[doc(hidden)]
+pub fn paid(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 fn field_mut<'a>(value:&'a mut DslValue,path:&[&str])->Result<&'a mut DslValue,OriginalTurnFailure>{let mut value=value;for name in path{let DslValue::Object(entries)=value else{return Err(refusal("original command address requires an object"))};value=&mut entries.iter_mut().find(|(key,_)|key==name).ok_or_else(||refusal("original command address field is missing"))?.1;}Ok(value)}
 impl OriginalManifestCommandReceiving{
- pub(crate) fn admit(source:&mut Vec<u8>,artifact:bool,limits:store::os_pack::PackLimits,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{
+ pub fn admit(source:&mut Vec<u8>,artifact:bool,limits:store::os_pack::PackLimits,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{
   let parent=cx.original_source_parent()?.source_identity()?;if !paid(cx,size_of::<Vec<u8>>())?{return Ok(None)}let source_id=(source.as_ptr()as usize,source.len());let maximum=usize::try_from(limits.max_total_alloc).map_err(|_|refusal("original manifest allocation ceiling exceeds target"))?;
   let(parser,raw_failure)=match RetainedIntrinsicBody::new(RetainedIntrinsicInput::OwnedBytes(std::mem::take(source)),limits,maximum){Ok(owner)=>(Some(owner),None),Err((original,RetainedIntrinsicInput::OwnedBytes(bytes)))=>{*source=bytes;(None,Some(OriginalCommandPackFailure{original}))},Err(_)=>unreachable!()};
   Ok(Some(Self{identity:(cx.operation(),cx.generation()),parent,recipient:cx.original_recipient_identity(),clock:cx.clock_source(),deadline:cx.deadline_us(),source:source_id,loan:ManuallyDrop::new(None),returning:false,parser:ManuallyDrop::new(parser),raw_failure:ManuallyDrop::new(raw_failure),parsed:ManuallyDrop::new(None),args:ManuallyDrop::new(None),fields:Default::default(),kind:if artifact{6}else{0},phase:0,action:ManuallyDrop::new(None),action_close:ManuallyDrop::new(None),injection_source:ManuallyDrop::new(None),injection:ManuallyDrop::new(None),injection_cursor:0,injection_key:None,injection_value:None,injection_text:ManuallyDrop::new(None),injection_text_close:ManuallyDrop::new(None),address:ManuallyDrop::new(None),fault:ManuallyDrop::new(None),closing:ManuallyDrop::new(None),fault_close:ManuallyDrop::new(None),address_close:ManuallyDrop::new(None),result:ManuallyDrop::new(None),finished:false}))
  }
- pub(crate) fn identity(&self)->(semio_framework_job::OperationId,semio_framework_job::Generation){self.identity}
- fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if self.identity!=(cx.operation(),cx.generation())||self.parent!=cx.original_source_parent()?.source_identity()?||self.recipient!=cx.original_recipient_identity()||!std::ptr::fn_addr_eq(self.clock,cx.clock_source())||self.deadline!=cx.deadline_us(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original command receiving requires its exact immutable source and caller").into())}if let Some(bytes)=self.parser.as_ref().and_then(|parser|parser.input()){if self.source!=(bytes.as_ptr()as usize,bytes.len()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original manifest immutable source identity changed").into())}}if !self.returning{if let Some(loan)=self.loan.as_ref(){loan.validate_context(cx)?}}Ok(())}
- pub(crate) fn advance_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original command receiving was cancelled").into())}if self.loan.is_none(){*self.loan=cx.original_source_parent()?.admit_loan(cx)?;return Ok(false)}if cx.should_yield(){return Ok(false)}
+ pub fn identity(&self)->(semio_framework_job::OperationId,semio_framework_job::Generation){self.identity}
+ pub fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if self.identity!=(cx.operation(),cx.generation())||self.parent!=cx.original_source_parent()?.source_identity()?||self.recipient!=cx.original_recipient_identity()||!std::ptr::fn_addr_eq(self.clock,cx.clock_source())||self.deadline!=cx.deadline_us(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original command receiving requires its exact immutable source and caller").into())}if let Some(bytes)=self.parser.as_ref().and_then(|parser|parser.input()){if self.source!=(bytes.as_ptr()as usize,bytes.len()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original manifest immutable source identity changed").into())}}if !self.returning{if let Some(loan)=self.loan.as_ref(){loan.validate_context(cx)?}}Ok(())}
+ pub fn advance_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original command receiving was cancelled").into())}if self.loan.is_none(){*self.loan=cx.original_source_parent()?.admit_loan(cx)?;return Ok(false)}if cx.should_yield(){return Ok(false)}
   if self.raw_failure.is_some(){return match semio_framework_job::admit_original_domain_failure(&mut self.raw_failure,cx)?{Some(failure)=>Err(failure),None=>Ok(false)}}
   if self.phase==0{
    let parser=self.parser.as_mut().unwrap();let call=parser.advance_original_step(cx.retained_grant(),cx.is_cancelled());cx.consume_retained(call.progress)?;cx.consume_fuel(call.progress.copied_items as u64);
@@ -56,9 +74,9 @@ impl OriginalManifestCommandReceiving{
  pub(crate) fn action_parts(&mut self)->(&semio_framework::manifest::ActionAddress,&mut Option<DslValue>,&mut Option<Fault>){(self.action.as_ref().unwrap(),&mut self.args,&mut self.fault)}
  pub(crate) fn dispatch_parts(&mut self)->(&ManifestCommandAddress,&mut Option<DslValue>,&mut Option<Fault>){(self.address.as_ref().unwrap(),&mut self.args,&mut self.fault)}
  pub(crate) fn finish_dispatch(&mut self,result:InvocationResult){*self.result=Some(result);self.finished=true}
- pub(crate) fn finished(&self)->bool{self.finished}
- pub(crate) fn take_result(&mut self,cx:&mut StepContext<'_>)->Result<Option<InvocationResult>,OriginalTurnFailure>{if !self.source_terminal()||!paid(cx,size_of::<InvocationResult>())?{return Ok(None)}Ok(self.result.take())}
- pub(crate) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;
+ pub fn finished(&self)->bool{self.finished}
+ pub fn take_result(&mut self,cx:&mut StepContext<'_>)->Result<Option<InvocationResult>,OriginalTurnFailure>{if !self.source_terminal()||!paid(cx,size_of::<InvocationResult>())?{return Ok(None)}Ok(self.result.take())}
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;
   if self.raw_failure.is_some(){return match semio_framework_job::admit_original_domain_failure(&mut self.raw_failure,cx)?{Some(failure)=>Err(failure),None=>Ok(false)}}
   if let Some(owner)=self.injection_text_close.as_mut(){if !owner.terminal_is_empty(){semio_framework_job::close_original_retained_step(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|owner.step(grant))?;return Ok(false)}if !paid(cx,0)?{return Ok(false)}self.injection_text_close.take();return Ok(false)}
   if self.injection_text.is_some(){if !paid(cx,size_of::<Vec<u8>>())?{return Ok(false)}let original=self.injection_text.take().unwrap();match ControlledRetirement::new(original){Ok(owner)=>*self.injection_text_close=Some(owner),Err((cause,original))=>{*self.injection_text=Some(original);return Err(cause.into())}}return Ok(false)}
@@ -79,42 +97,42 @@ impl OriginalManifestCommandReceiving{
   if let Some(loan)=self.loan.as_mut(){self.returning=true;loan.close_step(cx.original_source_parent()?,cx)?;if loan.terminal_is_empty(){self.loan.take();}return Ok(false)}Ok(true)
  }
  fn source_terminal(&self)->bool{self.loan.is_none()&&self.parser.is_none()&&self.raw_failure.is_none()&&self.parsed.is_none()&&self.args.is_none()&&self.fields.iter().all(Option::is_none)&&self.address.is_none()&&self.action.is_none()&&self.action_close.is_none()&&self.injection.is_none()&&self.injection_source.is_none()&&self.injection_key.is_none()&&self.injection_value.is_none()&&self.injection_text.is_none()&&self.injection_text_close.is_none()&&self.closing.is_none()&&self.address_close.is_none()&&self.fault.is_none()&&self.fault_close.is_none()}
- pub(crate) fn terminal_is_empty(&self)->bool{self.source_terminal()&&self.result.is_none()}
+ pub fn terminal_is_empty(&self)->bool{self.source_terminal()&&self.result.is_none()}
 }
 impl Drop for OriginalManifestCommandReceiving{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original manifest command requires paid source return before drop")}}
 
 /// 📦️ Decoded wire and its manifest receiving continuation share one persistent source owner.
-pub struct OriginalDecodedPluginCommand{wire:protocol::DecodedAppCommandOwner,pub(crate) command_seq:Option<u64>,artifact:bool,pub(crate) receiving:ManuallyDrop<Option<OriginalManifestCommandReceiving>>,media_submission:ManuallyDrop<Option<ArtifactMediaExportHandle>>,media_submission_close:ManuallyDrop<Option<ControlledRetirement<ArtifactMediaExportHandle>>>,media_poll:ManuallyDrop<Option<ArtifactMediaExportPoll>>,media_poll_close:ManuallyDrop<Option<ControlledRetirement<ArtifactMediaExportPoll>>>,media_status:ManuallyDrop<Option<crate::media_contract::ArtifactMediaExportPublishedStatus>>,media_status_close:ManuallyDrop<Option<ControlledRetirement<crate::media_contract::ArtifactMediaExportPublishedStatus>>>,media_chunk:ManuallyDrop<Option<Vec<u8>>>,media_chunk_close:ManuallyDrop<Option<ControlledRetirement<Vec<u8>>>>,media_chunk_terminal:bool}
+pub struct OriginalDecodedPluginCommand{pub wire:protocol::DecodedAppCommandOwner,pub command_seq:Option<u64>,pub artifact:bool,pub receiving:ManuallyDrop<Option<OriginalManifestCommandReceiving>>,media_submission:ManuallyDrop<Option<ArtifactMediaExportHandle>>,media_submission_close:ManuallyDrop<Option<ControlledRetirement<ArtifactMediaExportHandle>>>,media_poll:ManuallyDrop<Option<ArtifactMediaExportPoll>>,media_poll_close:ManuallyDrop<Option<ControlledRetirement<ArtifactMediaExportPoll>>>,media_status:ManuallyDrop<Option<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus>>,media_status_close:ManuallyDrop<Option<ControlledRetirement<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus>>>,media_chunk:ManuallyDrop<Option<Vec<u8>>>,media_chunk_close:ManuallyDrop<Option<ControlledRetirement<Vec<u8>>>>,media_chunk_terminal:bool}
 impl OriginalDecodedPluginCommand{
- pub(crate) fn new(command:protocol::AppCommand)->Self{let command_seq=match &command{protocol::AppCommand::Command{seq,..}|protocol::AppCommand::ArtifactCommand{seq,..}=>Some(*seq),_=>None};let artifact=matches!(&command,protocol::AppCommand::ArtifactCommand{..});Self{wire:protocol::DecodedAppCommandOwner::new(command),command_seq,artifact,receiving:ManuallyDrop::new(None),media_submission:ManuallyDrop::new(None),media_submission_close:ManuallyDrop::new(None),media_poll:ManuallyDrop::new(None),media_poll_close:ManuallyDrop::new(None),media_status:ManuallyDrop::new(None),media_status_close:ManuallyDrop::new(None),media_chunk:ManuallyDrop::new(None),media_chunk_close:ManuallyDrop::new(None),media_chunk_terminal:false}}
- pub(crate) fn original_command(&self)->Option<&protocol::AppCommand>{self.wire.original_command()}
- pub(crate) fn media_submission_parts(&mut self)->Result<(&str,&str,u64,&mut Option<ArtifactMediaExportHandle>),OriginalTurnFailure>{match self.wire.original_command(){Some(protocol::AppCommand::SubmitMediaExport{port,expected_parent_document_id,expected_base_revision,..})=>Ok((port,expected_parent_document_id,*expected_base_revision,&mut self.media_submission)),_=>Err(refusal("media submission requires its retained decoded command"))}}
- pub(crate) fn take_media_submission(&mut self)->Option<ArtifactMediaExportHandle>{self.media_submission.take()}
- pub(crate) fn media_poll_parts(&mut self)->Result<(crate::media_contract::ArtifactMediaExportHandleLoan<'_>,&mut Option<ArtifactMediaExportPoll>,&mut Option<crate::media_contract::ArtifactMediaExportPublishedStatus>),OriginalTurnFailure>{match self.wire.original_command(){Some(protocol::AppCommand::PollMediaExport{handle,..})=>Ok((crate::media_contract::ArtifactMediaExportHandleLoan{app_instance_id:handle.app_instance_id,parent_document_id:&handle.parent_document_id,operation_id:semio_framework_job::OperationId(handle.operation_id),base_revision:semio_framework_job::RevisionId(handle.base_revision),generation:semio_framework_job::Generation(handle.generation)},&mut self.media_poll,&mut self.media_status)),_=>Err(refusal("media polling requires its retained decoded wire source"))}}
- pub(crate) fn take_media_poll(&mut self)->Option<ArtifactMediaExportPoll>{self.media_poll.take()}
- pub(crate) fn take_media_status(&mut self)->Option<crate::media_contract::ArtifactMediaExportPublishedStatus>{self.media_status.take()}
- pub(crate) fn media_chunk_parts(&mut self)->Result<(crate::media_contract::ArtifactMediaExportHandleLoan<'_>,&mut Option<Vec<u8>>,&mut bool),OriginalTurnFailure>{match self.wire.original_command(){Some(protocol::AppCommand::TakeMediaExportChunk{handle,..})=>Ok((crate::media_contract::ArtifactMediaExportHandleLoan{app_instance_id:handle.app_instance_id,parent_document_id:&handle.parent_document_id,operation_id:semio_framework_job::OperationId(handle.operation_id),base_revision:semio_framework_job::RevisionId(handle.base_revision),generation:semio_framework_job::Generation(handle.generation)},&mut self.media_chunk,&mut self.media_chunk_terminal)),_=>Err(refusal("media chunk requires its retained decoded wire source"))}}
- pub(crate) fn take_media_chunk(&mut self)->(Option<Vec<u8>>,bool){(self.media_chunk.take(),self.media_chunk_terminal)}
+ pub fn new(command:protocol::AppCommand)->Self{let command_seq=match &command{protocol::AppCommand::Command{seq,..}|protocol::AppCommand::ArtifactCommand{seq,..}=>Some(*seq),_=>None};let artifact=matches!(&command,protocol::AppCommand::ArtifactCommand{..});Self{wire:protocol::DecodedAppCommandOwner::new(command),command_seq,artifact,receiving:ManuallyDrop::new(None),media_submission:ManuallyDrop::new(None),media_submission_close:ManuallyDrop::new(None),media_poll:ManuallyDrop::new(None),media_poll_close:ManuallyDrop::new(None),media_status:ManuallyDrop::new(None),media_status_close:ManuallyDrop::new(None),media_chunk:ManuallyDrop::new(None),media_chunk_close:ManuallyDrop::new(None),media_chunk_terminal:false}}
+ pub fn original_command(&self)->Option<&protocol::AppCommand>{self.wire.original_command()}
+ pub fn media_submission_parts(&mut self)->Result<(&str,&str,u64,&mut Option<ArtifactMediaExportHandle>),OriginalTurnFailure>{match self.wire.original_command(){Some(protocol::AppCommand::SubmitMediaExport{port,expected_parent_document_id,expected_base_revision,..})=>Ok((port,expected_parent_document_id,*expected_base_revision,&mut self.media_submission)),_=>Err(refusal("media submission requires its retained decoded command"))}}
+ pub fn take_media_submission(&mut self)->Option<ArtifactMediaExportHandle>{self.media_submission.take()}
+ pub fn media_poll_parts(&mut self)->Result<(semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,&mut Option<ArtifactMediaExportPoll>,&mut Option<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus>),OriginalTurnFailure>{match self.wire.original_command(){Some(protocol::AppCommand::PollMediaExport{handle,..})=>Ok((semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan{app_instance_id:handle.app_instance_id,parent_document_id:&handle.parent_document_id,operation_id:semio_framework_job::OperationId(handle.operation_id),base_revision:semio_framework_job::RevisionId(handle.base_revision),generation:semio_framework_job::Generation(handle.generation)},&mut self.media_poll,&mut self.media_status)),_=>Err(refusal("media polling requires its retained decoded wire source"))}}
+ pub fn take_media_poll(&mut self)->Option<ArtifactMediaExportPoll>{self.media_poll.take()}
+ pub fn take_media_status(&mut self)->Option<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus>{self.media_status.take()}
+ pub fn media_chunk_parts(&mut self)->Result<(semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,&mut Option<Vec<u8>>,&mut bool),OriginalTurnFailure>{match self.wire.original_command(){Some(protocol::AppCommand::TakeMediaExportChunk{handle,..})=>Ok((semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan{app_instance_id:handle.app_instance_id,parent_document_id:&handle.parent_document_id,operation_id:semio_framework_job::OperationId(handle.operation_id),base_revision:semio_framework_job::RevisionId(handle.base_revision),generation:semio_framework_job::Generation(handle.generation)},&mut self.media_chunk,&mut self.media_chunk_terminal)),_=>Err(refusal("media chunk requires its retained decoded wire source"))}}
+ pub fn take_media_chunk(&mut self)->(Option<Vec<u8>>,bool){(self.media_chunk.take(),self.media_chunk_terminal)}
 
 
 
- pub(crate) fn configuration_bytes_mut(&mut self)->Result<&mut Vec<u8>,OriginalTurnFailure>{match self.wire.original_command_mut(){Some(protocol::AppCommand::ConfigCommand{command,..})=>Ok(command),_=>Err(refusal("original configuration receiving requires its retained decoded wire owner"))}}
+ pub fn configuration_bytes_mut(&mut self)->Result<&mut Vec<u8>,OriginalTurnFailure>{match self.wire.original_command_mut(){Some(protocol::AppCommand::ConfigCommand{command,..})=>Ok(command),_=>Err(refusal("original configuration receiving requires its retained decoded wire owner"))}}
  pub(crate) fn command_parts(&mut self)->Result<(&mut Vec<u8>,&[u8],&mut Option<OriginalManifestCommandReceiving>),OriginalTurnFailure>{match self.wire.original_command_mut(){Some(protocol::AppCommand::Command{command,view_state,..})=>Ok((command,view_state,&mut self.receiving)),Some(protocol::AppCommand::ArtifactCommand{command,..})=>Ok((command,&[],&mut self.receiving)),_=>Err(refusal("original manifest receiving requires its retained command frame"))}}
- pub(crate) fn take_for_dispatch(&mut self)->Option<protocol::AppCommand>{if self.receiving.is_some(){None}else{self.wire.take_for_dispatch()}}
- pub(crate) fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ pub fn take_for_dispatch(&mut self)->Option<protocol::AppCommand>{if self.receiving.is_some(){None}else{self.wire.take_for_dispatch()}}
+ pub fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.media_chunk.is_some()||self.media_chunk_close.is_some(){let demand=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.media_chunk,&self.media_chunk_close,cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.media_chunk,&mut self.media_chunk_close,grant))?;return Ok(false)}
   if self.media_poll.is_some()||self.media_poll_close.is_some(){let demand=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.media_poll,&self.media_poll_close,cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.media_poll,&mut self.media_poll_close,grant))?;return Ok(false)}
   if self.media_status.is_some()||self.media_status_close.is_some(){let demand=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.media_status,&self.media_status_close,cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.media_status,&mut self.media_status_close,grant))?;return Ok(false)}
   if self.media_submission.is_some()||self.media_submission_close.is_some(){let demand=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.media_submission,&self.media_submission_close,cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.media_submission,&mut self.media_submission_close,grant))?;return Ok(false)}
   if self.receiving.is_some(){let(source,_,receiving)=self.command_parts()?;let owner=receiving.as_mut().unwrap();if !owner.close_step(cx)?{return Ok(false)}if !owner.terminal_is_empty(){return Ok(false)}if !paid(cx,0)?{return Ok(false)}receiving.take();return Ok(false)}self.wire.close_original_step(cx)}
- pub(crate) fn close_step(&mut self,bytes:usize)->(bool,usize,usize){if self.receiving.is_some()||self.media_submission.is_some()||self.media_submission_close.is_some()||self.media_poll.is_some()||self.media_poll_close.is_some()||self.media_status.is_some()||self.media_status_close.is_some()||self.media_chunk.is_some()||self.media_chunk_close.is_some(){(false,0,0)}else{self.wire.close_step(bytes)}}
- pub(crate) fn terminal_is_empty(&self)->bool{self.receiving.is_none()&&self.media_submission.is_none()&&self.media_submission_close.is_none()&&self.media_poll.is_none()&&self.media_poll_close.is_none()&&self.media_status.is_none()&&self.media_status_close.is_none()&&self.media_chunk.is_none()&&self.media_chunk_close.is_none()&&self.wire.terminal_is_empty()}
+ pub fn close_step(&mut self,bytes:usize)->(bool,usize,usize){if self.receiving.is_some()||self.media_submission.is_some()||self.media_submission_close.is_some()||self.media_poll.is_some()||self.media_poll_close.is_some()||self.media_status.is_some()||self.media_status_close.is_some()||self.media_chunk.is_some()||self.media_chunk_close.is_some(){(false,0,0)}else{self.wire.close_step(bytes)}}
+ pub fn terminal_is_empty(&self)->bool{self.receiving.is_none()&&self.media_submission.is_none()&&self.media_submission_close.is_none()&&self.media_poll.is_none()&&self.media_poll_close.is_none()&&self.media_status.is_none()&&self.media_status_close.is_none()&&self.media_chunk.is_none()&&self.media_chunk_close.is_none()&&self.wire.terminal_is_empty()}
 }
 
 impl Drop for OriginalDecodedPluginCommand{fn drop(&mut self){assert!(std::thread::panicking()||self.media_submission.is_none()&&self.media_submission_close.is_none()&&self.media_poll.is_none()&&self.media_poll_close.is_none()&&self.media_status.is_none()&&self.media_status_close.is_none()&&self.media_chunk.is_none()&&self.media_chunk_close.is_none(),"original media submission requires paid handle return before decoded owner drop")}}
 
 #[derive(Debug,semio_framework_value::RetireOwned)]
-struct OriginalCommandPackFailure{original:store::os_pack::PackRefusal}
+struct OriginalCommandPackFailure{pub original:store::os_pack::PackRefusal}
 impl semio_framework_job::OriginalDomainFailure for OriginalCommandPackFailure{
  fn domain_code(&self)->&str{"plugin.command-pack"}
  fn domain_message(&self)->&str{match &self.original{store::os_pack::PackRefusal::Malformed{detail,..}=>detail,store::os_pack::PackRefusal::RetainedMalformed{detail,..}|store::os_pack::PackRefusal::RetainedAllocation{detail,..}=>detail,store::os_pack::PackRefusal::ValueRefusal(error)|store::os_pack::PackRefusal::Io{error,..}=>&error.message,store::os_pack::PackRefusal::TextRefusal(error)=>&error.message,_=>"original intrinsic command refusal"}}
@@ -148,7 +166,7 @@ impl semio_framework_job::OriginalDomainProjection for OriginalCommandPackFailur
 }
 
 impl OriginalDecodedPluginCommand{
- pub(crate) async fn advance_manifest_step<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,instance_id:u32,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut StepContext<'_>)->Result<Option<(u64,InvocationResult)>,OriginalTurnFailure>{
+ pub async fn advance_manifest_step<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,instance_id:u32,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut StepContext<'_>)->Result<Option<(u64,InvocationResult)>,OriginalTurnFailure>{
   let seq=self.command_seq.ok_or_else(||refusal("original manifest receiving lost its command sequence"))?;
   if self.receiving.is_none(){let artifact=self.artifact;let(source,_,receiving)=self.command_parts()?;let mut limits=store::os_pack::PackLimits::default();limits.max_total_alloc=runtime.mounted_policy.preparation.maximum_capacity_bytes as u64;limits.max_file_len=source.len()as u64;limits.max_depth=u16::try_from(runtime.mounted_policy.preparation.maximum_depth).map_err(|_|refusal("original manifest depth ceiling exceeds Pack u16"))?;*receiving=OriginalManifestCommandReceiving::admit(source,artifact,limits,cx)?;return Ok(None)}
   if !self.receiving.as_ref().unwrap().finished(){
@@ -174,6 +192,7 @@ impl OriginalDecodedPluginCommand{
  }
 }
 
+#[doc(hidden)]
 #[cfg(any(test,feature="original-actor-context-testing"))]
 #[path="🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
+pub mod tests;

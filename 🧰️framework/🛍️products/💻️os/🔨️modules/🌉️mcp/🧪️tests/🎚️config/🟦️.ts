@@ -16,8 +16,8 @@ const repoRoot = resolve(root, "../../../../../../..");
  * measures a stranger's browser instead of the binary. */
 const SUITE_AGENT_BRIDGE_DIR = mkdtempSync(join(repoTestArtifactEnvironment(repoRoot, "mcp-suite").SEMIO_TEST_ARTIFACT_DIR!, "semio-mcp-suite-bridge-"));
 
-/** 🧪️ Vitest for `@semio-tech/framework-os-mcp` — in-source tests (`import.meta.vitest`) on
- * the pure surface in `../../🟦️.ts`, plus three real-process integration suites that spawn
+/** 🧪️ Vitest for `@semio-tech/framework-os-mcp` — the pure-surface suite on `../../🟦️.ts`
+ * (`../../🧪️tests/🧪️resolvemcpbinarypath`), plus three real-process integration suites that spawn
  * the compiled `semio-os-mcp` binary directly: legacy era (real `@modelcontextprotocol/sdk`
  * `Client`), modern era (hand-rolled raw JSON-RPC, `📓️design-decisions.md` D1), stdio hygiene, and the
  * end-to-end surface + progressive-enhancement gate (ticket `26/08/29/AI-MCP-END-TO-END`).
@@ -35,13 +35,9 @@ export default defineConfig({
     name: "@semio-tech/framework-os-mcp",
     environment: "node",
     include: [resolve(root, "../../🧪️tests/*/🟦️.ts")],
-    exclude: [
-      resolve(root, "../../🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts"),
-      resolve(root, "./🟦️.ts"),
-    ],
+    exclude: [resolve(root, "./🟦️.ts")],
     env: { S_AGENT_BRIDGE_DIR: SUITE_AGENT_BRIDGE_DIR },
     coverage: { include: ["../../🟦️.ts"] },
-    includeSource: ["../../🟦️.ts"],
     testTimeout: 30_000,
     hookTimeout: 30_000,
     passWithNoTests: false,

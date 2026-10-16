@@ -1,0 +1,106 @@
+{
+  "cases": [
+    {
+      "kind": "reader",
+      "parent": "partition",
+      "authority": "actual",
+      "outcome": "value",
+      "accepted": true
+    },
+    {
+      "kind": "reader",
+      "parent": "child",
+      "authority": "actual",
+      "outcome": "value",
+      "accepted": true
+    },
+    {
+      "kind": "maintenance",
+      "parent": "partition",
+      "authority": "actual",
+      "outcome": "value",
+      "accepted": true
+    },
+    {
+      "kind": "reader",
+      "parent": "partition",
+      "authority": "copied",
+      "outcome": "value",
+      "accepted": false
+    },
+    {
+      "kind": "reader",
+      "parent": "partition",
+      "authority": "released",
+      "outcome": "value",
+      "accepted": false
+    },
+    {
+      "kind": "reader",
+      "parent": "partition",
+      "authority": "outside",
+      "outcome": "value",
+      "accepted": false
+    },
+    {
+      "kind": "reader",
+      "parent": "partition",
+      "authority": "foreign-control",
+      "outcome": "value",
+      "accepted": false
+    },
+    {
+      "kind": "maintenance",
+      "parent": "partition",
+      "authority": "missing-custody",
+      "outcome": "value",
+      "accepted": false
+    },
+    {
+      "kind": "reader",
+      "parent": "partition",
+      "authority": "actual",
+      "outcome": "undefined",
+      "accepted": false
+    },
+    {
+      "kind": "reader",
+      "parent": "child",
+      "authority": "actual",
+      "outcome": "frozen",
+      "accepted": false
+    },
+    {
+      "kind": "maintenance",
+      "parent": "partition",
+      "authority": "actual",
+      "outcome": "undefined",
+      "accepted": false
+    },
+    {
+      "kind": "reader",
+      "parent": "partition",
+      "authority": "mutation",
+      "outcome": "value",
+      "accepted": true
+    }
+  ],
+  "cleanup": ["undefined", "frozen", "sealed", "absent"],
+  "readerLifetimes": ["self-close", "external-close", "failure"],
+  "acquisitions": ["root-undefined", "root-frozen", "backing-undefined", "backing-frozen", "value"],
+  "childControls":["actual","descendant","widened","stopped"],
+  "groups":["success","undefined","frozen","cleanup-failure"],
+  "ownerLifetimes":[0,2000],
+  "disposableBridges":["actual","copied","mutation","frozen"],
+  "lifetimes": [
+    {
+      "kind": "value"
+    },
+    {
+      "kind": "undefined"
+    },
+    {
+      "kind": "frozen"
+    }
+  ]
+}

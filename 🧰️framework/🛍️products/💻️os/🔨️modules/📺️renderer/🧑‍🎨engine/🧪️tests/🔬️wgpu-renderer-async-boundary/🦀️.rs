@@ -1,15 +1,45 @@
 use super::*;
 
-const LIBRARY_SOURCE: &str = crate::RENDERER_SOURCE;
-const BINARY_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs");
-const MANIFEST_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml");
-const WINT_APP_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
-const OS_HOST_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs");
-const GPU_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs");
-const DRAW_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🦀️.rs");
-const PREPARED_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs");
-const ENGINE_CANVAS_SOURCE: &str = concat!(include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🎬️canvas/🦀️.rs"),include_str!("../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/📦️prepared-engine-canvas/🦀️.rs"));
-const DRAW_LAWS_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🧪️tests/🔬️targets-wgpu-draw-unit/🦀️.rs");
+#[allow(non_snake_case)]
+fn LIBRARY_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::renderer_source()
+}
+#[allow(non_snake_case)]
+fn BINARY_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs")
+}
+#[allow(non_snake_case)]
+fn MANIFEST_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml")
+}
+#[allow(non_snake_case)]
+fn WINT_APP_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs")
+}
+#[allow(non_snake_case)]
+fn OS_HOST_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs")
+}
+#[allow(non_snake_case)]
+fn GPU_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs")
+}
+#[allow(non_snake_case)]
+fn DRAW_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_texts(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🦀️.rs"])
+}
+#[allow(non_snake_case)]
+fn PREPARED_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs")
+}
+#[allow(non_snake_case)]
+fn ENGINE_CANVAS_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_texts(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🎬️canvas/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/📦️prepared-engine-canvas/🦀️.rs"])
+}
+#[allow(non_snake_case)]
+fn DRAW_LAWS_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_texts(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/🧪️tests/🔬️unit/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/🧪️tests/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🧪️tests/🔬️unit/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🧪️tests/🔬️unit/🦀️.rs"])
+}
 
 /// 🩺️ LAW: a frame build that ends because its PREPARATION refused must name the refusal. Nothing
 /// else in the chain can: `AppFramePreparation` answers an empty `JobFault`, `ActiveFrameBuild`
@@ -18,7 +48,7 @@ const DRAW_LAWS_SOURCE: &str = include_str!("../../../../../../../🔨️modules
 /// console for a whole packet (`📓️w7b-presenter-one-frame-per-boot.md` §1).
 #[test]
 fn a_refused_frame_preparation_names_its_fault_before_the_build_cancels() {
-    let frame_job = include_str!("../../🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
+    let frame_job = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
     let prepare_at = frame_job.find("ActiveFramePhase::Prepare(preparation) => {").expect("the prepare phase");
     let refused_at = prepare_at + frame_job[prepare_at..].find("StepOutcome::Cancelled | StepOutcome::Fault(_) =>").expect("the refused arm");
     let refused = &frame_job[refused_at..][..frame_job[refused_at..].find("ActiveFrameStep::Pending").expect("the refused arm ends on its own step")];
@@ -30,20 +60,20 @@ fn a_refused_frame_preparation_names_its_fault_before_the_build_cancels() {
         "self.fault = Some(\"prepared render job lost its session\")",
         "self.fault = Some(\"prepared render job was cancelled\")",
     ] {
-        assert!(LIBRARY_SOURCE.contains(arm), "every preparation refusal names itself: {arm}");
+        assert!(LIBRARY_SOURCE().contains(arm), "every preparation refusal names itself: {arm}");
     }
-    assert!(LIBRARY_SOURCE.contains("session.checked_out_job_mut().and_then(|job| job.fault())"), "and a refusal from inside the prepared job carries that job's own fault string");
+    assert!(LIBRARY_SOURCE().contains("session.checked_out_job_mut().and_then(|job| job.fault())"), "and a refusal from inside the prepared job carries that job's own fault string");
 }
 
 #[test]
 fn a_presented_input_seal_refusal_keeps_its_exact_fault_name() {
-    assert!(LIBRARY_SOURCE.contains("Err(fault) => return FrameBuildBoundaryStep::Fault(fault)"));
-    assert!(!LIBRARY_SOURCE.contains("Err(_) => return FrameBuildBoundaryStep::Fault(\"presented input candidate generation exhausted\")"));
+    assert!(LIBRARY_SOURCE().contains("Err(fault) => return FrameBuildBoundaryStep::Fault(fault)"));
+    assert!(!LIBRARY_SOURCE().contains("Err(_) => return FrameBuildBoundaryStep::Fault(\"presented input candidate generation exhausted\")"));
 }
 
 #[test]
 fn a_pre_submit_input_epoch_change_retires_and_reschedules_without_faulting_the_surface() {
-    let render = LIBRARY_SOURCE.split("AppPresentPhase::Render => {").nth(1).expect("the render phase");
+    let render = LIBRARY_SOURCE().split("AppPresentPhase::Render => {").nth(1).expect("the render phase");
     let render = &render[..render.find("AppPresentPhase::CloseGpu =>").expect("the close-GPU phase")];
     assert!(render.contains("PresentedInputCandidateProgress::Stale"), "the pre-submit phase names an input epoch supersession");
     assert!(!render.contains("prepared frame input authority was stale before submit"), "normal pre-submit input supersession is not a surface fault");
@@ -58,40 +88,40 @@ fn a_pre_submit_input_epoch_change_retires_and_reschedules_without_faulting_the_
         assert!(stale.contains("return Ok(AppPresentStep::Pending);"), "the stale observation keeps the presenter live without a surface fault");
     }
 
-    let aborted = LIBRARY_SOURCE.split("AppPresentPhase::Aborted => {").nth(1).expect("the abort phase");
+    let aborted = LIBRARY_SOURCE().split("AppPresentPhase::Aborted => {").nth(1).expect("the abort phase");
     let aborted = &aborted[..aborted.find("AppPresentPhase::Fullscreen =>").expect("the next presenter phase")];
     assert!(aborted.contains("discard_presented_input_candidate(input_candidate)"), "the next bounded abort turn returns the exact Shell/UI witness before rescheduling");
 }
 
 #[test]
 fn product_library_has_no_executor_bridge() {
-    assert!(!LIBRARY_SOURCE.contains(concat!("poll", "ster")));
-    assert!(!LIBRARY_SOURCE.contains(concat!("block", "_on")));
-    assert!(LIBRARY_SOURCE.contains("KernelPoolFuture::spawn"));
-    assert!(LIBRARY_SOURCE.contains("spawn_app_task"));
-    assert!(!LIBRARY_SOURCE.contains(concat!("TASK", "_POOL")));
-    assert!(!LIBRARY_SOURCE.contains(concat!("poll", "_tasks")));
-    assert!(!LIBRARY_SOURCE.contains("thread_local! {\n        static REAL_WAKER"));
-    assert!(!WINT_APP_SOURCE.contains(concat!("poll", "_tasks")));
-    assert!(!WINT_APP_SOURCE.contains(concat!("TASK", "_POOL")));
-    assert!(!LIBRARY_SOURCE.contains("type RuntimeApply = Box"));
-    assert!(!LIBRARY_SOURCE.contains(concat!("mem::", "forget")));
-    assert!(!WINT_APP_SOURCE.contains("dispatch_drained_events"));
-    assert!(LIBRARY_SOURCE.contains("struct RuntimeDispatchCursor"));
-    assert!(LIBRARY_SOURCE.contains("ResumeDispatch"));
-    assert!(!LIBRARY_SOURCE.contains("response.array_buffer()"));
-    assert!(!LIBRARY_SOURCE.contains("collect_pending_ui_image_fetches"));
-    assert!(!LIBRARY_SOURCE.contains("collect_pending_map_tile_fetches"));
-    assert!(LIBRARY_SOURCE.contains("struct AppPresentCursor"));
-    assert!(!LIBRARY_SOURCE.contains(".submit_prepared("));
-    assert!(!GPU_SOURCE.contains("fn apply_prepared_uploads"));
-    assert!(!DRAW_SOURCE.contains("for index in 0..schema.vertices"));
-    assert!(!DRAW_SOURCE.contains("for index in 0..schema.indices"));
-    assert!(DRAW_SOURCE.contains("pub(crate) fn ensure_mesh_step"));
-    assert!(DRAW_SOURCE.contains("pub fn close_upload_step"));
-    assert!(GPU_SOURCE.contains("pub fn close_mesh_upload_step"));
-    let upload_close = OS_HOST_SOURCE.find("presenter.close_world_owners_step()").expect("active upload and packet close phase");
-    let world_close = OS_HOST_SOURCE.find("runtime.close_world3d_dynamic_step()").expect("world mesh close phase");
+    assert!(!LIBRARY_SOURCE().contains(concat!("poll", "ster")));
+    assert!(!LIBRARY_SOURCE().contains(concat!("block", "_on")));
+    assert!(LIBRARY_SOURCE().contains("KernelPoolFuture::spawn"));
+    assert!(LIBRARY_SOURCE().contains("spawn_app_task"));
+    assert!(!LIBRARY_SOURCE().contains(concat!("TASK", "_POOL")));
+    assert!(!LIBRARY_SOURCE().contains(concat!("poll", "_tasks")));
+    assert!(!LIBRARY_SOURCE().contains("thread_local! {\n        static REAL_WAKER"));
+    assert!(!WINT_APP_SOURCE().contains(concat!("poll", "_tasks")));
+    assert!(!WINT_APP_SOURCE().contains(concat!("TASK", "_POOL")));
+    assert!(!LIBRARY_SOURCE().contains("type RuntimeApply = Box"));
+    assert!(!LIBRARY_SOURCE().contains(concat!("mem::", "forget")));
+    assert!(!WINT_APP_SOURCE().contains("dispatch_drained_events"));
+    assert!(LIBRARY_SOURCE().contains("struct RuntimeDispatchCursor"));
+    assert!(LIBRARY_SOURCE().contains("ResumeDispatch"));
+    assert!(!LIBRARY_SOURCE().contains("response.array_buffer()"));
+    assert!(!LIBRARY_SOURCE().contains("collect_pending_ui_image_fetches"));
+    assert!(!LIBRARY_SOURCE().contains("collect_pending_map_tile_fetches"));
+    assert!(LIBRARY_SOURCE().contains("struct AppPresentCursor"));
+    assert!(!LIBRARY_SOURCE().contains(".submit_prepared("));
+    assert!(!GPU_SOURCE().contains("fn apply_prepared_uploads"));
+    assert!(!DRAW_SOURCE().contains("for index in 0..schema.vertices"));
+    assert!(!DRAW_SOURCE().contains("for index in 0..schema.indices"));
+    assert!(DRAW_SOURCE().contains("pub fn ensure_mesh_step"));
+    assert!(DRAW_SOURCE().contains("pub fn close_upload_step"));
+    assert!(GPU_SOURCE().contains("pub fn close_mesh_upload_step"));
+    let upload_close = OS_HOST_SOURCE().find("presenter.close_world_owners_step()").expect("active upload and packet close phase");
+    let world_close = OS_HOST_SOURCE().find("runtime.close_world3d_dynamic_step()").expect("world mesh close phase");
     assert!(upload_close < world_close);
 }
 
@@ -126,7 +156,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
     let engine_reservation = "self.reserve_engine_texture(key,width,height,1,identity,candidate,expected)";
     let engine_reservation_index = engine.find(engine_reservation).unwrap_or(usize::MAX);
     let first_engine_allocation = ["device.create_texture", ".create_view", "CanvasRasterSession::new"].iter().filter_map(|marker| engine.find(marker)).min().unwrap_or(0);
-    let upload_stage = &draw[draw.find("pub(crate) fn ensure_raster_step").unwrap_or(draw.len())..draw.find("pub fn get(&self, key: &str) -> Option<&RasterTexture>").unwrap_or(draw.len())];
+    let upload_stage = &draw[draw.find("pub fn ensure_raster_step").unwrap_or(draw.len())..draw.find("pub fn get(&self, key: &str) -> Option<&RasterTexture>").unwrap_or(draw.len())];
     let gpu_stage = &draw[draw.find("pub fn stage_gpu_bind_group").unwrap_or(draw.len())..draw.find("pub fn begin_presenting").unwrap_or(draw.len())];
     let cancellation = &draw[draw.find("pub fn cancel_engine_texture_admission").unwrap_or(draw.len())..draw.find("fn claim_stage_before_gpu_allocation").unwrap_or(draw.len())];
     let upload_close = &draw[draw.find("pub fn close_upload_step(&mut self) -> RasterTextureCleanupStep").unwrap_or(draw.len())..];
@@ -145,7 +175,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && draw.contains("candidate: RasterTextureWitnessSlot")
         && draw.contains("current.operation >= candidate.operation")
         && draw.contains("admission.witness != expected")
-        && draw.contains("view: Option<wgpu::TextureView>")
+        && draw.contains("view: Option<gpu_device::TextureView>")
         && draw.contains("scene_revision: Option<u64>")
         && draw.contains("preview_generation: Option<u64>")
         && draw.contains("operation: Option<u64>")
@@ -207,7 +237,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && gpu.contains("self.ensure_raster_texture_step(key, RasterUploadPixels::Contiguous(pixels)")
         && gpu.contains("self.ensure_raster_texture_step(key, RasterUploadPixels::Pages(pixels)")
         && gpu.contains("pub(crate) fn stage_engine_texture")
-        && gpu.contains("view: wgpu::TextureView")
+        && gpu.contains("view: gpu_device::TextureView")
         && gpu.contains(".stage_gpu_bind_group")
         && gpu.contains("Result<(), RasterTextureStageFault>")
         && gpu.contains("pixels.content_identity()")
@@ -256,141 +286,141 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
 /// same rotation: `(x, y, z)` → `(x, -z, y)`.
 #[test]
 fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
-    assert!(retained_raster_contract(DRAW_SOURCE, GPU_SOURCE, LIBRARY_SOURCE, ENGINE_CANVAS_SOURCE));
+    assert!(retained_raster_contract(DRAW_SOURCE(), GPU_SOURCE(), LIBRARY_SOURCE(), ENGINE_CANVAS_SOURCE()));
     let mutations = [
-            (DRAW_SOURCE.replace("pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 256", "pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 257"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("pub const RASTER_TEXTURE_KEY_BYTES: usize = 256", "pub const RASTER_TEXTURE_KEY_BYTES: usize = 255"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE().replace("pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 256", "pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 257"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("pub const RASTER_TEXTURE_KEY_BYTES: usize = 256", "pub const RASTER_TEXTURE_KEY_BYTES: usize = 255"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
             (
-                DRAW_SOURCE.replace("pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = 64 * 1024 * 1024", "pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = usize::MAX"),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                DRAW_SOURCE().replace("pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = 64 * 1024 * 1024", "pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = usize::MAX"),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
-            (DRAW_SOURCE.replace("pub struct RasterTextureAdmission", "pub struct ErasedRasterTextureAdmission"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("current.operation >= candidate.operation", "current.operation > candidate.operation"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("view: Option<wgpu::TextureView>", "view_erased: bool"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.replace("view: wgpu::TextureView", "view: &wgpu::TextureView"), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("self.reserve_engine_texture", "self.realize_without_reservation")),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.replace("raster_operation_authority: RuntimeRasterOperationAuthority", "raster_operation_authority_erased: bool"), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE().replace("pub struct RasterTextureAdmission", "pub struct ErasedRasterTextureAdmission"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("current.operation >= candidate.operation", "current.operation > candidate.operation"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("view: Option<gpu_device::TextureView>", "view_erased: bool"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().to_string(), GPU_SOURCE().replace("view: gpu_device::TextureView", "view: &gpu_device::TextureView"), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().to_string(), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().replace("self.reserve_engine_texture", "self.realize_without_reservation")),
+            (DRAW_SOURCE().to_string(), GPU_SOURCE().to_string(), LIBRARY_SOURCE().replace("raster_operation_authority: RuntimeRasterOperationAuthority", "raster_operation_authority_erased: bool"), ENGINE_CANVAS_SOURCE().to_string()),
             (
-                DRAW_SOURCE.to_string(),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.replace(
+                DRAW_SOURCE().to_string(),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().replace(
                     "let operation = loop {",
                     concat!("let operation = self.0.next_operation.", "fetch_add(1, Ordering::AcqRel); if operation == 0 { return Err(\"raster operation generation exhausted\"); } loop {"),
                 ),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
             (
-                DRAW_SOURCE.replace(
+                DRAW_SOURCE().replace(
                     "let reservation = self.reservation.take().expect(\"matching raster reservation\");",
                     concat!("self.reservation =", " None; let reservation = RasterTextureReservation { key: admission.key, witness: admission.witness, width: admission.width, height: admission.height, bytes: admission.bytes, staged_index: admission.staged_index, nonce: admission.nonce };"),
                 ),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
             (
-                DRAW_SOURCE.replace("self.upload_close = Some(RasterTextureUploadCloseCursor::new(upload));", "self.upload = None;"),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                DRAW_SOURCE().replace("self.upload_close = Some(RasterTextureUploadCloseCursor::new(upload));", "self.upload = None;"),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
             (
-                DRAW_SOURCE.replace("fn claim_stage_before_gpu_allocation", "fn claim_stage_after_gpu_allocation"),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                DRAW_SOURCE().replace("fn claim_stage_before_gpu_allocation", "fn claim_stage_after_gpu_allocation"),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
             (
-                DRAW_SOURCE.to_string(),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.replace("raster_operation_authority.begin(expected.scene_revision, expected.input_generation)", "raster_operation_authority.begin(packet.scene_revision(), packet.preview_generation())"),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                DRAW_SOURCE().to_string(),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().replace("raster_operation_authority.begin(expected.scene_revision, expected.input_generation)", "raster_operation_authority.begin(packet.scene_revision(), packet.preview_generation())"),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.replace("raster_operation_authority.matches(raster_witness)", "true"), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.replace("self.gpu.close_raster_table_step()", "true"), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE().to_string(), GPU_SOURCE().to_string(), LIBRARY_SOURCE().replace("raster_operation_authority.matches(raster_witness)", "true"), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().to_string(), GPU_SOURCE().to_string(), LIBRARY_SOURCE().replace("self.gpu.close_raster_table_step()", "true"), ENGINE_CANVAS_SOURCE().to_string()),
             (
-                DRAW_SOURCE.replace("self.claim_texture_allocation(admission, expected)", "self.allocate_texture_without_full_claim(admission, expected)"),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
-            ),
-            (
-                DRAW_SOURCE.replace("self.claim_view_allocation(admission, expected)", "self.allocate_view_without_full_claim(admission, expected)"),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                DRAW_SOURCE().replace("self.claim_texture_allocation(admission, expected)", "self.allocate_texture_without_full_claim(admission, expected)"),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
             (
-                DRAW_SOURCE.replace("self.claim_bind_group_allocation(admission, expected)", "self.allocate_bind_group_without_full_claim(admission, expected)"),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                DRAW_SOURCE().replace("self.claim_view_allocation(admission, expected)", "self.allocate_view_without_full_claim(admission, expected)"),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
             (
-                DRAW_SOURCE.replace("self.claim_bind_group_allocation(&admission, expected)", "self.allocate_bind_group_without_full_claim(&admission, expected)"),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                DRAW_SOURCE().replace("self.claim_bind_group_allocation(admission, expected)", "self.allocate_bind_group_without_full_claim(admission, expected)"),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
             (
-                DRAW_SOURCE.to_string(),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("self.validate_engine_target_texture_allocation(admission,expected)", "Ok(())"),
+                DRAW_SOURCE().replace("self.claim_bind_group_allocation(&admission, expected)", "self.allocate_bind_group_without_full_claim(&admission, expected)"),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
             (
-                DRAW_SOURCE.to_string(),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("self.validate_engine_target_view_allocation(admission,expected)", "Ok(())"),
+                DRAW_SOURCE().to_string(),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().replace("self.validate_engine_target_texture_allocation(admission,expected)", "Ok(())"),
             ),
             (
-                DRAW_SOURCE.to_string(),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("self.validate_engine_renderer_allocation(admission,expected)", "Ok(())"),
+                DRAW_SOURCE().to_string(),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().replace("self.validate_engine_target_view_allocation(admission,expected)", "Ok(())"),
             ),
             (
-                DRAW_SOURCE.replace(
+                DRAW_SOURCE().to_string(),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().replace("self.validate_engine_renderer_allocation(admission,expected)", "Ok(())"),
+            ),
+            (
+                DRAW_SOURCE().replace(
                     "if let Err((fault, admission, value, cpu_release)) = self.stage_claimed_texture(admission, value, allocation_claim, cpu_release)",
                     "if self.stage_claimed_texture(admission, value, allocation_claim, cpu_release).map_err(|(fault, _, _, _)| fault).is_err()",
                 ),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
             (
-                DRAW_SOURCE.replace("self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor", "self.upload = None; Some(RasterTextureUploadCursor"),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                DRAW_SOURCE().replace("self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor", "self.upload = None; Some(RasterTextureUploadCursor"),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
-            (DRAW_SOURCE.replace("texture: Some(value.texture)", "texture: None"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("view: Some(value.view)", "view: None"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("bind_group: Some(value.bind_group)", "bind_group: None"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("if !reservation.matches(admission)", "if false"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("if candidate != Some(expected)", "if false"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("if staged_occupied", "if false"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE().replace("texture: Some(value.texture)", "texture: None"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("view: Some(value.view)", "view: None"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("bind_group: Some(value.bind_group)", "bind_group: None"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("if !reservation.matches(admission)", "if false"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("if candidate != Some(expected)", "if false"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("if staged_occupied", "if false"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
             (
-                DRAW_SOURCE.replace("staged_index: admission.staged_index, staged_nonce: admission.nonce", "staged_index: admission.staged_index, staged_nonce: 0"),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                DRAW_SOURCE().replace("staged_index: admission.staged_index, staged_nonce: admission.nonce", "staged_index: admission.staged_index, staged_nonce: 0"),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
             (
-                DRAW_SOURCE.replace("Returned {", "Erased {"),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.to_string(),
+                DRAW_SOURCE().replace("Returned {", "Erased {"),
+                GPU_SOURCE().to_string(),
+                LIBRARY_SOURCE().to_string(),
+                ENGINE_CANVAS_SOURCE().to_string(),
             ),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("build.texture=Some(texture);", "drop(texture);")),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("build.view=Some(view);", "drop(view);")),
-            (DRAW_SOURCE.replace("Self::Scene(lease) => lease.transfer_bytes()", "Self::Scene(_) => usize::MAX"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("let transfer_bytes = pixels.transfer_bytes();", "let transfer_bytes = usize::MAX;"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("row_bytes > transfer_bytes", "false"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.replace("transfer_bytes / row_bytes", "usize::MAX"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE().to_string(), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().replace("build.texture=Some(texture);", "drop(texture);")),
+            (DRAW_SOURCE().to_string(), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().replace("build.view=Some(view);", "drop(view);")),
+            (DRAW_SOURCE().replace("Self::Scene(lease) => lease.transfer_bytes()", "Self::Scene(_) => usize::MAX"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("let transfer_bytes = pixels.transfer_bytes();", "let transfer_bytes = usize::MAX;"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("row_bytes > transfer_bytes", "false"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
+            (DRAW_SOURCE().replace("transfer_bytes / row_bytes", "usize::MAX"), GPU_SOURCE().to_string(), LIBRARY_SOURCE().to_string(), ENGINE_CANVAS_SOURCE().to_string()),
         ];
     assert_eq!(mutations.len(), 39);
     for (draw, gpu, glue, engine) in mutations {
@@ -398,8 +428,8 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
     }
     let reservation = "let admission=self.reserve_engine_texture(key,width,height,1,identity,candidate,expected)?;";
     let first_allocation = "build.texture=Some(self.roots.device.create_texture";
-    let reservation_after_first_allocation = ENGINE_CANVAS_SOURCE.replacen(reservation, "", 1).replacen(first_allocation, &format!("{first_allocation}\n            {reservation}"), 1);
-    assert!(!retained_raster_contract(DRAW_SOURCE, GPU_SOURCE, LIBRARY_SOURCE, &reservation_after_first_allocation));
+    let reservation_after_first_allocation = ENGINE_CANVAS_SOURCE().replacen(reservation, "", 1).replacen(first_allocation, &format!("{first_allocation}\n            {reservation}"), 1);
+    assert!(!retained_raster_contract(DRAW_SOURCE(), GPU_SOURCE(), LIBRARY_SOURCE(), &reservation_after_first_allocation));
 }
 
 #[test]
@@ -706,10 +736,10 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     assert_eq!(blend.material.emissive, [0.1, 0.05, 0.02]);
     assert_eq!((blend.material.metalness, blend.material.roughness), (0.65, 0.2));
     assert!(blend.material.double_sided && blend.material.preserve_vertex_color);
-    assert_eq!(blend.material.alpha, ui_wgpu::wgpu::SceneMaterialAlpha3d::Blend);
+    assert_eq!(blend.material.alpha, semio_framework_ui_scene_pass::SceneMaterialAlpha3d::Blend);
     let mask = &appearance.primitives()[1];
     assert_eq!((mask.first_index, mask.index_count), (3, 3));
-    assert_eq!(mask.material.alpha, ui_wgpu::wgpu::SceneMaterialAlpha3d::Mask);
+    assert_eq!(mask.material.alpha, semio_framework_ui_scene_pass::SceneMaterialAlpha3d::Mask);
     assert_eq!(mask.material.alpha_cutoff, 0.37);
     assert_eq!(blend.material.normal_scale,[1.0,-1.0]);assert_eq!(mask.material.normal_scale,[0.5,0.5]);assert_eq!(mask.material.occlusion_strength,0.25);
     for item in 0..3 {assert_eq!(mesh.vec4(Mesh3dField::Tangents,item).unwrap(),[0.0;4]);assert_eq!(mesh.vec4(Mesh3dField::Tangents,item+3).unwrap(),[0.0,0.0,1.0,-1.0]);let uv1=[[0.1,0.2],[0.9,0.2],[0.5,0.8]][item as usize];let uv4=[[0.2,0.3],[0.8,0.3],[0.5,0.7]][item as usize];assert_eq!(mesh.vec2(Mesh3dField::UvsNormal,item+3).unwrap(),uv1);assert_eq!(mesh.vec2(Mesh3dField::UvsOcclusion,item+3).unwrap(),uv1);assert_eq!(mesh.vec2(Mesh3dField::UvsMetallicRoughness,item+3).unwrap(),uv4);}
@@ -723,11 +753,11 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     eprintln!("[DEBUG] GLB authored five maps: 2 role leases, five sampler descriptors, mask/blend publication");
     assert_eq!(
         mask.material.texture_sampler,
-        ui_wgpu::wgpu::SceneTextureSampler3d {
-            wrap_u: ui_wgpu::wgpu::SceneTextureWrap3d::ClampToEdge,
-            wrap_v: ui_wgpu::wgpu::SceneTextureWrap3d::MirrorRepeat,
-            mag_filter: ui_wgpu::wgpu::SceneTextureFilter3d::Linear,
-            min_filter: ui_wgpu::wgpu::SceneTextureFilter3d::Nearest,
+        semio_framework_ui_scene_pass::SceneTextureSampler3d {
+            wrap_u: semio_framework_ui_scene_pass::SceneTextureWrap3d::ClampToEdge,
+            wrap_v: semio_framework_ui_scene_pass::SceneTextureWrap3d::MirrorRepeat,
+            mag_filter: semio_framework_ui_scene_pass::SceneTextureFilter3d::Linear,
+            min_filter: semio_framework_ui_scene_pass::SceneTextureFilter3d::Nearest,
         }
     );
     let asset = probe.take_ready_mesh_asset().expect("ready material asset transfers into request-owned Icon preparation");
@@ -758,8 +788,8 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     assert_eq!(prepared.format(), crate::scenes::icon_export::IconExportFormat::Png);
     let mut packet = prepared.take_packet().expect("prepared scene transfers one packet while retaining its World owner");
     let uploads = packet.uploads();
-    assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(ui_wgpu::wgpu::PreparedRenderUpload::Mesh { .. }))));
-    assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(ui_wgpu::wgpu::PreparedRenderUpload::SceneRaster { .. }))));
+    assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(semio_framework_ui_prepared_staging::PreparedRenderUpload::Mesh { .. }))));
+    assert!((0..uploads.len()).any(|index| matches!(uploads.get(index), Some(semio_framework_ui_prepared_staging::PreparedRenderUpload::SceneRaster { .. }))));
     while !packet.retire_step() {}
     prepared.begin_close();
     for _ in 0..262_144 {
@@ -1314,7 +1344,7 @@ fn native_reference_decode_cancellation_keeps_encoded_and_decoded_owners_until_b
             }
         }
     }
-    assert!(LIBRARY_SOURCE.contains("renderer_worker_pool().try_submit(semio_framework_async::Lane::Maintenance, job)"), "native reference decode submits only to the bounded maintenance lane");
+    assert!(LIBRARY_SOURCE().contains("renderer_worker_pool().try_submit(semio_framework_async::Lane::Maintenance, job)"), "native reference decode submits only to the bounded maintenance lane");
     io.begin_close();
     while !io.close_step() {}
     assert!(io.terminal_is_empty(), "the token fixture returns its request owner after proving job cancellation");
@@ -1489,17 +1519,17 @@ fn presenter_restores_only_the_checked_out_interaction_and_retains_its_deferred_
 
 #[test]
 fn native_binary_owns_exactly_one_entrypoint_driver() {
-    assert_eq!(BINARY_SOURCE.matches(concat!("block", "_on(")).count(), 1);
-    assert_eq!(BINARY_SOURCE.matches("drive_native_entrypoint(").count(), 3);
+    assert_eq!(BINARY_SOURCE().matches(concat!("block", "_on(")).count(), 1);
+    assert_eq!(BINARY_SOURCE().matches("drive_native_entrypoint(").count(), 3);
 }
 
 #[test]
 fn manifest_has_no_retired_direct_edges() {
-    assert!(!MANIFEST_SOURCE.contains(concat!("poll", "ster =")));
-    assert!(!MANIFEST_SOURCE.contains(concat!("wasm-bindgen", "-test")));
-    assert!(!MANIFEST_SOURCE.lines().any(|line| line.trim_start().starts_with("naga =")));
-    assert!(!MANIFEST_SOURCE.lines().any(|line| line.trim_start().starts_with("rfd =")));
-    assert!(!MANIFEST_SOURCE.lines().any(|line| line.trim_start().starts_with("ureq =")));
+    assert!(!MANIFEST_SOURCE().contains(concat!("poll", "ster =")));
+    assert!(!MANIFEST_SOURCE().contains(concat!("wasm-bindgen", "-test")));
+    assert!(!MANIFEST_SOURCE().lines().any(|line| line.trim_start().starts_with("naga =")));
+    assert!(!MANIFEST_SOURCE().lines().any(|line| line.trim_start().starts_with("rfd =")));
+    assert!(!MANIFEST_SOURCE().lines().any(|line| line.trim_start().starts_with("ureq =")));
 }
 
 #[test]
@@ -1579,7 +1609,7 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
         for row in pair {
             batch
                 .action("writer", row["action"].as_str().unwrap(), 128, |builder| {
-                    builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor,
+                    builder.set_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor,
                         token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
                         member: row["member"].as_u64().unwrap() as u8,
                         abort_correlation_on_error: row["abort"].as_bool().unwrap(),
@@ -1599,7 +1629,7 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
     let mut batch = interaction.input.reserve_actions(2, 256).unwrap();
     for member in 0..2 {
         batch
-            .action("writer", "textEdit", 128, |builder| builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor, token: std::num::NonZeroU64::new(fixture["stagedToken"].as_u64().unwrap()).unwrap(), member, abort_correlation_on_error: member == 0 }))
+            .action("writer", "textEdit", 128, |builder| builder.set_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor, token: std::num::NonZeroU64::new(fixture["stagedToken"].as_u64().unwrap()).unwrap(), member, abort_correlation_on_error: member == 0 }))
             .unwrap();
     }
     batch.publish().unwrap();
@@ -1650,7 +1680,7 @@ fn frame_deferred_cancel_retires_one_action_per_step() {
 
 #[test]
 fn catalogue_terminal_pair_never_partially_enters_the_frame_action_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛒️canvas-catalogue-terminal/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛒️canvas-catalogue-terminal/🔣️.json")).unwrap();
     let frame = &fixture["frameOwner"];
     assert_eq!(WORLD3D_DEADLINE_CAPACITY, frame["capacity"].as_u64().unwrap() as usize);
     let mut actions = FrameActionOwners::default();
@@ -1701,7 +1731,7 @@ fn a_fault_after_staging_leave_retires_the_source_drop_before_a_later_single_dis
     input.reserve_action("fixture", "later", 16).unwrap().publish().unwrap();
     let mut actions = FrameActionOwners::default();
     assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Pending));
-    input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+    input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ByteCredits);
     let mut faulted = false;
     for _ in 0..ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY * 2 + 2 {
         match transfer_frame_input_action(&mut input, &mut actions) {
@@ -1950,9 +1980,9 @@ fn frame_action_max_plus_one_returns_the_exact_owner() {
 
 #[test]
 fn asset_poll_does_not_accumulate_completed_response_vectors() {
-    assert!(!LIBRARY_SOURCE.contains("let mut fetched_glb = Vec::new()"));
-    assert!(!LIBRARY_SOURCE.contains("let mut fetched_map = Vec::new()"));
-    assert!(!LIBRARY_SOURCE.contains("let mut fetched_ui_images = Vec::new()"));
+    assert!(!LIBRARY_SOURCE().contains("let mut fetched_glb = Vec::new()"));
+    assert!(!LIBRARY_SOURCE().contains("let mut fetched_map = Vec::new()"));
+    assert!(!LIBRARY_SOURCE().contains("let mut fetched_ui_images = Vec::new()"));
 }
 
 /// 🔗️ The presenter contract's own cross-reference to the law below, checked by the COMPILER rather
@@ -2115,7 +2145,7 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
 
 #[test]
 fn presenter_ack_retirement_source_mutations_are_denied() {
-    assert!(presenter_retirement_contract(LIBRARY_SOURCE, PREPARED_SOURCE, GPU_SOURCE, DRAW_SOURCE, OS_HOST_SOURCE, WINT_APP_SOURCE, DRAW_LAWS_SOURCE));
+    assert!(presenter_retirement_contract(LIBRARY_SOURCE(), PREPARED_SOURCE(), GPU_SOURCE(), DRAW_SOURCE(), OS_HOST_SOURCE(), WINT_APP_SOURCE(), DRAW_LAWS_SOURCE()));
     for (source, from, to, once) in PRESENTER_RETIREMENT_MUTATIONS {
         let mutated = if *once { source.text().replacen(from, to, 1) } else { source.text().replace(from, to) };
         assert_ne!(mutated.as_str(), source.text(), "mutation '{from}' must actually rewrite {source:?} — a no-op edit proves nothing");
@@ -2139,18 +2169,18 @@ enum PresenterContractSource {
 impl PresenterContractSource {
     fn text(self) -> &'static str {
         match self {
-            PresenterContractSource::Glue => LIBRARY_SOURCE,
-            PresenterContractSource::Prepared => PREPARED_SOURCE,
-            PresenterContractSource::Gpu => GPU_SOURCE,
-            PresenterContractSource::Draw => DRAW_SOURCE,
-            PresenterContractSource::Host => OS_HOST_SOURCE,
-            PresenterContractSource::Laws => DRAW_LAWS_SOURCE,
-            PresenterContractSource::Winit => WINT_APP_SOURCE,
+            PresenterContractSource::Glue => LIBRARY_SOURCE(),
+            PresenterContractSource::Prepared => PREPARED_SOURCE(),
+            PresenterContractSource::Gpu => GPU_SOURCE(),
+            PresenterContractSource::Draw => DRAW_SOURCE(),
+            PresenterContractSource::Host => OS_HOST_SOURCE(),
+            PresenterContractSource::Laws => DRAW_LAWS_SOURCE(),
+            PresenterContractSource::Winit => WINT_APP_SOURCE(),
         }
     }
 
     fn substitute<'a>(self, mutated: &'a str) -> (&'a str, &'a str, &'a str, &'a str, &'a str, &'a str, &'a str) {
-        let mut sources = [LIBRARY_SOURCE, PREPARED_SOURCE, GPU_SOURCE, DRAW_SOURCE, OS_HOST_SOURCE, DRAW_LAWS_SOURCE, WINT_APP_SOURCE];
+        let mut sources = [LIBRARY_SOURCE(), PREPARED_SOURCE(), GPU_SOURCE(), DRAW_SOURCE(), OS_HOST_SOURCE(), DRAW_LAWS_SOURCE(), WINT_APP_SOURCE()];
         sources[self as usize] = mutated;
         (sources[0], sources[1], sources[2], sources[3], sources[4], sources[5], sources[6])
     }
@@ -2382,12 +2412,12 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
 /// terminal `Present` phase is the only code in the file that names `get_current_texture`.
 #[test]
 fn the_swapchain_is_acquired_written_and_presented_in_one_prepared_opportunity() {
-    let ladder = GPU_SOURCE.split("pub fn prepared_present_step").nth(1).expect("the prepared present ladder");
+    let ladder = GPU_SOURCE().split("pub fn prepared_present_step").nth(1).expect("the prepared present ladder");
     let ladder = &ladder[..ladder.find("fn encode_prepared_draw_scalar").unwrap_or(ladder.len())];
     assert_eq!(ladder.matches("get_current_texture").count(), 1, "exactly one phase may acquire the surface");
     assert_eq!(ladder.matches("frame.present()").count(), 1, "and exactly one presents it");
-    assert!(!GPU_SOURCE.contains("PreparedGpuPresentPhase::AcquireSurface"), "acquiring in its own phase is the defect this law exists for");
-    assert!(!GPU_SOURCE.contains("PreparedGpuPresentPhase::CreateView"), "and so is viewing it in its own phase");
+    assert!(!GPU_SOURCE().contains("PreparedGpuPresentPhase::AcquireSurface"), "acquiring in its own phase is the defect this law exists for");
+    assert!(!GPU_SOURCE().contains("PreparedGpuPresentPhase::CreateView"), "and so is viewing it in its own phase");
 
     let present = ladder.split("PreparedGpuPresentPhase::Present =>").nth(1).expect("the terminal present phase");
     let present = &present[..present.find("PreparedGpuPresentPhase::Complete =>").unwrap_or(present.len())];
@@ -2406,7 +2436,7 @@ fn the_swapchain_is_acquired_written_and_presented_in_one_prepared_opportunity()
 /// 🫧 Every glass samples the accumulated authored stream before later content is encoded.
 #[test]
 fn glass_snapshots_the_accumulated_composite_at_its_authored_command() {
-    let ladder = GPU_SOURCE.split("pub fn prepared_present_step").nth(1).expect("the prepared present ladder");
+    let ladder = GPU_SOURCE().split("pub fn prepared_present_step").nth(1).expect("the prepared present ladder");
     let commands = ladder.split("PreparedGpuPresentPhase::Commands =>").nth(1).expect("the command phase");
     let commands = &commands[..commands.find("PreparedGpuPresentPhase::SnapshotBackdrop =>").expect("the snapshot phase")];
     assert!(commands.contains("DrawMeasureCursor::Glass(_)"));
@@ -2425,7 +2455,7 @@ fn glass_snapshots_the_accumulated_composite_at_its_authored_command() {
     assert!(glass.contains("encode_prepared_glass_scalar"));
     assert!(glass.contains("cursor.command.checked_add(1)"), "one completed glass advances exactly one command");
     assert!(glass.contains("cursor.phase = PreparedGpuPresentPhase::Commands"), "later content resumes after its glass");
-    assert!(!GPU_SOURCE.contains("ForegroundCommands"), "no foreground replay can overprint a later popup");
+    assert!(!GPU_SOURCE().contains("ForegroundCommands"), "no foreground replay can overprint a later popup");
 }
 
 /// 🧷️ LAW: a prepared world draw whose mesh is not resident at SUBMIT is skipped and reported, never
@@ -2440,30 +2470,30 @@ fn glass_snapshots_the_accumulated_composite_at_its_authored_command() {
 /// until the mesh resolves, which is exactly what a skipped draw is.
 #[test]
 fn a_non_resident_prepared_world_mesh_is_skipped_and_reported_not_faulted() {
-    assert!(DRAW_SOURCE.contains("let Some(mesh) = mesh_store.get_versioned(mesh_key, mesh_version) else { return Ok(false) };"), "the encoder answers a non-resident mesh with a skip");
-    assert!(!DRAW_SOURCE.contains("prepared world mesh was missing"), "and no fault string survives anywhere in the encoder");
-    assert!(GPU_SOURCE.contains("self.missing_world_mesh = Some((draw_owner.mesh_key.clone(), draw_owner.mesh_version));"), "the GPU context records exactly which mesh was skipped");
-    assert!(GPU_SOURCE.contains("pub fn take_missing_world_mesh"), "and hands it over once");
-    assert!(LIBRARY_SOURCE.contains("os_host prepared world mesh was not resident, draw skipped"), "which the host reports on the transition");
-    let render = LIBRARY_SOURCE.split("AppPresentPhase::Render => {").nth(1).expect("the render phase");
+    assert!(DRAW_SOURCE().contains("let Some(mesh) = mesh_store.get_versioned(mesh_key, mesh_version) else { return Ok(false) };"), "the encoder answers a non-resident mesh with a skip");
+    assert!(!DRAW_SOURCE().contains("prepared world mesh was missing"), "and no fault string survives anywhere in the encoder");
+    assert!(GPU_SOURCE().contains("self.missing_world_mesh = Some((draw_owner.mesh_key.clone(), draw_owner.mesh_version));"), "the GPU context records exactly which mesh was skipped");
+    assert!(GPU_SOURCE().contains("pub fn take_missing_world_mesh"), "and hands it over once");
+    assert!(LIBRARY_SOURCE().contains("os_host prepared world mesh was not resident, draw skipped"), "which the host reports on the transition");
+    let render = LIBRARY_SOURCE().split("AppPresentPhase::Render => {").nth(1).expect("the render phase");
     assert!(render[..render.find("AppPresentPhase::CloseGpu =>").unwrap_or(render.len())].contains("take_missing_world_mesh()"), "from the phase that submits the frame");
 }
 
 #[test]
 fn presented_ink_intent_barrier_progresses_before_gpu_submit_and_holds_runtime_ingress_until_acknowledgement() {
-    let render = LIBRARY_SOURCE.split("AppPresentPhase::Render => {").nth(1).expect("the render phase");
+    let render = LIBRARY_SOURCE().split("AppPresentPhase::Render => {").nth(1).expect("the render phase");
     let render = &render[..render.find("AppPresentPhase::CloseGpu =>").expect("the close-GPU phase")];
     let progress = render.find("progress_presented_input_candidate").expect("the presenter-owned input barrier progress seam");
     let submit = render.find("begin_prepared_present").expect("the first GPU submit operation");
     assert!(progress < submit, "the old presented interaction reaches a terminal state before candidate pixels can submit");
 
-    let acknowledge = LIBRARY_SOURCE.split("AppPresentPhase::Acknowledge => {").nth(1).expect("the acknowledgement phase");
+    let acknowledge = LIBRARY_SOURCE().split("AppPresentPhase::Acknowledge => {").nth(1).expect("the acknowledgement phase");
     let acknowledge = &acknowledge[..acknowledge.find("AppPresentPhase::ProgressAcknowledge =>").expect("the next presenter phase")];
     let input_ack = acknowledge.find("shell.acknowledge_presented_input").expect("the exact input witness acknowledgement");
     let packet_ack = acknowledge.find("gate.acknowledge_presented").expect("the prepared packet acknowledgement");
     assert!(input_ack < packet_ack, "a refused input witness keeps the packet witness live for a Pending retry");
 
-    let host_build = WINT_APP_SOURCE.split("fn build_and_publish_snapshot(&mut self) {").nth(1).expect("the host build pump");
+    let host_build = WINT_APP_SOURCE().split("fn build_and_publish_snapshot(&mut self) {").nth(1).expect("the host build pump");
     let host_build = &host_build[..host_build.find("fn present_snapshot").expect("the host presentation half")];
     let ingress_gate = host_build.find("holds_presented_input_publication").expect("the input-publication critical section");
     let runtime_pump = host_build.find("pump_pending_applies").expect("the runtime apply pump");
@@ -2479,7 +2509,7 @@ fn component_close_retires_its_creating_frame_before_external_progress_and_readm
     assert_eq!(law["expected"]["sameGenerationReadmitted"], true);
     assert_eq!(law["expected"]["closingHostPublications"].as_array().map(Vec::len), Some(0));
 
-    let host_build = WINT_APP_SOURCE.split("fn build_and_publish_snapshot(&mut self) {").nth(1).expect("the host build pump");
+    let host_build = WINT_APP_SOURCE().split("fn build_and_publish_snapshot(&mut self) {").nth(1).expect("the host build pump");
     let host_build = &host_build[..host_build.find("fn present_snapshot").expect("the host presentation half")];
     let close_step = host_build.find("self.advance_component_surface_close()").expect("one bounded component-close step");
     let event_drain = host_build.find("if !self.events.is_empty()").expect("the unrelated input drain");
@@ -2489,7 +2519,7 @@ fn component_close_retires_its_creating_frame_before_external_progress_and_readm
     assert!(close_step < event_drain && event_drain < close_gate && close_gate < frame_admission && frame_admission < snapshot_publication, "input remains queued while the bridge gates frame admission until terminal");
     assert!(host_build[close_step..event_drain].contains("InvalidationReason::RESOURCE_READY"), "the nonterminal close retains its bounded progress wake while the sibling advances");
 
-    let close_owner = OS_HOST_SOURCE.split("pub(crate) fn advance_component_surface_close(&mut self) -> bool {").nth(1).expect("the component-close owner");
+    let close_owner = OS_HOST_SOURCE().split("pub(crate) fn advance_component_surface_close(&mut self) -> bool {").nth(1).expect("the component-close owner");
     let admission = &close_owner[..close_owner.find("let Some(owner)").expect("the active exact close owner")];
     assert!(admission.contains("self.presenter.has_pending_presentation()"), "an already prepared packet remains a hard close-admission fence");
     assert!(
@@ -2497,7 +2527,7 @@ fn component_close_retires_its_creating_frame_before_external_progress_and_readm
         "the frame that created the bridge is retired one bounded unit before external ownership detaches the surface"
     );
 
-    let frame_job = include_str!("../../🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
+    let frame_job = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
     let transient = frame_job.split("pub(crate) fn retire_for_component_surface_close_step(&mut self) -> bool {").nth(1).expect("the reusable frame handoff");
     let transient = &transient[..transient.find("pub(crate) fn close_step").expect("the permanent close path")];
     assert!(transient.contains("self.last_submitted_generation = None"), "native may readmit the same generation after handoff");
@@ -2513,11 +2543,11 @@ fn component_close_retires_its_creating_frame_before_external_progress_and_readm
 /// attached (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w11a-prepared-world-mesh-missing.md`).
 #[test]
 fn the_present_watchdog_signature_carries_within_item_upload_progress() {
-    assert!(DRAW_SOURCE.contains("pub fn upload_progress(&self) -> (u32, u32)"), "the mesh table exposes its own cursor's walk");
-    assert!(GPU_SOURCE.contains("pub fn prepared_upload_progress(&self) -> (u32, u32, usize)"), "the GPU context joins it with the atlas page cursor");
-    assert!(LIBRARY_SOURCE.contains("let upload_progress = self.gpu.prepared_upload_progress();"), "and the presenter reads it every step");
-    assert!(LIBRARY_SOURCE.contains("cursor.gpu_cursor.as_ref().map(ui_gpu::PreparedGpuPresentCursor::progress)"), "the signature retains exact GPU cursor progress");
-    let stall = LIBRARY_SOURCE.split("fn note_present_stall(").nth(1).expect("the presenter's stall watch");
+    assert!(DRAW_SOURCE().contains("pub fn upload_progress(&self) -> (u32, u32)"), "the mesh table exposes its own cursor's walk");
+    assert!(GPU_SOURCE().contains("pub fn prepared_upload_progress(&self) -> (u32, u32, usize)"), "the GPU context joins it with the atlas page cursor");
+    assert!(LIBRARY_SOURCE().contains("let upload_progress = self.gpu.prepared_upload_progress();"), "and the presenter reads it every step");
+    assert!(LIBRARY_SOURCE().contains("cursor.gpu_cursor.as_ref().map(ui_gpu::PreparedGpuPresentCursor::progress)"), "the signature retains exact GPU cursor progress");
+    let stall = LIBRARY_SOURCE().split("fn note_present_stall(").nth(1).expect("the presenter's stall watch");
     let stall = &stall[..stall.find("\n    }\n").expect("the stall watch closes")];
     let signature = &stall[stall.find("(cursor.phase").expect("the stall signature tuple") + 1..];
     let terms: Vec<&str> = signature.split(", ").map(|term| term.trim_end_matches([')', ',', '\n', ' '])).collect();

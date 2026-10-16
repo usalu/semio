@@ -9,7 +9,7 @@ use semio_framework_value::ValueError;
 use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 use semio_framework_os_vcs::VcsError;
 use semio_framework_diagnostic::TextError;
-use semio_framework_os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions};
+use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions};
 use semio_framework_os_pack::pack_rt;
 use semio_framework_dsl_record::{RecordSpecProducer,BorrowedRecordSpecProducer};
 use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
@@ -148,7 +148,7 @@ pub struct ArtifactCodec {
     /// 🏛️ Handcrafted semantic SQLite schema and native snapshot conversion provider.
     pub snapshot_sqlite: Option<ArtifactSqliteSnapshotCodec>,
     /// 🧬️ W5.7: a structural fingerprint of this document kind's field shape —
-    /// `crate::os_pack::schema_hash(&spec)` over `P::record_spec()`, or `[0u8; 32]` when `P` has no
+    /// `pack::record::schema_hash(&spec)` over `P::record_spec()`, or `[0u8; 32]` when `P` has no
     /// `RecordSpec` (hand-written `ArtifactPack` impls, see that trait method's doc). Hub actors
     /// send this in `ClientFrame::SocketHelloV1`; the semio_hub validates it against the durable
     /// `(space, document)` scope and rejects a later mismatching one before `Welcome` — a zero

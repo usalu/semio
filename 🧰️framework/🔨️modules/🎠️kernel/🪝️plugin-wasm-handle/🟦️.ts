@@ -3,7 +3,7 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import type { PluginManifest } from "../../🛂️manifest/🟦️.ts";
+import type { PluginManifest } from "@semio-tech/framework/manifest";
 import { type TurnOutcome } from "../📡️turn-outcome-broadcast/🟦️.ts";
 
 // #region 🎠️Kernel

@@ -49,5 +49,5 @@ export const stdioSemioV1AudioDiffTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseSemioAudioDiffText(value: unknown, at = "$"): SemioAudioDiffText {
-  return stdioSemioV1AudioDiffTextGuardObject(value, `${at}`);
+  return stdioSemioV1AudioDiffTextGuardString(value, `${at}`);
 }

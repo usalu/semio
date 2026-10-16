@@ -506,6 +506,10 @@ fn total(best: &BTreeMap<Slug, Best>, catalog: &CatalogView) -> f64 {
     catalog.quizzes.iter().filter_map(|quiz| best.get(&quiz.id)).fold(0.0, |sum, best| sum + best.points)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub fn binned(scores: impl Iterator<Item = super::Score>) -> super::CrowdScores {
+        super::binned(scores)
+    }
+}

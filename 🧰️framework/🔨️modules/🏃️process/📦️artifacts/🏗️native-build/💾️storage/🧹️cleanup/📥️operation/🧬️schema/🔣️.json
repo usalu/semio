@@ -5,7 +5,11 @@
     "Protocol": {
       "const": {
         "version": 1,
-        "maximumPendingOperations": 32
+        "maximumPendingOperations": 32,
+        "maximumUnresolvedCleanupOwners": 32,
+        "cleanupBodyFailures": "already-canonical-data",
+        "maximumCleanupOwnersPerBorrower": 1,
+        "maximumBorrowerOwners": 32
       }
     },
     "Case": {

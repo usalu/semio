@@ -19,16 +19,11 @@ pub use crate::editor::procedure::config::io::binary::artifact_items_2::{PROCEDU
 
 #[path = "."]
 pub mod extensions {
-    #[path = "../../../../../../../../../../🧩️extensions/🎮️control/🦀️.rs"]
-    pub mod control;
-    #[path = "../../../../../../../../../../🧩️extensions/📣️effect/🦀️.rs"]
-    pub mod effect;
-    #[path = "../../../../../../../../../../🧩️extensions/🧠️logic/🦀️.rs"]
-    pub mod logic;
-    #[path = "../../../../../../../../../../🧩️extensions/🧮️math/🦀️.rs"]
-    pub mod math;
-    #[path = "../../../../../../../../../../🧩️extensions/📝️text/🦀️.rs"]
-    pub mod text;
+    pub use semio_s_plugin_imperative_control as control;
+    pub use semio_s_plugin_imperative_effect as effect;
+    pub use semio_s_plugin_imperative_logic as logic;
+    pub use semio_s_plugin_imperative_math as math;
+    pub use semio_s_plugin_imperative_text as text;
 
 #[cfg(test)]
 #[path = "../../../../../../../../../../🧩️extensions/🧪️tests/🔬️unit/🦀️.rs"]

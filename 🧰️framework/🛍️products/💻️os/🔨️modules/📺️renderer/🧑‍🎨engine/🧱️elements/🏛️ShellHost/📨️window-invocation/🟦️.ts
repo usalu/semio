@@ -16,7 +16,7 @@ import {
 // #endregion 🔌️Adapters
 import { type ActiveSession, type ExtraWindowInstance } from "../../🐚️Shell/🟦️.tsx";
 import { sessionWindowInstances } from "../../🛠️ShellHelpers/🟦️.tsx";
-import { parseHubProgramIdV1 } from "../../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
+import { parseHubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
 
 //#region FrameworkOsShell
 /** 🪪️ The plugin an invocation addresses for a program: its descriptor's own plugin id. A hub document's

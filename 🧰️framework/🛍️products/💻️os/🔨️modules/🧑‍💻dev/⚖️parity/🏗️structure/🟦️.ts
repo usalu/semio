@@ -1,9 +1,5 @@
 /** 🧩️ Semantic parity structure owner. */
 
-import { ProbeRunResult } from "../🔬️probe/🟦️.ts";
-
-
-
 //#region 🔬️ParityScript
 /** 🔬️wgpu↔React UI-parity verification harness — structural DOM/retained-tree comparison, per-region
  * pixel diffing, and a boot-triage ladder, driven per catalog playground. Ticket:
@@ -51,18 +47,6 @@ type StructuralResult = { readonly status: "PASS" | "FAIL"; readonly nodeCount: 
 type BootStatus = "PASS" | "SERVER-FAIL" | "BOOT-TIMEOUT" | "ENV-FAIL" | "DUMP-EMPTY" | "BLANK-PAINT" | "STALE-BRIDGE";
 
 type PixelRegionResult = { readonly path: string; readonly ratio: number; readonly threshold: number; readonly diffPng?: string };
-
-type ParityPlaygroundReport = {
-  readonly variant: string;
-  readonly boot: { readonly react: BootStatus; readonly wgpu: BootStatus; readonly detail?: string };
-  readonly structural?: StructuralResult;
-  readonly pixel?: { readonly status: "PASS" | "FAIL"; readonly comparedRegions: number; readonly regions: readonly PixelRegionResult[] };
-  /** 🎬️See `🔖️ProbeCatalog` — behavioral (interaction-driven) parity, distinct from the static
-   * `structural`/`pixel` end-state checks above. Optional: only populated once boot passed (a probe
-   * can't drive a page that never finished booting). */
-  readonly behavioral?: ProbeRunResult;
-  readonly durationMs: number;
-};
 
 //#endregion 🔖️ParityTypes
 
@@ -220,4 +204,4 @@ function compareParityStructural(reactDump: ParityDump, wgpuDump: ParityDump): S
   return { status: mismatches.length === 0 ? "PASS" : "FAIL", nodeCount: allPaths.size, mismatches: mismatches.slice(0, 200) };
 }
 
-export { type BootStatus, PARITY_COLOR_TOLERANCE, PARITY_CONTAINER_KINDS, PARITY_FONT_SIZE_TOLERANCE_PX, PARITY_RECT_TOLERANCE_PX, PARITY_SCENE_LEAF_KINDS, type ParityColor, type ParityDump, type ParityMismatch, type ParityMismatchAxis, type ParityNode, type ParityPlaygroundReport, type ParityRect, type ParityRenderer, type PixelRegionResult, REACT_DOM_DUMP_SCRIPT, type StructuralResult, compareParityStructural, dumpReactStructure, dumpWgpuFrameStats, dumpWgpuStructure, parityColorClose, parityLinearToSrgbColor, parityNormalizeText };
+export { type BootStatus, PARITY_COLOR_TOLERANCE, PARITY_CONTAINER_KINDS, PARITY_FONT_SIZE_TOLERANCE_PX, PARITY_RECT_TOLERANCE_PX, PARITY_SCENE_LEAF_KINDS, type ParityColor, type ParityDump, type ParityMismatch, type ParityMismatchAxis, type ParityNode, type ParityRect, type ParityRenderer, type PixelRegionResult, REACT_DOM_DUMP_SCRIPT, type StructuralResult, compareParityStructural, dumpReactStructure, dumpWgpuFrameStats, dumpWgpuStructure, parityColorClose, parityLinearToSrgbColor, parityNormalizeText };

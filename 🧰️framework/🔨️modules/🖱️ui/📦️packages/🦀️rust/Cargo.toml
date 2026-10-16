@@ -191,6 +191,8 @@ unicode-segmentation = "1.13.2"
 # 🧪️ Keeps `#[test] async fn` bodies' literal `async` while expanding to a sync harness — see the
 # crate's own doc comment. Dev-only: `--lib` never links it, only `--tests`/`--all-targets` do.
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-ui-testing-paint-policy = { path = "../../🧪️testing/🎨️paint-policy/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../🔤️typography/📦️packages/🦀️rust", features = ["testkit"] }
 
 [[test]]
 name = "original_prepared_raster_refusal"

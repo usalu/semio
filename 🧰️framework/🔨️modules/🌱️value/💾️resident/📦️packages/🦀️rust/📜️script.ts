@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -13,8 +15,9 @@ import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦�
 /** 💾️ Runs every resident library assertion through the shared native budget. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     if (segments.length) throw new Error("Resident native test accepts no arguments");
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-value-resident"], cwd: this.root, extraArgs: ["--lib"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-value-resident"], cwd: this.root, extraArgs: ["--lib"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 
@@ -23,7 +26,7 @@ class CheckWasmScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Resident Wasm check accepts no arguments");
     for (const target of ["wasm32-wasip2", "wasm32-unknown-unknown"]) {
-      await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path", "Cargo.toml", "--lib", "--target", target],this.root,process.env,buildBudgetMs());
+      await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path", "Cargo.toml", "--lib", "--target", target],this.root,process.env,buildBudgetMs());
     }
   }
 }

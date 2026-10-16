@@ -3,7 +3,7 @@
 
 use super::*;
 use crate::agent_bridge::{AgentBridgeState, GatewayToShell};
-use ui_wgpu::wgpu::Theme;
+use semio_framework_ui_theme::Theme;
 
 /// 🧾️ The shared summary corpus — the same file the React `parseApprovalSummary` asserts against,
 /// read at compile time so a moved fixture is a build error, not a skipped test.

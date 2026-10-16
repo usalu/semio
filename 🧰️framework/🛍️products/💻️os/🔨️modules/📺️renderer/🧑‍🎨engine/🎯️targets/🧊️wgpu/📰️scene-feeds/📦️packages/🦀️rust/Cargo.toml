@@ -40,4 +40,6 @@ ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦�
 semio-framework-os-renderer-wgpu-native-platform = { path = "../../../🖥️native-platform/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-scene-views = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }

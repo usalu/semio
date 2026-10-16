@@ -2,8 +2,7 @@
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_os_kernel as store;
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::sqlite::snapshot::Process3dSnapshot;
 use semio_s_artifact_process_process3d_model::snapshot::*;

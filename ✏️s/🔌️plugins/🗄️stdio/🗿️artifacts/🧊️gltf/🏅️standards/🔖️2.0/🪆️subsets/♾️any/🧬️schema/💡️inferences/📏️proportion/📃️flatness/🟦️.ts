@@ -13,7 +13,7 @@ import {
   unavailable,
   type GltfTsGeometryContext,
   type GltfTsMeasure,
-} from '../../🔨️geometry-core/🟦️.ts';
+} from '../../🔨️geometry-kernel/🟦️.ts';
 
 export const inferGltfFlatness = (context: GltfTsGeometryContext): GltfTsMeasure<number> => {
   const extent = sortedExtents(context);

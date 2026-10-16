@@ -1,15 +1,15 @@
 //! 🔌️ The runtime app contract every hosted app instance satisfies, closed per plugin by `dyn_enum_close!`.
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
 use semio_framework::kernel::PresenceUpdate;
 use semio_framework_ui_contract::UiIntent;
 use semio_framework_dispatch_macros::dyn_enum;
-use crate::MountedOwnerPhaseV1;
-use crate::MountedOwnerTurnV1;
-use crate::window_config::WindowConfigPack;
+use semio_framework_plugin_mounted_owner::MountedOwnerPhaseV1;
+use semio_framework_plugin_mounted_owner::MountedOwnerTurnV1;
+use semio_framework_plugin_window_config::WindowConfigPack;
 use semio_framework_value::DslValue;
 use semio_framework::kernel::FixedCommandPage;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework::manifest::ActionInvocation as ManifestActionInvocation;
-use semio_framework::manifest::CommandInvocation as ManifestCommandInvocation;
 use semio_framework::kernel::AppEvent;
 use semio_framework::kernel::Effect;
 use semio_framework::kernel::HistoryPatch;
@@ -33,35 +33,34 @@ use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
-use crate::app_emission::ActionMeta;
+use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use crate::document_ingress::ArtifactStoreConstructorKind;
-use crate::document_ingress::ArtifactStoreConstructorPhase;
-use crate::media_contract::ArtifactMediaExportHandle;
-use crate::media_contract::ArtifactMediaExportPoll;
-use crate::media_contract::ArtifactMediaExportResult;
-use crate::peer_roster::PresenceRosterAdmission;
-use crate::peer_roster::PresenceRosterOutcome;
-use crate::reserved_jobs::FrameworkReservedCommitProgress;
-use crate::tool_contract::ToolOwnerWitness;
+use semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind;
+use semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase;
+use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle;
+use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPoll;
+use semio_framework_plugin_peer::PresenceRosterAdmission;
+use semio_framework_plugin_peer::PresenceRosterOutcome;
+use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitProgress;
+use semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use crate::store_publication::ComposedGestureResult;
-use crate::tool_contract::ArtifactToolPublicContract;
-use crate::tool_jobs::EmitWire;
-use crate::tool_jobs::TransactionProposalDraft;
-use crate::tool_jobs::TypedOperationCompletion;
-use crate::tool_jobs::TypedOperationResultPage;
-use crate::tool_jobs::TypedOperationResultToken;
-use crate::tool_jobs::TypedOperationUiProgress;
-use crate::app_contract::DOCUMENT_LOAD_UNAVAILABLE_CODE;
-use crate::app_contract::EphemeralSnapshot;
-use crate::app_contract::MediaArtifact;
-use crate::app_contract::MediaArtifactError;
-use crate::app_contract::MediaConsumption;
-use crate::app_contract::TransactionPrepareOutcome;
-use crate::app_contract::document_load_fault;
-use crate::app_contract::whole_document_archive;
-use crate::app_contract::whole_document_media;
+use semio_framework_plugin_composition_publication::ComposedGestureResult;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract;
+use semio_framework_plugin_job::EmitWire;
+use semio_framework_plugin_job::TransactionProposalDraft;
+use semio_framework_plugin_job::TypedOperationCompletion;
+use semio_framework_plugin_job::TypedOperationResultPage;
+use semio_framework_plugin_job::TypedOperationResultToken;
+use semio_framework_plugin_job::TypedOperationUiProgress;
+use semio_framework_plugin_decl_app::DOCUMENT_LOAD_UNAVAILABLE_CODE;
+use semio_framework_plugin_decl_app::EphemeralSnapshot;
+use semio_framework_plugin_document_media::lifted_app::MediaArtifact;
+use semio_framework_plugin_decl_app::MediaArtifactError;
+use semio_framework_plugin_decl_app::MediaConsumption;
+use semio_framework_plugin_decl_app::TransactionPrepareOutcome;
+use semio_framework_plugin_decl_app::document_load_fault;
+use semio_framework_plugin_decl_app::whole_document_archive;
+use semio_framework_plugin_document_media::lifted_app::whole_document_media;
 
 /// 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
 /// (via {@link VcsArtifactApp}'s store) across calls — no per-call document JSON is threaded in.
@@ -78,9 +77,9 @@ use crate::app_contract::whole_document_media;
 pub trait PluginApp: Send + 'static {
     /// 🏇️ Advances the real live mounted owner under its original scheduling and physical turn.
     fn mounted_owner_maintenance_phase(&self) -> Result<MountedOwnerPhaseV1, Fault>;
-    fn mounted_owner_maintenance_step(&mut self, turn: &mut MountedOwnerTurnV1<'_, '_>) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure>;
+    fn mounted_owner_maintenance_step(&mut self, turn: &mut MountedOwnerTurnV1<'_, '_>) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>;
     /// 🏁️ Closes the real mounted owner under the caller's independently declared close turn.
-    fn mounted_owner_close_step(&mut self, turn: &mut MountedOwnerTurnV1<'_, '_>) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure>;
+    fn mounted_owner_close_step(&mut self, turn: &mut MountedOwnerTurnV1<'_, '_>) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>;
     /// 📏️ Exact physical allocation needed by the currently retained close authority.
     fn close_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
     /// 🌱️ Exact physical allocation needed by the selected live maintenance authority.
@@ -92,13 +91,13 @@ pub trait PluginApp: Send + 'static {
     async fn bind_actor(&mut self, _actor: &str) {}
     /// 🧹 Releases one synchronous, bounded close unit. Implementations must never suspend and
     /// may return `Complete` only after their final destructor is constant-time.
-    fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure>;
+    fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>;
     /// 🧹 Proves that every deep owner has reached its terminal empty shell. The runtime checks
     /// this after `close_step` returns `Complete` and before releasing the erased app allocation.
     fn close_terminal_is_empty(&self) -> bool;
     /// 🧹 Releases one bounded nonterminal quarantine unit while the app remains live. This is
     /// scheduled on the shared maintenance worker and must never perform application-visible work.
-    fn maintenance_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure>;
+    fn maintenance_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>;
     /// 🪹️ Every live retirement frontier and its retained directory backing is empty.
     fn maintenance_terminal_is_empty(&self) -> bool;
     /// 🌡️ True while a displaced-owner queue of the document or a config-lane store sits at or
@@ -114,7 +113,7 @@ pub trait PluginApp: Send + 'static {
     async fn tool_owner_witness(&self) -> ToolOwnerWitness;
     async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract>;
     /// 📬️ Advances at most one typed-operation store or host publication unit.
-    async fn advance_typed_operation_publication(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), crate::PluginLifecycleFailure>;
+    async fn advance_typed_operation_publication(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>;
     /// 🧾️ Returns one exact preparation receipt without deriving work from its checkpoint.
     fn take_typed_operation_preparation_receipt(&mut self) -> Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)>;
     /// ♻️ Transfers one original mounted Close receipt before another ownership producer.
@@ -477,15 +476,15 @@ pub trait PluginApp: Send + 'static {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"checked media submission has no owning source receiver").into())
     }
     /// 📡️ Advances exactly one bounded worker slice and returns current progress/checkpoint/result.
-    async fn poll_media_export(&mut self, _handle: crate::media_contract::ArtifactMediaExportHandleLoan<'_>,_receiver:&mut Option<ArtifactMediaExportPoll>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+    async fn poll_media_export(&mut self, _handle: semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,_receiver:&mut Option<ArtifactMediaExportPoll>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"media polling has no owning source receiver").into())
     }
     /// 🛑️ Cancels an externally held live export handle.
     async fn cancel_media_export(&mut self, _handle: &ArtifactMediaExportHandle) -> Result<(), MediaError> {
         Err(MediaError::NotImplemented)
     }
-    async fn retain_media_export_result(&mut self,_handle:crate::media_contract::ArtifactMediaExportHandleLoan<'_>,_source:&mut Option<ArtifactMediaExportPoll>,_status:&mut Option<crate::media_contract::ArtifactMediaExportPublishedStatus>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"download publication has no original receiving port").into())}
-    async fn take_media_export_chunk(&mut self,_handle:crate::media_contract::ArtifactMediaExportHandleLoan<'_>,_receiver:&mut Option<Vec<u8>>,_terminal:&mut bool,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"media chunk has no original receiving port").into())}
+    async fn retain_media_export_result(&mut self,_handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,_source:&mut Option<ArtifactMediaExportPoll>,_status:&mut Option<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"download publication has no original receiving port").into())}
+    async fn take_media_export_chunk(&mut self,_handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,_receiver:&mut Option<Vec<u8>>,_terminal:&mut bool,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"media chunk has no original receiving port").into())}
     /// 🧵️ Takes one bounded action-download chunk by its operation handle.
     async fn take_segmented_download_chunk(&mut self, _operation_id: u64) -> Result<Option<Vec<u8>>, Fault> {
         Err(plugin_sdk_fault("segmented download not implemented"))
@@ -506,7 +505,7 @@ pub trait PluginApp: Send + 'static {
     /// `PluginApp` gets for free without declaring any `media_ports()`. Apps whose media output isn't simply their raw document
     /// (computed/derived outputs) override this directly; `port` is accepted for parity with `export_media` and ignored by the
     /// default (there is exactly one document to hand back).
-    async fn produce_media(&mut self, port: &str, _owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_,'_>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<MediaArtifact>,crate::app_contract::MediaArtifactOperationFailure> {
+    async fn produce_media(&mut self, port: &str, _owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<MediaArtifact>,semio_framework_plugin_decl_app::MediaArtifactOperationFailure> {
         let archive = self.document_archive().await?;
         whole_document_media(port, self.artifact_schema().await.to_string(), &archive).await.map(Some).map_err(Into::into)
     }
@@ -535,3 +534,7 @@ dyn_enum_close! {
     /// (or a test that never actually instantiates an app) never has to name a real app enum.
     pub enum NoPluginApp: PluginApp {}
 }
+
+#[path = "../🏃️runtime/📥️staging/🔌️reactor-app/🛠️runtime-helpers/🦀️.rs"]
+pub mod app_runtime_helpers;
+pub use app_runtime_helpers::*;

@@ -1,5 +1,6 @@
 /** 📥 Owned native child, wire operation and owned instance binding laws. */
 import { grant, createTypedWireSupport, type TypedWireVitest, type TypedWireDependencies } from "../🪛️typedwire-helpers/🟦️.tsx";
+import { loadRetainedNativeChildFixture, loadRetainedWireOperationsFixture, loadRetainedInstanceOwnerFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 export async function registerNativeChildAndWireOperationTests(vitest: TypedWireVitest, dependencies: TypedWireDependencies): Promise<void> {
   const { describe, expect, it, vi } = vitest;
@@ -12,7 +13,7 @@ export async function registerNativeChildAndWireOperationTests(vitest: TypedWire
     it("OwnedNativeChild preserves decode refusal and raw over-grant work through both operation layers", async () => {
       const { OwnedUiWireOperationCursor, OwnedUiWirePatchCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"); const { OwnedUiSurface } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/👶️native-child/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os"); const deepStrictEqual: typeof import("node:assert").deepStrictEqual = (await import("node:assert")).deepStrictEqual;
+      const fixture = await loadRetainedNativeChildFixture(); const { encodePackValue } = await import("@semio-tech/framework-os"); const deepStrictEqual: typeof import("node:assert").deepStrictEqual = (await import("node:assert")).deepStrictEqual;
       for (const layer of ["operation-decode", "stream-decode"]) for (const kind of fixture.refusals) for (const bytes of [0, fixture.overGrantBytes]) {
         const current: import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🟦️.ts").RetainedUiWireStep = { kind: kind === "blocked" ? "blocked" : "rejected", phase: layer, items: bytes ? 1 : 0, bytes };
         const surface = new OwnedUiSurface({ actor: "child", instance: 7, surface: "window" }, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 });
@@ -26,7 +27,7 @@ export async function registerNativeChildAndWireOperationTests(vitest: TypedWire
 
     it("OwnedNativeChild preserves exact close refusal without unlinking real payload and decoder owners", async () => {
       const { OwnedUiWireOperationCursor, OwnedUiWirePatchCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts"); const { RetainedUiTypedCursor, UiPayloadRetirement } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { OwnedUiOperationRetirement } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts"); const { OwnedUiSurface } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts"); const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/👶️native-child/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os"); const deepStrictEqual: typeof import("node:assert").deepStrictEqual = (await import("node:assert")).deepStrictEqual;
+      const { OwnedUiOperationRetirement } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts"); const { OwnedUiSurface } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts"); const fixture = await loadRetainedNativeChildFixture(); const { encodePackValue } = await import("@semio-tech/framework-os"); const deepStrictEqual: typeof import("node:assert").deepStrictEqual = (await import("node:assert")).deepStrictEqual;
       for (const layer of fixture.layers.filter(value => !value.endsWith("decode"))) for (const kind of fixture.refusals) {
         const current: import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🟦️.ts").RetainedUiWireStep = { kind: kind === "blocked" ? "blocked" : "rejected", phase: layer, items: 0, bytes: 0 };
         const surface = new OwnedUiSurface({ actor: "child-close", instance: 7, surface: "window" }, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 });
@@ -43,7 +44,7 @@ export async function registerNativeChildAndWireOperationTests(vitest: TypedWire
     });
 
     it("OwnedNativeChild separates terminal full-grant work and retains thrown close ownership", async () => {
-      const { OwnedUiWireOperationCursor, OwnedUiWirePatchCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts"); const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"); const { OwnedUiSurface } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts"); const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/👶️native-child/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { OwnedUiWireOperationCursor, OwnedUiWirePatchCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts"); const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"); const { OwnedUiSurface } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts"); const fixture = await loadRetainedNativeChildFixture(); const { encodePackValue } = await import("@semio-tech/framework-os");
       for (const layer of fixture.terminalLayers) {
         const surface = new OwnedUiSurface({ actor: "terminal-child", instance: 7, surface: "window" }, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const cursor = layer === "decoder-close" ? new OwnedUiWireOperationCursor("set-component", 7, encodePackValue({ type: "text", value: "Terminal" })) : new OwnedUiWirePatchCursor(surface, 0, 1, 1); if (cursor instanceof OwnedUiWirePatchCursor) expect(cursor.offer(0, { tag: "set-component", val: { node: 7n, component: encodePackValue({ type: "text", value: "Terminal" }) } })).toBe(true); cursor.beginClose(); let terminal = false;
         const typed = RetainedUiTypedCursor.prototype.closeStep; const native = OwnedUiWireOperationCursor.prototype.closeStep;
@@ -60,7 +61,7 @@ export async function registerNativeChildAndWireOperationTests(vitest: TypedWire
     it("OwnedWireOperation consumes all eleven native tags into paired publication before its exact ACK", async () => {
       const { OwnedUiWireOperationCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts");
       const { OwnedUiSurface } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/📨️wire-operations/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
+      const fixture = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
       const surface = new OwnedUiSurface({ actor: "wire", instance: 7, surface: "window" }, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const subscription = surface.subscribeNode(fixture.root, () => {}); while (surface.maintenancePending) surface.advanceMaintenance(grant); const original = surface.view; const patch = surface.beginPatch(0, 1); const tags = new Set<string>();
       const apply = (tag: string, target: unknown, payload?: unknown) => { const input = new OwnedUiWireOperationCursor(tag, target, payload); expect(input.advance({ maxItems: 0, maxBytes: 4096 }).kind).toBe("blocked"); expect(finish(input)).toBe("ready"); patch.pushOperation(input.takeResult()!); close(input); expect(finish(patch)).toBe("ready"); expect(surface.view).toBe(original); expect(patch.takeAcknowledgement()).toBeNull(); tags.add(tag); };
       const rootBytes = encodePackValue(fixture.node); const alias = new Uint8Array(rootBytes.buffer); apply("upsert", undefined, rootBytes); expect(alias.byteLength).toBe(0);
@@ -75,7 +76,7 @@ export async function registerNativeChildAndWireOperationTests(vitest: TypedWire
     it("OwnedWireOperation rejects hostile transport inputs before transfer and closes every admitted prefix", async () => {
       const { OwnedUiWireOperationCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts");
       const { RetainedUiChildIdsCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/📨️wire-operations/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
+      const fixture = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework-os");
       const hostile = new Set<string>();
       const refuse = (name: string, tag: string, target: unknown, payload?: unknown) => { const bytes = payload instanceof Uint8Array ? payload.byteLength : null; expect(() => new OwnedUiWireOperationCursor(tag, target, payload)).toThrow(); if (payload instanceof Uint8Array) expect(payload.byteLength).toBe(bytes); hostile.add(name); };
       refuse("unknown-tag", "unsupported", 7, encodePackValue(null)); refuse("unexpected-payload", "remove", 7, encodePackValue(null)); refuse("unsafe-node-id", "set-component", 9007199254740992n, encodePackValue(null)); refuse("negative-node-id", "set-root", -1); refuse("wrong-payload-kind", "upsert", undefined, []);
@@ -122,7 +123,7 @@ export async function registerNativeChildAndWireOperationTests(vitest: TypedWire
 
     it("OwnedWireOperation stream retains one exact ordinal through close and preserves committed late-cancel ACK", async () => {
       const { OwnedUiWirePatchCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts"); const { OwnedUiSurface } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/📨️wire-operations/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
+      const fixture = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework-os");
       const surface = new OwnedUiSurface({ actor: "stream", instance: 7, surface: "window" }, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const original = surface.view;
       const patch = new OwnedUiWirePatchCursor(surface, 0, 1, fixture.stream.operations); let reads = 0; const forbidden = { get tag() { reads++; throw new Error("Unadmitted page access"); } };
       expect(patch.offer(1, forbidden)).toBe(false); expect(reads).toBe(0); const bytes = encodePackValue(fixture.node); expect(patch.offer(0, { tag: "upsert", val: { node: bytes } })).toBe(true); expect(bytes.byteLength).toBe(0); expect(patch.offer(0, forbidden)).toBe(false); expect(patch.offer(1, forbidden)).toBe(false); expect(reads).toBe(0);
@@ -135,7 +136,7 @@ export async function registerNativeChildAndWireOperationTests(vitest: TypedWire
     });
 
     it("OwnedWireOperation native retirement closes known fields without claiming unknown wrapper ownership", async () => {
-      const { OwnedUiWireOperationCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts"); const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/📨️wire-operations/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
+      const { OwnedUiWireOperationCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/🟦️.ts"); const fixture = await loadRetainedWireOperationsFixture(); const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
       const bytes = encodePackValue(fixture.node); const unknown = { bytes: new Uint8Array(fixture.rawRetirement.unknownBytes).fill(17) }; const original = { tag: "upsert", val: { node: bytes, unknown }, unknown }; const cursor = OwnedUiWireOperationCursor.fromNative(original); expect(bytes.byteLength).toBe(0); close(cursor); expect(original.unknown).toBe(unknown); expect(original.val.unknown).toBe(unknown); expect(Buffer.from(unknown.bytes)).toEqual(Buffer.alloc(fixture.rawRetirement.unknownBytes, 17));
       const children = BigUint64Array.from(fixture.nativeChildren.values, BigInt); const child = OwnedUiWireOperationCursor.fromNative({ tag: "set-children", val: { node: 7n, children } }); expect(children.byteLength).toBe(0); close(child); close(OwnedUiWireOperationCursor.fromNative({ tag: "remove", val: 7n }));
       const untouched = encodePackValue({}); expect(() => OwnedUiWireOperationCursor.fromNative({ tag: "set-style", val: { node: 9007199254740992n, style: untouched } })).toThrow(/range/); expect(untouched.byteLength).toBeGreaterThan(0); let reads = 0; expect(() => OwnedUiWireOperationCursor.fromNative({ tag: "upsert", get val() { reads++; return { node: untouched }; } })).toThrow(/accessor/); expect(reads).toBe(0); expect(untouched.byteLength).toBeGreaterThan(0);
@@ -143,7 +144,7 @@ export async function registerNativeChildAndWireOperationTests(vitest: TypedWire
 
     it("OwnedInstance binds the exact activation and guest lifetime while closing old readers independently", async () => {
       const { OwnedUiInstance } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🪪️instance-owner/🔣️.json"); let active = true;
+      const fixture = await loadRetainedInstanceOwnerFixture(); let active = true;
       const activation = Object.freeze({ actorId: fixture.actor, activationGeneration: BigInt(fixture.activationGeneration), assertActive() { if (!active) throw new Error("Revoked activation"); }, async turn() { return {}; } }); const foreign = Object.freeze({ ...activation });
       const oldLife = Object.freeze({ activationGeneration: activation.activationGeneration, instanceId: fixture.instanceId, guestLifetime: BigInt(fixture.guestLifetimes[0]!) }); const nextLife = produce(oldLife, draft => { draft.guestLifetime = BigInt(fixture.guestLifetimes[1]!); });
       const old = new OwnedUiInstance(activation, oldLife, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const next = new OwnedUiInstance(activation, nextLife, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 });

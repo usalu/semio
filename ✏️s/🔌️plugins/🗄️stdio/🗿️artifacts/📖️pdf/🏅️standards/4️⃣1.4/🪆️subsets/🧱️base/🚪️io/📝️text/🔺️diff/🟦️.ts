@@ -49,5 +49,5 @@ export const stdioPdf14BaseDiffTextGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parsePdfDiffText(value: unknown, at = "$"): PdfDiffText {
-  return stdioPdf14BaseDiffTextGuardObject(value, `${at}`);
+  return stdioPdf14BaseDiffTextGuardString(value, `${at}`);
 }

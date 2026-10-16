@@ -49,5 +49,5 @@ export const spaceHomeMutationsTextGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseSHomeMutationsText(value: unknown, at = "$"): SHomeMutationsText {
-  return spaceHomeMutationsTextGuardObject(value, `${at}`);
+  return spaceHomeMutationsTextGuardString(value, `${at}`);
 }

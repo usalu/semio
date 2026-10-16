@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/value-testing-presence-retirement-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

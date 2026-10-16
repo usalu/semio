@@ -90,10 +90,10 @@ pub struct HistoryBackfillMark {
     pub log_seq: u64,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 thread_local! {
     /// 🧮️ History rows built on this test thread — what the O(change) laws of the history view count (design §20.14).
-    pub(crate) static HISTORY_ROWS_BUILT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    pub static HISTORY_ROWS_BUILT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 /// 📚️ What the history rows of one build or patch read beyond their command-log entries: the applied position of the

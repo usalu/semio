@@ -323,7 +323,7 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
     });
 
     it("resumes a suspended child only on the same execution target, adopting a newer checkpoint and revalidation witness", async () => {
-      const { sameExecutionTargetV1 } = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
+      const { sameExecutionTargetV1 } = await import("../../🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts");
       const { readFile } = await import("node:fs/promises");
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(await readFile(new URL("./🧪️tests/🧫️fixtures/📇️directory/⏯️execution-target-resume-v1.json", source.url), "utf8")) as { current: { fixture: string; pointer: "/manifest" }; cases: { case: string; patch: unknown; resumes: boolean }[] };

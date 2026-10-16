@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runBudgetedTestCommand} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
@@ -12,9 +13,10 @@ import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/�
 /** 🧪️ Checks owned identities and their physical text extensions. */
 class NativeScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
   const {rest}=resolveTestLevel(segments);
   if(rest.length)throw Error("test-native accepts an execution level");
-  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-artifact-reference"],cwd:this.root,extraArgs:["--lib","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-artifact-reference"],cwd:this.root,extraArgs:["--lib","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }
 }
 

@@ -22,7 +22,8 @@
         "version",
         "mode",
         "entry",
-        "sources"
+        "sources",
+        "resolutions"
       ],
       "properties": {
         "version": {
@@ -58,6 +59,30 @@
                 "pattern": "^[a-f0-9]{64}$"
               }
             }
+          }
+        },
+        "resolutions": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "required": [
+              "specifier",
+              "path"
+            ],
+            "properties": {
+              "specifier": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            },
+            "additionalProperties": false
           }
         }
       }

@@ -1,0 +1,25 @@
+# Compiler Capacity Stage Independent Audit
+
+No additional actionable defect found in the frozen stage/capacity/input-consumer boundary. Read-only inspection and retained evidence review only; no compiler, Native image/provider, service, browser, lease, jobserver or validation process was launched by this audit.
+
+## Exact Custody and Evidence
+
+All 16 reported Source hashes and all 15 retained log hashes matched before and after review. The stage report shared-wrapper snapshot f17f0525f9c8480ec03ee5fe2b8007b62d8589eb058dd74e59deb759ee2a3f33 matches this audit; it is a successor to the compiler-state report's wrapper observation. The actual SEMIO_CAPACITY_INHERITANCE_ONLY strict selector contains the 51 roots in exactly the report roster order (50 literal joins plus the wrapper import.meta.path). Required strict/noUnchecked/ES2022/JSX flags remain. Empty final strict logs have the reported empty SHA-256; terminal0 is collection provenance supplied by the owner report, not something an empty log can independently establish.
+
+Read final2 BOTH logs: inheritance 3/40, scope 3/67 and stage 3/67, totaling nine tests/174 assertions. Both logs retain all true lifetime observations: compileBusy, consumerFree, inputHeld, cpuRetired, reacquired, inputFree. Actual recorded slots/workers agree for available2, detached1, FIFO2 and single1. Failed child Original checks require terminal status1, exact Error/undefined identity, late accepted completion and consumer refusal; they do not turn a failed Original into a healthy one. No old fake Native-positive fixture is counted as executed evidence.
+
+## Inspected Production Boundaries
+
+Stage type at component-pass/🟦️.ts:70 requires single|available|whole-host|cleanup. Stage context has immutable worker facts, without widen/finalizer/workerProtocol. Actual stage references are captured before readiness waits. OS stages author available only for optimize, cleanup for discard and single otherwise, forwarding context.parallelism to Binaryen. OS writer/build/CPU namespace derives from the authentic storage policy.
+
+Stage capacity owner authenticates control and privately issued jobserver before directory/environment effects and synchronously enrolls a requested0 callback before readiness. single acquires one real slot; available takes one then opportunistically takes slots without bypassing the pool queue; whole-host takes the complete pool and checks actual private CPU facts equal host count. Real jobserver and config are frozen, copied/closed pools fail private identity. Computational callbacks await the private CPU scope and its canonical descendants before job slots release. Cleanup receives zero workers under its already accepted phase; canonical post-callback checks prevent successful conversion of cancellation.
+
+Shared-jobserver jobs at component-pass/🟦️.ts:419 use one actual pool slot and the existing shared worker protocol; their accepted child drains before slot release. No numeric environment hint supplies private CPU authority. Local available/whole-host stages subdivide the actual enclosing CPU credits instead of independently charging the same shared workers.
+
+Driver operation is canonically enrolled at component-pass/🟦️.ts:341. Base-owned aggregate/per-pass CargoInputContinuationTransactionV1 callbacks retain inputs through the completed consumer. Required prerequisites run before aggregate input compilation starts. Focused withNativeBuildCompilerCapacityV1 awaits complete CPU scope drain/release before invoking its returned consumer closure outside that retired AsyncLocalStorage context. The consumer uses the still-held base/input control; per-pass input controls are not rewritten as CPU controls. Per-pass gates close before the aggregate gate. The real boundary test independently probes CPU/input SQLite ownership, refuses retired CPU control, and reacquires genuine capacity from the retained input consumer.
+
+Continuation readiness uses explicit failed booleans and exact failure storage, preserving thrown undefined. Failed execution rejects ready and its real accepted owner task; CPU work drains and the completed consumer never runs. Canonical scope drain preserves primary Error/undefined through descendants. Stage and job release paths aggregate distinct secondary release errors with the primary first. Actual job, unit graph and pass child branches each join terminal and stream promises before enclosing CPU release; three production joins are retained.
+
+## Qualification
+
+This is Source closure plus review of previously collected ordinary-process, real jobserver/SQLite evidence. No actual Native compiler driver ran. Physical compiler concurrency, process-tree termination on all platforms, whole-host compiler stages and Native cancellation remain HOLD. Old stub Native-positive tests remain typed but unexecuted. Broader setup/cleanup-secondary behavior remains outside this epoch's claim. The report correctly identifies Cargo launcher capture-consumer capacity retention and other raw producers as remaining work; this audit does not imply whole-producer closure or aggregate repository green.

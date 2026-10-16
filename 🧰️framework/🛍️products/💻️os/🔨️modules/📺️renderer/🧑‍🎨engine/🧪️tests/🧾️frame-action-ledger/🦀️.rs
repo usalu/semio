@@ -16,8 +16,14 @@ use super::*;
 use serde_json::Value;
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/🧾️frame-action-ledger/🔣️.json");
-const RENDERER_SOURCE: &str = crate::RENDERER_SOURCE;
-const FRAME_JOB_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
+#[allow(non_snake_case)]
+fn RENDERER_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::renderer_source()
+}
+#[allow(non_snake_case)]
+fn FRAME_JOB_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs")
+}
 
 #[test]
 fn frame_action_refusal_cancels_only_the_correlated_successor_with_identical_payloads() {
@@ -28,7 +34,7 @@ fn frame_action_refusal_cancels_only_the_correlated_successor_with_identical_pay
     for row in rows {
         batch
             .action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 256, |builder| {
-                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor,
+                builder.set_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor,
                     token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
                     member: row["member"].as_u64().unwrap() as u8,
                     abort_correlation_on_error: row["abort"].as_bool().unwrap(),
@@ -195,7 +201,7 @@ fn a_live_deferred_owner_drains_before_a_new_complete_source_batch_installs() {
     assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "later"));
     assert!(next.take_next().is_none());
     assert!(next.terminal_is_empty());
-    assert!(!RENDERER_SOURCE.contains("frame completion found an unclosed deferred owner"));
+    assert!(!RENDERER_SOURCE().contains("frame completion found an unclosed deferred owner"));
 }
 
 #[test]
@@ -217,16 +223,16 @@ fn closing_a_partially_staged_batch_retires_one_descriptor_then_its_reservation(
 
 #[test]
 fn the_ledger_is_the_runtimes_and_no_frame_candidate_owns_one() {
-    assert!(RENDERER_SOURCE.contains("    frame_actions: FrameActionOwners,"), "the runtime declares the ledger");
-    assert!(RENDERER_SOURCE.contains("app.frame_actions.try_push(action)"), "the frame's authorities push onto the RUNTIME's ledger");
-    assert!(RENDERER_SOURCE.contains("std::mem::take(&mut self.frame_actions)"), "only a completing frame takes it, and takes all of it");
+    assert!(RENDERER_SOURCE().contains("    frame_actions: FrameActionOwners,"), "the runtime declares the ledger");
+    assert!(RENDERER_SOURCE().contains("app.frame_actions.try_push(action)"), "the frame's authorities push onto the RUNTIME's ledger");
+    assert!(RENDERER_SOURCE().contains("std::mem::take(&mut self.frame_actions)"), "only a completing frame takes it, and takes all of it");
     for candidate in ["struct FrameTransaction {", "struct FrameBuildCursor {", "struct AppFrameAfterChrome {", "struct FrameFinishCursor {"] {
-        let start = RENDERER_SOURCE.find(candidate).unwrap_or_else(|| panic!("{candidate} still exists"));
-        let body = &RENDERER_SOURCE[start..start + RENDERER_SOURCE[start..].find("\n}").expect("a struct body ends")];
+        let start = RENDERER_SOURCE().find(candidate).unwrap_or_else(|| panic!("{candidate} still exists"));
+        let body = &RENDERER_SOURCE()[start..start + RENDERER_SOURCE()[start..].find("\n}").expect("a struct body ends")];
         assert!(!body.contains("deferred_actions"), "{candidate} must own no action queue — a frame candidate is discardable by construction");
     }
-    assert!(!RENDERER_SOURCE.contains("deferred_actions.pop_front()"), "no close ladder retires a user's commit as a retirement unit");
-    let superseded = FRAME_JOB_SOURCE.split("AppFrameTransactionStep::Superseded => {").nth(1).expect("superseded frame arm");
+    assert!(!RENDERER_SOURCE().contains("deferred_actions.pop_front()"), "no close ladder retires a user's commit as a retirement unit");
+    let superseded = FRAME_JOB_SOURCE().split("AppFrameTransactionStep::Superseded => {").nth(1).expect("superseded frame arm");
     let discard = superseded.find("transaction.discard_presented_input_candidate(&self.runtime)").expect("exact external input witness return");
     let drop = superseded.find("self.phase = ActiveFramePhase::Terminal;").expect("plain frame candidate drop");
     assert!(discard < drop, "a superseded candidate returns its external input witness before the action-free candidate is dropped");
@@ -245,8 +251,8 @@ fn the_ledger_is_the_runtimes_and_no_frame_candidate_owns_one() {
 /// 3 751 batches for the remaining nine gestures (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
 fn a_stale_world3d_draw_rebuild_is_closed_and_never_quarantines_the_surface() {
-    let start = RENDERER_SOURCE.find("match step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context) {").expect("the host steps the retained draw rebuild");
-    let arm = &RENDERER_SOURCE[start..start + RENDERER_SOURCE[start..].find("\n                }").expect("the match ends")];
+    let start = RENDERER_SOURCE().find("match step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context) {").expect("the host steps the retained draw rebuild");
+    let arm = &RENDERER_SOURCE()[start..start + RENDERER_SOURCE()[start..].find("\n                }").expect("the match ends")];
     assert!(arm.contains("WorldDrawRebuildStep::Stale => {"), "`Stale` has its own arm");
     assert!(arm.contains("close_world3d_draw_rebuild_step(&mut state.scene, context)"), "a stale rebuild is CLOSED down the module's own ladder");
     assert!(!arm.contains("WorldDrawRebuildStep::Stale | WorldDrawRebuildStep::Fault"), "`Stale` is never lumped in with `Fault` — `record_frame_fault` quarantines the surface for good");

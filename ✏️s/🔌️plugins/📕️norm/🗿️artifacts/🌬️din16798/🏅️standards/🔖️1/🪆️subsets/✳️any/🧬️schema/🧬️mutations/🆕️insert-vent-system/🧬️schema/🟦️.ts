@@ -1,7 +1,7 @@
 /** 🆕️ `insert-vent-system` wire twin: the leaf payload `InsertVentSystem`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNullable, normWireObject, normWireOptional, normWireRange, type NormWireReader, normWireRequired } from "../../../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireInteger, normWireNullable, normWireObject, normWireOptional, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
 import { type Din16798VentSystem, parseDin16798VentSystem } from "../../../📸️snapshot/🟦️.ts";
 
 export interface InsertVentSystem {

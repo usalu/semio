@@ -19,9 +19,8 @@
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
+import { residentRefreshFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 //#region 🧫️Fixture
 type FixtureSurface = { readonly id: string; readonly nodes: number };
@@ -61,9 +60,7 @@ type Fixture = {
   readonly laws: readonly string[];
 };
 
-const here = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(here, "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🎟️resident/🔄️refresh/🧪️tests/🧫️fixtures/🔣️.json");
-const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(residentRefreshFixtureUrl, "utf8")) as Fixture;
 //#endregion 🧫️Fixture
 
 //#region 🎟️Ledger

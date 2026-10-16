@@ -1,4 +1,5 @@
 import schema from "./🔣️.json";
+import type { ComponentProfileV1, ComponentReceiptV1 } from "../../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
 
 /** 🏷️ The schema tag every component receipt carries (`ComponentReceiptV1.schema`). */
 export const COMPONENT_RECEIPT_SCHEMA_ID = schema.$defs.ComponentReceiptV1.properties.schema.const;
@@ -8,9 +9,6 @@ export const COMPONENT_RECEIPT_FILE = "🧾️receipt.json";
 
 /** 🎯️ The one component target triple (`ComponentReceiptV1.target`). */
 export const COMPONENT_TARGET = schema.$defs.ComponentReceiptV1.properties.target.const;
-
-/** 🎚️ A component build profile: `release` ships, `prototype` is the local single-plugin loop. */
-export type ComponentProfileV1 = "release" | "prototype";
 
 /** 🪶️ The ONE shipped component profile: describe, provenance, receipts, materialization and the trusted catalog act on its bytes. */
 export const SHIPPED_COMPONENT_PROFILE: ComponentProfileV1 = "release";
@@ -33,23 +31,8 @@ export const ITERATE_COMPONENT_MAX_BYTES = COMPONENT_PROFILE_POLICIES["prototype
 /** 📏️ The most bytes one canonical receipt file may have. */
 export const COMPONENT_RECEIPT_MAX_BYTES = 4096;
 
-/** 🧾️ One component's generated binding of its semantic descriptor to the bytes one profile produced. */
-export type ComponentReceiptV1 = Readonly<{
-  schema: typeof COMPONENT_RECEIPT_SCHEMA_ID;
-  pluginId: string;
-  packageId: string;
-  profile: ComponentProfileV1;
-  target: typeof COMPONENT_TARGET;
-  wasmSha256: string;
-  wasmBytes: number;
-  semanticDescriptorSha256: string;
-  toolchain: string;
-  sourceTreeDigest: string;
-  provenanceSha256: string;
-}>;
-
 /** 🔗️ The identity and bytes a receipt is required to name. */
-export type ComponentReceiptBindingV1 = Readonly<{ pluginId: string; packageId: string; wasmSha256: string; semanticDescriptorSha256: string }>;
+export type ComponentReceiptBindingV1 = Readonly<{ profile: ComponentProfileV1; pluginId: string; packageId: string; wasmSha256: string; semanticDescriptorSha256: string }>;
 
 const RECEIPT_KEYS = Object.freeze([...schema.$defs.ComponentReceiptV1.required]) as readonly (keyof ComponentReceiptV1)[];
 const SHA256 = new RegExp(schema.$defs.ComponentSha256.pattern, "u");
@@ -106,8 +89,7 @@ export function parseComponentReceiptV1(text: string): ComponentReceiptV1 {
   return receipt;
 }
 
-/** 🔗️ Whether a receipt is a valid shipped receipt naming exactly this package, these component bytes and this semantic
- * descriptor — the law every catalog, plan, lease and module page holds a receipt to. */
+/** 🔗️ Binds exactly the selected profile, package, component bytes and semantic descriptor. */
 export function componentReceiptBindsV1(receipt: ComponentReceiptV1, expected: ComponentReceiptBindingV1): boolean {
-  return COMPONENT_PROFILE_POLICIES[receipt.profile].shipped && receipt.pluginId === expected.pluginId && receipt.packageId === expected.packageId && receipt.wasmSha256 === expected.wasmSha256 && receipt.semanticDescriptorSha256 === expected.semanticDescriptorSha256;
+  return receipt.profile === expected.profile && receipt.pluginId === expected.pluginId && receipt.packageId === expected.packageId && receipt.wasmSha256 === expected.wasmSha256 && receipt.semanticDescriptorSha256 === expected.semanticDescriptorSha256;
 }

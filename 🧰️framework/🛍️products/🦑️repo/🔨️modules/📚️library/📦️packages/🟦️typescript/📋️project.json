@@ -53,6 +53,7 @@
     "cargoTransactionCommandSources": [
       "sharedGlobals",
       "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication}}/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts",
@@ -668,6 +669,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/**/*.ts",
         "{workspaceRoot}/✏️s/🔌️plugins/**/📦️packages/🦀️rust/📜️script.ts",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication}}/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
       ],
       "options": {
@@ -691,7 +693,8 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/**/*",
         "{workspaceRoot}/✏️s/🔌️plugins/{➗️mathematical,🌍️gis,🌿️vcs}/📦️packages/*/{📜️script.ts,📋️project.json}",
         "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/{📜️script.ts,📋️project.json}",
-        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts"
+        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication}}/🟦️.ts"
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -737,6 +740,7 @@
         "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/{🏗️builder/🌐️vite/🟦️.ts,🔨️modules/{📦️site,🧩️runtime,🧪️e2e}/📜️script.ts,🔨️modules/🧪️e2e/🎚️config/🟦️.ts,📋️project.json}",
         "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/{🏗️builder/🌐️vite/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts}}",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication}}/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/{🏗️builder/🌐️vite/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts},🧫️fixtures/{⚙️config-graph.json,🔌️staging-root.json},🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts}",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
@@ -1327,9 +1331,11 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧬️schema/🛂️validation/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication}}/🟦️.ts",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🧪️tests/🧫️fixtures/🔣️.json",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🪪️initial-child-identity/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
@@ -1595,7 +1601,7 @@
         "default",
         "^default",
         "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/**/*"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/♻️retirement/**/*"
       ],
       "outputs": [],
       "options": {

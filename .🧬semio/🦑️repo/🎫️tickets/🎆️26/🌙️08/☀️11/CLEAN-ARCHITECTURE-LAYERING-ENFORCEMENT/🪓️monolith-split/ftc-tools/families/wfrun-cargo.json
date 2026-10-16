@@ -1,0 +1,22 @@
+{
+ "parent_manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust/Cargo.toml",
+ "companion_dir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧪️tests/🥣️companion",
+ "name": "semio-framework-artifact-workflow-run-tests",
+ "id": "workflow-run-tests",
+ "role": "artifact",
+ "description": "Companion tests of the workflow run artifact: package contract, admission, replay, mutation descriptors and SQLite snapshot laws",
+ "project": "@semio-tech/framework-workflow-run-tests-rs",
+ "features": [],
+ "carry": [
+  "semio-framework-pack",
+  "semio-framework-artifact-reference",
+  "semio-framework-dsl-record",
+  "semio-framework-pack-json",
+  "semio-framework-diagnostic",
+  "semio-framework-value",
+  "semio-framework-os-kernel",
+  "semio-framework-async-macros",
+  "serde_json",
+  "semio-framework-io-sqlite-snapshot-testing-backing"
+ ]
+}

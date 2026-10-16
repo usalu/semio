@@ -118,11 +118,11 @@ fn every_ladder_index_moves_the_watchdog_signature() {
     assert!(cursor.terminal_is_empty(), "a closed cursor zeroes every index it walked");
 }
 
-fn clip_fixture_rect(value: &serde_json::Value) -> crate::draw_types::ScissorRect {
-    crate::draw_types::ScissorRect { x: value[0].as_u64().expect("rect x") as u32, y: value[1].as_u64().expect("rect y") as u32, w: value[2].as_u64().expect("rect width") as u32, h: value[3].as_u64().expect("rect height") as u32 }
+fn clip_fixture_rect(value: &serde_json::Value) -> semio_framework_ui_draw_contract::ScissorRect {
+    semio_framework_ui_draw_contract::ScissorRect { x: value[0].as_u64().expect("rect x") as u32, y: value[1].as_u64().expect("rect y") as u32, w: value[2].as_u64().expect("rect width") as u32, h: value[3].as_u64().expect("rect height") as u32 }
 }
 
-fn clip_fixture_pieces(row: &serde_json::Value, surface: crate::draw_types::ScissorRect) -> Result<Vec<crate::draw_types::ScissorRect>, ()> {
+fn clip_fixture_pieces(row: &serde_json::Value, surface: semio_framework_ui_draw_contract::ScissorRect) -> Result<Vec<semio_framework_ui_draw_contract::ScissorRect>, ()> {
     let mut pieces = match row["clip"].as_array() {
         Some(values) => values.iter().map(clip_fixture_rect).collect::<Vec<_>>(),
         None => vec![surface],
@@ -150,7 +150,7 @@ fn clip_fixture_pieces(row: &serde_json::Value, surface: crate::draw_types::Scis
 #[test]
 fn prepared_gpu_color_commands_advance_one_bounded_clip_piece_at_a_time() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🖥️prepared-gpu-clip-pieces/🔣️.json")).expect("neutral prepared GPU clip fixture");
-    let surface = crate::draw_types::ScissorRect { x: 0, y: 0, w: fixture["surface"][0].as_u64().expect("surface width") as u32, h: fixture["surface"][1].as_u64().expect("surface height") as u32 };
+    let surface = semio_framework_ui_draw_contract::ScissorRect { x: 0, y: 0, w: fixture["surface"][0].as_u64().expect("surface width") as u32, h: fixture["surface"][1].as_u64().expect("surface height") as u32 };
     for row in fixture["cases"].as_array().expect("clip cases") {
         let expected = &row["expected"];
         let pieces = clip_fixture_pieces(row, surface);
@@ -159,7 +159,7 @@ fn prepared_gpu_color_commands_advance_one_bounded_clip_piece_at_a_time() {
         let logical = pieces.iter().map(|piece| serde_json::json!([piece.x, piece.y, piece.w, piece.h])).collect::<Vec<_>>();
         assert_eq!(serde_json::Value::Array(logical), expected["logicalPieces"].clone(), "{}", row["id"]);
         let dpr = row["dpr"].as_f64().expect("DPR") as f32;
-        let physical = pieces.iter().map(|piece| crate::draw_types::physical_scissor_rect(*piece, dpr)).map(|piece| serde_json::json!([piece.x, piece.y, piece.w, piece.h])).collect::<Vec<_>>();
+        let physical = pieces.iter().map(|piece| semio_framework_ui_draw_contract::physical_scissor_rect(*piece, dpr)).map(|piece| serde_json::json!([piece.x, piece.y, piece.w, piece.h])).collect::<Vec<_>>();
         assert_eq!(serde_json::Value::Array(physical), expected["physicalPieces"].clone(), "{}", row["id"]);
         let kind = row["kind"].as_str().expect("command kind");
         let color_encodes = if matches!(kind, "ui" | "world") { pieces.len() } else { 0 };
@@ -168,17 +168,17 @@ fn prepared_gpu_color_commands_advance_one_bounded_clip_piece_at_a_time() {
         assert_eq!(if kind == "glass" { pieces.len() as u64 } else { 0 }, expected["glassComposites"].as_u64().expect("glass composites"), "{}", row["id"]);
         assert_eq!(u64::from(kind == "world"), expected["shadowBegins"].as_u64().expect("shadow begins"), "{}", row["id"]);
         assert_eq!(expected["commandAdvances"].as_u64(), Some(1), "{}", row["id"]);
-        let mut draw = crate::draw_types::DrawList::default();
+        let mut draw = semio_framework_ui_draw_contract::DrawList::default();
         draw.layers[0].scissor = (!row["scissor"].is_null()).then(|| clip_fixture_rect(&row["scissor"]));
-        draw.layers[0].clip = row["clip"].as_array().map(|values| crate::draw_types::ClipRegion { scissors: values.iter().map(clip_fixture_rect).collect() });
+        draw.layers[0].clip = row["clip"].as_array().map(|values| semio_framework_ui_draw_contract::ClipRegion { scissors: values.iter().map(clip_fixture_rect).collect() });
         let cursor = match kind {
             "ui" => DrawMeasureCursor::LayerUi { layer: 0, item: 0, overlay: false },
             "glass" => {
-                draw.glass_regions.push(crate::draw_types::GlassRegion {
+                draw.glass_regions.push(semio_framework_ui_draw_contract::GlassRegion {
                     layer_index: 0,
                     rect: [0.0, 0.0, surface.w as f32, surface.h as f32],
                     radius: 0.0,
-                    tint: crate::theme::Rgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+                    tint: semio_framework_ui_theme::Rgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
                     alpha: 1.0,
                     blur_px: 8.0,
                     saturate: 1.0,
@@ -240,19 +240,19 @@ fn overlapping_silhouette_pieces_are_refused_before_retained_draw_ownership() {
             crate::geometry::Rect::new(rect.x as f32, rect.y as f32, rect.w as f32, rect.h as f32)
         })
         .collect::<Vec<_>>();
-    let mut draw = crate::draw_types::DrawList::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     draw.begin_retained_output(16, 4_096).expect("bounded retained output grant");
     draw.begin_silhouette_clip(&rects);
-    assert_eq!(draw.finish_retained_output(), Err(crate::draw_types::RetainedOutputError::LimitExceeded), "overlapping alpha pieces must be rejected before they can double-blend a pixel");
+    assert_eq!(draw.finish_retained_output(), Err(semio_framework_ui_draw_contract::RetainedOutputError::LimitExceeded), "overlapping alpha pieces must be rejected before they can double-blend a pixel");
 }
 
 /// 🪟️ Glass insertion ends earlier content and retains the enclosing foreground.
 #[test]
 fn authored_glass_boundaries_preserve_the_enclosing_layer() {
-    let theme = crate::theme::Theme::default();
-    let mut draw = crate::draw_types::DrawList::default();
+    let theme = semio_framework_ui_theme::Theme::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     draw.push_solid([0.0, 0.0, 100.0, 100.0], theme.accent);
-    let panel = draw.push_glass([0.0, 0.0, 100.0, 100.0], 0.0, theme.glass(crate::theme::Level::Window));
+    let panel = draw.push_glass([0.0, 0.0, 100.0, 100.0], 0.0, theme.glass(semio_framework_ui_theme::Level::Window));
     draw.begin_glass_content(panel);
     draw.begin_silhouette_clip(&[crate::geometry::Rect::new(0.0, 0.0, 80.0, 80.0)]);
     draw.push_scissor(crate::geometry::Rect::new(4.0, 4.0, 60.0, 60.0));
@@ -262,7 +262,7 @@ fn authored_glass_boundaries_preserve_the_enclosing_layer() {
     let clip = previous.clip.clone();
     let foreground = previous.foreground_of;
     let layer = draw.layers.len();
-    let popup = draw.push_glass([40.0, 0.0, 80.0, 40.0], 0.0, theme.glass(crate::theme::Level::Menu));
+    let popup = draw.push_glass([40.0, 0.0, 80.0, 40.0], 0.0, theme.glass(semio_framework_ui_theme::Level::Menu));
     assert_eq!(draw.glass_regions[popup].layer_index, layer);
     assert_eq!(draw.layers.len(), layer + 1);
     assert_eq!(draw.layers[layer].scissor, scissor);
@@ -285,8 +285,8 @@ fn authored_glass_boundaries_preserve_the_enclosing_layer() {
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W5c).
 #[test]
 fn a_textured_world_instance_is_encoded_into_its_pass_target() {
-    let theme = crate::theme::Theme::default();
-    let mut draw = crate::draw_types::DrawList::default();
+    let theme = semio_framework_ui_theme::Theme::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     draw.push_rounded([0.0, 0.0, 100.0, 40.0], theme.accent, 0.0);
     draw.push_scene_pass(crate::kernel_3d_scene::ScenePass3d {
         viewport: [0.0, 0.0, 100.0, 40.0],
@@ -307,11 +307,11 @@ fn a_textured_world_instance_is_encoded_into_its_pass_target() {
 
 #[test]
 fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
-    let theme = crate::theme::Theme::default();
-    let mut draw = crate::draw_types::DrawList::default();
+    let theme = semio_framework_ui_theme::Theme::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     draw.push_rounded([0.0, 0.0, 100.0, 40.0], theme.accent, 0.0);
     draw.push_scene_pass(crate::kernel_3d_scene::ScenePass3d::default());
-    let region = draw.push_glass([0.0, 0.0, 100.0, 40.0], 0.0, theme.glass(crate::theme::Level::Window));
+    let region = draw.push_glass([0.0, 0.0, 100.0, 40.0], 0.0, theme.glass(semio_framework_ui_theme::Level::Window));
     draw.begin_glass_content(region);
     draw.push_scene_pass(crate::kernel_3d_scene::ScenePass3d::default());
     draw.end_glass_content();
@@ -353,8 +353,8 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
 /// expensive to see on a live boot, so they are pinned here.
 #[test]
 fn the_world_textured_pass_is_a_blended_underlay_on_a_centred_plane() {
-    assert_eq!(size_of::<crate::draw::World3dTexturedGpuInstance>(), 96, "the instance stride the shader contract declares");
-    let vertices = crate::draw::WORLD_PLANE_VERTICES;
+    assert_eq!(size_of::<semio_framework_ui_wgpu_draw_execution::World3dTexturedGpuInstance>(), 96, "the instance stride the shader contract declares");
+    let vertices = semio_framework_ui_wgpu_draw_execution::WORLD_PLANE_VERTICES;
     assert_eq!(vertices.len(), 30, "six vertices of position(3) + uv(2)");
     for chunk in vertices.chunks_exact(5) {
         assert!(chunk[0].abs() == 0.5 && chunk[1].abs() == 0.5 && chunk[2] == 0.0, "every corner is on the centred unit XY quad");
@@ -422,7 +422,7 @@ fn every_successful_gpu_transition_is_measured_before_returning() {
 fn a_native_gpu_context_creates_every_pipeline_without_a_validation_error() {
     match semio_framework_async::block_on(crate::gpu::GpuContext::headless(1, 1)) {
         Ok(_) => {
-            if let Some(root)=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR"){let root=std::path::PathBuf::from(root);std::fs::create_dir_all(&root).unwrap();std::fs::write(root.join("world3d-authored.wgsl"),crate::shaders::world3d_authored_shader()).unwrap();std::fs::write(root.join("raster-mip.wgsl"),crate::shaders::RASTER_MIP_SHADER).unwrap();}
+            if let Some(root)=std::env::var_os("SEMIO_TEST_ARTIFACT_DIR"){let root=std::path::PathBuf::from(root);std::fs::create_dir_all(&root).unwrap();std::fs::write(root.join("world3d-authored.wgsl"),semio_framework_ui_render_prepared_shaders::world3d_authored_shader()).unwrap();std::fs::write(root.join("raster-mip.wgsl"),semio_framework_ui_render_prepared_shaders::RASTER_MIP_SHADER).unwrap();}
             eprintln!("[DEBUG] native GPU created authored pipelines with five texture roles and four alpha/culling combinations");
         }
         Err(error) => assert!(error.starts_with("offscreen adapter:"), "a native GPU context refused past adapter selection: {error}"),

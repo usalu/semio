@@ -213,7 +213,7 @@ pub struct ArtifactStoreInitializationRuntime<P> {
     pub revision: std::mem::ManuallyDrop<CursorRevisionAccumulator>,
     pub close_active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     pub supersessions: std::mem::ManuallyDrop<EffectiveSupersessions>,
-    close_phase: u8,
+    pub(crate) close_phase: u8,
     taken: bool,
 }
 

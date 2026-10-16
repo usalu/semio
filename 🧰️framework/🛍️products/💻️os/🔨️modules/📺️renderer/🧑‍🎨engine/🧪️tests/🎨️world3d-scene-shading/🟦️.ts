@@ -4,10 +4,11 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Color, Matrix3, Matrix4, MeshStandardMaterial, REVISION, ShaderChunk, Vector3 } from "three";
 import { describe, expect, it } from "vitest";
+import { worldSceneShadingFixtureUrl } from "../../../../♾️infinite/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🎨️scene-shading/🔣️.json"), "utf8")) as any;
+const fixture = JSON.parse(readFileSync(worldSceneShadingFixtureUrl, "utf8")) as any;
 
 const expectVector = (actual: readonly number[], expected: readonly number[], precision = 7) => actual.forEach((value, index) => expect(value).toBeCloseTo(expected[index]!, precision));
 

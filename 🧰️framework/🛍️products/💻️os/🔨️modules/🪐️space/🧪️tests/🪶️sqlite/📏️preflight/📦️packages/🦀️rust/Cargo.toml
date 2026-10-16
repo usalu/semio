@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-os-space-testing-sqlite-preflight"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Public SQLite preflight law of the space tests: borrows actual typed owner state and admits concrete traversal scratch."
+
+[package.metadata.semio]
+role = "test"
+id = "os-space-testing-sqlite-preflight"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-io-sqlite-snapshot = { path = "../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
+semio-framework-os-io = { path = "../../../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../../../../../🏪️store/🚪️io/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

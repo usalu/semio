@@ -5,7 +5,7 @@ import { resolve, dirname } from "node:path";
 import { Database } from "bun:sqlite";
 import TOML from "@iarna/toml";
 import Ajv from "ajv";
-import { readRustSourceClosureV1 } from "../../../🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import { readRustSourceClosureV1 } from "@semio-tech/process/artifacts/native-build/source";
 import { rustTokens } from "../../../📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 const ui = resolve(import.meta.dir, "../.."), read = (path: string) => readFileSync(resolve(ui, path), "utf8");

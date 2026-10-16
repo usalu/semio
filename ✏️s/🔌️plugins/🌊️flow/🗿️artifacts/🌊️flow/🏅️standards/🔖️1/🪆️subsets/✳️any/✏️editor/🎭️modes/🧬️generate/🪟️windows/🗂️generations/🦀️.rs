@@ -88,7 +88,7 @@ fn generation_tree_label(key: &str, locale: Locale, terminology: Terminology) ->
 }
 
 /// ✏️ The selected generation's inline name editor: `renameGeneration{id}` committed on blur with the typed name — the one
-/// reachable rename, as procedural's twin `generation_rename_field` (`🌀️procedural/🫀️core/🖼️semantic-ui`) renders it. The
+/// reachable rename, as procedural's twin `generation_rename_field` (`🌀️procedural/🫀️foundation/🖼️semantic-ui`) renders it. The
 /// former row action renamed to a HARDCODED `"{name} copy"`, so a user could reach the verb but never choose a name.
 fn generation_rename_field(surface_prefix: &str, generation: &FormGeneration, placeholder: &str) -> UiAssemblyResult<BuiltNode> {
     let (action, args) = flow_action("renameGeneration", Some(ui_value_map([("id", ui_value_text(&generation.id)?)])?))?;

@@ -34,12 +34,6 @@ pub use protocol::codec::HistoryReadLimits;
 mod retained_codec_catalog;
 pub use retained_codec_catalog::{ArtifactCodecCatalogStep, RetainedArtifactCodecCatalog};
 
-#[cfg(test)]
-#[path = "📏️supersession-index/🧪️tests/🦀️.rs"]
-mod owned_supersession_index_tests;
-#[cfg(test)]
-#[path = "🧪️tests/🧬️retained-clone/🦀️.rs"]
-mod retained_clone_tests;
 pub use semio_framework_os_store_snapshot_clone as snapshot_clone_preparation;
 
 use semio_framework_os_store_replay::replay_preparation;
@@ -163,22 +157,6 @@ use semio_framework_value::retirement::frame::admit_retirement_frame as admit_ar
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🧬️OpaqueSnapshotRead
 use semio_framework_os_store_text_io::operation_identity;
 use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
@@ -211,41 +189,10 @@ pub use artifact_child_owner_schema::OwnerRef;
 pub use semio_framework_os_store_link_schema::{ArtifactLink,LinkPin};
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#region 🔖️CompositionDsl
 pub use semio_framework_os_store_child as artifact_child;
 use artifact_child::{ArtifactChild, ArtifactChildMaterializationError, ArtifactChildRetainedParts, ChildRef};
 use artifact_child::{ArtifactChildLocalText, artifact_child_from_record, artifact_child_spec, artifact_child_spec_controlled, artifact_child_spec_producer, artifact_child_to_record, artifact_link_from_record, artifact_link_from_record_controlled, artifact_link_spec, artifact_link_spec_controlled, artifact_link_spec_producer, artifact_link_to_record, artifact_link_to_record_controlled, link_pin_borrowed_spec, link_pin_from_record, link_pin_from_record_controlled, link_pin_spec, link_pin_spec_controlled, link_pin_spec_producer, link_pin_to_record, link_pin_to_record_controlled, owner_ref_from_record, owner_ref_spec, owner_ref_spec_controlled, owner_ref_spec_producer, owner_ref_to_record, validate_link_pin_record};
-
 
 
 //#endregion 🔖️CompositionDsl
@@ -258,9 +205,6 @@ use artifact_child::{ArtifactChildLocalText, artifact_child_from_record, artifac
 //#region 📡️Events
 //#endregion 📡️Events
 //#endregion 🔮️Projection
-
-
-
 
 
 //#region 🔖️EphemeralLanes
@@ -299,7 +243,7 @@ pub use semio_framework_os_semio as semio_format;
 /// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `ArtifactPack` impl and
 /// every downstream caller spell them `crate::os_store::PackEncodeOptions`/`crate::os_store::PackDecodeOptions`/
 /// `crate::os_store::PackVerificationLevel`, so there is exactly one spelling repo-wide).
-pub use semio_framework_os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, PackRefusal, VerificationLevel as PackVerificationLevel};
+pub use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions, PackError, PackRefusal, VerificationLevel as PackVerificationLevel};
 
 use semio_framework_os_pack::pack_rt;
 
@@ -310,7 +254,8 @@ pub mod mounted_pack_rt {
     pub use semio_framework_os_store_document::mounted_pack_session::{RetainedTypedPackCloseStep, RetainedTypedPackOwner, RetainedTypedPackSession};
     use semio_framework_dsl_record::{DslField,FieldValue,RecordLayout,RecordSpec,RecordSpecProducer,RecordValue,Shape};
 use semio_framework_value::DslValue;
-    pub use semio_framework_os_pack::{PackLimits, RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
+    pub use semio_framework_os_pack::PackLimits;
+    pub use pack::record::{RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
         MAGIC, RETAINED_PACK_MAXIMUM_PAGES, RETAINED_PACK_PAGE_BYTES, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent,
         RetainedPackCatalogFault, RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep,
@@ -370,17 +315,7 @@ use semio_framework_os_store_codec_registry::sqlite_snapshot_native_encoding;
 pub use sqlite_snapshot_native_encoding::encode_sqlite_snapshot_record_native;
 
 //#region 🗃️BoundedArtifactStoreOwners
-#[cfg(test)]
-#[path = "🧪️tests/♻️bounded-value-retirement/🦀️.rs"]
-mod bounded_value_retirement_tests;
 //#endregion 🗃️BoundedArtifactStoreOwners
-
-
-
-
-
-
-
 
 
 //#endregion 🔖️CodecRegistry
@@ -389,16 +324,8 @@ mod bounded_value_retirement_tests;
 //#region 🔖️MergeHelpers
 
 
-
-
-
 //#endregion 🔖️MergeHelpers
 //#region 🔖️Config
-
-
-
-
-
 
 
 pub use semio_framework_mutation_diff::{KeyedRow,KeyedRows,keyed_rows_apply,keyed_rows_inverse,keyed_rows_changing,keyed_rows_absorb};
@@ -617,47 +544,12 @@ semio_framework_diagnostic::fault_from_error!(CommandDecodeError, semio_framewor
 //#region 🔖️History
 
 
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️History
 //#region 🔖️ArtifactStore
 //#region 🔖️ArtifactStore
 pub use semio_framework_os_store_ledger as ledger;
 use ledger::{ArtifactEditMessageLedger, ArtifactEditMessageLedgerIter, ArtifactEditMessageLedgerRejected, edit_from_operation_envelope, fold_envelope_history, fold_event_log};
 use ledger::{ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES, ARTIFACT_EDIT_MESSAGE_ID_BYTES, ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY, ARTIFACT_EDIT_MESSAGE_INDEX_EMPTY, ARTIFACT_EDIT_MESSAGE_INDEX_TOMBSTONE, ARTIFACT_EDIT_MESSAGE_LEDGER_BYTES, ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE, ARTIFACT_EDIT_MESSAGE_OWNER_BYTES, ARTIFACT_EDIT_MESSAGE_PAGE_SLOTS, ARTIFACT_EDIT_MESSAGE_SLOT_PAGES, ARTIFACT_EDIT_MESSAGE_TARGET_BYTES, ArtifactEditMessageLedgerRetirement, ArtifactEditMessageTicket, ArtifactStoreHistoryCommitReservation, ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, CursorRevisionRecord, EditDigestChains, PendingCommandReport, ReplayProjection, StackMirrorDirt, edit_timestamp, envelope_viewer_head, operation_semantic_kind, retire_replayed_projection, retire_scratch_edits, retire_scratch_operations, retire_supersede_inputs, stamp_edit_semantics, validate_composition_pins};
-
-#[cfg(test)]
-pub(crate) use semio_framework_os_store_ledger::hot_path_census;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 use semio_framework_os_store_initialization_runtime::initialization_catalog_close;
@@ -671,17 +563,6 @@ mod initialization_replay {
 }
 pub use semio_framework_os_store_initialization_runtime::lifted_initialization_replay::ArtifactStoreInitializationNext;
 pub use semio_framework_os_store_initialization_replay::{ArtifactStoreReplayInitializer, ARTIFACT_STORE_REPLAY_FIELD_BYTES};
-
-
-
-
-
-
-
-
-
-
-
 
 
 //#region 📬️OneItemPublication
@@ -715,9 +596,6 @@ pub use prepared_operation_wire::{ArtifactCanonicalTreeSource, ArtifactOperation
 pub use semio_framework_os_store_one_item as one_item;
 use one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, mutation_inverse_rows_declaration_failures, validate_original_preparation_step};
 
-#[cfg(test)]
-#[path="🎮️one-item/🎟️preparation/🧪️tests/🦀️.rs"]
-mod original_preparation_receipt_tests;
 //#region 🧺️BatchSource
 
 //#endregion 🧺️BatchSource
@@ -734,64 +612,6 @@ pub use semio_framework_os_store_initialization_replay::original_store_genesis_f
 
 use semio_framework_os_store_initialization_runtime::native_publication_producer;
 pub use semio_framework_os_store_initialization_runtime::native_publication_producer::{ArtifactStorePublication, ArtifactSnapshotPublication};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //#endregion 🔖️ArtifactStore
@@ -833,24 +653,6 @@ pub use semio_framework_os_store_blob_identity::BlobRef;
 //#endregion 🔖️BlobStore
 //#region 🔖️Space
 //#region SpaceMember
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /// 🧬️ Generates a per-plugin `SpaceMember`+`MemberFactory` enum spanning several document
@@ -1204,9 +1006,6 @@ pub use semio_framework_os_store_test_support::lifted_store::{register_store_sch
 
 use semio_framework_os_store_composition::composition_links;
 
-#[cfg(test)]
-#[path = "🧩️composition/🌳️graph/🤝️group/🧪️tests/🦀️.rs"]
-mod composition_group_tests;
 //#endregion 🔖️CompositionCoordinator
 //#region 🔖️TestSupport
 pub use semio_framework_os_store_test_support as test_support;
@@ -1217,120 +1016,19 @@ pub use semio_framework_os_store_test_support as test_support;
 //#endregion 🔖️TestSupport
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "📨️messages/✂️clamp/🧪️tests/🦀️.rs"]
-mod edit_message_clamp_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🪪️artifact-addressing/🦀️.rs"]
-mod artifact_addressing_tests;
 
-#[cfg(test)]
-#[path = "🧪️testing/🦀️.rs"]
-mod fixture_mutations;
-
-#[cfg(test)]
-#[path = "🧪️tests/🧩️composed-pack-schema/🦀️.rs"]
-mod composed_pack_schema_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🚫️rejected-page-close/🦀️.rs"]
-mod owned_field_rejected_page_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🔖️InteractionStatePack
 //#region 🔖️SchemaExports
 
 
-
 //#endregion 🔖️SchemaExports
 
-#[cfg(test)]
-#[path = "🧪️tests/🧩️schema-composition/🦀️.rs"]
-mod schema_composition_tests;
 
-#[cfg(test)]
-#[path = "📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
-mod sqlite_snapshot_space_history_baseline;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
 
-#[cfg(test)]
-#[path = "👥️presence/🧪️testing/♻️retirement/🦀️.rs"]
-mod presence_test_retirement;
-
-// 🧪️ Test modules of the carved crates that need test doubles the kernel root still owns; they moved here from their host modules (PLAN-OS-KERNEL-CRATES.md, 9.2) until the companion test crates land.
-#[cfg(test)]
-#[path = "🔁️replay/🛑️cancel/🧪️tests/🦀️.rs"]
-mod raw_replay_retirement_tests;
-#[cfg(test)]
-#[path = "🕰️history/📐️planning/🎟️admission/🧪️tests/🦀️.rs"]
-mod history_read_admission_tests;
-#[cfg(test)]
-#[path = "🕰️history/📐️planning/🧪️tests/🦀️.rs"]
-mod history_plan_retirement_tests;
-#[cfg(test)]
-#[path = "🧵️canonical-edit/📖️reader/🧪️tests/📖️reader/🦀️.rs"]
-mod reader_tests;
-#[cfg(test)]
-#[path = "🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs"]
-mod canonical_edit_tests;
-#[cfg(test)]
-#[path = "🧵️canonical-edit/🧳️source/🧪️tests/🦀️.rs"]
-mod native_source_tests;
-#[cfg(test)]
-#[path = "🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs"]
-mod canonical_edit_borrowed_tests;
 
 // ♻️ `HistoryColumn` belongs to the engine core, so its retirement impl and the command custody test live beside it until the engine crates land.
 semio_framework_value::artifact_retire_struct!(HistoryColumn { checkpoint_id, timestamp, labels, authors, parent_checkpoint_id, description, lane, alternative_ids });
-#[cfg(test)]
-#[path = "📬️command/♻️retirement/🧪️tests/🦀️.rs"]
-mod command_custody_tests;
 
-// 🧪️ Test modules of the carved crates that need test doubles the kernel root still owns; they moved here from their host modules (PLAN-OS-KERNEL-CRATES.md, 9.2) until the companion test crates land.
-#[cfg(test)]
-#[path = "♻️retirement/📦️backing/🧪️tests/🦀️.rs"]
-mod resident_backing_tests;
-#[cfg(test)]
-#[path = "🧬️schema/🧬️mutations/🎯️set-active-space-alternative/🧪️tests/🔬️unit/🦀️.rs"]
-mod set_active_space_alternative_tests;
 
-// 🧪️ Test modules of the carved crates that need test doubles the kernel root still owns; they moved here from their host modules (PLAN-OS-KERNEL-CRATES.md, 9.2) until the companion test crates land.
-#[cfg(test)]
-#[path = "../🚪️io/🧪️tests/🔬️unit/🦀️.rs"]
-mod composer_registry_tests;
-
-// 🧪️ Test modules of the carved crates that need test doubles the kernel root still owns; they moved here from their host modules (PLAN-OS-KERNEL-CRATES.md, 9.2) until the companion test crates land.
-#[cfg(test)]
-#[path = "🏗️initialization/🔁️replay/🧪️tests/🔬️unit/🦀️.rs"]
-mod initialization_replay_tests;
-#[cfg(test)]
-#[path = "🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs"]
-mod durable_group_tests;
-#[cfg(test)]
-#[path = "🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/📥️snapshot-input/🦀️.rs"]
-mod operation_snapshot_input_tests;
-#[cfg(test)]
-#[path = "🧩️composition/🚪️open/🏭️operation/🛂️receiving/🧪️tests/🦀️.rs"]
-mod receiving_tests;
-#[cfg(test)]
-#[path = "🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🏭️factory/🦀️.rs"]
-mod factory_tests;
-#[cfg(test)]
-#[path = "🧩️composition/🚪️open/📜️history/🗂️dictionary/🧪️tests/🗂️dictionary/🦀️.rs"]
-mod dictionary_tests;
-#[cfg(test)]
-#[path = "🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs"]
-mod history_tests;
-#[cfg(test)]
-#[path = "🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs"]
-mod member_open_tests;
-#[cfg(test)]
-#[path = "🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs"]
-mod persisted_document_hydration_release_tests;
-// 🧪️ Test modules of the carved crates that need test doubles the kernel root still owns; they moved here from their host modules (PLAN-OS-KERNEL-CRATES.md, 9.2) until the companion test crates land.
-#[cfg(test)]
-#[path = "🔄️sync/🧪️tests/🔬️unit/🦀️.rs"]
-mod sync_tests;

@@ -49,5 +49,5 @@ export const layoutLayoutInferenceTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseLayoutInferenceText(value: unknown, at = "$"): LayoutInferenceText {
-  return layoutLayoutInferenceTextGuardObject(value, `${at}`);
+  return layoutLayoutInferenceTextGuardString(value, `${at}`);
 }

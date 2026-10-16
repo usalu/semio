@@ -7,7 +7,7 @@
 
 use semio_hub_directory_contract::error::DirectoryError;
 use semio_hub_directory_contract::{HubClock, NewDirectoryEvent};
-use crate::port::HubDirectory;
+use crate::port::{DocumentDirectory, EventLog, InviteDirectory, ShareTokenDirectory, SpaceDirectory, UserDirectory};
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner};
 use directory::os_directory::DocumentScope;
 use semio_hub_directory_contract::model::SpaceRole;
@@ -59,7 +59,7 @@ fn share_descriptor(scope: &DocumentScope) -> DocumentDescriptor {
 /// 🔑️ Runs the whole corpus against one seeded directory: the owned hex encoding matches the
 /// fixture's vectors, a grant authorizes its own scope, the fixture's cross-space scope is refused,
 /// revocation is durable and idempotent-by-refusal, and a zero-lifetime grant is rejected.
-pub async fn assert_share_scope_corpus_v1<D: HubDirectory + ?Sized>(directory: &D) {
+pub async fn assert_share_scope_corpus_v1<D: EventLog + ShareTokenDirectory + ?Sized>(directory: &D) {
     let corpus = corpus();
     for vector in &corpus.encoding {
         assert_eq!(semio_hub_directory_contract::encode_capability_bytes(&vector.bytes), vector.hex, "owned hex encoding must match the language-neutral vector");
@@ -102,7 +102,7 @@ pub async fn assert_share_scope_corpus_v1<D: HubDirectory + ?Sized>(directory: &
 /// grouping expressions`), so the route answered a bare `500` on every Neo4j hub ever booted, while
 /// every write law and the whole `directory::` suite stayed green (ticket 26/09/18, slice DB3).
 /// The route reads these five and nothing else, so running them here is running the page.
-pub async fn assert_space_administration_read_surface_v1<D: HubDirectory + ?Sized>(directory: &D) {
+pub async fn assert_space_administration_read_surface_v1<D: DocumentDirectory + EventLog + InviteDirectory + SpaceDirectory + UserDirectory + ?Sized>(directory: &D) {
     let author = directory.create_user("surface-author@example.com", "Surface Author", None, None, None).await.expect("create the space author");
     let space_id = format!("surface-{}", &author.id);
     let scope = DocumentScope::new(space_id.clone(), "surface-document".to_string());

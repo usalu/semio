@@ -16,8 +16,8 @@ import { sceneHostPort, BoxGeometry, BufferGeometry, Color, DoubleSide, DynamicD
 
 const { useFrame } = sceneHostPort.fiber;
 import { resolveColorHex, semanticVar, STYLING_METRICS, tokenVar } from "@semio-tech/ui-styling";
-import { base64UrlDecode } from "../../../../../../../../🔨️modules/🚪️io/🔤️base64/🟦️.ts";
-import { decodeToolRunTraceDelta, type ToolRunTraceCursor, type ToolRunTraceDelta, type ToolRunTraceSubject, type ToolRunVerdict, TOOL_RUN_VERDICTS } from "../../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
+import { base64UrlDecode } from "@semio-tech/framework/io/base64";
+import { decodeToolRunTraceDelta, type ToolRunTraceCursor, type ToolRunTraceDelta, type ToolRunTraceSubject, type ToolRunVerdict, TOOL_RUN_VERDICTS } from "@semio-tech/framework/tool-run";
 // #endregion 🔌️Adapters
 
 //#region 🗂️RecordStore

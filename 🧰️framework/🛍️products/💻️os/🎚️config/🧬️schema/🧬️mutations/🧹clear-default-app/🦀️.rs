@@ -70,13 +70,3 @@ fn role_name_de(role: AppRole) -> &'static str {
     }
 }
 //#endregion 🔖️Mutation
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🦀️.rs"]
-mod tests_unpins_the_cad_editor_and_keeps_the_viewer_pin;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

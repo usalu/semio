@@ -113,7 +113,7 @@ describe("plugin publication source ownership", () => {
   test("closes every direct consumer on semantic owners", () => {
     const owners = new Set(fixture.owners.map(({ path }) => path));
     const routers = new Set(fixture.routers.map(({ path }) => path));
-    expect(fixture.consumers).toHaveLength(3);
+    expect(fixture.consumers).toHaveLength(11);
     for (const consumer of fixture.consumers) {
       const path = resolve(repoRoot, consumer.path);
       expect(existsSync(path), consumer.path).toBe(true);

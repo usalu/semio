@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "absolute",
+      "absolute": true,
+      "state": "live",
+      "trace": [
+        "pin:open",
+        "run",
+        "pin:close"
+      ],
+      "failed": false
+    },
+    {
+      "name": "relative",
+      "absolute": false,
+      "state": "live",
+      "trace": [
+        "run"
+      ],
+      "failed": false
+    },
+    {
+      "name": "copied",
+      "absolute": true,
+      "state": "copied",
+      "trace": [],
+      "failed": true
+    },
+    {
+      "name": "cancelled",
+      "absolute": false,
+      "state": "cancelled",
+      "trace": [],
+      "failed": true
+    },
+    {
+      "name": "undefined",
+      "absolute": true,
+      "state": "undefined",
+      "trace": [
+        "pin:open",
+        "run",
+        "pin:close"
+      ],
+      "failed": true
+    },
+    {
+      "name": "frozen",
+      "absolute": false,
+      "state": "frozen",
+      "trace": [
+        "run"
+      ],
+      "failed": true
+    },
+    {
+      "name": "widened genuine returned phase",
+      "absolute": true,
+      "state": "widened",
+      "trace": [
+        "pin:open",
+        "pin:close"
+      ],
+      "failed": true
+    }
+  ],
+  "pinCases": [
+    "live",
+    "copied",
+    "cancelled",
+    "pin-failure",
+    "undefined",
+    "frozen",
+    "cleanup",
+    "undefined-cleanup",
+    "frozen-cleanup",
+    "cancel-during-pin"
+  ],
+  "pinTrace": [
+    "products",
+    "scratch",
+    "destination",
+    "pin",
+    "body",
+    "destination:close",
+    "scratch:close",
+    "products:close"
+  ],
+  "corePinCases": [
+    "live",
+    "missing",
+    "copied",
+    "cancelled",
+    "undefined-release",
+    "frozen-release"
+  ],
+  "sessionCases": [
+    "live",
+    "copied",
+    "cancelled",
+    "undefined-cleanup",
+    "frozen-cleanup",
+    "cleanup",
+    "readiness-expired"
+  ],
+  "sessionTrace": [
+    "start",
+    "run",
+    "child:settled",
+    "connections:close",
+    "server:close"
+  ],
+  "digestCases": [
+    "undefined",
+    "frozen",
+    "cancelled",
+    "expired-close",
+    "close-only"
+  ],
+  "releaseCases": [
+    "success",
+    "undefined",
+    "frozen",
+    "release-only",
+    "undefined-release",
+    "frozen-release"
+  ],
+  "fraction": {
+    "attempts": 16,
+    "remainingMilliseconds": 1,
+    "boundaries": [
+      "runner",
+      "mcp"
+    ]
+  }
+}

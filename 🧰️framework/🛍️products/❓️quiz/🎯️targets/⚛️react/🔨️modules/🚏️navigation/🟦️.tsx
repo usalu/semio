@@ -5,7 +5,7 @@
  * names a page opens it instead of the overview, a hash that changes later (typed, a card's heading link) opens its
  * page like any opening, and the address follows the step without writing entries into the browser's history.
  *
- * @see ../🧭️session/🟦️.ts — the trail and the place above a step
+ * @see ../🧭️session/🧮️state/🟦️.ts — the trail and the place above a step
  * @see ../../../../🧫️fixtures/🚏️navigation/🔣️.json — the shared vectors
  * @see https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/ — controls that stay focusable while unavailable
  */
@@ -15,7 +15,8 @@ import { Icon, cn, overviewCardChipClass, type IconName } from "@semio-tech/ui-r
 import { localized, type QuizLabelKey, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
 import { CHALLENGE_LABELS } from "../⛰️challenge/🟦️.tsx";
 import { homePages, pageLabel } from "../🏠️home/🟦️.tsx";
-import { stepAbove, stepAfter, stepBefore, type QuizSession, type QuizState, type QuizStep } from "../🧭️session/🟦️.ts";
+import { stepAbove, stepAfter, stepBefore, type QuizState, type QuizStep } from "../🧭️session/🧮️state/🟦️.ts";
+import { type QuizSession } from "../🧭️session/🟦️.ts";
 
 //#region 🏷️Places
 /** 🏷️ What the place a step shows is called: the overview, one of its pages, a run by its quiz and its challenge,

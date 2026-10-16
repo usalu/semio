@@ -1,6 +1,5 @@
 //! 🏭️ Independent native manufacturer fixture and declaration-owned capability obligations.
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 #[test]

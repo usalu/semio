@@ -5,7 +5,7 @@ import Ajv from"ajv";
 import TOML from"@iarna/toml";
 import fixture from"./🔣️.json" with{type:"json"};
 import schema from"../🧬️schema/🔣️.json" with{type:"json"};
-import{readRustSourceClosureV1}from"../../../../🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import{readRustSourceClosureV1}from"@semio-tech/process/artifacts/native-build/source";
 test("semantic UI Value contract owns its exact direct Value dependency",async()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  const ui=resolve(import.meta.dir,"../.."),root=resolve(ui,"../../../.."),directory=resolve(ui,"📦️packages/🦀️rust"),manifest=TOML.parse(readFileSync(resolve(directory,"Cargo.toml"),"utf8"))as any;

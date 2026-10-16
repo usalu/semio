@@ -1,0 +1,212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Proposed Windows Provisioning Review Inputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "status",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "status": {
+      "const": "proposal-input-not-runtime-proof"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/definitions/Case"
+      }
+    }
+  },
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "kind": {
+          "enum": [
+            "footer",
+            "preparation-barrier",
+            "system-path"
+          ]
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "owner": {
+              "enum": [
+                "actual-preparation",
+                "copied",
+                "ready-image",
+                "caller-path"
+              ]
+            },
+            "parent": {
+              "enum": [
+                "initial-host",
+                "retained-native",
+                "foreign-native"
+              ]
+            },
+            "phase": {
+              "enum": [
+                "actual-live",
+                "stopped",
+                "cancel-during"
+              ]
+            },
+            "receipt": {
+              "enum": [
+                "owned-file",
+                "changed-inode"
+              ]
+            },
+            "ancestry": {
+              "enum": [
+                "same",
+                "changed-after"
+              ]
+            },
+            "mapping": {
+              "enum": [
+                "same",
+                "changed-after"
+              ]
+            },
+            "query": {
+              "enum": [
+                "directory-filepath"
+              ]
+            },
+            "firstFailure": {
+              "enum": [
+                "undefined"
+              ]
+            },
+            "laterAttempt": {
+              "enum": [
+                "frozen-error"
+              ]
+            },
+            "bodyFailure": {
+              "enum": [
+                "frozen-error"
+              ]
+            },
+            "childFailure": {
+              "enum": [
+                "undefined"
+              ]
+            },
+            "source": {
+              "enum": [
+                "system-api",
+                "environment",
+                "process-report-sharedObjects"
+              ]
+            },
+            "result": {
+              "enum": [
+                "buffer-capacity"
+              ]
+            },
+            "dataBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maximumPhysicalBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "timestamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "uuid": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            },
+            "returnValue": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295
+                },
+                {
+                  "const": "0"
+                }
+              ]
+            },
+            "systemDirectory": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "windowsDirectory": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "pending": {
+              "enum": [
+                "earlier-dispatch"
+              ]
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "outcome",
+            "dispatches"
+          ],
+          "properties": {
+            "outcome": {
+              "enum": [
+                "accept",
+                "refuse",
+                "retain-primary"
+              ]
+            },
+            "dispatches": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "fileBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 100
+            }
+          }
+        }
+      }
+    }
+  }
+}

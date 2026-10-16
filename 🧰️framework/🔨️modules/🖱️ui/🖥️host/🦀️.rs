@@ -13,8 +13,6 @@
 //! frame transaction it drives does not (ruling U1, ticket
 //! `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`).
 
-#[path = "../../🌉️abi/🦀️.rs"]
-pub mod abi;
 #[path = "🔌️backend/🦀️.rs"]
 mod backend_alias;
 #[path = "📥️enqueue/🦀️.rs"]

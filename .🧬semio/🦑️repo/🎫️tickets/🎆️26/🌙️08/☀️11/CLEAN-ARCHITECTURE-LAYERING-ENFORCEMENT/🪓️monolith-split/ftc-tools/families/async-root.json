@@ -1,0 +1,148 @@
+{
+ "crate_dir": "🧰️framework/🔨️modules/⏳️async",
+ "lib_name": "semio_framework_async",
+ "companion_dir": "🧰️framework/🔨️modules/⏳️async/🧪️tests/🥣️companion",
+ "doc": "//! 🥣️ Companion tests of async: cancellation, scopes, combinators, publication, the native worker pool and its parking, maintenance and deferred wake registries.\n//!\n//! 🧭️ The root laws are mounted flat; the laws of private modules sit below wrappers that restate the module's imports and use the crate's `internals` hooks.",
+ "preamble": [
+  "#![allow(async_fn_in_trait)]",
+  "pub use semio_framework_async::*;",
+  "pub use semio_framework_async::internals::LANE_COUNT;",
+  "pub use semio_framework_async::internals::CancelNode;",
+  "use std::collections::VecDeque;",
+  "use std::{future::Future, pin::Pin, sync::{Arc, atomic::{AtomicU32, Ordering}}, task::{Context, Poll, Waker}};",
+  "",
+  "use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};",
+  "",
+  "pub fn product_directory() -> &'static Path {",
+  "    static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();",
+  "    DIRECTORY.get_or_init(|| Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../..\"))",
+  "}",
+  "",
+  "fn leaked(relative: &str) -> &'static [u8] {",
+  "    static READ: OnceLock<Mutex<HashMap<String, &'static [u8]>>> = OnceLock::new();",
+  "    let mut read = READ.get_or_init(Default::default).lock().unwrap();",
+  "    read.entry(relative.to_owned()).or_insert_with(|| {",
+  "        let path = product_directory().join(relative);",
+  "        Box::leak(std::fs::read(&path).unwrap_or_else(|error| panic!(\"test input {}: {error}\", path.display())).into_boxed_slice())",
+  "    })",
+  "}",
+  "",
+  "pub fn text(relative: &str) -> &'static str {",
+  "    std::str::from_utf8(leaked(relative)).unwrap_or_else(|error| panic!(\"test input {relative} is not UTF-8: {error}\"))",
+  "}",
+  "",
+  "pub fn bytes(relative: &str) -> &'static [u8] {",
+  "    leaked(relative)",
+  "}",
+  "",
+  "#[global_allocator]",
+  "static ASYNC_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;",
+  "",
+  "//#region 🧬️Tests",
+  "#[path = \"../🔬️unit/🦀️.rs\"]",
+  "mod tests;",
+  "//#endregion 🧬️Tests",
+  "",
+  "#[path = \"../../🔐️publication/🧪️tests/🦀️.rs\"]",
+  "mod publication_tests;",
+  "",
+  "#[path = \"../../🛑️cancel/🎟️admission/🧪️tests/🦀️.rs\"]",
+  "mod original_cancel_admission_tests;",
+  ""
+ ],
+ "modules": [
+  {
+   "name": "publication_claim",
+   "emoji": "📬",
+   "folder": "publication-claim",
+   "lib_file": "♻️cancel-return/📬️claim/🦀️.rs",
+   "tests": "♻️cancel-return/📬️claim/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_async::*",
+   "doc": "The original publication permit return slot laws.",
+   "extra": [
+    "pub use semio_framework_async::internals::publication_claim::*;"
+   ]
+  },
+  {
+   "name": "poll",
+   "emoji": "🔂",
+   "folder": "poll",
+   "lib_file": "🔂️poll/🦀️.rs",
+   "tests": "🔂️poll/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_async::poll::*",
+   "doc": "The ready-resolution laws."
+  },
+  {
+   "name": "original_thread_wake",
+   "emoji": "🧵",
+   "folder": "thread-wake",
+   "lib_file": "🔔️wake/🧵️thread/🦀️.rs",
+   "tests": "🔔️wake/🧵️thread/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_async::original_thread_wake::*",
+   "doc": "The native thread wake custody laws.",
+   "extra": [
+    "pub use semio_framework_async::original_thread_wake::internals::*;"
+   ]
+  },
+  {
+   "name": "deferred_wake",
+   "emoji": "🔔",
+   "folder": "deferred-wake",
+   "lib_file": "🔔️deferred-wake/🦀️.rs",
+   "tests": "🔔️deferred-wake/🧪️tests/🔬️unit/🦀️.rs",
+   "glob": "semio_framework_async::*",
+   "doc": "The deferred wake registry laws.",
+   "extra": [
+    "pub use semio_framework_async::internals::deferred_wake::*;"
+   ]
+  },
+  {
+   "name": "maintenance",
+   "emoji": "🛠",
+   "folder": "maintenance",
+   "lib_file": "🔔️maintenance/🦀️.rs",
+   "tests": "🔔️maintenance/🧪️tests/🔬️unit/🦀️.rs",
+   "glob": "semio_framework_async::*",
+   "doc": "The worker maintenance registry laws.",
+   "extra": [
+    "pub use semio_framework_async::internals::maintenance::*;"
+   ]
+  },
+  {
+   "name": "worker_parking",
+   "emoji": "🛌",
+   "folder": "worker-parking",
+   "lib_file": "🔔️worker-parking/🦀️.rs",
+   "tests": "🔔️worker-parking/🧪️tests/🔬️unit/🦀️.rs",
+   "glob": "semio_framework_async::*",
+   "doc": "The idle worker parking laws.",
+   "extra": [
+    "pub use semio_framework_async::internals::worker_parking::*;"
+   ]
+  },
+  {
+   "name": "cancellation_retirement",
+   "emoji": "♻",
+   "folder": "cancellation-retirement",
+   "lib_file": "🛑️cancel/♻️retirement/🦀️.rs",
+   "tests": "🛑️cancel/♻️retirement/🧪️tests/🦀️.rs",
+   "glob": "semio_framework_async::*",
+   "doc": "The cancellation token retirement laws."
+  },
+  {
+   "name": "native_pool",
+   "emoji": "🖥",
+   "folder": "native-pool",
+   "lib_file": "🖥️native-pool/🦀️.rs",
+   "tests": "🧪️tests/🔬️native-pool-unit/🦀️.rs",
+   "glob": "semio_framework_async::*",
+   "doc": "The native worker pool laws.",
+   "extra": [
+    "pub use semio_framework_async::internals::native_pool::*;",
+    "use semio_framework_async::internals::LANE_COUNT;",
+    "use std::{sync::{Arc, Mutex, atomic::Ordering}, task::Waker};"
+   ],
+   "include": true
+  }
+ ]
+}

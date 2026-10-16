@@ -15,8 +15,8 @@ import fixture from "../🧫️fixtures/⏯️tool-run-trace-mount.json" with { 
 import computeLocaleFixture from "../🧫️fixtures/⏳️compute-locale.json" with { type: "json" };
 import {createMemoryStoragePort} from "@semio-tech/framework";
 import {createShellScope, ShellScopeProvider, disposeShellI18nInstance} from "@semio-tech/ui-react";
-import { base64UrlEncode } from "../../../../../../../../../🔨️modules/🚪️io/🔤️base64/🟦️.ts";
-import { encodeToolRunTraceDelta, toolRunIdentityFromJson, toolRunTraceOpFromJson, ToolRunTraceStore, type ToolRunTraceCursor, type ToolRunTraceSubject } from "../../../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
+import { base64UrlEncode } from "@semio-tech/framework/io/base64";
+import { encodeToolRunTraceDelta, toolRunIdentityFromJson, toolRunTraceOpFromJson, ToolRunTraceStore, type ToolRunTraceCursor, type ToolRunTraceSubject } from "@semio-tech/framework/tool-run";
 
 const recorded = vi.hoisted(() => ({ instanced: [] as { mesh: InstancedMesh; live: boolean }[], geometries: [] as BufferGeometry[], dashed: 0, frames: [] as ((state: unknown, delta: number) => void)[], camera: null as PerspectiveCamera | null, gumball: null as UnifiedGumballProps | null }));
 
@@ -87,6 +87,9 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
 import { setRuntimeDiagnostics } from "../../../🏛️ShellHost/🟦️.tsx";
 import { World3dHost, world3dComponentInteractionTarget, buildMeshVisuals, disposeMeshVisuals, world3dGumballSelectionArgsV1, getWorldGumballTransformPreview } from "../../🟦️.tsx";
 import { WindowInstanceIdContext } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
+import { loadComponentSelectionMergesFixture, loadSceneComponentSourceFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadEngineVertexProvenanceFixture } from "../../../../../../../../../🔨️modules/🧊️3d/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadPrimaryGeometryStyleFixture } from "../../../../../../♾️infinite/🧪️tests/🧫️fixtures/🟦️.ts";
 
 type Batch = { readonly mesh: number; readonly verdict: string; readonly count: number };
 
@@ -281,7 +284,7 @@ describe("exact analytic component interaction targets", () => {
     }
   });
   it("pins live component gumball across a guest mesh and source refresh", async () => {
-    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).default;
+    const fixture = (await loadComponentSelectionMergesFixture());
     const row = fixture.gumball;
     const refresh = row.liveRefresh;
     const object = fixture.objects[row.object]!;
@@ -336,7 +339,7 @@ describe("exact analytic component interaction targets", () => {
     } finally { view.unmount(); }
   });
   it("paints neutral pure points in default object mode without fabricating surfaces or edges", async () => {
-    const fixture = (await import("../../../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).default;
+    const fixture = (await loadEngineVertexProvenanceFixture());
     const point = fixture.cases.find(row => row.kind === "point")!;
     const three = await vi.importActual<typeof import("three")>("three");
     const oracle = new three.Points(new three.BufferGeometry().setAttribute("position", new three.Float32BufferAttribute(point.points.flat(), 3)), new three.PointsMaterial({ sizeAttenuation: false }));
@@ -357,8 +360,8 @@ describe("exact analytic component interaction targets", () => {
     }
   });
   it("paints primary point and wire objects with the existing selection and hover palette", async () => {
-    const fixture = (await import("../../../../../../♾️infinite/🌍️world/🧪️tests/🧫️fixtures/🎨️primary-geometry-style/🔣️.json")).default;
-    const geometry = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json")).default;
+    const fixture = (await loadPrimaryGeometryStyleFixture());
+    const geometry = (await loadSceneComponentSourceFixture());
     const styling = await import("@semio-tech/ui-styling");
     const three = await vi.importActual<typeof import("three")>("three");
     styling.clearColorResolveCache();
@@ -391,7 +394,7 @@ describe("exact analytic component interaction targets", () => {
     }
   });
   it("projects exact analytic component selections across instances", async () => {
-    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).default;
+    const fixture = (await loadComponentSelectionMergesFixture());
     const three = await vi.importActual<typeof import("three")>("three");
     const indexed = new three.BufferGeometry().setAttribute("position", new three.Float32BufferAttribute(fixture.mesh.positions, 3)).setIndex(fixture.mesh.indices);
     const oracle = indexed.toNonIndexed();
@@ -454,7 +457,7 @@ describe("exact analytic component interaction targets", () => {
     }
   });
   it("retains zero-index analytic wire and point buffers and exact source admission", async () => {
-    const fixture = (await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json")).default;
+    const fixture = (await loadSceneComponentSourceFixture());
     const three = await vi.importActual<typeof import("three")>("three");
     for (const row of fixture.zeroIndex.accepted) {
       const positions = row.positions.flat();

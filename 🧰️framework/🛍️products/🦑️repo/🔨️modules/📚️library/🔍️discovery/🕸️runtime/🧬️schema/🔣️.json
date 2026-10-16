@@ -954,29 +954,6 @@
         }
       }
     },
-    "RuntimeActorCargoSelectionV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "cargoPackage",
-        "componentPath",
-        "componentSha256"
-      ],
-      "properties": {
-        "cargoPackage": {
-          "type": "string",
-          "minLength": 1
-        },
-        "componentPath": {
-          "type": "string",
-          "minLength": 1
-        },
-        "componentSha256": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$"
-        }
-      }
-    },
     "RuntimeCompilerInputV1": {
       "type": "object",
       "additionalProperties": true,

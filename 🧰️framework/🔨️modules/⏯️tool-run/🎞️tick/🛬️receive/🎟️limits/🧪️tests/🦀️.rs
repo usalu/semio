@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn original_tool_run_receiving_limits_preserve_every_required_captured_bound(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(crate::fixture_text("🎞️tick/🛬️receive/🎟️limits/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let policy:ToolRunReceivingLimits=serde_json::from_value(corpus["policy"].clone()).unwrap();
  assert_eq!(policy,ToolRunReceivingLimits::REPORTS);policy.validate().unwrap();
  let captured=policy;let mut edited=policy;edited.tick.maximum_file_bytes=1;assert_ne!(captured,edited);

@@ -49,5 +49,5 @@ export const spaceHomeDiffTextGuardConstant = <T extends string | number | boole
 //#endregion 🚪️Parsers
 
 export function parseSHomeDiffText(value: unknown, at = "$"): SHomeDiffText {
-  return spaceHomeDiffTextGuardObject(value, `${at}`);
+  return spaceHomeDiffTextGuardString(value, `${at}`);
 }

@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: stdio artifact catalog, standards subsets and artifact I/O rules.
+/** 🛂️ Wave 4 plugin consistency policy: stdio artifact catalog, standards subsets and artifact I/O rules.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { canonicalFilenameForKind, canonicalPrimaryFilenameForKind, loadTaxonomy, schemaFacetFormatEntries, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";

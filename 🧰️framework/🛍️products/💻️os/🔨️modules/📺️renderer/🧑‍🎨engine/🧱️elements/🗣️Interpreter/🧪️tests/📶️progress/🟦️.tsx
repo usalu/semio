@@ -1,3 +1,4 @@
+import { loadUiProgressFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 type TestSource = { readonly url: string };
 
 /** 📶️ The interpreted `progress` component is a real, accessible progressbar that answers the shared
@@ -13,7 +14,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { cleanup, render, screen } = await import("@semio-tech/ui-react/test");
   const { createElement } = await import("react");
-  const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/📶️progress.json");
+  const fixture = await loadUiProgressFixture();
 
   const SURFACE = "panel:tool-run";
   const TEST_STYLE = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };
@@ -53,7 +54,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     it("stays a progressbar while its record is loading instead of collapsing into a skeleton", () => {
-      mount(fixture.cases[0].component, "loading");
+      const first=fixture.cases[0];if(!first)throw Error("Authored loading progress case required");
+      mount(first.component,"loading");
       expect(screen.getByRole("progressbar", { name: "Fill progress" }).getAttribute("aria-valuenow")).toBe("12");
     });
   });

@@ -230,7 +230,7 @@
       "anchor": "BackboneWorkerRequest",
       "consumers": [
         "🧰️framework/🛍️products/💻️os/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧵️backbone/🟦️.ts"
+        "🧰️framework/🔨️modules/🛰️backbone/🟦️.ts"
       ],
       "sourceDisposition": "removed"
     },

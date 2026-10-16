@@ -1,0 +1,248 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "ordinary",
+      "effect": "ordinary",
+      "accepted": true
+    },
+    {
+      "name": "symlink",
+      "effect": "symlink",
+      "accepted": true
+    },
+    {
+      "name": "hardlink",
+      "effect": "hardlink",
+      "accepted": false
+    },
+    {
+      "name": "changed-journal",
+      "effect": "changed-journal",
+      "accepted": true
+    },
+    {
+      "name": "system-payload",
+      "effect": "system-payload",
+      "accepted": true
+    },
+    {
+      "name": "copied-control",
+      "effect": "copied-control",
+      "accepted": false
+    },
+    {
+      "name": "observer",
+      "effect": "observer",
+      "accepted": false
+    },
+    {
+      "name": "cancelled",
+      "effect": "cancelled",
+      "accepted": false
+    },
+    {
+      "name": "unsafe",
+      "effect": "unsafe",
+      "accepted": false
+    },
+    {
+      "name": "overwork",
+      "effect": "overwork",
+      "accepted": false
+    },
+    {
+      "name": "growth",
+      "effect": "growth",
+      "accepted": false
+    },
+    {
+      "name": "short-read",
+      "effect": "short-read",
+      "accepted": false
+    },
+    {
+      "name": "ancestry",
+      "effect": "ancestry",
+      "accepted": false
+    },
+    {
+      "name": "cross-device",
+      "effect": "cross-device",
+      "accepted": false
+    },
+    {
+      "name": "close",
+      "effect": "close",
+      "accepted": false
+    },
+    {
+      "name": "body-undefined-close",
+      "effect": "body-undefined-close",
+      "accepted": false
+    },
+    {
+      "name": "body-frozen-close",
+      "effect": "body-frozen-close",
+      "accepted": false
+    },
+    {
+      "name": "wide",
+      "effect": "wide",
+      "accepted": true
+    },
+    {
+      "name": "deep",
+      "effect": "deep",
+      "accepted": false
+    },
+    {
+      "name": "journal-link",
+      "effect": "journal-link",
+      "accepted": false
+    },
+    {
+      "name": "journal-directory",
+      "effect": "journal-directory",
+      "accepted": false
+    },
+    {
+      "name": "acquire-file-cancel",
+      "effect": "acquire-file-cancel",
+      "accepted": false
+    },
+    {
+      "name": "acquire-directory-cancel",
+      "effect": "acquire-directory-cancel",
+      "accepted": false
+    },
+    {
+      "name": "acquire-file-observer",
+      "effect": "acquire-file-observer",
+      "accepted": false
+    },
+    {
+      "name": "acquire-directory-observer",
+      "effect": "acquire-directory-observer",
+      "accepted": false
+    },
+    {
+      "name": "census-change",
+      "effect": "census-change",
+      "accepted": false
+    },
+    {
+      "name": "directory-close",
+      "effect": "directory-close",
+      "accepted": false
+    },
+    {
+      "name": "body-undefined-directory-close",
+      "effect": "body-undefined-directory-close",
+      "accepted": false
+    },
+    {
+      "name": "body-frozen-directory-close",
+      "effect": "body-frozen-directory-close",
+      "accepted": false
+    }
+  ],
+  "payload": {
+    "directories": [
+      "sub",
+      ".fseventsd"
+    ],
+    "files": [
+      {
+        "path": "a.txt",
+        "bytes": [
+          97,
+          108,
+          112,
+          104,
+          97
+        ]
+      },
+      {
+        "path": "storage-events.jsonl",
+        "bytes": [
+          123,
+          34,
+          118,
+          97,
+          108,
+          117,
+          101,
+          34,
+          58,
+          49,
+          125,
+          10
+        ]
+      },
+      {
+        "path": "storage-checkpoint.jsonl",
+        "bytes": [
+          123,
+          34,
+          99,
+          104,
+          101,
+          99,
+          107,
+          112,
+          111,
+          105,
+          110,
+          116,
+          34,
+          58,
+          116,
+          114,
+          117,
+          101,
+          125,
+          10
+        ]
+      },
+      {
+        "path": ".fseventsd/payload",
+        "bytes": [
+          110,
+          101,
+          118,
+          101,
+          114,
+          32,
+          101,
+          120,
+          99,
+          108,
+          117,
+          100,
+          101,
+          100
+        ]
+      },
+      {
+        "path": "State",
+        "bytes": [
+          97,
+          108,
+          108,
+          32,
+          98,
+          121,
+          116,
+          101,
+          115
+        ]
+      },
+      {
+        "path": "sub/b.bin",
+        "repeat": 7,
+        "count": 131073
+      }
+    ]
+  }
+}

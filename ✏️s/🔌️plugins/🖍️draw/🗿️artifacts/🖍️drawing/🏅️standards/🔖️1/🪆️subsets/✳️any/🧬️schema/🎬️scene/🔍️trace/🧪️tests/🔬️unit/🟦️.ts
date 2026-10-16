@@ -47,7 +47,7 @@ test("document trace source, parameters and resource failures stay private",()=>
 });
 test("aggregate source and pixel budgets charge distinct assets once",()=>{
  const row=rows[4]!,source=input(row);expect(finish({...source,limits:{...source.limits,maxSourceBytes:source.plan.assets[0]!.image.pixels.length,maxAdmittedPixels:9}},7).nodes.length).toBe(2);
- for(const cap of ["maxSourceBytes","maxAdmittedPixels"]){const value=structuredClone(source);value.plan.assets.push({...value.plan.assets[0]!,id:"second"});(value.plan.nodes[1]!.content as any).source="second";value.limits[cap]=cap==="maxSourceBytes"?value.plan.assets[0]!.image.pixels.length*2-1:17;const job=new DocumentTraceJob(value);expect(()=>{while(!job.advance(4096).done){}}).toThrow();expect(()=>job.result()).toThrow();}
+ for(const cap of ["maxSourceBytes","maxAdmittedPixels"] as const){const value=structuredClone(source);value.plan.assets.push({...value.plan.assets[0]!,id:"second"});(value.plan.nodes[1]!.content as any).source="second";value.limits[cap]=cap==="maxSourceBytes"?value.plan.assets[0]!.image.pixels.length*2-1:17;const job=new DocumentTraceJob(value);expect(()=>{while(!job.advance(4096).done){}}).toThrow();expect(()=>job.result()).toThrow();}
 });
 test("every document trace phase cancels with private candidates and owned published output",()=>{
  const value=input(rows[0]!),seen=new Set<string>();finish(value,1,p=>{if(seen.has(p.phase))return;const job=new DocumentTraceJob(value);job.advance(p.work);job.cancel();expect(()=>job.result()).toThrow(/cancel/i);expect(()=>job.advance(1)).toThrow(/cancel/i);seen.add(p.phase);});expect([...seen].sort()).toEqual(["assets","indexing","nodes","luma","tracing","publishing","complete"].sort());
@@ -77,10 +77,11 @@ test("complete document work admission bounds every stage and permits the exact 
 /** 🧹️ Transfer private trace owners without sharing mutable completed scene metadata. */
 import retirementRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🧹️retirement/🔣️.json";
 import {ScenePlanCloseJob} from "../../../🧹️retire/🟦️.ts";
+import {rasterSceneGroupFixture} from "../../../../../🧪️tests/🧫️fixtures/🟦️.ts";
 const retirementValid=ajv.compile({$ref:schema.$id+"#/definitions/retirementProgress"});
 test("document trace retirement composes active kernels and independently owned scene plans",()=>{
  for(const sample of retirementRows.cases)for(const grant of [1,7,4096]){
-  const row=rows.find(r=>r.name===("source" in sample?sample.source:retirementRows.source))!,source=input(row);for(const n of source.plan.nodes)n.groups.push(structuredClone(retirementRows.metadata.group));const c=source.plan.nodes.find(n=>n.content.kind==="trace")!.content as any;c.fill=structuredClone(retirementRows.metadata.fill);c.stroke=structuredClone(retirementRows.metadata.stroke);
+  const row=rows.find(r=>r.name===("source" in sample?sample.source:retirementRows.source))!,source=input(row);for(const n of source.plan.nodes)n.groups.push(rasterSceneGroupFixture(retirementRows.metadata.group));const c=source.plan.nodes.find(n=>n.content.kind==="trace")!.content as any;c.fill=structuredClone(retirementRows.metadata.fill);c.stroke=structuredClone(retirementRows.metadata.stroke);
   if("maxWork" in sample)source.limits={...source.limits,maxWork:sample.maxWork!};if("maxRetainedSegments" in sample)source.limits={...source.limits,maxRetainedSegments:sample.maxRetainedSegments!};
   const before=structuredClone(source),job=new DocumentTraceJob(source),state=job as any;
   if(sample.phase==="failure")expect(()=>job.advance(100000)).toThrow();else if(sample.phase!=="fresh"){if(sample.phase!=="cancelled"){let reached=false;for(let at=0;at<100000;at++){if(job.advance(1).phase===sample.phase&&(!("checkpoint" in sample)||state.closingTracer!==null)){reached=true;break;}}expect(reached).toBe(true);}for(let at=0;at<sample.offset;at++)job.advance(1);}

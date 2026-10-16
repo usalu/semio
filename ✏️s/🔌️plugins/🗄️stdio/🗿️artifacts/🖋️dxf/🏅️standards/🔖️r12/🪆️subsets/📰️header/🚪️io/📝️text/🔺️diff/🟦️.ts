@@ -49,5 +49,5 @@ export const stdioDxfR12HeaderDiffTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseDxfDiffText(value: unknown, at = "$"): DxfDiffText {
-  return stdioDxfR12HeaderDiffTextGuardObject(value, `${at}`);
+  return stdioDxfR12HeaderDiffTextGuardString(value, `${at}`);
 }

@@ -52,7 +52,7 @@ fn value_intrinsic_retirement_full_system_requests_and_release() {
             }
         }
         drop(source);
-        let ((), requests, released) = crate::test_allocation::observe_backing(|| <DslValue as FromValue>::retire_decoded(owner));
+        let ((), requests, released) = semio_framework_trace_memory_testing::observe_backing(|| <DslValue as FromValue>::retire_decoded(owner));
         assert_eq!(requests, usize::try_from(contract["requestBytes"].as_u64().unwrap()).unwrap(), "{label} mandatory retirement requested unadmitted backing after cancellation");
         assert_eq!(released, expected_release, "{label} complete source-owned backing must be deallocated");
     }

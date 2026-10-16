@@ -21,20 +21,9 @@ pub mod read;
 mod types;
 pub use types::{ValueKind, ValueType};
 
-#[cfg(any(test, feature="testkit"))]
+#[cfg(feature="testkit")]
 #[path="../../🧪️testing/🧾️wire/🦀️.rs"]
 pub mod testing;
-
-#[cfg(test)]
-#[path="../../🧪️testing/💾️allocator/🦀️.rs"]
-mod allocation_testing;
-#[cfg(test)]
-pub(crate) use allocation_testing::observe_retirement_allocations;
-
-
-#[cfg(test)]
-#[path="../../♻️retirement/🧪️tests/🔬️unit/🦀️.rs"]
-mod original_retirement_integration_tests;
 
 pub use semio_framework_value_retirement::{advance_retirement_turn,RetirementReceipt,RetirementTurnError};
 pub use semio_framework_value_original_aliases::OriginalAliasBatch;
@@ -49,3 +38,9 @@ pub use semio_framework_value_retirement_queue as retirement_queue;
 
 pub use semio_framework_value_factory::owned::FactoryOwnedRetirement;
 pub use semio_framework_value_factory::boxed::{FactoryBoxedValue,FactoryBoxedPublication};
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod internals {
+    pub use super::types::testkit as types;
+}

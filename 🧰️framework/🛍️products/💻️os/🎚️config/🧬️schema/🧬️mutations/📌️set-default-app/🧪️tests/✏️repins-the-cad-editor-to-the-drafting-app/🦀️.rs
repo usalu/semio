@@ -14,20 +14,20 @@
 use super::super::super::{OpeningDiff, OpeningPreferences};
 use super::super::OpeningConfigMutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📌️set-default-app/✏️repins-the-cad-editor-to-the-drafting-app/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn before() -> OpeningPreferences {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before opening preferences decode")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before opening preferences decode")
 }
 fn expected_after() -> OpeningPreferences {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after opening preferences decode")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after opening preferences decode")
 }
 fn mutation() -> OpeningConfigMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-default-app mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-default-app mutation decodes")
 }
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
@@ -67,14 +67,14 @@ fn repinning_the_prior_app_restores_before() {
 /// rides as the camelCase wire spelling `"editor"`, and the payload is internally tagged.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: OpeningPreferences = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("opening preferences decode");
         let reencoded = json_value(&decoded);
         let original: serde_json::Value = serde_json::from_str(text).expect("opening preferences reparse");
         assert_eq!(reencoded, original, "set-default-app/repins-the-cad-editor-to-the-drafting-app: committed {label} preferences JSON is not canonical");
     }
     let reencoded = json_value(&mutation());
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("setDefaultApp payload reparses");
+    let original: serde_json::Value = serde_json::from_str(MUTATION.as_str()).expect("setDefaultApp payload reparses");
     assert_eq!(reencoded, original, "set-default-app/repins-the-cad-editor-to-the-drafting-app: committed setDefaultApp JSON is not canonical");
 }
 
@@ -82,7 +82,7 @@ fn committed_json_is_canonical() {
 /// does not fire and the declared `applied` outcome must be message-free.
 #[test]
 fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "set-default-app/repins-the-cad-editor-to-the-drafting-app: this fixture declares an applied outcome");
     let produced = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None, "set-default-app/repins-the-cad-editor-to-the-drafting-app: pinning a different app must not raise mutation.no-op");
@@ -94,24 +94,24 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let outcome = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &before());
     let produced = json_value(outcome.diff());
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-default-app/repins-the-cad-editor-to-the-drafting-app: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff decodes to the facet's sparse diff type and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-default-app diff decodes");
+    let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-default-app diff decodes");
     assert_eq!(decoded.pins.len(), 1, "set-default-app/repins-the-cad-editor-to-the-drafting-app: the sparse diff names exactly the touched coordinate");
     let reencoded = json_value(&decoded);
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-default-app/repins-the-cad-editor-to-the-drafting-app: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed diff carries the before-record to the after-record through the central applier.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-default-app diff decodes");
+    let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-default-app diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-preferences");
     assert_eq!(produced, expected_after(), "set-default-app/repins-the-cad-editor-to-the-drafting-app: committed diff did not carry before to after");
 }

@@ -1,73 +1,20 @@
-import {repositoryBuildGraphDataDirectoryV1} from "../💾️storage/🟨️.mjs";
-import { selectedCargoLockDigest } from "../🔒️lock/📥️read/🟨️.mjs";
-import { createHash } from "node:crypto";
-import { readFileSync, lstatSync } from "node:fs";
-import { isAbsolute, resolve, relative, join } from "node:path";
+import{selectedCargoLockDigestInBatchV1}from"../🔒️lock/📥️read/🟨️.mjs";
+import{createHash}from"node:crypto";
+import{isAbsolute}from"node:path";
+import{types}from"node:util";
+import{requireIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{captureNxSourceHashInputsV1,captureNxSourceReceiptV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/📥️inputs/📋️data/🟦️.ts";
+import{withExactSourceReadBatchV1,readExactSourceFileV1,readExactSourceInventoryV1}from"./📥️read/🟨️.mjs";
+import schema from"./📥️read/🧬️schema/🔣️.json"with{type:"json"};
+const policy=Object.freeze({...schema.definitions.Policy.const});
+function path(value){if(typeof value!=="string"||!value||value.length>policy.maximumPathUnits||Buffer.byteLength(value)>policy.maximumPathBytes||value.includes("\0")||value.includes(":")||/^[A-Za-z]:/u.test(value)||isAbsolute(value)||value.includes("\\")||value.split("/").some(part=>["",".",".."].includes(part)))throw Error("Source input must be repository relative");for(const char of value){const point=char.codePointAt(0);if(point>=55296&&point<=57343)throw Error("Scalar Source filename required");}return value;}
+function closure(value){if(!value||typeof value!=="object"||types.isProxy(value)||Object.getPrototypeOf(value)!==Object.prototype)throw Error("Exact Source closure required");const rows=Object.getOwnPropertyDescriptors(value);if(Reflect.ownKeys(value).length!==2||Object.keys(rows).sort().join()!=="files,version"||Object.values(rows).some(row=>!("value"in row)||!row.enumerable)||rows.version.value!==1)throw Error("Exact Source closure required");const files=rows.files.value;if(!Array.isArray(files)||types.isProxy(files)||Object.getPrototypeOf(files)!==Array.prototype||files.length>policy.maximumFilesPerClosure||Reflect.ownKeys(files).length!==files.length+1)throw Error("Finite exact Source file roster required");const captured=[];let bytes=0;for(let index=0;index<files.length;index++){const row=Object.getOwnPropertyDescriptor(files,String(index));if(!row||!("value"in row)||!row.enumerable)throw Error("Own Source filename required");const name=path(row.value);if((bytes+=Buffer.byteLength(name))>policy.maximumClosureBytes)throw Error("Source roster byte capacity exceeded");captured.push(name);}if(new Set(captured).size!==captured.length)throw Error("Unique Source file roster required");return Object.freeze({version:1,files:Object.freeze(captured.sort())});}
+async function digestClosure(batch,value){const digest=createHash("sha256");for(const name of value.files){digest.update(name).update("\0");const file=await readExactSourceFileV1(batch,name);if(file===null)digest.update("missing\0");else digest.update("file\0").update(file.sha256).update("\0");}return digest.digest("hex");}
 
-/** 🧮️ Hashes current bytes and absence from an exact source inventory independently of graph serialization. */
-export function sourceClosureDigest(workspaceRoot, value, files = new Map()) {
-  if (!value || Object.keys(value).length !== 2 || value.version !== 1 || !Array.isArray(value.files) || new Set(value.files).size !== value.files.length) throw Error("Exact source closure required");
-  const digest = createHash("sha256");
-  for (const path of [...value.files].sort()) {
-    if (typeof path !== "string" || !path || path.length > 256 || path.includes("\0") || /^[A-Za-z]:/u.test(path) || isAbsolute(path) || path.includes("\\") || path.split("/").some(part => ["", ".", ".."].includes(part))) throw Error("Source input must be repository relative");
-    const absolute = resolve(workspaceRoot, path);
-    if (relative(workspaceRoot, absolute).startsWith("..")) throw Error("Source input escapes workspace");
-    digest.update(path).update("\0");
-    try {
-      const status = lstatSync(absolute);
-      if (!status.isFile() && !status.isSymbolicLink()) throw Error(`Source input must be a file: ${path}`);
-      if (!files.has(absolute)) files.set(absolute, createHash("sha256").update(readFileSync(absolute)).digest("hex"));
-      digest.update("file\0").update(files.get(absolute)).update("\0");
-    } catch (error) {
-      if (!error || typeof error !== "object" || !("code" in error) || !["ENOENT", "ENOTDIR"].includes(String(error.code))) throw error;
-      digest.update("missing\0");
-    }
-  }
-  return digest.digest("hex");
-}
-
-/** 🏗️ Fills private exact-source hash inputs in process before native hash batches. */
-export function sourceClosureTaskEnvironments(workspaceRoot, plans, environments) {
-  const values = new Map(), files = new Map(), lockRecords = new Map(), result = {};
-  const prefix = "env:SEMIO_SOURCE_CLOSURE_";
-  for (const [id, instructions] of Object.entries(plans)) {
-    const environment = { ...environments[id] };
-    for (const instruction of instructions) {
-      if (instruction.startsWith("env:SEMIO_CARGO_LOCK_")) {
-        const key = instruction.slice("env:SEMIO_CARGO_LOCK_".length);
-        if (!/^[a-f0-9]{64}$/u.test(key)) throw Error("Invalid Cargo lock input identity");
-        const name = instruction.slice(4);
-        if (!values.has(name)) {
-          const bytes = readFileSync(join(repositoryBuildGraphDataDirectoryV1(workspaceRoot,"build-lock-closures"), `${key}.json`));
-          if (createHash("sha256").update(bytes).digest("hex") !== key) throw Error("Cargo lock inventory identity changed");
-          const contract = JSON.parse(bytes);
-          if (Object.keys(contract).length !== 2 || contract.version !== 1 || typeof contract.manifest !== "string" || contract.manifest.length > 256 || contract.manifest.includes("\0") || /^[A-Za-z]:/u.test(contract.manifest) || isAbsolute(contract.manifest) || contract.manifest.includes("\\") || contract.manifest.split("/").some(part => ["", ".", ".."].includes(part))) throw Error("Cargo lock inventory must be workspace relative");
-          values.set(name, selectedCargoLockDigest(join(workspaceRoot, contract.manifest), lockRecords));
-        }
-        environment[name] = values.get(name);
-        continue;
-      }
-      if (!instruction.startsWith(prefix)) continue;
-      const key = instruction.slice(prefix.length);
-      if (!/^[a-f0-9]{64}$/u.test(key)) throw Error("Invalid exact source input identity");
-      if (!values.has(key)) {
-        const manifest = join(repositoryBuildGraphDataDirectoryV1(workspaceRoot,"build-input-closures"), `${key}.json`), bytes = readFileSync(manifest);
-        if (createHash("sha256").update(bytes).digest("hex") !== key) throw Error("Exact source inventory identity changed");
-        values.set(key, sourceClosureDigest(workspaceRoot, JSON.parse(bytes), files));
-      }
-      environment[instruction.slice(4)] = values.get(key);
-    }
-    result[id] = environment;
-  }
-  return result;
-}
-
-/** 🔐️ Refuses promotion if any exact selected source changed while the task ran. */
-export function sourceClosureReceiptHolds(workspaceRoot, receipt) {
-  if (receipt === undefined) return true;
-  if (!receipt || Object.keys(receipt).length !== 2 || receipt.version !== 1 || !receipt.values || typeof receipt.values !== "object" || Array.isArray(receipt.values)) throw Error("Exact source receipt required");
-  const names = Object.keys(receipt.values);
-  if (names.some(name => !/^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/u.test(name) || !/^[a-f0-9]{64}$/u.test(receipt.values[name]))) throw Error("Exact source receipt identity refused");
-  const current = sourceClosureTaskEnvironments(workspaceRoot, { selected: names.map(name => `env:${name}`) }, { selected: {} }).selected;
-  return names.every(name => current[name] === receipt.values[name]);
-}
+async function taskEnvironments(root,plans,environments,batch){const values=new Map(),result={};for(const[id,instructions]of Object.entries(plans)){const environment={...environments[id]};for(const instruction of instructions){const source=instruction.startsWith("env:SEMIO_SOURCE_CLOSURE_"),lock=instruction.startsWith("env:SEMIO_CARGO_LOCK_");if(!source&&!lock)continue;const prefix=source?"env:SEMIO_SOURCE_CLOSURE_":"env:SEMIO_CARGO_LOCK_",key=instruction.slice(prefix.length),name=instruction.slice(4);if(!/^[a-f0-9]{64}$/u.test(key))throw Error("Invalid exact Source inventory identity");if(!values.has(name)){const file=await readExactSourceInventoryV1(batch,source?"build-input-closures":"build-lock-closures",key);if(!file||file.sha256!==key)throw Error("Exact Source inventory identity changed");if(source)values.set(name,await digestClosure(batch,closure(file.value)));else{const contract=file.value;if(!contract||typeof contract!=="object"||Array.isArray(contract)||Object.keys(contract).sort().join()!=="manifest,version"||contract.version!==1)throw Error("Cargo lock inventory required");values.set(name,await selectedCargoLockDigestInBatchV1(batch,root,path(contract.manifest)));}}environment[name]=values.get(name);}result[id]=environment;}return result;}
+/** 🧮️ Hashes one fresh bounded Source batch with exact bytes and absence; caches never escape the batch. */
+export function sourceClosureDigest(root,value,control){requireIssuedResourceControlV1(control);const captured=closure(value);return withExactSourceReadBatchV1(root,control,batch=>digestClosure(batch,captured));}
+/** 🏗️ Resolves exact Source and selected-lock inputs under one genuine carried batch. */
+export function sourceClosureTaskEnvironments(root,plans,environments,control){requireIssuedResourceControlV1(control);const captured=captureNxSourceHashInputsV1(plans,environments);return withExactSourceReadBatchV1(root,control,batch=>taskEnvironments(root,captured.plans,captured.values,batch));}
+/** 🔐️ Rechecks receipts through a new current-byte batch rather than a persistent digest cache. */
+export function sourceClosureReceiptHolds(root,receipt,control){requireIssuedResourceControlV1(control);const captured=captureNxSourceReceiptV1(receipt);return withExactSourceReadBatchV1(root,control,async batch=>{if(captured===undefined)return true;const names=Object.keys(captured.values),current=await taskEnvironments(root,{selected:names.map(name=>"env:"+name)},{selected:{}},batch);return names.every(name=>current.selected[name]===captured.values[name]);});}

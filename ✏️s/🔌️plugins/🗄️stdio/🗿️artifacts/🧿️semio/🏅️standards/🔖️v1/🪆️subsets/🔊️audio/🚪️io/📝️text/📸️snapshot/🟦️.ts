@@ -49,5 +49,5 @@ export const stdioSemioV1AudioSnapshotTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseSemioAudioSnapshotText(value: unknown, at = "$"): SemioAudioSnapshotText {
-  return stdioSemioV1AudioSnapshotTextGuardObject(value, `${at}`);
+  return stdioSemioV1AudioSnapshotTextGuardString(value, `${at}`);
 }

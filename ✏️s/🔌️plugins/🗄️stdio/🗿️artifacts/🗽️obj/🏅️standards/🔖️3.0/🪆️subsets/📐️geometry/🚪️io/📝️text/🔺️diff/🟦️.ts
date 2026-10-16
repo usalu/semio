@@ -49,5 +49,5 @@ export const stdioObj30GeometryDiffTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseObjDiffText(value: unknown, at = "$"): ObjDiffText {
-  return stdioObj30GeometryDiffTextGuardObject(value, `${at}`);
+  return stdioObj30GeometryDiffTextGuardString(value, `${at}`);
 }

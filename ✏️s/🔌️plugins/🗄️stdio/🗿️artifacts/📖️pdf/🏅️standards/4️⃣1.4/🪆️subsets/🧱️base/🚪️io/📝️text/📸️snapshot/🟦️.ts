@@ -49,5 +49,5 @@ export const stdioPdf14BaseSnapshotTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parsePdfSnapshotText(value: unknown, at = "$"): PdfSnapshotText {
-  return stdioPdf14BaseSnapshotTextGuardObject(value, `${at}`);
+  return stdioPdf14BaseSnapshotTextGuardString(value, `${at}`);
 }

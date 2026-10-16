@@ -1,0 +1,91 @@
+{
+ "families": [
+  {
+   "id": "stdio-base",
+   "old": "🧱️base",
+   "new": "🧱️full",
+   "anchors": [
+    "🪆️subsets"
+   ],
+   "dirFilter": "^✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/[^/]+/🏅️standards/[^/]+/🪆️subsets/🧱️base$",
+   "artifactPrefixDepth": 5,
+   "variableRooted": true,
+   "forceFiles": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🦠️mutation-catalogs/🟦️.ts"
+   ]
+  },
+  {
+   "id": "semio-base",
+   "old": "✉️base",
+   "new": "✉️wrap",
+   "anchors": [
+    "🪆️subsets",
+    "🧿️semio"
+   ],
+   "dirFilter": "^✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/[^/]+/🏅️standards/[^/]+/🪆️subsets/✉️base$",
+   "artifactPrefixDepth": 5,
+   "variableRooted": true,
+   "forceFiles": [
+    "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🦠️mutation-catalogs/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧮️mutation-catalog/🟦️.ts"
+   ]
+  },
+  {
+   "id": "block-shared",
+   "old": "🧱️shared",
+   "new": "🧱️document-fields",
+   "anchors": [
+    "🧱️block/🧬️schema",
+    "🧱️block/🧪️tests/🧫️fixtures"
+   ],
+   "dirFilter": "^✏️s/🔌️plugins/🧱️block/(🧬️schema|🧪️tests/🧫️fixtures)/🧱️shared$",
+   "artifactPrefixDepth": 3
+  },
+  {
+   "id": "procedural-core",
+   "old": "🫀️core",
+   "new": "🫀️foundation",
+   "anchors": [
+    "🌀️procedural"
+   ],
+   "dirFilter": "^✏️s/🔌️plugins/🌀️procedural/🫀️core$",
+   "artifactPrefixDepth": 3
+  },
+  {
+   "id": "cad-core",
+   "old": "🫀️core",
+   "new": "🫀️kernel",
+   "anchors": [
+    "📐️cad/⚙️engine"
+   ],
+   "dirFilter": "^✏️s/🔌️plugins/📐️cad/⚙️engine/🫀️core$",
+   "artifactPrefixDepth": 4
+  },
+  {
+   "id": "gltf-geometry-core",
+   "old": "🔨️geometry-core",
+   "new": "🔨️geometry-kernel",
+   "anchors": [
+    "💡️inferences"
+   ],
+   "dirFilter": "^✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/.*/💡️inferences/🔨️geometry-core$",
+   "artifactPrefixDepth": 5,
+   "forceFiles": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+   ]
+  },
+  {
+   "id": "vscode-path-helpers",
+   "old": "🎵️path-helpers",
+   "new": "🎵️path-navigation",
+   "anchors": [
+    "💻️client/🧩️vscode"
+   ],
+   "dirFilter": "^🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🎵️path-helpers$",
+   "artifactPrefixDepth": 8
+  }
+ ]
+}

@@ -5,12 +5,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import _ from "lodash";
 import Ajv from "ajv";
+import { valueOrderedRetirementSchemaUrl } from "../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 
 //#region ✂️BackboneDetachOracle
 export function testBackboneDetachFixture(): void {
   const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
   assert.ok(fixture.cleanup, "Original detach examples declare independent full cleanup authority");
-  const contract = JSON.parse(readFileSync(new URL("../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const contract = JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl, "utf8"));
   const valid = new Ajv({strict:false,allErrors:true}).compile({...contract,$ref:"#/$defs/Grant"});
   for (const grant of Object.values(fixture.cleanup) as Record<string,number>[]) {
     assert.equal(valid(grant),true);

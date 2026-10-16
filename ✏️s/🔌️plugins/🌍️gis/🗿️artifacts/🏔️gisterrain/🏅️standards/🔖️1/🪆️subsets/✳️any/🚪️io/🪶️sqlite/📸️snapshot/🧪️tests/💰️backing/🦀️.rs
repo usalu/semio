@@ -1,9 +1,7 @@
 //! 🔬️ Full actual Terrain owners are measured against System allocator requests.
-#[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use super::*;
-#[path="../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
-mod observed;
+use semio_framework_io_sqlite_snapshot_testing_backing as observed;
 #[test]
 fn sqlite_snapshot_gis_terrain_full_concrete_requests_preserve_every_owned_field(){
  let plan:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🗺️imported-map/🔣️.json")).unwrap();

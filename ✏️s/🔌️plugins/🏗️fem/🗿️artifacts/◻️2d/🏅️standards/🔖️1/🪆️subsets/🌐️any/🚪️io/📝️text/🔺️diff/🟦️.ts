@@ -49,5 +49,5 @@ export const femFem2dDiffTextGuardConstant = <T extends string | number | boolea
 //#endregion 🚪️Parsers
 
 export function parseFem2dDiffText(value: unknown, at = "$"): Fem2dDiffText {
-  return femFem2dDiffTextGuardObject(value, `${at}`);
+  return femFem2dDiffTextGuardString(value, `${at}`);
 }

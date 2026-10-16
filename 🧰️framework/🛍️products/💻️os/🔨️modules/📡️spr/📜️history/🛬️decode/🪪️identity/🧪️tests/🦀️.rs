@@ -6,7 +6,7 @@ impl RetainedWireByteSource for OriginalPagedIdentitySource<'_>{
  fn byte_at(&self,index:usize)->Option<u8>{if index>=self.identity.extent{return None}self.pages.get(index/self.page_bytes)?.get(index%self.page_bytes).copied()}
 }
 
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(operation)}
 fn receipt(owner:&mut RetainedHistoryIdDecode,grant:RetainedCloneGrant,born:usize,released:usize)->usize{let(received,progress)=owner.take_receipt().unwrap();assert_eq!(received,grant);assert!(progress.fits(grant));assert_eq!((born,released),(progress.retained_capacity_bytes,progress.released_bytes));progress.copied_bytes}
 fn decode_hex(text:&str)->Vec<u8>{text.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 fn close_text(mut text:Option<String>,grant:RetainedCloneGrant)->usize{let(result,born,released)=observe(||RetainedWireFieldDecode::admit_received_text(&mut text,grant).unwrap());assert_eq!((born,released),(0,0));let mut owner=result.unwrap();assert_eq!(owner.take_receipt().unwrap().1.copied_bytes,0);let(_,born,released)=observe(||owner.close_step(grant).unwrap());let(received,progress)=owner.take_receipt().unwrap();assert_eq!(received,grant);assert_eq!((born,released),(progress.retained_capacity_bytes,progress.released_bytes));assert!(owner.terminal_is_empty());released}

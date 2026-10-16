@@ -9,44 +9,19 @@
   "maximumOutputLines": 65536,
   "cases": [
     {
-      "id": "prepared-build",
-      "expected": {
-        "prepared": 1,
-        "captured": 1,
-        "refused": false
-      }
+      "id": "prepared-build"
     },
     {
-      "id": "refused-preparation",
-      "expected": {
-        "prepared": 1,
-        "captured": 0,
-        "refused": true
-      }
+      "id": "refused-preparation"
     },
     {
-      "id": "original-cancellation",
-      "expected": {
-        "prepared": 1,
-        "captured": 0,
-        "refused": true
-      }
+      "id": "original-cancellation"
     },
     {
-      "id": "original-deadline",
-      "expected": {
-        "prepared": 1,
-        "captured": 0,
-        "refused": true
-      }
+      "id": "original-deadline"
     },
     {
-      "id": "namespace-override",
-      "expected": {
-        "prepared": 1,
-        "captured": 1,
-        "refused": false
-      }
+      "id": "namespace-override"
     }
   ]
 }

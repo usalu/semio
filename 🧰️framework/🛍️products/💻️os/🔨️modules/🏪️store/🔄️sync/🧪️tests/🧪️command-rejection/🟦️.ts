@@ -6,6 +6,8 @@
  * `worker.onmessage`). The worker wire round trip is pinned for both producers: the TypeScript actor's numbers and the Rust
  * actor's exact-integer carriers, whose local batch ids count down from `u64::MAX`.
  * @see ../../🧬️schema/🔣️command-rejection/🔣️.json */
+import { loadKernelHistoryPatchSchema } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
+
 
 type Rejection = { readonly kind: "rejected"; readonly code: string; readonly reason: string; readonly messages: readonly unknown[]; readonly detail?: Readonly<Record<string, number>> };
 type LocalCode = "local.read-only" | "local.queue-full" | "local.backbone-capacity" | "local.backbone-pair-unavailable" | "local.backbone-scope-mismatch" | "local.backbone-malformed" | "local.socket-frame-ceiling";
@@ -31,7 +33,7 @@ export async function registerCommandRejectionTests(
   const { describe, it, expect } = vitest;
   const { default: corpus } = await import("../../../🧪️tests/🧫️fixtures/🧫️command-rejection/🔣️.json");
   const { default: schema } = await import("../../🧬️schema/🔣️command-rejection/🔣️.json");
-  const { default: historyPatch } = await import("../../../../../../../🔨️modules/🎠️kernel/🧬️schema/🔣️history-patch/🔣️.json");
+  const historyPatch = await loadKernelHistoryPatchSchema();
   const fixture = corpus as unknown as Fixture;
   const bytes = (text: string): Uint8Array => new TextEncoder().encode(text);
   const wire = (event: unknown): Uint8Array => {

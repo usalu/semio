@@ -32,4 +32,5 @@ semio-framework-3d-brep-representation = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-s-artifact-procedural-3d-io-text = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-phased-job-support = { workspace = true }
 

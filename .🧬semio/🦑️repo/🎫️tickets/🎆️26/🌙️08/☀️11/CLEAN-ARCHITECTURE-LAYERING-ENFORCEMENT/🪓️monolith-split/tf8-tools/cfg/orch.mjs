@@ -1,0 +1,15 @@
+const cfg = {
+  modules: [
+    { name: "docs", folder: "📚️schema-documents", emoji: "📚️", title: "Schema documents", doc: ["Reads the catalogued schema documents of the repository, resolves the uncatalogued components they reference, and the JSON-pointer and schema-kind helpers every mutation gate shares."], names: ["readJsonObject", "catalogSchemaDocuments", "resolveReferencedSchemaDocuments", "SchemaNode", "isRecord", "escapePointer", "unescapePointer", "schemaKind", "canonicalJson"] },
+    { name: "rust", folder: "🦀️rust-tokens", emoji: "🦀️", title: "Rust tokens", doc: ["The Rust lexer of the mutation gates and its structural readers: group ends, impl blocks, functions, call arguments, paths and first literals."], names: ["RustToken", "rustTrivia", "rustLex", "rustGroupEnd", "RustImplBlock", "rustImplBlocks", "rustFunctions", "rustCallArguments", "rustPathAt", "rustFirstLiteral"] },
+    { name: "tree", folder: "🌳️mutation-tree", emoji: "🌳️", title: "Mutation tree", doc: ["Discovers the mutation leaves and the `#[derive(Mutations)]` aggregates of the repository, walks its Rust sources, and names the owner and artifact scope of a mutation schema."], names: ["MutationAggregateLayout", "MutationAggregate", "RustValueEnum", "MutationLeafRecord", "MutationTree", "MUTATION_TREE_ROOTS", "MUTATION_TREE_SKIPPED", "rustValueAttributes", "rustMutationAggregates", "rustValueEnums", "mutationTree", "mutationPayloadOwner", "mutationArtifactScope", "sharedSegments", "RUST_SOURCE_ROOTS", "rustSources", "repositorySources"] },
+    { name: "inputs", folder: "🎛️mutation-input-ui", emoji: "🎛️", title: "Mutation input UI gate", doc: ["`schema-mutation-input-ui`: every mutation input carries a UI descriptor, and the census of declared and inferred inputs."], regions: ["🎛️MutationInputUi"] },
+    { name: "payload", folder: "⚖️mutation-payload-parity", emoji: "⚖️", title: "Mutation payload parity gate", doc: ["`schema-mutation-payload-parity`: every mutation leaf and aggregate schema describes the wire its committed fixtures and the `#[derive(Mutations)]` enum witness."], regions: ["⚖️MutationPayloadParity"] },
+    { name: "caps", folder: "🐘️mutation-caps", emoji: "🐘️", title: "Mutation cap gate", doc: ["The structural cap rule: every unbounded leaf of a generic aggregate declares a cap law."], regions: ["🐘️MutationCaps"] },
+    { name: "labels", folder: "🏷️mutation-labels", emoji: "🏷️", title: "Mutation label gate", doc: ["`schema-mutation-label`: every leaf is labelled natively or forwarded, in every locale."], regions: ["🏷️MutationLabels"] },
+    { name: "faults", folder: "📢️fault-notices", emoji: "📢️", title: "Fault notice gate", doc: ["`schema-fault-notice`: every guest fault code reaches the person as a notice in every locale."], regions: ["📢️FaultNotices"] },
+    { name: "editability", folder: "✏️mutation-editability", emoji: "✏️", title: "Mutation editability gate", doc: ["`schema-mutation-editability`: every aggregate is editable in history or declares why not."], regions: ["✏️MutationEditability"] },
+    { name: "script", folder: "", isParent: true, names: ["SchemaScript"] },
+  ],
+};
+export default cfg;

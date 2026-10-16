@@ -16,7 +16,7 @@ import fixture from "./🔣️.json";
 import optionFixture from "../🧫️fixtures/🧬️chart-mutations/🔣️.json";
 import schemaDocument from "../../🧬️schema/🔣️.json";
 import Ajv2020 from "ajv/dist/2020.js";
-import { validateJsonSchemaSubset } from "../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { changeVizChartValue } from "../../🧬️schema/🧬️mutations/🟦️.ts";
 import { applyVizChartDiff, inverseVizChartDiff } from "../../🧬️schema/🔀️diff/🟦️.ts";
 import { inferVizChart } from "../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";

@@ -2,10 +2,6 @@
 
 #![allow(async_fn_in_trait)]
 
-#[cfg(any(test, feature = "testkit"))]
-#[path = "../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-pub mod test_allocation;
-
 #[path = "../🤖️agent-credential/🦀️.rs"]
 pub mod agent_credential;
 

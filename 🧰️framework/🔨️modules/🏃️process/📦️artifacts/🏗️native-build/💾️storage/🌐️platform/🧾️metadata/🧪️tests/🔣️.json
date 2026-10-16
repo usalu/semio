@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "name": "exact",
+      "result": 0,
+      "changed": false,
+      "allowed": true
+    },
+    {
+      "name": "cim-1",
+      "result": 1,
+      "changed": false,
+      "allowed": false
+    },
+    {
+      "name": "cim-2",
+      "result": 2,
+      "changed": false,
+      "allowed": false
+    },
+    {
+      "name": "cim-3",
+      "result": 3,
+      "changed": false,
+      "allowed": false
+    },
+    {
+      "name": "cim-4",
+      "result": 4,
+      "changed": false,
+      "allowed": false
+    },
+    {
+      "name": "cim-5",
+      "result": 5,
+      "changed": false,
+      "allowed": false
+    },
+    {
+      "name": "mapping-changed",
+      "result": 0,
+      "changed": true,
+      "allowed": false
+    }
+  ]
+}

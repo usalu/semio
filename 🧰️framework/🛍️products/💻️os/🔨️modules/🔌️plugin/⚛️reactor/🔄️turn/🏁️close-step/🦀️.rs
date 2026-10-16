@@ -1,8 +1,16 @@
 //! 🏁️ One bounded reactor close opportunity driven by the turn.
 
-use super::*;
+use semio_framework_plugin_reactor_core::ARMED_TIMERS;
+use std::cell::Cell;
+use semio_framework_plugin_reactor_tasks::{INSTANCE_METADATA, REGISTRY, TASK_RESUMES};
+use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
+use semio_framework_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR};
+use semio_framework_plugin_reactor_tasks::tasks_task_lane::cancel_instance_tasks_step;
+use semio_framework_plugin_actor_host::requests;
+use crate as turn;
 
-pub(super) fn step_reactor_close(cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+#[doc(hidden)]
+pub fn step_reactor_close(cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     REACTOR_CLOSES.with(|closes| {
         let Ok(mut closes) = closes.try_borrow_mut() else { return Ok(false) };
         let start = REACTOR_CLOSE_CURSOR.with(Cell::get);

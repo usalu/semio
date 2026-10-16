@@ -62,9 +62,9 @@ pub mod board {
     pub use geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
     pub use semio_framework_canvas as canvas;
     pub use graph;
-    pub use crate::io as io;
-    pub use crate::normal as normal;
-    pub use crate::ports as ports;
+    pub use crate::io;
+    pub use crate::normal;
+    pub use crate::ports;
     pub mod schema {
         pub use semio_framework_os_infinite_board_schema::{board_edge_handle_ids, board_locked_option, board_visible_option, board_visible_or_true, BoardPalette, BoardPaletteOverlay, BoardVisibility, CameraDescriptor, NodeDescriptor};
         pub mod dag_input {
@@ -114,16 +114,16 @@ pub mod directed {
     pub use semio_framework_graph_drawing::routing::{circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, rectangle_handle_angle_toward};
     pub use geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
     pub use semio_framework_canvas as canvas;
-    pub use crate::directed as directed;
-    pub use crate::directed_dag as directed_dag;
-    pub use crate::directed_normal as directed_normal;
+    pub use crate::directed;
+    pub use crate::directed_dag;
+    pub use crate::directed_normal;
     pub use graph;
-    pub use crate::io as io;
-    pub use crate::normal as normal;
-    pub use crate::ports as ports;
-    pub use crate::schema as schema;
-    pub use crate::types as types;
-    pub use crate::undirected as undirected;
+    pub use crate::io;
+    pub use crate::normal;
+    pub use crate::ports;
+    pub use crate::schema;
+    pub use crate::types;
+    pub use crate::undirected;
 }
 pub mod directed_dag {
     pub use semio_framework_os_infinite_board_schema::Selection;
@@ -159,16 +159,16 @@ pub mod directed_normal {
     pub use semio_framework_canvas::camera::CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX;
     pub use semio_framework_canvas::camera::CANVAS_CAMERA_ZOOM_MIN as BOARD_CAMERA_ZOOM_MIN;
     pub use semio_framework_canvas as canvas;
-    pub use crate::directed as directed;
-    pub use crate::directed_dag as directed_dag;
-    pub use crate::directed_normal as directed_normal;
+    pub use crate::directed;
+    pub use crate::directed_dag;
+    pub use crate::directed_normal;
     pub use graph;
-    pub use crate::io as io;
-    pub use crate::normal as normal;
-    pub use crate::ports as ports;
-    pub use crate::schema as schema;
-    pub use crate::types as types;
-    pub use crate::undirected as undirected;
+    pub use crate::io;
+    pub use crate::normal;
+    pub use crate::ports;
+    pub use crate::schema;
+    pub use crate::types;
+    pub use crate::undirected;
 }
 pub mod io {
     pub mod text {
@@ -216,10 +216,10 @@ pub mod normal {
         pub use geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
         pub use semio_framework_canvas as canvas;
         pub use graph;
-        pub use crate::io as io;
-        pub use crate::normal as normal;
-        pub use crate::ports as ports;
-        pub use crate::board::schema as schema;
+        pub use crate::io;
+        pub use crate::normal;
+        pub use crate::ports;
+        pub use crate::board::schema;
     }
     pub mod undirected {
         pub use semio_framework_os_infinite_board_schema::{board_edge_handle_ids, board_locked_option, board_visible_option, board_visible_or_true, BoardPalette, BoardPaletteOverlay, BoardVisibility, CameraDescriptor, NodeDescriptor, Selection};
@@ -231,10 +231,10 @@ pub mod normal {
         pub use geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
         pub use semio_framework_canvas as canvas;
         pub use graph;
-        pub use crate::io as io;
-        pub use crate::normal as normal;
-        pub use crate::ports as ports;
-        pub use crate::board::schema as schema;
+        pub use crate::io;
+        pub use crate::normal;
+        pub use crate::ports;
+        pub use crate::board::schema;
     }
 }
 pub mod ports {
@@ -246,14 +246,14 @@ pub mod ports {
     pub use semio_framework_graph_drawing::routing::{circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, rectangle_handle_angle_toward};
     pub use geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
     pub use semio_framework_canvas as canvas;
-    pub use crate::directed as directed;
-    pub use crate::directed_dag as directed_dag;
-    pub use crate::directed_normal as directed_normal;
+    pub use crate::directed;
+    pub use crate::directed_dag;
+    pub use crate::directed_normal;
     pub use graph;
-    pub use crate::io as io;
-    pub use crate::normal as normal;
-    pub use crate::ports as ports;
-    pub use crate::undirected as undirected;
+    pub use crate::io;
+    pub use crate::normal;
+    pub use crate::ports;
+    pub use crate::undirected;
     pub mod schema {
         pub use semio_framework_os_infinite_board_engine::HandleDescriptor;
     }
@@ -278,15 +278,15 @@ pub mod undirected {
     pub use semio_framework_graph_drawing::routing::{circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, rectangle_handle_angle_toward};
     pub use geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
     pub use semio_framework_canvas as canvas;
-    pub use crate::directed as directed;
-    pub use crate::directed_dag as directed_dag;
-    pub use crate::directed_normal as directed_normal;
+    pub use crate::directed;
+    pub use crate::directed_dag;
+    pub use crate::directed_normal;
     pub use graph;
-    pub use crate::io as io;
-    pub use crate::normal as normal;
-    pub use crate::ports as ports;
-    pub use crate::ports::schema as schema;
-    pub use crate::undirected as undirected;
+    pub use crate::io;
+    pub use crate::normal;
+    pub use crate::ports;
+    pub use crate::ports::schema;
+    pub use crate::undirected;
 }
 pub use semio_framework_os_infinite_board_normal_scene::{board_set_grid_visible, board_set_wheel_zoom_active};
 pub use semio_framework_os_infinite_board_normal_focus::board_set_camera;

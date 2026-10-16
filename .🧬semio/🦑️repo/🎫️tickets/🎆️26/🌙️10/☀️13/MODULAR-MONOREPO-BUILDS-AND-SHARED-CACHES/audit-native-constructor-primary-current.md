@@ -1,0 +1,22 @@
+# Independent Native Constructor Primary Audit
+
+No actionable Source finding in the frozen successor. The earlier P1 (prepare Error or thrown undefined replaced by later backing failure) is addressed in the consumed Fixed constructor. This is a read-only Source/evidence review; no tests, compiler, provider, mount, cache, service, browser or lease operation ran.
+
+## Source Findings
+
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/👓️observation/🟦️.ts:7` authenticates the genuine control before callback/DATA validation, then uses the original issued-operation owner. Its explicit `failed` boolean preserves thrown undefined; ordered awaited prepare/observe steps retain at most two failures and rethrow the first. The schema closes those two steps and failure extent. The diagnostic array is not cleanup authority.
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts:168` consumes that exact helper around actual `platform.prepare` and actual backing lstat/link/size/identity validation. It checks/captures the actual operation before the closure. Validated backing identity is assigned only after validation. The constructor records helper failures in order with identity deduplication, awaits ordinary work and pending commands, begins canonical accepted cleanup, and throws `attempt.primary`. Unknown backing, pending creator/receipt descriptor, changed identity or cleanup ambiguity retains the real writer/scope rather than deleting unknown backing or releasing unresolved custody.
+- Fixed `handoffFixedPreparationV1` at line 232 and Mac cleanup command `handoffPersistentPreparationV1` at line 149 validate original enrollment/body and genuine writer proof before pure `nativeImagePreparationDecisionV1` DATA. Actual ordinary drain, command/operation drain and retained guard custody precede handoff. This does not establish outer funded-parent orchestration.
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧹️retirement/🧪️tests/🟦️.ts:91–95` uses genuine received children, ordinary actual filesystem backing, exact helper, outside-receiver expected failure assertions, and AST consumption by the true constructor. The fixture/schema, Ajv and independent SQLite precedence checks cover both later-invalid-backing rows. These are not successful Native-provider doubles.
+
+## Evidence Correction And Limits
+
+The earlier audit's statement that four constructor logs were absent was wrong: its relative-directory lookup was wrong. All four exist under this ticket's `🗑️generated`; I independently read/hash them at that location. They match the corrected observation. All four successor logs also exist and match the frozen hashes. Both successor test logs contain all five debug observations, including Error then observation and undefined then observation, and six file totals adding to 39 passing tests / 920 assertions with zero reported failures.
+
+The four strict logs are empty. Empty bytes establish neither exit status nor execution. The terminal handles and exit-zero statuses in `native-constructor-primary-observation-current.md` remain execution-owner provenance; this audit did not independently collect those terminal statuses. Likewise retained test output is inspected evidence, not a new execution by this reviewer.
+
+## Closure And Custody
+
+All six changed Source paths and all 55 declared closure paths matched the frozen snapshot when read. Full before/after byte lengths and SHA-256 are retained in [Before Hashes](audit-native-constructor-primary-hashes-before.md) and [After Hashes](audit-native-constructor-primary-hashes-after.md), including all eight cited evidence logs. No drift was detected across this audit's bracketing captures. Peer facade drift predating the frozen successor is not a new authority owner: current package descriptor export maps to the explicit public facade, which reexports the same original Core descriptor module. Its private descriptor ledger remains in that original owner; no copied issuer/parallel custody is introduced by the observed facade.
+
+Actual Native construction/failure and OS teardown, handoff-gap recovery, parent preappend/allocation-to-provider association, durable preclaim backend consumption and Volume adoption remain unqualified. This audit accepts only the bounded consumed-Source successor; it does not close the goal/ticket or qualify those integrations.

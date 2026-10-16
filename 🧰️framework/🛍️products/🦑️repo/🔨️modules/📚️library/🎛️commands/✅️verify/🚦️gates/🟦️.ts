@@ -1,4 +1,4 @@
-/** 🧭️ Census gates behind `verify production-placeholders|docstrings|agnostic|mutation-caps|debug-tags|interface-owners`.
+/** 🚦️ Census gates behind `verify production-placeholders|docstrings|agnostic|mutation-caps|debug-tags|interface-owners`.
  * @see 📜️script.ts
  */
 import { readFileSync } from "node:fs";
@@ -172,10 +172,10 @@ export async function runAgnosticGate(root: string, args: readonly string[]): Pr
  * (`x-semio-inverse-rows.bounded`) is wrapped by a non-generic `#[derive(Mutations)]` aggregate of its artifact, so the derived
  * payload law — the per-leaf oracle of the cap — exists. Prints the bounded leaves per plugin and every `capLawMissing` leaf;
  * `--under <repository-relative path>` narrows it and refuses a path that holds no bounded leaf. Publishes no acceptance record.
- * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🟦️.ts `mutationCapReport` */
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🐘️mutation-caps/🟦️.ts `mutationCapReport` */
 export async function runMutationCapGate(root: string, args: readonly string[]): Promise<void> {
   if (!(args.length === 0 || (args.length === 2 && args[0] === "--under" && args[1] !== ""))) throw new Error("usage: verify mutation-caps [--under <repository-relative path>]");
-  const { mutationCapReport } = await import("../../../../🧪️test/🧬️schema/📋️orchestration/🟦️.ts");
+  const { mutationCapReport } = await import("../../../../🧪️test/🧬️schema/📋️orchestration/🐘️mutation-caps/🟦️.ts");
   const report = mutationCapReport(root, args[1] ?? "");
   if (args.length === 2 && report.leaves.length === 0) throw new Error(`verify mutation-caps: --under ${JSON.stringify(args[1])} holds no bounded leaf`);
   const plugins = new Map<string, number>();

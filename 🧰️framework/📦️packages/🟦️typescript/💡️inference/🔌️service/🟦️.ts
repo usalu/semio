@@ -1,0 +1,3 @@
+/** 🔌️ SDK entry `@semio-tech/framework/inference/service`: explicit public surface of the framework module that plugins build on. */
+export { DOCUMENT_SERVICE_TOPIC_V1, InstalledServiceRegistryV1, admitDocumentServiceDeclarationV1, parseInstalledServiceContributionsV1, parseInstalledServiceHistoryStatusV1, parseInstalledServiceOperationV1, parseInstalledServiceStatusV1 } from "../../../../🔨️modules/💡️inference/🔌️service/🟦️.ts";
+export type { AdmittedDocumentServiceDeclarationV1, InstalledServiceDriverV1, InstalledServiceHistoryStatusV1, InstalledServiceOperationV1, InstalledServiceStatusV1 } from "../../../../🔨️modules/💡️inference/🔌️service/🟦️.ts";

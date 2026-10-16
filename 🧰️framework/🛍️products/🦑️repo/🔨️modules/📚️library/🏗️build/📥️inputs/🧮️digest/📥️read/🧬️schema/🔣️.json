@@ -1,0 +1,113 @@
+{
+  "$id": "semio:nx:source-read:v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumChunkBytes": 65536,
+        "maximumPathUnits": 256,
+        "maximumPathBytes": 1024,
+        "maximumAncestors": 64,
+        "maximumFilesPerClosure": 65536,
+        "maximumUniqueSourceFiles": 262144,
+        "maximumInventories": 16384,
+        "maximumSourceFileBytes": 536870912,
+        "maximumSourceBytes": 8589934592,
+        "maximumClosureBytes": 134217728,
+        "maximumTomlBytes": 33554432,
+        "maximumMetadataBytes": 268435456,
+        "maximumMetadataNodes": 262144,
+        "maximumMetadataDepth": 64,
+        "maximumReadOperations": 1048576,
+        "maximumBatchFailures": 3
+      }
+    },
+    "Admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "bytes",
+        "remainingBytes",
+        "files",
+        "remainingFiles",
+        "accepted"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "regular",
+            "missing",
+            "symlink",
+            "hardlink",
+            "directory",
+            "ancestor"
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "remainingBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8589934592
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 262145
+        },
+        "remainingFiles": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 262144
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "bytes",
+        "sourceBytes",
+        "metadataBytes",
+        "inventories"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "source",
+            "json",
+            "toml"
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sourceBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "metadataBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "inventories": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  }
+}

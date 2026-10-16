@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 export interface SvgVideoRequestV1 {

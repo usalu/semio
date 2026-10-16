@@ -32,7 +32,7 @@ import { resolvePluginBuildTargets } from "../📋️plan/🟦️.ts";
  * edits keep hot-swapping the running shell for the rest of the dev session. */
 async function watchPluginRebuilds(invocation:ScriptInvocation,targets: readonly PluginBuildTargetV1[], control: CompilerAdmissionControl): Promise<void> {
   const { nativeSourceWatchPlanV1 } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
-  const { startNativeSourceWatchV1, nativeSourceWatchSelectedV1 } = await import("./📋️plan/🟦️.ts");
+  const { startNativeSourceWatchV1, nativeSourceWatchSelectedV1,parseNativeSourceWatchPlanV1 } = await import("./📋️plan/🟦️.ts");
   const plans = new Map<string, import("./📋️plan/🟦️.ts").NativeSourceWatchPlanV1>();
   let observation: { close(): Promise<void> } | undefined;
   const signal = control.signal;
@@ -53,7 +53,7 @@ async function watchPluginRebuilds(invocation:ScriptInvocation,targets: readonly
         if (!target) continue;
         try {
           await buildPlugin(invocation,target,control);
-          plans.set(target.pluginId, await nativeSourceWatchPlanV1(target.cratePath, repoRoot));
+          plans.set(target.pluginId, parseNativeSourceWatchPlanV1(await nativeSourceWatchPlanV1(target.cratePath, repoRoot)));
           await refresh();
         } catch (error) {
           console.error("program watch rebuild failed", error);
@@ -74,7 +74,7 @@ async function watchPluginRebuilds(invocation:ScriptInvocation,targets: readonly
     await prior?.close();
   };
   try {
-    for (const target of targets) plans.set(target.pluginId, await nativeSourceWatchPlanV1(target.cratePath, repoRoot));
+    for (const target of targets) plans.set(target.pluginId, parseNativeSourceWatchPlanV1(await nativeSourceWatchPlanV1(target.cratePath, repoRoot)));
     if (plans.size) await refresh();
   } catch (error) { close(); await observation?.close(); throw error; }
   console.log("watching plugin crates for hot-swap rebuilds");

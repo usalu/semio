@@ -27,6 +27,7 @@ testkit = ["semio-hub-document-routes/testkit", "semio-hub-ledgers/testkit", "se
 [dependencies]
 
 [dev-dependencies]
+semio-hub-directory = { workspace = true }
 semio-hub-directory-contract = { workspace = true }
 semio-hub-directory-dispatch = { workspace = true }
 semio-hub-directory-service = { workspace = true }

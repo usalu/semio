@@ -68,13 +68,3 @@ fn role_name_de(role: AppRole) -> &'static str {
     }
 }
 //#endregion 🔖️Mutation
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️repins-the-cad-editor-to-the-drafting-app/🦀️.rs"]
-mod tests_repins_the_cad_editor_to_the_drafting_app;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

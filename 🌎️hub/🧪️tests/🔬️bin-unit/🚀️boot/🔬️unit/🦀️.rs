@@ -35,6 +35,7 @@ use semio_hub_runtime::presence::{db_artifact_id, document_scope_key_v1};
 use semio_framework_os_kernel as directory_access_permits;
 use semio_hub_runtime::support::now_ms;
 use semio_hub_runtime::readiness;
+use semio_hub_directory::{AuthSessionDirectory, DocumentDirectory, ShareTokenDirectory};
 #[cfg(test)]
 use protocol::{ActorId, ApplyOutcome, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 #[cfg(test)]

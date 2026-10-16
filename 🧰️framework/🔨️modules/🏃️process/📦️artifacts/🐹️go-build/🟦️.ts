@@ -1,6 +1,6 @@
 import { basename,dirname,join,resolve } from "node:path";
 import { mkdirSync,mkdtempSync,rmSync } from "node:fs";
-import { acquireCompilerCapacityLeaseV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../🏗️build/🎟️capacity/🟦️.ts";
+import { withCompilerCapacityScopeV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode,type BuildMode } from "../../🏗️build/🎚️mode/🟦️.ts";
 import { runOwnedCommand } from "../../🎛️owned-execution/🟦️.ts";
 import { stageArtifacts } from "../📤️publication/🟦️.ts";
@@ -24,13 +24,12 @@ export async function buildGoArtifactsV1(input:readonly string[],policy:GoArtifa
  const args:string[]=[];let output:string|undefined;
  for(let index=0;index<input.length;index++){const argument=input[index]!;if(argument==="-o"){if(output||!input[index+1])throw Error("Go build requires one output");output=resolve(policy.cwd,input[++index]!);}else if(argument.startsWith("-o=")){if(output)throw Error("Go build requires one output");output=resolve(policy.cwd,argument.slice(3));}else args.push(argument);}
  const configured=goBuildArgumentsV1(policy.mode,args),control=requestedCompilerAdmissionControlV1(options.control,policy.budgetMs),signal=control.signal;
- mkdirSync(policy.captureDirectory,{recursive:true});const staging=mkdtempSync(join(policy.captureDirectory,"go-"));let capacity:Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>>|undefined;
+ mkdirSync(policy.captureDirectory,{recursive:true});const staging=mkdtempSync(join(policy.captureDirectory,"go-")),artifact=output?join(staging,basename(output)):undefined;
  try{
-  capacity=await acquireCompilerCapacityLeaseV1({directory:policy.leaseDirectory,control,environment:options.environment});
-  const artifact=output?join(staging,basename(output)):undefined,environment={...(options.environment??process.env),SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism),GOMAXPROCS:String(capacity.parallelism),GOTMPDIR:staging};
-  await runOwnedCommand("go",["build",`-p=${capacity.parallelism}`,...(artifact?["-o",artifact]:[]),...configured],policy.cwd,"go:build",compilerAdmissionBudgetV1(control),{env:environment,signal});
-  capacity.release();capacity=undefined;
+  await withCompilerCapacityScopeV1({directory:policy.leaseDirectory,control,environment:options.environment},async(capacity,control)=>{const environment={...(options.environment??process.env),SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism),GOMAXPROCS:String(capacity.parallelism),GOTMPDIR:staging};
+  await runOwnedCommand("go",["build",`-p=${capacity.parallelism}`,...(artifact?["-o",artifact]:[]),...configured],policy.cwd,"go:build",compilerAdmissionBudgetV1(control),{env:environment,signal:control.signal});
+  });
   if(output&&artifact)await stageArtifacts(dirname(output),`${resolve(policy.cwd)}:go:${policy.mode}`,new Map([[basename(output),artifact]]),{signal,leaseDirectory:policy.leaseDirectory});
   console.log(`[DEBUG] Go compiler mode=${policy.mode} output=${output??"shared compiler intermediates"}`);
- }finally{capacity?.release();rmSync(staging,{recursive:true,force:true});}
+ }finally{rmSync(staging,{recursive:true,force:true});}
 }

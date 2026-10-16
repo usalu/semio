@@ -1,4 +1,4 @@
-import { validateDocumentDescriptorV1, type DocumentDescriptor } from "../../../🧬️schema/🟦️.ts";
+import { validateDocumentDescriptorV1, type DocumentDescriptor } from "@semio-tech/framework/directory/schema";
 
 export const DESCRIPTOR_DIGEST_V1_DOMAIN = "semio.document-descriptor.digest.v1\0";
 

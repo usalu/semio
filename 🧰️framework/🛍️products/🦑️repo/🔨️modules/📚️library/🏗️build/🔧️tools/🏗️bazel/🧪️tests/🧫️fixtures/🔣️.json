@@ -466,5 +466,56 @@
       "cleanup": "throw",
       "expected": "body"
     }
+  ],
+  "serviceCleanupCases": [
+    {
+      "body": "undefined",
+      "pid": "missing",
+      "outcome": "body",
+      "cleanupRefused": false,
+      "checks": 0
+    },
+    {
+      "body": "frozen",
+      "pid": "missing",
+      "outcome": "body",
+      "cleanupRefused": false,
+      "checks": 0
+    },
+    {
+      "body": "frozen",
+      "pid": "dead",
+      "outcome": "body",
+      "cleanupRefused": false,
+      "checks": 1
+    },
+    {
+      "body": "success",
+      "pid": "dead",
+      "outcome": "success",
+      "cleanupRefused": false,
+      "checks": 1
+    },
+    {
+      "body": "success",
+      "pid": "missing",
+      "outcome": "cleanup",
+      "cleanupRefused": true,
+      "checks": 0
+    },
+    {
+      "body": "success",
+      "pid": "live",
+      "outcome": "cleanup",
+      "cleanupRefused": true,
+      "checks": 1
+    },
+    {
+      "body": "frozen",
+      "pid": "unreadable",
+      "outcome": "body",
+      "cleanupRefused": true,
+      "checks": 0
+    }
   ]
 }

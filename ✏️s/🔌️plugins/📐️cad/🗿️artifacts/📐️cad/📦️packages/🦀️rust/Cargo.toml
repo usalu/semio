@@ -19,6 +19,22 @@ path = "../../🦀️.rs"
 name = "cad_editor_unit"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"
 
+[[test]]
+name = "cad_transform_tool"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🧭️transform/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "cad_panels_inspection"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "cad_panels_artifact"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "cad_panels_catalogue"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs"
+
 [dependencies]
 semio-framework-dsl = { workspace = true }
 semio-framework-plugin = { workspace = true }
@@ -31,6 +47,12 @@ semio-s-artifact-cad-cad-model-diff = { workspace = true }
 semio-s-artifact-cad-cad-mutations = { workspace = true }
 
 [dev-dependencies]
+semio-framework-ui-contract = { workspace = true }
+semio-s-artifact-cad-cad-picking = { workspace = true }
+machine = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-tool-machine = { workspace = true }
+semio-s-artifact-cad-cad-testing = { workspace = true }
 base64_codec = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-2d = { workspace = true }

@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | ShellHelpers}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { isIconName } from "@semio-tech/assets";
+import { isIconName } from "@semio-tech/framework/assets";
 // #region 🔌️Adapters
 import {
   type ActionArgDef,

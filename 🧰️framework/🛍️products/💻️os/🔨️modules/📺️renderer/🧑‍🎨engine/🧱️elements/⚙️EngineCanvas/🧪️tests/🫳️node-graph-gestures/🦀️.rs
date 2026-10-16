@@ -10,9 +10,11 @@
 //! its inline widgets and connector dots), and a port's grab point is the published connector centre.
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, lane `wgpu-node-graph-gestures`.
 
-use super::node_graph_attach_tests::{drop_engine_surface, entity_screen_rect, flow_window_scene};
+use super::node_graph_attach_tests::{entity_screen_rect, flow_window_scene};
+use semio_framework_os_renderer_wgpu_engine_attach::drop_engine_surface;
 use super::*;
-use ui_wgpu::wgpu::{InputState, SurfaceKind};
+use semio_framework_ui_declaration::ui::SurfaceKind;
+use ui_wgpu::wgpu::InputState;
 
 const GESTURE_LAW: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🫳️node-graph-gestures/🔣️.json");
 
@@ -148,7 +150,7 @@ fn a_dense_sweep_across_the_whole_surface_survives_an_action_queue_that_is_never
         }
     }
     assert_eq!(published, columns * rows, "every swept point was admitted");
-    assert!(crate::collect_fixture_actions(&mut input).len() < ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY, "a {columns}x{rows} sweep of an undrained queue stays inside {} items", ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY);
+    assert!(crate::collect_fixture_actions(&mut input).len() < semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY, "a {columns}x{rows} sweep of an undrained queue stays inside {} items", semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY);
     drop_engine_surface(surface_id);
 }
 

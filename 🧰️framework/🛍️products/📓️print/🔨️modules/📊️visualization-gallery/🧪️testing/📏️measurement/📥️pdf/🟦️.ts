@@ -2,12 +2,12 @@ import{awaitPrintPageWorkerV1}from"../../../../../📦️artifacts/🧵️worker
 import{createHash}from"node:crypto";
 import{inflateSync,inflateRawSync}from"node:zlib";
 import{Worker}from"node:worker_threads";
-import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{withPrintStorageTaskV1,type PrintExecutionV1}from"../../../../../📦️artifacts/🎛️operation/🟦️.ts";
 import{awaitPrintWorkerV1,type PrintWorkerPortV1}from"../../../../../📦️artifacts/🧵️worker/🟦️.ts";
 import{withArtifactDestinationTaskV1,type ArtifactDestinationV1}from"../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
 import{requireIssuedResourceControlRefinementV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 const policy=schema.definitions.Policy.const;
 /** 📖️ Carries only bounded page text and normalized PDF evidence. */

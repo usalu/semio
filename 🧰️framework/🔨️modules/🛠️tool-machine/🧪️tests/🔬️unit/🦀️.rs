@@ -3,13 +3,22 @@
 #![allow(unexpected_cfgs)]
 
 use super::*;
+use machine::Command;
+use machine::Machine;
+use machine::Snapshot;
+use machine::TimerId;
+use protocol::ActorId;
+use protocol::HybridLogicalTimestamp;
+use protocol::TransactionRef;
 use machine::{InvokeId, StatechartEvent, TestHost, Trigger};
 use serde_json::{json, Value};
 
-const LAW: &str = include_str!("../🧫️fixtures/🧫️transaction-law/🔣️.json");
+fn transaction_law_text() -> &'static str {
+    crate::fixture_text("🧪️tests/🧫️fixtures/🧫️transaction-law/🔣️.json")
+}
 
 fn law() -> Value {
-    serde_json::from_str(LAW).expect("fixture parses")
+    serde_json::from_str(transaction_law_text()).expect("fixture parses")
 }
 
 fn text(value: &Value) -> &str {
@@ -612,10 +621,12 @@ fn a_host_abort_cancels_the_left_timers_and_invokes_and_rests_the_tool() {
 //#endregion 🔖️RunnerLaws
 
 //#region 🔖️ScrubLaws
-const SCRUB_LAW: &str = include_str!("../🧫️fixtures/🧫️scrub-law/🔣️.json");
+fn scrub_law_text() -> &'static str {
+    crate::fixture_text("🧪️tests/🧫️fixtures/🧫️scrub-law/🔣️.json")
+}
 
 fn scrub_law() -> Value {
-    serde_json::from_str(SCRUB_LAW).expect("scrub fixture parses")
+    serde_json::from_str(scrub_law_text()).expect("scrub fixture parses")
 }
 
 fn reference_scrub_context(input: ScrubContext) -> ScrubContext {
@@ -848,10 +859,12 @@ fn a_persisted_scrub_of_another_chart_is_refused() {
 //#endregion 🔖️ScrubLaws
 
 //#region 🔖️TypingLaws
-const TYPING_LAW: &str = include_str!("../🧫️fixtures/🧫️typing-law/🔣️.json");
+fn typing_law_text() -> &'static str {
+    crate::fixture_text("🧪️tests/🧫️fixtures/🧫️typing-law/🔣️.json")
+}
 
 fn typing_law() -> Value {
-    serde_json::from_str(TYPING_LAW).expect("typing fixture parses")
+    serde_json::from_str(typing_law_text()).expect("typing fixture parses")
 }
 
 fn reference_typing_context(input: TypingContext) -> TypingContext {
@@ -1084,7 +1097,9 @@ fn two_hundred_typed_characters_are_one_run() {
 //#endregion 🔖️TypingLaws
 
 //#region 🔖️NodeDragLaws
-const NODE_DRAG_LAW: &str = include_str!("../🧫️fixtures/🧫️node-drag-law/🔣️.json");
+fn node_drag_law_text() -> &'static str {
+    crate::fixture_text("🧪️tests/🧫️fixtures/🧫️node-drag-law/🔣️.json")
+}
 
 fn node_drag_row(json: &Value) -> protocol::DslValue {
     match json {
@@ -1102,7 +1117,7 @@ fn node_drag_row(json: &Value) -> protocol::DslValue {
 /// refused by name.
 #[test]
 fn node_drag_rows_decode_to_their_records_and_invalid_rows_are_refused() {
-    let law: Value = serde_json::from_str(NODE_DRAG_LAW).expect("fixture parses");
+    let law: Value = serde_json::from_str(node_drag_law_text()).expect("fixture parses");
     for case in law["valid"].as_array().expect("valid") {
         let id = text(&case["id"]);
         let record = NodeDragRecord::from_row(&node_drag_row(&case["row"])).unwrap_or_else(|reason| panic!("{id}: {reason}"));
@@ -1120,7 +1135,7 @@ fn node_drag_rows_decode_to_their_records_and_invalid_rows_are_refused() {
 /// authoring actor, the clock and the tool; a release that yields nothing commits nothing.
 #[test]
 fn a_released_node_drag_commits_one_transaction_of_its_leaves() {
-    let law: Value = serde_json::from_str(NODE_DRAG_LAW).expect("fixture parses");
+    let law: Value = serde_json::from_str(node_drag_law_text()).expect("fixture parses");
     let commit = &law["commit"];
     let (tool, actor, at) = (text(&commit["tool"]), ActorId(text(&commit["actor"]).into()), clock(&commit["clock"]));
     let leaves: Vec<Value> = commit["leaves"].as_array().expect("leaves").clone();
@@ -1149,7 +1164,7 @@ fn a_one_step_tool_commits_one_transaction_of_its_leaves() {
 #[test]
 fn independent_one_step_dispatches_never_share_a_transaction() {
     let mut ids = std::collections::BTreeSet::new();
-    let fixture: Value = serde_json::from_str(NODE_DRAG_LAW).expect("fixture");
+    let fixture: Value = serde_json::from_str(node_drag_law_text()).expect("fixture");
     for _ in 0..fixture["independentReleases"]["count"].as_u64().expect("count") {
         let NodeDragEmit::Commit(transaction, _) = tool_once_emit("demo@1/*#editor", "place", "seed", vec![1]) else { panic!("one-step dispatch commits") };
         assert!(ids.insert(transaction.id), "each independent gesture owns its transaction");

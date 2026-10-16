@@ -2016,14 +2016,6 @@ where
         let step = replay.step_operations(&store_log.envelope.vcs.edits, budget.operations, &mut || budget.turn_ends(0, deadline));
         match step {
             Ok(ReplayStep::Pending(progress)) => {
-                #[cfg(debug_assertions)]
-                {
-                    static TURNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-                    let turns = TURNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed).saturating_add(1);
-                    if turns >= 1024 && turns.is_power_of_two() {
-                        eprintln!("[DEBUG] deferred reprojection turn={turns} cursor={} operation={} done={} total={} settlementWork={:?} cleanup={} convergence={:?}", replay.cursor, replay.operation, progress.done, progress.total, replay.message_settlement.as_ref().map(|settlement| settlement.completed_work()), replay.replay_retirement.is_some(), replay.convergence_search);
-                    }
-                }
                 self.pending_reprojection = Some(pending);
                 Ok(Some(ReprojectionAdvance::Pending(progress)))
             }

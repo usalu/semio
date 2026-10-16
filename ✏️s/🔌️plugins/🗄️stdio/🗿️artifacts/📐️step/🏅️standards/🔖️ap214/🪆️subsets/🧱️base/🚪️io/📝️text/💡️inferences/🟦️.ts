@@ -49,5 +49,5 @@ export const stdioStepAp214BaseInferenceTextGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseStepInferenceText(value: unknown, at = "$"): StepInferenceText {
-  return stdioStepAp214BaseInferenceTextGuardObject(value, `${at}`);
+  return stdioStepAp214BaseInferenceTextGuardString(value, `${at}`);
 }

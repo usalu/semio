@@ -9,12 +9,16 @@
 //! | `zoom-wheel` | `interactionHover`, `noteWorldNavigation`, `setCamera` | `interactionHover` | the notch resolved the window's own `ScrollRegion`, whose id names no `.pane`/`.map` surface, so `wheel_reaches_scene_surface` refused and the world never saw it (`🗑️generated/w11a-parity-run-14/wgpu/console.txt:19476`, `wheel apply … hit=Some(ScrollRegion) control=Some("") propagates=false`) |
 //! | `example-picker-dismiss` | `engagementAbort` | (none) | the open picker made `idle` false, so the app-keybinding rung never ran, and the sync Escape arm closed the picker and returned |
 
-use super::command_registry_tests::test_app;
+use semio_framework_os_renderer_wgpu_fixtures::shell::{retained_world_sequence_probe, test_app};
+use test_app;
 use super::*;
 use infinite_world::world::World3dState;
 use semio_framework::manifest::Keybinding;
 
-const WGPU_RENDERER_SOURCE: &str = crate::RENDERER_SOURCE;
+#[allow(non_snake_case)]
+fn WGPU_RENDERER_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::renderer_source()
+}
 const WORLD_JOURNAL_SEQUENCES: &str = include_str!("../../../🌐️World3dHost/🧪️tests/🧫️fixtures/📜️journal-sequences.json");
 
 /// 🪟️ The pane geometry of the parity journey's own perspective window, and the point the probe aims
@@ -239,7 +243,7 @@ fn a_modal_layer_or_an_unnamed_dock_row_activates_no_window() {
 /// 🖱️ A real secondary press opens the menu and reaches only its captured World.
 #[test]
 fn a_plain_secondary_press_over_a_pane_opens_the_menu_and_still_presses_the_surface() {
-    super::shell_input_tests::retained_world_sequence_probe("secondary");
+    retained_world_sequence_probe("secondary");
 }
 
 /// ⚖️ LAW (source anchor + oracle): a modal layer OPENING hands every surface that still publishes a
@@ -253,12 +257,12 @@ fn a_plain_secondary_press_over_a_pane_opens_the_menu_and_still_presses_the_surf
 #[test]
 fn a_modal_layer_opening_clears_every_published_hover_in_that_frame() {
     let anchor = "if modal && world3d_hover_clear_is_owed(&state.selection, &state.authority) && enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_leave(";
-    assert!(WGPU_RENDERER_SOURCE.contains(anchor), "🚧️ the world authority phase clears a published hover while a modal layer is up");
+    assert!(WGPU_RENDERER_SOURCE().contains(anchor), "🚧️ the world authority phase clears a published hover while a modal layer is up");
     assert!(
-        !WGPU_RENDERER_SOURCE.contains("if modal && world3d_hover_is_published(&state.selection)"),
+        !WGPU_RENDERER_SOURCE().contains("if modal && world3d_hover_is_published(&state.selection)"),
         "🚧️ and it asks the OWED predicate, never the published one — a per-FRAME caller that asks `is_published` re-enqueues one leave per frame until the bounded queue saturates and the frame faults"
     );
-    assert!(WGPU_RENDERER_SOURCE.contains("let modal = shell.pointer_input_is_modal();"), "🚧️ and it asks the shell's own modal predicate, the one W12a's overlay laws already pin");
+    assert!(WGPU_RENDERER_SOURCE().contains("let modal = shell.pointer_input_is_modal();"), "🚧️ and it asks the shell's own modal predicate, the one W12a's overlay laws already pin");
 
     let fixture: serde_json::Value = serde_json::from_str(WORLD_JOURNAL_SEQUENCES).expect("🧫️ the world journal oracle parses");
     let case = fixture["steps"].as_array().expect("steps").iter().find(|case| case["id"] == "modal-open").expect("🧫️ the oracle carries the modal-open step");

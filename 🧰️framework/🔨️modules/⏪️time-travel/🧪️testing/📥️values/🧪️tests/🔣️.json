@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "titles": [
+    {
+      "text": "",
+      "title": ""
+    },
+    {
+      "text": "Dialog\nDetails",
+      "title": "Dialog"
+    },
+    {
+      "text": "📄 Dokument\nZeile zwei",
+      "title": "📄 Dokument"
+    },
+    {
+      "text": "\nDetails",
+      "title": ""
+    }
+  ],
+  "history": [
+    {
+      "id": "x/framework.history.entry.12",
+      "label": "First",
+      "kind": "entry",
+      "key": "12",
+      "parent": null
+    },
+    {
+      "id": "x/framework.history.mutation.change",
+      "label": "Change",
+      "kind": "mutation",
+      "key": "change",
+      "parent": "x/framework.history.entry.12"
+    }
+  ],
+  "inferenceExports": [
+    "prepareSourceAnalysesV1",
+    "createScriptInputCache",
+    "nativeSourceWatchPlanV1",
+    "inferReadOnlyBuildProjectSourcesV1",
+    "discoverNativeBuildOwnersV1",
+    "discoverBuildOwnerAdmissionFactsV1",
+    "readBuildOwnerRegistrySourceV1",
+    "dependencyResolutionAuthority",
+    "createDependencies",
+    "createMetadata",
+    "default",
+    "libraryBootstrap",
+    "cacheInternals",
+    "discoverBuildProjectsV1",
+    "discoverBuildDependenciesV1"
+  ]
+}

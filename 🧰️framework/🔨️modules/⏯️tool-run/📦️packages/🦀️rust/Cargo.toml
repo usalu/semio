@@ -28,6 +28,5 @@ semio-framework-replication = { path = "../../../📡️replication/📦️packa
 ui = { path = "../../../🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 serde = { workspace = true }
 
-[dev-dependencies]
-semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
-serde_json = { workspace = true }
+[features]
+testkit = []

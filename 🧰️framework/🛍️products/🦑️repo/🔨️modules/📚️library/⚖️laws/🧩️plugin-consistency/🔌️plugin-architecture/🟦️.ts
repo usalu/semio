@@ -1,4 +1,4 @@
-/** 📐️ Wave 4 plugin consistency policy: artifacts-only plugin architecture rules and the APA ratchet.
+/** 🔌️ Wave 4 plugin consistency policy: artifacts-only plugin architecture rules and the APA ratchet.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { type PolicyModSpan, policyMaskLiterals, policyTestModSpans, policyLineInTestMod } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";
@@ -285,7 +285,7 @@ const POLICY_STATE_LANE_EPHEMERAL_BOX_RE = /\bephemeral(?:Box|Map|Set|WeakMap)\b
  *   `🖥️platform` adapter. Persisted local-only state IS the config lane; the medium is an adapter
  *   detail, so bypassing the lane is what is banned, never the API itself.
  * - `ephemeral-box`: the `ephemeralBox`/`ephemeralMap`/`ephemeralSet`/`ephemeralWeakMap` helpers in
- *   `🎠️kernel/🟦️.ts`, whose own docstring calls them the "sole lane until the OS draft
+ *   `🫧️transient/🟦️.ts`, whose own docstring calls them the "sole lane until the OS draft
  *   snapshot owns these keys". The Transient lane now owns them.
  */
 export function policyStateLaneExhaustivenessBreaches(repoRoot: string): BreachRecord[] {

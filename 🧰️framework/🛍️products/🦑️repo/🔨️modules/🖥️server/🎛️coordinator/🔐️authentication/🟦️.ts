@@ -10,8 +10,8 @@ import { randomBytes } from "crypto";
 import { parseCommandAction, parseCreateDeveloperRequest, parseCreateKeyRequest, parseRevokeKeyRequest } from "../🧬️schema/🟦️.ts";
 // #endregion 🔌️Adapters
 
-import { createApiKey, revokeApiKey, createDeveloper, getDeveloperByEmail, insertAuditLog } from "@/lib/persistence";
-import { requireAuth, requireAdmin, isAuthError, hashApiKey } from "@/lib/authentication";
+import { createApiKey, revokeApiKey, createDeveloper, getDeveloperByEmail, insertAuditLog } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
+import { requireAuth, requireAdmin, isAuthError, hashApiKey } from "@semio-tech/framework/products/repo/modules/server/library/authentication";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);

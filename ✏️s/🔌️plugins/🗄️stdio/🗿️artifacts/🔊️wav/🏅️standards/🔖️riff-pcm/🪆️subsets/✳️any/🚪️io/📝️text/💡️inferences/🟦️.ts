@@ -49,5 +49,5 @@ export const stdioWavRiffpcmAnyInferenceTextGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseWavInferenceText(value: unknown, at = "$"): WavInferenceText {
-  return stdioWavRiffpcmAnyInferenceTextGuardObject(value, `${at}`);
+  return stdioWavRiffpcmAnyInferenceTextGuardString(value, `${at}`);
 }

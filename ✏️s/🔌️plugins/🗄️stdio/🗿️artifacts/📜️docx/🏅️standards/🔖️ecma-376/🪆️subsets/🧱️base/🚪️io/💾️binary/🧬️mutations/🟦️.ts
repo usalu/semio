@@ -1,6 +1,6 @@
 import {parseXmlDocumentJson,xmlDocumentJsonValue} from "../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 /** 💾️ Authored SetPart record framing over the first-party pack value codec. */
-import {encodePackValue,decodePackValue,packUInt,isPackInteger} from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
+import {encodePackValue,decodePackValue,packUInt,isPackInteger} from "@semio-tech/framework/packs";
 import {parseDocxSetPart} from "../../../🧬️schema/🧬️mutations/📦set-part/🟦️.ts";
 import type {DocxSetPart} from "../../../🧬️schema/🧬️mutations/🟦️.ts";
 export type DocxMutationsDocx=Uint8Array;

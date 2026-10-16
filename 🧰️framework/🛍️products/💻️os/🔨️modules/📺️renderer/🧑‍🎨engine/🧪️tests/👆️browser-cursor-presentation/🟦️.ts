@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import fixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧊️wgpu/👆️cursor/🔣️.json";
+import { uiWgpuCursorFixture as fixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
 import { resolveWgpuBootDescriptor } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 

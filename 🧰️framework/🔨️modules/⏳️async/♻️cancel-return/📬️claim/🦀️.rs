@@ -1,8 +1,8 @@
 //! 🔐️ Returns each actual permit alias through its original pre-admitted claim slot.
 use semio_framework_value::{ValueError, ValueRefusalKind, retirement::{RetireOwned, RetirementCursor, RetirementStep}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use std::sync::{Arc, atomic::{AtomicU8,AtomicPtr,Ordering}};
-pub struct PublicationClaim { state: AtomicU8, returned: AtomicPtr<PublicationClaim> }
-pub struct PublicationClaimHandle { inner: Arc<PublicationClaim> }
+pub struct PublicationClaim { #[doc(hidden)] pub state: AtomicU8, returned: AtomicPtr<PublicationClaim> }
+pub struct PublicationClaimHandle { #[doc(hidden)] pub inner: Arc<PublicationClaim> }
 impl PublicationClaim {
  /// 📏️ Quotes the original inline claim and shared frame before its caller-funded birth.
  pub fn admission_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{capacity_bytes:PublicationClaimHandle::frame_bytes(),depth:1,..Default::default()}}
@@ -13,12 +13,12 @@ impl PublicationClaim {
  pub fn is_cancelled(&self)->bool { self.state.load(Ordering::Acquire)&2!=0 }
  pub fn finish(&self) { self.state.fetch_or(4,Ordering::AcqRel); }
  pub fn is_finished(&self)->bool { self.state.load(Ordering::Acquire)&4!=0 }
- fn is_claimed(&self)->bool { self.state.load(Ordering::Acquire)&1!=0 }
+ pub fn is_claimed(&self)->bool { self.state.load(Ordering::Acquire)&1!=0 }
 }
 impl PublicationClaimHandle {
  pub fn same_original(left:&Self,right:&Self)->bool { Arc::ptr_eq(&left.inner,&right.inner) }
- fn frame_bytes()->usize { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<PublicationClaim>() }
- fn has_returned_alias(&self)->bool { !self.inner.returned.load(Ordering::Acquire).is_null() }
+ pub fn frame_bytes()->usize { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<PublicationClaim>() }
+ pub fn has_returned_alias(&self)->bool { !self.inner.returned.load(Ordering::Acquire).is_null() }
  fn drain_returned_alias(&self)->bool {
   let pointer=self.inner.returned.swap(std::ptr::null_mut(),Ordering::AcqRel);
   if pointer.is_null(){return false;}
@@ -43,7 +43,7 @@ impl Clone for PublicationClaimHandle { fn clone(&self)->Self { Self { inner:Arc
 impl std::ops::Deref for PublicationClaimHandle { type Target=PublicationClaim; fn deref(&self)->&PublicationClaim { &self.inner } }
 pub struct PublicationPermit { claim:Option<PublicationClaimHandle> }
 impl Drop for PublicationPermit { fn drop(&mut self){if let Some(original)=self.claim.take(){original.return_permit();}} }
-struct ClaimRetirement { source:Option<PublicationClaimHandle> }
+struct ClaimRetirement { pub source:Option<PublicationClaimHandle> }
 impl RetirementCursor for ClaimRetirement {
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
   let Some(source)=self.source.as_ref()else{return RetirementStep::Complete;};
@@ -60,9 +60,6 @@ impl RetirementCursor for ClaimRetirement {
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
 
 impl RetireOwned for PublicationClaimHandle {
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(ClaimRetirement{source:Some(self)})}
@@ -71,3 +68,8 @@ impl RetireOwned for PublicationClaimHandle {
  fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
 }
 
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod internals {
+    pub type ClaimRetirement = super::ClaimRetirement;
+}

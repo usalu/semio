@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "trace": [
+      "products",
+      "scratch",
+      "destination",
+      "body",
+      "destination:close",
+      "scratch:close",
+      "products:close"
+    ],
+    "cases": [
+      "live",
+      "copied",
+      "cancelled",
+      "undefined",
+      "frozen"
+    ],
+    "declarationFiles": 5,
+    "declarationEntry": "🟦️.d.ts"
+  }
+}

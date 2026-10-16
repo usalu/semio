@@ -2,27 +2,115 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/framework/process/compiler-capacity/inherited-proof/v1",
   "definitions": {
+    "AuthorityRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "expectedReads",
+        "expectedRefused"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "copy",
+            "structural"
+          ]
+        },
+        "expectedReads": {
+          "const": 0
+        },
+        "expectedRefused": {
+          "const": true
+        }
+      }
+    },
     "ChildResult": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "entered", "outcome", "parallelism"],
+      "required": [
+        "version",
+        "entered",
+        "outcome",
+        "parallelism"
+      ],
       "properties": {
-        "version": {"const": 1},
-        "entered": {"type": "boolean"},
-        "outcome": {"enum": ["granted", "refused"]},
-        "parallelism": {"type": ["integer", "null"], "minimum": 1}
+        "version": {
+          "const": 1
+        },
+        "entered": {
+          "type": "boolean"
+        },
+        "outcome": {
+          "enum": [
+            "granted",
+            "refused"
+          ]
+        },
+        "parallelism": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
       }
     },
     "Observation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "parentExclusiveBefore", "parentExclusiveAfter", "childEntered", "childCoreDatabases"],
+      "required": [
+        "version",
+        "parentExclusiveBefore",
+        "parentExclusiveAfter",
+        "childEntered",
+        "childCoreDatabases"
+      ],
       "properties": {
-        "version": {"const": 1},
-        "parentExclusiveBefore": {"type": "boolean"},
-        "parentExclusiveAfter": {"type": "boolean"},
-        "childEntered": {"type": "boolean"},
-        "childCoreDatabases": {"type": "integer", "minimum": 0}
+        "version": {
+          "const": 1
+        },
+        "parentExclusiveBefore": {
+          "type": "boolean"
+        },
+        "parentExclusiveAfter": {
+          "type": "boolean"
+        },
+        "childEntered": {
+          "type": "boolean"
+        },
+        "childCoreDatabases": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "NamespaceObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "authenticatedPolicyReads",
+        "constantNamespaceUses",
+        "independentCapacityDirectory",
+        "actualGuardControl"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "authenticatedPolicyReads": {
+          "const": 1
+        },
+        "constantNamespaceUses": {
+          "const": 0
+        },
+        "independentCapacityDirectory": {
+          "const": false
+        },
+        "actualGuardControl": {
+          "const": true
+        }
       }
     }
   }

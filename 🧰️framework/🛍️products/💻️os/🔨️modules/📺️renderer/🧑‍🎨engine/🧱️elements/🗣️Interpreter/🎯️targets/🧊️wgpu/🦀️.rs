@@ -14,7 +14,7 @@
 #[cfg(test)]
 use crate::element_contracts::WorkerCell;
 #[cfg(test)]
-use ui_wgpu::wgpu::UiNode;
+use semio_framework_ui_declaration::ui::UiNode;
 
 use semio_framework_os_renderer_wgpu_ui_engine::render_plan_validator;
 pub use render_plan_validator::{validate_component_scene, RenderPlanLimits, RENDER_PLAN_LIMITS};

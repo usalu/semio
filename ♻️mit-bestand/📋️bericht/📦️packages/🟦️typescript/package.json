@@ -14,6 +14,8 @@
   "bundleKind": "asset",
   "devDependencies": {
     "d3-force": "3.0.0",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@napi-rs/canvas": "^1.0.2",
+    "pdfjs-dist": "^5.4.296"
   }
 }

@@ -5,14 +5,14 @@ import { dirname, isAbsolute, join } from "node:path";
 import { CARGO_CONTRACT_NAME, JsonMap, BUILD_CONTRACT_NAME, StdioArtifactPackageRecord, canonicalStdioArtifactNames, stdioArtifactPackageContract, slashStdioPath } from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts";
 import { cargoWorkspaceForManifest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
 import { readBuildGraphV1,resolveBuildInputsV1, type BuildGraphV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import pinSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️pin.json";
 import {checkScriptInvocation,withScriptInvocationSignalV1,createIssuedResourceControlV1,type ScriptInvocation} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {nativeCallerPhaseV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import {withRepositoryToolingStoreV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {withRepositoryRustToolchainV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts";
-import {checkResourceLeaseControl} from "../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl} from "@semio-tech/process/leases";
 
 import { CARGO_COMPOSITION_NAME, COMPOSITION_RUST_NAME, COMPOSITION_TYPESCRIPT_NAME } from "../🪪️identity/🟦️.ts";
 

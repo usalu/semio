@@ -7,12 +7,13 @@
 //! (`🖥️platform/🟦️.ts`), and the shared fixture `🐚️Shell/🧫️fixtures/⌨️keybinding-glyphs/🔣️.json`,
 //! which React's own suite reads too.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::{tour_introduction, tour_shell};
 use super::*;
 use ui_wgpu::wgpu::InputState;
 
 /// 🌳️ `…/🧑‍🎨engine` — the same derivation the two sibling law files use.
 fn engine_root() -> std::path::PathBuf {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root")
+    semio_framework_os_renderer_wgpu_test_support::engine_root()
 }
 
 /// 🌳️ `🧰️framework`, where React's own `🔨️modules/🖱️ui` and `🔨️modules/🖥️platform` live.
@@ -21,7 +22,7 @@ fn framework_root() -> std::path::PathBuf {
 }
 
 fn armed_tour_shell() -> ShellState {
-    let mut shell = super::appearance_tour_and_footer_pill_tests::tour_shell(Some(super::appearance_tour_and_footer_pill_tests::tour_introduction()));
+    let mut shell = tour_shell(Some(tour_introduction()));
     shell.chrome.screen_w = 1440.0;
     shell.chrome.screen_h = 900.0;
     shell.docs.auto_start_introduction("tour-app", false, &mut shell.chrome, &shell.tutorial);
@@ -31,7 +32,7 @@ fn armed_tour_shell() -> ShellState {
 struct PaintedTour {
     quads: Vec<[f32; 4]>,
     glass: Vec<[f32; 4]>,
-    veil: Vec<ui_wgpu::wgpu::draw_types::GlassRegion>,
+    veil: Vec<semio_framework_ui_draw_contract::GlassRegion>,
     foreground: Vec<[f32; 4]>,
     background: Vec<[f32; 4]>,
     hits: Vec<(String, Rect)>,
@@ -119,7 +120,7 @@ fn an_introduced_target_is_cut_out_of_the_veil_and_the_card_moves_beside_it() {
 
     let anchor = Rect::new(100.0, 400.0, 120.0, 40.0);
     shell.chrome.chrome_build.register_element_rect("transform", anchor);
-    let mut introduction = super::appearance_tour_and_footer_pill_tests::tour_introduction();
+    let mut introduction = tour_introduction();
     introduction.steps[0].introduce = Some("transform".into());
     introduction.steps[0].placement = semio_framework::onboarding::IntroductionPlacement::Right;
     if let Some(session) = shell.docs.session.as_mut() {
@@ -179,7 +180,7 @@ fn the_veil_owns_every_pointer_it_covers() {
 fn an_interaction_step_paints_a_checklist_and_no_next_button() {
     let theme = Theme::light();
     let mut shell = armed_tour_shell();
-    let mut introduction = super::appearance_tour_and_footer_pill_tests::tour_introduction();
+    let mut introduction = tour_introduction();
     introduction.steps[0].interactions = vec![
         semio_framework::onboarding::IntroductionInteraction { label: "Zoom".into(), on: semio_framework::onboarding::IntroductionInteractionKind::Action("zoomIn".into()), celebrate: None },
         semio_framework::onboarding::IntroductionInteraction { label: "Pan".into(), on: semio_framework::onboarding::IntroductionInteractionKind::Action("panLeft".into()), celebrate: None },
@@ -216,10 +217,10 @@ fn the_published_control_ids_are_reacts_own() {
     assert!(platform.contains("return `framework.panelTab.${tabId}`;"), "🆔️ React's panel-tab element id appends the dotted tab id verbatim");
     assert_eq!(panel_tab_introduction_element_id("framework.panel.catalogue"), "framework.panelTab.framework.panel.catalogue");
 
-    let shell = super::appearance_tour_and_footer_pill_tests::tour_shell(None);
+    let shell = tour_shell(None);
     assert_eq!(shell.dock.panel_tab_anchor("nothing.like.a.tab"), None, "🆔️ a non-tab id is not a panel tab");
 
-    let source = crate::shell::SHELL_SOURCE.to_string();
+    let source = semio_framework_os_renderer_wgpu_test_support::shell_source().to_string();
     for dead in ["\"shell.tour.skip\"", "\"shell.tour.next\"", "\"shell.tour.back\"", "fn dock_tab_control("] {
         assert!(!source.contains(dead), "🆔️ {dead} is gone — no alias, no second vocabulary");
     }
@@ -243,7 +244,7 @@ fn a_panel_toggle_journals_reacts_own_shell_commands() {
     assert!(host.contains("noteShellCommand(\"shell.panelToggle\", shellLabelTextV1(\"ui.shellCommand.panelToggle\"), { anchor, visible: value })"), "🕒️ React journals a visibility flip");
     assert!(host.contains("noteShellCommand(\"shell.panelTab\", shellLabelTextV1(\"ui.shellCommand.panelTab\"), { anchor, tabId })"), "🕒️ and a path move");
 
-    let source = crate::shell::SHELL_SOURCE.to_string();
+    let source = semio_framework_os_renderer_wgpu_test_support::shell_source().to_string();
     let journal = source.split("async fn journal_panel_selection").nth(1).expect("the panel journal exists");
     let journal = &journal[..journal.find("async fn select_panel_tab").unwrap_or(journal.len())];
     assert!(journal.contains("\"shell.panelToggle\"") && journal.contains("\"shell.panelTab\""), "🕒️ and so does this shell");
@@ -284,18 +285,18 @@ struct GlyphRow {
 fn the_chord_formatter_answers_the_shared_platform_fixture() {
     let fixture: GlyphFixture = serde_json::from_str(include_str!("../🧫️fixtures/⌨️keybinding-glyphs/🔣️.json")).expect("the shared glyph fixture");
     for platform in &fixture.platforms.apple {
-        assert!(crate::keybinding_platform_uses_meta(platform), "⌨️ {platform} is an Apple platform");
+        assert!(semio_framework_os_renderer_wgpu_host_base::keybinding_platform_uses_meta(platform), "⌨️ {platform} is an Apple platform");
     }
     for platform in &fixture.platforms.other {
-        assert!(!crate::keybinding_platform_uses_meta(platform), "⌨️ {platform} is not");
+        assert!(!semio_framework_os_renderer_wgpu_host_base::keybinding_platform_uses_meta(platform), "⌨️ {platform} is not");
     }
     for row in &fixture.rows {
-        crate::set_host_platform_uses_meta(true);
+        semio_framework_os_renderer_wgpu_host_base::set_host_platform_uses_meta(true);
         assert_eq!(format_keybinding_shortcut(&row.keys), row.apple, "⌨️ apple: {}", row.keys);
-        crate::set_host_platform_uses_meta(false);
+        semio_framework_os_renderer_wgpu_host_base::set_host_platform_uses_meta(false);
         assert_eq!(format_keybinding_shortcut(&row.keys), row.other, "⌨️ other: {}", row.keys);
     }
-    crate::set_host_platform_uses_meta(cfg!(target_os = "macos"));
+    semio_framework_os_renderer_wgpu_host_base::set_host_platform_uses_meta(cfg!(target_os = "macos"));
 }
 
 /// 🧪️ **The platform-door law.** The formatter reads a PUBLISHED platform, the browser hook exists,
@@ -307,7 +308,7 @@ fn the_platform_door_is_wired_end_to_end() {
     assert!(renderer.contains("js_name = semioWgpuSetHostPlatform"), "⌨️ the browser hook is exported");
     assert!(renderer.contains("const { std::cell::Cell::new(cfg!(target_os = \"macos\")) }"), "⌨️ and a native process answers from its own OS with no door call at all");
 
-    let shell = crate::shell::SHELL_SOURCE.to_string();
+    let shell = semio_framework_os_renderer_wgpu_test_support::shell_source().to_string();
     let formatter = shell.split("fn format_keybinding_shortcut").nth(1).expect("the formatter exists");
     let formatter = &formatter[..formatter.find("\n}\n").unwrap_or(formatter.len())];
     assert!(formatter.contains("crate::host_platform_uses_meta()"), "⌨️ the formatter reads the published platform");
@@ -429,7 +430,7 @@ fn a_confirm_dialogs_sheet_is_encoded_in_the_foreground_pass_over_a_blurred_scri
     assert!(complete, "🗨️ the dialog walk terminates");
 
     let sheet = overlay.layers.iter().find_map(|layer| layer.foreground_of).expect("🫧 the dialog opens a glass-content layer");
-    let scrim: Vec<&ui_wgpu::wgpu::draw_types::GlassRegion> = overlay.glass_regions.iter().enumerate().filter(|(index, _)| *index != sheet).map(|(_, region)| region).collect();
+    let scrim: Vec<&semio_framework_ui_draw_contract::GlassRegion> = overlay.glass_regions.iter().enumerate().filter(|(index, _)| *index != sheet).map(|(_, region)| region).collect();
     assert_eq!(scrim.len(), 1, "🌫️ exactly one scrim");
     assert_eq!(scrim[0].blur_px, Theme::veil_blur_px(), "🌫️ which blurs at `--veil-blur` like React's `ui-veil`");
     assert_eq!(scrim[0].rect, [0.0, 0.0, 1440.0, 900.0], "🌫️ over the whole viewport");
@@ -534,7 +535,7 @@ fn the_cards_chips_carry_reacts_label_chord_icon_order() {
 /// in a screenshot nobody takes until the sheet is open.
 #[test]
 fn every_overlay_sheet_with_a_glass_region_encodes_its_glyphs_in_the_foreground_pass() {
-    let source = crate::shell::SHELL_SOURCE.to_string();
+    let source = semio_framework_os_renderer_wgpu_test_support::shell_source().to_string();
     let mut bare = Vec::new();
     for (index, line) in source.lines().enumerate() {
         if !line.contains("push_glass(") || line.contains("fn ") {

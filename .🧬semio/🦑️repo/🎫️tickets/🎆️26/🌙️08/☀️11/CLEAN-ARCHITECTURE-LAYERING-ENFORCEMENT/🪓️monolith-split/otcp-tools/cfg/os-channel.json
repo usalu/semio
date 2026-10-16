@@ -1,0 +1,36 @@
+{
+ "id": "os-channel",
+ "pkg": "semio_framework_os_channel",
+ "trees": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/",
+  "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures"
+ ],
+ "inputs_units": [
+  "os-channel-lib-test-semio-framework-os-channel"
+ ],
+ "p_lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+ "p_dirs": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/"
+ ],
+ "comps": [
+  {
+   "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🪤️companion/🦀️.rs"
+  }
+ ],
+ "ext": [
+  "semio_framework_value",
+  "protocol",
+  "semio_framework_diagnostic",
+  "semio_framework_job",
+  "semio_framework_io_sqlite_snapshot",
+  "serde",
+  "serde_json",
+  "semio_framework_trace_memory_testing",
+  "semio_framework_async_macros",
+  "semio_framework_io_control"
+ ],
+ "base_features": [],
+ "features": [
+  "testkit"
+ ]
+}

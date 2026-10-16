@@ -12,6 +12,7 @@ use semio_hub_artifact_authority::ValidatingCanonicalArtifactAuthority;
 use protocol::ArtifactId as WireArtifactId;
 use semio_hub_runtime::presence::db_artifact_id;
 use semio_hub_route_models::check_in::ledger_artifact_frontier;
+use semio_hub_directory::{AdminOperationDirectory, ArtifactCreationDirectory, AuthSessionDirectory, DocumentDirectory, EventLog};
 #[cfg(test)]
 use directory::os_directory::{DirectorySpaceRole, DirectorySpaceVisibility, DocumentCheckInStatusV1, DocumentCheckInV1, DocumentDescriptor};
 #[cfg(test)]

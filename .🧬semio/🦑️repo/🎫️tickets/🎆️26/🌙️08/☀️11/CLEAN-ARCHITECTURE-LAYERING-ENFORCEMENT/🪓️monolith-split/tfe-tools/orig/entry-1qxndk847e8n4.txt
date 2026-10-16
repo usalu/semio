@@ -1,0 +1,4 @@
+/** 🧫 The pack module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
+export { default as errorCauseCodecFixture } from "../../⚠️error/🧪️tests/🧫️fixtures/🧭️cause/📡️codec/🔣️.json" with { type: "json" };
+export const valueScalarWitnessFixtureUrl = new URL("../../🌱️value/🔎️scalar-witness/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url);
+export { default as valueIntrinsicMediaFixture } from "../../🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json" with { type: "json" };

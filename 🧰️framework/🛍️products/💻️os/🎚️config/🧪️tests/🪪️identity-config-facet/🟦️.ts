@@ -4,7 +4,7 @@ import { workerLawFakesV1 } from "../../../🧪️tests/🧰️worker-law-fakes/
 import type { TestSource } from "../../../🧪️tests/🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactEvent = import("../../../🟦️.ts").ArtifactEvent;
-type Identity = import("../../🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts").Identity;
+type Identity = import("@semio-tech/framework/config/schema/mutations/identity-config-mutation").Identity;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
 export async function registerIdentityConfigFacetTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, source: TestSource): Promise<void> {
@@ -31,7 +31,7 @@ export async function registerIdentityConfigFacetTests(vitest: Vitest, dependenc
     });
 
     it("sign-in -> sign-out -> sign-in round-trips through applyIdentityConfigMutation, and each inverts the last", async () => {
-      const { applyIdentityConfigMutation, inverseIdentityConfigMutation, signIn, signOut } = await import("../../🧬️schema/🧬️mutations/🟦️");
+      const { applyIdentityConfigMutation, inverseIdentityConfigMutation, signIn, signOut } = await import("@semio-tech/framework/config/mutations");
 
       const first = sampleIdentity();
       const afterFirstSignIn = applyIdentityConfigMutation(null, signIn(first));

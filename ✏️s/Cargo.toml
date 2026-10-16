@@ -43,7 +43,7 @@ exclude = [
     "🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d",
     "🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
     "🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
-    "🔌️plugins/🌀️procedural/🫀️core",
+    "🔌️plugins/🌀️procedural/🫀️foundation",
     "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
     "🔌️plugins/🌊️flow/🧩️extensions/🏗️bim",
     "🔌️plugins/🌊️flow/🧩️extensions/📃️list",

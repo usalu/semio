@@ -1,0 +1,9 @@
+# Public SDK Layout Reconciled Proof
+
+Ordinary fresh public `bun repo tools setup all` session86883 launched2026-10-16 12:22:15UTC, returned0 confirmed12:26:51UTC. Eleven incoming invocation/policy/tool/graph/budget overrides were removed, with no added outer deadline. The current authored public root retains policy0; finite descendant work retains its actual owner. Actual pinned Nx startup reported23.2.0.
+
+Three actual Node immutable-authorizer preflights each exposed38functions and agreed bundleSHA256116fb54d5d412fb51085873b9076971304cf1ae5dd29025aed74146ac0e6d3d2. Stage then published generation3abdf882ae2d6ea08b27c81c46b37b71c1076f586517c86417694185dad56741 were observed by production setup.
+
+Fresh aligned complete Source capture98994 returned0 for147reader/226runtime/107compiler=480role rows, zero reader declaration differences. Independent Low nofollowFD/stamps/SHA/formula/declaration audit12:21:59.069–.165UTC was clean. Canonical tooling-store/generation SH metadata diagnostic returned0 after setup: authenticated=true and currentSourceMetadataEqual=true; all roles equal with no missing/extra/hash differences. It retained59,292ms of its genuine60Original and closed its normal owned scopes before further runtime release. This is exact metadata provenance/current-file comparison plus setup's actual Node preflights, not whole-workspace, every SDK consumption/derivative, or continuing future Source authority.
+
+Retained Generated evidence: public-sdk-layout-reconciled-current.log, tooling-closures-layout-reconciled-current.json, tooling-closures-layout-reconciled-low-independent.json, active-sdk-layout-reconciled-current-provenance.json and its log. Earlier authenticated-but-semanticFALSE provenance remains retained separately. No outcome is inferred across future Source changes.

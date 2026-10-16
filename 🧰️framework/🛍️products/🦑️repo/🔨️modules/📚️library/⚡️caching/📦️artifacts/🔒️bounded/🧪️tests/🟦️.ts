@@ -1,3 +1,4 @@
+import{withBuildTestInvocationV1}from"../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
 import {createHash} from "node:crypto";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
@@ -5,7 +6,7 @@ import {Database} from "bun:sqlite";
 import {mkdtempSync,mkdirSync,readdirSync,symlinkSync,readFileSync,writeFileSync,rmSync} from "node:fs";
 import {join,dirname} from "node:path";
 import {createRequire} from "node:module";
-import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {receiveScriptProcessInvocation,scriptInvocationEnvironment,createIssuedResourceControlV1,requireIssuedResourceControlRefinementV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
@@ -51,15 +52,15 @@ test("ordinary directories and escaping outputs refuse before producer or journa
  expect(writes).toBe(0);expect(observations).toBe(0);expect(readdirSync(root)).toEqual(["link"]);console.log("[DEBUG] Nx ordinary/escaping storage refused with zero producer effects");}finally{rmSync(parent,{recursive:true});}
 });
 
-test("publication and failed restore remain conservatively charged until owned physical retirement",async()=>{
- const {root,parent}=owned(),control=original(),policy={version:1 as const,root,leaseDirectory:join(process.cwd(),".cache/b/l/m/data"),capacityBytes:16,maximumWorkspaceBytes:16,maximumArtifactBytes:16};let retired=0;
- const port:NativeStoragePortV1={observe:async()=>({identity:"law-backing",root,maximumPhysicalBytes:16}),recheck:async()=>{},retire:async()=>{retired++;}};
+test("publication and failed restore remain conservatively charged in an explicit storage Source model",()=>withBuildTestInvocationV1(async issued=>{
+ const {root,parent}=owned(),leaseDirectory=mkdtempSync(join(artifacts!,"q")),control=createIssuedResourceControlV1(issued,"test:bounded-storage-model",0),policy={version:1 as const,root,leaseDirectory,capacityBytes:16,maximumWorkspaceBytes:16,maximumArtifactBytes:16};let retired=0;
+ const port:NativeStoragePortV1={withOperation:async(actual,run)=>{requireIssuedResourceControlRefinementV1(control,actual);return run(actual);},observe:async()=>({identity:"law-backing",root,maximumPhysicalBytes:16}),recheck:async()=>{},syncMetadata:async(backing,directory,actual)=>{requireIssuedResourceControlRefinementV1(control,actual);expect(backing.identity).toBe("law-backing");expect(directory).toBe(root);},retire:async()=>{retired++;}};
  try{const first=await withBoundedNxArtifactWriteV1({policy,control,port,request:{version:1,kind:"artifact-publication",owner:"nx:first",maximumBytes:8,paths:[join(root,"cache")]}},async()=>{writeFileSync(join(root,"out"),"artifact");return 7;});expect(first.value).toBe(7);
  await expect(withBoundedNxArtifactWriteV1({policy,control,port,request:{version:1,kind:"artifact-restore",owner:"nx:failed",maximumBytes:8,paths:[join(root,"restore")]}},async()=>{throw Error("copy failed");})).rejects.toThrow("copy failed");
  let attempted=0;await expect(withBoundedNxArtifactWriteV1({policy,control,port,request:{version:1,kind:"artifact-publication",owner:"nx:next",maximumBytes:1,paths:[join(root,"cache")]}},async()=>{attempted++;})).rejects.toThrow("capacity");expect(attempted).toBe(0);expect(retired).toBe(0);
  const events=readFileSync(join(root,"storage-events.jsonl"),"utf8").trim().split("\n").map(line=>JSON.parse(line)),db=new Database(":memory:");db.exec("CREATE TABLE charge(id TEXT PRIMARY KEY,bytes INTEGER NOT NULL)");for(const event of events)if(event.type==="reserved")db.query("INSERT INTO charge VALUES(?,?)").run(event.allocation.id,event.allocation.bytes);expect((db.query("SELECT SUM(bytes) AS total FROM charge").get() as {total:number}).total).toBe(16);db.close();console.log("[DEBUG] Nx successful publication and failed restore retain16bytes; next producer refused");
- }finally{rmSync(parent,{recursive:true});}
-});
+ }finally{rmSync(parent,{recursive:true});rmSync(leaseDirectory,{recursive:true});}
+}));
 
 
 

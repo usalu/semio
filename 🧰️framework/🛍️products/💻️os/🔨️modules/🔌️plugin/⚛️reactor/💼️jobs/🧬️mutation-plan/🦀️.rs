@@ -19,31 +19,32 @@
 //! return type already matches `BuiltinPhaseFn`'s exactly — no fault-code translation needed here,
 //! unlike `💡️infer`'s `ArtifactInferenceExecutionError` boundary.
 
-use super::{BoundedJob, TwoPhaseBoundedJob};
+use crate::{BoundedJob, TwoPhaseBoundedJob};
 
 // 🚫️async: E4 fn-pointer slot — registered into `BoundedJobFactory` (see
 // `⚛️reactor/💼️jobs/🦀️.rs`'s `builtin_registry`); the admission body is a pure constructor call.
 pub(super) fn job_mutation_plan(_job: u64, input: &mut Option<Vec<u8>>, restored: &mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<Box<dyn BoundedJob>>,semio_framework_value::ValueError> {
-    super::admit_original_job(input,restored,cx,|input,restored|TwoPhaseBoundedJob::admit("job.mutation-plan", input, restored, decode_phase, super::BuiltinExecuteFn::Pure(execute_phase)))
+    crate::admit_original_job(input,restored,cx,|input,restored|TwoPhaseBoundedJob::admit("job.mutation-plan", input, restored, decode_phase, crate::BuiltinExecuteFn::Pure(execute_phase)))
 }
 
 // 🚫️async: E4 phase slot — `BuiltinPhaseFn` is synchronous by contract; `decode` itself has no
 // suspension point, so `settle_in_step` resolves it inside this state action.
 fn decode_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    super::settle_in_step("job.mutation-plan", decode(input))
+    crate::settle_in_step("job.mutation-plan", decode(input))
 }
 
 // 🚫️async: E4 phase slot — see `decode_phase`; `wire_artifact_mutation_plan` is the unchunked
 // native call this state action declares `WORK_UNITS_EXECUTE` for.
 fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    super::settle_in_step("job.mutation-plan", crate::plugin_runtime::wire_artifact_mutation_plan(input))
+    crate::settle_in_step("job.mutation-plan", semio_framework_plugin_plugin_program::wire_artifact_mutation_plan(input))
 }
 
 /// 🔎️ Validates `input` decodes as a `WireArtifactMutationPlanRequest` and reports its
 /// `(artifact_kind, mutation_id)` identity as the first slice's progress bytes.
-async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    let value = store::pack_rt::decode_wire_value(input).map_err(|error| super::fault("job.mutation-plan.decode", format!("invalid {} input: {error}", super::JOB_KIND_MUTATION_PLAN)))?;
-    let request: crate::artifact_registration::WireArtifactMutationPlanRequest = semio_framework_value::FromValue::from_value(value).map_err(|error| super::fault("job.mutation-plan.decode", error.to_string()))?;
+#[doc(hidden)]
+pub async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+    let value = store::pack_rt::decode_wire_value(input).map_err(|error| crate::fault("job.mutation-plan.decode", format!("invalid {} input: {error}", crate::JOB_KIND_MUTATION_PLAN)))?;
+    let request: semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest = semio_framework_value::FromValue::from_value(value).map_err(|error| crate::fault("job.mutation-plan.decode", error.to_string()))?;
     Ok(semio_framework_pack_json::to_json_string(&(request.artifact_kind, request.mutation_id)).into_bytes())
 }
 
@@ -53,6 +54,7 @@ async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 mod job_test_mutation_fixture;
 //#endregion 🧬️JobTestMutationFixtureMount
 
+#[doc(hidden)]
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub mod tests;

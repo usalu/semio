@@ -1,0 +1,108 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🎞️visual-job/🦀️.rs",
+ "original": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/pfb-orig/visual-job/🦀️.rs",
+ "descendants": [],
+ "chunks": [
+  {
+   "name": "contract",
+   "folder": "🧾️contract",
+   "doc": "🧾️ Visual job contract: capacities, step ceiling, backing credit, visual state, field, freshness and job stage.",
+   "segments": [
+    {
+     "lines": [
+      26,
+      152
+     ]
+    }
+   ],
+   "after": [
+    "//#endregion 🔖️Contract"
+   ]
+  },
+  {
+   "name": "solver_view",
+   "folder": "🧮️solver-view",
+   "doc": "🧮️ Solver view and numerical vocabulary: scalar fields, the solver view, numerical stages, fixed slots, child ends and the session close budget.",
+   "segments": [
+    {
+     "lines": [
+      153,
+      503
+     ]
+    }
+   ],
+   "after": [
+    "//#endregion 📦️PageVisualJob"
+   ]
+  },
+  {
+   "name": "model_step",
+   "folder": "🧱️model-step",
+   "doc": "🧱️ Numerical child, model half: the meshed solid, the child state and the model assembly step.",
+   "segments": [
+    {
+     "lines": [
+      504,
+      591
+     ]
+    },
+    {
+     "lines": [
+      593,
+      1138
+     ],
+     "wrap": {
+      "header": 592,
+      "close": 2119
+     }
+    }
+   ],
+   "before": [
+    "//#region 📦️PageVisualJob"
+   ],
+   "after": [
+    "//#endregion 📦️PageVisualJob"
+   ]
+  },
+  {
+   "name": "solve_step",
+   "folder": "🪜️solve-step",
+   "doc": "🪜️ Numerical child, solve half: the staged solve step, the interactive close and the close ladder.",
+   "segments": [
+    {
+     "lines": [
+      1139,
+      2118
+     ],
+     "wrap": {
+      "header": 592,
+      "close": 2119
+     }
+    }
+   ],
+   "before": [
+    "//#region 📦️PageVisualJob"
+   ],
+   "after": [
+    "//#endregion 📦️PageVisualJob"
+   ],
+   "reexport": false
+  },
+  {
+   "name": "page_job",
+   "folder": "📄️page-job",
+   "doc": "📄️ Paged world-snapshot publication: process backing recovery, fixed order, page credit, page lease and the page visual job.",
+   "segments": [
+    {
+     "lines": [
+      2120,
+      2836
+     ]
+    }
+   ],
+   "before": [
+    "//#region 📦️PageVisualJob"
+   ]
+  }
+ ]
+}

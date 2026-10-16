@@ -953,24 +953,6 @@ pub fn mutation_fixture_ops<M: semio_framework_value::FromValue>(root: &std::pat
 
 //#endregion 🔖️PayloadLaw
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/📔️registry/🦀️.rs"]
-mod registry_fixture;
-
-#[cfg(test)]
-#[path = "🧪️tests/🧬️mutation-laws/🦀️.rs"]
-mod mutation_laws_fixture;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🧪️mutation-payload/🦀️.rs"]
-mod mutation_payload_tests;
-//#endregion 🧪️Tests
-
 #[path = "../🧮️fold/🦀️.rs"]
 pub mod fold;
 pub use semio_framework_ui_locale::LocalizedLabel;

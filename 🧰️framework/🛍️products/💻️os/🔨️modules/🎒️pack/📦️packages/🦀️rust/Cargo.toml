@@ -4,7 +4,7 @@ name = "semio-framework-os-pack"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Schema-driven record and intrinsic value pack codecs"
+description = "The os side of the .spk family: pack runtime bridge, stored content hash read and record codec laws over the framework pack record codec"
 
 [package.metadata.semio]
 role = "framework"
@@ -28,15 +28,12 @@ record-codec-laws = ["pack/corruption-testing"]
 
 [dependencies]
 semio-framework-pack-source = { path = "../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
-semio-framework-pack-record-token = { path = "../../../../../../🔨️modules/🎒️pack/🧬️schema/📡️record-token/📦️packages/🦀️rust" }
 pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 protocol = { path = "../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
-semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 

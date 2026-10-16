@@ -26,6 +26,11 @@
   "bundleKind": "library",
   "devDependencies": {
     "@semio-tech/process": "workspace:*",
+    "@semio-tech/schema-ts": "workspace:*",
     "immer": "10.1.1"
+  },
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/value-ts": "workspace:*"
   }
 }

@@ -1,0 +1,142 @@
+{
+  "callers": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts",
+      "count": 5,
+      "owner": "store",
+      "effects": [
+        "control",
+        "control",
+        "control",
+        "control",
+        "snapshotControl"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
+      "count": 1,
+      "owner": "store",
+      "effects": [
+        "actualPhase"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
+      "count": 1,
+      "owner": "products",
+      "effects": [
+        "sink.control"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🏃️execution/🟦️.ts",
+      "count": 2,
+      "owner": "store",
+      "effects": [
+        "storePhase",
+        "storePhase"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts",
+      "count": 1,
+      "owner": "store",
+      "effects": [
+        "actualPhase"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🏗️web-build/🟦️.ts",
+      "count": 4,
+      "owner": "stateStore",
+      "effects": [
+        "createRequestedIssuedResourceControlV1(phaseControl,600_000)",
+        "createRequestedIssuedResourceControlV1(phaseControl,600_000)",
+        "createRequestedIssuedResourceControlV1(phaseControl,10_000)",
+        "createRequestedIssuedResourceControlV1(phaseControl,10_000,cancelled.signal)"
+      ]
+    }
+  ],
+  "forwarding": [
+    {
+      "storage": "store.storage",
+      "storageControl": "store.control",
+      "effect": "actualPhase",
+      "expectedStorage": "store.storage",
+      "expectedControl": "store.control",
+      "accepted": true,
+      "expectedEffect": "actualPhase"
+    },
+    {
+      "storage": "copy.storage",
+      "storageControl": "store.control",
+      "effect": "actualPhase",
+      "expectedStorage": "store.storage",
+      "expectedControl": "store.control",
+      "accepted": false,
+      "expectedEffect": "actualPhase"
+    },
+    {
+      "storage": "store.storage",
+      "storageControl": "actualPhase",
+      "effect": "actualPhase",
+      "expectedStorage": "store.storage",
+      "expectedControl": "store.control",
+      "accepted": false,
+      "expectedEffect": "actualPhase"
+    },
+    {
+      "storage": "store.storage",
+      "storageControl": "store.control",
+      "effect": "ancestor",
+      "expectedStorage": "store.storage",
+      "expectedControl": "store.control",
+      "expectedEffect": "actualPhase",
+      "accepted": false
+    }
+  ],
+  "projects": [
+    {
+      "path": "🌎️hub/📦️packages/🟦️typescript/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "calls": 2
+    },
+    {
+      "path": "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📜️script.ts",
+      "calls": 1
+    }
+  ],
+  "storybookStorage": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/💾️storage/🟦️.ts",
+  "projectOwner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts"
+}

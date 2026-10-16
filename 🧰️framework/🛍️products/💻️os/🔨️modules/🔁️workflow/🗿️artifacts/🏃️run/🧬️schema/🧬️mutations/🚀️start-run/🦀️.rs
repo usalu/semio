@@ -58,6 +58,3 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for StartRun {
 }
 //#endregion ⚙️Semantics
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

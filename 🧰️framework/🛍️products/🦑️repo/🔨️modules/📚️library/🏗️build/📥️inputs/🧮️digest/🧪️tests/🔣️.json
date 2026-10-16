@@ -1,0 +1,151 @@
+{
+  "admission": [
+    {
+      "kind": "regular",
+      "bytes": 2,
+      "remainingBytes": 2,
+      "files": 1,
+      "remainingFiles": 1,
+      "accepted": true
+    },
+    {
+      "kind": "regular",
+      "bytes": 3,
+      "remainingBytes": 2,
+      "files": 1,
+      "remainingFiles": 1,
+      "accepted": false
+    },
+    {
+      "kind": "regular",
+      "bytes": 2,
+      "remainingBytes": 2,
+      "files": 1,
+      "remainingFiles": 0,
+      "accepted": false
+    },
+    {
+      "kind": "missing",
+      "bytes": 0,
+      "remainingBytes": 0,
+      "files": 0,
+      "remainingFiles": 0,
+      "accepted": true
+    },
+    {
+      "kind": "symlink",
+      "bytes": 2,
+      "remainingBytes": 2,
+      "files": 1,
+      "remainingFiles": 1,
+      "accepted": false
+    },
+    {
+      "kind": "hardlink",
+      "bytes": 2,
+      "remainingBytes": 2,
+      "files": 1,
+      "remainingFiles": 1,
+      "accepted": false
+    },
+    {
+      "kind": "directory",
+      "bytes": 0,
+      "remainingBytes": 2,
+      "files": 1,
+      "remainingFiles": 1,
+      "accepted": false
+    }
+  ],
+  "files": {
+    "a.rs": "pub fn answer()->u8{7}\n",
+    "data.txt": "hello\n"
+  },
+  "paths": [
+    "a.rs",
+    "data.txt",
+    "absent.rs"
+  ],
+  "budgets": [
+    {
+      "request": {
+        "role": "source",
+        "bytes": 536870912,
+        "sourceBytes": 8053063680,
+        "metadataBytes": 0,
+        "inventories": 0
+      },
+      "accepted": true
+    },
+    {
+      "request": {
+        "role": "source",
+        "bytes": 536870913,
+        "sourceBytes": 0,
+        "metadataBytes": 0,
+        "inventories": 0
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "role": "source",
+        "bytes": 1,
+        "sourceBytes": 8589934592,
+        "metadataBytes": 0,
+        "inventories": 0
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "role": "json",
+        "bytes": 134217728,
+        "sourceBytes": 0,
+        "metadataBytes": 134217728,
+        "inventories": 16383
+      },
+      "accepted": true
+    },
+    {
+      "request": {
+        "role": "json",
+        "bytes": 134217729,
+        "sourceBytes": 0,
+        "metadataBytes": 0,
+        "inventories": 0
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "role": "toml",
+        "bytes": 33554432,
+        "sourceBytes": 0,
+        "metadataBytes": 0,
+        "inventories": 0
+      },
+      "accepted": true
+    },
+    {
+      "request": {
+        "role": "toml",
+        "bytes": 33554433,
+        "sourceBytes": 0,
+        "metadataBytes": 0,
+        "inventories": 0
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "role": "json",
+        "bytes": 0,
+        "sourceBytes": 0,
+        "metadataBytes": 0,
+        "inventories": 16384
+      },
+      "accepted": false
+    }
+  ]
+}

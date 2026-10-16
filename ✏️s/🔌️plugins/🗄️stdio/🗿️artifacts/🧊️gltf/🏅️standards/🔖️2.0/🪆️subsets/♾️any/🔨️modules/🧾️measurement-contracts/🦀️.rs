@@ -71,7 +71,7 @@ pub struct GltfVec3 {
 
 impl GltfVec3 {
     // 🚫️async: E1/R9 pure field-shuffle, zero I/O, consumed synchronously throughout
-    // 🔨️geometry-core (a whole-file R9 revert) — see that file's header for the full rationale.
+    // 🔨️geometry-kernel (a whole-file R9 revert) — see that file's header for the full rationale.
     pub(crate) fn new(v: [f64; 3]) -> Self {
         Self { x: v[0], y: v[1], z: v[2] }
     }

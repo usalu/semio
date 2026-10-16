@@ -28,6 +28,7 @@ testkit = ["semio-hub-ledgers/testkit", "semio-hub-route-models/testkit", "semio
 
 [dev-dependencies]
 semio-hub-auth = { workspace = true }
+semio-hub-directory = { workspace = true }
 semio-hub-directory-contract = { workspace = true }
 semio-hub-ledgers = { workspace = true, features = ["testkit"] }
 semio-hub-observability = { workspace = true }

@@ -1,0 +1,9 @@
+import{test,expect}from"bun:test";
+import{Database}from"bun:sqlite";
+import Ajv from"ajv";
+import schema from"../../../🧾️metadata/🧬️schema.json";
+import corpus from"./🔣️.json";
+import{readNativeMetadataReceiptV1}from"../../../🧾️metadata/🟦️.ts";
+/** 🧮️ Exact owned-volume receipts agree with independent schema and relational equality. */
+test("Native metadata closed volume receipt",()=>{const db=new Database(":memory:"),validate=new Ajv({strict:true}).compile({...schema,$ref:"#/definitions/Receipt"}),mapping={image:"C:\\owned\\fixed.vhd",device:"device",disk:3,unique:"owned-disk",partition:2,volume:"owned-volume",bytes:1073741824};try{expect(new Ajv({strict:true}).validate({...schema,$ref:"#/definitions/ReceiptCases"},corpus)).toBe(true);db.exec("create table result(name text,result integer,changed integer)");for(const row of corpus.cases){db.query("insert into result values(?,?,?)").run(row.name,row.result,Number(row.changed));const receipt={version:1,operation:"sync-metadata",before:mapping,after:{...mapping,volume:row.changed?"foreign":mapping.volume},returnValue:row.result},oracle=db.query<{allowed:number},[string]>("select result=0 and changed=0 as allowed from result where name=?").get(row.name);expect(Boolean(oracle?.allowed)).toBe(row.allowed);expect(validate(receipt)).toBe(row.result===0);if(row.allowed)expect(readNativeMetadataReceiptV1(JSON.stringify(receipt),JSON.stringify(mapping))).toEqual(mapping);else expect(()=>readNativeMetadataReceiptV1(JSON.stringify(receipt),JSON.stringify(mapping))).toThrow();}expect(()=>readNativeMetadataReceiptV1(JSON.stringify({version:1,operation:"sync-metadata",before:mapping,after:mapping,returnValue:0,extra:true}),JSON.stringify(mapping))).toThrow();for(const text of["{","x".repeat(8193),JSON.stringify({version:1,operation:"sync-metadata",before:mapping,after:mapping,returnValue:"0"})])expect(()=>readNativeMetadataReceiptV1(text,JSON.stringify(mapping))).toThrow();}finally{db.close();}});
+

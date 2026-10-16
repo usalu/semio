@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-pixels-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion tests of pixels: PNG and JPEG codecs, editing, sampling, coverage, compositing and raster lease retirement"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "pixels-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pixels = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-2d = { path = "../../../../../◻️2d/📦️packages/🦀️rust" }
+base64 = "0.22.1"
+percent-encoding = "2.3.2"
+png = "0.17.16"
+serde_json = { workspace = true }
+image = { version = "0.25", default-features = false, features = ["jpeg"] }

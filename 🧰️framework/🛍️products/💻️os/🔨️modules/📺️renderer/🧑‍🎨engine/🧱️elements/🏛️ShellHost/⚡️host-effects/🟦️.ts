@@ -7,7 +7,7 @@ import { shellDialogOriginIsCurrentV1, shellDialogSessionIsCurrentV1 } from "../
 import { useCallback, useEffect } from "react";
 import { renderIconRequest } from "../../🖼️IconRenderHost/🚚️request/🟦️.ts";
 import { type Effect, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
-import { encodeBackboneWorkerRequest } from "@semio-tech/framework-os";
+import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { programHistoryKeyV1, spawnedProgramViewStateV1 } from "../🪟️spawned-program/🟦️.ts";
 // #region 🔌️Adapters
 import {
@@ -19,7 +19,7 @@ import {
   localCatalogNoticeTextV1,
   localCatalogRehydrationArgumentsV1
 } from "../🗂️local-catalog/🟦️.ts";
-import { retireLocalDocument } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { retireLocalDocument } from "@semio-tech/framework/config/mutations";
 import { sharedDocumentOpeningRoleV1 } from "../🧭️opening/🟦️.ts";
 import { type ActiveSession, resolveBootExampleId } from "../../🐚️Shell/🟦️.tsx";
 import {

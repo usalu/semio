@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/renderer-wgpu-native-runtime-modules-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

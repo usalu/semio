@@ -49,5 +49,5 @@ export const energyModelInferenceTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseEnergyModelInferenceText(value: unknown, at = "$"): EnergyModelInferenceText {
-  return energyModelInferenceTextGuardObject(value, `${at}`);
+  return energyModelInferenceTextGuardString(value, `${at}`);
 }

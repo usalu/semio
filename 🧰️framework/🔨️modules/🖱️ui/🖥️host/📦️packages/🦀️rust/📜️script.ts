@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -14,6 +16,7 @@ import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦�
 /** 🎟️ Runs the input oracle or delegates native filters to the shared budget. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     if (segments[0] === "source") {
       const scope = segments[1];
       if (segments.length > 2 || (scope && scope !== "input-admission" && scope !== "ordered-scroll")) throw new Error("UI-host source test scope must be input-admission or ordered-scroll");
@@ -29,7 +32,7 @@ class TestScript extends BundleScript {
     }
     const { rest } = resolveTestLevel(segments);
     await runBudgetedTestCommand(process.execPath, ["../../🧪️tests/🌐️browser-host/🟨️.js"], { cwd: this.root, budgetMs: buildBudgetMs() });
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-host"], cwd: this.root, extraArgs: ["--no-fail-fast", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-host", "semio-framework-ui-host-tests"], cwd: this.root, extraArgs: ["--no-fail-fast", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 
@@ -37,7 +40,7 @@ class TestScript extends BundleScript {
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("UI-host native check accepts no arguments");
-    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path", "Cargo.toml", "--lib"],this.root,process.env,buildBudgetMs());
+    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path", "Cargo.toml", "--lib"],this.root,process.env,buildBudgetMs());
   }
 }
 
@@ -45,7 +48,7 @@ class CheckScript extends BundleScript {
 class CheckWasmScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("UI-host Wasm check accepts no arguments");
-    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path", "Cargo.toml", "--lib", "--target", "wasm32-unknown-unknown"],this.root,process.env,buildBudgetMs());
+    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path", "Cargo.toml", "--lib", "--target", "wasm32-unknown-unknown"],this.root,process.env,buildBudgetMs());
   }
 }
 

@@ -16,10 +16,10 @@ fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<UtilityNod
     let mut buckets: [Vec<UtilityNode>; 4] = [vec![], vec![], vec![], vec![]];
     for utility in utilities {
         let idx = match utility.category() {
-            ui_wgpu::wgpu::UtilityCategory::Selection => 0,
-            ui_wgpu::wgpu::UtilityCategory::Utilities => 1,
-            ui_wgpu::wgpu::UtilityCategory::History => 2,
-            ui_wgpu::wgpu::UtilityCategory::Sync => 3,
+            semio_framework_ui_layout::utilities::UtilityCategory::Selection => 0,
+            semio_framework_ui_layout::utilities::UtilityCategory::Utilities => 1,
+            semio_framework_ui_layout::utilities::UtilityCategory::History => 2,
+            semio_framework_ui_layout::utilities::UtilityCategory::Sync => 3,
         };
         buckets[idx].push(utility.clone());
     }

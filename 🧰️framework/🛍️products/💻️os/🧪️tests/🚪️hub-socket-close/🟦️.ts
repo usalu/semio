@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { BROWSER_HUB_SOCKET_CLOSE_V1, browserSocketCloseCodeAdmissibleV1, closeHubSocketV1, type BrowserHubSocketCloseReasonV1 } from "../../🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts";
+import { BROWSER_HUB_SOCKET_CLOSE_V1, browserSocketCloseCodeAdmissibleV1, closeHubSocketV1, type BrowserHubSocketCloseReasonV1 } from "@semio-tech/framework/directory/client/socket-close";
 
 type OracleSocket = { close(code?: number, reason?: string): void; onerror: (() => void) | null };
 type OracleWindow = { WebSocket: new (url: string) => OracleSocket; close(): void };

@@ -17,11 +17,9 @@ workspace = true
 name = "semio_framework_pack_json"
 path = "../../🦀️.rs"
 
+[features]
+# 🪝️ Exposes the `testkit` hooks (aliases and forwarders of crate-private items) for the companion crate `semio-framework-pack-json-tests`.
+testkit = []
+
 [dependencies]
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
-
-[dev-dependencies]
-serde = { workspace = true }
-serde_json = { version = "1.0.140", features = ["float_roundtrip"] }
-semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
-semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

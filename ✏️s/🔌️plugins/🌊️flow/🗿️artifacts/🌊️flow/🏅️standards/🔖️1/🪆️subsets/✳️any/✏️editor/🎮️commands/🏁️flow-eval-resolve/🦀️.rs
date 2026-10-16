@@ -27,7 +27,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `reactor::extension_response_args` together with the window address the request carried.
 ///
 /// 📏️ THREE fields is the whole budget: this route's wire witness is the fixed
-/// `store::os_pack::ScalarRecordView` (`🎒️pack/🔎️scalar-witness`), which holds three slots and at most
+/// `store::os_pack::record::scalar_witness::ScalarRecordView` (`🎒️pack/🔎️scalar-witness`), which holds three slots and at most
 /// two of them text. So the answer carries the window it belongs to, the node it answers and the
 /// answer — and NOT generation2d's `extension_id`/`ok`/`fault_*`, which its own non-scalar route can
 /// afford. A faulted answer is still bounded here: it folds as an envelope the session cannot seed,

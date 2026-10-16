@@ -31,7 +31,7 @@ test("validates the language-neutral Cargo, transaction, and Go source contract"
   expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["transaction"]["runOwnerDirectory"]).toEqual("🧾️runs");
   expect(fixture.owners).toHaveLength(9);
   expect(fixture.contexts).toHaveLength(12);
-  expect(fixture.consumers).toHaveLength(18);
+  expect(fixture.consumers).toHaveLength(23);
 });
 
 test("resolves every anonymous owner and semantic context", () => {

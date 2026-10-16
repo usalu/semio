@@ -46,6 +46,7 @@ semio-s-artifact-stdio-xlsx-base-mutations = { workspace = true }
 semio-s-artifact-stdio-xlsx-base-model = { workspace = true }
 semio-s-artifact-stdio-xlsx-base-inferences = { workspace = true }
 semio-s-artifact-stdio-xlsx-base = { workspace = true }
+semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
 
 [package.metadata.semio.composition]
 manifest = "../../🧩️composition/🔣️.json"

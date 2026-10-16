@@ -1,7 +1,7 @@
 import {parseArtifactHashHex} from "../🪪️artifact-hash/🟦️.ts";
-import type {AdmittedCheckpointSelectionV1,DocumentOpenCheckpointV1} from "../../../🧬️schema/🟦️.ts";
+import type { AdmittedCheckpointSelectionV1, DocumentOpenCheckpointV1 } from "@semio-tech/framework/directory/schema";
 /** 🪢️ Native binary checkpoint framing; pure admission lives in Directory schema. */
-import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, DOCUMENT_OPEN_ID_MAX_BYTES, type ArtifactHash, type ArtifactFrontier, type DocumentScope, type PublishedArtifactBlob, type CanonicalCheckpointPairV1 } from "../../../🧬️schema/🟦️.ts";
+import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, DOCUMENT_OPEN_ID_MAX_BYTES, type ArtifactHash, type ArtifactFrontier, type DocumentScope, type PublishedArtifactBlob, type CanonicalCheckpointPairV1 } from "@semio-tech/framework/directory/schema";
 
 /** 🪢️ The hub's canonical-checkpoint-pair media type — the ONE transport that hands a cold client
  * the published pack+SPR pair of a document's active checkpoint (`GET

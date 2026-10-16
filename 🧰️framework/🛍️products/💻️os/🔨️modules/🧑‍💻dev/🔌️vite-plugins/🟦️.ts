@@ -1,3 +1,4 @@
+import {VITE_RUNTIME_CHANNELS_ENV_V1,readViteRuntimeChannelsV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {receiveScriptProcessInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -18,14 +19,15 @@ import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_BRIDGE_FILE } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceFreshness } from "../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, activationSourceFreshnessDirectory, activationSourceFreshnessKey, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
-import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
-import { STREAM_MUX_BOUNDS_V1, StreamMuxServerV1, type StreamMuxJobV1, type StreamMuxJsonV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
-import { requestLocalBrokerSession } from "../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework/hash";
+import { STREAM_MUX_BOUNDS_V1, StreamMuxServerV1, type StreamMuxJobV1, type StreamMuxJsonV1 } from "@semio-tech/framework/io/stream-mux";
+import {readDevLocalHubProxyV1,requestDevLocalHubProxyV1,devLocalHubSessionPolicyV1} from "../🚀️local-hub/🎫️session/📋️data/🟦️.ts";
+import {parseLocalSessionV1} from "../../📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
 import { protectOwnerOnly } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
 import { agentClientLauncher, readDeclaredTools } from "../../../../🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🟦️.ts";
-import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV } from "../🚀️local-hub/🧬️schema/🟦️.ts";
-import { LOCAL_HUB_SESSION_ENDPOINT_V1, localHubSessionAnswerV1 } from "../../📇️directory/🎫️local-session/🟦️.ts";
-import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, AGENT_CREDENTIAL_SCHEMA_V1, agentCredentialInstallFileNameV1, isAgentDelegationTokenV1 } from "../../📇️directory/🤖️delegations/🟦️.ts";
+
+import { LOCAL_HUB_SESSION_ENDPOINT_V1, localHubSessionAnswerV1 } from "@semio-tech/framework/directory/local-session";
+import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, AGENT_CREDENTIAL_SCHEMA_V1, agentCredentialInstallFileNameV1, isAgentDelegationTokenV1 } from "@semio-tech/framework/directory/delegations";
 /** 📥️ Filename owned by plugin store installation; inlined so the vite-plugin graph does not pull materialization. */
 const EXTENSION_INSTALL_META = "📥️install.json";
 
@@ -1437,21 +1439,8 @@ export function semioAgentCredentialInstallVitePlugin(options: { readonly repoRo
  * hub without a broker (the shell's own sign-in stays available).
  * @see ../🚀️local-hub/🏃️execution/🟦️.ts */
 export function semioLocalHubSessionVitePlugin() {
-  return {
-    name: "semio-local-hub-session",
-    configureServer(server: { middlewares: { use: (handler: (req: { readonly url?: string; readonly method?: string }, res: { statusCode: number; setHeader: (k: string, v: string) => void; end: (body?: string) => void }, next: () => void) => void) => void } }) {
-      server.middlewares.use((req, res, next) => {
-        if (req.method !== "GET" || req.url?.split("?")[0] !== LOCAL_HUB_SESSION_ENDPOINT_V1) return next();
-        const dataDir = process.env[DEV_LOCAL_HUB_DATA_ENV] ?? "";
-        const hubUrl = process.env.S_HUB_URL ?? "";
-        const profileId = process.env[DEV_LOCAL_HUB_PROFILE_ENV] ?? "";
-        void (dataDir && hubUrl && profileId ? requestLocalBrokerSession(dataDir, hubUrl, profileId).catch(() => null) : Promise.resolve(null)).then((session) => {
-          res.setHeader("cache-control", "no-store");
-          res.statusCode = 200;
-          res.setHeader("content-type", "application/json");
-          res.end(JSON.stringify(localHubSessionAnswerV1(session === null ? null : { token: session.token, userId: session.userId })));
-        });
-      });
-    },
-  };
+  const wire=process.env[VITE_RUNTIME_CHANNELS_ENV_V1],channels=readViteRuntimeChannelsV1(wire?JSON.parse(wire):[]),channel=channels.find(row=>row.name===devLocalHubSessionPolicyV1().runtimeChannelName),proxy=channel?readDevLocalHubProxyV1({version:1,endpoint:channel.endpoint,secret:channel.secret}):undefined;
+  return {name:"semio-local-hub-session",configureServer(server:{middlewares:{use:(handler:(req:{readonly url?:string;readonly method?:string},res:{statusCode:number;setHeader:(key:string,value:string)=>void;end:(body?:string)=>void},next:()=>void)=>void)=>void}}){
+    server.middlewares.use((req,res,next)=>{if(req.method!=="GET"||req.url?.split("?")[0]!==LOCAL_HUB_SESSION_ENDPOINT_V1)return next();const signal=AbortSignal.timeout(devLocalHubSessionPolicyV1().maximumRequestMilliseconds),work=proxy?requestDevLocalHubProxyV1(proxy,signal):Promise.resolve(null);void work.then(value=>{const session=value===null?null:parseLocalSessionV1(value);res.setHeader("cache-control","no-store");res.statusCode=200;res.setHeader("content-type","application/json");res.end(JSON.stringify(localHubSessionAnswerV1(session===null?null:{token:session.token,userId:session.userId})));}).catch(()=>{res.statusCode=503;res.end();});});
+  }};
 }

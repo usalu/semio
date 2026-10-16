@@ -26,6 +26,7 @@ use semio_hub_session_routes::access_grants::issue_directory_socket_grant;
 use semio_hub_document_routes::admin::reconcile_stale_admin_acceptance;
 use semio_hub_session_routes::directory_commands::resolve_bearer_user;
 use semio_hub_document_routes::directory_events::socket_directory_membership_visibility;
+use semio_hub_directory::{AdminOperationDirectory, AuthSessionDirectory, DocumentDirectory, EventLog, InviteDirectory, ReceiptDirectory, ShareTokenDirectory, SpaceDirectory};
 #[cfg(any(test, feature = "testkit"))]
 use semio_hub_route_models::admin::ADMIN_SECRET_WIPE_BYTES;
 #[cfg(test)]
@@ -2027,8 +2028,8 @@ async fn directory_event_page_v1_append_admission_is_transactional_for_sqlite_po
     let space = state.directory.get_space(STUDIO).await.expect("space projection").expect("seed space");
     assert_ne!(space.name.len(), os_directory::DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES, "rejected event never reaches projection");
 
-    let postgres = semio_hub_testing::hub_source("📇️directory/🐘️postgres/🦀️.rs");
-    let neo4j = semio_hub_testing::hub_source("📇️directory/🌐️neo4j/🦀️.rs");
+    let postgres = semio_hub_testing::hub_module_tree("📇️directory/🐘️postgres/🦀️.rs");
+    let neo4j = semio_hub_testing::hub_module_tree("📇️directory/🌐️neo4j/🦀️.rs");
     let postgres_writes = postgres.matches("INSERT INTO hub_directory_event(seq").count() + postgres.matches("INSERT INTO hub_directory_event (seq").count();
     let neo4j_writes = neo4j.matches("CREATE (e:DirectoryEvent {seq:").count();
     assert!(postgres_writes >= 3 && neo4j_writes >= 3, "both remote backends still persist directory events on every append seam");

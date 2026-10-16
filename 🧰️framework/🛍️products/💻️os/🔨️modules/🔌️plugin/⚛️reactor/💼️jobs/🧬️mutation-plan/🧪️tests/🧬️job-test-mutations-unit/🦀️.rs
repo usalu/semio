@@ -1,10 +1,15 @@
 //#region 🧪️JobTestMutationLaws
-use super::*;
+use crate::mutation_plan::job_test_mutation_fixture::mutations::add_value::AddValue;
+use pack::snapshot::ArtifactPack;
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::mutation_plan::job_test_mutation_fixture::{JobTestDiff, JobTestSnapshot};
+use crate::mutation_plan::job_test_mutation_fixture::mutations::JobTestOp;
 use protocol::{Mutation, MutationDiff, MutationLeaf};
 use store::OpBinary;
 
+#[doc(hidden)]
 #[test]
-fn actual_descriptor_provenance() {
+pub fn actual_descriptor_provenance() {
     let provenance = AddValue::PROVENANCE;
     assert_eq!(provenance.owner, AddValue::DESCRIPTOR.owner);
     assert_eq!(provenance.source_path, format!("{}/🦀️.rs", provenance.owner));
@@ -120,8 +125,9 @@ fn ordered_diff_absorb_is_associative_at_boundaries() {
 }
 
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
+#[doc(hidden)]
 #[test]
-fn committed_wire_witnesses_are_the_canonical_wire() {
+pub fn committed_wire_witnesses_are_the_canonical_wire() {
     ::store::os_store::test_support::assert_wire_witness::<JobTestOp>(include_str!("../../🧪️testing/🧬️job-test-mutations/🧬️mutations/➕️add-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧪️JobTestMutationLaws

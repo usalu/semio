@@ -49,5 +49,5 @@ export const stdioObj30GeometryInferenceTextGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseObjInferenceText(value: unknown, at = "$"): ObjInferenceText {
-  return stdioObj30GeometryInferenceTextGuardObject(value, `${at}`);
+  return stdioObj30GeometryInferenceTextGuardString(value, `${at}`);
 }

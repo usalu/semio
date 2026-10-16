@@ -9,7 +9,7 @@ impl RetainedWireByteSource for OriginalPagedOriginSource<'_>{
 use super::super::RetainedHistoryOriginPartial;
 use semio_framework_value::{ErasedSnapshotRetirement,admit_owned_retirement,owned_retirement_birth_bytes};
 use semio_framework_value::native_decoding::{NativeDecodeRetirementRecipient,NativeDecodeAllocation,NativeDecodeAllocationPort,NativeDecodeProgress};
-fn observe<T>(action:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(action)}
+fn observe<T>(action:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(action)}
 fn receipt(owner:&mut RetainedHistoryOriginJsonDecode,g:RetainedCloneGrant,born:usize,released:usize){let(issued,p)=owner.take_receipt().unwrap();assert_eq!(issued,g);assert!(p.fits(g));assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes))}
 fn close_box<T:semio_framework_value::retirement::RetireOwned>(original:T,control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant)->(usize,usize){
  let capacity=owned_retirement_birth_bytes::<T>();assert!(capacity<=g.maximum_capacity_bytes);control.charge(capacity).unwrap();let(result,born,released)=observe(||admit_owned_retirement(original,g));let(child,p)=result.map_err(|(error,_)|error).unwrap();assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));

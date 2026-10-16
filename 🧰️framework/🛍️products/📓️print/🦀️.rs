@@ -106,9 +106,5 @@ pub fn chart_inference_service(assets: &ChartSchemaAssets) -> semio_framework_pl
 }
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🧬️chart-mutations/🦀️.rs"]
-mod tests;
-
 /// ♻️ This synchronous executable retains no callback child between invocations.
 fn chart_inference_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}

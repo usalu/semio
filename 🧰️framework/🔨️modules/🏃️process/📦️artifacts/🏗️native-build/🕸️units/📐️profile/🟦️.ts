@@ -1,4 +1,4 @@
-import{validateJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 /** 📋️ Complete observed Cargo profile DATA supplies no output path or resource authority. */
 export interface CargoEffectiveProfileV1{readonly name:string;readonly opt_level:string;readonly lto:string;readonly codegen_backend:string|null;readonly codegen_units:number|null;readonly debuginfo:number|string|null;readonly split_debuginfo:string|null;readonly debug_assertions:boolean|null;readonly overflow_checks:boolean|null;readonly rpath:boolean;readonly incremental:boolean;readonly panic:"abort"|"unwind";readonly strip:Readonly<{resolved:"None"|Readonly<{Named:string}>}|{deferred:string}>;readonly trim_paths?:readonly("diagnostics"|"macro"|"object")[]}

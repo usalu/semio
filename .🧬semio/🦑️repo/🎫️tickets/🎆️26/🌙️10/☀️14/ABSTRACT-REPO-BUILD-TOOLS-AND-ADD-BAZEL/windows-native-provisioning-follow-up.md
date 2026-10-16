@@ -1,0 +1,15 @@
+# Windows Native Provisioning Follow-Up
+
+Read-only investigation, no production edit or Windows execution. The current fixed backend builds both its executable path and clean environment around C:\Windows, and allocation invokes Hyper-V New-VHD. These are separate from the metadata flush correction and remain qualification work.
+
+Microsoft exposes the actual Windows directory through GetWindowsDirectoryW; its documentation describes variable installation paths and Terminal Services behavior. A hardcoded C:\Windows assumption is not universal. [Microsoft Windows-directory contract](https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getwindowsdirectoryw).
+
+Microsoft documents DiskPart as a system command interpreter for disks, volumes and virtual disks on Windows10/11 and current servers, and requires local Administrators membership or similar permissions. This establishes a possible system-tool investigation path, not a verified replacement for fixed-VHD creation, a privilege exemption or Windows-Home qualification. The directly attempted create-vdisk documentation URL was unavailable; no unverified creation syntax is adopted. [Microsoft DiskPart contract](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/diskpart).
+
+Before changing provisioning, verify an exact system facility and its fixed-image format/allocation guarantees, child-input/cancellation/drain ownership, nondefault system-root resolution, privilege requirements and zero-touch installation behavior. Keep the existing physical limits and exact image identity. Do not add a compatibility fallback, runtime compiler/dependency, UAC/service or raw host-volume operation from this exploratory note. The [metadata proposal](windows-state-metadata-port-proposal.md) records the independently verified attachment and Hyper-V constraints.
+
+## Root Namespace Candidate — 2026-10-16 12:29 UTC
+
+Root directly opened Microsoft's [Naming Files, Paths, and Namespaces](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file), whose NT Namespaces section documents that the GLOBALROOT prefix reaches the true Object Manager root rather than a session-dependent root. Its [Object Names](https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/object-names) and [MS-DOS Device Names](https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/introduction-to-ms-dos-device-names) pages explain the distinction between object-manager and DOS paths.
+
+Inference only: an explicitly OS-owned GLOBALROOT/SystemRoot PowerShell path could provide a trusted initial command without env/PATH authority, then report bounded native system directories on either Bun host architecture. This is not yet an accepted path: the SystemRoot object contract, actual CreateProcess/Bun extended-path behavior, Unicode/redirector semantics, command authority checks and native Windows runtime must be validated. No Source edit or execution was authorized from this candidate. LeaseHigh is investigating this exact alternative read-only rather than assuming bare DLL lookup is failclosed.

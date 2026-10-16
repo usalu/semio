@@ -85,30 +85,3 @@ fn dag_cursor_failure(fault: dag_selection_io::DagSelectionTextFault) -> FlowFai
         dag_selection_io::DagSelectionTextFault::Sealed => AbiErrorCode::Sealed,
     })
 }
-
-pub(super) fn surface_abi_failure(code: SurfaceAbiErrorCode) -> FlowFailure {
-    let code = match code {
-        SurfaceAbiErrorCode::MalformedTag => AbiErrorCode::MalformedTag,
-        SurfaceAbiErrorCode::MalformedLength => AbiErrorCode::MalformedLength,
-        SurfaceAbiErrorCode::InvalidUtf8 => AbiErrorCode::InvalidUtf8,
-        SurfaceAbiErrorCode::MissingField => AbiErrorCode::MissingField,
-        SurfaceAbiErrorCode::LimitExceeded => AbiErrorCode::LimitExceeded,
-        SurfaceAbiErrorCode::UnknownOperation => AbiErrorCode::UnknownOperation,
-        SurfaceAbiErrorCode::UnknownHandle => AbiErrorCode::UnknownHandle,
-        SurfaceAbiErrorCode::StaleGeneration => AbiErrorCode::StaleGeneration,
-        SurfaceAbiErrorCode::AbaHandle => AbiErrorCode::AbaHandle,
-        SurfaceAbiErrorCode::DuplicateAcknowledgement => AbiErrorCode::DuplicateAcknowledgement,
-        SurfaceAbiErrorCode::Interrupted => AbiErrorCode::Interrupted,
-        SurfaceAbiErrorCode::Cancelled => AbiErrorCode::Cancelled,
-        SurfaceAbiErrorCode::Sealed => AbiErrorCode::Sealed,
-        SurfaceAbiErrorCode::LateReply => AbiErrorCode::LateReply,
-        SurfaceAbiErrorCode::DuplicateReply => AbiErrorCode::DuplicateReply,
-        SurfaceAbiErrorCode::OutOfOrderPage => AbiErrorCode::OutOfOrderPage,
-        SurfaceAbiErrorCode::DeadlineExceeded => AbiErrorCode::DeadlineExceeded,
-        SurfaceAbiErrorCode::NoCredit => AbiErrorCode::NoCredit,
-        SurfaceAbiErrorCode::Busy => AbiErrorCode::Busy,
-        SurfaceAbiErrorCode::Closed => AbiErrorCode::Closed,
-        SurfaceAbiErrorCode::GenerationExhausted => AbiErrorCode::GenerationExhausted,
-    };
-    abi_failure(code)
-}

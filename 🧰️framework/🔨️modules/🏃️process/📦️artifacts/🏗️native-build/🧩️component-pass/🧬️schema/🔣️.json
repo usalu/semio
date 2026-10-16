@@ -370,6 +370,40 @@
           "maximum": 134217728
         }
       }
+    },
+    "ContractCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "change",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "plan",
+            "pipeline"
+          ]
+        },
+        "change": {
+          "enum": [
+            "none",
+            "duplicate-pass",
+            "duplicate-package",
+            "duplicate-job",
+            "profile",
+            "unknown"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

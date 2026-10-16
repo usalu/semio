@@ -20,7 +20,7 @@ import { composeControlKeybindings, Footer, Layout, Navbar, UiKeybindingsProvide
 import type { HistoryPatch, HistoryTimeTravel } from "@semio-tech/framework";
 import { syncShellLabelLocale } from "../../../🟦️.tsx";
 import { HistoryReprojectionStatus, TimeTravelBand } from "../../🟦️.tsx";
-import { readModuleTreeSource } from "../../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const shellHelpers = join(here, "..", "..", "..");

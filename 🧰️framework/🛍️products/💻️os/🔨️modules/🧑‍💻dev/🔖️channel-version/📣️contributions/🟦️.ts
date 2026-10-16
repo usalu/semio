@@ -1,5 +1,5 @@
 import schema from "./🧬️schema/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 
 export type ChannelVersionConsumerV1 = Readonly<{
   path: string;

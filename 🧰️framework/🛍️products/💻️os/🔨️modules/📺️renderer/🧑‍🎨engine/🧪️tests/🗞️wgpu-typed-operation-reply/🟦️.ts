@@ -8,7 +8,7 @@
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Oracle: the SAME neutral fixture the native renderer's
  * `🗞️typed-result-page/🦀️.rs` law and the shared `🖼️wire-turn/🟦️.ts` twin read. */
 import { describe, expect, it } from "vitest";
-import lanes from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🗞️typed-operation-page/🧫️fixtures/🔣️.json";
+import { typedOperationPageFixture as lanes } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
 import { decodeAppFrame, encodeAppFrame } from "../../../../../🟦️.ts";
 import { TYPED_OPERATION_PAGE_MAGIC, scanTypedOperationPages, shellFrameBytes } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { WGPU_TYPED_OPERATION_DRAIN_BUDGET, WGPU_TYPED_OPERATION_EFFECT_CAPACITY, WGPU_TYPED_OPERATION_SETTLE_LIMIT, WgpuTypedOperationDrive, invocationResponseJson } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";

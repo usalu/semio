@@ -1,4 +1,4 @@
-/** 🧭️ Tool-job coverage: fixed-operation registry fixtures and the shared framework action fixture.
+/** ⚙️ Tool-job coverage: fixed-operation registry fixtures and the shared framework action fixture.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { policyReadFileSafe, policyReadModuleTreeSource } from "../../../🔍️discovery/📖️source-access/🟦️.ts";

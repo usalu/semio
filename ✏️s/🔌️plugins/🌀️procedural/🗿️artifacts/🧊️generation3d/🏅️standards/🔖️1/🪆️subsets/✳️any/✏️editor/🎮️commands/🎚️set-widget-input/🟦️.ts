@@ -7,21 +7,21 @@ import {parsePolygonMesh} from "@semio-tech/framework/mesh/polygon";
 export function editInputValue(types: string[], current: unknown, text: string, component?: string): Record<string, unknown> {
   const existing = current && typeof current === "object" ? current as Record<string, unknown> : undefined;
   const schema = typeof existing?.$schema === "string" ? existing.$schema : types[0];
-  if (!types.includes(schema) || !["number", "text", "boolean", "point", "vector", "plane"].includes(schema)) throw new Error("Connect a compatible output to this input");
+  if (schema===undefined || !types.includes(schema) || !["number", "text", "boolean", "point", "vector", "plane"].includes(schema)) throw new Error("Connect a compatible output to this input");
   const numeric = () => {
     if (!text.trim() || !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text.trim()) || !Number.isFinite(Number(text))) throw new Error("Input must be a finite number");
     return Number(text);
   };
   if(schema==="plane"){
     const [part,axis,...rest]=component?.split(".")??[];
-    if(rest.length||!["origin","normal"].includes(part)||!["x","y","z"].includes(axis))throw Error("Choose a plane origin or normal coordinate");
+    if(!part||!axis||rest.length||!["origin","normal"].includes(part)||!["x","y","z"].includes(axis))throw Error("Choose a plane origin or normal coordinate");
     const coordinates=(name:string,type:string,z:number):Record<string,unknown>=>{
       const current=existing?.[name]as Record<string,unknown>|undefined;
       if(existing&&(!current||current.$schema!==type||!["x","y","z"].every(axis=>typeof current[axis]==="number"&&Number.isFinite(current[axis]))))throw Error("Plane input must contain a point origin and vector normal");
       return {$schema:type,x:current?.x??0,y:current?.y??0,z:current?.z??z};
     };
-    const plane:Record<string,unknown>={$schema:"plane",origin:coordinates("origin","point",0),normal:coordinates("normal","vector",1)};
-    (plane[part]as Record<string,unknown>)[axis]=numeric();return plane;
+    const origin=coordinates("origin","point",0),normal=coordinates("normal","vector",1);
+    (part==="origin"?origin:normal)[axis]=numeric();return {$schema:"plane",origin,normal};
   }
   if (schema === "point" || schema === "vector") {
     if (!component || !["x", "y", "z"].includes(component)) throw new Error("Choose a coordinate to edit");
@@ -37,11 +37,12 @@ export type CollectionInputEdit = {operation?:string;index?:number;destination?:
 /** 🥽️ Structured source edits validate through the existing owning indexed-polygon parser. */
 export function editMeshSource(text:string,edit:{path:string[];value:string;operation?:string;destination?:number}):string|null {
   if(new TextEncoder().encode(text).length>16777216)throw Error("Mesh source exceeds 16 MiB");
-  if (!edit.path.length || edit.path.length>16 || edit.path.some(part=>!part.length || [...part].length>128) || !["vertices","faces","attributes","materials","textures"].includes(edit.path[0])) throw Error("Choose a structured mesh field");
+  const [section,name,field,coordinate,samplerField]=edit.path;
+  if (!section || !edit.path.length || edit.path.length>16 || edit.path.some(part=>!part.length || [...part].length>128) || !["vertices","faces","attributes","materials","textures"].includes(section)) throw Error("Choose a structured mesh field");
   const source=JSON.parse(text) as Record<string,unknown>;
   if(edit.operation!=="move"&&edit.destination!==undefined)throw Error("Mesh destinations belong to move actions");
-  if(["materials","textures"].includes(edit.path[0])) {
-    const kind=edit.path[0],name=edit.path[1],table=(source[kind]??={}) as Record<string,Record<string,unknown>>;
+  if(["materials","textures"].includes(section)) {
+    const kind=section,table=(source[kind]??={}) as Record<string,Record<string,unknown>>;
     if(!name)throw Error("Choose an asset");
     const operation=edit.operation??"set";
     if(edit.path.length===2&&operation==="add"&&kind==="materials"&&!Object.hasOwn(table,name)&&edit.value==="")Object.defineProperty(table,name,{value:{baseColor:[1,1,1,1],metallic:0,roughness:1,emissive:[0,0,0],normalScale:[1,1],occlusionStrength:1,alphaMode:"OPAQUE",alphaCutoff:0.5,doubleSided:false},writable:true,enumerable:true,configurable:true});
@@ -57,12 +58,12 @@ export function editMeshSource(text:string,edit:{path:string[];value:string;oper
     else {
       const material=Object.hasOwn(table,name)?table[name]:undefined;if(!material||operation!=="set"||edit.path.length<3)throw Error("Choose a material field");
       const defaults:Record<string,unknown>={baseColor:[1,1,1,1],metallic:0,roughness:1,emissive:[0,0,0],normalScale:[1,1],occlusionStrength:1,alphaMode:"OPAQUE",alphaCutoff:0.5,doubleSided:false,textureCoordinates:{},textureSamplers:{}};
-      const field=edit.path[2];
+      if(!field)throw Error("Choose a material field");
       if(edit.path.length===3&&field.endsWith("Texture")) {if(edit.value==="")delete material[field];else material[field]=edit.value;}
       else {
         if(!Object.hasOwn(material,field)){if(!Object.hasOwn(defaults,field))throw Error("Choose a canonical material field");material[field]=structuredClone(defaults[field]);}
-        if(field==="textureCoordinates"&&edit.path.length===4)(material[field] as Record<string,unknown>)[edit.path[3]]??=0;
-        if(field==="textureSamplers"&&edit.path.length===5){const samplers=material[field] as Record<string,Record<string,unknown>>;samplers[edit.path[3]]??={};samplers[edit.path[3]][edit.path[4]]??=edit.path[4].startsWith("wrap")?10497:9729;}
+        if(field==="textureCoordinates"&&edit.path.length===4){if(!coordinate)throw Error("Choose a texture coordinate");(material[field] as Record<string,unknown>)[coordinate]??=0;}
+        if(field==="textureSamplers"&&edit.path.length===5){if(!coordinate||!samplerField)throw Error("Choose a texture sampler");const samplers=material[field] as Record<string,Record<string,unknown>>,sampler=samplers[coordinate]??={};sampler[samplerField]??=samplerField.startsWith("wrap")?10497:9729;}
         let parent=material as Record<string,unknown>;for(const part of edit.path.slice(2,-1)){if(parent[part]===undefined)throw Error("Choose a material field");parent=parent[part] as Record<string,unknown>;}
         const key=edit.path.at(-1)!,current=parent[key];
         const next=typeof current==="number"?Number(edit.value):typeof current==="boolean"?edit.value==="true":edit.value;
@@ -72,25 +73,25 @@ export function editMeshSource(text:string,edit:{path:string[];value:string;oper
     }
     const encoded=JSON.stringify(source);parsePolygonMesh(encoded);return encoded;
   }
-  if(edit.path[0]==="attributes"&&edit.path.length===2&&edit.operation==="add") {
-    const name=edit.path[1],attributes=(source.attributes??={}) as Record<string,unknown>;
+  if(section==="attributes"&&edit.path.length===2&&edit.operation==="add") {
+    if(!name)throw Error("Choose an attribute");const attributes=(source.attributes??={}) as Record<string,unknown>;
     if(Object.hasOwn(attributes,name))throw Error("Attribute already exists");
-    const [preset,chosen]=edit.value.split("/"),domain=preset==="material"?"face":chosen??(preset==="uv"?"corner":"vertex"),semantic=["uv","normal","color","material"].includes(preset)?preset:"custom";
-    if(!["vertex","face","edge","corner"].includes(domain))throw Error("Choose an attribute domain");
+    const [preset,chosen]=edit.value.split("/"),domain=preset==="material"?"face":chosen??(preset==="uv"?"corner":"vertex"),semantic=preset!==undefined&&["uv","normal","color","material"].includes(preset)?preset:"custom";
+    if(!preset||!["vertex","face","edge","corner"].includes(domain))throw Error("Choose an attribute domain");
     const sample=preset==="normal"?[0,0,1]:preset==="uv"?[0,0]:preset==="color"?[1,1,1,1]:preset==="number"?0:preset==="boolean"?false:preset==="vector"?[0,0,0]:preset==="text"?"":preset==="material"?chosen:undefined;
     if(sample===undefined)throw Error("Choose an attribute type");
     const count=["corner","edge"].includes(domain)?(source.faces as number[][]).reduce((total,face)=>total+face.length,0):domain==="face"?(source.faces as number[][]).length:(source.vertices as number[][]).length;
     Object.defineProperty(attributes,name,{value:{domain,semantic,interpolation:["text","boolean","material"].includes(preset)?"nearest":"linear",values:Array.from({length:count},()=>structuredClone(sample))},writable:true,enumerable:true,configurable:true});
     const encoded=JSON.stringify(source);parsePolygonMesh(encoded);return encoded;
   }
-  if(edit.path[0]==="attributes"&&edit.path.length===2&&edit.operation==="remove") {
-    const attributes=source.attributes as Record<string,unknown>;if(!attributes||!Object.hasOwn(attributes,edit.path[1])||edit.value!=="")throw Error("Choose an existing attribute");delete attributes[edit.path[1]];
+  if(section==="attributes"&&edit.path.length===2&&edit.operation==="remove") {
+    const attributes=source.attributes as Record<string,unknown>;if(!name||!attributes||!Object.hasOwn(attributes,name)||edit.value!=="")throw Error("Choose an existing attribute");delete attributes[name];
     const encoded=JSON.stringify(source);parsePolygonMesh(encoded);return encoded;
   }
-  if(edit.path[0]==="attributes"&&edit.path.length===3&&edit.path[2]==="name"&&(edit.operation??"set")==="set") {
-    const attributes=source.attributes as Record<string,unknown>,name=edit.value.trim();
-    if(!name||[...name].length>128||!attributes||!Object.hasOwn(attributes,edit.path[1])||name!==edit.path[1]&&Object.hasOwn(attributes,name))throw Error("Choose a unique attribute name");
-    if(name===edit.path[1])return null;Object.defineProperty(attributes,name,{value:attributes[edit.path[1]],writable:true,enumerable:true,configurable:true});delete attributes[edit.path[1]];
+  if(section==="attributes"&&edit.path.length===3&&edit.path[2]==="name"&&(edit.operation??"set")==="set") {
+    const attributes=source.attributes as Record<string,unknown>,nextName=edit.value.trim();
+    if(!name||!nextName||[...nextName].length>128||!attributes||!Object.hasOwn(attributes,name)||nextName!==name&&Object.hasOwn(attributes,nextName))throw Error("Choose a unique attribute name");
+    if(nextName===name)return null;Object.defineProperty(attributes,nextName,{value:attributes[name],writable:true,enumerable:true,configurable:true});delete attributes[name];
     const encoded=JSON.stringify(source);parsePolygonMesh(encoded);return encoded;
   }
   if ((edit.operation??"set")!=="set") { editMeshArray(source,edit); const encoded=JSON.stringify(source);parsePolygonMesh(encoded);return encoded; }
@@ -109,7 +110,7 @@ export function editMeshSource(text:string,edit:{path:string[];value:string;oper
   else if (typeof current==="number") {
     if (!edit.value.trim() || !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(edit.value.trim()) || !Number.isFinite(Number(edit.value))) throw Error("Input must be a finite number");
     value=Number(edit.value);
-    if ((edit.path[0]==="faces" || edit.path.includes("indices")) && (!Number.isInteger(value) || (value as number)<0 || (value as number)>4294967295)) throw Error("Choose a non-negative integer index");
+    if ((section==="faces" || edit.path.includes("indices")) && (!Number.isInteger(value) || (value as number)<0 || (value as number)>4294967295)) throw Error("Choose a non-negative integer index");
   } else throw Error("Choose a primitive mesh field");
   if (value===current) return null;
   (parent as Record<string,unknown>)[key]=value;
@@ -146,8 +147,8 @@ function editMeshArray(source:Record<string,unknown>,edit:{path:string[];value:s
     source.faces=faces.map(face=>face.map(vertex=>{const next=reverse.get(vertex);if(next===undefined)throw Error("A referenced vertex cannot be removed");return next;}));orders.vertex=order;
   }else if(path[0]==="faces"){
     const offsets=oldFaces.map((_,index)=>oldFaces.slice(0,index).reduce((total,face)=>total+face.length,0));
-    if(path.length===1){orders.face=order;orders.corner=order.flatMap(old=>old===null?[null,null,null]:oldFaces[old].map((_,index)=>offsets[old]+index));}
-    else{const face=Number(path[1]);orders.corner=oldFaces.flatMap((items,faceIndex)=>faceIndex===face?order.map(old=>old===null?null:offsets[faceIndex]+old):items.map((_,index)=>offsets[faceIndex]+index));}
+    if(path.length===1){orders.face=order;orders.corner=order.flatMap(old=>{if(old===null)return [null,null,null];const face=oldFaces[old],offset=offsets[old];if(!face||offset===undefined)throw Error("Original mesh face no longer exists");return face.map((_,index)=>offset+index);});}
+    else{const face=Number(path[1]);orders.corner=oldFaces.flatMap((items,faceIndex)=>{const offset=offsets[faceIndex];if(offset===undefined)throw Error("Original mesh face offset required");return faceIndex===face?order.map(old=>old===null?null:offset+old):items.map((_,index)=>offset+index);});}
     orders.edge=orders.corner;
   }
   for(const attribute of Object.values(source.attributes as Record<string,Record<string,unknown>>??{})){
@@ -174,7 +175,7 @@ export function editCollectionValue(types:string[],current:unknown,edit:Collecti
   if (list && (list.$schema !== "list" || Object.keys(list).some(key => key !== "$schema" && !/^(0|[1-9]\d*)$/.test(key)))) throw new Error("Input must be a contiguous homogeneous list");
   const first = list?.["0"] as Record<string,unknown> | undefined;
   const schema = typeof first?.$schema === "string" ? first.$schema : types[0];
-  if (!types.includes(schema) || !["number","text","boolean","point","vector"].includes(schema)) throw new Error("Unsupported collection type");
+  if (schema===undefined || !types.includes(schema) || !["number","text","boolean","point","vector"].includes(schema)) throw new Error("Unsupported collection type");
   const values = Array.from({length:list ? Object.keys(list).length-1 : 0},(_,index) => {
     const item = list?.[String(index)] as Record<string,unknown> | undefined;
     if (!item || item.$schema !== schema) throw new Error("Input must be a contiguous homogeneous list");

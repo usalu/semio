@@ -611,6 +611,13 @@
         "cwd": "{projectRoot}"
       }
     },
+    "test-pack-single-owner-source": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts test-pack-single-owner-source",
+        "cwd": "{projectRoot}"
+      }
+    },
     "generate-jco-package-adapter": {
       "executor": "repo:script",
       "cache": true,
@@ -789,6 +796,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️testing/🧩️consumer/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/*/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs"
       ]
@@ -946,7 +954,6 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📦️crate-boundaries/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🧬️schema/📡️record-token/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️owner/**/*"
       ],
       "options": {

@@ -274,7 +274,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       area.dispatchEvent(new Event("scroll"));
       await frame();
 
-      const last = reports[reports.length - 1];
+      const last=reports.at(-1);if(!last)throw Error("Actual tree window report required");
       expect(last.viewportRows).toBe(10);
       // 🎯️ 40 rows scrolled away, 10 on screen, 8 rows of overscan per edge: rows 32…57 of 200.
       expect(last.requests).toEqual([{ nodeKey: "objects", offset: 32, rows: 26 }]);
@@ -309,7 +309,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       area.dispatchEvent(new Event("scroll"));
       await frame();
       const settled = reports.length;
-      expect(reports[settled - 1].requests).toEqual([{ nodeKey: "objects", offset: 32, rows: 26 }]);
+      const settledReport=reports[settled-1];if(!settledReport)throw Error("Actual settled row window required");
+      expect(settledReport.requests).toEqual([{ nodeKey: "objects", offset: 32, rows: 26 }]);
 
       area.dispatchEvent(new Event("scroll"));
       await frame();
@@ -348,7 +349,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       area.dispatchEvent(new Event("scroll"));
       await frame();
 
-      const last = reports[reports.length - 1];
+      const last=reports.at(-1);if(!last)throw Error("Actual tree window report required");
       const sectionRequest = last.requests.find((request) => request.nodeKey === "objects")!;
       const childRequest = last.requests.find((request) => request.nodeKey === `objects${TREE_WINDOW_PATH_SEPARATOR}objects.1`)!;
       // 🎯️ The viewport sits inside the section's SECOND row, not its thirtieth.
@@ -457,7 +458,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         await frame();
       });
 
-      const last = reports[reports.length - 1];
+      const last=reports.at(-1);if(!last)throw Error("Actual tree window report required");
       expect(last.requests.map((request) => request.nodeKey)).toEqual(["left", leftShared, "right", rightShared]);
       // 🎯️ Two independent measurements: the visible one streams rows, the one below the fold asks for none.
       expect(last.requests.find((request) => request.nodeKey === leftShared)!.rows).toBeGreaterThan(0);
@@ -509,7 +510,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       area.dispatchEvent(new Event("scroll"));
       await frame();
 
-      const last = reports[reports.length - 1];
+      const last=reports.at(-1);if(!last)throw Error("Actual tree window report required");
       // 🧮️ Every container costs its own node plus its rows — the guest's ledger, priced here.
       expect(last.requests.length).toBe(12);
       expect(nodeCost(last.requests)).toBe(TREE_WINDOW_BODY_NODE_BUDGET);

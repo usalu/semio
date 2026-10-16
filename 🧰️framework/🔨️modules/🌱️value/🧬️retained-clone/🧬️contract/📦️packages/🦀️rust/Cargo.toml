@@ -32,3 +32,5 @@ semio-framework-value-paged-list = { path="../../../../📋️list/📦️packag
 serde = { workspace = true }
 semio-framework-value-derive = { path="../../../../✨️derive/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../🔗️source/🧪️testing/📦️packages/🦀️rust" }

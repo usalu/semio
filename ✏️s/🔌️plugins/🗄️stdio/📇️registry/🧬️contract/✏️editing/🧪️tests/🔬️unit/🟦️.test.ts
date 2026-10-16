@@ -216,7 +216,7 @@ test("original unit preparation preserves typed semantic refusal custody",async(
   const law=await Bun.file(new URL("../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
   const {ValueError}=await import("@semio-tech/framework/value/refusal");
   for(const row of law.wireCases){const error=new ValueError(row.kind,row.message).withRetainedProgress(row.retainedProgress);expect(JSON.parse(Buffer.from(JSON.stringify(error.retainedProgress)).toString("utf8"))).toEqual(row.retainedProgress);}
-  const source=await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs")).text();
+  const source=await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs")).text();
   for(const definition of ["impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEphemeralPreparation", "impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEditCursor"]){
     const start=source.indexOf(definition);expect(start).toBeGreaterThan(0);const stop=Math.min(...[source.indexOf("fn checkpoint",start),source.indexOf("fn take_inverse",start)].filter(index=>index>start));const actual=source.slice(start,stop);
     expect(actual).not.toContain("Result<ArtifactStoreOneItemPreparationStep, String>");expect(actual).not.toContain("Result<RetainedCloneEditStep, String>");expect(actual).not.toContain("error.to_string()");expect(actual).not.toContain("ValueError::into_message");expect(actual).toContain("self.semantic_refusal = Some(error)");

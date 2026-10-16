@@ -5,7 +5,7 @@ use crate::value::observe_retirement_allocations;
 
 #[test]
 fn retained_clone_owned_source_birth_is_funded_before_original_owner_transfer(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️owned-birth/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️owned-birth/🔣️.json")).unwrap();
     let((mut owner,mut authority),original)=observe_retirement_allocations(||{
         let mut owner=String::with_capacity(law["ownerCapacity"].as_u64().unwrap()as usize);owner.push_str(law["owner"].as_str().unwrap());
         let mut authority=String::with_capacity(law["authorityCapacity"].as_u64().unwrap()as usize);authority.push_str(law["authority"].as_str().unwrap());(owner,authority)
@@ -36,7 +36,7 @@ struct RefusingCopyDemand { owner: Option<u64> }
 fn retained_clone_owned_source_shared_alias_keeps_original_identity_in_every_close_order(){
  use crate::retirement::{RetireOwned,controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}};
  fn drain<T:RetireOwned>(value:T)->(usize,usize){let mut owner=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("shared original typed closure"));let(mut born,mut released)=(0,0);for _ in 0..10000{if owner.terminal_is_empty(){break;}let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe_retirement_allocations(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;}assert!(owner.terminal_is_empty());assert_eq!(observe_retirement_allocations(||drop(owner)).1,(0,0));(born,released)}
- let law:serde_json::Value=serde_json::from_str(include_str!("../../../🔗️shared/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🔗️shared/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for text in law["texts"].as_array().unwrap(){for order in law["closeOrders"].as_array().unwrap(){for stop in std::iter::once(None).chain(law["interruptAfter"].as_array().unwrap().iter().map(|x|Some(x.as_u64().unwrap()as usize))){
   let(value,original)=observe_retirement_allocations(||text.as_str().unwrap().to_owned());let pointer=value.as_ptr();let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:SealedShared::<String>::birth_bytes(),maximum_depth:1,..Default::default()};let((value,receipt),heap)=observe_retirement_allocations(||SealedShared::admit(value,SharedIssuer::owned(),grant).unwrap_or_else(|_|panic!("original shared admission")));assert_eq!(heap,(receipt.retained_capacity_bytes,0));let(mut born,mut released)=heap;let identity=value.identity();
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<SealedShared<String>>::constructor_copy_bytes(),maximum_capacity_bytes:RetainedCloneSource::<SealedShared<String>>::owned_constructor_capacity_bytes::<()>(),maximum_depth:1,..Default::default()};let((source,receipt),heap)=observe_retirement_allocations(||RetainedCloneSource::admit_owned(value,(),grant).unwrap_or_else(|_|panic!("original alias source admission")));assert_eq!(heap,(receipt.retained_capacity_bytes,0));born+=heap.0;
@@ -53,7 +53,7 @@ fn retained_clone_owned_source_shared_alias_keeps_original_identity_in_every_clo
 fn retained_clone_owned_source_controlled_facade_retains_original_projection_in_both_close_orders(){
  use crate::retirement::{RetireOwned,controlled::ControlledRetirement};
  fn drain<T:RetireOwned>(mut owner:ControlledRetirement<T>)->(usize,usize){let(mut born,mut released)=(0,0);for _ in 0..10000{if owner.terminal_is_empty(){break;}let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),grant.maximum_capacity_bytes.checked_sub(1).map(|v|RetainedCloneGrant{maximum_capacity_bytes:v,..grant}),grant.maximum_release_bytes.checked_sub(1).map(|v|RetainedCloneGrant{maximum_release_bytes:v,..grant})].into_iter().flatten(){let(step,heap)=observe_retirement_allocations(||owner.step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}let(step,heap)=observe_retirement_allocations(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;}assert!(owner.terminal_is_empty());assert_eq!(observe_retirement_allocations(||drop(owner)).1,(0,0));(born,released)}
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️owned-birth/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️owned-birth/🔣️.json")).unwrap();
  for order in law["closeOrders"].as_array().unwrap(){let projection_first=order=="projectionFirst";let((value,authority),original)=observe_retirement_allocations(||{let mut value=String::with_capacity(law["ownerCapacity"].as_u64().unwrap()as usize);value.push_str(law["owner"].as_str().unwrap());let mut authority=String::with_capacity(law["authorityCapacity"].as_u64().unwrap()as usize);authority.push_str(law["authority"].as_str().unwrap());(value,authority)});let pointer=value.as_ptr();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<String>::constructor_copy_bytes(),maximum_capacity_bytes:RetainedCloneSource::<String>::owned_constructor_capacity_bytes::<String>(),maximum_depth:1,..Default::default()};let((source,receipt),heap)=observe_retirement_allocations(||RetainedCloneSource::admit_owned(value,authority,grant).map_err(|(error,_,_)|error).unwrap());assert_eq!(heap,(receipt.retained_capacity_bytes,0));let(mut born,mut released)=heap;
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<String>::constructor_copy_bytes(),maximum_depth:1,..Default::default()};let((projection,receipt),heap)=observe_retirement_allocations(||source.project_owned(1,|value|value.as_str(),grant).unwrap());assert_eq!(heap,(0,0));assert!(receipt.fits(grant));assert_eq!(projection.borrow().unwrap().get().as_ptr(),pointer);
   let(source,heap)=observe_retirement_allocations(||ControlledRetirement::new(source).map_err(|(error,_)|error).unwrap());assert_eq!(heap,(0,0));
@@ -64,7 +64,7 @@ fn retained_clone_owned_source_controlled_facade_retains_original_projection_in_
 #[test]
 fn retained_clone_owned_source_closes_its_actual_shared_authority_lease(){
     use crate::retirement::{controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️owned-birth/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️owned-birth/🔣️.json")).unwrap();
     let((owner,authority),original)=observe_retirement_allocations(||{let mut owner=String::with_capacity(law["ownerCapacity"].as_u64().unwrap()as usize);owner.push_str(law["owner"].as_str().unwrap());let mut authority=String::with_capacity(law["authorityCapacity"].as_u64().unwrap()as usize);authority.push_str(law["authority"].as_str().unwrap());(owner,authority)});
     let pointer=authority.as_ptr();let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:SealedShared::<String>::birth_bytes(),maximum_depth:1,..Default::default()};
     let(result,heap)=observe_retirement_allocations(||SealedShared::admit(authority,SharedIssuer::owned(),grant));let(authority,progress)=result.map_err(|(error,_)|error).unwrap();assert_eq!(heap,(progress.retained_capacity_bytes,0));let(mut born,mut released)=heap;
@@ -87,7 +87,7 @@ impl crate::ErasedSnapshotRetirement for RefusingCopyDemand {
 
 #[test]
 fn retained_clone_erased_copy_demand_propagates_original_owner_refusal(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json")).unwrap();
     let owner=RefusingCopyDemand{owner:Some(law["owner"].as_u64().unwrap())};
     let(result,heap)=observe_retirement_allocations(||crate::ErasedSnapshotRetirement::next_copy_byte_demand(&owner));
     assert_eq!(heap,(0,0));assert_eq!(format!("{:?}",result.unwrap_err().kind),law["copyDemandRefusal"].as_str().unwrap());assert_eq!(owner.owner,Some(law["owner"].as_u64().unwrap()));
@@ -101,7 +101,7 @@ fn retained_clone_erased_copy_demand_propagates_original_owner_refusal(){
 
 #[test]
 fn retained_clone_close_depth_observes_pending_birth_and_preserves_owner_on_refusal() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json")).unwrap();
     let mut cursor=crate::retained_clone::ScalarCursor::<u64>::default();
     cursor.value=Some(law["owner"].as_u64().unwrap());
     assert_eq!(cursor.next_close_depth_demand().unwrap(),law["idleDepth"].as_u64().unwrap()as usize);
@@ -126,7 +126,7 @@ fn retained_clone_close_depth_observes_pending_birth_and_preserves_owner_on_refu
 
 #[test]
 fn admitted_source_authority_preserves_original_owners_and_canceled_cursor_custody() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in law["vectors"].as_array().unwrap(){for work in law["workGrants"].as_array().unwrap(){
         let work=work.as_u64().unwrap()as usize;
         let ((owner,authority),original)=observe_retirement_allocations(||{
@@ -174,7 +174,7 @@ fn admitted_source_authority_preserves_original_owners_and_canceled_cursor_custo
 
 #[test]
 fn retained_clone_terminal_ticket_quotes_and_funds_the_original_header(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json")).unwrap();let law=&law["terminalTicket"];
+ let law:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🧪️tests/🧫️fixtures/🪜️close-demands/🔣️.json")).unwrap();let law=&law["terminalTicket"];
  let(mut close,heap)=observe_retirement_allocations(||crate::retained_clone::RetainedCloneClose{retirement:std::mem::ManuallyDrop::new(Some(Box::new(RefusingCopyDemand{owner:None})))});let original=close.retirement.as_ref().unwrap().as_ref()as*const dyn crate::ErasedSnapshotRetirement as*const ();
  let expected=law["headerWidths"].as_array().unwrap().iter().find(|row|row["wordBytes"].as_u64().unwrap()as usize==size_of::<usize>()).unwrap()["copyBytes"].as_u64().unwrap()as usize;let bytes=heap.0;assert_eq!(heap.1,0);
  let((copy,capacity,release,depth),heap)=observe_retirement_allocations(||(close.next_copy_byte_demand().unwrap(),close.next_capacity_byte_demand(expected).unwrap(),close.next_release_byte_demand().unwrap(),close.next_depth_demand().unwrap()));assert_eq!(heap,(0,0));assert_eq!(copy,expected);assert_eq!(capacity,law["capacityBytes"].as_u64().unwrap()as usize);assert_eq!(release,bytes);assert_eq!(depth,law["depth"].as_u64().unwrap()as usize);
@@ -237,7 +237,7 @@ fn retained_array_clone_cancels_at_every_turn_without_abandoning_element_owners(
 #[test]
 fn original_source_typed_payload_close_preserves_raw_atoms_and_selected_child_currency(){
     use crate::retirement::controlled::ControlledRetirement;
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️header.json")).unwrap();let payload=&law["typedPayload"];
+    let law:serde_json::Value=serde_json::from_str(crate::text("🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️header.json")).unwrap();let payload=&law["typedPayload"];
     for body in payload["closeBodies"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;
         let((source,original),heap)=observe_retirement_allocations(||{let values:Vec<[f32;3]>=payload["values"].as_array().unwrap().iter().map(|row|serde_json::from_value(row.clone()).unwrap()).collect();let original=values.as_ptr();let demand=RetainedCloneSource::<Vec<[f32;3]>>::owned_constructor_demand::<()>();let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};let(source,receipt)=RetainedCloneSource::admit_owned(values,(),grant).map_err(|(e,_,_)|e).unwrap();assert_eq!(receipt.copied_bytes,0);(source,original)});
         assert_eq!(source.borrow().get().as_ptr(),original);let(mut born,mut freed,mut turns,mut spills,mut arrays,mut leaves)=(heap.0,heap.1,0,0,0,0);let(mut owner,heap)=observe_retirement_allocations(||ControlledRetirement::new(source).ok().unwrap());assert_eq!(heap,(0,0));assert_eq!(owner.original().unwrap().borrow().get().as_ptr(),original);

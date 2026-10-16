@@ -1,4 +1,4 @@
-import type { ArtifactHash } from "../../../🧬️schema/🟦️.ts";
+import type { ArtifactHash } from "@semio-tech/framework/directory/schema";
 
 /** 🔤️ Admits nonzero canonical lowercase SHA256 text as a typed semantic hash. */
 export function parseArtifactHashHex(value: string): ArtifactHash | undefined {

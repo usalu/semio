@@ -1,0 +1,19 @@
+# Protected Canonical Leases Publication Diagnostic
+
+Root explicitly authorized one protected Native host-metadata diagnostic after all earlier physical scopes closed. The helper is `lease-publication/📜️script.ts --inspect`; execution awaits final strict and Low helper review. It is not a normal Native opener or a Source-only operation.
+
+A fresh genuine60 Original and actual issued callback phase derive the actual current repositoryCacheBudgetV1 leases directory, filesystem/capacity and host control directory. The real ResourceLease API acquires SH on the exact `native-fixed-image:<directory>` resource with maximumDatabaseBytes16384, matching the real persistent receiver's constrained guard path. No raw SQLite operations or quota changes occur. Lock metadata effects are legitimate and should not be described as a zero-write filesystem scan.
+
+While SH is live, the helper uses the existing bounded nofollow Core retirement-receipt reader (4096bytes), an independent nofollow backing FD, pre/post named/FD dev/inode/size/blocks/stamps, and actual folder/mount lstat and statfs. It validates current ImageReceipt with its actual mountDirectory schema reference, and records every field comparison used by the initial canonical publication guard. Malformed numeric values are recorded as mismatches rather than coerced to physical authority. The mount path is derived by nativeImageRootV1, not guessed. No hdiutil command is necessary to explain the earlier pre-kernel initial publication failure.
+
+Backing FD close and SH release run independently with boxed arbitrary-primary preservation; a success-path close failure stays fatal. A unique PID-bound wx receipt is written only after release attempt and includes actualSharedReleased. No normal image open/create/activate/retire, receipt/ledger rewrite, repair, allocation, raw deletion or SDK/public workspace is reachable in inspect mode. Initial strict found an invalid owner property on the direct nonqueued lease options; it was removed to match the actual API, preserving that failed strict log.
+
+## Actual Protected Result
+
+Low approved the exact helper and strict17843 terminated0. The one authorized inspect command terminated0 (0.245s), PID68049. The PID-bound wx receipt explicitly reports success and actualSharedReleased:true. All owned operations and runtime sessions are closed. This used ordinary lease-admission metadata and made no claim of globally mutation-free filesystem observation.
+
+Current receipt bytes120, SHA256 `9c9bc5ca59ca02e1446699ee31aaa2feb61bd962f1364d8e321dbd273aa066f4`, contain version/filesystemBytes/maximumPhysicalBytes/dev/ino/size and omit mountDirectory. The sole current schema diagnostic is `/mountDirectory is required`. All six remaining initial-publication comparisons are true. Thus the current strict admission refusal is explained by the missing required owned mount-directory facts; no equality exception or old-schema fallback is appropriate. The protected metadata observation is a new current witness, not a cryptographic assertion that the earlier failing test read identical historical bytes.
+
+Exact authored filesystem66060288B; authored max/backing logical/allocated66060288B; current capacity67108864B. Backing dev16777232/ino336386864/nlink1 matches the receipt. Actual mounted root dev16777260/ino2, statfs total66019328B/free51249152B. Named/FD backing facts, root/folder facts and bounded receipt stamp were stable across the observation. No hdiutil or normal Native opener was used and no data, backing, receipt or ledger was repaired/rewritten/retired.
+
+The full result is `🗑️generated/lease-publication-protected-68049.json`; full command output is `leases-publication-protected-current.log`. No automatic retry or repair is authorized by this observation. Root owns any further canonical receipt-lifetime resolution.

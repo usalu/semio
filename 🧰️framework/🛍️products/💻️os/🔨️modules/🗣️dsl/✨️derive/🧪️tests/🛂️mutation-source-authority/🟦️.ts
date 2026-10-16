@@ -4,6 +4,7 @@ import Ajv from "ajv";
 import { strict as assert } from "node:assert";
 import picomatch from "picomatch";
 import { mutationDomainOwnersProblems, mutationOwnerIdentity, loadCatalogTaxonomy } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { sourceAuthorityDomainsFixtureUrl } from "../../../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/🟦️.ts";
 
 type LayoutCase = { readonly name: string; readonly accepted: boolean; readonly relativeSource?: string };
 
@@ -32,7 +33,7 @@ const hostile = [
 assert(!acceptsLayout("domain/🧬️mutations/🆕️insert-page/unknown/🦀️.rs"));
 assert(!acceptsLayout("domain/🧬️mutations/🆕️insert-page/🦠️mutation/nested/🦀️.rs"));
 
-const domainFixture = await Bun.file(new URL("../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json", import.meta.url)).json();
+const domainFixture = await Bun.file(sourceAuthorityDomainsFixtureUrl).json();
 const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [domainFixture.mutationRoot]: domainFixture.domains } };
 assert.deepEqual(mutationDomainOwnersProblems(taxonomy.mutationDomainOwners), []);
 const explicitOwners = Object.entries(domainFixture.domains).flatMap(([domain, operations]) => Object.entries(operations as Record<string, string>).map(([operation, identity]) => ({ owner: `${domain}/${operation}`, identity })));

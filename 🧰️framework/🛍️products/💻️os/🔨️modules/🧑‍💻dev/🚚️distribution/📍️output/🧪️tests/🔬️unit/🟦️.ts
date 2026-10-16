@@ -19,8 +19,8 @@ export async function testDistributionOutputContract(workspace: string, artifact
       const actual = (): string => playgroundReactOutputPath(temporary, join(temporary, corpus.stagingRoot), vector.row, "release");
       const nx = (): string => playgroundReactNxOutput(corpus.stagingRoot, vector.row, "release");
       if (!vector.valid) {
-        assert.throws(actual, undefined, vector.id); assert.throws(nx, undefined, vector.id);
-        assert.throws(() => cacheInternals.pluginSiteTargetsForCrate("owners/component/package", [{ ...vector.row, cratePath: "owners/component/package" }], corpus.stagingRoot, workspace), undefined, vector.id);
+        assert.throws(actual,vector.id);assert.throws(nx,vector.id);
+        assert.throws(() => cacheInternals.pluginSiteTargetsForCrate("owners/component/package", [{ ...vector.row, cratePath: "owners/component/package" }], corpus.stagingRoot, workspace),vector.id);
         continue;
       }
       assert.equal(relative(temporary, actual()).replaceAll("\\", "/"), vector.path, vector.id);

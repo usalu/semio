@@ -49,5 +49,5 @@ export const playbookPlaybookDiffTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parsePlaybookDiffText(value: unknown, at = "$"): PlaybookDiffText {
-  return playbookPlaybookDiffTextGuardObject(value, `${at}`);
+  return playbookPlaybookDiffTextGuardString(value, `${at}`);
 }

@@ -1,0 +1,10 @@
+import { writeFileSync } from "node:fs";
+import { inventoryTaxonomy } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+const out = process.argv[2]!;
+const scope = process.argv[3];
+const inv = inventoryTaxonomy({ repoRoot: "/Users/ueli/Documents/semio", ...(scope ? { scope } : {}), progress: (p) => { if (p.current % 20000 === 0) console.error(`${p.operation}/${p.phase} ${p.current}/${p.total}`); } });
+const rows = inv.violations.concat(inv.entries.flatMap((e) => e.violations));
+const seen = new Set<string>();
+const uniq = rows.filter((v) => { const k = `${v.code}|${v.path}`; if (seen.has(k)) return false; seen.add(k); return true; });
+writeFileSync(out, JSON.stringify({ entries: inv.entries.length, violations: uniq }, null, 0));
+console.log(`entries=${inv.entries.length} violations=${uniq.length}`);

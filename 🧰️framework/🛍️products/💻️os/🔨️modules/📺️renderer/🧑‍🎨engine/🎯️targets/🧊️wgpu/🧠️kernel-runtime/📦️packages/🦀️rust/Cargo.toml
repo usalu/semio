@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-framework-os-renderer-wgpu-contracts/testkit", "semio-framework-os-renderer-wgpu-kernel-pool/testkit", "semio-framework-os-renderer-wgpu-kernel-protocol/testkit"]
+
 [dependencies]
 semio-framework-os-renderer-wgpu-kernel-pool = { path = "../../../🏊️kernel-pool/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-kernel-retained = { path = "../../../🗃️kernel-retained/📦️packages/🦀️rust" }

@@ -22,8 +22,6 @@
 
 //#region 🔖️Backend
 
-#[path = "../../../../../../🌉️abi/🦀️.rs"]
-pub mod abi;
 #[path = "../../🧊️surface-adapter/🦀️.rs"]
 mod surface_adapter;
 

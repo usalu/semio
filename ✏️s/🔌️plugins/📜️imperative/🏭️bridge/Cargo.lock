@@ -1126,6 +1126,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-native-build-compiler-resources"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+]
+
+[[package]]
 name = "semio-framework-number"
 version = "0.1.0"
 
@@ -1443,6 +1450,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -1509,13 +1517,10 @@ name = "semio-framework-os-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
- "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-pack-record-token",
  "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
@@ -2231,15 +2236,16 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
+ "semio-framework-pack-schema-index",
  "semio-framework-replication-codec",
  "semio-framework-value",
 ]
 
 [[package]]
-name = "semio-framework-pack-record-token"
+name = "semio-framework-pack-schema-index"
 version = "0.1.0"
 dependencies = [
- "semio-framework-pack",
+ "semio-framework-dsl-record",
  "semio-framework-value",
 ]
 
@@ -2616,6 +2622,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-app-builder",
  "semio-framework-plugin-decl-app",
@@ -4573,6 +4580,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "syn 2.0.119",
 ]
 
@@ -4943,6 +4951,11 @@ dependencies = [
  "semio-s-artifact-stdio-txt",
  "semio-s-imperative",
  "semio-s-imperative-extension-sdk",
+ "semio-s-plugin-imperative-control",
+ "semio-s-plugin-imperative-effect",
+ "semio-s-plugin-imperative-logic",
+ "semio-s-plugin-imperative-math",
+ "semio-s-plugin-imperative-text",
 ]
 
 [[package]]
@@ -6790,6 +6803,71 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-imperative-control"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-value",
+ "semio-s-imperative-extension-sdk",
+]
+
+[[package]]
+name = "semio-s-plugin-imperative-effect"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-value",
+ "semio-s-imperative-extension-sdk",
+]
+
+[[package]]
+name = "semio-s-plugin-imperative-logic"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-value",
+ "semio-s-imperative-extension-sdk",
+]
+
+[[package]]
+name = "semio-s-plugin-imperative-math"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-value",
+ "semio-s-imperative-extension-sdk",
+]
+
+[[package]]
+name = "semio-s-plugin-imperative-text"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-value",
+ "semio-s-imperative-extension-sdk",
 ]
 
 [[package]]

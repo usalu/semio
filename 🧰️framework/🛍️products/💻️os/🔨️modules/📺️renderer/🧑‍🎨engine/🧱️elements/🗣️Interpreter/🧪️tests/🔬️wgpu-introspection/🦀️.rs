@@ -1,14 +1,14 @@
 use super::*;
+use semio_framework_ui_declaration::ui::UiStackNode;
+use semio_framework_ui_declaration::ui::UiTextNode;
+use semio_framework_ui_layout::layout::UiPresence;
 use semio_framework_ui_locale::Label;
-use ui_wgpu::wgpu::LayoutBucket;
-use ui_wgpu::wgpu::Node;
-use ui_wgpu::wgpu::NodeFlags;
-use ui_wgpu::wgpu::NodeKey;
-use ui_wgpu::wgpu::Theme;
-use ui_wgpu::wgpu::UiPresence;
-use ui_wgpu::wgpu::UiStackNode;
-use ui_wgpu::wgpu::UiTextNode;
-use ui_wgpu::wgpu::WidgetSpec;
+use semio_framework_ui_retained_tree::tree::LayoutBucket;
+use semio_framework_ui_retained_tree::tree::Node;
+use semio_framework_ui_retained_tree::tree::NodeFlags;
+use semio_framework_ui_retained_tree::tree::NodeKey;
+use semio_framework_ui_retained_tree::tree::WidgetSpec;
+use semio_framework_ui_theme::Theme;
 
 fn text_node(value: &str) -> UiNode {
     UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
@@ -29,7 +29,7 @@ fn path_segments_use_kind_index_and_declared_id() {
 
 #[test]
 fn walk_dump_accumulates_absolute_rects_and_builds_full_paths() {
-    let mut tree = ui_wgpu::wgpu::UiTree::new();
+    let mut tree = semio_framework_ui_retained_tree::tree::UiTree::new();
     let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
     let child_id = tree.insert_child(Some(root_id), Node::new(NodeKey::Positional(1, 0), WidgetSpec(text_node("hi"))));
     tree.node_mut(root_id).unwrap().layout = LayoutBucket { x: 10.0, y: 20.0, width: 200.0, height: 100.0, ..Default::default() };
@@ -49,7 +49,7 @@ fn walk_dump_accumulates_absolute_rects_and_builds_full_paths() {
 
 #[test]
 fn focus_path_is_recorded_for_the_focused_node() {
-    let mut tree = ui_wgpu::wgpu::UiTree::new();
+    let mut tree = semio_framework_ui_retained_tree::tree::UiTree::new();
     let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
     let child_id = tree.insert_child(Some(root_id), Node::new(NodeKey::Positional(1, 0), WidgetSpec(text_node("hi"))));
     tree.node_mut(child_id).unwrap().flags.set(NodeFlags::FOCUSED, true);
@@ -121,7 +121,7 @@ fn mesh_stats_publish_one_row_per_published_mesh_with_its_role_and_bounds() {
     .to_string();
     let instances_json = serde_json::json!([{"id": "extrude@solid#0", "meshId": "eval-extrude@solid#0", "interactionId": "extrude@solid"}]).to_string();
     let selection_json = serde_json::json!({"ids": ["extrude@solid#0"], "hoveredId": "extrude@solid#0"}).to_string();
-    let node = ui_wgpu::wgpu::build_world_3d_scene("procedural-preview", "controller", ui_wgpu::wgpu::World3dScene::base("{\"position\": [4.0, 4.0, 4.0]}".into(), meshes_json, instances_json, selection_json));
+    let node = semio_framework_ui_declaration::ui::build_world_3d_scene("procedural-preview", "controller", semio_framework_ui_scene_world3d::World3dScene::base("{\"position\": [4.0, 4.0, 4.0]}".into(), meshes_json, instances_json, selection_json));
     let UiNode::ComponentScene(scene) = &node else { unreachable!("build_world_3d_scene answers a component scene") };
 
     let surface = mesh_stats_for_scene(scene, [10.0, 20.0, 400.0, 300.0]).expect("a world3d scene publishes mesh stats");
@@ -144,8 +144,8 @@ fn mesh_stats_publish_one_row_per_published_mesh_with_its_role_and_bounds() {
 /// rect — a rect reported parent-relative aims every pointer probe at the wrong pane.
 #[test]
 fn walk_mesh_stats_finds_nested_world3d_surfaces_at_their_absolute_rect() {
-    let scene = ui_wgpu::wgpu::build_world_3d_scene("procedural-preview", "controller", ui_wgpu::wgpu::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into()));
-    let mut tree = ui_wgpu::wgpu::UiTree::new();
+    let scene = semio_framework_ui_declaration::ui::build_world_3d_scene("procedural-preview", "controller", semio_framework_ui_scene_world3d::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into()));
+    let mut tree = semio_framework_ui_retained_tree::tree::UiTree::new();
     let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
     let scene_id = tree.insert_child(Some(root_id), Node::new(NodeKey::Explicit("procedural-preview".into()), WidgetSpec(scene)));
     tree.node_mut(root_id).unwrap().layout = LayoutBucket { x: 10.0, y: 20.0, width: 900.0, height: 800.0, ..Default::default() };
@@ -169,7 +169,7 @@ fn board2d_dump_reads_the_published_board_like_reacts_vitals() {
         "edges": [{"id": "e-1", "from": "n-1:h-1", "to": "n-2"}]
     })
     .to_string();
-    let mut board = ui_wgpu::wgpu::Board2dScene::base(fixture, serde_json::json!({"x": 12.5, "y": -3.0, "zoom": 1.75}).to_string(), true);
+    let mut board = semio_framework_ui_scene_plane::Board2dScene::base(fixture, serde_json::json!({"x": 12.5, "y": -3.0, "zoom": 1.75}).to_string(), true);
     board.selection_json = serde_json::json!(["n-2", "n-1:h-1"]).to_string();
     board.highlighted_ids_json = serde_json::json!(["n-1", "n-2"]).to_string();
     let surface = board2d_surface("puzzle2d-edit", "2d-edit", &board, [100.0, 50.0, 640.0, 480.0]);
@@ -186,7 +186,7 @@ fn board2d_dump_reads_the_published_board_like_reacts_vitals() {
         }),
         "the wire shape the W3-E2E probe reads (`📓️w3-e2e-report.md` W.3 P1)"
     );
-    let broken = board2d_surface("s", "w", &ui_wgpu::wgpu::Board2dScene::base("{not json".into(), "{}".into(), false), [0.0; 4]);
+    let broken = board2d_surface("s", "w", &semio_framework_ui_scene_plane::Board2dScene::base("{not json".into(), "{}".into(), false), [0.0; 4]);
     assert_eq!((broken.parsed, broken.nodes, broken.edges, broken.handles, broken.positions.len(), broken.camera, broken.selection.len(), broken.highlighted.len()), (false, -1, -1, -1, 0, None, 0, 0));
 }
 
@@ -194,8 +194,8 @@ fn board2d_dump_reads_the_published_board_like_reacts_vitals() {
 /// ABSOLUTE page rect; a window without a board contributes no row.
 #[test]
 fn walk_board2d_finds_nested_boards_at_their_absolute_rect_in_their_window() {
-    let scene = ui_wgpu::wgpu::build_board2d_scene("puzzle2d-edit", "controller", ui_wgpu::wgpu::Board2dScene::base("{\"nodes\":[],\"edges\":[]}".into(), "{}".into(), true));
-    let mut tree = ui_wgpu::wgpu::UiTree::new();
+    let scene = semio_framework_ui_declaration::ui::build_board2d_scene("puzzle2d-edit", "controller", semio_framework_ui_scene_plane::Board2dScene::base("{\"nodes\":[],\"edges\":[]}".into(), "{}".into(), true));
+    let mut tree = semio_framework_ui_retained_tree::tree::UiTree::new();
     let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
     let scene_id = tree.insert_child(Some(root_id), Node::new(NodeKey::Explicit("board".into()), WidgetSpec(scene)));
     tree.node_mut(root_id).unwrap().layout = LayoutBucket { x: 10.0, y: 20.0, width: 900.0, height: 800.0, ..Default::default() };
@@ -212,7 +212,7 @@ fn walk_board2d_finds_nested_boards_at_their_absolute_rect_in_their_window() {
 
 #[test]
 fn sibling_world_diagnostics_read_their_exact_host_camera_and_keep_the_public_surface_id() {
-    let mut node = ui_wgpu::wgpu::build_world_3d_scene("shared-world-document", "controller", ui_wgpu::wgpu::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into()));
+    let mut node = semio_framework_ui_declaration::ui::build_world_3d_scene("shared-world-document", "controller", semio_framework_ui_scene_world3d::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into()));
     let UiNode::ComponentScene(scene) = &mut node else { unreachable!() };
     let mut observations = Vec::new();
     for (host_id, position) in [("world-diagnostic-a", [1.0, 2.0, 3.0]), ("world-diagnostic-b", [4.0, 5.0, 6.0])] {
@@ -234,7 +234,7 @@ fn sibling_world_diagnostics_read_their_exact_host_camera_and_keep_the_public_su
 fn retiring_a_component_releases_its_exact_camera_diagnostic_owner() {
     let mut owner = fixture_scene_pointer_target("diagnostic-close-window", "diagnostic-close-document", "camera-owner");
     owner.host_id = "diagnostic-close-host".into();
-    owner.kind = ui_wgpu::wgpu::SurfaceKind::Canvas2d;
+    owner.kind = semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d;
     assert!(crate::scenes::mount_scene_identity(&owner));
     WORLD_CAMERA_LEDGER.borrow_mut().insert(owner.host_id.clone(), serde_json::json!({ "position": [1.0, 2.0, 3.0] }));
     assert!(crate::scenes::retire_scene_identity(&owner));
@@ -257,9 +257,9 @@ impl ui_wgpu::wgpu::SceneHost for NoSceneHost {
         &mut self,
         _slot: &ui_wgpu::wgpu::SceneSlot<'_>,
         _cursor: &mut ui_wgpu::wgpu::ScenePaintCursor,
-        _draw: &mut ui_wgpu::wgpu::DrawList,
-        _atlas: &mut ui_wgpu::wgpu::FontAtlas,
-        _icons: Option<&ui_wgpu::wgpu::IconAtlas>,
+        _draw: &mut semio_framework_ui_draw_contract::DrawList,
+        _atlas: &mut semio_framework_ui_text::FontAtlas,
+        _icons: Option<&semio_framework_ui_draw_contract::IconAtlas>,
     ) -> ui_wgpu::wgpu::ScenePaintStep {
         ui_wgpu::wgpu::ScenePaintStep::Fault
     }
@@ -279,7 +279,7 @@ fn a_painted_chrome_window_reports_draw_calls_quads_and_glyphs() {
     engine.apply_tree(window_id, &stack_node(Some("root"), vec![text_node("Puzzle 3D"), text_node("Catalogue")]));
     engine.set_viewport(window_id, 640.0, 360.0);
 
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::from_bytes(&[]).expect("the deterministic builtin bitmap atlas");
+    let mut atlas = semio_framework_ui_text::FontAtlas::from_bytes(&[]).expect("the deterministic builtin bitmap atlas");
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();

@@ -1,7 +1,7 @@
 /** 🧭️ `change-building-plan-regular` wire twin: the leaf payload `ChangeBuildingPlanRegular`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireBoolean, normWireInteger, normWireLiteral, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "../../../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireBoolean, normWireInteger, normWireLiteral, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeBuildingPlanRegular {
   mutation: "changeBuildingPlanRegular";

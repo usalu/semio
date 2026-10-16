@@ -3,12 +3,12 @@
 use serde_json::Value;
 use std::sync::OnceLock;
 
-pub(crate) fn contract() -> &'static Value {
+pub fn contract() -> &'static Value {
     static CONTRACT: OnceLock<Value> = OnceLock::new();
     CONTRACT.get_or_init(|| serde_json::from_str(include_str!("🧬️contract/🔣️.json")).expect("theme geometry contract"))
 }
 
-pub(crate) fn bindings() -> &'static Value {
+pub fn bindings() -> &'static Value {
     static BINDINGS: OnceLock<Value> = OnceLock::new();
     BINDINGS.get_or_init(|| serde_json::from_str(include_str!("🔣️.json")).expect("theme geometry bindings"))
 }

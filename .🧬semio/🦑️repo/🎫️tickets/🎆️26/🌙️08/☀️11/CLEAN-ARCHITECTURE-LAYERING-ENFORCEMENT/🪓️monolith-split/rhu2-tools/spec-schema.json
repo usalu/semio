@@ -1,0 +1,15 @@
+{
+ "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+ "names": {
+  "parseDocumentOpenPackageV1": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+  "parseDocumentOpenIntentV1": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+  "parseDocumentPlanSocketGrantIntentV1": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+  "parseDocumentOpenPlanV1": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+  "parseDocumentExecutionTargetLeaseFieldsV1": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+  "leaseFieldsFromPlanV1": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+  "sameLeaseFieldsV1": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+  "sameExecutionTargetV1": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+  "DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts"
+ },
+ "default": "🧰️framework/🔨️modules/📇️directory/🧬️schema/🟦️.ts"
+}

@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-3d-testing-support"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Test-only allocation observer shared by every 3d crate's test binary: the one global allocator of that binary."
+
+[package.metadata.semio]
+role = "test"
+id = "3d-testing-support"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }

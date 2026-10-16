@@ -1,3 +1,4 @@
+use semio_framework_os_renderer_wgpu_fixtures::shell::paint_component_pointer_documents;
 use super::*;
 use serde::Deserialize;
 
@@ -35,7 +36,7 @@ fn hub_command_opens_the_route_overlay_without_adding_a_default_dock_tab() {
     assert!(shell.directory.hub_workspace_open);
     assert_eq!(shell.opening.uri_history.get(shell.opening.uri_index).map(String::as_str), Some("/hub"));
     assert!(shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs).iter().any(|id| id == FRAMEWORK_HUB_PANEL_ID), "the overlay keeps its retained body publication");
-    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_hub_workspace_action(crate::hub_connection::action::CLOSE_WORKSPACE, None));
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_hub_workspace_action(semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CLOSE_WORKSPACE, None));
     assert!(!shell.directory.hub_workspace_open);
 }
 
@@ -127,7 +128,7 @@ fn settle_hub_workspace(shell: &mut ShellState) {
     while !shell.directory.hub_workspace_settled() {
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let _ = crate::pump_renderer_io_sessions(1);
+            let _ = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
             drive(ActionsCtx::of(&mut shell).pump_directory_events());
         }
         #[cfg(target_arch = "wasm32")]
@@ -166,24 +167,24 @@ fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
     assert!(shell.directory.hub_workspace_open);
     assert_eq!(shell.directory.hub_workspace.presence(), HubSessionPresence::SignedOut);
     assert_eq!(shell.sync.hub_connection_state(&shell.directory), HubConnectionState::SignedOut);
-    hub_verb(&mut shell, crate::hub_connection::action::SET_ADDRESS, &[("value", origin.as_str())]);
-    hub_verb(&mut shell, crate::hub_connection::action::ADD_CONNECTION, &[]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ADDRESS, &[("value", origin.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::ADD_CONNECTION, &[]);
     assert_eq!(shell.directory.hub_workspace.origin(), origin.trim_end_matches('/'));
-    hub_verb(&mut shell, crate::hub_connection::action::SET_EMAIL, &[("value", email.as_str())]);
-    hub_verb(&mut shell, crate::hub_connection::action::SET_PASSWORD, &[("value", password.as_str())]);
-    hub_verb(&mut shell, crate::hub_connection::action::SIGN_IN, &[]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_EMAIL, &[("value", email.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_PASSWORD, &[("value", password.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_IN, &[]);
     println!("wg6-live sign-in phase={} error={:?} user={:?} display={:?}", shell.directory.hub_workspace.session.phase.as_str(), shell.directory.hub_workspace.session.error, shell.directory.hub_workspace.session.user_id, shell.directory.hub_workspace.display_name);
     assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SignedIn, "error {:?}", shell.directory.hub_workspace.session.error);
     assert!(shell.directory.hub_workspace.password_draft.is_empty(), "the password never outlives its request");
     assert!(shell.directory.hub_workspace.display_name.is_some());
     assert_eq!(shell.sync.hub_connection_state(&shell.directory), HubConnectionState::Online, "a verified session on a reachable hub with nothing attached");
-    hub_verb(&mut shell, crate::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
-    hub_verb(&mut shell, crate::hub_connection::action::CREATE_SPACE, &[]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
     println!("wg6-live spaces phase={} rows={:?}", shell.directory.hub_workspace.phase.as_str(), shell.directory.hub_workspace.rows.iter().map(|row| (row.name.as_str(), row.id.as_str(), row.access.as_str())).collect::<Vec<_>>());
-    assert_eq!(shell.directory.hub_workspace.phase, crate::space_browser::SpaceBrowserPhase::Ready);
+    assert_eq!(shell.directory.hub_workspace.phase, semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready);
     let created = shell.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).expect("the created space is listed").id.clone();
     for locale in [Locale::En, Locale::De] {
-        let tree = crate::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
+        let tree = semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
         let mut spaces = Vec::new();
         hub_attribute_values(&tree, "data-semio-hub-space", &mut spaces);
         let mut phases = Vec::new();
@@ -192,7 +193,7 @@ fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
         assert!(spaces.contains(&created), "{locale:?} tree lists the created space");
         assert_eq!(phases, vec![HubSessionPhase::SignedIn.as_str().to_string()]);
     }
-    hub_verb(&mut shell, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", created.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", created.as_str())]);
     println!(
         "wg6-live open space={:?} members={:?} uri={:?}",
         shell.directory.hub_workspace.open_space_id,
@@ -201,7 +202,7 @@ fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
     );
     assert_eq!(shell.directory.hub_workspace.open_space_id.as_deref(), Some(created.as_str()));
     assert!(shell.directory.hub_workspace.members.iter().any(|member| member.owner), "the creator is listed as the owner");
-    hub_verb(&mut shell, crate::hub_connection::action::SIGN_OUT, &[]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
     assert_eq!(shell.directory.hub_workspace.presence(), HubSessionPresence::SignedOut);
     assert!(shell.directory.hub_workspace.rows.is_empty());
 }
@@ -295,7 +296,7 @@ fn drive<F: std::future::Future>(future: F) -> F::Output {
         if let std::task::Poll::Ready(output) = future.as_mut().poll(&mut context) {
             return output;
         }
-        let advanced = crate::pump_renderer_io_sessions(1);
+        let advanced = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
         let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         if advanced == 0 {
             std::thread::sleep(std::time::Duration::from_millis(1));
@@ -314,13 +315,13 @@ fn live_env(key: &str) -> String {
 #[cfg(not(target_arch = "wasm32"))]
 fn sign_in_live(shell: &mut ShellState, origin: &str, email: &str, password: &str) -> Option<String> {
     drive(ActionsCtx::of(&mut shell).apply_os_command("os.openHub", None)).expect("the hub route opens");
-    hub_verb(shell, crate::hub_connection::action::SET_ADDRESS, &[("value", origin)]);
-    hub_verb(shell, crate::hub_connection::action::ADD_CONNECTION, &[]);
+    hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ADDRESS, &[("value", origin)]);
+    hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::ADD_CONNECTION, &[]);
     let mut first_refusal = None;
     for _ in 0..2 {
-        hub_verb(shell, crate::hub_connection::action::SET_EMAIL, &[("value", email)]);
-        hub_verb(shell, crate::hub_connection::action::SET_PASSWORD, &[("value", password)]);
-        hub_verb(shell, crate::hub_connection::action::SIGN_IN, &[]);
+        hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_EMAIL, &[("value", email)]);
+        hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_PASSWORD, &[("value", password)]);
+        hub_verb(shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_IN, &[]);
         if shell.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn {
             break;
         }
@@ -475,7 +476,7 @@ fn is_live(shell: &ShellState) -> bool {
 /// hub saw no peer and dropped each idle document socket after its presence lease (two-user gate run 13).
 #[cfg(not(target_arch = "wasm32"))]
 fn frame_pump(shell: &mut ShellState) -> usize {
-    let advanced = crate::pump_renderer_io_sessions(1);
+    let advanced = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
     let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
     drive(PointerCtx::of(&mut shell).pump_sync_events());
     shell.sync.request_presence_preview(&mut shell.chrome);
@@ -594,7 +595,7 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let variant = live_env("SEMIO_PLUGIN");
     let relay = SeverableRelay::start(&origin);
     let mut ledger = CollaborationLedger::default();
-    let plugins = drive(crate::program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
     assert!(plugins.iter().any(|entry| entry.plugin_id == journey.plugin_id.as_str()), "the staged runtime carries {}", journey.plugin_id);
     let mut a = ShellState::new(plugins.clone(), variant.clone(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut b = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -620,27 +621,27 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     );
 
     let space_name = format!("g7w collaboration {}", chrome_now_ms() as u64);
-    hub_verb(&mut a, crate::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
-    hub_verb(&mut a, crate::hub_connection::action::CREATE_SPACE, &[]);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
     let space_id = a.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).unwrap_or_default();
     shell_command(&mut a, "os.directory.upsert-member", &[("spaceId", space_id.as_str()), ("email", b_email.as_str()), ("role", "author")]);
-    hub_verb(&mut b, crate::hub_connection::action::REFRESH_SPACES, &[]);
+    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
     let b_row = b.directory.hub_workspace.rows.iter().find(|row| row.id == space_id).map(|row| (row.name.clone(), row.role));
     ledger.record("2-same-space", !space_id.is_empty() && b_row.as_ref().is_some_and(|(_, role)| *role == Some(DirectorySpaceRole::Author)), format!("space={space_id} B sees {b_row:?}"));
 
-    hub_verb(&mut a, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
-    hub_verb(&mut b, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
     let (a_roster, b_roster) = (online_members(&mut a, &space_id), online_members(&mut b, &space_id));
     ledger.record("3-roster", a_roster.len() == 2 && b_roster.len() == 2, format!("A roster={a_roster:?} B roster={b_roster:?}"));
 
     let kind_id = a.directory.hub_workspace.creation.catalog.as_ref().and_then(|catalog| catalog.kinds.iter().find(|kind| kind.schema == journey.schema.as_str())).map(|kind| kind.kind_id.clone()).unwrap_or_default();
-    hub_verb(&mut a, crate::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
-    hub_verb(&mut a, crate::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Shared board")]);
-    hub_verb(&mut a, crate::hub_connection::action::CREATE_ARTIFACT, &[]);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Shared board")]);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
     let creation_started = std::time::Instant::now();
     let mut creation_trail = Vec::new();
     while creation_started.elapsed() < std::time::Duration::from_secs(150) {
-        let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (crate::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+        let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
         if creation_trail.last() != Some(&observed) {
             creation_trail.push(observed);
         }
@@ -719,11 +720,11 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let offline_pump = std::time::Instant::now();
     let _ = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(3), &mut trail, |_, _| false);
     let pump_elapsed = offline_pump.elapsed();
-    hub_verb(&mut b, crate::hub_connection::action::REFRESH_SPACES, &[]);
+    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
     let offline_phase = b.directory.hub_workspace.phase.as_str();
     let offline_remote = remote_of(&b);
     relay.heal();
-    hub_verb(&mut b, crate::hub_connection::action::REFRESH_SPACES, &[]);
+    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::REFRESH_SPACES, &[]);
     let healed_phase = b.directory.hub_workspace.phase.as_str();
     let a_before_heal = applied_edits(&mut a).len();
     let relive = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(40), &mut trail, |a, b| is_live(a) && is_live(b));
@@ -731,14 +732,14 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let a_after_heal = applied_edits(&mut a);
     ledger.record(
         "12-connection-loss",
-        offline_edit.is_ok() && offline_latency <= b_latency.saturating_mul(2) && pump_elapsed < std::time::Duration::from_secs(5) && offline_phase == crate::space_browser::SpaceBrowserPhase::Stale.as_str() && healed_phase == crate::space_browser::SpaceBrowserPhase::Ready.as_str() && relive.is_some() && a_after_heal.len() > a_before_heal,
+        offline_edit.is_ok() && offline_latency <= b_latency.saturating_mul(2) && pump_elapsed < std::time::Duration::from_secs(5) && offline_phase == semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Stale.as_str() && healed_phase == semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready.as_str() && relive.is_some() && a_after_heal.len() > a_before_heal,
         format!("severed={severed} B offline edit={offline_edit:?} latency={offline_latency:?} pump={pump_elapsed:?} B spaces offline={offline_phase} healed={healed_phase} B remote offline={offline_remote} relive={relive:?} A ledger {a_before_heal}->{a_after_heal:?}"),
     );
 
     println!("g7w-live trail={trail:?}");
     let failed: Vec<&str> = ledger.steps.iter().filter(|(_, passed, _)| !passed).map(|(step, _, _)| *step).collect();
-    hub_verb(&mut a, crate::hub_connection::action::SIGN_OUT, &[]);
-    hub_verb(&mut b, crate::hub_connection::action::SIGN_OUT, &[]);
+    hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
+    hub_verb(&mut b, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
     assert!(failed.is_empty(), "two-user collaboration steps failed: {failed:?}");
 }
 
@@ -775,7 +776,7 @@ fn native_guest_journey() -> NativeGuestJourney {
 fn native_guest_authored(journey: &NativeGuestJourney) -> ShellState {
     let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
     let variant = live_env("SEMIO_PLUGIN");
-    let plugins = drive(crate::program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
     assert!(plugins.iter().any(|entry| entry.plugin_id == journey.plugin_id), "the staged runtime carries {}", journey.plugin_id);
     let mut shell = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let document_id = format!("native-guest-journey-{}", chrome_now_ms() as u64);
@@ -907,7 +908,7 @@ fn a_native_guest_open_keeps_the_frame_loop_painting_and_is_cancellable() {
     let journey = native_guest_journey();
     let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
     let variant = live_env("SEMIO_PLUGIN");
-    let plugins = drive(crate::program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
     let mut shell = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let open = |shell: &mut ShellState, document_id: &str| {
         let started = std::time::Instant::now();
@@ -952,22 +953,22 @@ fn a_live_hub_artifact_is_created_through_the_wgpu_creation_door() {
     let refusal = sign_in_live(&mut shell, &origin, &live_env("SEMIO_HUB_LIVE_EMAIL"), &live_env("SEMIO_HUB_LIVE_PASSWORD"));
     assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SignedIn, "first refusal {refusal:?}");
     let space_name = format!("wg8 door {}", chrome_now_ms() as u64);
-    hub_verb(&mut shell, crate::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
-    hub_verb(&mut shell, crate::hub_connection::action::CREATE_SPACE, &[]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
     let space_id = shell.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).expect("the created space is listed");
-    hub_verb(&mut shell, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
     let creation = &shell.directory.hub_workspace.creation;
     let kinds: Vec<(String, String, String)> = creation.catalog.iter().flat_map(|catalog| catalog.kinds.iter()).map(|kind| (kind.kind_id.clone(), kind.label.en.clone(), kind.label.de.clone())).collect();
     println!("wg8-door catalog={} kinds={kinds:?}", creation.catalog_phase.as_str());
     assert_eq!(creation.catalog_phase, HubArtifactCatalogPhase::Ready);
     let kind_id = kinds.first().map(|(kind_id, _, _)| kind_id.clone()).expect("the catalog offers a kind");
-    hub_verb(&mut shell, crate::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
-    hub_verb(&mut shell, crate::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Door artifact")]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Door artifact")]);
     let started = std::time::Instant::now();
-    hub_verb(&mut shell, crate::hub_connection::action::CREATE_ARTIFACT, &[]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
     let mut trail = Vec::new();
     while started.elapsed() < std::time::Duration::from_secs(150) {
-        let observed = shell.directory.hub_workspace.creation.operation.as_ref().map(|operation| (crate::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+        let observed = shell.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
         if trail.last() != Some(&observed) {
             trail.push(observed);
         }
@@ -980,14 +981,14 @@ fn a_live_hub_artifact_is_created_through_the_wgpu_creation_door() {
     let operation = shell.directory.hub_workspace.creation.operation.clone().expect("the door holds its creation");
     println!("wg8-door kind={kind_id} trail={trail:?} after={:?} ready={:?}", started.elapsed(), operation.ready);
     for locale in [Locale::En, Locale::De] {
-        let tree = crate::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
+        let tree = semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
         let mut phases = Vec::new();
         hub_attribute_values(&tree, "data-semio-hub-artifact-creation-phase", &mut phases);
         println!("wg8-door tree locale={locale:?} phase={phases:?}");
     }
     assert_eq!(operation.phase, SpaceArtifactCreationPhaseV1::Ready);
     assert!(operation.ready.as_ref().is_some_and(|ready| ready.kind_id == kind_id && ready.artifact_id.starts_with("artifact-")));
-    hub_verb(&mut shell, crate::hub_connection::action::SIGN_OUT, &[]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
 }
 
 /// 🌉️ The file handshake between the native half of the cross-shell journey and its browser driver
@@ -1031,7 +1032,7 @@ impl CrossShellHandshake {
 /// mirror into the shell's pointer-state maps exactly as they would under a GPU. Answers the painted boards.
 #[cfg(not(target_arch = "wasm32"))]
 fn paint_session_windows(shell: &mut ShellState, body: Rect) -> Vec<String> {
-    let _serialized = crate::engine_canvas::engine_surface_law_guard();
+    let _serialized = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard();
     let controller = shell.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
     let mut windows: Vec<String> = shell.docs.window_ui.keys().cloned().collect();
     windows.sort();
@@ -1077,7 +1078,7 @@ impl CrossShellMeeting {
         let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
         let variant = live_env("SEMIO_PLUGIN");
         let mut ledger = CollaborationLedger::default();
-        let plugins = drive(crate::program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
+        let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
         let mut a = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
 
         let retry = sign_in_live(&mut a, &origin, &a_email, &a_password);
@@ -1085,20 +1086,20 @@ impl CrossShellMeeting {
         ledger.record("1-a-signs-in", a.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn, format!("A={} {a_user:?} retried-after={retry:?}", a.directory.hub_workspace.session.phase.as_str()));
 
         let space_name = format!("wg8 cross-shell {}", chrome_now_ms() as u64);
-        hub_verb(&mut a, crate::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
-        hub_verb(&mut a, crate::hub_connection::action::CREATE_SPACE, &[]);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_SPACE, &[]);
         let space_id = a.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).unwrap_or_default();
         shell_command(&mut a, "os.directory.upsert-member", &[("spaceId", space_id.as_str()), ("email", b_email.as_str()), ("role", "author")]);
-        hub_verb(&mut a, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
         let kind_id = a.directory.hub_workspace.creation.catalog.as_ref().and_then(|catalog| catalog.kinds.iter().find(|kind| kind.schema == schema)).map(|kind| kind.kind_id.clone()).unwrap_or_default();
-        hub_verb(&mut a, crate::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
-        hub_verb(&mut a, crate::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Cross-shell board")]);
-        hub_verb(&mut a, crate::hub_connection::action::CREATE_ARTIFACT, &[]);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Cross-shell board")]);
+        hub_verb(&mut a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CREATE_ARTIFACT, &[]);
         let creation_started = std::time::Instant::now();
         let mut creation_trail = Vec::new();
         while creation_started.elapsed() < std::time::Duration::from_secs(600) && !a.directory.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening)
         {
-            let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (crate::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+            let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
             if creation_trail.last() != Some(&observed) {
                 creation_trail.push(observed);
             }
@@ -1145,7 +1146,7 @@ impl CrossShellMeeting {
     fn finish(mut self) {
         let failed: Vec<&str> = self.ledger.steps.iter().filter(|(_, passed, _)| !passed).map(|(step, _, _)| *step).collect();
         self.handshake.publish("done", serde_json::json!({ "failed": failed }));
-        hub_verb(&mut self.a, crate::hub_connection::action::SIGN_OUT, &[]);
+        hub_verb(&mut self.a, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SIGN_OUT, &[]);
         assert!(failed.is_empty(), "cross-shell steps failed: {failed:?}");
     }
 }
@@ -1262,10 +1263,10 @@ fn a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board() {
 fn a_long_guest_turn_shares_the_kernel_and_only_its_owners_cancel_ends_it() {
     let journey = native_guest_journey();
     let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
-    let plugins = drive(crate::program_bridge::load_wasm_plugins(&live_env("SEMIO_PLUGIN"), &modules)).expect("the staged native runtime loads");
+    let plugins = drive(semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&live_env("SEMIO_PLUGIN"), &modules)).expect("the staged native runtime loads");
     let answering_program = plugins.iter().find(|entry| entry.plugin_id == journey.plugin_id).cloned().expect("the staged runtime carries the answering app");
     let answering = drive(answering_program.create_app(&journey.app_id)).expect("the answering app opens");
-    let long = drive(crate::program_bridge::load_resolved_program(
+    let long = drive(semio_framework_os_renderer_wgpu_program_bridge::load_resolved_program(
         &live_env("SEMIO_LONG_TURN_PLUGIN"),
         std::path::Path::new(&live_env("SEMIO_LONG_TURN_COMPONENT")),
         std::path::Path::new(&live_env("SEMIO_LONG_TURN_DESCRIPTOR")),
@@ -1276,7 +1277,7 @@ fn a_long_guest_turn_shares_the_kernel_and_only_its_owners_cancel_ends_it() {
     let waker = std::task::Waker::noop();
     let mut context = std::task::Context::from_waker(waker);
     let pump = || {
-        let _ = crate::pump_renderer_io_sessions(1);
+        let _ = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
         let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
     };
 
@@ -1304,7 +1305,7 @@ fn a_long_guest_turn_shares_the_kernel_and_only_its_owners_cancel_ends_it() {
     let long_instance = opened.expect("the long InstanceOpen completes: no wall-clock limit ends a progressing turn");
     assert!(open_took < std::time::Duration::from_secs(2) || !answers.is_empty(), "another app answered between the long turn's slices ({open_took:?} open, no answer)");
 
-    let cancelled_before = crate::kernel_runtime::CANCELLED_KERNEL_TURNS.load(std::sync::atomic::Ordering::Relaxed);
+    let cancelled_before = semio_framework_os_renderer_wgpu_kernel_runtime::CANCELLED_KERNEL_TURNS.load(std::sync::atomic::Ordering::Relaxed);
     let cancelled_open_started = std::time::Instant::now();
     let mut cancelled_open = Box::pin(long.create_app(&long_app));
     let mut finished_before_cancel = false;
@@ -1326,7 +1327,7 @@ fn a_long_guest_turn_shares_the_kernel_and_only_its_owners_cancel_ends_it() {
         }
         std::thread::sleep(std::time::Duration::from_millis(5));
     };
-    let cancelled_after = crate::kernel_runtime::CANCELLED_KERNEL_TURNS.load(std::sync::atomic::Ordering::Relaxed);
+    let cancelled_after = semio_framework_os_renderer_wgpu_kernel_runtime::CANCELLED_KERNEL_TURNS.load(std::sync::atomic::Ordering::Relaxed);
     println!("fair-turns cancel finished-before-cancel={finished_before_cancel} cancelled-turns={cancelled_before}->{cancelled_after} next-answer-after={:?} ok={}", answered_after_cancel.elapsed(), read.is_ok());
     read.expect("the kernel keeps answering after a cancelled turn");
     assert!(finished_before_cancel || cancelled_after == cancelled_before + 1, "dropping the open mid-turn retired exactly that turn");
@@ -1375,7 +1376,7 @@ fn pump_until(shell: &mut ShellState, budget: std::time::Duration, done: impl Fn
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn the_sign_in_verb_arms_a_task_and_returns_while_the_hub_is_still_answering() {
-    let source = crate::shell::SHELL_SOURCE;
+    let source = semio_framework_os_renderer_wgpu_test_support::shell_source();
     let dispatch = source.split("fn handle_hub_workspace_action<'a>(").nth(1).expect("the hub verb dispatch exists");
     let dispatch = &dispatch[..dispatch.find("\n    }\n").expect("the dispatch closes")];
     assert!(dispatch.contains("hub_action::SIGN_IN => self.start_hub_sign_in(),"), "SIGN_IN arms and returns");
@@ -1383,14 +1384,14 @@ fn the_sign_in_verb_arms_a_task_and_returns_while_the_hub_is_still_answering() {
     assert!(!source.contains("run_hub_sign_in_turn") && !source.contains("reload_hub_spaces().await"), "no hub leg is awaited inside a verb");
 
     let mut shell = shell();
-    hub_verb(&mut shell, crate::hub_connection::action::SET_EMAIL, &[("value", "user1@semio.dev")]);
-    hub_verb(&mut shell, crate::hub_connection::action::SET_PASSWORD, &[("value", "correct horse battery staple")]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_EMAIL, &[("value", "user1@semio.dev")]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::SET_PASSWORD, &[("value", "correct horse battery staple")]);
     let (sender, receiver) = std::sync::mpsc::channel();
     shell.directory.hub_workspace.session = reduce_hub_session(&shell.directory.hub_workspace.session, &HubSessionEvent::Submit);
     shell.directory.hub_sign_in_task = Some(ShellHubTask { receiver, cancel: CancelToken::root_now(), task: None });
     assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SigningIn);
     for locale in [Locale::En, Locale::De] {
-        let tree = serde_json::to_string(&crate::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale)).expect("hub tree json");
+        let tree = serde_json::to_string(&semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale)).expect("hub tree json");
         assert!(tree.contains("framework.hub.sign-in.cancel"), "a running sign-in offers Cancel ({locale:?})");
     }
     assert!(!shell.sync.poll_hub_workspace_tasks(&mut shell.directory), "nothing is applied before the hub answers");
@@ -1402,7 +1403,7 @@ fn the_sign_in_verb_arms_a_task_and_returns_while_the_hub_is_still_answering() {
     let (late, receiver) = std::sync::mpsc::channel();
     shell.directory.hub_workspace.session = reduce_hub_session(&shell.directory.hub_workspace.session, &HubSessionEvent::Submit);
     shell.directory.hub_sign_in_task = Some(ShellHubTask { receiver, cancel: CancelToken::root_now(), task: None });
-    hub_verb(&mut shell, crate::hub_connection::action::CANCEL_SIGN_IN, &[]);
+    hub_verb(&mut shell, semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::action::CANCEL_SIGN_IN, &[]);
     assert!(shell.directory.hub_workspace_settled(), "Cancel ends the request");
     let _ = late.send(ShellHubSignInAnswer::Unverified);
     assert!(!shell.sync.poll_hub_workspace_tasks(&mut shell.directory), "a cancelled sign-in's late answer is never applied");

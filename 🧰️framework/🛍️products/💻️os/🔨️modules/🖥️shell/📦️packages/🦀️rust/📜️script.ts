@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import {type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{scriptCompilerAdmissionControlV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
@@ -7,15 +9,15 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:f
 import { basename, dirname, join, relative } from "node:path";
 import {runRepositoryCargoCommandV1,runRepositoryCargoTests} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import {launchRepositoryCargoV1,readRepositoryCargoLaunchV1,readRepositoryCargoGeneratedCapturePolicyV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
-import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import {OwnedCommandFailure,writeOwnedCommandOutputV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import {OwnedCommandFailure,writeOwnedCommandOutputV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 class CheckScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check","--manifest-path","Cargo.toml"],this.root,process.env,buildBudgetMs());
+    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check","--manifest-path","Cargo.toml"],this.root,process.env,buildBudgetMs());
   }
 }
 
@@ -54,8 +56,8 @@ function generatedBindingsPath(root: string): string {
 const OWNED_JSON_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/os/shell/component.json";
 const OWNED_JSON_SCHEMA_DIALECT = "http://json-schema.org/draft-07/schema#";
 
-async function runTypegenExportTest(root:string,outPath:string,workspace:string,invocation:ScriptInvocation):Promise<void>{
-  await runRepositoryCargoCommandV1(invocation,workspace,["test","--features","typegen",TYPEGEN_TEST_FILTER],root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs());
+async function runTypegenExportTest(root:string,outPath:string,workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{
+  await runRepositoryCargoCommandV1(invocation,phaseControl,workspace,["test","--features","typegen",TYPEGEN_TEST_FILTER],root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs());
 }
 
 /** 🧬️ Renders `<owner>/🤖️generated/🟦️.ts` from `<owner>/🧬️schema` — the schema module's Rust
@@ -65,7 +67,7 @@ class TypegenScript extends BundleScript {
     assertSchemaModulePresent(this.root);
     const outPath = generatedBindingsPath(this.root);
     mkdirSync(dirname(outPath), { recursive: true });
-    await runTypegenExportTest(this.root,outPath,this.repoRoot,this.invocation);
+    await runTypegenExportTest(this.root,outPath,this.repoRoot,this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:typegen",0));
     for (const name of readdirSync(dirname(outPath))) if (name !== basename(outPath)) rmSync(join(dirname(outPath), name), { recursive: true, force: true });
     console.log(`framework-os-shell typescript mirror refreshed from 🧬️schema -> ${outPath}`);
   }
@@ -75,7 +77,7 @@ class TypegenScript extends BundleScript {
 class PreviewGeneratedScript extends BundleScript {
   async run():Promise<void>{
     const targetPath=generatedBindingsPath(this.root),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),request=readRepositoryCargoLaunchV1(["--store=shared","--configuration="+mode,"--","test","--locked","--features","typegen",TYPEGEN_TEST_FILTER],{...process.env,SEMIO_BUILD_MODE:mode});
-    await launchRepositoryCargoV1(this.invocation,this.repoRoot,request,this.root,process.env,{maximumMilliseconds:buildBudgetMs(),output:"capture",limits:{maximumBytes:16777216,maximumLines:65536},generated:readRepositoryCargoGeneratedCapturePolicyV1({version:1,maximumBytes:1048576}),consume:async(result,context)=>{
+    await launchRepositoryCargoV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:typegen-preview",0),this.repoRoot,request,this.root,process.env,{maximumMilliseconds:buildBudgetMs(),output:"capture",limits:{maximumBytes:16777216,maximumLines:65536},generated:readRepositoryCargoGeneratedCapturePolicyV1({version:1,maximumBytes:1048576}),consume:async(result,context)=>{
       if(result.status!==0||result.signal!==null){if(result.stderr)await writeOwnedCommandOutputV1(process.stderr,result.stderr,context.control);throw new OwnedCommandFailure("shell:preview-generated",{version:1,status:result.status,signal:result.signal});}
       if(!context.generated)throw Error("Actual shell generated output absent");
       const rootPath=relative(this.repoRoot,dirname(targetPath)).replaceAll("\\","/").normalize("NFC"),nodes=[{bytesBase64:"",mode:0o755,nodeKind:"directory",path:rootPath},{bytesBase64:Buffer.from(context.generated).toString("base64"),mode:0o644,nodeKind:"file",path:rootPath+"/"+basename(targetPath).normalize("NFC")}].sort((a,b)=>Buffer.from(a.path).compare(Buffer.from(b.path))),staleRemovals=(existsSync(dirname(targetPath))?readdirSync(dirname(targetPath)):[]).filter(name=>name!==basename(targetPath)).map(name=>rootPath+"/"+name.normalize("NFC")).sort((a,b)=>Buffer.from(a).compare(Buffer.from(b)));
@@ -149,7 +151,7 @@ class SchemaCheckScript extends BundleScript {
       for (const problem of problems) console.error(`framework-os-shell schema-check: ${problem}`);
       throw Error("framework-os-shell schema ownership disagreement");
     }
-    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["test","--features","typegen",SCHEMA_GATE_TEST_FILTER],this.root,process.env,buildBudgetMs());
+    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["test","--features","typegen",SCHEMA_GATE_TEST_FILTER],this.root,process.env,buildBudgetMs());
     console.log(`framework-os-shell schema-check: ${declared.length} 🔣️.json \`$defs\` exports agree with the Rust registry, the rendered mirror and 🧬️schema/🟦️.ts.`);
   }
 }

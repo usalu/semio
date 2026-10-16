@@ -4,7 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { acquireResourceLease, acquireQueuedResourceLease, checkResourceLeaseControl, resourceLeasePathV1, resourceQueueTicketV1, type ResourceLeaseControl, type ResourceLease, type LeaseWait } from "../../🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { checkScriptInvocation, type ScriptInvocation } from "../../🧭️routing/📥️invocation/🟦️.ts";
-import{createIssuedResourceControlV1,createRequestedIssuedResourceControlV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlV1,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🎛️ Requires the original compiler caller's cancellation, deadline, progress and continuation ports. */
@@ -36,46 +36,46 @@ export function compilerAdmissionBudgetV1(control: CompilerAdmissionControl): nu
  return budget;
 }
 
-/** 🎟️ One compiler's admitted host capacity or allocation borrowed from an enclosing jobserver. */
+/** 🎟️ Records one compiler's actual admitted host capacity. */
 export type CompilerCapacityLeaseV1 = ResourceLease & Readonly<{parallelism:number}>;
 
-/** 🧵️ Reads an enclosing compiler's reserved worker budget or all CPUs owned by an independent compiler. */
+/** 🧵️ Reads a bounded worker hint without granting a compiler reservation. */
 export function compilerCapacityWorkerCountV1(environment: Readonly<Record<string,string|undefined>> = process.env): number {
  const protocol = schema.definitions.Protocol.const;
- if (environment[protocol.inheritedEnvironment] !== "true") return availableParallelism();
+ if (environment[protocol.parallelismEnvironment] === undefined) return availableParallelism();
  const parallelism = Number(environment[protocol.parallelismEnvironment]);
- if (!Number.isSafeInteger(parallelism) || parallelism < 1 || parallelism > availableParallelism()) throw Error("Inherited compiler capacity requires an admitted worker count");
+ if (!Number.isSafeInteger(parallelism) || parallelism < 1 || parallelism > availableParallelism()) throw Error("Compiler worker hint exceeds available host workers");
  return parallelism;
 }
 
 /** 🧮️ Owns all host CPUs, or a requested count of bounded cores picked first come first served behind a fair shared admission gate. */
 export async function acquireCompilerCapacityLeaseV1(options: { readonly directory: string; readonly control: CompilerAdmissionControl; readonly environment?: Readonly<Record<string,string|undefined>>; readonly requestedParallelism?:number; }): Promise<CompilerCapacityLeaseV1> {
- checkResourceLeaseControl(options.control);
- const signal = options.control.signal, owner = randomBytes(16).toString("base64url");
- const request=options.requestedParallelism===undefined?{}:{requestedParallelism:options.requestedParallelism};
- if(validateJsonSchemaSubset(schema.definitions.Request,request).length||options.requestedParallelism!==undefined&&options.requestedParallelism>availableParallelism())throw Error("Invalid compiler capacity request");
- const environment=options.environment??process.env,protocol=schema.definitions.Protocol.const,resource=schema.properties.resource.const,requested=options.requestedParallelism,mode=requested===undefined?"exclusive":"shared";
- resourceLeasePathV1(options.directory,resource,resourceQueueTicketV1({arrivedAtMs:Date.now(),pid:process.pid,owner}));
- if(environment[protocol.inheritedEnvironment]==="true"){
-  const parallelism=compilerCapacityWorkerCountV1(environment);checkResourceLeaseControl(options.control);return{resource,mode,parallelism:requested===undefined?parallelism:Math.min(requested,parallelism),release(){}};
- }
- const gate=await acquireQueuedResourceLease({directory:options.directory,resource,mode,sharedCohort:mode==="shared",owner,signal,control:options.control});
+ const control=options.control;requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);
+ const environment=options.environment??process.env,protocol=schema.definitions.Protocol.const;if(environment[protocol.inheritedEnvironment]==="true")throw Error("Actual compiler capacity owner required; environment markers cannot lend CPUs");
+ const signal = control.signal, owner = randomBytes(16).toString("base64url");
+ const requested=options.requestedParallelism,directory=options.directory,request=requested===undefined?{}:{requestedParallelism:requested};
+ if(validateJsonSchemaSubset(schema.definitions.Request,request).length||requested!==undefined&&requested>availableParallelism())throw Error("Invalid compiler capacity request");
+ const resource=schema.properties.resource.const,mode=requested===undefined?"exclusive":"shared";
+ resourceLeasePathV1(directory,resource,resourceQueueTicketV1({arrivedAtMs:Date.now(),pid:process.pid,owner}));
+ const gate=await acquireQueuedResourceLease({directory,resource,mode,sharedCohort:mode==="shared",owner,signal,control});
  const cores:ResourceLease[]=[];let released=false;const started=Date.now();let nextProgress=0;
  const releaseCores=()=>{for(const core of cores.splice(0))core.release();};
  try{
-  checkResourceLeaseControl(options.control);
+  checkResourceLeaseControl(control);
   if(requested===undefined)return{...gate,parallelism:availableParallelism(),release:()=>gate.release()};
-  const picker=await acquireQueuedResourceLease({directory:options.directory,resource:protocol.pickerResource,mode:"exclusive",owner,signal,control:options.control});
+  const picker=await acquireQueuedResourceLease({directory,resource:protocol.pickerResource,mode:"exclusive",owner,signal,control});
   try{
    while(cores.length<requested){
     for(let index=0;index<availableParallelism()&&cores.length<requested;index++){
-     try{cores.push(await acquireResourceLease({directory:options.directory,resource:protocol.coreResourcePrefix+index,mode:"exclusive",signal,control:options.control,timeoutMs:0}));}
+     try{cores.push(await acquireResourceLease({directory,resource:protocol.coreResourcePrefix+index,mode:"exclusive",signal,control,timeoutMs:0}));}
      catch(error){if(!(error instanceof Error)||!error.message.startsWith("Resource lease timed out: "))throw error;}
     }
-    checkResourceLeaseControl(options.control);
-    if(cores.length<requested){releaseCores();const elapsedMs=Date.now()-started;if(elapsedMs>=nextProgress){await options.control.publish({resource,mode,elapsedMs});checkResourceLeaseControl(options.control);await options.control.yieldContinuation();checkResourceLeaseControl(options.control);nextProgress=elapsedMs+1000;}await delay(Math.min(protocol.pollMs,checkResourceLeaseControl(options.control)??Infinity),undefined,{signal});checkResourceLeaseControl(options.control);}
+    checkResourceLeaseControl(control);
+    if(cores.length<requested){releaseCores();const elapsedMs=Date.now()-started;if(elapsedMs>=nextProgress){await control.publish({resource,mode,elapsedMs});checkResourceLeaseControl(control);await control.yieldContinuation();checkResourceLeaseControl(control);nextProgress=elapsedMs+1000;}await delay(Math.min(protocol.pollMs,checkResourceLeaseControl(control)??Infinity),undefined,{signal});checkResourceLeaseControl(control);}
    }
   }finally{picker.release();}
   return{resource,mode,parallelism:requested,release(){if(released)return;released=true;try{releaseCores();}finally{gate.release();}}};
  }catch(error){try{releaseCores();}finally{gate.release();}throw error;}
 }
+
+export{withCompilerCapacityScopeV1,compilerCapacitySubdivisionV1,type CompilerCapacityFactsV1,type CompilerCapacityScopeOptionsV1}from"./🪆️scope/🟦️.ts";

@@ -18,7 +18,7 @@ pub const READ_LEASE_CAPACITY:usize=1024;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct ReadLeaseId {pub index:u16,pub generation:u64}
 
-struct Slot<T> {generation:u64,owner:Arc<T>,returned:bool}
+struct Slot<T> {generation:u64,pub owner:Arc<T>,returned:bool}
 struct State<T> {
     slots:Option<Box<[Option<Slot<T>>;READ_LEASE_CAPACITY]>>,
     occupied:[u64;READ_LEASE_CAPACITY/64],free:[u16;READ_LEASE_CAPACITY],free_read:usize,free_len:usize,generation:u64,cursor:usize,
@@ -90,12 +90,13 @@ impl<T:RetireOwned+Sync> ReadOwnershipRegistry<T> {
         let sequence=self.sequence.load(Ordering::Acquire);if sequence==0||sequence&1!=0||self.generation.load(Ordering::Relaxed)!=generation{return false;}
         for(index,word)in self.revision.iter().enumerate(){if word.load(Ordering::Relaxed)!=u64::from_le_bytes(revision[index*8..index*8+8].try_into().unwrap()){return false;}}sequence==self.sequence.load(Ordering::Acquire)
     }
-    #[cfg(test)]
-    fn set_cleanup_cursor(&self,cursor:usize)->Result<(),ValueError> {self.state.try_lock()?.cursor=cursor%READ_LEASE_CAPACITY;Ok(())}
+    #[cfg(feature = "testkit")]
+    #[doc(hidden)]
+    pub fn set_cleanup_cursor(&self,cursor:usize)->Result<(),ValueError> {self.state.try_lock()?.cursor=cursor%READ_LEASE_CAPACITY;Ok(())}
 }
 impl<T:RetireOwned+Sync> Drop for ReadOwnershipRegistry<T> {fn drop(&mut self){let state=self.state.state.get_mut();assert!(std::thread::panicking()||state.free_len==READ_LEASE_CAPACITY&&state.slots.is_none(),"read registry must close every original typed root and fixed backing");}}
 
-struct RegistryRetirement<T:RetireOwned+Sync> {owner:ManuallyDrop<ReadOwnershipRegistry<T>>,active:Option<SharedControlledRetirement<T>>}
+struct RegistryRetirement<T:RetireOwned+Sync> {pub owner:ManuallyDrop<ReadOwnershipRegistry<T>>,active:Option<SharedControlledRetirement<T>>}
 impl<T:RetireOwned+Sync> RetirementCursor for RegistryRetirement<T> {
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
         if self.terminal_is_empty(){return RetirementStep::Complete;}
@@ -150,7 +151,7 @@ impl<T:RetireOwned+Sync> RetireOwned for RegistryAuthority<T> {
 }
 
 /// 👁️ An immutable typed root closes its exact read alias and registry authority through full grants.
-pub struct ReadLease<T:RetireOwned+Sync> {owner:ManuallyDrop<Option<Arc<T>>>,registry:ManuallyDrop<Option<Arc<ReadOwnershipRegistry<T>>>>,closing:ManuallyDrop<Option<SharedControlledRetirement<ReadOwnershipRegistry<T>>>>,id:ReadLeaseId}
+pub struct ReadLease<T:RetireOwned+Sync> {#[doc(hidden)] pub owner:ManuallyDrop<Option<Arc<T>>>,registry:ManuallyDrop<Option<Arc<ReadOwnershipRegistry<T>>>>,closing:ManuallyDrop<Option<SharedControlledRetirement<ReadOwnershipRegistry<T>>>>,id:ReadLeaseId}
 impl<T:RetireOwned+Sync> ReadLease<T> {
     pub fn get(&self)->&T {self.owner.as_deref().expect("read root is unavailable after granted return")}
     pub fn id(&self)->ReadLeaseId {self.id}
@@ -180,6 +181,3 @@ impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadLease<T> {
 }
 impl<T:RetireOwned+Sync> Drop for ReadLease<T> {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"read lease must finish explicitly granted closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owner);ManuallyDrop::drop(&mut self.registry);ManuallyDrop::drop(&mut self.closing);}}}}
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

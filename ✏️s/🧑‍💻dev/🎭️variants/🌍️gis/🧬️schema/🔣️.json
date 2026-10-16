@@ -3,15 +3,8 @@
   "viteConfig": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🏗️builder/🌐️vite/🟦️.ts",
   "browserEntry": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🚀️entry/🟦️.ts",
   "localHub": {
-    "owner": {
-      "program": "bun",
-      "args": [
-        "repo",
-        "run",
-        "os-hub:local-hub-owner",
-        "--"
-      ]
-    },
+    "version": 1,
+    "service": "local-hub",
     "defaultProfileId": "developer"
   },
   "browserSessionFactories": [

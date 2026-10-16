@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🎲️randomness/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { randomBetween, randomPick, randomUnit, randomWords } from "../../🔨️modules/🎲️randomness/🟦️.ts";
 
 const VECTORS = "shared://🎲️counter-randomness/🔣️.json";

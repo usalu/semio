@@ -1,0 +1,83 @@
+{
+ "crate_dir": "🧰️framework/🛍️products/❓️quiz",
+ "lib_name": "quiz",
+ "companion_dir": "🧰️framework/🛍️products/❓️quiz/🧪️tests/🥣️companion",
+ "doc": "//! 🥣️ Companion tests of the quiz product: sheet assembly, validation, scoring, badges, the learner lifecycle, the read models, presence, challenge rules and the Mersenne Twister.\n//!\n//! 🧭️ Each module's unit file is mounted below a wrapper module of the same name, so the laws that share fixtures through `crate::sheet::tests` and `crate::lifecycle::tests` keep their paths.",
+ "preamble": [
+  "pub use quiz::*;",
+  ""
+ ],
+ "modules": [
+  {
+   "name": "randomness",
+   "lib_file": "🔨️modules/🎲️randomness/🦀️.rs",
+   "tests": "🔨️modules/🎲️randomness/🧪️tests/🔬️unit/🦀️.rs",
+   "emoji": "🎲",
+   "doc": "The Mersenne Twister and shuffle laws."
+  },
+  {
+   "name": "challenge",
+   "lib_file": "🔨️modules/⛰️challenge/🦀️.rs",
+   "tests": "🔨️modules/⛰️challenge/🧪️tests/🔬️unit/🦀️.rs",
+   "emoji": "⛰",
+   "doc": "The challenge rules laws."
+  },
+  {
+   "name": "sheet",
+   "lib_file": "🔨️modules/🃏️sheet/🦀️.rs",
+   "tests": "🔨️modules/🃏️sheet/🧪️tests/🔬️unit/🦀️.rs",
+   "pub_tests": true,
+   "emoji": "🃏",
+   "doc": "The solution-free sheet assembly laws and the fixtures the other laws share."
+  },
+  {
+   "name": "validation",
+   "lib_file": "🔨️modules/✅️validation/🦀️.rs",
+   "tests": "🔨️modules/✅️validation/🧪️tests/🔬️unit/🦀️.rs",
+   "emoji": "✅",
+   "doc": "The answer, completeness and schema validation laws.",
+   "extra": [
+    "pub use quiz::validation::testkit::*;"
+   ]
+  },
+  {
+   "name": "scoring",
+   "lib_file": "🔨️modules/📏️scoring/🦀️.rs",
+   "tests": "🔨️modules/📏️scoring/🧪️tests/🔬️unit/🦀️.rs",
+   "emoji": "📏",
+   "doc": "The partial-credit scoring laws."
+  },
+  {
+   "name": "badges",
+   "lib_file": "🔨️modules/🏅️badges/🦀️.rs",
+   "tests": "🔨️modules/🏅️badges/🧪️tests/🔬️unit/🦀️.rs",
+   "emoji": "🏅",
+   "doc": "The badge award laws."
+  },
+  {
+   "name": "lifecycle",
+   "lib_file": "🔨️modules/🧾️lifecycle/🦀️.rs",
+   "tests": "🔨️modules/🧾️lifecycle/🧪️tests/🔬️unit/🦀️.rs",
+   "pub_tests": true,
+   "emoji": "🧾",
+   "doc": "The learner lifecycle decide/evolve laws and the replay fixtures the read models share."
+  },
+  {
+   "name": "views",
+   "lib_file": "🔨️modules/👁️views/🦀️.rs",
+   "tests": "🔨️modules/👁️views/🧪️tests/🔬️unit/🦀️.rs",
+   "emoji": "👁",
+   "doc": "The proctor read-model laws.",
+   "extra": [
+    "pub use quiz::views::testkit::*;"
+   ]
+  },
+  {
+   "name": "presence",
+   "lib_file": "🔨️modules/👥️presence/🦀️.rs",
+   "tests": "🔨️modules/👥️presence/🧪️tests/🔬️unit/🦀️.rs",
+   "emoji": "👥",
+   "doc": "The presence tag and roster laws."
+  }
+ ]
+}

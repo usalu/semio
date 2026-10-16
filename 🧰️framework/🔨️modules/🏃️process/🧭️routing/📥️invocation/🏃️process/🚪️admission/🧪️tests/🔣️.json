@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "cases": [
+    {"scope": "process", "failure": "error", "expectedNewEffects": 0, "expectedSiblingCompletions": 1},
+    {"scope": "process", "failure": "undefined", "expectedNewEffects": 0, "expectedSiblingCompletions": 1},
+    {"scope": "signal", "failure": "error", "expectedNewEffects": 0, "expectedSiblingCompletions": 1},
+    {"scope": "signal", "failure": "undefined", "expectedNewEffects": 0, "expectedSiblingCompletions": 1}
+  ]
+}

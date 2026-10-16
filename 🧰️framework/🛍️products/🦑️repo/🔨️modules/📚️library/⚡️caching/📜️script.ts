@@ -36,7 +36,7 @@ import {withRepositoryTestArtifactsV1,repositoryTestArtifactEnvironmentV1,reposi
 
 import type{ResourceLeaseControl}from"../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
-export async function testCacheContracts(invocation: ScriptInvocation): Promise<void> {
+export async function testCacheContracts(invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): Promise<void> {
   const { createCachePolicyTests } = await import("./🧪️tests/⚡️cache-contracts/🟦️.ts");
   const tests = createCachePolicyTests(
   {
@@ -70,7 +70,7 @@ export async function testCacheContracts(invocation: ScriptInvocation): Promise<
   },
   { directory: import.meta.dir, url: import.meta.url },
 );
-  await tests.testCacheContracts(invocation);
+  await tests.testCacheContracts(invocation,phaseControl);
 }
 
 /** 🧪️ Runs the native workspace laws inside the same original command cancellation and deadline. */
@@ -147,7 +147,7 @@ class TestScript extends BundleScript {
     if (args[0] === "build-mode") {
       if (args.length !== 1) throw Error("Expected test build-mode");
       const { testNxBuildModes } = await import("./🧪️tests/🎚️build-mode/🟦️.ts");
-      await testNxBuildModes(this.repoRoot, environment.SEMIO_TEST_ARTIFACT_DIR);
+      await testNxBuildModes(this.repoRoot, environment.SEMIO_TEST_ARTIFACT_DIR,this.invocation,phaseControl);
       return;
     }
     if (args[0] === "next-runtime") {
@@ -160,7 +160,7 @@ class TestScript extends BundleScript {
     if (args[0] === "web-build") {
       if (args.length !== 1) throw Error("Expected test web-build");
       const output = repositoryTestArtifactRootV1(this.repoRoot);
-      await (await import("./🧪️tests/🏗️web-build/🟦️.ts")).proveWebBuild(this.repoRoot, output, this.invocation);
+      await (await import("./🧪️tests/🏗️web-build/🟦️.ts")).proveWebBuild(this.repoRoot, output, this.invocation,phaseControl);
       return;
     }
     if (args[0] === "cache-policy") {
@@ -235,7 +235,7 @@ class TestScript extends BundleScript {
       await this.runBunTests(["test", join(SCRIPT_ROOT, "🧪️tests", "🧾️cargo-provenance", "🟦️.ts")],orchestratorBudgetOpts(environment).budgetMs!,environment,phaseControl);
       return;
     }
-    await testCacheContracts(this.invocation);
+    await testCacheContracts(this.invocation,phaseControl);
   }
 }
 

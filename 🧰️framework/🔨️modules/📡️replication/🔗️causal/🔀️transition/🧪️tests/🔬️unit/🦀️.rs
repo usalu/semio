@@ -642,7 +642,7 @@ fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
     use semio_framework_value::{ErasedSnapshotRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 65536, maximum_depth: 8 };
     for refused in [false, true] {
-        let ((job, pointer), born, freed) = crate::test_allocation::observe_backing(|| {
+        let ((job, pointer), born, freed) = semio_framework_trace_memory_testing::observe_backing(|| {
             let fault = refused.then(|| semio_framework_replication_error::ProtocolError::Malformed { what: "terminal receipt law", offset: 0, detail: String::with_capacity(37) });
             let pointer = fault.as_ref().map(|error| match error { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() });
             (HistoryFoldJob::new(move |_| async move { match fault { Some(error) => Err(error), None => Ok(()) } }), pointer)
@@ -653,7 +653,7 @@ fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
         let mut total_released = 0;
         let mut outcome = None;
         for _ in 0..64 {
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| job.step(grant, &mut || false).unwrap());
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.step(grant, &mut || false).unwrap());
             let (progress, done) = match step {
                 HistoryFoldJobStep::Pending { progress, .. } => (progress, false),
                 HistoryFoldJobStep::Ready { value: (), progress } => { assert!(!refused); (progress, true) },
@@ -674,13 +674,13 @@ fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
             let original = match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => { assert_eq!(detail.capacity(), 37); detail.as_ptr() }, _ => panic!("same original refusal") };
             assert_eq!(Some(original), pointer);
             let denied = RetainedCloneGrant { maximum_release_bytes: 36, ..grant };
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| job.close_step(denied).unwrap());
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_step(denied).unwrap());
             assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             assert_eq!(match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() }, original);
             for _ in 0..4 {
                 if job.terminal_is_empty() { break; }
-                let (step, allocated, released) = crate::test_allocation::observe_backing(|| job.close_step(grant).unwrap());
+                let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_step(grant).unwrap());
                 assert!(step.progress().fits(grant));
                 assert_eq!(step.progress().retained_capacity_bytes, allocated);
                 assert_eq!(step.progress().released_bytes, released);
@@ -690,7 +690,7 @@ fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
         }
         assert!(job.terminal_is_empty());
         assert_eq!(total_released, held + total_born);
-        let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(job));
+        let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(job));
         assert_eq!((allocated, released), (0, 0));
         eprintln!("[DEBUG] fold outcome rejected={} final control release={} total={} original={} refusal remains original until paid", refused, outcome.released_bytes, total_released, held);
     }

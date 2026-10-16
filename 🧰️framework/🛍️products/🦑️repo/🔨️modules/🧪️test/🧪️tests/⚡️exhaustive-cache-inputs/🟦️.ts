@@ -86,6 +86,16 @@ describe("⚡️ test-exhaustive cache inputs cover the owner's real dependency 
     expect(inputs).toContain(`{workspaceRoot}/${vocabulary.testDomainPath}/**/*`);
   });
 
+  test("inputsFor tracks every adapter file of the case folder so split adapter children invalidate the cache", async () => {
+    const { internals } = await import("../../🟨️.mjs");
+    const vocabulary = internals.taxonomy(workspaceRoot);
+    const owner = "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any";
+    const caseRel = `${owner}/🧪️tests/🏛️mutate-energy-model-1`;
+    const inputs: string[] = internals.inputsFor(workspaceRoot, vocabulary, owner, caseRel, [`${caseRel}/🦀️.rs`, `${caseRel}/🐍️.py`]);
+    expect(inputs).toContain(`{workspaceRoot}/${caseRel}/**/🦀️.rs`);
+    expect(inputs).toContain(`{workspaceRoot}/${caseRel}/**/🐍️.py`);
+  });
+
   test("inputsFor adds no rust crate root when the case has no rust adapter", async () => {
     const { internals } = await import("../../🟨️.mjs");
     const vocabulary = internals.taxonomy(workspaceRoot);

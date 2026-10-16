@@ -1,8 +1,7 @@
 
 use super::*;
 
-#[path = "../../../🧪️tests/🔬️unit/🔮️oracle/🦀️.rs"]
-mod json_oracle;
+use semio_s_plugin_sourcing_catalog_oracle as json_oracle;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_module_for_sourcing_curation() {

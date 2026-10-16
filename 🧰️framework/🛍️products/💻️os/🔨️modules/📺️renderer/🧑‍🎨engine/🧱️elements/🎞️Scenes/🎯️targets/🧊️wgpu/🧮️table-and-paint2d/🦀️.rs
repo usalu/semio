@@ -30,7 +30,7 @@ fn paint2d_default_one() -> f64 {
     1.0
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Paint2dDocSyncJson {
@@ -38,7 +38,7 @@ pub struct Paint2dDocSyncJson {
     pub camera: Paint2dCameraFields,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub struct Paint2dFlatLayer {
     pub x: f64,
     pub y: f64,
@@ -49,7 +49,7 @@ pub struct Paint2dFlatLayer {
 }
 
 //#region Paint2dNavigator
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub const PAINT2D_NAVIGATOR_PADDING: f32 = 24.0;
 
 /** 🧭️ Fits a camera to the document's pixel-layer bounds so a `viewMode === "navigator"` surface

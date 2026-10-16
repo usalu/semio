@@ -49,5 +49,5 @@ export const stdioStlAsciiAnyInferenceTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseStlInferenceText(value: unknown, at = "$"): StlInferenceText {
-  return stdioStlAsciiAnyInferenceTextGuardObject(value, `${at}`);
+  return stdioStlAsciiAnyInferenceTextGuardString(value, `${at}`);
 }

@@ -36,6 +36,10 @@
     "d3-shape": "3.2.0",
     "d3-time": "3.1.0",
     "d3-time-format": "4.1.0",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "d3-color": "3.1.0"
+  },
+  "dependencies": {
+    "@semio-tech/schema-validator-ts": "workspace:*"
   }
 }

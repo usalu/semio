@@ -12,7 +12,7 @@ import { SHIPPED_COMPONENT_MAX_BYTES } from "../../🏷️component-receipt/🟦
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1 } from "../../🧾️source-epoch/🟦️.ts";
 import {parseFreshProcessPolicyV1,type FreshProcessControlV1} from "../../🏭️fresh-component/🎛️control/🟦️.ts";
 import { setImmediate } from "node:timers/promises";
-import {requireIssuedScriptInvocationV1,type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createIssuedResourceControlV1,requireIssuedScriptInvocationV1,type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { captureFreshComponentInputs, freshRun, freshStage, stageFreshComponentInputs } from "../../🏭️fresh-component/🟦️.ts";
 
 export function createFreshComponentTests(original:ScriptInvocation) {
@@ -243,7 +243,7 @@ export function createFreshComponentTests(original:ScriptInvocation) {
     const handoff = async <T>(name: string, input: ReturnType<typeof cloneSnapshot>, buildControl: FreshBuildControlV1, derive: (lease: FreshComponentLeaseV1) => Promise<T>) => {
       const stage = join(evidence, name);
       mkdirSync(stage);
-      return await stageFreshComponentInputs({ pluginId: "gis", componentPackageId: "semio:gis" }, input, stage, ["checkpoint", "describe", "jobs", "reactor"], componentReceipt, buildControl, derive);
+      return await stageFreshComponentInputs({ pluginId: "gis", componentPackageId: "semio:gis" }, input, stage, ["checkpoint", "describe", "jobs", "reactor"], componentReceipt, buildControl, createIssuedResourceControlV1(original,"fresh-component:staged-test",0), derive);
     };
     let retainedLease: FreshComponentLeaseV1 | undefined, retainedLoan: Uint8Array<ArrayBuffer> | undefined;
     const retainedInput = cloneSnapshot();

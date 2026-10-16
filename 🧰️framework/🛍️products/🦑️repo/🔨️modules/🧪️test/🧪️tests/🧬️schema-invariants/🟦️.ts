@@ -12,9 +12,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { type SchemaTestExample, type SchemaDiagnostic, type SchemaDiagnosticCode, GRAPHQL_EXPORT_KEYWORDS, SCHEMA_DIAGNOSTIC_CODES, SCHEMA_DIAGNOSTIC_CODE_TABLE, SCHEMA_DIAGNOSTIC_EMITTERS, SCHEMA_FIXTURE_STAGES, TAXONOMY_REL_PATH, TEST_DOMAIN_REL_PATH, clearSchemaContractCache, declaresSchemaExport, declaresSchemaExportParser, discoverSchemaFixtures, testInputUrisIn, isFixtureOwnedPath, isJsonSchemaDefinition, leafDescriptorCoverage, matchesTaxonomyPathPattern, mutationLeafDirectories, mutationLeafSchemaId, parseSchemaUri, readLeafDescriptors, readSchemaCatalog, repoRootFromHere, resolveTestInputs, resolvePayloadSchemas, resolveSchemaExport, runSchemaFixture, schemaContractDiagnostics, schemaDiagnosticCodesEmittedBy, schemaExportCompletenessDiagnostics, schemaFixtureIsolationDiagnostics, schemaMeasurementDisagreementDiagnostics, schemaOwnerEligibilityDiagnostics, schemaPlacementDiagnostics, schemaResolutionDiagnostics, schemaScopeEligibility, schemaTreeFiles, submodulePaths, validateAgainstJsonSchema } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { parseFeature } from "../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
+import { parseFeature } from "@semio-tech/framework/test/gherkin";
 import cases from "../🧫️fixtures/🧬️schema-invariants/🔣️.json";
-import protocolSchema from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
+import { testFixture as protocolSchema } from "@semio-tech/framework/test/schema";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Scaffold

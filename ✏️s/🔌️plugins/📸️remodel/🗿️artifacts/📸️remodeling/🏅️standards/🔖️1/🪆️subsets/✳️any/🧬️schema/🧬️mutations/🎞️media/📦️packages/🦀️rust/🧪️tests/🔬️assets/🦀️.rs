@@ -2,8 +2,7 @@
 
 extern crate semio_framework_os_kernel as protocol;
 
-#[path = "../../../../../🧪️tests/🔬️vectors/🦀️.rs"]
-mod vectors;
+use semio_s_artifact_remodel_remodeling_mut_vectors as vectors;
 
 #[path = "../../../../../🧷create-asset/🧪️tests/♻️overwrites/🦀️.rs"]
 mod create_asset_tests_overwrites_an_a34b9d;

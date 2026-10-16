@@ -2,12 +2,12 @@
 //! 🖥️ WebGPU device, surface, and frame loop.
 use semio_framework_ui_wgpu_device as gpu_device;
 
-use crate::draw::{
+use semio_framework_ui_wgpu_draw_execution::{
     FrameBuffers, MeshGpuTable, PreparedCompositeTarget, RasterTextureAdmission, RasterTextureCancelFault, RasterTextureCleanupStep, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, RasterUploadPixels, SceneColorTarget, UiPipelines, SCENE_MIP_LEVELS,
 };
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use crate::prepared::OffscreenPresentToken;
-use crate::prepared::{DrawMeasureCursor, PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, RasterContentIdentity, UiPresentToken, PREPARED_RENDER_COMMAND_PAGES, PREPARED_RENDER_COMMAND_PAGE_ITEMS};
+use semio_framework_ui_prepared::OffscreenPresentToken;
+use semio_framework_ui_prepared::{DrawMeasureCursor, PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, RasterContentIdentity, UiPresentToken, PREPARED_RENDER_COMMAND_PAGES, PREPARED_RENDER_COMMAND_PAGE_ITEMS};
 use semio_framework_ui_text::FontAtlas;
 use std::sync::atomic::{AtomicPtr, AtomicU8, Ordering};
 use std::sync::Arc;
@@ -48,7 +48,7 @@ fn address_prepared_glass_region(region: usize, len: usize) -> Result<usize, usi
     }
 }
 
-fn prepared_glass_command(packet: &PreparedRenderPacket, command: usize) -> Result<&crate::draw_types::GlassRegion, String> {
+fn prepared_glass_command(packet: &PreparedRenderPacket, command: usize) -> Result<&semio_framework_ui_draw_contract::GlassRegion, String> {
     let command = packet.command_pages().get(command).ok_or_else(|| "prepared glass command was missing".to_string())?;
     let Some(DrawMeasureCursor::Glass(region)) = command.draw_cursor() else { return Err("prepared command did not address glass".to_string()) };
     let draw = if command.packet_overlay() { packet.overlay().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { packet.draw() };
@@ -107,11 +107,11 @@ fn prepared_draw_scalar_uses_world_encoded_attachment(cursor: DrawMeasureCursor)
 enum PreparedCommandClipPiece {
     Unclipped,
     Empty,
-    Scissor(crate::draw_types::ScissorRect),
+    Scissor(semio_framework_ui_draw_contract::ScissorRect),
     Complete,
 }
 
-fn prepared_command_color_layer(draw: &crate::draw_types::DrawList, cursor: DrawMeasureCursor) -> Result<Option<(usize, Option<[f32; 4]>)>, String> {
+fn prepared_command_color_layer(draw: &semio_framework_ui_draw_contract::DrawList, cursor: DrawMeasureCursor) -> Result<Option<(usize, Option<[f32; 4]>)>, String> {
     let layer = match cursor {
         DrawMeasureCursor::LayerUi { layer, .. } | DrawMeasureCursor::LayerRaster { layer, .. } => Some((layer, None)),
         DrawMeasureCursor::LayerVector { layer, item, .. } if item % 3 == 2 => Some((layer, None)),
@@ -132,10 +132,10 @@ fn prepared_command_color_layer(draw: &crate::draw_types::DrawList, cursor: Draw
     Ok(layer)
 }
 
-fn prepared_command_clip_piece(draw: &crate::draw_types::DrawList, cursor: DrawMeasureCursor, piece: usize, width: f32, height: f32) -> Result<PreparedCommandClipPiece, String> {
+fn prepared_command_clip_piece(draw: &semio_framework_ui_draw_contract::DrawList, cursor: DrawMeasureCursor, piece: usize, width: f32, height: f32) -> Result<PreparedCommandClipPiece, String> {
     let Some((layer, viewport)) = prepared_command_color_layer(draw, cursor)? else { return Ok(PreparedCommandClipPiece::Unclipped) };
     let layer = draw.layers.get(layer).ok_or_else(|| "prepared command clip layer was stale".to_string())?;
-    let surface = crate::draw_types::ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
+    let surface = semio_framework_ui_draw_contract::ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
     let mut resolved = match layer.clip.as_ref() {
         Some(clip) => match clip.scissors.get(piece).copied() {
             Some(piece) => piece.intersect(&surface),
@@ -148,7 +148,7 @@ fn prepared_command_clip_piece(draw: &crate::draw_types::DrawList, cursor: DrawM
         resolved = resolved.intersect(&scissor);
     }
     if let Some(viewport) = viewport {
-        resolved = resolved.intersect(&crate::draw_types::ScissorRect { x: viewport[0].max(0.0) as u32, y: viewport[1].max(0.0) as u32, w: viewport[2].max(0.0) as u32, h: viewport[3].max(0.0) as u32 });
+        resolved = resolved.intersect(&semio_framework_ui_draw_contract::ScissorRect { x: viewport[0].max(0.0) as u32, y: viewport[1].max(0.0) as u32, w: viewport[2].max(0.0) as u32, h: viewport[3].max(0.0) as u32 });
     }
     Ok(if resolved.w == 0 || resolved.h == 0 { PreparedCommandClipPiece::Empty } else { PreparedCommandClipPiece::Scissor(resolved) })
 }
@@ -762,7 +762,7 @@ impl GpuContext {
         Ok(cursor.phase == PreparedGpuPresentPhase::Complete)
     }
 
-    fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool, scissor: Option<crate::draw_types::ScissorRect>) -> Result<(), String> {
+    fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool, scissor: Option<semio_framework_ui_draw_contract::ScissorRect>) -> Result<(), String> {
         let draw = if packet_overlay { packet.overlay().ok_or_else(|| "prepared overlay owner was missing".to_string())? } else { packet.draw() };
         if let DrawMeasureCursor::PassBackdropSnapshot { pass } = cursor {
             let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared backdrop snapshot pass cursor was stale".to_string())?;
@@ -931,7 +931,7 @@ impl GpuContext {
         self.pipelines.upload_glyph_atlas(&self.roots.queue, &atlas.pixels, atlas.width, atlas.height);
     }
 
-    pub fn upload_icon_atlas(&self, atlas: &crate::draw_types::IconAtlas) {
+    pub fn upload_icon_atlas(&self, atlas: &semio_framework_ui_draw_contract::IconAtlas) {
         self.pipelines.upload_icon_atlas(&self.roots.queue, &atlas.pixels, atlas.width, atlas.height);
     }
 

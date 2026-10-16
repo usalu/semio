@@ -11,12 +11,12 @@ import fixture from "./🔣️.json" with {type:"json"};
 import {withSelectedNextBuildGraphV1} from "../../../📥️inputs/🔌️nx/🟦️.ts";
 import {withNextStorageV1} from "../../🟦️.ts";
 import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withResourceLeases} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {withResourceLeases} from "@semio-tech/process/leases";
 import {withRepositoryBuildGraphArtifactV1} from "../../../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts";
 import {runOwnedNxInvocationV1,NX_OUTPUT_LOG_ENV} from "../../../../../../📚️library/⚡️caching/🚀️bootstrap/📜️script.ts";
 import {boundedNxNamespaceV1} from "../../../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import {repositoryStrictStorageV1} from "../../../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/🟦️.ts";
-import {nativeImageRootV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {nativeImageRootV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import type {BuildGraphV1} from "../../../../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
 
 /** 🧾️ Captures every genuine compiled output byte for an independent restore inventory. */

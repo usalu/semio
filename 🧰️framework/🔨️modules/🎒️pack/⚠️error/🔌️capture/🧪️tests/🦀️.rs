@@ -13,7 +13,7 @@ impl Drop for Sentinel{fn drop(&mut self){self.0.fetch_add(1,Ordering::SeqCst);}
 fn pre_reserved_transport_shared_cell_keeps_concrete_identity_category_retry_and_last_owner_drop(){
  let mut admission=TransportAdmission::new(4096,11);
  let mut allocator_calls=0;
- let (reservation,reservation_requested_bytes)=crate::test_allocation::observe(||reserve_with::<Sentinel,_,_>(&mut admission,PackTransportCategory::HttpBody,PackRetryDisposition::Never,|_,_|true,|storage|{allocator_calls+=1;storage.try_reserve_exact(2).is_ok()}).unwrap());
+ let (reservation,reservation_requested_bytes)=semio_framework_trace_memory_testing::observe(||reserve_with::<Sentinel,_,_>(&mut admission,PackTransportCategory::HttpBody,PackRetryDisposition::Never,|_,_|true,|storage|{allocator_calls+=1;storage.try_reserve_exact(2).is_ok()}).unwrap());
  let allocated=reservation.allocated_bytes();
  assert!(reservation_requested_bytes>0);
  assert_eq!(reservation_requested_bytes,allocated);
@@ -21,9 +21,9 @@ fn pre_reserved_transport_shared_cell_keeps_concrete_identity_category_retry_and
  let error=reservation.publish(Sentinel(releases.clone()));
  assert_eq!(admission.committed_bytes(),11+allocated);
  let original=error.source_error() as *const _ as *const ();
- let (copy,clone_bytes)=crate::test_allocation::observe(||error.clone());
+ let (copy,clone_bytes)=semio_framework_trace_memory_testing::observe(||error.clone());
  assert_eq!(clone_bytes,0);
- let (projection,projection_bytes)=crate::test_allocation::observe(||{
+ let (projection,projection_bytes)=semio_framework_trace_memory_testing::observe(||{
   let pack=crate::PackError::TransportFailure(copy);
   let cause=std::error::Error::source(&pack).unwrap() as *const _ as *const ();
   let kind=pack.cause_kind();let refusal=pack.refusal_kind();

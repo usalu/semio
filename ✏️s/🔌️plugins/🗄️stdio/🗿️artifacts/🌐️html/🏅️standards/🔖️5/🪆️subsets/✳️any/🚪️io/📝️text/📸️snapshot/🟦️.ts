@@ -51,5 +51,5 @@ export const stdioHtml5AnySnapshotTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseHtmlSnapshotText(value: unknown, at = "$"): HtmlSnapshotText {
-  return stdioHtml5AnySnapshotTextGuardObject(value, `${at}`);
+  return stdioHtml5AnySnapshotTextGuardString(value, `${at}`);
 }

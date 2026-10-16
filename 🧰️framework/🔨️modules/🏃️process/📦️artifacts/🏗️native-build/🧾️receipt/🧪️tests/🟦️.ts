@@ -8,7 +8,7 @@ import pMap from "p-map";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { CurrentPhysicalOwnerV1, mapBoundedV1, type CurrentPhysicalPortV1 } from "../../../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
+import { CurrentPhysicalOwnerV1, mapBoundedV1, type CurrentPhysicalPortV1 } from "@semio-tech/framework/filesystem/observation/current";
 import { CargoProvenanceSessionV1, portProvenanceCustodyV1, sharedProvenanceCustodyV1, writeCompletedCargoInvocationProvenanceV1 } from "../../🟦️.ts";
 import {
   CARGO_PROVENANCE_PHYSICAL_BUDGET_V1,

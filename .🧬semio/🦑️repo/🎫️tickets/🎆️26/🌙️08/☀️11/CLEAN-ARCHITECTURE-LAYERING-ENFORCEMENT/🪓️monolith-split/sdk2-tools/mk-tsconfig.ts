@@ -11,6 +11,7 @@ const cfg = {
   extends: ROOT + "/tsconfig.json",
   compilerOptions: { allowImportingTsExtensions: true, noEmit: true, skipLibCheck: true, incremental: false, types: ["bun", "node"],
     paths: { "dom-accessibility-api": [ROOT + "/node_modules/dom-accessibility-api/dist/index.d.ts"], "fast-json-stable-stringify": [ROOT + "/🧰️framework/📦️packages/🟦️typescript/🌿️ambient/🔤️fast-json-stable-stringify/🟦️.d.ts"], "lines-and-columns": [ROOT + "/node_modules/lines-and-columns/build/index.d.ts"] } },
+  include: [],
   files: [...files].sort().map(f => ROOT + "/" + f),
 };
 writeFileSync(out, JSON.stringify(cfg, null, 1));

@@ -5,10 +5,11 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "@iarna/toml";
+import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
-const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🔣️.json")) as { package: string; suites: { target: string; path: string; targetPath: string; previousPath: string; sha256: string; laws: string[] }[]; retainedArtifactUnits: RetainedArtifactUnit[] };
+const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🔣️.json")) as { package: string; suites: { target: string; path: string; targetPath: string; previousPath: string; sha256: string; tree?: boolean; laws: string[] }[]; retainedArtifactUnits: RetainedArtifactUnit[] };
 /** 🧩️ One retained artifact test file: the family package and Cargo target that compile it and its exact laws. */
 type RetainedArtifactUnit = { path: string; package: string; target: { kind: "lib" | "test"; name: string }; sha256: string; laws: string[] };
 /** 🏷️ The selection that names every retained artifact unit group at once. */
@@ -31,16 +32,17 @@ export function compositionLawGroups() {
 /** 🔍️ Independent TOML parsing validates authored ownership and preserved source. */
 export function testCompositionOwnership(target?: string): void {
   const authored = read("📦️packages/🦀️rust/Cargo.toml");
-  const manifest = Bun.TOML.parse(authored) as any;
+  const manifest = Bun.TOML.parse(authored);
   assert.deepEqual(manifest, parse(authored));
-  assert.equal(manifest.package.name, fixture.package);
-  assert.equal(manifest.package.metadata.semio.role, "test");
+  const packageRow=manifest.package;assert(packageRow&&typeof packageRow==="object"&&!Array.isArray(packageRow),"Actual composition package required");assert.equal(Reflect.get(packageRow,"name"),fixture.package);
+  const metadata:unknown=Reflect.get(packageRow,"metadata");assert(metadata&&typeof metadata==="object"&&!Array.isArray(metadata),"Actual package metadata required");const semio:unknown=Reflect.get(metadata,"semio");assert(semio&&typeof semio==="object"&&!Array.isArray(semio),"Actual Semio metadata required");assert.equal(Reflect.get(semio,"role"),"test");
+  const targets=manifest.test;assert(Array.isArray(targets),"Actual declared Cargo test targets required");
   for (const suite of fixture.suites.filter(suite => target === undefined || suite.target === target)) {
-    const source = read(suite.path);
+    const source = suite.tree === true ? readModuleTreeSource(resolve(root, suite.path)) : read(suite.path);
     assert.equal(createHash("sha256").update(source).digest("hex"), suite.sha256, suite.target);
     const previous = resolve(root, "../../..", suite.previousPath);
     for (const law of suite.laws) if (existsSync(previous)) assert(!readFileSync(previous, "utf8").includes(`fn ${law.split("::").at(-1)}(`), law);
-    assert(manifest.test.some((target: any) => target.name === suite.target && resolve(root, "📦️packages/🦀️rust", target.path) === resolve(root, suite.targetPath)), suite.target);
+    assert(targets.some(target=>target!==null&&typeof target==="object"&&!Array.isArray(target)&&Reflect.get(target,"name")===suite.target&&typeof Reflect.get(target,"path")==="string"&&resolve(root,"📦️packages/🦀️rust",String(Reflect.get(target,"path")))===resolve(root,suite.targetPath)), suite.target);
     for (const law of suite.laws) assert(source.includes(`fn ${law.split("::").at(-1)}(`), law);
   }
   for (const suite of fixture.retainedArtifactUnits.filter(unit => target === undefined || target === RETAINED_ARTIFACT_UNITS || unit.target.name === target)) {

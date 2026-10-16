@@ -2,7 +2,7 @@
 
 use semio_hub_artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStores};
 use semio_hub_artifact_authority::{checkpoint_id_encoding_v1, ArtifactBlobIntegrity, ArtifactPair, AuthorityError, AuthorityLimits, AuthorityOperationControl, ImmutableArtifactBlobStore, OperationContext, StagedArtifactBlob, AUTHORITY_MAX_PAIR_BYTES};
-use semio_hub_directory::{published_artifact_checkpoint, HubDirectory};
+use semio_hub_directory::{DocumentDirectory, published_artifact_checkpoint};
 use semio_hub_directory_dispatch::HubDirectories;
 use directory::os_directory::{ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentScope, PublishedArtifactBlob, RebootstrapRequired};
 use directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};

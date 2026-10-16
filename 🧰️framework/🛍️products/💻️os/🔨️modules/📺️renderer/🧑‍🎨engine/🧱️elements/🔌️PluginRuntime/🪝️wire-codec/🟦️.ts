@@ -3,19 +3,26 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { nodeIdList } from "../../../../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
+import { nodeIdList } from "@semio-tech/framework/browser-bundle/patch-handoff";
 import {
-  type AppFrameValue,
+  decodePackValue
+} from "@semio-tech/framework/packs";
+import {
+  type AppFrameValue
+} from "@semio-tech/framework/wire-contracts";
+import {
   decodeAppFrame,
-  decodePackValue,
+  faultDisplayMessage
+} from "@semio-tech/framework/app-channel";
+import {
   decodePackWire,
-  faultDisplayMessage,
   packWireNatural
-} from "@semio-tech/framework-os";
+} from "@semio-tech/framework/packs";
 import { type UiNodeRecord, type UiPatchOp } from "@semio-tech/framework";
 import { leftoverShellInvocationFrames as wireLeftoverShellInvocationFrames, shellFrameBytes as wireShellFrameBytes } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 // #region 🔌️Adapters
-import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, decodeBackboneMessage } from "@semio-tech/framework-os";
+import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "@semio-tech/framework/wire-contracts";
+import { decodeBackboneMessage } from "@semio-tech/framework/backbone";
 // #endregion 🔌️Adapters
 
 //#region 🔖️plugin-runtime

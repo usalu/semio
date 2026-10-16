@@ -37,7 +37,7 @@ import {
   type MergeReport,
   type Severity
 } from "@semio-tech/framework";
-import { resolveArtifactOpeningRelay, type ResolvedArtifactOpeningRelay } from "@semio-tech/framework-os";
+import { resolveArtifactOpeningRelay, type ResolvedArtifactOpeningRelay } from "@semio-tech/framework/backbone";
 import {
   type ActiveSession,
   selectOpenConflicts,
@@ -56,7 +56,7 @@ import {
 // #endregion 🔌️Adapters
 import { isPluginInstanceRetiredV1, type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { liveInstanceWindowFaultV1 } from "../🩺️fault/🟦️.ts";
-import { parseHubProgramIdV1 } from "../../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
+import { parseHubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
 import { reduceArtifactCreationProgressUiV1 } from "../🌱️artifact-creation/🟦️.tsx";
 import { COMMAND_REJECTED_FAULT_CODE, mutationCodeLabelKey, scheduleShellTransientNoticeDismissV1, seededActiveWindowId } from "../🎚️shell-model/🟦️.tsx";
 import { canonicalSurfaceId } from "../🔐️identity-binding/🟦️.ts";

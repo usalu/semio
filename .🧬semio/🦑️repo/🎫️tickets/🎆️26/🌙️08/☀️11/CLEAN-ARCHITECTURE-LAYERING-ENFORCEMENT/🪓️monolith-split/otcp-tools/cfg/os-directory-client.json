@@ -1,0 +1,69 @@
+{
+ "id": "os-directory-client",
+ "pkg": "semio_framework_os_directory_client",
+ "trees": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️identity",
+  "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory"
+ ],
+ "inputs_units": [
+  "os-directory-client-lib-test-semio-framework-os-directory-client"
+ ],
+ "p_lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧩️composition/🦀️.rs",
+ "p_dirs": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️identity"
+ ],
+ "comps": [
+  {
+   "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🧶️companion/🦀️.rs"
+  }
+ ],
+ "ext": [
+  "semio_framework_os_directory",
+  "semio_framework_value",
+  "protocol",
+  "semio_framework_value_derive",
+  "semio_framework_pack_json",
+  "semio_framework_hash",
+  "semio_framework_schema_validator",
+  "semio_framework_artifact_reference",
+  "semio_framework_async",
+  "semio_framework_os_identity",
+  "semio_framework_os_channel",
+  "semio_framework_plugin_component_receipt",
+  "serde",
+  "serde_json",
+  "semio_framework_async_macros",
+  "ureq",
+  "tokio_tungstenite",
+  "semio_framework_os_services",
+  "semio_framework_actor",
+  "js_sys",
+  "wasm_bindgen",
+  "web_sys",
+  "tokio"
+ ],
+ "base_features": [
+  "ureq",
+  "sync"
+ ],
+ "features": [
+  "ureq",
+  "sync",
+  "testkit"
+ ],
+ "traits": [
+  "FromValue",
+  "ToValue",
+  "HostAsyncRuntime",
+  "InteractiveJob",
+  "HttpTransport"
+ ],
+ "seed_use_modules": {
+  "semio_framework_os_directory": [
+   "schema",
+   "io"
+  ]
+ }
+}

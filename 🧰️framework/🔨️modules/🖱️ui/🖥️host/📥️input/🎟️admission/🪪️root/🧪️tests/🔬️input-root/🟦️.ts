@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
+import { valueSchemaUrl } from "../../../../../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 🪪️ The input-root admission ledger: root-scoped grants and their publication outcomes. */
 type InputRootFixture = {
@@ -49,7 +50,7 @@ type InputRootFixture = {
 export function testInputRootFixture(): void {
   const fixture: InputRootFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   
-  const value = JSON.parse(readFileSync(new URL("../../../../../../../🌱️value/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const value = JSON.parse(readFileSync(valueSchemaUrl, "utf8"));
   
   
   const maximum = (1n << 64n) - 1n;
@@ -81,7 +82,7 @@ export function testInputRootFixture(): void {
   assert.equal(fixture.concurrent.successfulRootsUnique, true);
   for (const invalid of ["-1", "01", "18446744073709551616"]) {
     const hostile = structuredClone(fixture);
-    hostile.cases[0].before = invalid;
+    const first=hostile.cases[0];if(!first)throw Error("Actual input corpus case required");first.before = invalid;
     
   }
   

@@ -1,6 +1,13 @@
 //! 🧪️ Every original partial native field prefix retains one final frame through paid publication or closure.
 use super::*;
+use pack::record::RetainedRecordBodySourceDecode;
+use semio_framework_value::RetainedCloneGrant;
+use semio_framework_value::RetainedCloneProgress;
+use semio_framework_value::list::PagedList;
+use std::mem::size_of;
 use protocol::codec::{OriginalWireSourceIdentity,RetainedWireByteSource};
+type Receipt=Option<(RetainedCloneGrant,RetainedCloneProgress)>;
+fn original(source:&RetainedRecordBodySourceDecode)->(usize,usize,Option<(u64,u64)>,(usize,usize)){let s=source.source_identity();(s.address,s.extent,s.authority,source.original_range())}
 struct Pages<'a>{bytes:&'a[u8]}
 impl RetainedWireByteSource for Pages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.bytes.as_ptr()as usize,extent:self.bytes.len(),authority:Some((42,7))}}fn byte_at(&self,index:usize)->Option<u8>{self.bytes.chunks(7).nth(index/7)?.get(index%7).copied()}}
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(v,h)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(v,(h.requested_bytes,h.released_bytes))}
@@ -11,7 +18,7 @@ fn identity(source:&Pages<'_>,g:RetainedCloneGrant)->(RetainedRecordBodySourceDe
 }
 #[test]
 fn original_native_tick_preparation_preserves_final_frame_and_every_initialized_prefix(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let leaf:serde_json::Value=serde_json::from_str(include_str!("../../🪪️identity/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let bytes:Vec<u8>=leaf["bodyHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect();let source=Pages{bytes:&bytes};
+ let fixture:serde_json::Value=serde_json::from_str(crate::fixture_text("🎞️tick/🛬️receive/🏗️native/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let leaf:serde_json::Value=serde_json::from_str(crate::fixture_text("🎞️tick/🛬️receive/🪪️identity/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let bytes:Vec<u8>=leaf["bodyHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect();let source=Pages{bytes:&bytes};
  let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:17,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};let m=RetainedCloneGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..g};
  for cut in fixture["interruptAfter"].as_array().unwrap(){let cut=cut.as_u64().unwrap()as usize;let(mut lower,mut typed,mut physical)=identity(&source,g);let expected=*typed.identity().unwrap();let mut limited=ToolRunReceivingLimits::REPORTS;limited.tick.maximum_total_allocation_bytes=1;limited.tick.maximum_cursor_allocation_bytes=1;let(denied,h)=observe(||ToolRunNativeTickPreparation::admit(&lower,limited,g));assert!(denied.is_err());assert_eq!(h,(0,0));drop(denied);
   for denied in[RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_depth:1,..g},RetainedCloneGrant{maximum_capacity_bytes:ToolRunNativeTickPreparation::birth_bytes()-1,..g}]{let(r,h)=observe(||ToolRunNativeTickPreparation::admit(&lower,ToolRunReceivingLimits::REPORTS,denied).unwrap());assert!(r.is_none());assert_eq!(h,(0,0))}

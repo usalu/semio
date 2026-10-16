@@ -34,13 +34,3 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetC
         vec!["custom-drivers".to_string(), self.driver_id.clone()]
     }
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️sets-custom-driver/🦀️.rs"]
-mod tests_sets_custom_driver;
-
-#[cfg(test)]
-#[path = "🧪️tests/🟰️keeps-custom-driver/🦀️.rs"]
-mod tests_keeps_custom_driver;
-//#endregion 🧪️Tests

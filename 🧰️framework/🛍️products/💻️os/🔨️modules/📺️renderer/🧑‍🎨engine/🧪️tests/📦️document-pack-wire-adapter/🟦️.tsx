@@ -1,5 +1,6 @@
 /** 📦 PluginRuntime documentPack and transaction wire adapter. */
 import { encodeAppFrame } from "@semio-tech/framework-os";
+import { loadChannelMediaExportWireFixture } from "../../../../📡️spr/🧪️tests/🧫️fixtures/🟦️.ts";
 import type { TurnOutcome } from "../../../../../../../🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts";
 import { type PluginRuntimeVitest, type PluginRuntimeDependencies, type PluginRuntimeSource } from "../🛠️plugin-runtime-helpers/🟦️.tsx";
 
@@ -126,9 +127,7 @@ export async function registerDocumentPackWireAdapterTests(vitest: PluginRuntime
 
       it("resumable media export forwarding preserves exact ownership and rejects foreign receipts", async () => {
         const { decodeAppCommand } = await import("@semio-tech/framework-os");
-        const { readFile } = await import("node:fs/promises");
-        const { URL: FileURL } = await import("node:url");
-        const fixture = JSON.parse(await readFile(new FileURL("../../../../📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🎬️media-export-wire/🔣️.json", source.url), "utf8"));
+        const fixture = await loadChannelMediaExportWireFixture();
         const authority = { app_instance_id: fixture.handle.appInstanceId, parent_document_id: fixture.handle.parentDocumentId, operation_id: BigInt(fixture.handle.operationId), base_revision: BigInt(fixture.handle.baseRevision), generation: BigInt(fixture.handle.generation) };
         const status = { handle: authority, state: "running" as const, applied_progress: 2n, checkpoint_available: true, mime_type: "audio/mpeg", total_bytes: 3n, detail: "" };
         const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();

@@ -49,5 +49,5 @@ export const stdioXlsxEcma376BaseDiffTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseXlsxDiffText(value: unknown, at = "$"): XlsxDiffText {
-  return stdioXlsxEcma376BaseDiffTextGuardObject(value, `${at}`);
+  return stdioXlsxEcma376BaseDiffTextGuardString(value, `${at}`);
 }

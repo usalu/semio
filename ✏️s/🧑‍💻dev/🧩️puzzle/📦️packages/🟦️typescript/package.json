@@ -15,6 +15,7 @@
     "@semio-tech/puzzle-2d": "workspace:*"
   },
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/schema-ts": "workspace:*"
   }
 }

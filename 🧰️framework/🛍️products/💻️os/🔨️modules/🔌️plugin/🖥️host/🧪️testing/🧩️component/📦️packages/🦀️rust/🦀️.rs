@@ -22,7 +22,7 @@ semio_framework_plugin::plugin_exports!(
 );
 
 #[cfg(test)]
-#[path="../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+#[path="../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_snapshot_tests;
 #[cfg(test)]
 use semio_framework_trace_memory_testing as test_allocation;

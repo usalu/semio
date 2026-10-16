@@ -37,7 +37,8 @@ import { PreferencesCard, PreferencesPage, challengeOf, textScale, withChallenge
 import { LearnerCard, LearnerPage } from "../📇️profile/🟦️.tsx";
 import { QuizCardView, QuizPage, type Act } from "../📖️quiz-page/🟦️.tsx";
 import { BodyButton, ProblemNote, type Problem } from "../🪟️chrome/🟦️.tsx";
-import { HOME_PAGES, type QuizSession, type QuizState } from "../🧭️session/🟦️.ts";
+import { HOME_PAGES, type QuizState } from "../🧭️session/🧮️state/🟦️.ts";
+import { type QuizSession } from "../🧭️session/🟦️.ts";
 
 /** 🗺️ The grid of the overview: three columns, or two with the leaderboard on a row of its own. */
 export type HomeGrid = "desktop" | "tablet";

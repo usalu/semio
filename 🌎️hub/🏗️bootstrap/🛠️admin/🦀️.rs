@@ -18,7 +18,7 @@ use semio_hub_observability::HubObservabilityV1;
 use semio_hub_artifact_authority::AuthorityOperationControl;
 use semio_hub_directory_contract::model::{AdminEffectCommitV1, AdminOperationAuditRecord, NewAdminOperationAuditRecord, SocketSessionBindingStatus, SpaceRole};
 use directory::os_directory::DocumentScope;
-use semio_hub_directory::{HubDirectory, ProjectionRebuildControl};
+use semio_hub_directory::{AdminOperationDirectory, AuthSessionDirectory, DocumentDirectory, EventLog, ProjectionRebuild, ProjectionRebuildControl, ShareTokenDirectory, SpaceDirectory, SyncSessionDirectory, UserDirectory};
 use semio_hub_directory_contract::{ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_RESPONSE_MAX_BYTES, IdentityVerificationControl, AUTH_TEXT_MAX_BYTES};
 use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use semio_hub_lag_rebootstrap::RebootstrapTransferControl;

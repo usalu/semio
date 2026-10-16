@@ -1,4 +1,3 @@
-/// <reference types="vitest/importMeta" />
 /** 📡️ The multicast queue of one instance's turn replies: the outcome type and `createTurnOutcomeBroadcast` with its own and force-close contract.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
@@ -67,16 +66,4 @@ export function createTurnOutcomeBroadcast<T>(): { readonly push: (value: T) => 
   };
 }
 //#endregion 🔖️TurnOutcomeBroadcast
-
-//#region 🧪️TurnOutcomeBroadcastTests
-/** 🧪️ Kept right against `createTurnOutcomeBroadcast` — this is the ONE new primitive
- * `PluginWasmHandle.outcomes` and `AppChannelClient` (`💻️os/🟦️.ts`) both depend on, so its
- * multicast/unsubscribe/force-close contract is worth pinning here rather than only indirectly via a
- * `loadPluginModule` integration test (which needs a real `Worker` this suite doesn't have — see
- * `PluginRuntime/🟦️.tsx`'s own header doc on that pre-existing limitation). */
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("../🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests1(import.meta.vitest, { createTurnOutcomeBroadcast }, { directory: (await import("node:path")).dirname((await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url))), url: import.meta.url });
-}
-//#endregion 🧪️TurnOutcomeBroadcastTests
 // #endregion 🎠️Kernel

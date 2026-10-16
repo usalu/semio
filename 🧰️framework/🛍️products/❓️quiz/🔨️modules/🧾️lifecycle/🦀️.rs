@@ -318,6 +318,3 @@ pub fn evolve_learner(state: &mut LearnerState, event: &Event) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;

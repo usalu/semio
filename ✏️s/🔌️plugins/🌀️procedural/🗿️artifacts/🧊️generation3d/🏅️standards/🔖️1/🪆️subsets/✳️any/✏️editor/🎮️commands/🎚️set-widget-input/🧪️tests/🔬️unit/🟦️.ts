@@ -8,7 +8,6 @@ import { editCollectionValue, editInputValue, editWidgetFacet, editMeshSource, e
 import { meshEnginePolygonSchema as meshSchema } from "@semio-tech/framework/mesh-engine/schema/polygon";
 import {PNG} from "pngjs";
 import {BoxGeometry,EdgesGeometry,Vector3} from "three";
-import {JSDOM} from "jsdom";
 import {createRequire} from "node:module";
 import {getByRole} from "@testing-library/dom";
 import inspectorFixture from "../../../../📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json";
@@ -103,7 +102,8 @@ export function generation3dWidgetInputSelfTests(): number {
   assert.deepEqual(dimensions,{width:declaredBox.width,depth:declaredBox.depth,height:declaredBox.height});
   checks++;
   const box=new BoxGeometry(dimensions.width,dimensions.depth,dimensions.height);
-  const positions=box.attributes.position,index=box.index!,edges=new EdgesGeometry(box),edgePositions=edges.attributes.position;
+  const positions=box.attributes.position,index=box.index,edges=new EdgesGeometry(box),edgePositions=edges.attributes.position;
+  if(!positions||!index||!edgePositions)throw Error("Actual Three.js indexed box and edges required");
   let area=0,volume=0,length=0;
   for(let i=0;i<index.count;i+=3) {
     const a=new Vector3().fromBufferAttribute(positions,index.getX(i)),b=new Vector3().fromBufferAttribute(positions,index.getX(i+1)),c=new Vector3().fromBufferAttribute(positions,index.getX(i+2));
@@ -127,18 +127,21 @@ export function generation3dWidgetInputSelfTests(): number {
   assert.deepEqual(live.history,["undo","redo"]);
   checks+=7;
   assert(Math.abs(measurements.area-inspectorFixture.selectedBrepControls.numericOracle.area)<1e-10);
+  const dom=widgetDomOracleV1();
+  try {
   for(const entry of inspectorFixture.selectedBrepControls.cases) for(const control of entry.controls) {
     const expected={$schema:"number",value:control.committedValue};
     assert.deepEqual(editInputValue(["number"],{$schema:"number",value:control.value},String(control.committedValue)),expected);
     assert(validateMutation({mutation:"changeWidgetInput",id:"selected",channel:control.channel,type:"number",value:control.committedValue}),JSON.stringify(validateMutation.errors));
     for(const locale of ["en","de"] as const) {
-      const dom=new JSDOM("<!doctype html><html><body></body></html>");
-      const input=dom.window.document.createElement("input"); input.type="number"; input.value=String(control.value); input.setAttribute("aria-label",control[locale]); dom.window.document.body.append(input);
-      assert.equal(computeAccessibleName(getByRole(dom.window.document.body,"spinbutton",{name:control[locale]})),control[locale]);
-      dom.window.close(); checks++;
+      dom.document.body.replaceChildren();
+      const input=dom.document.createElement("input"); input.type="number"; input.value=String(control.value); input.setAttribute("aria-label",control[locale]); dom.document.body.append(input);
+      assert.equal(computeAccessibleName(getByRole(dom.document.body,"spinbutton",{name:control[locale]})),control[locale]);
+      checks++;
     }
     checks+=2;
   }
+  } finally { dom.close(); }
   checks++;
   for(const entry of inspectorFixture.selectedBrepControls.cases) for(const input of entry.readOnlyInputs ?? []) {
     const parsed=input.channel==="sourceHandle"?[input.value]:JSON.parse(input.value) as string[];
@@ -153,4 +156,9 @@ export function generation3dWidgetInputSelfTests(): number {
   checks++;
   box.dispose();edges.dispose();
   return checks;
+}
+
+/** 🌐️ Validates the actual test-only DOM implementation behind its consumed platform interface. */
+function widgetDomOracleV1():{document:Document;close():void}{
+ const imported:unknown=createRequire(import.meta.url)("jsdom");if(!imported||typeof imported!=="object")throw Error("Actual jsdom oracle required");const constructor:unknown=Reflect.get(imported,"JSDOM");if(typeof constructor!=="function")throw Error("Actual jsdom constructor required");const instance:unknown=Reflect.construct(constructor,["<!doctype html><html><body></body></html>"]);if(!instance||typeof instance!=="object")throw Error("Actual jsdom instance required");const window:unknown=Reflect.get(instance,"window");const valid=(value:unknown):value is {document:Document;close():void}=>{if(!value||typeof value!=="object"||typeof Reflect.get(value,"close")!=="function")return false;const document:unknown=Reflect.get(value,"document");return !!document&&typeof document==="object"&&Reflect.get(document,"nodeType")===9&&typeof Reflect.get(document,"createElement")==="function"&&typeof Reflect.get(document,"querySelector")==="function"&&Reflect.get(document,"body")!==null;};if(!valid(window))throw Error("Actual jsdom document and lifetime required");return window;
 }

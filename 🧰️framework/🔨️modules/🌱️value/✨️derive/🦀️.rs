@@ -2,8 +2,7 @@
 
 #![feature(proc_macro_tracked_path, proc_macro_tracked_env)]
 
-#[path = "../../🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/🦀️.rs"]
-mod compiler_resources;
+use semio_framework_native_build_compiler_resources as compiler_resources;
 
 fn observe_compiler_resources<R>(run: impl FnOnce() -> R) -> R {
     compiler_resources::with_compiler_resources_v1(env!("CARGO_MANIFEST_DIR"), concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs"), proc_macro::Span::call_site().local_file(), proc_macro::tracked::env_var("SEMIO_COMPILER_RESOURCE_ROOT").ok(), |path| proc_macro::tracked::path(path), run)

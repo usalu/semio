@@ -17,6 +17,9 @@ workspace = true
 name = "semio_framework_io_sqlite_snapshot"
 path = "🦀️.rs"
 
+[features]
+testkit = []
+
 [[bin]]
 name = "semio-io-sqlite-snapshot-oracle"
 path = "../../🧪️tests/🧭️oracle/🦀️.rs"
@@ -25,11 +28,3 @@ path = "../../🧪️tests/🧭️oracle/🦀️.rs"
 semio-framework-io-sqlite-model.workspace = true
 semio-framework-io-control.workspace = true
 semio-framework-value.workspace = true
-
-[dev-dependencies]
-semio-framework-trace.workspace = true
-semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
-serde_json = "1.0.140"
-
-semio-framework-io-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
-semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }

@@ -1,8 +1,9 @@
 {
   "version": 1,
   "entrypoints": [
-    "🧰️framework/📦️packages/🟦️typescript/📜️script.ts",
-    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🟦️typescript/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.ts"
   ],
   "partitions": [
     {
@@ -62,35 +63,155 @@
     },
     {
       "foreign": true
+    },
+    {
+      "leaseDirectory": "unmanaged"
+    },
+    {
+      "mode": "dev"
+    },
+    {
+      "mode": "wasm-prototype"
     }
   ],
   "source": "export const value: number = 42;",
   "invalidSource": "export const value: number = 'bad';",
   "admission": {
-    "deadlineMs": 80,
-    "publishDelayMs": 20,
-    "stages": [
-      "state",
-      "host",
-      "core"
-    ],
-    "maximumPathUnits": 256,
-    "sidecars": [
-      "-journal",
-      "-wal",
-      "-shm"
-    ],
-    "compilerLeaf": "state.tsbuildinfo",
-    "intersections": [
-      {
-        "originalMs": 120,
-        "requestedMs": 40
-      },
-      {
-        "originalMs": 40,
-        "requestedMs": 120
-      }
-    ],
-    "publicationExpiryMs": 10
-  }
+    "maximumPathUnits": 256
+  },
+  "arguments": [
+    {
+      "value": [],
+      "accepted": true
+    },
+    {
+      "value": [
+        "--extendedDiagnostics"
+      ],
+      "accepted": true
+    },
+    {
+      "value": [
+        "--pretty",
+        "--diagnostics"
+      ],
+      "accepted": true
+    },
+    {
+      "value": [
+        "--listFiles",
+        "--noErrorTruncation"
+      ],
+      "accepted": true
+    },
+    {
+      "value": [
+        "--noEmit",
+        "false"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "--outDir",
+        "unmanaged"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "--build"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "--watch"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "--incremental",
+        "false"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "--tsBuildInfoFile",
+        "unmanaged"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "-p",
+        "foreign.json"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "foreign.ts"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "--pretty",
+        "false"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "--pretty",
+        "--pretty"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "true"
+      ],
+      "accepted": false
+    },
+    {
+      "value": [
+        "--extendedDiagnostics",
+        "--diagnostics",
+        "--pretty",
+        "--listFiles",
+        "--listFilesOnly",
+        "--explainFiles",
+        "--traceResolution",
+        "--noErrorTruncation"
+      ],
+      "accepted": true
+    },
+    {
+      "value": [
+        "--extendedDiagnostics",
+        "--diagnostics",
+        "--pretty",
+        "--listFiles",
+        "--listFilesOnly",
+        "--explainFiles",
+        "--traceResolution",
+        "--noErrorTruncation",
+        "--extendedDiagnostics"
+      ],
+      "accepted": false
+    }
+  ],
+  "environments": [
+    {},
+    {
+      "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "unmanaged-bun",
+      "NODE_DISABLE_COMPILE_CACHE": "0",
+      "NODE_COMPILE_CACHE": "unmanaged-node",
+      "AUTHORED_TEST_VALUE": "retained"
+    }
+  ]
 }

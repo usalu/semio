@@ -1,7 +1,16 @@
 //! 🧪️ Actual immutable Pack source and semantic fields stay bound to the genuine fixture Root.
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_value::{DslValue, FromValue, ToValue};
+use semio_framework::FaultFrom;
+use semio_framework::manifest::CommandOwnerAddress as ManifestCommandOwnerAddress;
+use crate::ops_ingress::original_manifest_receiving::OriginalManifestCommandReceiving;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_plugin_program::PluginProgram;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use serde_json::Value;
+#[doc(hidden)]
 #[path="../../../../../../🧪️testing/🎟️caller/🦀️.rs"]
-mod original_caller;
+pub mod original_caller;
 
 #[cfg_attr(test,test)]
 pub fn original_manifest_fields_keep_paid_source_and_denied_transfer(){

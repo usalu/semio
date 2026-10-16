@@ -97,3 +97,10 @@ export function parseTsvRowsDiff(value: unknown, at = "$"): TsvRowsDiff {
     added: row["added"] === undefined ? undefined : stdioTsvIanaAnyDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseTsvRowAdded(item, `${at}.added[${index}]`)),
   };
 }
+
+export function parseTsvRowDiff(value: unknown, at = "$"): TsvRowDiff {
+  const row = stdioTsvIanaAnyDiffGuardObject(value, at);
+  return {
+    fields: row["fields"] === undefined ? undefined : stdioTsvIanaAnyDiffGuardArray(row["fields"], `${at}.fields`).map((item, index) => (item === null ? null : stdioTsvIanaAnyDiffGuardString(item, `${at}.fields[${index}]`))),
+  };
+}

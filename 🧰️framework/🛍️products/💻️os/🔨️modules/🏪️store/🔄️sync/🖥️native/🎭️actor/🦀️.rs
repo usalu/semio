@@ -261,7 +261,7 @@ pub struct ArtifactActor {
 const ARTIFACT_CLOSE_OUTBOX_DRAIN: Duration = Duration::from_secs(2);
 
 impl ArtifactActor {
-    pub(super) async fn new(
+    pub async fn new(
         pool: Arc<semio_framework_async::WorkerPool>,
         config: ArtifactActorConfig,
         remote: ChannelBackboneRemote,

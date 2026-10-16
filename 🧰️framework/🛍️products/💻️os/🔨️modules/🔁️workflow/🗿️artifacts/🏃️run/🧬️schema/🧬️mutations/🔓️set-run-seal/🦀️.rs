@@ -40,6 +40,3 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for SetRunSeal {
 }
 //#endregion ⚙️Semantics
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

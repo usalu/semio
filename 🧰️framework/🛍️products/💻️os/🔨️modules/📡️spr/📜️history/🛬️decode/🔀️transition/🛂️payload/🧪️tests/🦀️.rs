@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::native_decoding::{NativeDecodeAllocation,NativeDecodeAllocationPort,NativeDecodeRetirementRecipient};
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(operation)}
 fn hex(value:&str)->Vec<u8>{value.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 fn receipt(owner:&mut RetainedHistoryTransitionPayloadValidation,g:RetainedCloneGrant){let(issued,p)=owner.take_receipt().unwrap();assert_eq!(issued,g);assert!(p.fits(g));assert_eq!((p.retained_capacity_bytes,p.released_bytes),(0,0));}
 #[test]fn original_history_transition_payload_native_preserves_all_canonical_semantic_refusals_without_cold_owners(){

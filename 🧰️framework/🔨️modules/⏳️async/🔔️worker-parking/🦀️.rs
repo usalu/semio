@@ -34,28 +34,28 @@ pub(super) enum ParkWake {
 
 pub(super) struct WorkerParking {
     signal: AtomicU64,
-    idle: AtomicUsize,
+    pub idle: AtomicUsize,
     keeper: AtomicBool,
     timer_moved: AtomicBool,
-    state: Mutex<ParkState>,
+    pub state: Mutex<ParkState>,
     work: Condvar,
     timer: Condvar,
-    #[cfg(test)]
+    #[cfg(feature = "testkit")]
     sleeps: AtomicU64,
 }
 
 impl WorkerParking {
-    pub(super) fn new() -> Self {
-        Self { signal: AtomicU64::new(0), idle: AtomicUsize::new(0), keeper: AtomicBool::new(false), timer_moved: AtomicBool::new(false), state: Mutex::new(ParkState { sleepers: 0, keeper: false, closed: false }), work: Condvar::new(), timer: Condvar::new(), #[cfg(test)] sleeps: AtomicU64::new(0) }
+    pub fn new() -> Self {
+        Self { signal: AtomicU64::new(0), idle: AtomicUsize::new(0), keeper: AtomicBool::new(false), timer_moved: AtomicBool::new(false), state: Mutex::new(ParkState { sleepers: 0, keeper: false, closed: false }), work: Condvar::new(), timer: Condvar::new(), #[cfg(feature = "testkit")] sleeps: AtomicU64::new(0) }
     }
 
     /// 👁️ The signal generation a worker scans under; pass it back to [`Self::park`].
-    pub(super) fn observe(&self) -> u64 {
+    pub fn observe(&self) -> u64 {
         self.signal.load(Ordering::SeqCst)
     }
 
     /// 📣️ New runnable work: wakes one sleeper, or the timer keeper when it is the only idle worker.
-    pub(super) fn signal_work(&self) {
+    #[doc(hidden)] pub fn signal_work(&self) {
         self.signal.fetch_add(1, Ordering::SeqCst);
         if self.idle.load(Ordering::SeqCst) == 0 {
             return;
@@ -87,7 +87,7 @@ impl WorkerParking {
     /// the wheel: that worker re-reads the wheel before it parks again, so nobody is woken now. The
     /// move is remembered, because an armed keeper still sleeps on the stale later deadline: the
     /// firing worker hands the new deadline to it before it runs a job or parks as a sleeper.
-    pub(super) fn signal_timer_from_firing_worker(&self) {
+    #[doc(hidden)] pub fn signal_timer_from_firing_worker(&self) {
         self.timer_moved.store(true, Ordering::SeqCst);
         self.signal.fetch_add(1, Ordering::SeqCst);
     }
@@ -95,7 +95,7 @@ impl WorkerParking {
     /// 🤝️ Called by a worker about to run a job while timers are pending: when no keeper is armed
     /// and someone sleeps, that sleeper takes over the wheel so a long job cannot delay a deadline;
     /// when a keeper sleeps on a deadline a firing callback moved earlier, it recomputes it.
-    pub(super) fn hand_off_timers(&self) {
+    pub fn hand_off_timers(&self) {
         let moved = self.timer_moved.swap(false, Ordering::SeqCst);
         if !moved && self.keeper.load(Ordering::SeqCst) || self.idle.load(Ordering::SeqCst) == 0 {
             return;
@@ -111,7 +111,7 @@ impl WorkerParking {
     }
 
     /// 🛑️ Wakes every parked worker for shutdown; later parks return immediately.
-    pub(super) fn close(&self) {
+    pub fn close(&self) {
         self.signal.fetch_add(1, Ordering::SeqCst);
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         state.closed = true;
@@ -121,7 +121,7 @@ impl WorkerParking {
 
     /// 🛌️ Parks until a signal newer than `observed`, shutdown, or — for the one timer keeper —
     /// `timer_due` elapses. `timer_due` is `None` when the wheel holds no deadline.
-    pub(super) fn park(&self, observed: u64, timer_due: Option<Duration>) -> ParkWake {
+    pub fn park(&self, observed: u64, timer_due: Option<Duration>) -> ParkWake {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         if state.keeper && self.timer_moved.swap(false, Ordering::SeqCst) {
             self.timer.notify_one();
@@ -132,7 +132,7 @@ impl WorkerParking {
         } else if self.signal.load(Ordering::SeqCst) != observed {
             ParkWake::Signalled
         } else {
-            #[cfg(test)]
+            #[cfg(feature = "testkit")]
             self.sleeps.fetch_add(1, Ordering::Relaxed);
             match timer_due {
                 Some(due) if !state.keeper => {
@@ -159,12 +159,15 @@ impl WorkerParking {
 
     /// 📊️ How many times a worker actually went to sleep — the law's observable: an idle pool
     /// with no timers sleeps once per worker and never again.
-    #[cfg(test)]
-    pub(super) fn sleeps(&self) -> u64 {
+    #[cfg(feature = "testkit")]
+    pub fn sleeps(&self) -> u64 {
         self.sleeps.load(Ordering::Relaxed)
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod internals {
+    pub type ParkWake = super::ParkWake;
+    pub type WorkerParking = super::WorkerParking;
+}

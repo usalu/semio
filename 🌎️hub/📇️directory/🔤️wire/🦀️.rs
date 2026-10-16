@@ -450,8 +450,8 @@ pub enum DirectoryAppendOutcomeV1 {
 //#endregion 🔖️Service
 
 /// 🧢️ The one tail of every backend's `socket_session_binding`: the session's membership role in the asked space
-/// under its principal's ceiling ([`HubDirectory::principal_ceiling`]); a space it holds no role in is `MembershipLost`.
-pub async fn capped_socket_session_binding<D: HubDirectory>(directory: &D, record: &AuthSessionRecord, space_id: Option<&str>, membership: Option<SpaceRole>) -> DirectoryResult<SocketSessionBindingStatus> {
+/// under its principal's ceiling ([`PrincipalAuthority::principal_ceiling`]); a space it holds no role in is `MembershipLost`.
+pub async fn capped_socket_session_binding<D: PrincipalAuthority>(directory: &D, record: &AuthSessionRecord, space_id: Option<&str>, membership: Option<SpaceRole>) -> DirectoryResult<SocketSessionBindingStatus> {
     let Some(space_id) = space_id else { return Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms: record.expires_at, session_kind: record.session_kind }) };
     Ok(match directory.principal_ceiling(record.principal()).await?.cap(space_id, membership) {
         Some(role) => SocketSessionBindingStatus::Active { role: Some(role), expires_at_ms: record.expires_at, session_kind: record.session_kind },

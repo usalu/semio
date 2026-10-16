@@ -19,7 +19,8 @@ import { ownRow } from "../🏆️leaderboard/🟦️.tsx";
 import type { Act } from "../📖️quiz-page/🟦️.tsx";
 import { CardAction, CardIcon, Dialog, Facts, Glyph, Missing, PageFrame, QuizCard, Records, TABLE, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { PRESENCE_ANCHORS, PresenceList } from "../👥️presence/🟦️.tsx";
-import { HOME_PAGES, overallLeaderboard, type QuizSession, type QuizState } from "../🧭️session/🟦️.ts";
+import { HOME_PAGES, overallLeaderboard, type QuizState } from "../🧭️session/🧮️state/🟦️.ts";
+import { type QuizSession } from "../🧭️session/🟦️.ts";
 
 interface LearnerProps {
   readonly session: QuizSession;

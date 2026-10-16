@@ -49,5 +49,5 @@ export const stdioMdCommonmarkAnySnapshotTextGuardConstant = <T extends string |
 //#endregion 🚪️Parsers
 
 export function parseMdSnapshotText(value: unknown, at = "$"): MdSnapshotText {
-  return stdioMdCommonmarkAnySnapshotTextGuardObject(value, `${at}`);
+  return stdioMdCommonmarkAnySnapshotTextGuardString(value, `${at}`);
 }

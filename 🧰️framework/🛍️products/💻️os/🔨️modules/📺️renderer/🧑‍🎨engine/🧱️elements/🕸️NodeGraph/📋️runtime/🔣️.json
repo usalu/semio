@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "methods": [
+    "syncFromSceneJson",
+    "syncFromScenePack",
+    "attachCanvas",
+    "gpuReady",
+    "setSize",
+    "setCanvasThemeJson",
+    "renderFrame",
+    "pointerDownScreen",
+    "pointerMoveScreen",
+    "pointerUpScreen",
+    "pointerCancelScreen",
+    "wheelScreen",
+    "labelOverlayPaintStateJson",
+    "sliderOverlayStateJson",
+    "selectionUnionBoundsScreenJson",
+    "selectionPreviewPointsJson",
+    "selectionPreviewCrossing",
+    "selectionPreviewMethod",
+    "selectedNodeIdsJson",
+    "hoveredNodeId",
+    "hoveredChannelJson",
+    "viewport",
+    "lodScaleJson",
+    "drawLodLabel",
+    "setAutomaticLod",
+    "setForcedDrawLodLabel",
+    "setGhostNodeJson",
+    "clearGhostNode",
+    "pickTargetsAtScreenJson",
+    "entityScreenJson",
+    "syncInteraction",
+    "takeSelectionGatherJson",
+    "alignSelection",
+    "takeGraphEditsJson",
+    "hostSnapshotJson",
+    "takePendingOpenInstanceId",
+    "screenToWorld",
+    "worldFromScreen",
+    "selectAll",
+    "deleteSelection",
+    "cancelAreaSelect",
+    "reorganize",
+    "free"
+  ],
+  "entrypoints": [
+    {
+      "kind": "source",
+      "bare": null
+    },
+    {
+      "kind": "generated",
+      "bare": "runtime.js"
+    }
+  ]
+}

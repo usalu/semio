@@ -648,14 +648,12 @@ describe("package language semantic handoff", () => {
       }
       expect(semanticDirectoryKindId("📦️packages", schema, { parentKindId: "members-of-members-of-modules" })).toBe("packages");
       expect(semanticDirectoryKindId("🦀️rust", schema, { parentKindId: "packages" })).toBe("rust-language");
-      const libraryBase = posix.dirname(expected.cargo.libSourcePath);
-      for (const [base, operand, target] of [[expected.packagePath, expected.cargo.libPath, expected.cargo.libSourcePath], ...expected.sourceOracles.map((oracle: { importSpecifier: string; scriptPath: string }) => [expected.packagePath, oracle.importSpecifier, oracle.scriptPath]), [expected.packagePath, expected.browserHost.script, expected.browserHost.sourcePath], [libraryBase, expected.abi.libRelativePath, expected.abi.sourcePath], [expected.packagePath, expected.project.$schema, "node_modules/nx/schemas/project-schema.json"]]) {
+      for (const [base, operand, target] of [[expected.packagePath, expected.cargo.libPath, expected.cargo.libSourcePath], ...expected.sourceOracles.map((oracle: { importSpecifier: string; scriptPath: string }) => [expected.packagePath, oracle.importSpecifier, oracle.scriptPath]), [expected.packagePath, expected.browserHost.script, expected.browserHost.sourcePath], [expected.packagePath, expected.project.$schema, "node_modules/nx/schemas/project-schema.json"]]) {
         expect(posix.normalize(posix.join(base, operand))).toBe(target);
         expect(win32.normalize(win32.join(base, operand)).replaceAll("\\", "/")).toBe(target);
       }
       const entry = read(expected.cargo.libSourcePath).toString("utf8");
-      expect(entry).toContain('#[path = "' + expected.abi.libRelativePath + '"]');
-      read(expected.abi.sourcePath);
+      expect(entry).not.toContain("🌉️abi");
       for (const path of [expected.browserHost.sourcePath, expected.packagePath + "/📜️script.ts"]) read(path);
       for (const oracle of expected.sourceOracles as { ownerPath: string; scriptPath: string; fixturePath: string; schemaPath: string }[]) {
         for (const path of [oracle.scriptPath, oracle.fixturePath, oracle.schemaPath]) read(path);

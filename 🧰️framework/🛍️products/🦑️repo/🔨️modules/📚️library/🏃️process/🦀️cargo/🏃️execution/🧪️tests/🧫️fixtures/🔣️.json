@@ -387,6 +387,9 @@
           "a b",
           "雪"
         ]
+      ],
+      "packages": [
+        "semio-framework-trace"
       ]
     },
     {
@@ -405,6 +408,9 @@
           "a b",
           "雪"
         ]
+      ],
+      "packages": [
+        "semio-framework-async-macros"
       ]
     },
     {
@@ -423,6 +429,9 @@
           "a b",
           "雪"
         ]
+      ],
+      "packages": [
+        "semio-framework-value-derive"
       ]
     },
     {
@@ -441,6 +450,9 @@
           "a b",
           "雪"
         ]
+      ],
+      "packages": [
+        "semio-framework-schema-derive"
       ]
     },
     {
@@ -460,6 +472,9 @@
           "a b",
           "雪"
         ]
+      ],
+      "packages": [
+        "semio-framework-schema-state"
       ]
     },
     {
@@ -479,6 +494,13 @@
           "a b",
           "雪"
         ]
+      ],
+      "packages": [
+        "semio-framework-canvas-assets",
+        "semio-framework-canvas-camera",
+        "semio-framework-canvas-scene",
+        "semio-framework-canvas-icons",
+        "semio-framework-canvas"
       ]
     }
   ]

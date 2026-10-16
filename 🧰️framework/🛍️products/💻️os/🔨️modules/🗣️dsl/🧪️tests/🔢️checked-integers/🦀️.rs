@@ -54,7 +54,7 @@ fn index_record(value: u64) -> RecordValue {
 fn binary_record(ordinal: u64, record: &RecordValue) -> Vec<u8> {
     let mut bytes = vec![variants_binary::OP_BINARY_FORMAT];
     semio_framework_os_kernel::os_pack::write_varint_u64(&mut bytes, ordinal);
-    bytes.extend(semio_framework_os_kernel::os_pack::encode_record_body(&IndexRecord::__dsl_spec(), record, &semio_framework_os_kernel::os_pack::EncodeOptions::default()).unwrap());
+    bytes.extend(semio_framework_os_kernel::os_pack::record::encode_record_body(&IndexRecord::__dsl_spec(), record, &semio_framework_os_kernel::os_pack::record::EncodeOptions::default()).unwrap());
     bytes
 }
 //#endregion 🧬️Fixture

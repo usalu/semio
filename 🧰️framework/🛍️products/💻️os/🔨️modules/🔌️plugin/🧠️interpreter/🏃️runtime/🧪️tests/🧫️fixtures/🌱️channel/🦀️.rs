@@ -1,6 +1,6 @@
 //! 🌱️ The synthetic current Owned ABI exposes only the real channel result and traps unrelated operations.
 
-use super::OwnedSemioExport;
+use semio_framework_plugin_interpreter::OwnedSemioExport;
 pub fn owned_channel_guest(channel: u32) -> Vec<u8> {
     fn uleb(mut value: u64, output: &mut Vec<u8>) {
         loop {

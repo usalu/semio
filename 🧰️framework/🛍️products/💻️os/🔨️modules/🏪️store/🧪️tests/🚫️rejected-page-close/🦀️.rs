@@ -365,7 +365,7 @@ impl Subject {
         let ticket = authority.field_ticket;
         let diagnostic = OwnedSchemaDecodeDiagnostic { code: "test.rejected-page-close", offset: 0, line: 1, column: 1, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
         let grant=Grant::generous(1).retained();
-        let mut caller=super::tests::OriginalEnvelopeCaller::admit_cleanup("rejected-setup");
+        let mut caller=semio_framework_os_store_testing_doubles::OriginalEnvelopeCaller::admit_cleanup("rejected-setup");
         let mut cx=caller.context();
         match authority.reject(diagnostic) {
             Ok(rejected) => {drop(cx);caller.retire(grant);Some(Self::Registered { rejected: Box::new(rejected), registry, ticket })},

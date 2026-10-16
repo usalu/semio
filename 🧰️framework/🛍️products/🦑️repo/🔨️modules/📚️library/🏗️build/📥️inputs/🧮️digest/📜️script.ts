@@ -1,17 +1,9 @@
 #!/usr/bin/env bun
-import { readFileSync } from "node:fs";
-import { sourceClosureDigest } from "./🟨️.mjs";
-export { sourceClosureDigest } from "./🟨️.mjs";
-/** 📥️ The owned wire contract contains only exact repository-relative files. */
-export interface SourceClosure {
-  readonly version: 1;
-  readonly files: readonly string[];
-}
-
-
-if (import.meta.main) {
-  const [command, path, ...extra] = process.argv.slice(2);
-  if (!path || !["digest", "source"].includes(command) || command === "digest" && extra.length) throw Error("Expected digest <closure manifest> or source <repository files...>");
-  const contract = command === "source" ? { version: 1 as const, files: [path, ...extra] } : JSON.parse(readFileSync(path, "utf8"));
-  process.stdout.write(sourceClosureDigest(process.cwd(), contract));
-}
+import{sourceClosureDigest}from"./🟨️.mjs";
+import{readExactSourceJsonV1,withExactSourceReadBatchV1}from"./📥️read/🟨️.mjs";
+import{relative,resolve,sep}from"node:path";
+import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+export{sourceClosureDigest}from"./🟨️.mjs";
+/** 📥️ Exact repository-relative files admitted by the Source owner. */
+export interface SourceClosure{readonly version:1;readonly files:readonly string[]}
+if(import.meta.main)await receiveScriptProcessInvocation(process.env,async original=>{const[command,path,...extra]=process.argv.slice(2);if(!path||!["digest","source"].includes(command??"")||command==="digest"&&extra.length)throw Error("Expected digest <closure manifest> or source <repository files...>");const root=process.cwd(),control=createIssuedResourceControlV1(original,"source:digest",120000),contract=command==="source"?{version:1,files:[path,...extra]}:await withExactSourceReadBatchV1(root,control,async batch=>{const file=await readExactSourceJsonV1(batch,relative(root,resolve(root,path)).split(sep).join("/"));if(!file)throw Error("Exact Source inventory required");return file.value;});process.stdout.write(await sourceClosureDigest(root,contract,control));});

@@ -49,5 +49,5 @@ export const stdioPptxEcma376BaseInferenceTextGuardConstant = <T extends string 
 //#endregion 🚪️Parsers
 
 export function parsePptxInferenceText(value: unknown, at = "$"): PptxInferenceText {
-  return stdioPptxEcma376BaseInferenceTextGuardObject(value, `${at}`);
+  return stdioPptxEcma376BaseInferenceTextGuardString(value, `${at}`);
 }

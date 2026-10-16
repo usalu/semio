@@ -3,8 +3,8 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import type { ShellLocale, ShellTerminology } from "../../🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts";
-import { faultNoticeText, fillFaultNotice, type FaultNoticeDefinition } from "../../🛂️manifest/🟦️.ts";
+import type { ShellLocale, ShellTerminology } from "@semio-tech/framework/manifest/generated/ui-axes";
+import { faultNoticeText, fillFaultNotice, type FaultNoticeDefinition } from "@semio-tech/framework/manifest";
 
 // #region 🎠️Kernel
 //#region InvocationResponse

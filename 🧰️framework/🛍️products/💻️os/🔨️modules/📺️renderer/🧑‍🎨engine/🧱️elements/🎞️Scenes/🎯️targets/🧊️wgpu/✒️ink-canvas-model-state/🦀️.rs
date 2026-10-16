@@ -1255,7 +1255,7 @@ pub fn ink_pointer_cancel_into(surface_id: &str) {
     });
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn ink_pointer_state_is_clear(surface_id: &str) -> bool {
     let state = scene_state(surface_id);
     !state.pointer_was_down && state.drag.is_none() && !state.ink_gesture_open && state.ink_marquee_points.is_empty() && state.ink_overrides.is_empty()

@@ -1,4 +1,4 @@
-/** 🧭️ Composed-child reference asset gate behind `verify composed-child-refs`.
+/** 🧷️ Composed-child reference asset gate behind `verify composed-child-refs`.
  * @see 📜️script.ts
  */
 import { readFileSync, readdirSync } from "node:fs";

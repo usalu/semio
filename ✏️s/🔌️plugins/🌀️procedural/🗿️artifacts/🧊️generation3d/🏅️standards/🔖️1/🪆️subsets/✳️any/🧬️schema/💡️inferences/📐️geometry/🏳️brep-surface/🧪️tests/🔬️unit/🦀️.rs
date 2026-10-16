@@ -1,29 +1,30 @@
 use super::*;
 
-#[path = "../../../🧪️tests/🧰️construction-support/🦀️.rs"]
-mod support;
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_geometry::registry;
+use semio_s_artifact_procedural_3d_geometry_construction_support as support;
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏳️brep-surface/🔣️.json");
 
 #[test]
 fn every_fixture_case_holds_at_fuel_one_and_at_unbounded_fuel() {
-    assert_eq!(support::run_fixture(FIXTURE, COMPUTES), 26);
+    assert_eq!(support::run_fixture(catalogue(), registry::lookup, FIXTURE, COMPUTES), 26);
 }
 
 #[test]
 fn the_table_and_the_fixture_cover_exactly_the_catalogue_kinds_of_brep_surface() {
-    support::assert_category("brep.surface", COMPUTES, FIXTURE);
+    support::assert_category(catalogue(), "brep.surface", COMPUTES, FIXTURE);
 }
 
 #[test]
 fn equal_inputs_give_equal_shape_bytes() {
-    assert_eq!(support::assert_deterministic(FIXTURE, COMPUTES), 14);
+    assert_eq!(support::assert_deterministic(catalogue(), registry::lookup, FIXTURE, COMPUTES), 14);
 }
 
 fn filled_face_normal(points: &[[f64; 3]]) -> ([f64; 3], [f64; 3]) {
     let wire = std::sync::Arc::new(semio_s_artifact_procedural_3d_brep_curve::polyline_value(points, true).expect("closed polyline"));
     let winding = fit_plane(&wire_corners(&wire).expect("corners"), WIRE).expect("plane").normal;
-    let kind = support::kind_of("brep.surface.faceFromWire");
+    let kind = support::kind_of(catalogue(), "brep.surface.faceFromWire");
     let job = Pipeline::new(kind)
         .import(&wire)
         .once(|work| {
@@ -69,5 +70,5 @@ fn the_planar_fit_refuses_outlines_without_area_or_beyond_their_plane() {
 
 #[test]
 fn an_offset_face_is_cancellable_and_equal_when_computed_twice() {
-    assert!(support::assert_cancellable(FIXTURE, COMPUTES) <= 26);
+    assert!(support::assert_cancellable(catalogue(), registry::lookup, FIXTURE, COMPUTES) <= 26);
 }

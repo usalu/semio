@@ -1,0 +1,26 @@
+{
+"name": "okeng",
+"crates": [
+"semio-framework-os-store-initialization-runtime",
+"semio-framework-os-store-durable-group-wire",
+"semio-framework-os-store-member-open",
+"semio-framework-os-store-engine-owners",
+"semio-framework-os-store-engine-core",
+"semio-framework-os-store-engine-live",
+"semio-framework-os-store-engine-stage",
+"semio-framework-os-store-engine",
+"semio-framework-os-store-codec-factory",
+"semio-framework-os-store-initialization-replay",
+"semio-framework-os-store-space-member",
+"semio-framework-os-store-document",
+"semio-framework-os-store-member-open-store",
+"semio-framework-os-store-config",
+"semio-framework-os-store-durable-group",
+"semio-framework-os-store-composition",
+"semio-framework-os-store-space",
+"semio-framework-os-store-test-support",
+"semio-framework-os-store-space-schema"
+],
+"base": null,
+"note": "OS-KERNEL-ENGINE: the 18 carved crates + space-schema, absolute"
+}

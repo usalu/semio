@@ -5,7 +5,10 @@
 use super::{decode_directory_door_response, encode_directory_door_binary_request, encode_directory_door_request, DIRECTORY_DOOR_OP, DIRECTORY_HTTP_TIMEOUT_MS};
 use semio_framework_os_kernel::os_directory::client::{HttpMethod, TransportError};
 
-const SHELL_SOURCE: &str = crate::shell::SHELL_SOURCE;
+#[allow(non_snake_case)]
+fn SHELL_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::shell_source()
+}
 
 //#region 🧪️Wire
 #[test]
@@ -142,17 +145,17 @@ fn region_of(source: &str, region: &str) -> String {
 
 #[test]
 fn the_space_administration_region_compiles_on_the_browser_target() {
-    assert!(!region_of(SHELL_SOURCE, "🏛️SpaceAdministration").contains(r#"cfg(not(target_arch = "wasm32"))"#), "Space Administration is gated out of the browser build again");
+    assert!(!region_of(SHELL_SOURCE(), "🏛️SpaceAdministration").contains(r#"cfg(not(target_arch = "wasm32"))"#), "Space Administration is gated out of the browser build again");
 }
 
 #[test]
 fn the_pure_check_in_reducers_compile_on_the_browser_target() {
-    assert!(!region_of(SHELL_SOURCE, "🔖️CheckInPure").contains(r#"cfg(not(target_arch = "wasm32"))"#), "the check-in reducers are gated out of the browser build again");
+    assert!(!region_of(SHELL_SOURCE(), "🔖️CheckInPure").contains(r#"cfg(not(target_arch = "wasm32"))"#), "the check-in reducers are gated out of the browser build again");
 }
 
 #[test]
 fn the_directory_command_queue_compiles_on_the_browser_target() {
-    assert!(!region_of(SHELL_SOURCE, "🎮️DirectoryCommandQueue").contains(r#"cfg(not(target_arch = "wasm32"))"#), "the directory command FIFO is gated out of the browser build again");
+    assert!(!region_of(SHELL_SOURCE(), "🎮️DirectoryCommandQueue").contains(r#"cfg(not(target_arch = "wasm32"))"#), "the directory command FIFO is gated out of the browser build again");
 }
 
 /// ⚖️ The shared lane may still branch INSIDE a method on the two halves the browser has no door for
@@ -162,7 +165,7 @@ fn the_directory_command_queue_compiles_on_the_browser_target() {
 /// `pump_space_administration` native-only in the first place.
 #[test]
 fn no_method_of_the_shared_directory_lane_is_left_without_a_browser_answer() {
-    let lane = region_of(SHELL_SOURCE, "📇️DirectoryLane");
+    let lane = region_of(SHELL_SOURCE(), "📇️DirectoryLane");
     let signature = |tail: &str| -> Option<String> {
         let head = tail.trim_start().lines().next()?;
         head.split_once('(').map(|(name, _)| name.trim_start_matches("pub ").trim_start_matches("async ").trim_start_matches("fn ").to_string())
@@ -183,7 +186,7 @@ fn no_method_of_the_shared_directory_lane_is_left_without_a_browser_answer() {
 
 #[test]
 fn the_shared_directory_lane_declares_the_space_administration_entry_points() {
-    let lane = region_of(SHELL_SOURCE, "📇️DirectoryLane");
+    let lane = region_of(SHELL_SOURCE(), "📇️DirectoryLane");
     for entry in [
         "pub fn open_space_administration(",
         "pub fn close_space_administration(",

@@ -2,8 +2,8 @@ use super::{
     artifact_mailbox_pair, ensure_demo_codec_registered, native_actor, presence_to_bytes, ActorId, ArtifactActorConfig, ArtifactEvent, Bootstrap, ChannelBackbone, ClientFrame, CommandAckOutcome, DemoMutation, DemoSnapshot, MutationEnvelope,
     PersistenceBinding, PresencePeer, RemoteState, RuntimeFrontierSummary, ServerFrame, AckStage, ApplyOutcome,
 };
-use crate::os_spr::wire::RebootstrapRequired;
-use crate::os_spr::{ArtifactId, Edit};
+use semio_framework_os_spr::wire::RebootstrapRequired;
+use semio_framework_os_spr::ArtifactId; use semio_framework_os_spr::Edit;
 use futures::StreamExt;
 use serde_json::Value;
 use std::collections::BTreeSet;
@@ -39,10 +39,10 @@ async fn parity_envelope(document_id: &str, mutation_id: &str, n: i32) -> Mutati
         finished_at: None,
     };
     let document_id = ArtifactId(document_id.into());
-    let schema = crate::os_spr::SchemaId("demo/v1".to_string());
-    let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("envelope");
+    let schema = semio_framework_os_spr::SchemaId("demo/v1".to_string());
+    let mut envelopes = semio_framework_os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("envelope");
     let mut envelope = envelopes.pop().expect("one envelope");
-    envelope.mutation_id = crate::os_spr::MutationId(mutation_id.into());
+    envelope.mutation_id = semio_framework_os_spr::MutationId(mutation_id.into());
     envelope
 }
 
@@ -122,7 +122,7 @@ impl ParityHarness {
     fn drain_events(&mut self) {
         while let Ok(event) = self.events.try_recv() {
             if let ArtifactEvent::DocumentBackbone { message } = &event {
-                if let Ok(crate::os_store::backbone::BackboneMessage::Retract { mutation_ids }) = crate::os_store::backbone::decode_hot_backbone_message_exact(message) {
+                if let Ok(semio_framework_os_store_backbone::BackboneMessage::Retract { mutation_ids }) = semio_framework_os_store_backbone::decode_hot_backbone_message_exact(message) {
                     self.retracted.extend(mutation_ids);
                 }
             }
@@ -145,7 +145,7 @@ impl ParityHarness {
         loop {
             match tokio::time::timeout(std::time::Duration::from_millis(20), socket.next()).await {
                 Ok(Some(Ok(Message::Binary(bytes)))) => {
-                    let frame = crate::os_spr::decode_client_frame(&bytes).await.expect("client frame").1;
+                    let frame = semio_framework_os_spr::decode_client_frame(&bytes).await.expect("client frame").1;
                     let kind = match frame {
                         ClientFrame::SocketHelloV1 { .. } => "socketHelloV1",
                         ClientFrame::Commands { .. } => "commands",
@@ -247,10 +247,10 @@ impl ParityHarness {
                 self.actor.queue_test_outbox(vec![envelope]);
             }
             "queueTransition" => {
-                let supersede = crate::os_spr::TransitionSupersede { scope: None, inputs: vec![crate::os_spr::SupersededInput { target: crate::os_spr::MutationId("ghost".into()), replacement: crate::os_spr::InputReplacement::Withdrawn }] };
+                let supersede = semio_framework_os_spr::TransitionSupersede { scope: None, inputs: vec![semio_framework_os_spr::SupersededInput { target: semio_framework_os_spr::MutationId("ghost".into()), replacement: semio_framework_os_spr::InputReplacement::Withdrawn }] };
                 let dependencies = supersede.targets();
-                let mut envelope = crate::os_spr::history_transition_envelope(&crate::os_spr::HistoryTransition::Supersede(supersede), &ArtifactId(self.document_id.clone()), &ActorId(self.author.clone().into()), dependencies, crate::os_spr::HybridLogicalTimestamp::new(1, 9));
-                envelope.mutation_id = crate::os_spr::MutationId(dispatch["mutationId"].as_str().expect("id").into());
+                let mut envelope = semio_framework_os_spr::history_transition_envelope(&semio_framework_os_spr::HistoryTransition::Supersede(supersede), &ArtifactId(self.document_id.clone()), &ActorId(self.author.clone().into()), dependencies, semio_framework_os_spr::HybridLogicalTimestamp::new(1, 9));
+                envelope.mutation_id = semio_framework_os_spr::MutationId(dispatch["mutationId"].as_str().expect("id").into());
                 self.actor.queue_test_outbox(vec![envelope]);
             }
             "installSocketActor" => {
@@ -325,7 +325,7 @@ impl ParityHarness {
 }
 
 fn load_fixture() -> Value {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🔨️modules/🏪️store/🔄️sync/⚖️parity");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../⚖️parity");
     let fixtures = std::fs::read_dir(&root).expect("parity dir").filter_map(|entry| entry.ok()).find(|entry| entry.file_name().to_string_lossy().contains("fixture")).expect("fixtures dir");
     let text = std::fs::read_to_string(fixtures.path().join("🔣️.json")).expect("fixture json");
     serde_json::from_str(&text).expect("fixture parse")

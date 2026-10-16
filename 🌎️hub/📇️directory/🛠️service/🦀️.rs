@@ -852,7 +852,7 @@ use std::sync::Arc;
 use semio_hub_artifact_authority::chunk_cas::{ArtifactCasDeleteOutcome, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkCasStorage};
 use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandResultV1, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceVisibility, DirectoryStreamMessage};
 use semio_hub_artifact_creation::{ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
-use semio_hub_directory::{DirectoryAppendOutcomeV1, document_genesis_completion_v1, published_artifact_checkpoint};
+use semio_hub_directory::{ArtifactCasDirectory, ArtifactCreationDirectory, DirectoryAppendOutcomeV1, EventLog, InviteDirectory, ReceiptDirectory, SpaceDirectory, document_genesis_completion_v1, published_artifact_checkpoint};
 use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
 use semio_hub_directory_dispatch::HubDirectories;
 use semio_framework_hash::Sha256;

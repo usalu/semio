@@ -26,6 +26,7 @@ class World:
         self.mono = M.load_crate(PLUG + "/" + PKGDIR + "/🦀️.rs", key="FACADE")
         self.real = {}
         self.cache = {}
+        self.trunc = 0
         self.fcache = {}
         self.active = set()
         self.owner_cache = {}
@@ -58,8 +59,10 @@ class World:
             return self.cache[key]
         seen = set() if seen is None else seen
         if key in seen:
+            self.trunc += 1
             return []
         seen.add(key)
+        t0 = self.trunc
         out = [("item", node, it) for it in node.items if it.name == name]
         out += [("use", node, u) for u in node.uses if not u.glob and u.local == name]
         if not out:
@@ -67,7 +70,8 @@ class World:
                 if u.glob:
                     tgt = self.resolve_path(node, u.path, seen=seen)
                     out += self._names_of(tgt, name, seen, via=u, node=node)
-        self.cache[key] = out
+        if self.trunc == t0 or out:
+            self.cache[key] = out
         return out
 
     def bound_elsewhere(self, node, name, skip_path):
@@ -132,7 +136,7 @@ class World:
             return self.lookup(cur, name, seen)
         return []
 
-    def resolve_path(self, node, segs, seen=None, in_use=True):
+    def resolve_path(self, node, segs, seen=None, in_use=True, prefer=None):
         """resolve a module-path prefix: first segment relative to node (crate/self/super/local name/extern crate); remaining segments walk nodes. Stops at the first non-module and returns the item with remaining segments in .segs"""
         if not segs:
             return Res("node", node=node)
@@ -151,7 +155,7 @@ class World:
         else:
             b = self.lookup(node, head, seen)
             if b:
-                cur = self.follow_any(b, seen)
+                cur = self.pick(b, seen, prefer) if not rest else self.follow_any(b, seen)
             else:
                 if head.startswith(PFX):
                     cur = Res("crate", key=head[len(PFX):].replace("_", "-"), segs=[])
@@ -159,19 +163,29 @@ class World:
                     return Res("ext", segs=segs)
         if cur is None:
             return None
-        return self._walk(cur, rest, seen)
+        return self._walk(cur, rest, seen, prefer)
 
-    def follow_any(self, binds, seen=None):
-        """first binding that resolves without running into a cycle (glob chains can loop back through a re-export)"""
+    def pick(self, binds, seen, prefer):
+        return self.follow_any(binds, seen, prefer)
+
+    def follow_any(self, binds, seen=None, prefer=None):
+        """first binding that resolves without running into a cycle (glob chains can loop back through a re-export); with prefer="macro" a macro binding wins"""
         last = None
+        first = None
         for b in binds:
-            r = self._follow(b, set())
-            if r is not None and r.kind != "cycle":
-                return r
-            last = r
-        return last
+            r = self._follow(b, set(), prefer)
+            if r is None or r.kind == "cycle":
+                last = r if last is None else last
+                continue
+            if prefer == "macro":
+                if r.kind == "item" and r.item.kind == "macro":
+                    return r
+                first = r if first is None else first
+                continue
+            return r
+        return first if first is not None else last
 
-    def _follow(self, bind, seen):
+    def _follow(self, bind, seen, prefer=None):
         kind, node, obj = bind
         if kind == "item":
             if obj.kind == "mod":
@@ -186,29 +200,31 @@ class World:
                 return Res("ext", segs=[real])
             return Res("item", node=node, item=obj)
         u = obj
-        k = id(u)
+        k = (id(u), prefer)
         if k in self.fcache:
             return self.fcache[k]
         if k in self.active:
             return Res("cycle")
         self.active.add(k)
         try:
-            tgt = self.resolve_path(node, u.path, set())
+            tgt = self.resolve_path(node, u.path, set(), prefer=prefer)
         finally:
             self.active.discard(k)
         if tgt is None or tgt.kind != "cycle":
             self.fcache[k] = tgt
         return tgt
 
-    def _walk(self, cur, rest, seen):
+    def _walk(self, cur, rest, seen, prefer=None):
         while rest:
             if cur is None:
                 return None
             if cur.kind == "node":
                 b = self.lookup(cur.node, rest[0], seen)
                 if not b:
-                    return Res("node", node=cur.node, segs=rest) if False else Res("unresolved", node=cur.node, segs=rest)
-                cur = self.follow_any(b, seen)
+                    if cur.node.name in ("wasip2", "return_walk"):
+                        return Res("node", node=cur.node, segs=rest)
+                    return Res("unresolved", node=cur.node, segs=rest)
+                cur = self.pick(b, seen, prefer) if len(rest) == 1 else self.follow_any(b, seen)
                 rest = rest[1:]
             elif cur.kind == "crate":
                 tree = self.real_tree(cur.key)
@@ -224,8 +240,7 @@ class World:
                 return Res("ext", segs=cur.segs + rest)
             else:
                 # item: remaining segments are associated items / variants
-                cur.segs = list(cur.segs) + rest
-                return cur
+                return Res(cur.kind, node=cur.node, item=cur.item, key=cur.key, segs=list(cur.segs) + rest)
         return cur
 
     def def_of(self, node, name):

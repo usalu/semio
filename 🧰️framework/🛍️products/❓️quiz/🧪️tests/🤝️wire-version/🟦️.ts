@@ -6,7 +6,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { WIRE_VERSION } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const SCHEMA = ["🧰️framework", "🛍️products", "❓️quiz", "🧬️schema", "🔣️.json"] as const;

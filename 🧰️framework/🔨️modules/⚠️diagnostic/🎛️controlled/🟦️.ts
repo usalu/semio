@@ -1,7 +1,7 @@
 import type {FaultSource,Fault} from "../🧾️retained/🟦️.ts";
 import {ValueError} from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
-import type {ValueRefusalCodecControl} from "../../🌱️value/⚠️refusal/🔁️codec/🟦️.ts";
-import type {IntrinsicValue,IntrinsicMember} from "../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
+import type {ValueRefusalCodecControl} from "@semio-tech/value-ts/refusal/codec";
+import type {IntrinsicValue,IntrinsicMember} from "@semio-tech/value-ts/schema/intrinsic";
 import {binary64Value} from "../../🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 import type {TextSpan} from "../📍️span/🟦️.ts";
 /** 🧾️ Source-positioned data uses the closed owned Diagnostic schema. */

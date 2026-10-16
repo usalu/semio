@@ -21,7 +21,7 @@ impl<T:RetireOwned+Sync> Publication for ReadOwnershipRegistry<T> {
 }
 
 /// 🪪️ A sealed erased view and its original typed factory capability close as one managed owner.
-pub struct ReadAuthority {view:ManuallyDrop<Option<Arc<dyn Publication>>>,owner:FactoryAuthority}
+pub struct ReadAuthority {view:ManuallyDrop<Option<Arc<dyn Publication>>>,#[doc(hidden)] pub owner:FactoryAuthority}
 impl ReadAuthority {
     pub fn terminal_is_empty(&self)->bool {self.view.is_none()&&self.owner.terminal_is_empty()}
     pub fn constructor_capacity_bytes<T:RetireOwned+Sync>()->usize {ReadOwnershipRegistry::<T>::constructor_capacity_bytes()}

@@ -1,0 +1,57 @@
+{
+ "moves": [
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🏘️spaces/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎓️first-run/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🎓️first-run/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🤖️delegations/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🤖️delegations/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🎫️local-session/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📞️directory-client/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📞️directory-client/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🧵️backbone/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🧵️backbone/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🌐️browser-bundle/🪟️view-context/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🪪️notice/🟦️.tsx",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔖️session-notice/🟦️.tsx"
+  }
+ ],
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/rhu2-snap-dir2.json"
+}

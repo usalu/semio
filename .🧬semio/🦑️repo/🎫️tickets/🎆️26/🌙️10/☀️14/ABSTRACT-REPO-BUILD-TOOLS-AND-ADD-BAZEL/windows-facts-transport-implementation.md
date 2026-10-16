@@ -1,0 +1,19 @@
+# Windows Facts Transport
+
+Fresh Bun Build and Nx factories now capture `{version:1,windows,system}` from the first-party Core Windows OS API receiver before Original birth. The shared Native invocation producer compares any supplied authored fact against that actual OS result; non-Windows hosts refuse asserted Windows facts. Fresh Nx explicit capability JSON enters the same check. Inherited Nx envelopes retain exact capabilities and existing equality checks. No environment path or JSON string establishes new OS fact authority.
+
+Build Caller, authoring, Nx Caller and Native Owner schemas close this primitive shape. Types stay first-party. Both actual TS Build-to-Native and MJS Nx-to-Native projectors retain the top-level Native Owner facts. Existing neutral/Nx projections retain the same native object. The inherited neutral child projector authenticates its genuine Original and issued phase, then uses private launch expansion. A pure Nx launch resolver returns only request DATA, so Node expansion does not call a fresh native factory or query OS APIs.
+
+## Source Tests
+
+The language-neutral eight-row corpus covers actual Windows capture, exact/foreign/extra/version authored facts, Linux/macOS absence and foreign-host assertion. Ajv validates rows and facts; SQLite independently computes admission and reconstructs the returned primitive object. Actual producer/factory function bodies run against explicit OS ports. Actual inherited projector bodies use genuine received Original/issued phases plus an explicit capability DATA port; copied and cancelled phases refuse, inherited policy/deadline/native facts survive, and a fresh OS factory trap remains uncalled. Native Owner MJS projection retains the same fact object.
+
+`windows-facts-spoof-red.log` is actual semantic RED: omitting the new OS comparison wrongly admitted foreign authored paths (one failure, other projection law passed). The comparison was restored immediately. `windows-facts-issued-final.log`: actual terminal 0, two laws, 62 assertions, 0.987 seconds. `windows-facts-strict-final.log`: actual terminal 0, eight focused roots under strict/noUncheckedIndexedAccess. No public Original deadline or production budget changed.
+
+Earlier commands used a bare relative Unicode pathname, which Bun interpreted as a test-name filter and recursively scanned the workspace. One crashed with 133, another returned unmatched-filter 1; neither is semantic RED. The corrected ticket runner supplies an absolute leaf path under a genuine finite 60-second Source envelope. Initial direct fixture-envelope checks were replaced by the existing issued test receiver. All final evidence is Source-only, with no Windows process/API call, native image, SDK or canonical store operation.
+
+## Routing And Inventory
+
+The new permanent leaf is imported by the existing Nx native-caller law aggregate. No new executable command, launch registration or runtime dependency is introduced. Fourteen combined Source snapshots, byte counts, SHA-256 and UTF-16 path lengths are retained in `🗑️generated/windows-facts-transport-source.json`; all paths are within 256 units. The new production reader dependency is the existing Core fixed/system owner; Root must derive fresh actual reader/runtime closures and SDK provenance.
+
+The actual production factory census is retained in `windows-facts-factory-callers.txt`. A separate existing Bazel purpose birth helper still calls the fresh Build native factory and compares inherited native data. Root was notified because that held owner must preserve inherited Windows facts if it executes in Node; this slice does not silently claim that remaining path qualified. Root owns the Core genuine-control capabilities getter and Node refusal tests separately. Native Windows x64, pinned ARM64 ABI, OS privilege and kernel behavior remain physical qualification requirements.

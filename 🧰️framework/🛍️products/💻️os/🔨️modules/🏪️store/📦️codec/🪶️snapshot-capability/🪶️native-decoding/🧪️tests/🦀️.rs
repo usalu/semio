@@ -1,16 +1,16 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use super::*;
-use crate::os_store::serialization::{ ArtifactSqliteSnapshotHost};
+use semio_framework_os_store_text_io::ArtifactSqliteSnapshotHost;
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::os_store::NativeSnapshotDecodeOwner;
+use semio_framework_os_io::control::NativeSnapshotDecodeOwner;
 use semio_framework_dsl_record::FieldSpec;
 use semio_framework_dsl_record::FieldValue;
 use semio_framework_dsl_record::RecordLayout;
 use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::RecordValue;
 use semio_framework_dsl_record::Shape;
-use crate::sqlite_snapshot::{SqliteDatabase, SqliteDatabaseLimits, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue};
+use semio_framework_io_sqlite_snapshot::SqliteDatabase; use semio_framework_io_sqlite_snapshot::SqliteDatabaseLimits; use semio_framework_io_sqlite_snapshot::SqliteRow; use semio_framework_io_sqlite_snapshot::SqliteSnapshotControl; use semio_framework_io_sqlite_snapshot::SqliteSnapshotPhase; use semio_framework_io_sqlite_snapshot::SqliteValue;
 use semio_framework_value::{ValueError, ValueRefusalKind,RetainedCloneGrant,retirement::{RetireOwned,RetirementCursor}};
 
 struct DecodedBuffers {
@@ -66,15 +66,15 @@ fn sqlite_snapshot_erased_export_dispatches_only_the_declared_controlled_native_
     let mut callback=|_|true;
     let mut native=NativeDecodeControl::new(fixture["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let outcome = (<DecodedBuffers as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)("fixture.buffers/v1", &dialect, &crate::io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant())).unwrap();
+    let outcome = (<DecodedBuffers as semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)("fixture.buffers/v1", &dialect, &semio_framework_io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant())).unwrap();
     assert_eq!(outcome.value.table("decoded_buffer").unwrap().single_row().unwrap().blob(1).unwrap(), snapshot.buffers[0]);
     ORDINARY_DECODER_CALLS.with(|count| assert_eq!(count.get() as u64, case["ordinaryCalls"].as_u64().unwrap()));
     CONTROLLED_DECODER_CALLS.with(|count| assert_eq!(count.get() as u64, case["controlledCalls"].as_u64().unwrap()));
     let mut reached = false;
-    let result = (<DecodedBuffers as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)(
+    let result = (<DecodedBuffers as semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)(
         "fixture.buffers/v1",
         &dialect,
-        &crate::io_schema::IoPayload::Binary(bytes),
+        &semio_framework_io_schema::IoPayload::Binary(bytes),
         &mut SqliteSnapshotControl::new(
             &mut |event| {
                 if event.phase == SqliteSnapshotPhase::DecodeNative && event.completed >= case["cancelAt"].as_u64().unwrap() as usize {
@@ -113,13 +113,13 @@ impl ArtifactPack for DecodedBuffers {
         let mut record = semio_framework_dsl_record::RecordValue::default();
         record.fields.insert(1, semio_framework_dsl_record::FieldValue::List(self.buffers.iter().cloned().map(semio_framework_dsl_record::FieldValue::Bytes64).collect()));
         let body = pack_rt::encode_document(&buffer_spec(), &record, options)?;
-        let envelope = semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(), semio_format::Component::Pack, 1).unwrap();
-        Ok(semio_format::wrap_binary(&envelope, &body))
+        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(Self::envelope_id(), semio_framework_os_semio::Component::Pack, 1).unwrap();
+        Ok(semio_framework_os_semio::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         ORDINARY_DECODER_CALLS.with(|count| count.set(count.get() + 1));
-        let (envelope, body) = semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(Self::envelope_id(), semio_format::Component::Pack, 1) {
+        let (envelope, body) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(Self::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
             return Err(PackError::from(ValueError::new(ValueRefusalKind::UnsupportedOwner,"fixture envelope identity")));
         }
         let (mut record, _) = pack_rt::decode_document(&body, &buffer_spec(), options)?;
@@ -137,11 +137,11 @@ impl ArtifactPack for DecodedBuffers {
         Ok(Self { buffers })
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DecodedBuffers {
+impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DecodedBuffers {
 
 }
 
-fn bind_original_buffers(record: &mut RecordValue, snapshot_output: &mut Option<DecodedBuffers>, native: &mut NativeDecodeControl<'_>, body: &mut crate::os_store::NativeSnapshotBodyWallet) -> Result<(), ValueError> {
+fn bind_original_buffers(record: &mut RecordValue, snapshot_output: &mut Option<DecodedBuffers>, native: &mut NativeDecodeControl<'_>, body: &mut semio_framework_os_io::control::NativeSnapshotBodyWallet) -> Result<(), ValueError> {
     let Some(FieldValue::List(fields)) = record.fields.get_mut(&1) else {
         return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "expected buffers"));
     };
@@ -166,7 +166,7 @@ fn bind_original_buffers(record: &mut RecordValue, snapshot_output: &mut Option<
 
 impl ArtifactSqliteSnapshotHost for DecodedBuffers {
     
-    fn decode_sqlite_snapshot_native(payload: &crate::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &semio_framework_io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         CONTROLLED_DECODER_CALLS.with(|count| count.set(count.get() + 1));
         decode_sqlite_snapshot_record_native(
             payload,
@@ -215,13 +215,13 @@ fn sqlite_snapshot_binding_moves_original_octet_allocations_with_exact_structura
     let mut output = None;
     let mut callback = |_| true;
     let mut native = NativeDecodeControl::new(1048576, &mut callback);
-    let mut denied = crate::os_store::NativeSnapshotBodyWallet::new(RetainedCloneGrant { maximum_copy_bytes: 0, ..policy });
-    let (refusal, allocated, released) = crate::test_allocation::observe_backing(|| bind_original_buffers(&mut record, &mut output, &mut native, &mut denied));
+    let mut denied = semio_framework_os_io::control::NativeSnapshotBodyWallet::new(RetainedCloneGrant { maximum_copy_bytes: 0, ..policy });
+    let (refusal, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| bind_original_buffers(&mut record, &mut output, &mut native, &mut denied));
     assert_eq!(refusal.unwrap_err().kind, ValueRefusalKind::OwnershipLimit);
     assert_eq!((allocated, released), (0, 0));
     assert!(output.is_none());
-    let mut wallet = crate::os_store::NativeSnapshotBodyWallet::new(policy);
-    let (result, allocated, released) = crate::test_allocation::observe_backing(|| bind_original_buffers(&mut record, &mut output, &mut native, &mut wallet));
+    let mut wallet = semio_framework_os_io::control::NativeSnapshotBodyWallet::new(policy);
+    let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| bind_original_buffers(&mut record, &mut output, &mut native, &mut wallet));
     result.unwrap();
     assert_eq!((allocated, released), (2 * std::mem::size_of::<Vec<u8>>(), 0));
     assert_eq!(wallet.progress().retained_capacity_bytes, allocated);
@@ -234,12 +234,12 @@ fn sqlite_snapshot_binding_moves_original_octet_allocations_with_exact_structura
     let mut retirement = semio_framework_value::retirement::controlled::ControlledRetirement::new((record, output)).unwrap_or_else(|(error, _)| panic!("{error}"));
     for _ in 0..131072 {
         if retirement.terminal_is_empty() { break; }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| retirement.step(policy).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| retirement.step(policy).unwrap());
         assert!(step.progress().fits(policy));
         assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     }
     assert!(retirement.terminal_is_empty());
-    let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(retirement));
+    let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(retirement));
     assert_eq!((allocated, released), (0, 0));
     println!("[DEBUG] SQLite binding original32768 octets in two16384-byte payload allocations moved without duplication; fixed65536 copy authority; structural receipt/System equality; denied original retained and terminalDrop0");
 }
@@ -257,14 +257,14 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
         let snapshot =
             DecodedBuffers { buffers: case["bufferBytes"].as_array().unwrap().iter().map(|value| vec![0; value.as_u64().unwrap() as usize]).chain(std::iter::repeat_with(Vec::new).take(case["emptyBuffers"].as_u64().unwrap() as usize)).collect() };
         let mut options = PackEncodeOptions::default();
-        options.codec = crate::os_pack::CodecId(1);
+        options.codec = semio_framework_os_pack::CodecId(1);
         options.chunk_threshold = u64::MAX;
         options.frame_size = 32768;
         let bytes = snapshot.encode_pack_with(&options).unwrap();
         let maximum = case["maximumBytes"].as_u64().unwrap() as usize;
         assert!(bytes.len() < maximum, "fixture must exercise decoded expansion");
         let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
-        let sqlite = crate::sqlite_snapshot::export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
+        let sqlite = semio_framework_io_sqlite_snapshot::export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
         let script = "import {Database} from 'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(Buffer.from(input.sqlite,'base64'));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');await Bun.write(Bun.stdout,String(db.query('SELECT SUM(length(octets)) AS n FROM decoded_buffer').get().n));db.close();";
         let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
         let input = serde_json::json!({"sqlite": protocol::bytes::encode_base64(&sqlite)});
@@ -279,13 +279,13 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
         let mut callback=|_|true;
         let mut native=NativeDecodeControl::new(fixture["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);
         native.install_retirement_recipient(&mut recipient).unwrap();
-        let result = (<DecodedBuffers as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)("fixture.buffers/v1", &dialect, &crate::io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, limits),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant()));
+        let result = (<DecodedBuffers as semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)("fixture.buffers/v1", &dialect, &semio_framework_io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, limits),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant()));
         let decoded = case["decoded"].as_bool().unwrap();
         assert_eq!(result.is_ok(), decoded, "{}: {result:?}", case["id"]);
         COMPLETED_DECODERS.with(|count| assert_eq!(count.get(), usize::from(decoded), "{}", case["id"]));
         close_original_recipient(&mut native);
         COMPLETED_DECODERS.with(|count| count.set(0));
-        let result = (<DecodedBuffers as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)("fixture.buffers/v1", &dialect, &crate::io_schema::IoPayload::Binary(bytes), &mut SqliteSnapshotControl::new(&mut |event| event.phase != SqliteSnapshotPhase::DecodeNative, limits),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant()));
+        let result = (<DecodedBuffers as semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)("fixture.buffers/v1", &dialect, &semio_framework_io_schema::IoPayload::Binary(bytes), &mut SqliteSnapshotControl::new(&mut |event| event.phase != SqliteSnapshotPhase::DecodeNative, limits),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant()));
         assert!(result.is_err());
         COMPLETED_DECODERS.with(|count| assert_eq!(count.get(), 0));
         close_original_recipient(&mut native);
@@ -328,16 +328,16 @@ fn sqlite_snapshot_metadata_admits_final_file_before_mutating_domain_database() 
         SqliteDatabaseLimits { max_schema_bytes: 1, ..Default::default() },
     ] {
         let mut bounded = database.clone();
-        assert!(semio_framework_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut bounded, &dialect, crate::sqlite_snapshot::SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
+        assert!(semio_framework_os_io::io_mechanism::attach_sqlite_snapshot_metadata(&mut bounded, &dialect, semio_framework_io_sqlite_snapshot::SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
         assert_eq!(bounded, database);
     }
     let mut canceled = database.clone();
-    assert!(semio_framework_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut canceled, &dialect, crate::sqlite_snapshot::SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut |_| false, Default::default())).is_err());
+    assert!(semio_framework_os_io::io_mechanism::attach_sqlite_snapshot_metadata(&mut canceled, &dialect, semio_framework_io_sqlite_snapshot::SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut |_| false, Default::default())).is_err());
     assert_eq!(canceled, database);
     let mut admitted = database;
     let limits = SqliteDatabaseLimits { max_rows: file_rows, ..Default::default() };
-    semio_framework_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut admitted, &dialect, crate::sqlite_snapshot::SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-    let bytes = crate::sqlite_snapshot::export_sqlite_database(&admitted, limits, &mut |_| true).unwrap();
+    semio_framework_os_io::io_mechanism::attach_sqlite_snapshot_metadata(&mut admitted, &dialect, semio_framework_io_sqlite_snapshot::SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let bytes = semio_framework_io_sqlite_snapshot::export_sqlite_database(&admitted, limits, &mut |_| true).unwrap();
     let script = "import {Database} from 'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(Buffer.from(x.bytes,'base64'));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');await Bun.write(Bun.stdout,String(db.query('SELECT (SELECT COUNT(*) FROM decoded_buffer)+(SELECT COUNT(*) FROM semio_snapshot) AS n').get().n));db.close();";
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
     child.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture,"bytes":protocol::bytes::encode_base64(&bytes)}).to_string().as_bytes()).unwrap();

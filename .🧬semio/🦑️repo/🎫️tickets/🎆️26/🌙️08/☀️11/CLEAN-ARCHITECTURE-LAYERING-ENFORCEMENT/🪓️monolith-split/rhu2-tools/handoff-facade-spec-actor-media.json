@@ -1,0 +1,10 @@
+[
+ {"sub":"./actor","file":"🎭️actor/🟦️.ts","emoji":"🎭️","sources":["🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts"]},
+ {"sub":"./actor/lifetime","file":"🎭️actor/🚪️lifetime/🟦️.ts","emoji":"🚪️","sources":["🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts"]},
+ {"sub":"./actor/lifetime/patch","file":"🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts","emoji":"🩹️","sources":["🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts"]},
+ {"sub":"./actor/shard-client","file":"🎭️actor/📮️shard-client/🟦️.ts","emoji":"📮️","sources":["🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts"]},
+ {"sub":"./actor/shard-client/segmented-download","file":"🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts","emoji":"📤️","sources":["🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts"]},
+ {"sub":"./actor/shard-runtime","file":"🎭️actor/🧵️shard-runtime/🟦️.ts","emoji":"🧵️","sources":["🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"]},
+ {"sub":"./actor/wire-turn","file":"🎭️actor/🖼️wire-turn/🟦️.ts","emoji":"🖼️","sources":["🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts"]},
+ {"sub":"./kernel/media-export","file":"🎠️kernel/🎬️media-export/🟦️.ts","emoji":"🎬️","sources":["🧰️framework/🔨️modules/🎠️kernel/🎬️media-export/🟦️.ts"]}
+]

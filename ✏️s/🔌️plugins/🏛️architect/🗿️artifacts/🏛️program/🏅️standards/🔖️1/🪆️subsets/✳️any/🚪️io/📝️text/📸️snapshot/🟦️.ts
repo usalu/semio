@@ -49,5 +49,5 @@ export const architectProgramSnapshotTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseProgramSnapshotText(value: unknown, at = "$"): ProgramSnapshotText {
-  return architectProgramSnapshotTextGuardObject(value, `${at}`);
+  return architectProgramSnapshotTextGuardString(value, `${at}`);
 }

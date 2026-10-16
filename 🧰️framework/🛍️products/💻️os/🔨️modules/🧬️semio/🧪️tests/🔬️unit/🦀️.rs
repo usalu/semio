@@ -12,7 +12,7 @@ fn retire_original_semio_owner<T:semio_framework_value::retirement::RetireOwned>
         let copy=owner.next_copy_byte_demand().unwrap();let work=quantum.max(copy).min(remaining.maximum_copy_bytes);let capacity=owner.next_capacity_byte_demand(work).unwrap();let release=owner.next_release_byte_demand().unwrap();let depth=owner.next_depth_demand().unwrap();
         assert!(remaining.maximum_items>0&&copy<=remaining.maximum_copy_bytes&&capacity<=remaining.maximum_capacity_bytes&&release<=remaining.maximum_release_bytes&&depth<=remaining.maximum_depth);
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work,..remaining};control.checkpoint().unwrap();control.charge(capacity).unwrap();
-        let(step,allocated,released)=crate::test_allocation::observe_backing(||owner.step(grant));let progress=step.unwrap().progress();assert_eq!((allocated,released),(progress.retained_capacity_bytes,progress.released_bytes));assert!(progress.fits(grant));assert_ne!(progress,RetainedCloneProgress::default(),"funded original cleanup must make progress");*total=total.checked_add(progress).unwrap();performed=performed.checked_add(progress).unwrap();
+        let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||owner.step(grant));let progress=step.unwrap().progress();assert_eq!((allocated,released),(progress.retained_capacity_bytes,progress.released_bytes));assert!(progress.fits(grant));assert_ne!(progress,RetainedCloneProgress::default(),"funded original cleanup must make progress");*total=total.checked_add(progress).unwrap();performed=performed.checked_add(progress).unwrap();
     }
     performed
 }
@@ -33,7 +33,7 @@ fn retained_text_envelope_preserves_original_body_and_bounds_resume_cancel_and_r
         assert_eq!(cursor.source_body().unwrap().as_ptr(),pointer);
         let mut accept=|_|true; let mut control=NativeEncodeControl::new(fixture["retained"]["nativeMaximum"].as_u64().unwrap()as usize,&mut accept);
         assert!(cursor.step(1,grant,&mut control).unwrap().is_none());
-        let output=loop { let before=cursor.position(); assert!(cursor.step(0,0,&mut control).unwrap().is_none()); assert_eq!(cursor.position(),before); let before=cursor.progress();let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.step(budget.as_u64().unwrap() as usize,grant,&mut control));let after=cursor.progress();assert_eq!((allocated,released),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));if let Some(output)=step.unwrap(){break output;} };
+        let output=loop { let before=cursor.position(); assert!(cursor.step(0,0,&mut control).unwrap().is_none()); assert_eq!(cursor.position(),before); let before=cursor.progress();let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.step(budget.as_u64().unwrap() as usize,grant,&mut control));let after=cursor.progress();assert_eq!((allocated,released),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));if let Some(output)=step.unwrap(){break output;} };
         assert_eq!(output,expected); assert!(cursor.source_body().is_none());assert!(cursor.progress().fits(caller));assert_eq!(cursor.remaining_grant().maximum_copy_bytes,caller.maximum_copy_bytes-cursor.progress().copied_bytes);
         assert!(cursor.retirement.is_none());let mut total=cursor.progress();retire_original_semio_owner(cursor,grant,caller,&mut total,&mut control);
         let output_capacity=output.capacity();let progress=retire_original_semio_owner(output,grant,caller,&mut total,&mut control);assert!(progress.released_bytes>=output_capacity,"the exact physical output allocation is fully returned independently of the small copy grant");
@@ -113,9 +113,9 @@ fn original_controlled_binary_refusal_keeps_borrowed_wire_and_zero_system_alloca
     for row in fixture["binaryRefusals"].as_array().unwrap(){
         let mut bytes=wire.clone();let mut declared=id;match row["case"].as_str().unwrap(){"prefix"=>bytes[0]=0,"truncated"=>bytes[8..12].copy_from_slice(&u32::MAX.to_le_bytes()),"identity"=>declared="foreign.owner",_=>panic!("unknown original case")};
         let pointer=bytes.as_ptr();let mut accept=|_|true;let mut control=NativeDecodeControl::new(0,&mut accept);
-        let(result,allocated,released)=crate::test_allocation::observe_backing(||unwrap_binary_controlled(&bytes,declared,Component::Pack,version,&mut control));
+        let(result,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||unwrap_binary_controlled(&bytes,declared,Component::Pack,version,&mut control));
         let error:ValueError=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::InvalidValue);assert_eq!(error.to_string(),row["message"].as_str().unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(error.retained_progress(),Default::default());assert_eq!(bytes.as_ptr(),pointer);assert_eq!(control.owned_bytes(),0);
     }
-    let mut canceled=|_|false;let mut control=NativeDecodeControl::new(0,&mut canceled);let(result,allocated,released)=crate::test_allocation::observe_backing(||unwrap_binary_controlled(&wire,id,Component::Pack,version,&mut control));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!((allocated,released),(0,0));
+    let mut canceled=|_|false;let mut control=NativeDecodeControl::new(0,&mut canceled);let(result,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||unwrap_binary_controlled(&wire,id,Component::Pack,version,&mut control));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!((allocated,released),(0,0));
     eprintln!("[DEBUG] Original controlled binary malformed and canceled refusals retain caller wire with zero System backing allocation");
 }

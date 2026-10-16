@@ -1,0 +1,45 @@
+{
+ "id": "os-kernel-dsl-derive",
+ "pkg": "dsl_derive",
+ "trees": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/"
+ ],
+ "inputs_units": [
+  "os-kernel-dsl-derive-lib-test-semio-framework-os-kernel-dsl-derive"
+ ],
+ "p_lib": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs",
+ "p_lib_cur": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧩️expand/🦀️.rs",
+ "p_dirs": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/"
+ ],
+ "comps": [
+  {
+   "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🌆️companion/🦀️.rs"
+  }
+ ],
+ "ext": [
+  "semio_framework_ui_locale",
+  "semio_framework_schema_state",
+  "semio_framework_value",
+  "syn",
+  "quote",
+  "proc_macro2",
+  "serde_json",
+  "semio_framework_hash",
+  "semio_framework_native_build_compiler_resources",
+  "serde",
+  "sha2"
+ ],
+ "crate_type_a": "proc-macro",
+ "base_features": [],
+ "features": [
+  "testkit"
+ ],
+ "union_prelude": [
+  "extern crate proc_macro;"
+ ],
+ "pkg_cur": "semio_framework_os_kernel_dsl_derive_expand",
+ "base_prelude": [
+  "extern crate proc_macro;"
+ ]
+}

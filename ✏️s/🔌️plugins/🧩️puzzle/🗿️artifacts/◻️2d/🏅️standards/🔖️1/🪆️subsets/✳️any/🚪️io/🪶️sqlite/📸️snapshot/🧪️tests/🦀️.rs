@@ -1,5 +1,4 @@
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::Puzzle2dSnapshot;
 fn snapshot()->Puzzle2dSnapshot{let laws:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();semio_framework_pack_json::from_json_str(&laws["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}

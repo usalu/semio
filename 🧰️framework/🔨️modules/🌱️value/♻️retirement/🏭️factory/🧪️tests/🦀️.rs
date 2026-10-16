@@ -1,9 +1,7 @@
 use super::*;
 use crate::{retirement::controlled::ControlledRetirement,RetireOwned};
 
-#[path="../🧪️testing/🦀️.rs"]
-mod original_factory_fixture;
-use original_factory_fixture::*;
+use crate::original_factory_fixture::*;
 fn admit<T:FactoryPayloadRetirement>(owner:Arc<T>)->(Box<dyn FactoryRetirementTicket>,usize) {
     let birth=owner.factory_retirement_birth_bytes();
     let depth=owner.factory_retirement_depth_demand();

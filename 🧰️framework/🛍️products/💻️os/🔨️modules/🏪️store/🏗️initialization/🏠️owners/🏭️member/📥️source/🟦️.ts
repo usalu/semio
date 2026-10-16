@@ -1,4 +1,4 @@
-import {compileJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {compileJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {rustTokens,rustTokenPairs,rustTokenText,type RustToken} from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import declaration from "./🔣️.json" with {type:"json"};

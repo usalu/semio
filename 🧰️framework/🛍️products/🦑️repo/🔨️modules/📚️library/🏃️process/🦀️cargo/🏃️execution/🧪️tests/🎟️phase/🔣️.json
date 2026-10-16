@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "name": "exact",
+      "kind": "exact-laws",
+      "control": "live",
+      "effects": 1
+    },
+    {
+      "name": "tests",
+      "kind": "tests",
+      "control": "live",
+      "effects": 1
+    },
+    {
+      "name": "copied",
+      "kind": "exact-laws",
+      "control": "copied",
+      "effects": 0
+    },
+    {
+      "name": "cancelled",
+      "kind": "exact-laws",
+      "control": "cancelled",
+      "effects": 0
+    },
+    {
+      "name": "cancelled after delegate",
+      "kind": "exact-laws",
+      "control": "during",
+      "effects": 1
+    }
+  ]
+}

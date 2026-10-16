@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: mutation outcome, merge policy and diff-only laws.
+/** 🎯️ Wave 4 plugin consistency policy: mutation outcome, merge policy and diff-only laws.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { policyMaskLiterals } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";
@@ -513,7 +513,7 @@ export function policyDeriveGlueMountBreaches(repoRoot: string): BreachRecord[] 
       scope: POLICY_DERIVE_GLUE,
       priority: "high",
       reason: "The dsl derive macro's proc-macro package is glue: it mounts the owner implementation instead of carrying a copy, so the macro body exists once and no build shape runs stale derive logic.",
-      solution: `Make ${POLICY_DERIVE_GLUE} mount the owner with #[path = "../../🦀️.rs"] mod component; and forward each #[proc_macro_derive] entry to component::expand_*; move any expand_* body into ${POLICY_DERIVE_OWNER}.`,
+      solution: `Make ${POLICY_DERIVE_GLUE} mount the owner through a #[path] attribute naming "../../🦀️.rs" on mod component; and forward each #[proc_macro_derive] entry to component::expand_*; move any expand_* body into ${POLICY_DERIVE_OWNER}.`,
     },
   ];
 }

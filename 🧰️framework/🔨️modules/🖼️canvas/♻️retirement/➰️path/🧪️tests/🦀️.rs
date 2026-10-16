@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_allocation::observe_backing;
+use semio_framework_trace_memory_testing::observe_backing;
 
 #[test]
 fn original_canvas_path_retains_all_cancelled_backings_and_exact_native_receipts() {

@@ -16,7 +16,9 @@ import { badgesEarnedIn } from "../🏅️badges/🟦️.tsx";
 import { CardAction, CardIcon, Dialog, Facts, Glyph, IconLabel, PageFrame, QuizCard, TaskGlyph, textPresentation, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { PRESENCE_ANCHORS, PanePeers, usePresenceView } from "../👥️presence/🟦️.tsx";
 import { CrowdDoor, ScoreFigure, TaskFigures, crowdGate, crowdShown, type CrowdGate, type OthersChoice } from "../🗳️crowd/🟦️.tsx";
-import { lastSubmittedRunOf, openChallengeOf, openRunOf, type QuizSession, type QuizState, type SessionFailure } from "../🧭️session/🟦️.ts";
+import { lastSubmittedRunOf, openChallengeOf, openRunOf, type QuizState } from "../🧭️session/🧮️state/🟦️.ts";
+import { type QuizSession } from "../🧭️session/🟦️.ts";
+import { type SessionFailure } from "../🧭️session/📋️session-model/🟦️.ts";
 import { petProp } from "../🐾️pets/🟦️.tsx";
 
 /** 🎬️ Runs one interactive command of home (starting or resuming a run) with progress, cancellation and its message. */

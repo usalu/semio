@@ -1,0 +1,9 @@
+from tt2_edit import *
+S=ANY+'🧬️schema/'
+edit(S+'🎬️scene/🔤️text/🧪️tests/🟦️.ts',[('expect(job.result().nodes.map(node=>(node.content as any).fontFamily)).toEqual(families);','expect<unknown>(job.result().nodes.map(node=>(node.content as any).fontFamily)).toEqual(families);')])
+edit(S+'🎨️fill/🧪️tests/🔬️unit/🟦️.ts',[('expect(result).toEqual(entry.after);','expect<unknown>(result).toEqual(entry.after);'),('expect(source).toEqual(entry.before);','expect<unknown>(source).toEqual(entry.before);'),('expect(fill).toEqual(entry.fill);','expect<unknown>(fill).toEqual(entry.fill);')])
+edit(S+'🖊️stroke/🧪️tests/🔬️unit/🟦️.ts',[('expect(decodeDashText(entry.value,{maximumBytes:4096,onProgress:()=>true})).toEqual(entry.dash);','expect<unknown>(decodeDashText(entry.value,{maximumBytes:4096,onProgress:()=>true})).toEqual(entry.dash);'),('if (entry.valid) expect(parse(entry.value)).toBe(entry.value);','if (entry.valid) expect<unknown>(parse(entry.value)).toBe(entry.value);')])
+edit(S+'🧬️mutations/🧪️tests/🧪️drag-layers/🟦️.ts',[('if (accepted) expect(parseDragLayers(candidate)).toEqual(','if (accepted) expect<unknown>(parseDragLayers(candidate)).toEqual(')])
+edit(S+'🧬️mutations/🧪️tests/🧪️drag-path-points/🟦️.ts',[('expect(parseDragPathPoints(mutation)).toEqual(payload);','expect<unknown>(parseDragPathPoints(mutation)).toEqual(payload);'),('if (accepted) expect(parseDragPathPoints(candidate)).toEqual(','if (accepted) expect<unknown>(parseDragPathPoints(candidate)).toEqual(')])
+edit(S+'🧬️mutations/🧪️tests/🧪️rotate-layers/🟦️.ts',[('if (accepted) expect(parseRotateLayers(candidate)).toEqual(','if (accepted) expect<unknown>(parseRotateLayers(candidate)).toEqual(')])
+edit(S+'🧬️mutations/🧪️tests/🧪️scale-layers/🟦️.ts',[('if (accepted) expect(parseScaleLayers(candidate)).toEqual(','if (accepted) expect<unknown>(parseScaleLayers(candidate)).toEqual(')])

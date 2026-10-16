@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumOwners": 32,
+        "maximumCloseAttempts": 1,
+        "admission": "before-open",
+        "failedClose": "retained",
+        "numericRetry": false,
+        "retirement": "deny-only"
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "body",
+        "close",
+        "primary",
+        "unresolved"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "body": {
+          "enum": [
+            "value",
+            "error",
+            "undefined"
+          ]
+        },
+        "close": {
+          "enum": [
+            "ok",
+            "error",
+            "undefined"
+          ]
+        },
+        "primary": {
+          "enum": [
+            "value",
+            "body-error",
+            "body-undefined",
+            "close-error",
+            "close-undefined"
+          ]
+        },
+        "unresolved": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$ref": "#/definitions/Protocol"
+}

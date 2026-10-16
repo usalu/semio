@@ -6,13 +6,13 @@ export interface IndexedDiff<T, D> { removed: number[]; modified: IndexedModifie
 
 export interface AviChunkDiff { data?: number[]; keyframe?: boolean; }
 export interface AviStreamDiff {
-  strh?: import("./🟦️").AviStreamHeader;
-  strf?: import("./🟦️").AviStreamFormat;
-  chunks?: IndexedDiff<import("./🟦️").AviChunk, AviChunkDiff>;
+  strh?: import("../📸️snapshot/🟦️.ts").AviStreamHeader;
+  strf?: import("../📸️snapshot/🟦️.ts").AviStreamFormat;
+  chunks?: IndexedDiff<import("../📸️snapshot/🟦️.ts").AviChunk, AviChunkDiff>;
 }
 export interface AviDiff {
-  mainHeader?: import("./🟦️").AviMainHeader;
-  streams?: IndexedDiff<import("./🟦️").AviStream, AviStreamDiff>;
+  mainHeader?: import("../📸️snapshot/🟦️.ts").AviMainHeader;
+  streams?: IndexedDiff<import("../📸️snapshot/🟦️.ts").AviStream, AviStreamDiff>;
   idx1Present?: boolean;
-  unknownChunks?: IndexedDiff<import("./🟦️").RiffChunk, import("./🟦️").RiffChunk>;
+  unknownChunks?: IndexedDiff<import("../📸️snapshot/🟦️.ts").RiffChunk, import("../📸️snapshot/🟦️.ts").RiffChunk>;
 }

@@ -6,9 +6,9 @@
 //! `crate::shell::...` call site elsewhere in the crate keeps resolving with zero other changes.
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 //!
-//! 🧩 This file keeps the shared imports, the extension-ledger types, [`ShellState`] and its `Drop`; every other
-//! concern lives in a sibling chunk module wired below, each a `<emoji>️<kebab>/🦀️.rs` folder that reaches the shared
-//! imports through `use super::*;` and is re-exported here, so every `crate::shell::...` path is unchanged.
+//! 🧩 This file keeps the shared imports and re-exports the Shell crates, so every `crate::shell::...` path is unchanged.
+//! The chunk folders that remain next to it are `cfg(test)` hosts of the tests that need the monolith fixtures; each reaches
+//! the shared imports through `use super::*;`.
 
 use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
 use semio_framework_os_config::io::text::mutations::{decode_ui_preferences_config_mutation_json};
@@ -147,91 +147,53 @@ use protocol::os_directory::client::{DocumentHttpPortDeclarationV1, InstalledSer
 use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
 use serde_json::Value;
 
-#[path = "📤️icon-export/🦀️.rs"]
-mod icon_export;
-
-#[path = "🪟️tree-windows/🦀️.rs"]
-mod tree_windows;
-
+#[cfg(test)]
 #[path = "⏪️time-travel/🦀️.rs"]
 mod time_travel;
 
+#[cfg(test)]
 #[path = "📎️local-folders/🦀️.rs"]
 mod local_folders;
 
-#[path = "🔖️identity-and-types/🦀️.rs"]
-mod identity_and_types;
-pub use identity_and_types::*;
-
-#[path = "🧵️shell-async-runners/🦀️.rs"]
-mod shell_async_runners;
-pub(crate) use shell_async_runners::*;
-
-#[path = "🏛️space-admin-and-settle/🦀️.rs"]
-mod space_admin_and_settle;
-pub use space_admin_and_settle::*;
-
+#[cfg(test)]
 #[path = "⚓️dock-model-and-measures/🦀️.rs"]
 mod dock_model_and_measures;
+#[cfg(test)]
 pub use dock_model_and_measures::*;
 
+#[cfg(test)]
 #[path = "🧾️panel-records/🦀️.rs"]
 mod panel_records;
+#[cfg(test)]
 pub(crate) use panel_records::*;
 
-#[path = "🧩️session-and-topology/🦀️.rs"]
-mod session_and_topology;
-
+#[cfg(test)]
 #[path = "⚙️settings-and-dock-persistence/🦀️.rs"]
 mod settings_and_dock_persistence;
 
-#[path = "🎬️shell-actions/🦀️.rs"]
-mod shell_actions;
-pub use shell_actions::*;
-
-#[path = "📨️command-dispatch/🦀️.rs"]
-mod command_dispatch;
-
-#[path = "🖱️pointer-input/🦀️.rs"]
-mod pointer_input;
-pub use pointer_input::*;
-
+#[cfg(test)]
 #[path = "⌨️keyboard-and-palette/🦀️.rs"]
 mod keyboard_and_palette;
 
+#[cfg(test)]
 #[path = "🧱️chrome-paint-and-navbar/🦀️.rs"]
 mod chrome_paint_and_navbar;
+#[cfg(test)]
 pub use chrome_paint_and_navbar::*;
 
-#[path = "🧰️window-actions-and-commands/🦀️.rs"]
-mod window_actions_and_commands;
-pub(crate) use window_actions_and_commands::*;
-
-#[path = "🗨️chrome-overlays-and-tour/🦀️.rs"]
-mod chrome_overlays_and_tour;
-pub use chrome_overlays_and_tour::*;
-
-#[path = "🎓️tutorial-runtime/🦀️.rs"]
-mod tutorial_runtime;
-pub use tutorial_runtime::*;
-
-#[path = "🖼️chrome-frame-and-main-window/🦀️.rs"]
-mod chrome_frame_and_main_window;
-pub(crate) use chrome_frame_and_main_window::*;
-
-#[path = "🧭️navbar-footer-and-overlays/🦀️.rs"]
-mod navbar_footer_and_overlays;
-
-#[path = "💬️chrome-dialog-and-tooltips/🦀️.rs"]
-mod chrome_dialog_and_tooltips;
-
+#[cfg(test)]
 #[path = "🔑️storage-prefs-and-i18n/🦀️.rs"]
 mod storage_prefs_and_i18n;
+#[cfg(test)]
 pub use storage_prefs_and_i18n::*;
 
+#[cfg(test)]
 #[path = "🎨️theme-file-import-and-accessibility/🦀️.rs"]
 mod theme_file_import_and_accessibility;
+#[cfg(test)]
 pub use theme_file_import_and_accessibility::*;
+
+pub use semio_framework_os_renderer_wgpu_contracts::{try_push_find_item, ActiveShellFindItems, ShellFindItem, ShellFindItemBinding, ShellFindItems, SHELL_FIND_ITEM_CAPACITY, SHELL_FIND_PAYLOAD_BYTES};
 
 //#region 🧬️RendererWp4Components
 pub use semio_framework_os_renderer_wgpu_shell_chrome_state::*;
@@ -269,24 +231,11 @@ pub(crate) use shell_vocab::shell_chrome_string;
 /// 🔎️ The whole Shell module as the one text the unsplit file held: this file and every child split out of it, for the source-text laws. The four modules that were already mounted before the split (`icon_export`, `tree_windows`, `time_travel`, `local_folders`) stay out, as they were out of that text.
 pub(crate) const SHELL_SOURCE: &str = concat!(
     include_str!("🦀️.rs"),
-    include_str!("🔖️identity-and-types/🦀️.rs"),
-    include_str!("🧵️shell-async-runners/🦀️.rs"),
-    include_str!("🏛️space-admin-and-settle/🦀️.rs"),
     include_str!("⚓️dock-model-and-measures/🦀️.rs"),
     include_str!("🧾️panel-records/🦀️.rs"),
-    include_str!("🧩️session-and-topology/🦀️.rs"),
     include_str!("⚙️settings-and-dock-persistence/🦀️.rs"),
-    include_str!("🎬️shell-actions/🦀️.rs"),
-    include_str!("📨️command-dispatch/🦀️.rs"),
-    include_str!("🖱️pointer-input/🦀️.rs"),
     include_str!("⌨️keyboard-and-palette/🦀️.rs"),
     include_str!("🧱️chrome-paint-and-navbar/🦀️.rs"),
-    include_str!("🧰️window-actions-and-commands/🦀️.rs"),
-    include_str!("🗨️chrome-overlays-and-tour/🦀️.rs"),
-    include_str!("🎓️tutorial-runtime/🦀️.rs"),
-    include_str!("🖼️chrome-frame-and-main-window/🦀️.rs"),
-    include_str!("🧭️navbar-footer-and-overlays/🦀️.rs"),
-    include_str!("💬️chrome-dialog-and-tooltips/🦀️.rs"),
     include_str!("🔑️storage-prefs-and-i18n/🦀️.rs"),
     include_str!("🎨️theme-file-import-and-accessibility/🦀️.rs"),
     include_str!("📥️staging/⏳️async/📨️command-dispatch/🦀️.rs"),

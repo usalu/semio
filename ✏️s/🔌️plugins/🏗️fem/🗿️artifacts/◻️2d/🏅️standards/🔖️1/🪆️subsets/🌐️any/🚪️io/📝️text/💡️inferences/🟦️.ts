@@ -49,5 +49,5 @@ export const femFem2dInferenceTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseFem2dInferenceText(value: unknown, at = "$"): Fem2dInferenceText {
-  return femFem2dInferenceTextGuardObject(value, `${at}`);
+  return femFem2dInferenceTextGuardString(value, `${at}`);
 }

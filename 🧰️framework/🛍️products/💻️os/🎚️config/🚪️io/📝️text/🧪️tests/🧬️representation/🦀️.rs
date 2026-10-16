@@ -4,7 +4,7 @@ use super::{mutations, snapshot};
 use semio_framework_value::ToValue;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("neutral IO fixture")
+    serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🚪️io/📝️text/🧪️tests/🧫️fixtures/🔣️.json")).expect("fixture").as_str()).expect("neutral IO fixture")
 }
 
 #[test]

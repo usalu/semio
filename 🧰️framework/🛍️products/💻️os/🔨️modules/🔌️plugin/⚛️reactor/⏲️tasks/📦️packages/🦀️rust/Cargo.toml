@@ -21,8 +21,16 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+artifact-app-testing = []
+
 [dependencies]
 semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

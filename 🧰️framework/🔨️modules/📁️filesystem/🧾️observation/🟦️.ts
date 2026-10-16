@@ -2,6 +2,7 @@ import {constants} from "node:fs";
 import {lstat,open} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {isAbsolute} from "node:path";
+import {withArtifactDescriptorV1} from "./📁️descriptor/🟦️.ts";
 
 /** 🧾️ One regular physical file observation, independent of any catalog or application. */
 export type PhysicalFileClaimV1=Readonly<{path:string;sha256:string;byteLength:number}>;
@@ -19,21 +20,26 @@ const integer=(value:number,minimum:number)=>Number.isSafeInteger(value)&&value>
 
 async function physicalFileObservationV1(path:string,control:FileObservationControlV1,retain:boolean):Promise<{claim:PhysicalFileClaimV1;bytes:Uint8Array|null}>{
  const refuse=(code:FileObservationRefusalV1):never=>{throw new FileObservationErrorV1(code,path);};
- if(typeof path!=="string"||!isAbsolute(path)||!control||!integer(control.maxBytes,0)||!integer(control.maxWork,1)||!integer(control.chunkBytes,1)||control.chunkBytes>1048576||typeof control.cancelled!=="function"||typeof control.remainingMs!=="function"||typeof control.onProgress!=="function")refuse("invalid-control");
- let work=0,length=0,total=0,file:Awaited<ReturnType<typeof open>>|undefined,chunk:Buffer|undefined,retained:Uint8Array|undefined;
- const check=()=>{if(control.cancelled())refuse("cancelled");const remaining=control.remainingMs();if(!Number.isFinite(remaining))refuse("invalid-control");if(remaining<=0)refuse("deadline");};
- const admit=()=>{check();if(work>=control.maxWork)refuse("work-capacity");work++;};
- const progress=(phase:FileObservationProgressV1["phase"])=>{control.onProgress(Object.freeze({phase,bytes:length,totalBytes:total,work}));check();};
+ if(typeof path!=="string"||!isAbsolute(path)||!control)refuse("invalid-control");
+ const {maxBytes,maxWork,chunkBytes,cancelled,remainingMs,onProgress}=control;
+ if(!integer(maxBytes,0)||!integer(maxWork,1)||!integer(chunkBytes,1)||chunkBytes>1048576||typeof cancelled!=="function"||typeof remainingMs!=="function"||typeof onProgress!=="function")refuse("invalid-control");
+ let work=0,length=0,total=0,chunk:Buffer|undefined,retained:Uint8Array|undefined;
+ const check=()=>{if(cancelled.call(control))refuse("cancelled");const remaining=remainingMs.call(control);if(!Number.isFinite(remaining))refuse("invalid-control");if(remaining<=0)refuse("deadline");};
+ const admit=()=>{check();if(work>=maxWork)refuse("work-capacity");work++;};
+ const progress=(phase:FileObservationProgressV1["phase"])=>{onProgress.call(control,Object.freeze({phase,bytes:length,totalBytes:total,work}));check();};
+ const filesystem=async<T>(body:()=>Promise<T>):Promise<T>=>{try{return await body();}catch{return refuse("io");}};
  try{
-  admit();const before=await lstat(path);check();
-  if(!before.isFile()||before.isSymbolicLink()||!integer(before.size,0))refuse("not-regular");total=before.size;if(total>control.maxBytes)refuse("byte-capacity");if(Math.ceil(total/control.chunkBytes)+5>control.maxWork)refuse("work-capacity");progress("admit");
+  admit();const before=await filesystem(()=>lstat(path));check();
+  if(!before.isFile()||before.isSymbolicLink()||!integer(before.size,0))refuse("not-regular");total=before.size;if(total>maxBytes)refuse("byte-capacity");if(Math.ceil(total/chunkBytes)+5>maxWork)refuse("work-capacity");progress("admit");
   const same=(stat:typeof before)=>stat.isFile()&&!stat.isSymbolicLink()&&stat.dev===before.dev&&stat.ino===before.ino&&stat.size===before.size&&stat.mtimeMs===before.mtimeMs&&stat.ctimeMs===before.ctimeMs;
-  admit();file=await open(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0));check();admit();const opened=await file.stat();check();if(!same(opened))refuse("changed");progress("opened");
-  const hash=createHash("sha256");chunk=Buffer.alloc(Math.min(control.chunkBytes,Math.max(1,total)));if(retain)retained=new Uint8Array(total);
-  while(length<total){admit();const read=await file.read(chunk,0,Math.min(chunk.length,total-length),length);check();if(read.bytesRead===0)refuse("changed");const bytes=chunk.subarray(0,read.bytesRead);retained?.set(bytes,length);length+=read.bytesRead;hash.update(bytes);progress("read");}
-  admit();const after=await file.stat();check();admit();const linked=await lstat(path);check();if(length!==total||!same(after)||!same(linked))refuse("changed");const claim=Object.freeze({path,sha256:hash.digest("hex"),byteLength:length});await file.close();file=undefined;progress("complete");const bytes=retained??null;retained=undefined;return{claim,bytes};
- }catch(error){if(error instanceof FileObservationErrorV1)throw error;throw new FileObservationErrorV1("io",path);}
- finally{chunk?.fill(0);retained?.fill(0);if(file)try{await file.close();}catch{throw new FileObservationErrorV1("io",path);}}
+  admit();const claim=await withArtifactDescriptorV1(async()=>{const file=await filesystem(()=>open(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0)));return{file,close:()=>filesystem(()=>file.close())};},async({file})=>{
+   check();admit();const opened=await filesystem(()=>file.stat());check();if(!same(opened))refuse("changed");progress("opened");
+   const hash=createHash("sha256"),buffer=chunk=Buffer.alloc(Math.min(chunkBytes,Math.max(1,total)));if(retain)retained=new Uint8Array(total);
+   while(length<total){admit();const read=await filesystem(()=>file.read(buffer,0,Math.min(buffer.length,total-length),length));check();if(read.bytesRead===0)refuse("changed");const bytes=buffer.subarray(0,read.bytesRead);retained?.set(bytes,length);length+=read.bytesRead;hash.update(bytes);progress("read");}
+   admit();const after=await filesystem(()=>file.stat());check();admit();const linked=await filesystem(()=>lstat(path));check();if(length!==total||!same(after)||!same(linked))refuse("changed");return Object.freeze({path,sha256:hash.digest("hex"),byteLength:length});
+  });
+  progress("complete");const bytes=retained??null;retained=undefined;return{claim,bytes};
+ }finally{chunk?.fill(0);retained?.fill(0);}
 }
 
 /** 🔍️ Hashes bounded asynchronous chunks while joining descriptor and path identity before and after reading.

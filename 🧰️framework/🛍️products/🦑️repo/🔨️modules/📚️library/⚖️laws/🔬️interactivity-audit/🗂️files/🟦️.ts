@@ -1,4 +1,4 @@
-/** 🧭️ Interactivity audit: audited file constants, severity, patterns and the allowlist.
+/** 🗂️ Interactivity audit: audited file constants, severity, patterns and the allowlist.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🏁️run/🟦️.ts
  */
 

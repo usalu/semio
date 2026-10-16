@@ -19,13 +19,14 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
-original-actor-context-testing = []
+original-actor-context-testing = ["semio-framework-plugin-guest-contract/original-actor-context-testing"]
 
 [dependencies]
 semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-plugin-guest-contract = { path = "../../../../🧬️guest-contract/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-app = { path = "../../../🔌️app/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-lifecycle = { path = "../../../📨️pending/📦️packages/🦀️rust" }
 semio-framework-plugin-runtime-ops = { path = "../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust" }
@@ -35,6 +36,8 @@ semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/
 semio-framework-plugin-extension = { path = "../../../../🧩️extension/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-plugin-reactor-wit-bridge = { path = "../../../🧬️wit-bridge/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }

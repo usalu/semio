@@ -61,7 +61,7 @@ pub struct ArtifactStoreOperationRowsRetirement<Mu> {
 }
 
 impl<Mu> ArtifactStoreOperationRowsRetirement<Mu> {
-    pub(crate) fn new(rows: impl Into<ArtifactStoreOperationRowOwners<Mu>>, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>) -> Self { Self { rows: std::mem::ManuallyDrop::new(rows.into()), identity: std::mem::ManuallyDrop::new(None), active: std::mem::ManuallyDrop::new(None), pending: std::mem::ManuallyDrop::new(None), factory: std::mem::ManuallyDrop::new(Some(factory)), closing_factory: std::mem::ManuallyDrop::new(None), strings: std::mem::ManuallyDrop::new(None) } }
+    pub fn new(rows: impl Into<ArtifactStoreOperationRowOwners<Mu>>, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>) -> Self { Self { rows: std::mem::ManuallyDrop::new(rows.into()), identity: std::mem::ManuallyDrop::new(None), active: std::mem::ManuallyDrop::new(None), pending: std::mem::ManuallyDrop::new(None), factory: std::mem::ManuallyDrop::new(Some(factory)), closing_factory: std::mem::ManuallyDrop::new(None), strings: std::mem::ManuallyDrop::new(None) } }
     pub fn with_identity(mut self, identity: String) -> Self { *self.identity = Some(identity); self }
     pub fn with_strings(mut self, strings: Vec<String>) -> Self { *self.strings = Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(strings).unwrap_or_else(|_| unreachable!("String Vec declares controlled retirement"))); self }
     pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -138,7 +138,7 @@ pub struct ArtifactStoreDecodedEditRetirement<Mutation> {
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct ArtifactStoreDecodedEditRetirementFactory<Mutation> {
     #[factory_child]
-    pub(crate) mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+    pub mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
 }
 
 impl<Mutation: Send + 'static> ArtifactOwnedValueRetirementFactory<Edit<Mutation>> for ArtifactStoreDecodedEditRetirementFactory<Mutation> {
@@ -159,7 +159,7 @@ impl ArtifactOwnedValueRetirementFactory<Change> for ArtifactStoreChangeRetireme
 }
 
 impl<Mutation> ArtifactStoreDecodedEditRetirement<Mutation> {
-    pub(crate) fn new(edit: Edit<Mutation>, mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self {
+    pub fn new(edit: Edit<Mutation>, mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self {
         Self { edit: std::mem::ManuallyDrop::new(Some(edit)), active: std::mem::ManuallyDrop::new(None), pending_mutation: std::mem::ManuallyDrop::new(None), mutation_factory: std::mem::ManuallyDrop::new(Some(mutation_factory)), closing_factory: std::mem::ManuallyDrop::new(None) }
     }
     pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {

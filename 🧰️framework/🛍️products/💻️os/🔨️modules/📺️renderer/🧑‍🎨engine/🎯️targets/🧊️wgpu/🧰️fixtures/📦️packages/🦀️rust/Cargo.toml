@@ -1,0 +1,72 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-os-renderer-wgpu-fixtures"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Shared test fixtures of the wgpu renderer test bins"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "os-renderer-wgpu-fixtures"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-frame-actions = { path = "../../../🛎️frame-actions/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-scene-canvas2d = { path = "../../../🎨️scene-canvas2d/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-scene-state = { path = "../../../🎭️scene-state/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-shell-dock = { path = "../../../⚓️shell-dock/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-shell-docs = { path = "../../../📄️shell-docs/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-shell-input = { path = "../../../🕹️shell-input/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-shell-prefs = { path = "../../../🎛️shell-prefs/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-shell-session = { path = "../../../🚶️shell-session/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-shell-view-paint = { path = "../../../🖍️shell-view-paint/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-shell-view-panels = { path = "../../../🪀️shell-view-panels/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-shell-windows = { path = "../../../🔲️shell-windows/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-ui-engine = { path = "../../../🖱️ui-engine/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-ui-engine-dump = { path = "../../../🔎️ui-engine-dump/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-ui-engine-tests = { path = "../../../🧿️ui-engine-tests/📦️packages/🦀️rust" }
+infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-ui-scene-surface = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🌉️surface/📦️packages/🦀️rust" }
+semio-framework-ui-scene-world3d = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🌍️world3d/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
+ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+semio-framework-async = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
+
+[target.'cfg(not(target_os = "wasi"))'.dependencies]
+infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-artifact-reference = { workspace = true }
+serde_json = "1.0.140"
+ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+ui_wgpu  = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }

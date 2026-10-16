@@ -1,4 +1,18 @@
 use super::*;
+use semio_framework_os_renderer_wgpu_app_runtime::{AppFrameAfterChrome, AppFrameBuild, AppFramePresentation, AppMailbox, AppRuntime, FrameBuildCursor, FrameEnginePackets, discard_frame_input_candidate};
+use semio_framework_os_renderer_wgpu_frame_actions::{AppInteractionState, FrameActionOwners};
+use semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction;
+use semio_framework_os_renderer_wgpu_host_plumbing::deadlines;
+use semio_framework_os_renderer_wgpu_runtime_mailbox::{RuntimeMailbox, RuntimePresentationWitness};
+use semio_framework_os_renderer_wgpu_shell_input::{PointerCapture, PresentedInputCandidateWitness};
+use semio_framework_os_renderer_wgpu_shell_state::ShellState;
+use semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx;
+use semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx;
+use semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger;
+use semio_framework_ui_locale::{Locale, Terminology};
+use serde_json::Value;
+use std::sync::atomic::Ordering;
+use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, PointerModifiers, SemioCursor, Theme};
 
 fn fixture_frame_grant() -> RetainedCloneGrant {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪙️authority/🖼️frame/🔣️.json")).expect("independent frame root authority");
@@ -19,22 +33,22 @@ fn partial_control_deadline_publication_cannot_erase_another_owner_when_a_candid
         assert!(runtime.try_lock().unwrap().shell.input.presented_input_candidate_matches(witness));
     }
     let mut scheduler = ui_render::FrameScheduler::new();
-    let key = crate::deadlines::RETAINED_CONTROL_CLOCK;
+    let key = semio_framework_os_renderer_wgpu_host_plumbing::deadlines::RETAINED_CONTROL_CLOCK;
     runtime.publish_shell_clock_deadline(Some(1.4));
     runtime.publish_retained_control_deadline(Some(1.0));
-    scheduler.replace_deadline(key, crate::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(0), 0.0));
+    scheduler.replace_deadline(key, semio_framework_os_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(0), 0.0));
     assert!(scheduler.should_render(1.0).is_some());
     runtime.publish_retained_control_deadline(Some(1.6));
     let mut candidate = Some(witness);
-    assert!(crate::discard_frame_input_candidate(&runtime, &mut candidate));
+    assert!(semio_framework_os_renderer_wgpu_app_runtime::discard_frame_input_candidate(&runtime, &mut candidate));
     assert!(candidate.is_none());
     assert_eq!(runtime.control_deadline_us(), Some(1_400_000));
-    scheduler.replace_deadline(key, crate::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(1_000_000), 1.0));
+    scheduler.replace_deadline(key, semio_framework_os_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(1_000_000), 1.0));
     assert!(scheduler.should_render(1.0).is_none());
     assert_eq!(scheduler.next_deadline().map(|value| value.due), Some(1.4));
     assert!(scheduler.should_render(1.4).is_some());
     runtime.publish_shell_clock_deadline(Some(1.8));
-    scheduler.replace_deadline(key, crate::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(1_400_000), 1.4));
+    scheduler.replace_deadline(key, semio_framework_os_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(runtime.control_deadline_us(), Some(1_400_000), 1.4));
     assert!(scheduler.should_render(1.4).is_none());
     assert!((scheduler.next_deadline().unwrap().due - 1.6).abs() < f64::EPSILON * 2.0);
     runtime.publish_shell_clock_deadline(None);
@@ -62,7 +76,7 @@ fn retained_clock_publication_preserves_the_live_frame_and_uses_its_completion_w
     assert_eq!(wakes.load(std::sync::atomic::Ordering::SeqCst), 0, "deadline publication rides the existing frame completion; generic Wake would supersede this build");
     assert!(runtime.retained_control_deadline(0.0).is_none());
     let mut candidate = Some(witness);
-    assert!(crate::discard_frame_input_candidate(&runtime, &mut candidate));
+    assert!(semio_framework_os_renderer_wgpu_app_runtime::discard_frame_input_candidate(&runtime, &mut candidate));
     assert!(candidate.is_none());
 }
 
@@ -157,11 +171,11 @@ fn cancellation_retires_deadline_apply_and_build_phases_to_terminal_empty() {
 
 #[test]
 fn cancellation_retires_empty_preparation_to_terminal_empty() {
-    let build = crate::AppFrameBuild {
+    let build = semio_framework_os_renderer_wgpu_app_runtime::AppFrameBuild {
         retained: fixture_frame_grant(),
-        input: ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 1, ui_wgpu::wgpu::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty fixture preparation admission")),
+        input: semio_framework_ui_prepared::PreparedRenderInput::try_new(1, 1, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty fixture preparation admission")),
         input_candidate: None,
-        engine_packets: crate::FrameEnginePackets::default(),
+        engine_packets: semio_framework_os_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
         generation: Generation(1),
         cursor: ui_wgpu::wgpu::SemioCursor::Default,
         theme_dark: false,
@@ -180,18 +194,18 @@ fn cancellation_retires_empty_preparation_to_terminal_empty() {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn runtime_with_presented_input_candidate() -> (crate::AppMailbox, crate::shell::PresentedInputCandidateWitness) {
-    crate::interpreter::begin_accessibility_visible_documents();
-    let mut interaction = crate::AppInteractionState {
-        shell: crate::shell::ShellState::new(Vec::new(), "frame-candidate-retirement".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
+fn runtime_with_presented_input_candidate() -> (semio_framework_os_renderer_wgpu_app_runtime::AppMailbox, semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness) {
+    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+    let mut interaction = semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
+        shell: semio_framework_os_renderer_wgpu_shell_state::ShellState::new(Vec::new(), "frame-candidate-retirement".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
         input: ui_wgpu::wgpu::InputState::default(),
-        theme: ui_wgpu::wgpu::Theme::default(),
+        theme: semio_framework_ui_theme::Theme::default(),
         theme_dark: false,
         last_pointer_x: 0.0,
         last_pointer_y: 0.0,
         pointer_down: false,
         pointer_button: 0,
-        pointer_capture: crate::shell::PointerCapture::default(),
+        pointer_capture: semio_framework_os_renderer_wgpu_shell_input::PointerCapture::default(),
         modifiers: ui_wgpu::wgpu::PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
@@ -201,20 +215,20 @@ fn runtime_with_presented_input_candidate() -> (crate::AppMailbox, crate::shell:
         text_cancel_pending: false,
         last_sync_pump_ms: 0.0,
     };
-    let accepted = crate::shell::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("accepted A presented input candidate");
-    assert!(crate::shell::PanelsViewCtx::of(&mut interaction.shell).acknowledge_presented_input(&mut interaction.input, accepted), "baseline A is accepted before B is staged");
-    let witness = crate::shell::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("stale B presented input candidate");
-    let runtime = crate::RuntimeMailbox::new(crate::AppRuntime {
-        atlas: ui_wgpu::wgpu::FontAtlas::builtin(),
-        icons: ui_wgpu::wgpu::IconAtlas::default(),
+    let accepted = semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&semio_framework_ui_theme::Theme::default()).expect("accepted A presented input candidate");
+    assert!(semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut interaction.shell).acknowledge_presented_input(&mut interaction.input, accepted), "baseline A is accepted before B is staged");
+    let witness = semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&semio_framework_ui_theme::Theme::default()).expect("stale B presented input candidate");
+    let runtime = semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimeMailbox::new(semio_framework_os_renderer_wgpu_app_runtime::AppRuntime {
+        atlas: semio_framework_ui_text::FontAtlas::builtin(),
+        icons: semio_framework_ui_draw_contract::IconAtlas::default(),
         icon_rebuild: None,
         icon_raster_scale: 1.0,
         interaction: Some(interaction),
         checkout: Default::default(),
-        draw: ui_wgpu::wgpu::DrawList::default(),
-        overlay: ui_wgpu::wgpu::DrawList::default(),
+        draw: semio_framework_ui_draw_contract::DrawList::default(),
+        overlay: semio_framework_ui_draw_contract::DrawList::default(),
         pending_frame_deferred: None,
-        frame_actions: crate::FrameActionOwners::default(),
+        frame_actions: semio_framework_os_renderer_wgpu_frame_actions::FrameActionOwners::default(),
         pending_frame_maintenance_refusal: None,
         plugin_modules_root: Default::default(),
         native_plugin_mtimes: Default::default(),
@@ -227,7 +241,7 @@ fn runtime_with_presented_input_candidate() -> (crate::AppMailbox, crate::shell:
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn close_active_frame(mut active: ActiveFrameBuild) -> crate::AppMailbox {
+fn close_active_frame(mut active: ActiveFrameBuild) -> semio_framework_os_renderer_wgpu_app_runtime::AppMailbox {
     let runtime = active.runtime.clone();
     active.begin_close();
     for _ in 0..262_144 {
@@ -240,14 +254,14 @@ fn close_active_frame(mut active: ActiveFrameBuild) -> crate::AppMailbox {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn assert_candidate_returned(runtime: &crate::AppMailbox, witness: crate::shell::PresentedInputCandidateWitness) {
+fn assert_candidate_returned(runtime: &semio_framework_os_renderer_wgpu_app_runtime::AppMailbox, witness: semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness) {
     let mut runtime = runtime.try_lock().expect("test runtime lock");
     let interaction = runtime.interaction.as_mut().expect("test interaction owner");
     assert!(!interaction.shell.input.presented_input_candidate_matches(witness), "the abandoned frame returns its exact sealed input candidate");
-    let successor = crate::shell::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("successor presented input candidate");
+    let successor = semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&semio_framework_ui_theme::Theme::default()).expect("successor presented input candidate");
     assert_ne!(successor, witness, "the successor receives a fresh presentation witness");
     assert!(interaction.shell.input.presented_input_candidate_matches(successor), "the successor owns the one retained candidate slot");
-    assert!(crate::shell::PanelsViewCtx::of(&mut interaction.shell).acknowledge_presented_input(&mut interaction.input, successor), "the successor candidate remains publishable after abandonment");
+    assert!(semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut interaction.shell).acknowledge_presented_input(&mut interaction.input, successor), "the successor candidate remains publishable after abandonment");
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -256,9 +270,9 @@ fn superseded_frame_build_returns_its_exact_presented_input_candidate() {
     let (runtime, witness) = runtime_with_presented_input_candidate();
     let operation = OperationId(91);
     let generation = Generation(91);
-    let presentation = crate::RuntimePresentationWitness { scene_revision: 1, input_generation: generation.0 };
-    let mut transaction = crate::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
-    let mut cursor = crate::FrameBuildCursor::new(presentation, fixture_frame_grant());
+    let presentation = semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimePresentationWitness { scene_revision: 1, input_generation: generation.0 };
+    let mut transaction = semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
+    let mut cursor = semio_framework_os_renderer_wgpu_app_runtime::FrameBuildCursor::new(presentation, fixture_frame_grant());
     cursor.input_candidate = Some(witness);
     transaction.build_cursor = Some(cursor);
     let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, root_cancel_token(), fixture_frame_grant());
@@ -273,11 +287,11 @@ fn cancelled_frame_preparation_returns_its_exact_presented_input_candidate() {
     let (runtime, witness) = runtime_with_presented_input_candidate();
     let operation = OperationId(92);
     let generation = Generation(92);
-    let build = crate::AppFrameBuild {
+    let build = semio_framework_os_renderer_wgpu_app_runtime::AppFrameBuild {
         retained: fixture_frame_grant(),
-        input: ui_wgpu::wgpu::PreparedRenderInput::try_new(1, generation.0, ui_wgpu::wgpu::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty prepared input")),
+        input: semio_framework_ui_prepared::PreparedRenderInput::try_new(1, generation.0, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty prepared input")),
         input_candidate: Some(witness),
-        engine_packets: crate::FrameEnginePackets::default(),
+        engine_packets: semio_framework_os_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
         generation,
         cursor: ui_wgpu::wgpu::SemioCursor::Default,
         theme_dark: false,
@@ -297,11 +311,11 @@ fn stale_completed_frame_returns_its_exact_presented_input_candidate() {
     let (runtime, witness) = runtime_with_presented_input_candidate();
     let operation = OperationId(93);
     let generation = Generation(93);
-    let frame = crate::AppFramePresentation {
+    let frame = semio_framework_os_renderer_wgpu_app_runtime::AppFramePresentation {
         retained: fixture_frame_grant(),
         packet: None,
         input_candidate: Some(witness),
-        engine_packets: crate::FrameEnginePackets::default(),
+        engine_packets: semio_framework_os_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
         generation,
         cursor: ui_wgpu::wgpu::SemioCursor::Default,
         theme_dark: false,
@@ -322,9 +336,9 @@ fn cancelled_after_chrome_frame_returns_its_exact_presented_input_candidate() {
     let (runtime, witness) = runtime_with_presented_input_candidate();
     let operation = OperationId(94);
     let generation = Generation(94);
-    let mut transaction = crate::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
+    let mut transaction = semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
     transaction.after_chrome =
-        Some(crate::AppFrameAfterChrome { retained: fixture_frame_grant(), resource_input: None, input_candidate: Some(witness), upload_rejected: None, draw_rejected: None, engine_packets: None, fullscreen: None, cursor_wake: None, job_progress: None, retirement: None });
+        Some(semio_framework_os_renderer_wgpu_app_runtime::AppFrameAfterChrome { retained: fixture_frame_grant(), resource_input: None, input_candidate: Some(witness), upload_rejected: None, draw_rejected: None, engine_packets: None, fullscreen: None, cursor_wake: None, job_progress: None, retirement: None });
     let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, root_cancel_token(), fixture_frame_grant());
     active.phase = ActiveFramePhase::Build(transaction);
     let runtime = close_active_frame(active);
@@ -337,9 +351,9 @@ fn component_close_transiently_retires_the_creating_frame_and_readmits_the_same_
     let (runtime, witness) = runtime_with_presented_input_candidate();
     let operation = OperationId(95);
     let generation = Generation(95);
-    let presentation = crate::RuntimePresentationWitness { scene_revision: 1, input_generation: generation.0 };
-    let mut transaction = crate::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
-    let mut cursor = crate::FrameBuildCursor::new(presentation, fixture_frame_grant());
+    let presentation = semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimePresentationWitness { scene_revision: 1, input_generation: generation.0 };
+    let mut transaction = semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction::new(FrameDirectives::default(), operation, generation, fixture_frame_grant());
+    let mut cursor = semio_framework_os_renderer_wgpu_app_runtime::FrameBuildCursor::new(presentation, fixture_frame_grant());
     cursor.input_candidate = Some(witness);
     transaction.build_cursor = Some(cursor);
     let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, root_cancel_token(), fixture_frame_grant());

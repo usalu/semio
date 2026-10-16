@@ -13,7 +13,8 @@ import {
   resolveLayoutForMode,
   type WindowLayout
 } from "@semio-tech/framework";
-import { type BackboneWorkerRequest, encodeBackboneWorkerRequest, type DirectoryEvent } from "@semio-tech/framework-os";
+import { type BackboneWorkerRequest, encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
+import { type DirectoryEvent } from "@semio-tech/framework/directory/schema";
 import {
   collectLocalPresenceWindowViewsV1,
   collectLocalActiveToolV1,
@@ -21,7 +22,7 @@ import {
   subscribeLocalPresenceWindowViewsV1
 } from "../../👕️canvas-presence/🟦️.ts";
 import { SURFACE_ROLE_CONTROL_IDS, roleSwitchTargetV1, stepModeIdV1 } from "../🔀️surface-switch/🟦️.ts";
-import { setNamedLayout } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { setNamedLayout } from "@semio-tech/framework/config/mutations";
 import { decodeWorldProjectionTemplateId, worldProjectionSpecIconId, worldProjectionSpecLabel } from "@semio-tech/infinite-world-r3f";
 import {
   applyUiThemeToRoot,

@@ -15,18 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[test]]
-name = "cad_panels_inspection"
-path = "../../🔍️inspection/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "cad_panels_artifact"
-path = "../../🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "cad_panels_catalogue"
-path = "../../🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs"
-
 [dependencies]
 semio-framework-plugin = { workspace = true }
 semio-framework-ui-contract = { workspace = true }

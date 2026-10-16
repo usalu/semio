@@ -49,7 +49,7 @@ import { Icon, presenceColor, presencePaint } from "@semio-tech/ui-react/chrome"
 import { localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
 import { learnerName } from "../🪪️identity/🟦️.tsx";
 import { RETRY_TIMING, type RetryTiming } from "../🛂️proctor/🟦️.ts";
-import { HOME_PAGES, type QuizState, type QuizStep } from "../🧭️session/🟦️.ts";
+import { HOME_PAGES, type QuizState, type QuizStep } from "../🧭️session/🧮️state/🟦️.ts";
 import { cn } from "../🪟️chrome/🟦️.tsx";
 
 //#region 🔌️Socket

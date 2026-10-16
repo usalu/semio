@@ -6,7 +6,7 @@ import { composeSpecificOsCatalogV1 } from "../../🟦️.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🤖️generated/🎮️playgrounds/🟦️.ts";
 import { auditPluginCatalogSources, auditNavbarExamplePickerCoverage, auditNavbarExampleArtifactPayload } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { examplesForApp, normalizeManifestExamples, type PluginManifest } from "../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts";
+import { examplesForApp, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework/manifest";
 import { installedScope, sourceDeploymentOwnersV1 } from "../🧩️scope/🟦️.ts";
 import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";

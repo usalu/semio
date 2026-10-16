@@ -32,4 +32,5 @@ semio-framework-3d = { workspace = true }
 semio-s-artifact-procedural-3d-brep-feature = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
 semio-s-artifact-procedural-3d-io-text = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-phased-job-support = { workspace = true }
 

@@ -1,4 +1,13 @@
 use super::*;
+use semio_framework_os_renderer_wgpu_frame_actions::dispatch_normalized_event;
+use semio_framework_os_renderer_wgpu_host_base::{apply_boot_descriptor, boot_descriptor, set_host_platform, set_host_platform_kind, set_host_platform_uses_meta};
+use semio_framework_os_renderer_wgpu_shell_docs::key_event_matches_chord;
+use semio_framework_os_renderer_wgpu_shell_input::PointerCapture;
+use semio_framework_os_renderer_wgpu_shell_state::ShellState;
+use semio_framework_ui_locale::{Locale, Terminology};
+use serde::Deserialize;
+use serde_json::Value;
+use ui_wgpu::wgpu::{InputState, KeyAction, PointerModifiers, Theme};
 
 #[test]
 fn secondary_pointer_button_uses_context_menu_code() {
@@ -76,17 +85,17 @@ struct OsShortcutCollision {
     refuses: String,
 }
 
-fn keyboard_interaction() -> crate::AppInteractionState {
-    crate::AppInteractionState {
-        shell: crate::shell::ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
+fn keyboard_interaction() -> semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
+    semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
+        shell: semio_framework_os_renderer_wgpu_shell_state::ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
         input: ui_wgpu::wgpu::InputState::default(),
-        theme: ui_wgpu::wgpu::Theme::default(),
+        theme: semio_framework_ui_theme::Theme::default(),
         theme_dark: false,
         last_pointer_x: 0.0,
         last_pointer_y: 0.0,
         pointer_down: false,
         pointer_button: 0,
-        pointer_capture: crate::shell::PointerCapture::default(),
+        pointer_capture: semio_framework_os_renderer_wgpu_shell_input::PointerCapture::default(),
         modifiers: ui_wgpu::wgpu::PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
@@ -106,26 +115,26 @@ fn normalized_host_key_routes_the_platform_os_command_to_the_shell() {
     assert_eq!(fixture.retired_chord, "mod+shift+f");
     assert!(fixture.bindings.iter().any(|binding| binding.platform == "macOs" && binding.chord == "control+meta+f"));
 
-    let restore = crate::boot_descriptor();
-    crate::set_host_platform("MacIntel");
+    let restore = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();
+    semio_framework_os_renderer_wgpu_host_base::set_host_platform("MacIntel");
     let action = ui_wgpu::wgpu::KeyAction::Char("f".into());
     let modifiers = ui_wgpu::wgpu::PointerModifiers { ctrl: true, meta: true, shift: false, alt: false };
-    assert!(crate::shell::key_event_matches_chord(&action, &modifiers, &fixture.collision.matches));
-    assert!(!crate::shell::key_event_matches_chord(&action, &modifiers, &fixture.collision.refuses), "control+meta+f must not be reserved by Find's mod+f row");
+    assert!(semio_framework_os_renderer_wgpu_shell_docs::key_event_matches_chord(&action, &modifiers, &fixture.collision.matches));
+    assert!(!semio_framework_os_renderer_wgpu_shell_docs::key_event_matches_chord(&action, &modifiers, &fixture.collision.refuses), "control+meta+f must not be reserved by Find's mod+f row");
     let mut interaction = keyboard_interaction();
     semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, &mut DispatchEvent::KeyDown { key: "f".into(), modifiers: EventModifiers { shift: false, ctrl: true, alt: false, meta: true } }));
     assert!(interaction.shell.chrome.fullscreen_toggle_requested, "the real host ingress reaches apply_os_command");
     assert!(interaction.shell.settle.deferred_actions.is_empty(), "an OS command never enters the guest action lane");
 
-    crate::set_host_platform_uses_meta(cfg!(target_os = "macos"));
-    crate::set_host_platform_kind(if cfg!(target_os = "macos") {
+    semio_framework_os_renderer_wgpu_host_base::set_host_platform_uses_meta(cfg!(target_os = "macos"));
+    semio_framework_os_renderer_wgpu_host_base::set_host_platform_kind(if cfg!(target_os = "macos") {
         semio_framework::manifest::Platform::MacOs
     } else if cfg!(target_os = "windows") {
         semio_framework::manifest::Platform::Windows
     } else {
         semio_framework::manifest::Platform::Linux
     });
-    crate::apply_boot_descriptor(restore).expect("restore boot descriptor");
+    semio_framework_os_renderer_wgpu_host_base::apply_boot_descriptor(restore).expect("restore boot descriptor");
 }
 
 #[test]

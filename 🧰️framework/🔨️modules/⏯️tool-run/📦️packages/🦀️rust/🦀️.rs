@@ -1,11 +1,11 @@
 //! ⏯️ Package glue — wiring only. Domain lives at owner `🦀️.rs`; pure and target-neutral, so the
 //! owner file compiles unmodified on native, `wasm32-unknown-unknown` and `wasm32-wasip2`.
 
-#[cfg(test)]
-extern crate self as semio_framework_tool_run;
-
 #[path = "../../🦀️.rs"]
 mod component;
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub use component::testkit;
 pub use component::progress_clone;
 pub use component::step_ring_insert;
 pub use component::{

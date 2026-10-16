@@ -11,7 +11,7 @@ pub struct ArtifactStoreStringRetirement {
 }
 
 impl ArtifactStoreStringRetirement {
-    pub(crate) fn new(value: String) -> Self {
+    pub fn new(value: String) -> Self {
         Self { owner: semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|_|unreachable!("String declares controlled retirement")) }
     }
 }
@@ -36,7 +36,7 @@ pub type ArtifactStoreEditMetadata = (String, Option<semio_framework_value::Shar
 pub type ArtifactStoreEditRetirementState = semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactStoreEditMetadata>;
 
 impl<Mutation> ArtifactStoreEditRetirement<Mutation> {
-    pub(crate) fn new(edit: Edit<Mutation>) -> Result<Self, Edit<Mutation>> {
+    pub fn new(edit: Edit<Mutation>) -> Result<Self, Edit<Mutation>> {
         if !edit.forwards.is_empty() || !edit.inverse.is_empty() { return Err(edit); }
         let Edit { id, actor, line, forwards, inverse, mutation_meta, verb, sequence_number: _, started_at, finished_at } = edit;
         let state=ArtifactStoreEditRetirementState::new((id,actor,(line,mutation_meta),(verb,started_at,finished_at))).unwrap_or_else(|_|unreachable!("original edit metadata declares controlled retirement"));

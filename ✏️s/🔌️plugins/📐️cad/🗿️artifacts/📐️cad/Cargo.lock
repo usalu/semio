@@ -1007,6 +1007,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-io-sqlite-snapshot-testing-backing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+]
+
+[[package]]
 name = "semio-framework-job"
 version = "0.1.0"
 dependencies = [
@@ -1289,6 +1296,13 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-intrinsic",
  "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-native-build-compiler-resources"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
 ]
 
 [[package]]
@@ -1609,6 +1623,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -1631,13 +1646,10 @@ name = "semio-framework-os-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
- "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-pack-record-token",
  "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
@@ -2353,15 +2365,16 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
+ "semio-framework-pack-schema-index",
  "semio-framework-replication-codec",
  "semio-framework-value",
 ]
 
 [[package]]
-name = "semio-framework-pack-record-token"
+name = "semio-framework-pack-schema-index"
 version = "0.1.0"
 dependencies = [
- "semio-framework-pack",
+ "semio-framework-dsl-record",
  "semio-framework-value",
 ]
 
@@ -2740,6 +2753,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-app-builder",
  "semio-framework-plugin-decl-app",
@@ -4127,6 +4141,23 @@ name = "semio-framework-source-projection"
 version = "0.1.0"
 
 [[package]]
+name = "semio-framework-test-original-snapshot-owners"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-test-typed-input-law"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-trace",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-time-travel"
 version = "0.1.0"
 dependencies = [
@@ -4715,6 +4746,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "syn",
 ]
 
@@ -4870,6 +4902,7 @@ dependencies = [
  "semio-framework-3d-brep-engine",
  "semio-framework-async",
  "semio-framework-async-macros",
+ "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-io-base64",
  "semio-framework-job",
@@ -4878,7 +4911,9 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema-registry",
+ "semio-framework-tool-machine",
  "semio-framework-ui",
+ "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-ui-scene",
  "semio-framework-value",
@@ -4897,7 +4932,9 @@ dependencies = [
  "semio-s-artifact-cad-cad-mut-nodes",
  "semio-s-artifact-cad-cad-mutations",
  "semio-s-artifact-cad-cad-panels",
+ "semio-s-artifact-cad-cad-picking",
  "semio-s-artifact-cad-cad-play",
+ "semio-s-artifact-cad-cad-testing",
  "semio-s-artifact-cad-cad-transform",
  "semio-s-artifact-cad-cad-transient",
  "semio-s-artifact-cad-cad-typology",
@@ -5185,6 +5222,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-io-sqlite-snapshot-testing-backing",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -5192,6 +5230,8 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-schema-registry",
+ "semio-framework-test-original-snapshot-owners",
+ "semio-framework-test-typed-input-law",
  "semio-framework-trace",
  "semio-framework-ui-locale",
  "semio-framework-value",

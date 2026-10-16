@@ -6,6 +6,7 @@ use semio_hub_directory_contract::SessionCapability;
 use semio_framework_hash::Sha256;
 use semio_hub_artifact_authority::ValidatingCanonicalArtifactAuthority;
 use semio_hub_route_testkit::{artifact_document_id_for_test, create_space_for_test, issue_test_session, publish_genesis_checkpoint_for_test, spawn_restartable_server, test_state, upsert_member_for_test};
+use semio_hub_directory::AuthSessionDirectory;
 #[cfg(test)]
 use directory::os_directory::{DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor};
 #[cfg(test)]

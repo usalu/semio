@@ -27,7 +27,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "measurement") {
       if (segments.length !== 1) throw Error("Expected test measurement");
-      const{captureOwnedCommandV1}=await import("../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),{scriptInvocationEnvironment,withRequestedIssuedResourceControlV1}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),phaseControl=createIssuedResourceControlV1(this.invocation,"print:measurement:test",0);
+      const{captureOwnedCommandV1}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts"),{scriptInvocationEnvironment,withRequestedIssuedResourceControlV1}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),phaseControl=createIssuedResourceControlV1(this.invocation,"print:measurement:test",0);
       await withPrintExecutionV1({workspace:this.repoRoot,invocation:this.invocation,phaseControl,kind:"probe"},execution=>withPrintScratchV1(execution,"test/measurement",scratch=>withRequestedIssuedResourceControlV1(scratch.control,30000,async control=>{const output=await captureOwnedCommandV1(process.execPath,["test","../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🧪️tests/📏️ownership/🟦️.ts"],this.root,{control,env:scriptInvocationEnvironment(this.invocation,scratch.environment)});process.stdout.write(output);})));
 
       return;

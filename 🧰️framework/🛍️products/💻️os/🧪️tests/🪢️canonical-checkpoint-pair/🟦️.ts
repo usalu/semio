@@ -6,12 +6,12 @@ import { describe, expect, it } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import {
   admitCanonicalCheckpointPairForRebootstrapV1,
   admitCanonicalCheckpointPairV1,
-  type CanonicalCheckpointPairV1,
-} from "../../🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+  type CanonicalCheckpointPairV1
+} from "@semio-tech/framework/directory/schema";
 
 import { admitCheckpointSelectionV1, CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES, CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES, CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1, CANONICAL_CHECKPOINT_PAIR_RECORD_BYTES, decodeCanonicalCheckpointPairV1 } from "../../🔨️modules/📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts";
 

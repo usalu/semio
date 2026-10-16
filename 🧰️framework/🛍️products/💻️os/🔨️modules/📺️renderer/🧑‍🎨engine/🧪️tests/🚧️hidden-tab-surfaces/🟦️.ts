@@ -6,14 +6,15 @@ import { openSurfaceContextMenu } from "../../🧱️elements/🗣️Interpreter
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { createFlowBrowserRuntime } from "@semio-tech/flow-core/🌐️flow-browser.js";
 import { MockFlowBridge } from "../../../../🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts";
-import flowAbi from "../../../../🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json" with { type: "json" };
+import { flowWasmAbiSchema as flowAbi } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
 import { render, waitFor } from "@semio-tech/ui-react/test";
 import { describe, expect, it, test, vi } from "vitest";
 import { type BuiltNode, type NodeGraphScene, pendingPanelUiNode } from "@semio-tech/framework";
 import { FlowGraphCanvasHost, InterpretedUiNode, builtNodeToSnapshot, resizeCanvasBackingStore, panelTabDefinitionToNode } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
-import sceneMeshKindFixture from "../../../../../../../🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json";
+import { sceneMeshKindsFixture as sceneMeshKindFixture } from "../../../../../../../🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🟦️.ts";
 import { buildContractNode, noopAction } from "../🧰️engine-contract-helpers/🟦️.ts";
+import { surfaceHostRetentionFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 //#region 🥽️SceneMeshKindReferences
 /** 🥽️ The local-space bounding box a resolved kind occupies — the ONE property the fixture pins across
@@ -295,7 +296,7 @@ describe("node-graph surface attachment in a hidden tab", () => {
    * two mounts, two sessions and `flow surface created surface=2`, costing 5.7 s of attach and a
    * graph that stayed blank for 39 s (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
   it("retained surface host — patches the session it already owns across consecutive refreshes, one session and one attach", async () => {
-    const retention = (await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🪪️surface-host-retention.json")).default;
+    const retention = surfaceHostRetentionFixture;
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 966, 836));
     const context = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => recordingCanvasContext([]) as never);
     const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));

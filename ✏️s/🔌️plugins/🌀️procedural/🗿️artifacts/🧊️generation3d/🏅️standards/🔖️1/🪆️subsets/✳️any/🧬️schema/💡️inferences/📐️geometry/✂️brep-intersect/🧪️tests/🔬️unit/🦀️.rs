@@ -1,8 +1,8 @@
 use super::*;
 use std::collections::BTreeMap;
 
-#[path = "../../../⏱️phased-job/🧪️tests/🧰️support/🦀️.rs"]
-mod support;
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_geometry_phased_job_support as support;
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✂️brep-intersect/🔣️.json");
 const FIXTURE_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✂️brep-intersect/🔣️.json");
@@ -14,7 +14,7 @@ fn cube(size: f64) -> Arc<ShapeValue> {
 }
 
 fn run(id: &str, values: Vec<(&str, GeometryValue)>, fuel: usize) -> (usize, WidgetEvaluation) {
-    let kind = support::kind_of(id);
+    let kind = support::kind_of(catalogue(), id);
     let values: BTreeMap<String, GeometryValue> = values.into_iter().map(|(port, value)| (port.to_string(), value)).collect();
     let entry = COMPUTES.iter().find(|entry| entry.id == id).expect("registered");
     support::slices((entry.start)(kind, WidgetInputs::new_cold("w", kind, values)), fuel)
@@ -23,18 +23,18 @@ fn run(id: &str, values: Vec<(&str, GeometryValue)>, fuel: usize) -> (usize, Wid
 #[test]
 fn fixtures_are_refreshed_only_on_request() {
     if support::writing() {
-        support::refresh(FIXTURE_PATH, FIXTURE, COMPUTES);
+        support::refresh(catalogue(), FIXTURE_PATH, FIXTURE, COMPUTES);
     }
 }
 
 #[test]
 fn the_compute_table_and_the_fixture_cover_exactly_the_catalogue_kinds() {
-    support::assert_category("brep.intersect", COMPUTES, FIXTURE);
+    support::assert_category(catalogue(), "brep.intersect", COMPUTES, FIXTURE);
 }
 
 #[test]
 fn every_fixture_case_matches_the_analytic_numbers_the_third_party_reading_and_the_pinned_mesh_at_every_fuel() {
-    assert!(support::run_fixture(FIXTURE, COMPUTES) >= 20);
+    assert!(support::run_fixture(catalogue(), FIXTURE, COMPUTES) >= 20);
 }
 
 #[test]
@@ -57,7 +57,7 @@ fn section_and_split_are_stepped_jobs_that_yield_before_they_finish() {
 
 #[test]
 fn cancelling_a_split_midway_ends_in_the_cancelled_fault() {
-    let kind = support::kind_of("brep.intersect.split");
+    let kind = support::kind_of(catalogue(), "brep.intersect.split");
     let values = BTreeMap::from([("solid".to_string(), GeometryValue::Shape(cube(2.0))), ("plane".to_string(), GeometryValue::Plane(PlaneValue { origin: [1.0, 0.0, 0.0], normal: [1.0, 0.0, 0.0] }))]);
     let entry = COMPUTES.iter().find(|entry| entry.id == kind.id).expect("registered");
     let mut job = (entry.start)(kind, WidgetInputs::new_cold("w", kind, values));

@@ -16,7 +16,9 @@
     "inference-service-receiving-check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/gis-gismap-js:inference-service-receiving-check"
   },
   "devDependencies": {
-    "d3-geo": "3.1.1"
+    "@semio-tech/process": "workspace:*",
+    "d3-geo": "3.1.1",
+    "fast-deep-equal": "^3.1.3"
   },
   "exports": {
     ".": {

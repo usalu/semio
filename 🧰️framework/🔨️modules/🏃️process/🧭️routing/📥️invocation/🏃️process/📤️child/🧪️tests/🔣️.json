@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "baseMilliseconds": 20000,
+  "cases": [
+    {
+      "requestedMilliseconds": 0,
+      "expectedMaximum": 20000
+    },
+    {
+      "requestedMilliseconds": 5000,
+      "expectedMaximum": 5000
+    },
+    {
+      "requestedMilliseconds": 40000,
+      "expectedMaximum": 20000
+    },
+    {
+      "requestedMilliseconds": 2000,
+      "expectedMaximum": 2000
+    }
+  ]
+}

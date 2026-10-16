@@ -49,5 +49,5 @@ export const femFem2dSnapshotTextGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseFem2dSnapshotText(value: unknown, at = "$"): Fem2dSnapshotText {
-  return femFem2dSnapshotTextGuardObject(value, `${at}`);
+  return femFem2dSnapshotTextGuardString(value, `${at}`);
 }

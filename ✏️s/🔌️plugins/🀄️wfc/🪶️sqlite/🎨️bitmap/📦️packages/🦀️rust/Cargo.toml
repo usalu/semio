@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-wfc-sqlite-bitmap"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Explicit indexed bitmap entities of the wfc SQLite snapshots: canonical byte indices or exact literal Unicode scalars, shared by wfc 2d and grid2d"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testing = ["dep:pack", "dep:serde_json"]
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack", optional = true }
+serde_json = { workspace = true, optional = true }
+
+[dev-dependencies]
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

@@ -12,7 +12,7 @@ import { roomScope, type BadgeAward, type CatalogBadgeView, type Slug } from "@s
 import { localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
 import { formatDate } from "../📏️quantity/🟦️.ts";
 import { CardAction, CardIcon, Glyph, PageFrame, QuizCard, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
-import { HOME_PAGES, type QuizState } from "../🧭️session/🟦️.ts";
+import { HOME_PAGES, type QuizState } from "../🧭️session/🧮️state/🟦️.ts";
 import { PRESENCE_ANCHORS, PanePeers } from "../👥️presence/🟦️.tsx";
 
 /** 🎗️ The award of `badge` the learner holds, if any. */

@@ -8,6 +8,7 @@
     "test-exhaustive": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-composition-rs:test --skip-cache -- exhaustive"
   },
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/schema-ts": "workspace:*"
   }
 }

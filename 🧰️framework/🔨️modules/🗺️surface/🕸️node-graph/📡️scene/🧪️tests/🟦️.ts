@@ -4,7 +4,7 @@ import {getNodeValue, parseTree, type ParseError} from "jsonc-parser";
 import contract from "../🧬️schema/🔣️.json";
 import corpus from "./🧫️fixtures/🔣️.json";
 import wire from "./🧫️fixtures/📦️body/🔣️.json";
-import viewport from "../../../../🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json";
+import { uiViewport2dSchema as viewport } from "../../../../🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import {readIntrinsicBody} from "../../../../🎒️pack/🌱️value/🧪️tests/🫳️preflight/🔮️pack/🟦️.ts";
 
 const ajv = new Ajv({strict: true, allErrors: true}).addSchema(viewport).addSchema(contract);

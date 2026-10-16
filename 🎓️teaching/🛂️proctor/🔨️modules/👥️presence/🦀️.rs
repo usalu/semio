@@ -16,7 +16,7 @@
 //! [`SCOPE_UNKNOWN`].
 //!
 //! @see ../../../../🧰️framework/🛍️products/❓️quiz/🔨️modules/👥️presence/🦀️.rs — the rules and scopes
-//! @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🦀️.rs — the presence socket
+//! @see ../../../../🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/🛰️presence-stream/🦀️.rs — the presence socket
 
 use std::collections::{HashMap, HashSet};
 

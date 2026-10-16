@@ -367,7 +367,7 @@ fn flat_run(frame: &mut NativeFrame, output: &mut [u8], grant: RetainedCloneGran
 enum Phase { Inspect, Scalar, Text, ArrayStart, ArrayNext, ArrayChild, ObjectStart, ObjectNext, ObjectKey, ObjectColon, ObjectChild, Complete }
 
 #[derive(Default)]
-struct TextState { chunk: usize, offset: usize, phase: u8, original: u8, escaped: usize }
+struct TextState { chunk: usize, offset: usize, pub phase: u8, original: u8, escaped: usize }
 impl TextState {
     fn step(&mut self, text: ArtifactCanonicalJsonText<'_>) -> Result<Option<u8>, ValueError> {
         match self.phase {
@@ -383,13 +383,13 @@ impl TextState {
 }
 
 struct NativeFrame {
-    owner: RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>,
-    phase: Phase,
+    pub owner: RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>,
+    pub phase: Phase,
     ordinal: usize,
-    length: usize,
+    pub length: usize,
     scalar: ScalarBytes,
     offset: usize,
-    text: TextState,
+    pub text: TextState,
 }
 impl NativeFrame {
     fn new(owner: RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>) -> Self { Self { owner, phase: Phase::Inspect, ordinal: 0, length: 0, scalar: ScalarBytes { bytes: [0; 64], length: 0 }, offset: 0, text: TextState::default() } }
@@ -404,9 +404,9 @@ pub struct ArtifactCanonicalJsonTreeStep { pub ownership: RetainedCloneStep, pub
 
 /// 🧭️ Owns actual immutable-root aliases in a genuinely paged traversal frontier without path rescans.
 pub struct ArtifactCanonicalJsonTreeCursor {
-    frames: PagedList<NativeFrame, {usize::MAX}>,
-    pending: Option<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>,
-    closing: bool,
+    #[doc(hidden)] pub frames: PagedList<NativeFrame, {usize::MAX}>,
+    #[doc(hidden)] pub pending: Option<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>,
+    #[doc(hidden)] pub closing: bool,
 }
 
 impl ArtifactCanonicalJsonTreeCursor {
@@ -547,10 +547,20 @@ impl ArtifactCanonicalJsonTreeCursor {
 }
 impl Drop for ArtifactCanonicalJsonTreeCursor { fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "canonical native traversal requires exact frontier closure"); } }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 #[path="📨️wire/🦀️.rs"]
 mod original_wire;
 pub use original_wire::{ArtifactCanonicalJsonTreeWireCursor,ArtifactCanonicalJsonTreeWireStep};
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    use super::*;
+    pub use super::original_wire::testkit as wire;
+    pub type Phase = super::Phase;
+    pub const FLAT_DEPTH: usize = super::FLAT_DEPTH;
+    pub const FLAT_MINIMUM_BYTES: usize = super::FLAT_MINIMUM_BYTES;
+    pub fn refusal(reason: &'static str) -> ValueError {
+        super::refusal(reason)
+    }
+}

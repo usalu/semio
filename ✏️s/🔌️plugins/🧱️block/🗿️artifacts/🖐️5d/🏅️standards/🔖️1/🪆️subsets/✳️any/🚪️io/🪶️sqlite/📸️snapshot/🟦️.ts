@@ -3,7 +3,7 @@ import type * as m from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {ArtifactSqliteProjection,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import {ValueError,sqliteOperation,sqliteValueByteLength,type SqliteDatabase,type SqliteValue,type SqliteOperation} from "@semio-tech/framework/io/sqlite-snapshot";
 import type {Binary64} from "@semio-tech/framework/value/ieee754";
-import * as p from "../../../../../../../../../🧬️schema/🧱️shared/🪶️sqlite/🟦️.ts";
+import * as p from "../../../../../../../../../🧬️schema/🧱️document-fields/🪶️sqlite/🟦️.ts";
 import {BLOCK5D_SQLITE_SCHEMA as SQL} from "./🗄️schema/🟦️.ts";
 type Cells=readonly SqliteValue[];
 function quaternion(value:unknown):[Binary64,Binary64,Binary64,Binary64]{const words=p.list(value,p.word);if(words.length!==4)return p.invalid("four exact pose words required");return[words[0]!,words[1]!,words[2]!,words[3]!]}

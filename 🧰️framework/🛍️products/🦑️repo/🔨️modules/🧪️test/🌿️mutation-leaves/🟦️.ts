@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type MutationOutcomeClass, MUTATION_OUTCOME_CLASSES } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type MutationOutcomeClass, MUTATION_OUTCOME_CLASSES } from "@semio-tech/framework/test/adapter";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { type BreachRecord } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";

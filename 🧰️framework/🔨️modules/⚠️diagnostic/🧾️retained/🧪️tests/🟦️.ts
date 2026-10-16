@@ -4,7 +4,7 @@ import {Database} from "bun:sqlite";
 import {ValueError} from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import {faultFromValueError,faultValueRefusalKind} from "../🟦️.ts";
 import schema from "../../🧬️schema/🎛️controlled/🔣️.json";
-import valueSchema from "../../../🌱️value/⚠️refusal/🧬️schema/🔣️.json";
+import { refusalSchema as valueSchema } from "@semio-tech/value-ts/refusal/schema";
 import fixture from "../../🧪️tests/🧫️fixtures/🎛️controlled/🔣️.json";
 test("original diagnostic preserves actual failed receipt and strict wire",()=>{
  const row=fixture.cases.find(row=>row.id==="Fault actual failed receipt")!;const receipt={copiedItems:1,copiedBytes:0,retainedCapacityBytes:64,releasedBytes:0};const error=new ValueError("invariantViolated","original reservation failed").withRetainedProgress(receipt);const fault=faultFromValueError(error);expect(fault.retainedProgress).toBe(error.retainedProgress);expect(fault as unknown).toEqual(row.expected);

@@ -49,5 +49,5 @@ export const stdioSvg11BaseInferenceTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseSvgInferenceText(value: unknown, at = "$"): SvgInferenceText {
-  return stdioSvg11BaseInferenceTextGuardObject(value, `${at}`);
+  return stdioSvg11BaseInferenceTextGuardString(value, `${at}`);
 }

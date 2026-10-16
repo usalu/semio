@@ -756,6 +756,13 @@ name = "semio-framework-io-base64"
 version = "0.1.0"
 
 [[package]]
+name = "semio-framework-native-build-compiler-resources"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+]
+
+[[package]]
 name = "semio-framework-pack-error"
 version = "0.1.0"
 dependencies = [
@@ -842,6 +849,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "syn",
 ]
 

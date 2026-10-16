@@ -16,6 +16,7 @@
 //! [`ShellState::pointer_owner_at`] (the layers) and [`PointerCapture`] (the sequence), and the laws
 //! below drive the probe's exact gestures through both.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::{retained_world_sequence_probe, split_pane_shell};
 use super::*;
 
 /// 🧾️ The eight leaking steps, each with the hit its press actually resolved to in run 14 — kind and
@@ -135,7 +136,7 @@ fn the_surface_body_and_the_empty_canvas_are_never_chrome() {
 /// beside the menu, which registers no hit of its own and used to fall straight through to the world.
 #[test]
 fn an_open_overlay_owns_every_pointer_until_it_closes() {
-    let mut shell = super::window_pane_chrome_tests::split_pane_shell();
+    let mut shell = split_pane_shell();
     let theme = Theme::light();
     let mut input = InputState::<ActionDescriptor>::default();
     PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
@@ -168,7 +169,7 @@ fn an_open_overlay_owns_every_pointer_until_it_closes() {
 /// element, so the canvas beneath it receives nothing anywhere inside its box.
 #[test]
 fn an_open_panels_whole_box_owns_the_pointer_over_the_pane_it_floats_on() {
-    let mut shell = super::window_pane_chrome_tests::split_pane_shell();
+    let mut shell = split_pane_shell();
     let theme = Theme::light();
     let mut input = InputState::<ActionDescriptor>::default();
     shell.chrome.screen_w = 1594.0;
@@ -203,7 +204,7 @@ fn an_open_panels_whole_box_owns_the_pointer_over_the_pane_it_floats_on() {
 /// a move the chrome owns hands the surface a LEAVE instead.
 #[test]
 fn the_renderer_ingress_routes_every_pointer_phase_through_the_capture() {
-    super::shell_input_tests::retained_world_sequence_probe("motion-wheel");
+    retained_world_sequence_probe("motion-wheel");
 }
 
 //#endregion 🧊️RendererIngress

@@ -1,0 +1,291 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://process/native-image-publication",
+  "definitions": {
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "initialState",
+        "receiptSha256",
+        "directory",
+        "backing",
+        "root"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-publication"
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "directory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino"
+          ],
+          "properties": {
+            "dev": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            },
+            "ino": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            }
+          }
+        },
+        "backing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "size",
+            "allocatedBytes"
+          ],
+          "properties": {
+            "dev": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            },
+            "ino": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "allocatedBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "root": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino"
+          ],
+          "properties": {
+            "dev": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            },
+            "ino": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            }
+          }
+        },
+        "initialState": {
+          "enum": [
+            "mounted",
+            "inactive"
+          ]
+        }
+      }
+    },
+    "Slot": {
+      "const": {
+        "directory": ".publication",
+        "intent": "intent.json",
+        "candidate": "receipt.json",
+        "maximumFileBytes": 4096
+      }
+    },
+    "Witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "digest",
+        "files",
+        "directories",
+        "links",
+        "bytes",
+        "journalSha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "directories": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "links": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "journalSha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Producer": {
+      "const": {
+        "role": "current-publication",
+        "maximumBodyCommands": 5,
+        "maximumCleanupCommands": 3,
+        "actions": [
+          "information",
+          "detach",
+          "inactive",
+          "attach",
+          "verify"
+        ],
+        "inactiveActions": [
+          "information",
+          "attach",
+          "verify"
+        ]
+      }
+    },
+    "NativeGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumElapsedMilliseconds",
+        "maximumBytes",
+        "maximumLines"
+      ],
+      "properties": {
+        "maximumElapsedMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600000
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "maximumLines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        }
+      }
+    },
+    "Namespace": {
+      "const": {
+        "mode": 448,
+        "fileMode": 384,
+        "maximumEntries": 2
+      }
+    },
+    "MetadataEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "file",
+        "symlink",
+        "sameDevice",
+        "links",
+        "mode",
+        "bytes"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "intent.json",
+            "receipt.json"
+          ]
+        },
+        "file": {
+          "const": true
+        },
+        "symlink": {
+          "const": false
+        },
+        "sameDevice": {
+          "const": true
+        },
+        "links": {
+          "const": "1"
+        },
+        "mode": {
+          "const": 384
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        }
+      }
+    },
+    "StageOrders": {
+      "const": {
+        "mounted": [
+          "accepted",
+          "observed",
+          "witnessed",
+          "detached",
+          "underlying",
+          "staged",
+          "published",
+          "attached",
+          "verified",
+          "settled"
+        ],
+        "inactive": [
+          "accepted",
+          "observed",
+          "underlying",
+          "staged",
+          "published",
+          "attached",
+          "verified",
+          "settled"
+        ]
+      }
+    },
+    "Qualification": {
+      "enum": [
+        "mounted-preserved",
+        "inactive-current"
+      ]
+    }
+  }
+}

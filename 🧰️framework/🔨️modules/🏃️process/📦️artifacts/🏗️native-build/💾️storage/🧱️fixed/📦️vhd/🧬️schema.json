@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:native-fixed-vhd-footer:v1",
+  "definitions": {
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "timestampSeconds",
+        "uuid"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099510579200,
+          "multipleOf": 1048576
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 34603008,
+          "maximum": 1099511627776,
+          "multipleOf": 1048576
+        },
+        "timestampSeconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "uuid": {
+          "type": "string",
+          "pattern": "^(?!0{32}$)[0-9a-f]{32}$"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "unitBytes": 1048576,
+        "sectorBytes": 512,
+        "footerBytes": 512,
+        "cookie": "conectix",
+        "features": 2,
+        "fileVersion": 65536,
+        "creatorApplication": "smio",
+        "creatorVersion": 65536,
+        "creatorHost": "Wi2k",
+        "diskType": 2,
+        "maximumCylinders": 65535,
+        "maximumHeads": 16,
+        "maximumSectorsPerTrack": 255,
+        "savedState": 0,
+        "smallSectorsPerTrack": 17,
+        "mediumSectorsPerTrack": 31,
+        "largeSectorsPerTrack": 63,
+        "cylinderTrackLimit": 1024,
+        "minimumHeads": 4
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases",
+        "stability"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "request",
+              "accepted"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "request": {},
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "stability": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "accessor-refused",
+              "private-schema-snapshot"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

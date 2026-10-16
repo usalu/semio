@@ -1,7 +1,7 @@
 /** 🧺️ `En1993Mutation` wire twin: the mutation aggregate, branch for branch as `./🔣️.json` spells it, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireExternal, type NormWireReader } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireExternal, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 import { parseUpdateThroughThicknessInputs, type UpdateThroughThicknessInputs } from "./↕️update-through-thickness-inputs/🧬️schema/🟦️.ts";
 import { parseUpdateStainlessInputs, type UpdateStainlessInputs } from "./✨️update-stainless-inputs/🧬️schema/🟦️.ts";
 import { type InsertBridgeFatigue, parseInsertBridgeFatigue } from "./➕️insert-bridge-fatigue/🧬️schema/🟦️.ts";

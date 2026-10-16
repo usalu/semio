@@ -6,9 +6,9 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020";
-import {validateJsonSchemaSubset} from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import fixture from "./🧫️fixtures/🔣️.json";
-import grantSchema from "../../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";
 import decoder from "./🧫️fixtures/🛬️cursor.json";
 import nativeOwner from "./🧫️fixtures/🦀️owner/🔣️.json";
 

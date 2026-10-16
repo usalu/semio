@@ -5,7 +5,7 @@ import {existsSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import Ajv from "ajv";
 import fixture from "./🧫️fixtures/🔣️.json";
-import grantSchema from "../../../../../🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";
 
 test("original SQLite receiving preserves plain declaration and extent oracles without trial admission",()=>{
  expect(existsSync(resolve(import.meta.dir,"../🧬️schema/🔣️.json"))).toBe(false);

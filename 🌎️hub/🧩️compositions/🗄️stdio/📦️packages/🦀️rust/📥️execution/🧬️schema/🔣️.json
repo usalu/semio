@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumBytes",
+    "maximumLines"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "const": 16777216
+    },
+    "maximumLines": {
+      "const": 65536
+    }
+  }
+}

@@ -6,6 +6,7 @@ export const LOCAL_BOOTSTRAP_DEADLINE_MS = 15_000;
 /** 📡️ Reads one length-prefixed JSON value while bounding retained input and outstanding work. */
 export class LocalFrameReader {
   private retained = Buffer.alloc(0);
+  private terminalFailure:Error|undefined;
   private readonly waiters: Array<{ resolve: (value: Record<string, any>) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }> = [];
 
   constructor(
@@ -24,6 +25,7 @@ export class LocalFrameReader {
   }
 
   read(deadlineMs = LOCAL_BOOTSTRAP_DEADLINE_MS): Promise<Record<string, any>> {
+    if(this.terminalFailure)return Promise.reject(this.terminalFailure);
     if (!Number.isSafeInteger(deadlineMs) || deadlineMs <= 0) return Promise.reject(new Error("local bootstrap frame deadline invalid"));
     if (this.waiters.length >= 8) return Promise.reject(new Error("local bootstrap outstanding read bound exceeded"));
     return new Promise((resolveRead, rejectRead) => {
@@ -59,6 +61,8 @@ export class LocalFrameReader {
   }
 
   private fail(error: Error): void {
+    this.terminalFailure??=error;
+    error=this.terminalFailure;
     for (const waiter of this.waiters.splice(0)) {
       clearTimeout(waiter.timer);
       waiter.reject(error);

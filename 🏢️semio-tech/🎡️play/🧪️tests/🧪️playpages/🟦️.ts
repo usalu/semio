@@ -22,7 +22,7 @@ export async function registerTests1(
   const { assignPlayPages, playPageOrigins, publishPlayPages, PLAY_PAGE_BUDGET_BYTES } = dependencies;
   const { describe, expect, it } = vitest;
   const { shardWorkerUrl } = await import("../../../../🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts");
-  const { publishedPageUrl, relocatePublishedRequestUrl } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts");
+  const { publishedPageUrl, relocatePublishedRequestUrl } = await import("../../../../🧰️framework/🔨️modules/🖼️assets/🌐️published-page/🟦️.ts");
 
   describe("play CDN pages", () => {
     const origins = playPageOrigins("play.semio-tech.com");

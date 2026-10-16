@@ -18,6 +18,7 @@ import { parseComponentPackageId, type CompiledComponentOwnerV1 } from "../../�
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { examplesForApp, normalizeManifestExamples } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import type { PluginManifest } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { identityInstallationSchemaUrl } from "../../../../../../../🔨️modules/🪪️identity/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const fixtureRoot = join(import.meta.dirname, "../🧫️fixtures/🧬️catalog-complete");
 const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
@@ -74,7 +75,7 @@ describe("explicit module deployment directories", () => {
     const catalog = { version: 1, modules: registryModuleDirectories(entries) };
     const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
     const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
-    const registrySchemas = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(JSON.parse(readFileSync(join(import.meta.dirname, "../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"), "utf8"))).addSchema(schema);
+    const registrySchemas = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(JSON.parse(readFileSync(identityInstallationSchemaUrl, "utf8"))).addSchema(schema);
     const validate = registrySchemas.getSchema(`${schema.$id}#/$defs/DeploymentCatalogV1`)!;
     expect(validate(catalog)).toBe(true);
     expect(parseModuleDirectories(catalog)).toEqual(catalog.modules);

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript as GraphPreviewScript, OwnerGraphWireCheckScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 📦️ draw drawing Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
@@ -35,7 +36,7 @@ class InspectorSelectionActionsScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-inspector-selection-actions accepts no arguments");
   if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned generated output");
-  const receipts=await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),cwd:this.repoRoot,env:process.env,groups:[{package:"semio-s-artifact-draw-drawing",target:{kind:"lib"},laws:[
+  const receipts=await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),cwd:this.repoRoot,env:process.env,groups:[{package:"semio-s-artifact-draw-drawing",target:{kind:"lib"},laws:[
     "editor::drawing::panels::properties::tests::inspector_actions_respect_selection_eligibility",
     "editor::drawing::panels::properties::tests::inspector_selection_fixtures",
     "editor::drawing::panels::properties::tests::inspector_stroke_controls_are_localized",

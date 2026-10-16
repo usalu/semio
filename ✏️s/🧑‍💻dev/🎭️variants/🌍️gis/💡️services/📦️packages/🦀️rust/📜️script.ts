@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {join} from "node:path";
 import {repositoryCargoNetworkV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import {verifyCapturedCargoArtifactsV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode, buildModeEnvironment } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
@@ -26,7 +27,7 @@ class SourceScript extends BundleScript { async run():Promise<void> {nativeServi
 class TestScript extends BundleScript {
   async run():Promise<void> {
     nativeServiceCompositionLaws(this.repoRoot);
-    const laws=await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.repoRoot, env:{...process.env,CARGO_BUILD_JOBS:"1",RUST_MIN_STACK:"33554432"}, nativeEnv:{RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-s-dev-gis-services",target:{kind:"lib"},laws:["tests::native_composition_installs_the_real_owner_and_matches_the_portable_oracle","tests::installed_owner_cannot_execute_without_a_verified_document_lease"]}], progress:event=>console.log(`native-service ${event.stage} ${event.package} ${event.law??""}`) });
+    const laws=await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.repoRoot, env:{...process.env,CARGO_BUILD_JOBS:"1",RUST_MIN_STACK:"33554432"}, nativeEnv:{RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-s-dev-gis-services",target:{kind:"lib"},laws:["tests::native_composition_installs_the_real_owner_and_matches_the_portable_oracle","tests::installed_owner_cannot_execute_without_a_verified_document_lease"]}], progress:event=>console.log(`native-service ${event.stage} ${event.package} ${event.law??""}`) });
     console.log(`native-service-runtime: exact=${laws.length} passed`);
   }
 }

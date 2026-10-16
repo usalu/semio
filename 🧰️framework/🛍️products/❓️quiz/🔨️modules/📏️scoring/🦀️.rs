@@ -211,6 +211,3 @@ fn distance(left: &[f64], right: &[f64]) -> f64 {
     left.iter().zip(right).map(|(a, b)| (a - b) * (a - b)).fold(0.0, |sum, square| sum + square).sqrt()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

@@ -13,7 +13,7 @@
 import { useEffect, useState, type ReactElement } from "react";
 import { Button, useLabel } from "@semio-tech/ui-react";
 import { agentUiLabel, type PendingAgentApproval } from "../🔗️AgentBridge/🟦️.tsx";
-import { type ApprovalDecision, type ApprovalWithdrawal } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
+import { type ApprovalDecision, type ApprovalWithdrawal } from "@semio-tech/framework/mcp/bridge";
 // #endregion 🔌️Adapters
 
 //#region 🔖️ParseSummary

@@ -32,6 +32,7 @@ import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️
 import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-cancellation/🟦️.ts";
 import { browserAssetFailureDisposition } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-failure/🟦️.ts";
 import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { uiRenderDeadlineFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
@@ -124,7 +125,7 @@ describe("retained browser clock deadlines", () => {
     return { worker, subject, raf, flushRaf, reply, setTimer, clearTimer };
   }
 
-  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/⏱️deadline/🔣️.json"), "utf8")) as { cases: { id: string; steps: ({ key: number; dueMs: number | null } | { nowMs: number; fired: boolean; nextMs: number | null })[] }[] };
+  const fixture = JSON.parse(readFileSync(uiRenderDeadlineFixtureUrl, "utf8")) as { cases: { id: string; steps: ({ key: number; dueMs: number | null } | { nowMs: number; fired: boolean; nextMs: number | null })[] }[] };
   for (const row of fixture.cases.filter(row => row.steps.every(step => !("key" in step) || step.key === 1))) it(`waits without rAF and replays ${row.id}`, () => {
     vi.useFakeTimers();
     vi.setSystemTime(0);

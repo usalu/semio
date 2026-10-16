@@ -1,5 +1,5 @@
 /** 🚪️ Canonical Directory JSON admission and physical receipt projection. */
-import { documentCheckInStatusFromValueV1, type DocumentCheckInStatusV1, type DocumentCheckInV1, DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1, PHASES, REFUSALS, canonicalFrontier, encoder, exactKeys, isEditedArtifactFrontierV1, natural, ready, record, requestId } from "../../../🧬️schema/📌️document-check-in-v1/🟦️.ts";
+import { documentCheckInStatusFromValueV1, type DocumentCheckInStatusV1, type DocumentCheckInV1, DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1, PHASES, REFUSALS, canonicalFrontier, encoder, exactKeys, isEditedArtifactFrontierV1, natural, ready, record, requestId } from "@semio-tech/framework/document/check-in";
 
 /** 📤️ The canonical request body; throws for a request the hub would refuse unread. */
 export function documentCheckInCanonicalJson(request: DocumentCheckInV1): string {

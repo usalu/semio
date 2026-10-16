@@ -154,7 +154,7 @@ fn sqlite_snapshot_json_typed_number_meaning_is_owned_by_named_profile_guards(){
 
 #[test]
 fn sqlite_snapshot_json_owned_record_identity_matches_handwritten_definition() {
-    let graph = store::os_pack::PackSchemaGraph::of(&<JsonSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap());
+    let graph = pack::record::PackSchemaGraph::of(&<JsonSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap());
     let bytes = graph.canonical_bytes();
     let independent = blake3::hash(&bytes);
     let factory = crate::native_codecs().pop().unwrap();

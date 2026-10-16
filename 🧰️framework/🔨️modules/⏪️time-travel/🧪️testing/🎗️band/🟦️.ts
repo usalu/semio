@@ -363,7 +363,7 @@ const reactFinalizeDialog = () =>
       };
       const name = (dialog.querySelector('input[id="name"]') ?? dialog.querySelector('input[type="text"]')) as HTMLInputElement | null;
       return {
-        title: (dialog.querySelector("h2") as HTMLElement | null)?.innerText.trim() ?? dialog.innerText.split("\n")[0],
+        title: (dialog.querySelector("h2") as HTMLElement | null)?.innerText.trim() ?? dialog.innerText.split("\n",1).join(""),
         text: dialog.innerText.replace(/\s+/g, " ").slice(0, 500),
         overwrite: button("ui.dialog.choice.overwrite"),
         submit: button("ui.dialog.submit"),

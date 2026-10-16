@@ -7,8 +7,9 @@ import { shellDialogOriginIsCurrentV1 } from "../🗨️dialog-origin/🟦️.ts
 import { OwnedTutorialRunV1, runPausedTutorialSeekV1 } from "../🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { TUTORIAL_CONVERGE_MS, type TutorialCameraState, type TutorialDocumentEventKind } from "@semio-tech/framework";
-import { encodeMutationEnvelopesPack, type DocumentArchivePack } from "@semio-tech/framework-os";
-import { type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
+import { encodeMutationEnvelopesPack } from "@semio-tech/framework/packs";
+import { type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
+import { type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework/replication";
 // #region 🔌️Adapters
 import {
   CELEBRATE_STAMP_DURATION_MS,

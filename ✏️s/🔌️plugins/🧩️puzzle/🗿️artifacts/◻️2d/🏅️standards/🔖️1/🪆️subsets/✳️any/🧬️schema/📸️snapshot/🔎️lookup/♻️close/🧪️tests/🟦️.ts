@@ -40,7 +40,7 @@ test("Puzzle2d literal and optional text producers expose the exact active nativ
  }finally{db.close()}
  console.log("[DEBUG] SQLite literal inverse and connection edge close original field, displaced output, then immutable mutation custody in exact native frontier order");
  const mutations=resolve(import.meta.dir,"../../../../🧬️mutations");
- for(const path of["🏷️literal-id-inverse/🦀️.rs","🪢️connect-handles/🎮️prepare/🪢️edge/🦀️.rs","🔤️text/↩️inverse/🦀️.rs","🔤️text/🎮️prepare/📸️candidate/🦀️.rs","📍move-node/🎮️prepare/↩️inverse/🦀️.rs","📍move-node/🎮️prepare/📸️candidate/🦀️.rs","⚑️flag/🎮️prepare/↩️inverse/🦀️.rs","⚑️flag/🎮️prepare/📸️candidate/🦀️.rs","🌱create-node/🎮️prepare/📸️candidate/🦀️.rs","🗑️delete-node/🎮️prepare/↩️inverse/🦀️.rs","🗑️delete-node/🎮️prepare/📸️candidate/🦀️.rs","🪢️connect-handles/🎮️prepare/📸️candidate/🦀️.rs","🎮️prepare/🧰️child/🦀️.rs"]){
+ for(const path of["🏷️literal-id-inverse/🦀️.rs","🪢️connect-handles/🎮️prepare/🪢️edge/🦀️.rs","🔤️text/↩️inverse/🦀️.rs","🔤️text/🎮️prepare/📸️candidate/🦀️.rs","📍move-node/🎮️prepare/↩️inverse/🦀️.rs","📍move-node/🎮️prepare/📸️candidate/🦀️.rs","🚩️flag/🎮️prepare/↩️inverse/🦀️.rs","🚩️flag/🎮️prepare/📸️candidate/🦀️.rs","🌱create-node/🎮️prepare/📸️candidate/🦀️.rs","🗑️delete-node/🎮️prepare/↩️inverse/🦀️.rs","🗑️delete-node/🎮️prepare/📸️candidate/🦀️.rs","🪢️connect-handles/🎮️prepare/📸️candidate/🦀️.rs","🎮️prepare/🧰️child/🦀️.rs"]){
   const source=readFileSync(resolve(mutations,path),"utf8");
   for(const marker of["next_close_copy_byte_demand","next_close_capacity_byte_demand","next_close_release_byte_demand","next_close_depth_demand"])expect(source).toContain(marker);
   expect(source).not.toContain("SnapshotRetirementStep");

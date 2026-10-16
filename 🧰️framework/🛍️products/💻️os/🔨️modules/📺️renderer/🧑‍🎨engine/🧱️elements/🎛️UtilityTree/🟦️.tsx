@@ -91,8 +91,8 @@ export function groupUtilityNodesByCategory(nodes: readonly UtilityNode[], categ
   return categories
     .filter((category) => hasInteractiveUtilityNodes(buckets.get(category)))
     .map((category, order) => {
-      const bucket = buckets.get(category)!;
-      if (bucket.length === 1 && bucket[0].kind === "collection") return { ...bucket[0], order };
+      const bucket=buckets.get(category);if(!bucket)throw Error("Actual interactive utility bucket required");const first=bucket[0];
+      if(bucket.length===1&&first?.kind==="collection")return{...first,order};
       return { id: category, kind: "collection" as const, iconId: UTILITY_CATEGORY_ICON_ID[category], text: category, order, category, children: bucket };
     });
 }

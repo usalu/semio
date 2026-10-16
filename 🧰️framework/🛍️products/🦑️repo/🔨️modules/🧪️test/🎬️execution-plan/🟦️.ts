@@ -4,8 +4,8 @@
  */
 
 //#region 🔌️Adapters
-import { parseFeature, type ParsedFeature } from "../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
-import { type TestCasePlan, type ComparisonProfile, type SubjectRawInputs, type Implementation, type TestRole } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { parseFeature, type ParsedFeature } from "@semio-tech/framework/test/gherkin";
+import { type TestCasePlan, type ComparisonProfile, type SubjectRawInputs, type Implementation, type TestRole } from "@semio-tech/framework/test/adapter";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { TEST_LEVELS, type TestLevel } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";

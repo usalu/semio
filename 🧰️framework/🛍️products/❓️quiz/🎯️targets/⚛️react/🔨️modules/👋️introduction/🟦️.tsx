@@ -6,7 +6,7 @@ import { roomScope, type CatalogView } from "@semio-tech/quiz";
 import { localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
 import { CardAction, CardIcon, PageFrame, QuizCard, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { PRESENCE_ANCHORS, PanePeers } from "../👥️presence/🟦️.tsx";
-import { HOME_PAGES } from "../🧭️session/🟦️.ts";
+import { HOME_PAGES } from "../🧭️session/🧮️state/🟦️.ts";
 
 function Paragraphs(props: { readonly catalog: CatalogView; readonly locale: QuizLocale }): ReactElement {
   return (

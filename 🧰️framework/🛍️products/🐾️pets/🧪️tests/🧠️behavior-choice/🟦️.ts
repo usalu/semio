@@ -4,7 +4,7 @@
  * @see ../../🔨️modules/🧠️behavior/🟦️.ts
  * @see ../../🔨️modules/🎲️randomness/🟦️.ts — `randomPick`, `weightedIndex`
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { ACTIVITIES, type Activity, type Actor, type Cast, type Needs, type PetMode, type Species } from "../../🧬️schema/🟦️.ts";
 import { randomPick, weightedIndex } from "../../🔨️modules/🎲️randomness/🟦️.ts";
 import { MODE_LIMITS, activityWeights, castOf, dwellOf, encounterOf, encounterShares, followersOf } from "../../🔨️modules/🧠️behavior/🟦️.ts";

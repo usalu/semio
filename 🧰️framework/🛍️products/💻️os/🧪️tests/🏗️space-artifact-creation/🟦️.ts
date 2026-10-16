@@ -4,7 +4,7 @@ import { workerLawFakesV1 } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
-type FetchTimeoutResponse = import("../../../../🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts").FetchTimeoutResponse;
+type FetchTimeoutResponse = import("@semio-tech/framework/io/fetch-timeout").FetchTimeoutResponse;
 type HubSpaceArtifactCreationStatusV1 = import("../../🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts").SpaceArtifactCreationStatusV1;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 

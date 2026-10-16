@@ -7,7 +7,7 @@ import{mkdtemp,mkdir,rm}from"node:fs/promises";
 import{join,isAbsolute}from"node:path";
 import Ajv from"ajv";
 import schema from"../../🧬️schema/🎟️writer.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import fixture from"./🔣️.json"with{type:"json"};
 import{acquireResourceLease,requireResourceLeaseCustodyV1,resourceLeasePathV1}from"../../🟦️.ts";
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

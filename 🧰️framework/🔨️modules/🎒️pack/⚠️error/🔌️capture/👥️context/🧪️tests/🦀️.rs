@@ -1,6 +1,6 @@
 //! 👥️ Unmounted native context allocation, concurrency and final-policy ownership laws.
 use super::*;
-use crate::test_allocation::observe;
+use semio_framework_trace_memory_testing::observe;
 use std::sync::{Arc,Barrier};
 use std::sync::atomic::{AtomicUsize,Ordering};
 

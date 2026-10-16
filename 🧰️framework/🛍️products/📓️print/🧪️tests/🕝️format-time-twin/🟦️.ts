@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { timeFormatLocale, type TimeLocaleDefinition } from "d3-time-format";
-import { defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { formatVizTime } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 // #endregion 🔌️Adapters
 

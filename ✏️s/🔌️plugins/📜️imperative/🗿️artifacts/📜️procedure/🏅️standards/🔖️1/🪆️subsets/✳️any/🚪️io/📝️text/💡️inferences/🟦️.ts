@@ -49,5 +49,5 @@ export const imperativeImperativeInferenceTextGuardConstant = <T extends string 
 //#endregion 🚪️Parsers
 
 export function parseProcedureInferenceText(value: unknown, at = "$"): ProcedureInferenceText {
-  return imperativeImperativeInferenceTextGuardObject(value, `${at}`);
+  return imperativeImperativeInferenceTextGuardString(value, `${at}`);
 }

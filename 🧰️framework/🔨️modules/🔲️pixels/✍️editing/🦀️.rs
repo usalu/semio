@@ -443,8 +443,8 @@ pub fn fill_in_place(image: &mut RasterImage, operation: &PixelOperation, covera
 
 /// 🧵️ An unpublished result whose work is bounded by an explicit pixel grant.
 pub struct PixelEditJob {
-    source: RasterImage,
-    output: RasterImage,
+    #[doc(hidden)] pub source: RasterImage,
+    #[doc(hidden)] pub output: RasterImage,
     operation: PixelOperation,
     selection: Option<Vec<u8>>,
     cursor: usize,
@@ -536,10 +536,10 @@ impl PixelEditJob {
 
 /// 🎯️ Owned scanline selection work with row-granted progress and atomic cancellation.
 pub struct PixelSelectionJob {
-    width:u32,
-    height:u32,
+    #[doc(hidden)] pub width:u32,
+    #[doc(hidden)] pub height:u32,
     shape:SelectionShape,
-    mask:Vec<u8>,
+    #[doc(hidden)] pub mask:Vec<u8>,
     row:u32,
     intersections:Vec<f64>,
     cancelled:bool,
@@ -610,7 +610,7 @@ pub struct SelectionCombineJob<'a> {
     current:Option<&'a [u8]>,
     next:&'a [u8],
     mode:SelectionMerge,
-    output:Vec<u8>,
+    #[doc(hidden)] pub output:Vec<u8>,
     cancelled:bool,
 }
 impl<'a> SelectionCombineJob<'a> {
@@ -636,6 +636,3 @@ impl<'a> SelectionCombineJob<'a> {
     pub fn into_result(self)->Result<Vec<u8>,PixelEditError> {self.result()?;Ok(self.output)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

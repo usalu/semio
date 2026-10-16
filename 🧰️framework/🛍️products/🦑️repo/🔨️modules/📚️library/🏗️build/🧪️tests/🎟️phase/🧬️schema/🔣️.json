@@ -85,6 +85,56 @@
           ]
         }
       }
+    },
+    "DashboardEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "target",
+        "forward"
+      ],
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "forward": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CargoAlias": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "calls",
+        "missing",
+        "canonicalArguments"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "missing": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "canonicalArguments": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
     }
   }
 }

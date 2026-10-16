@@ -1,6 +1,28 @@
 //! 🖼️ The history panel sections: row refusals of the mutation controls, the band, reprojection and editor sections, control rows, the input row builder and the panel limits.
 
-use super::*;
+use semio_framework::{ActionArgControl, ArgPresentation, ArgSchema, FaultFrom, reference_id_text};
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework_value::DslValue;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework::history_edit::{HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ARG_EDIT, HISTORY_EDIT_ARG_GENERATION, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_PATH, HISTORY_EDIT_ARG_STORE, HISTORY_EDIT_ARG_VALUE, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, HISTORY_EDIT_DISCARD_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID, HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_INPUT_INSERT, HISTORY_EDIT_INPUT_REMOVE, HISTORY_EDIT_RERUN_ACTION_ID, HISTORY_EDIT_USE_SELECTION_ACTION_ID, HISTORY_EDIT_WITHDRAW_ACTION_ID};
+use semio_framework_plugin_command::lifted_command::{HistoryPanelText, MutationRowRefusals, TimeTravelEditorPanel, TimeTravelInputRow, TimeTravelListItem, TimeTravelPanel, history_code_text, history_severity_text, history_severity_tone};
+use semio_framework::kernel::{HistoryReprojection, HistoryReprojectionKind, HistoryTimeTravelStage};
+use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use store::{Mutation, MutationDiff};
+use protocol::{OpBinary, OpText};
+use semio_framework_time_travel::{TimeTravelLabel, TimeTravelRefusal, TimeTravelReview, TimeTravelStage};
+#[cfg(test)]
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use crate::panel_pointer::{time_travel_color_rgba, time_travel_json};
+use semio_framework_ui_contract::*;
 
 //#region 🔖️Limits
 /// 🔎️ Document values one reference-name lookup visits at most ([`time_travel_entity_names`]).
@@ -70,7 +92,8 @@ fn time_travel_value_args(generation: u32, path: &str, value: UiValue) -> UiAsse
 }
 
 /// 🧮️ Why a list edit is disabled, localized: "Maximum 8 items" (`maxItems` reached), "Minimum 1 item" (`minItems` left).
-pub(crate) fn time_travel_item_limit_text(limit: u32, max: bool, locale: Locale) -> String {
+#[doc(hidden)]
+pub fn time_travel_item_limit_text(limit: u32, max: bool, locale: Locale) -> String {
     let text = match (max, limit == 1) {
         (true, true) => HistoryPanelText::MaxItem,
         (true, false) => HistoryPanelText::MaxItems,
@@ -263,7 +286,8 @@ pub(crate) fn time_travel_reprojection_section(remote: &HistoryReprojection, con
 /// schema that describes none its reason), then Accept, Discard and Withdraw — and `framework.history.editor.inputs`,
 /// one row per input row of [`time_travel_input_rows`] ([`time_travel_input_row`]). The inputs section is a tree window
 /// over every row, so a payload of any size stays reachable: the host streams the slice it scrolls to.
-pub(crate) fn time_travel_editor_sections(panel: &TimeTravelPanel, editor: &TimeTravelEditorPanel, windows: &TreeWindows<'_>, controller_id: &str, locale: Locale) -> UiAssemblyResult<[BuiltNode; 2]> {
+#[doc(hidden)]
+pub fn time_travel_editor_sections(panel: &TimeTravelPanel, editor: &TimeTravelEditorPanel, windows: &TreeWindows<'_>, controller_id: &str, locale: Locale) -> UiAssemblyResult<[BuiltNode; 2]> {
     let error = ui_assembly_error;
     let scope = "framework.history.editor";
     let generation = panel.status.generation;

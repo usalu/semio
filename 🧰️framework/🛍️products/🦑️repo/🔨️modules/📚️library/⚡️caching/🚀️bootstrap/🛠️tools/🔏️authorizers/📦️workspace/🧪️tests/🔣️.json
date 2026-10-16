@@ -1,0 +1,304 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "root",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./entry.ts",
+            "./sub": "./sub.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": "packages/a/entry.ts"
+    },
+    {
+      "id": "subpath",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./entry.ts",
+            "./sub": "./sub.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned/sub",
+      "expected": "packages/a/sub.ts"
+    },
+    {
+      "id": "missing-export",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./entry.ts",
+            "./sub": "./sub.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned/missing",
+      "expected": null
+    },
+    {
+      "id": "external",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./entry.ts",
+            "./sub": "./sub.ts"
+          }
+        }
+      },
+      "specifier": "external-package",
+      "expected": null
+    },
+    {
+      "id": "nonprivate",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": false,
+          "exports": {
+            ".": "./entry.ts",
+            "./sub": "./sub.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    },
+    {
+      "id": "duplicate-name",
+      "workspaces": [
+        "packages/a",
+        "packages/b"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./entry.ts",
+            "./sub": "./sub.ts"
+          }
+        },
+        "packages/b/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./entry.ts",
+            "./sub": "./sub.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    },
+    {
+      "id": "membership-glob",
+      "workspaces": [
+        "packages/*"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./entry.ts",
+            "./sub": "./sub.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    },
+    {
+      "id": "membership-parent",
+      "workspaces": [
+        "../outside"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./entry.ts",
+            "./sub": "./sub.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    },
+    {
+      "id": "missing-manifest",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {},
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    },
+    {
+      "id": "escape-export",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./../escape.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    },
+    {
+      "id": "node-modules-export",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./node_modules/foo.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    },
+    {
+      "id": "conditional",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": {
+              "types": "./type.d.ts",
+              "import": "./entry.ts"
+            }
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": "packages/a/entry.ts"
+    },
+    {
+      "id": "ambiguous-conditional",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": {
+              "node": "./one.ts",
+              "default": "./two.ts"
+            }
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    },
+    {
+      "id": "declaration-only",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./entry.d.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    },
+    {
+      "id": "unpublished",
+      "workspaces": [],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": "./entry.ts",
+            "./sub": "./sub.ts"
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    },
+    {
+      "id": "blocked",
+      "workspaces": [
+        "packages/a"
+      ],
+      "manifests": {
+        "packages/a/package.json": {
+          "name": "@semio-tech/owned",
+          "private": true,
+          "exports": {
+            ".": null
+          }
+        }
+      },
+      "specifier": "@semio-tech/owned",
+      "expected": null
+    }
+  ],
+  "reads": [
+    "success",
+    "grow",
+    "short",
+    "named-swap",
+    "ancestor-swap",
+    "undefined",
+    "frozen",
+    "close",
+    "undefined-close",
+    "frozen-close",
+    "cancel-on-close"
+  ]
+}

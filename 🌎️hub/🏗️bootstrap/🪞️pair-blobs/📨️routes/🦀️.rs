@@ -14,6 +14,7 @@ use axum::extract::{OriginalUri, Path, State};
 use semio_hub_session_routes::guard::{authorized, authorized_for_blob, authorized_for_canonical_pair};
 use semio_hub_runtime::support::{bearer, db_error_status, directory_error_status, parse_content_hash};
 use semio_hub_runtime::presence::db_artifact_id;
+use semio_hub_directory::DocumentDirectory;
 
 //#region 🔖️Rest
 /// 🧭️ Exact authenticated, path-only public projection of one active canonical checkpoint pair.

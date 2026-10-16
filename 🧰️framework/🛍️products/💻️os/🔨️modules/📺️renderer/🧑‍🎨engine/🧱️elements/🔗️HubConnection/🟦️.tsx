@@ -13,7 +13,7 @@
 // #region 🔌️Adapters
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { registerUiTranslationBundles } from "@semio-tech/ui-react";
-import type { DirectoryCommand, DirectoryCommandReceiptV1, DirectorySpaceKind, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework-os";
+import type { DirectoryCommand, DirectoryCommandReceiptV1, DirectorySpaceKind, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework/directory/schema";
 import {
   hubSessionInitialStateV1,
   localBootstrapHubConnectionV1,
@@ -39,8 +39,8 @@ import {
   type HubSignInClientClassV1,
   type HubSignInCredentialV1,
   type HubSignInErrorCodeV1,
-  type HubSignInTransportV1,
-} from "../../../../📇️directory/🔐️sign-in/🟦️.ts";
+  type HubSignInTransportV1
+} from "@semio-tech/framework/directory/sign-in";
 import {
   archiveSpaceCommandV1,
   createInviteCommandV1,
@@ -55,8 +55,8 @@ import {
   type InviteRedemptionErrorCodeV1,
   type SpaceBrowserPhaseV1,
   type SpaceMemberPresenceV1,
-  type SpaceRowV1,
-} from "../../../../📇️directory/🏘️spaces/🟦️.ts";
+  type SpaceRowV1
+} from "@semio-tech/framework/directory/spaces";
 import {
   agentCredentialCommandV1,
   agentCredentialFileV1,
@@ -79,8 +79,8 @@ import {
   type AgentDelegationPhaseV1,
   type AgentDelegationReceiptV1,
   type AgentDelegationRowV1,
-  type AgentDelegationSummaryV1,
-} from "../../../../📇️directory/🤖️delegations/🟦️.ts";
+  type AgentDelegationSummaryV1
+} from "@semio-tech/framework/directory/delegations";
 // #endregion 🔌️Adapters
 
 //#region 🌐️Labels

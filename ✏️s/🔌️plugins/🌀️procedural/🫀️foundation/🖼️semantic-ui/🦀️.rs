@@ -1,0 +1,284 @@
+//! 🖼️ Shared semantic UI builders for procedural generation surfaces.
+#![allow(clippy::result_large_err)]
+
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_ui_locale::{Locale, Terminology};
+
+fn ui_assembly_error(code: &'static str) -> PluginAssemblyError {
+    PluginAssemblyError::new(code, "fixed UI admission failed")
+}
+
+pub fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
+    UiText::try_from_str(value.as_ref()).ok_or_else(|| ui_assembly_error("ui.text"))
+}
+
+pub fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<Label> {
+    Label::try_from(value.as_ref()).map_err(|_| ui_assembly_error("ui.label"))
+}
+
+fn ui_id<B: HasBase>(builder: B, id: impl AsRef<str>) -> UiAssemblyResult<B> {
+    builder.try_id(id).map_err(|_| ui_assembly_error("ui.node.id"))
+}
+
+fn ui_child<B: HasChildren>(builder: B, child: impl Into<BuiltNode>) -> UiAssemblyResult<B> {
+    builder.try_child(child).map_err(|_| ui_assembly_error("ui.node.child"))
+}
+
+fn ui_build<B: Buildable>(builder: B) -> UiAssemblyResult<BuiltNode> {
+    builder.try_build().map_err(|_| ui_assembly_error("ui.node.build"))
+}
+
+pub fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
+    UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| ui_assembly_error("ui.value.text"))
+}
+
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
+    let mut builder = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.map"))?;
+    for (key, value) in values {
+        builder.push(key.to_owned(), value).map_err(|_| ui_assembly_error("ui.value.map.entry"))?;
+    }
+    Ok(UiValue::Map(builder.finish()))
+}
+
+/// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
+pub fn scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
+    let id = id.into();
+    semio_framework_plugin::scene_surface(&id, kind, scene)
+}
+
+/// ♿️ [`scene_surface`] plus the accessible name, description and liveness a canvas owes a reader.
+///
+/// A scene surface paints into a texture with no accessible children, so the `AccessibilitySpec` on
+/// its own record is the ONLY thing an assistive technology ever learns about it — without this the
+/// canvas is an anonymous `application` region that nothing can name, reach or hear. `live` makes the
+/// surface a live region so an evaluation advancing `Computing → Evaluated` is announced without the
+/// reader having to go find it.
+///
+/// The description is [`UiText::clipped`] display copy: a description that failed admission would
+/// fail the whole refresh, and its full text is always reachable in the window's own outline.
+///
+/// @see ../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🦀️.rs
+pub fn accessible_scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(
+    id: impl Into<String>,
+    kind: SurfaceKind,
+    scene: &T,
+    label: &str,
+    description: &str,
+    live: Liveness,
+) -> UiAssemblyResult<BuiltNode> {
+    let mut node = scene_surface(id, kind, scene)?;
+    node.accessibility.label = UiText::try_from_str(label).map(Label);
+    node.accessibility.description = Some(Label(UiText::clipped(description)));
+    node.accessibility.live = live;
+    Ok(node)
+}
+
+/// ⏎️ Gives a scene surface the `Trigger::Activate` binding its `role="application"` promises.
+///
+/// A canvas that announces itself as an application is telling assistive technology "I handle my own
+/// Enter/Space" — and the React interpreter's `SurfaceAccessibilityShell` only installs its
+/// `onKeyDown` when the record actually carries an activate binding, so without this the promise is
+/// unkept and Enter does nothing. `shortcut` is what reaches the reader as `aria-keyshortcuts`, which
+/// is the only way a user who cannot see the canvas learns the chord exists.
+///
+/// @see ../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx
+pub fn activatable_scene_surface(mut node: BuiltNode, controller_id: &'static str, action: &str, shortcut: &str) -> UiAssemblyResult<BuiltNode> {
+    let (action_id, _) = ActionFactory::new(controller_id).action(action, None)?;
+    node.bindings
+        .try_push(ActionBinding { trigger: Trigger::Activate, action: action_id, args: None, capability: None })
+        .map_err(|_| ui_assembly_error("ui.surface.activate-binding"))?;
+    node.accessibility.shortcut = UiText::try_from_str(shortcut);
+    Ok(node)
+}
+
+/// 🖊️ The SELECTED generation's inline name editor: a text `input` seeded with the current name
+/// whose `Trigger::Commit` (Enter / blur — `InputProps::commit == "blur"`) dispatches
+/// `renameGeneration{id}`, the typed text arriving as the framework's scalar `value` argument
+/// (`uiIntentPayload`,
+/// `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx`).
+///
+/// 🐛️ Why an editor and not the old row action: rename used to be a `RowActionPlacement::Menu`
+/// affordance — right-click only — dispatching a HARDCODED `"{name} copy"`, so a user could reach the
+/// verb but never choose a name (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap #7).
+fn generation_rename_field(factory: &ActionFactory, surface_prefix: &str, id: &str, name: &str, placeholder: &str) -> UiAssemblyResult<BuiltNode> {
+    let (action, args) = factory.action("renameGeneration", Some(ui_value_map([("id", ui_value_text(id)?)])?))?;
+    let editor = input(InputKind::Text).value(ui_text(name)?).placeholder(ui_label(placeholder)?).commit(ui_text("blur")?);
+    let editor = ui_id(editor, format!("{surface_prefix}.generation.{id}.rename"))?;
+    let editor = match args {
+        Some(args) => editor.try_on_with(Trigger::Commit, action, args).map_err(|_| ui_assembly_error("ui.generation.rename.binding"))?,
+        None => editor.try_on(Trigger::Commit, action).map_err(|_| ui_assembly_error("ui.generation.rename.binding"))?,
+    };
+    ui_build(editor)
+}
+
+/// 📖 Renders the shared generation list without routing through Flow's legacy renderer node.
+///
+/// 🖱️ The three row verbs a user meets, in reach order: the row itself activates
+/// `selectGeneration{id}`; the selected row carries [`generation_rename_field`]'s inline name editor
+/// (`renameGeneration`); every row carries a `RowActionPlacement::Row` delete button
+/// (`removeGeneration{id}`) painted ON the row rather than folded into its right-click menu, which is
+/// what `RowActionPlacement::Menu` meant (`🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx`'s
+/// `mergeTreeRowContextMenu`).
+///
+/// 🪟️ The roster is WINDOWED, not paged: the generations container states its full `total` and
+/// materialises only the rows the host's viewport asked for, so a document with hundreds of saved
+/// generations scrolls instead of refusing at the fixed-list ceiling — and, because every row costs
+/// three `UiValue` argument maps (select + rename + remove), the window is also what keeps the shared
+/// argument arena affordable (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING).
+pub fn generation_tree(
+    controller_id: &'static str,
+    surface_prefix: &str,
+    generation: &semio_framework_os_playbook_contract::GenerationPlayState,
+    selected_id: Option<&str>,
+    locale: Locale,
+    terminology: Terminology,
+    windows: &TreeWindows<'_>,
+) -> UiAssemblyResult<BuiltNode> {
+    let _ = terminology;
+    let label = |key: &str| {
+        match (key, locale) {
+            ("remove", Locale::De) => "Entfernen",
+            ("remove", _) => "Remove",
+            ("rename", Locale::De) => "Generierung umbenennen",
+            ("rename", _) => "Rename generation",
+            ("generations", Locale::De) => "Generierungen",
+            ("generations", _) => "Generations",
+            ("add", Locale::De) => "Generierung hinzufügen",
+            ("add", _) => "Add Generation",
+            ("empty", Locale::De) => "(keine Generierungen)",
+            ("empty", _) => "(no generations)",
+            ("actions", Locale::De) => "Aktionen",
+            ("actions", _) => "Actions",
+            _ => key,
+        }
+        .to_string()
+    };
+    let factory = ActionFactory::new(controller_id);
+    let generation_row = |entry: &semio_framework_os_playbook_contract::FormGeneration| -> UiAssemblyResult<BuiltNode> {
+        let args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
+        let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} values", entry.values.len())), factory.action("selectGeneration", Some(args))?)?;
+        if let Component::TreeItem(props) = &mut item.component {
+            props.icon = Some(ui_text("layers")?);
+            let mut row_actions = UiFixedList::default();
+            row_actions.try_push(row_action("trash-2", &label("remove"), "removeGeneration", RowActionPlacement::Row)?).map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
+            props.row_actions = row_actions;
+        }
+        if selected_id == Some(entry.id.as_str()) {
+            item = item.try_with_children([generation_rename_field(&factory, surface_prefix, &entry.id, &entry.name, &label("rename"))?]).map_err(|_| ui_assembly_error("ui.generation.rename"))?;
+        }
+        Ok(item)
+    };
+    let generations_id = format!("{surface_prefix}.generations");
+    PanelTreeBuilder::new(surface_prefix)?
+        .window_section_or_placeholder(windows, &generations_id, Some(ui_label(label("generations"))?), true, &generation.generations, generation_row, ui_label(label("empty"))?)?
+        .section(format!("{surface_prefix}.actions"), Some(ui_label(label("actions"))?), true, ui_node_list([tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None)?)])?)?
+        .build()
+}
+
+fn generation_control_action<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: UiValue) -> UiAssemblyResult<B> {
+    generation_control_binding(builder, Trigger::Change, controller_id, action, args)
+}
+
+/// ⌨️ A typed answer commits once, on blur or Enter (`commit("blur")` + `Trigger::Commit`): one edit per answer, never one
+/// per keystroke (design §13.2, short single-line and long text fields).
+fn generation_text_action<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: UiValue) -> UiAssemblyResult<B> {
+    generation_control_binding(builder, Trigger::Commit, controller_id, action, args)
+}
+
+fn generation_control_binding<B: HasBase>(builder: B, trigger: Trigger, controller_id: &'static str, action: &str, args: UiValue) -> UiAssemblyResult<B> {
+    let (action, args) = ActionFactory::new(controller_id).action(action, Some(args))?;
+    match args {
+        Some(args) => builder.try_on_with(trigger, action, args).map_err(|_| ui_assembly_error("ui.control.binding")),
+        None => builder.try_on(trigger, action).map_err(|_| ui_assembly_error("ui.control.binding")),
+    }
+}
+
+fn generation_control_args(generation_id: &str, question_id: &str, field_index: Option<usize>) -> UiAssemblyResult<UiValue> {
+    let mut values = vec![("generationId", ui_value_text(generation_id)?), ("questionId", ui_value_text(question_id)?)];
+    if let Some(field_index) = field_index {
+        values.push(("fieldIndex", UiValue::Number(field_index as f64)));
+    }
+    ui_value_map(values)
+}
+
+/// 📝 Renders generation questions as semantic controls with typed change bindings.
+pub fn generation_form(
+    spec: &semio_framework_os_playbook_contract::PlaybookSpec,
+    values: &semio_framework_os_playbook_contract::PlaybookValues,
+    controller_id: &'static str,
+    action: &str,
+    generation_id: &str,
+) -> UiAssemblyResult<BuiltNode> {
+    let mut root = ui_id(column(), "generate.form")?;
+    let mut has_children = false;
+    for step in &spec.steps {
+        if !step.blocks.is_empty() {
+            let heading = ui_build(ui_id(text(ui_label(&step.title)?), format!("generate.step.{}", step.id))?)?;
+            root = ui_child(root, heading)?;
+            has_children = true;
+        }
+        for question in &step.blocks {
+            if !semio_framework_os_playbook_contract::is_block_visible(question, values) {
+                continue;
+            }
+            let value = values.get(&question.id).cloned().unwrap_or_else(|| semio_framework_os_playbook_contract::default_value_for_block(question));
+            let field_id = format!("generate.form.{}", question.id);
+            let args = || generation_control_args(generation_id, &question.id, None);
+            let control = match question.kind.as_str() {
+                "text" | "longText" => {
+                    let input = input(if question.kind == "longText" { InputKind::LongText } else { InputKind::Text }).value(ui_text(value.as_str().unwrap_or_default())?).commit(ui_text("blur")?);
+                    ui_build(generation_text_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
+                }
+                "number" => {
+                    let value = value.as_f64().map(|number| number.to_string()).unwrap_or_default();
+                    let input = input(InputKind::Number).value(ui_text(value)?);
+                    ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
+                }
+                "slider" => {
+                    let slider = slider(value.as_f64().unwrap_or_else(|| question.min.unwrap_or(0.0))).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0));
+                    ui_build(generation_control_action(ui_id(slider, format!("{field_id}.slider"))?, controller_id, action, args()?)?)?
+                }
+                "boolean" => {
+                    let toggle = toggle(value.as_bool().unwrap_or(false)).icon(ui_text("toggle-left")?).text(ui_label(&question.label)?);
+                    ui_build(generation_control_action(ui_id(toggle, format!("{field_id}.toggle"))?, controller_id, action, args()?)?)?
+                }
+                "single" => {
+                    let mut select = select(ui_text(value.as_str().unwrap_or_default())?);
+                    for option in question.options.as_deref().unwrap_or_default() {
+                        select = select.try_item(ui_text(&option.value)?, ui_label(&option.label)?).map_err(|_| ui_assembly_error("ui.select.item"))?;
+                    }
+                    ui_build(generation_control_action(ui_id(select, format!("{field_id}.select"))?, controller_id, action, args()?)?)?
+                }
+                "vector" => {
+                    let numbers = value.as_array().map_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect(), <[DslValue]>::to_vec);
+                    let labels: Vec<String> = question
+                        .fields
+                        .as_deref().map_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect(), |fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect());
+                    let mut vector = ui_id(column(), format!("{field_id}.vector"))?;
+                    for (index, number) in numbers.iter().enumerate() {
+                        let input = input(InputKind::Number).value(ui_text(number.as_f64().map(|entry| entry.to_string()).unwrap_or_default())?);
+                        let input = ui_id(input, format!("{field_id}.vector.{index}.input"))?;
+                        let input = ui_build(generation_control_action(input, controller_id, action, generation_control_args(generation_id, &question.id, Some(index))?)?)?;
+                        let label = labels.get(index).cloned().unwrap_or_else(|| format!("Field {}", index + 1));
+                        let field = ui_id(field(ui_label(label)?), format!("{field_id}.vector.{index}"))?;
+                        vector = ui_child(vector, ui_build(ui_child(field, input)?)?)?;
+                    }
+                    ui_build(vector)?
+                }
+                "note" => ui_build(ui_id(text(ui_label(question.text.clone().unwrap_or_default())?), format!("{field_id}.note"))?)?,
+                "image" => ui_build(ui_id(text(ui_label(question.src.clone().unwrap_or_else(|| "(no image)".into()))?), format!("{field_id}.image"))?)?,
+                _ => {
+                    let input = input(InputKind::Text).value(ui_text(Value::from(&value).to_string())?).commit(ui_text("blur")?);
+                    ui_build(generation_text_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
+                }
+            };
+            let field = ui_id(field(ui_label(&question.label)?), field_id)?;
+            root = ui_child(root, ui_build(ui_child(field, control)?)?)?;
+            has_children = true;
+        }
+    }
+    if !has_children {
+        return ui_build(text(ui_label("No input widgets to generate from.")?));
+    }
+    ui_build(root)
+}

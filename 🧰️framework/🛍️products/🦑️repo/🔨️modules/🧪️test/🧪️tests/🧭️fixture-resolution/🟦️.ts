@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { resolveTestInputs, repoRootFromHere, TAXONOMY_REL_PATH, type DiscoveredCase } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import schema from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
+import { testFixture as schema } from "@semio-tech/framework/test/schema";
 import vectors from "../🧫️fixtures/🧭️fixture-resolution/🔣️.json";
 
 const output = process.env.SEMIO_TEST_ARTIFACT_DIR;

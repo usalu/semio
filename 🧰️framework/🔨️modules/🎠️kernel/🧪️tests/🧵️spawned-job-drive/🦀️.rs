@@ -1,5 +1,5 @@
 //! 🧵 The `Effect::SpawnJob` → `Event::JobCompleted` drive law, driven by the language-agnostic
-//! fixture `🧫️fixtures/🧵️spawned-job-drive/🔣️.json` that `🎠️kernel/🟦️.ts`'s TypeScript twin drives
+//! fixture `🧫️fixtures/🧵️spawned-job-drive/🔣️.json` that `🎠️kernel/🛠️spawned-job/🟦️.ts`'s TypeScript twin drives
 //! too.
 //!
 //! The defect this pins: a host may admit the effect and never pump it. On the wgpu target every

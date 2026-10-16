@@ -1,0 +1,33 @@
+import type{NativeStorageBackingV1}from"../../../🟦️.ts";
+import exportedSchema from"../🧬️schema/🔣️.json";
+const protocol=Object.freeze({...exportedSchema.definitions.Protocol.const,operations:Object.freeze([...exportedSchema.definitions.Protocol.const.operations])});
+/** 🧬️ Captures finite cleanup policy independently of mutable public schema DATA. */
+export function nativeImageCleanupProtocolV1():typeof protocol{return protocol;}
+declare const imageCleanupBrand:unique symbol;
+/** 🪪️ Identifies only an actual canonical receiver retained by its privately captured kernel guard. */
+export type NativeImageRetainedCleanupV1=Readonly<{[imageCleanupBrand]:true}>;
+/** 📋️ Immutable observations carry no Native port, resource control, release method or deletion authority. */
+export type NativeImageCleanupFactsV1=Readonly<{root:string;leaseDirectory:string;capacityBytes:number;backing:NativeStorageBackingV1}>;
+/** 🔎️ Rechecks the genuine retained reader only while its accepted terminal callback is live. */
+export type NativeImageCleanupReadV1=Readonly<{facts:NativeImageCleanupFactsV1;recheck():void}>;
+
+import{withIssuedResourceOperationV1,withAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1}from"../../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import type{AcceptedPhysicalCleanupV1}from"../../../../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../🔒️leases/🟦️.ts";
+import type{NativeImageStorageV1}from"../../../🌐️platform/📋️contract/🟦️.ts";
+import{readNativeStorageImageReservationV1,type NativeStorageReservationV1,type NativeStorageAllocationV1}from"../../../🟦️.ts";
+declare const disposableBrand:unique symbol;
+/** 🎟️ Identifies one accepting actual disposable child; it exposes no path, writer or command authority. */
+export type NativeDisposableImageV1=Readonly<{[disposableBrand]:true}>;
+/** 🔌️ Sequences physical owner implementations; supplied model ports confer no real Native authority. */
+export interface NativeDisposableImagePortV1{open(control:ResourceLeaseControl,enrollment:AcceptedPhysicalCleanupV1):Promise<NativeImageStorageV1>;capture(image:NativeImageStorageV1,control:ResourceLeaseControl,enrollment:AcceptedPhysicalCleanupV1):NativeStorageBackingV1;retire(enrollment:AcceptedPhysicalCleanupV1,allocation:NativeStorageAllocationV1|undefined):Promise<void>;unresolved(failure:unknown):void;}
+type DisposableScope={image:NativeImageStorageV1;control:ResourceLeaseControl;backing:NativeStorageBackingV1;accepting:boolean;allocation?:NativeStorageAllocationV1};
+const disposableImages=new WeakMap<NativeDisposableImageV1,DisposableScope>();
+/** 🪢️ Binds once to the actual reservation's privately captured port, backing and issuance phase. */
+export function bindNativeDisposableImageAllocationV1(owner:NativeDisposableImageV1,reservation:NativeStorageReservationV1,control:ResourceLeaseControl):void{const scope=disposableImages.get(owner);if(!scope?.accepting||scope.allocation)throw Error("One accepting actual disposable allocation binding required");requireIssuedResourceControlRefinementV1(scope.control,control);scope.allocation=readNativeStorageImageReservationV1(reservation,control,scope.image.port,scope.backing);}
+/** 🛟️ Funds terminal work before birth and joins only body descendants before private physical settlement. */
+export function runNativeDisposableImageV1<T>(control:ResourceLeaseControl,resource:string,port:NativeDisposableImagePortV1,body:(image:NativeImageStorageV1,control:ResourceLeaseControl,owner:NativeDisposableImageV1)=>Promise<T>):Promise<T>{return withIssuedResourceOperationV1(control,()=>{const failures:unknown[]=[];let value:T|undefined;const retain=(error:unknown)=>{if(!failures.some(prior=>Object.is(prior,error)))failures.push(error);},finish=()=>{if(failures.length>1)throw new AggregateError(failures,"Disposable Native body and terminal settlement failed");if(failures.length)throw failures[0];return value as T;};return withAcceptedPhysicalCleanupV1(control,{version:1,kind:"native-image",resource,reserveMilliseconds:protocol.disposableReserveMilliseconds},async(enrollment,actual)=>{let scope:DisposableScope|undefined;try{const image=await port.open(actual,enrollment),backing=port.capture(image,actual,enrollment),owner=Object.freeze({})as NativeDisposableImageV1;scope={image,control:actual,backing,accepting:true};disposableImages.set(owner,scope);checkResourceLeaseControl(actual);value=await body(image,actual,owner);checkResourceLeaseControl(actual);}catch(error){retain(error);}if(scope)scope.accepting=false;try{await beginAcceptedPhysicalCleanupV1(enrollment);}catch(error){retain(error);}try{await port.retire(enrollment,scope?.allocation);}catch(error){const include=(value:unknown)=>{if(failures.some(prior=>Object.is(prior,value)))return;if(value instanceof AggregateError)for(const item of value.errors)include(item);else retain(value);};include(error);try{port.unresolved(error);}catch(secondary){retain(secondary);}}}).then(finish,error=>{const include=(value:unknown)=>{if(failures.some(prior=>Object.is(prior,value)))return;if(value instanceof AggregateError)for(const item of value.errors)include(item);else retain(value);};include(error);return finish();});});}
+
+import{nativeStorageStateV1,nativeStorageEventV1}from"../../../🟦️.ts";
+/** 📜️ Derives exact retirement bytes only for an empty image or its sole authentically bound allocation. */
+export function nativeDisposableJournalV1(bytes:Uint8Array,capacity:number,allocation:NativeStorageAllocationV1|undefined):Uint8Array{const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes);if(text&&!text.endsWith("\n"))throw Error("Complete disposable allocation journal required");let state=nativeStorageStateV1();for(const line of text?text.slice(0,-1).split("\n"):[])state=nativeStorageEventV1(state,JSON.parse(line),capacity);if(state.allocations.length!==(allocation?1:0))throw Error("Exact disposable allocation census required");if(!allocation)return bytes.slice();const held=state.allocations[0]!;if((["id","owner","kind","bytes"]as const).some(key=>held[key]!==allocation[key])||held.kind==="persistent-state")throw Error("Exact disposable allocation identity required");let suffix="";if(held.phase!=="retiring"){const event={type:"retiring"as const,id:held.id};state=nativeStorageEventV1(state,event,capacity);suffix+=JSON.stringify(event)+"\n";}state=nativeStorageEventV1(state,{type:"retired",id:held.id},capacity);if(state.allocations.length)throw Error("Disposable allocations remain held");return Buffer.from(text+suffix+JSON.stringify({type:"retired",id:held.id})+"\n");}

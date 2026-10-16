@@ -1,0 +1,314 @@
+/** 🏠️ Strict local-interaction contracts and independent immutable restore semantics. */
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { produce } from "immer";
+import { applyEdits, modify, parse } from "jsonc-parser";
+import { sumBy } from "lodash";
+import { strict as assert } from "node:assert";
+import { createHash } from "node:crypto";
+import{unsignedLebOracleV1}from"../../../../../🎒️pack/📐️format/🧪️tests/🔮️oracles/🔢️leb/🟦️.ts";
+const leb=unsignedLebOracleV1();
+
+//#region 🧬️Contract
+const schema = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
+const fixture = await Bun.file(new URL("../../🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json", import.meta.url)).json();
+const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(schema);
+
+
+assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
+const { applyLocalInteractionRestoreCold, localInteractionIdentityEquals } = await import("../../🟦️.ts");
+for (const row of fixture.cases) {
+  const untouched = structuredClone(row.before);
+  if (row.error) {
+    assert.throws(() => applyLocalInteractionRestoreCold(row.before, row.current, row.restore), /stale-authority/);
+    assert(!localInteractionIdentityEquals(row.current, row.restore.base));
+  } else {
+    const result = applyLocalInteractionRestoreCold(row.before, row.current, row.restore);
+    const oracle = produce(row.before, (draft: any) => {
+      if (row.restore.kind === "full") return row.restore.state;
+      for (const [domain, patch] of Object.entries<any>(row.restore.domains)) {
+        for (const field of ["selection", "activeMode", "activeGranularity"]) {
+          if (patch[field] === null) delete draft[field][domain];
+          else draft[field][domain] = patch[field];
+        }
+      }
+    });
+    assert.deepEqual(result, row.expected);
+    assert.deepEqual(result, oracle);
+    let edited = JSON.stringify(row.before);
+    if (row.restore.kind === "full") edited = applyEdits(edited, modify(edited, [], row.restore.state, {}));
+    else for (const [domain, patch] of Object.entries<any>(row.restore.domains)) for (const field of ["selection", "activeMode", "activeGranularity"]) edited = applyEdits(edited, modify(edited, [field, domain], patch[field] === null ? undefined : patch[field], {}));
+    assert.deepEqual(result, parse(edited), `${row.id}: independent JSON edit oracle`);
+    assert.deepEqual(row.before, untouched);
+  }
+}
+const privateReplacement = fixture.cases.find((row: any) => row.id === "sparse-explicit-private-replacement");
+assert(privateReplacement && privateReplacement.restore.kind === "domains");
+for (const [domain, patch] of Object.entries<any>(privateReplacement.restore.domains)) {
+  assert(fixture.nonbroadcastDomains.includes(domain));
+  assert(patch.selection.anchorId.includes(",") && patch.selection.ids.includes(patch.selection.anchorId));
+  for (const field of ["selection", "activeMode", "activeGranularity"]) {
+    assert.deepEqual(privateReplacement.expected[field][domain], patch[field]);
+    for (const unrelated of Object.keys(privateReplacement.before[field]).filter(key => key !== domain)) assert.deepEqual(privateReplacement.expected[field][unrelated], privateReplacement.before[field][unrelated]);
+  }
+}
+const emptySparse = fixture.cases.find((row: any) => row.id === "sparse-empty-preserves-three-maps");
+assert(emptySparse && emptySparse.restore.kind === "domains"); assert.deepEqual(emptySparse.restore.domains, {}); assert.deepEqual(emptySparse.expected, emptySparse.before);
+const large = fixture.cases.find((row: any) => row.id === "semantic-unicode-over-page");
+const [largeKey]=Object.keys(large.expected.selection);assert.notEqual(largeKey,undefined);if(largeKey===undefined)throw Error("Large semantic key required");assert(Buffer.byteLength(largeKey) > 4096);
+for (const mutate of [
+  (value: any) => { value.extra = true; },
+  (value: any) => { value.cases[0].restore.selectionJson = "{}"; },
+  (value: any) => { value.cases[0].current.generation = 9007199254740993; },
+  (value: any) => { value.cases[0].current.revision = "1".repeat(16); },
+  (value: any) => { value.cases[1].restore.domains.graph.selection.anchor = "b"; },
+  (value: any) => { delete value.cases[1].restore.domains.graph.activeMode; },
+  (value: any) => { value.cases[1].restore.domains.graph.selection.ids = ["a", "a"]; },
+  (value: any) => { value.cases[0].current.topologyRevision = "ABC"; },
+  (value: any) => { value.cases[0].current.generation = "18446744073709551616"; },
+  (value: any) => { delete value.nonbroadcastDomains; },
+  (value: any) => { value.nonbroadcastDomains = ["private", "private"]; },
+  (value: any) => { value.cases = value.cases.filter((row: any) => row.id !== "sparse-explicit-private-replacement"); },
+  (value: any) => { value.cases = value.cases.filter((row: any) => row.id !== "sparse-empty-preserves-three-maps"); },
+]) {
+  const mutant = structuredClone(fixture); mutate(mutant); 
+}
+//#endregion 🧬️Contract
+
+//#region 🌳️RetainedRootContract
+/** 🧫️ Shape of `../../🌳️root/🧪️tests/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+type RetainedRootFixture = {
+  readonly version: number;
+  readonly sourceCase: string;
+  readonly grants: readonly number[];
+  readonly wireFields: readonly string[];
+  readonly rootClonePayloadBytes: number;
+  readonly sharedOwnerRetiredBytes: number;
+  readonly finalOwnerRetiredBytes: number;
+  readonly largeSourceCase: string;
+  readonly largeFinalOwnerRetiredBytes: number;
+  readonly hoverIsCaptured: boolean;
+  readonly privateDomainIsCaptured: boolean;
+  readonly anchorIsCaptured: boolean;
+  readonly commaIdIsSplit: boolean;
+  readonly zeroGrantChangesOwner: boolean;
+  readonly coldDecodeEarnsInteractiveCredit: boolean;
+};
+/** 🧫️ Shape of `../../🌳️root/🩹️update/🧪️tests/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+type RetainedUpdateFixture = {
+  readonly version: number;
+  readonly cases: readonly string[];
+  readonly grants: readonly number[];
+  readonly cancelSourceCase: string;
+  readonly cancelOwnedKeyBytes: number;
+  readonly cancelDomainKeyBytes: number;
+  readonly largeSourceCase: string;
+  readonly domainKeyCopies: number;
+  readonly partialCandidateReadable: boolean;
+  readonly cancelPublishesCandidate: boolean;
+  readonly comparisonBytesAreRetiredBytes: boolean;
+  readonly zeroGrantMutates: boolean;
+  readonly absentFieldsRemoveOnlyTargetDomain: boolean;
+  readonly publishedCandidateUsesOriginalPayloadPointers: boolean;
+};
+/** 🧫️ Shape of `../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json`, the document its JSON Schema validates at load. */
+type RetirementFixture = {
+  readonly version: number;
+  readonly grants: readonly number[];
+  readonly cases: readonly {
+    readonly id: string;
+    readonly sourceCase: string;
+    readonly sourceField: string;
+    readonly expectedReleasedBytes: number;
+  }[];
+  readonly zeroItemMutates: boolean;
+  readonly terminalOwners: number;
+};
+/** 🧫️ Shape of `../../🧪️tests/🧫️fixtures/📃️query/🔣️.json`, the document its JSON Schema validates at load. */
+type QueryFixture = {
+  readonly version: number;
+  readonly pageBytes: number;
+  readonly grants: readonly number[];
+  readonly sourceCases: readonly string[];
+  readonly cancelAfterBytes: readonly number[];
+  readonly wrongAcknowledgements: readonly string[];
+  readonly zeroItemMutates: boolean;
+  readonly unacknowledgedPageAdvances: boolean;
+  readonly duplicateAcknowledgementAccepted: boolean;
+  readonly cancelledPageReadable: boolean;
+  readonly terminalRequiresReadReturn: boolean;
+  readonly partialError: {
+    readonly first: string;
+    readonly expectedPrefix: string;
+    readonly error: string;
+  };
+};
+/** 🧫️ Shape of `../../🧪️tests/🧫️fixtures/🔐️topology-authority/🔣️.json`, the document its JSON Schema validates at load. */
+type TopologyAuthorityFixture = {
+  readonly version: number;
+  readonly domain: string;
+  readonly generationEncoding: string;
+  readonly cases: readonly {
+    readonly id: string;
+    readonly documentByte: number;
+    readonly configByte: number;
+    readonly uiGeneration: string;
+    readonly expected: string;
+  }[];
+  readonly overflowMutatesCache: boolean;
+  readonly closedAuthorityReadable: boolean;
+  readonly canonicalTopologyHash: boolean;
+};
+/** 🧫️ Shape of `../../📡️transport/🧪️tests/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+type TransportFixture = {
+  readonly version: number;
+  readonly appCommandTag: number;
+  readonly appFrameTag: number;
+  readonly unsigned: readonly {
+    readonly decimal: string;
+    readonly hex: string;
+  }[];
+  readonly malformedUnsigned: readonly string[];
+  readonly commandKinds: readonly string[];
+  readonly replyKinds: readonly string[];
+  readonly maximumPageBytes: number;
+  readonly requestReuseNeedsNewGeneration: boolean;
+  readonly lateAcknowledgementAfterCloseAccepted: boolean;
+};
+const rootFixture: RetainedRootFixture = await Bun.file(new URL("../../🌳️root/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
+
+const ownershipSchema=await Bun.file(new URL("../../🌳️root/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
+const orderedOwnershipSchema=await Bun.file(new URL("../../../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
+const ownershipAjv=semioSchemaAjvV1({allErrors:true}).addSchema(orderedOwnershipSchema).addSchema(ownershipSchema);
+const validateOwnershipGrant=ownershipAjv.compile({$ref:ownershipSchema.$id+"#/$defs/Grant"});
+const validateOwnershipDemand=ownershipAjv.compile({$ref:ownershipSchema.$id+"#/$defs/Demand"});
+for(const copyBytes of rootFixture.grants){assert(validateOwnershipGrant({maximumItems:1,maximumCopyBytes:copyBytes,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:1}));assert(validateOwnershipDemand({copyBytes,capacityBytes:0,releaseBytes:0,depth:1}));}
+assert(!validateOwnershipGrant({maximumItems:1,maximumBytes:1}));assert(!validateOwnershipDemand({copyBytes:1,capacityBytes:0,releaseBytes:-1,depth:1}));
+console.log("[DEBUG] local interaction variable ownership grants and demands independently validate with strict AJV; String corpus totals remain logical work");
+
+
+
+/** 🔑️ Retirement copies only ordered-map key bytes: String values retire by release alone, so the logical copy work of one root is its domain-key corpus. */
+function rootKeyBytes(state: typeof fixture.cases[number]["before"]): number {
+  return sumBy([state.selection, state.activeMode, state.activeGranularity], (map: object) => sumBy(Object.keys(map), (domain: string) => Buffer.byteLength(domain)));
+}
+const rootSource = fixture.cases.find((row: any) => row.id === rootFixture.sourceCase).before;
+const largeRootSource = fixture.cases.find((row: any) => row.id === rootFixture.largeSourceCase).expected;
+assert.equal(rootKeyBytes(rootSource), rootFixture.finalOwnerRetiredBytes);
+assert.equal(rootKeyBytes(largeRootSource), rootFixture.largeFinalOwnerRetiredBytes);
+assert(rootFixture.largeFinalOwnerRetiredBytes > 4096);
+assert.deepEqual(produce(rootSource, () => {}), rootSource);
+assert(rootSource.selection.private && rootSource.selection.graph.anchorId === "b" && rootSource.selection.graph.ids[0] === "a,comma");
+//#endregion 🌳️RetainedRootContract
+
+//#region 🩹️RetainedUpdateContract
+const updateFixture: RetainedUpdateFixture = await Bun.file(new URL("../../🌳️root/🩹️update/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
+
+
+
+const cancelSource = fixture.cases.find((row: any) => row.id === updateFixture.cancelSourceCase);
+assert.equal(rootKeyBytes(cancelSource.before), updateFixture.cancelOwnedKeyBytes);
+const [cancelDomain]=Object.keys(cancelSource.restore.domains);if(cancelDomain===undefined)throw Error("Cancellation domain key required");assert.equal(Buffer.byteLength(cancelDomain), updateFixture.cancelDomainKeyBytes);
+for (const name of updateFixture.cases) {
+  const row = fixture.cases.find((row: any) => row.id === name);
+  const oracle = produce(row.before, (draft: any) => {
+    for (const [domain, patch] of Object.entries<any>(row.restore.domains)) for (const field of ["selection", "activeMode", "activeGranularity"]) {
+      if (patch[field] === null) delete draft[field][domain];
+      else draft[field][domain] = patch[field];
+    }
+  });
+  assert.deepEqual(oracle, row.expected);
+}
+//#endregion 🩹️RetainedUpdateContract
+
+
+
+//#region ♻️RetirementContract
+const retirement: RetirementFixture = await Bun.file(new URL("../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json", import.meta.url)).json();
+
+
+for (const row of retirement.cases) {
+  const source = fixture.cases.find((value: any) => value.id === row.sourceCase)[row.sourceField];
+  let bytes = 0;
+  for (const [domain, selection] of Object.entries<any>(source.selection)) bytes += Buffer.byteLength(domain) + Buffer.byteLength(selection.granularity) + selection.ids.reduce((sum: number, id: string) => sum + Buffer.byteLength(id), 0) + Buffer.byteLength(selection.anchorId ?? "");
+  for (const domain of Object.keys(source.activeMode)) bytes += Buffer.byteLength(domain);
+  for (const [domain, granularity] of Object.entries<string>(source.activeGranularity)) bytes += Buffer.byteLength(domain) + Buffer.byteLength(granularity);
+  assert.equal(bytes, row.expectedReleasedBytes);
+  const strings = [
+    ...Object.entries<any>(source.selection).flatMap(([key, value]) => [key, value.granularity, ...value.ids, ...(value.anchorId === undefined ? [] : [value.anchorId])]),
+    ...Object.keys(source.activeMode),
+    ...Object.entries<string>(source.activeGranularity).flat(),
+  ];
+  assert.equal(sumBy(strings, (value: string) => new TextEncoder().encode(value).length), row.expectedReleasedBytes);
+}
+const query: QueryFixture = await Bun.file(new URL("../../🧪️tests/🧫️fixtures/📃️query/🔣️.json", import.meta.url)).json();
+
+
+assert.equal(`{"first":${JSON.stringify(query.partialError.first)},"second":`, query.partialError.expectedPrefix);
+assert.equal(Buffer.byteLength(query.partialError.expectedPrefix), new TextEncoder().encode(query.partialError.expectedPrefix).length);
+function canonical(value: any): any {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value !== null && typeof value === "object") return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])]));
+  return value;
+}
+for (const sourceCase of query.sourceCases) {
+  const source = fixture.cases.find((row: any) => row.id === sourceCase);
+  assert(source, `query source case ${sourceCase}`);
+  const expected = Buffer.from(JSON.stringify(canonical({ identity: source.current, state: source.expected })));
+  const full = createHash("sha256").update(expected).digest("hex");
+  for (const grant of query.grants) {
+    const streamed = createHash("sha256");
+    let bytes = 0;
+    for (let offset = 0; offset < expected.length; offset += Math.min(grant, query.pageBytes)) {
+      const page = expected.subarray(offset, offset + Math.min(grant, query.pageBytes));
+      streamed.update(page); bytes += page.length;
+    }
+    assert.equal(bytes, expected.length);
+    assert.equal(streamed.digest("hex"), full);
+  }
+}
+const topologyAuthority: TopologyAuthorityFixture = await Bun.file(new URL("../../🧪️tests/🧫️fixtures/🔐️topology-authority/🔣️.json", import.meta.url)).json();
+
+
+for (const row of topologyAuthority.cases) {
+  const generation = Buffer.alloc(8); generation.writeBigUInt64LE(BigInt(row.uiGeneration));
+  const actual = createHash("sha256").update(topologyAuthority.domain).update(Buffer.alloc(32, row.documentByte)).update(Buffer.alloc(32, row.configByte)).update(generation).digest("hex");
+  assert.equal(actual, row.expected);
+}
+assert.equal(new Set(topologyAuthority.cases.map((row: any) => row.expected)).size, topologyAuthority.cases.length);
+const transport: TransportFixture = await Bun.file(new URL("../../📡️transport/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
+const transportFixtureSchema = await Bun.file(new URL("../../📡️transport/🧬️schema/🔣️.json", import.meta.url)).json();
+
+const validateTransport = ajv.addSchema(transportFixtureSchema).compile({ $ref: `${transportFixtureSchema.$id}#/$defs/Transport` });
+
+const wire = await import("../../📡️transport/🟦️.ts");
+function oracleUnsigned(value: string): Buffer { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(value)); return Buffer.from(leb.encodeUnsignedBuffer(bytes)); }
+for (const row of transport.unsigned) {
+  const encoded = Buffer.from(wire.encodeLocalInteractionUnsigned(row.decimal));
+  assert.equal(encoded.toString("hex"), row.hex);
+  assert.deepEqual(encoded, oracleUnsigned(row.decimal));
+  assert.equal(wire.decodeLocalInteractionUnsigned(encoded), row.decimal);
+  assert.equal(leb.decodeUnsigned64(encoded, 0).decimal, row.decimal);
+}
+for (const hex of transport.malformedUnsigned) assert.throws(() => wire.decodeLocalInteractionUnsigned(Buffer.from(hex, "hex")));
+const queryToken = { requestId: "13", queryGeneration: "41", identity: fixture.cases[0].current, ordinal: "2" };
+const identity = queryToken.identity;
+const oracleToken = Buffer.concat([oracleUnsigned(queryToken.requestId), oracleUnsigned(queryToken.queryGeneration), oracleUnsigned(String(identity.appInstanceId)), oracleUnsigned(identity.generation), Buffer.from(identity.revision, "hex"), Buffer.from(identity.documentRevision, "hex"), Buffer.from(identity.topologyRevision, "hex"), oracleUnsigned(queryToken.ordinal)]);
+const commands = [{ kind: "read", requestId: "13" }, { kind: "acknowledge", token: queryToken }, { kind: "cancel", token: queryToken }] as const;
+for (const [index, command] of commands.entries()) {
+  assert(validateTransport(command), JSON.stringify(validateTransport.errors));
+  const encoded = wire.encodeLocalInteractionQueryCommand(command);
+  assert.deepEqual(Buffer.from(encoded), Buffer.concat([Buffer.from([index]), index === 0 ? oracleUnsigned("13") : oracleToken]));
+  assert.deepEqual(wire.decodeLocalInteractionQueryCommand(encoded), command);
+  assert.throws(() => wire.decodeLocalInteractionQueryCommand(Uint8Array.from([...encoded, 0])));
+}
+const replies = [{ kind: "started", token: queryToken }, { kind: "page", page: { ...queryToken, terminal: true, bytes: [123, 125] } }, { kind: "closed", token: queryToken, cancelled: false }, { kind: "rejected", requestId: "13", code: "busy" }] as const;
+const expectedReplies = [Buffer.concat([Buffer.from([0]), oracleToken]), Buffer.concat([Buffer.from([1]), oracleToken, Buffer.from([1, 2, 123, 125])]), Buffer.concat([Buffer.from([2]), oracleToken, Buffer.from([0])]), Buffer.from([3, 13, 0])];
+for (const [index, reply] of replies.entries()) {
+  assert(validateTransport(reply), JSON.stringify(validateTransport.errors));
+  const encoded = wire.encodeLocalInteractionQueryReply(reply);
+  assert.deepEqual(Buffer.from(encoded), expectedReplies[index]);
+  assert.deepEqual(wire.decodeLocalInteractionQueryReply(encoded), reply);
+  assert.throws(() => wire.decodeLocalInteractionQueryReply(Uint8Array.from([...encoded, 0])));
+}
+for (const invalid of [{ ...commands[0], extra: true }, { kind: "acknowledge", token: { ...queryToken, queryGeneration: 41 } }, { kind: "page", page: { ...queryToken, terminal: true, bytes: Array(4097).fill(0) } }]) assert(!validateTransport(invalid));
+//#endregion 📡️TransportCodec

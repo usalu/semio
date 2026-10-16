@@ -46,10 +46,4 @@ export function renderTree(view: TreeView): BuiltNode {
   return builtNode(TREE_WINDOW_KIND_ID, { type: "tree", interactionDomain: null }, [section]);
 }
 
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️rendertree/🟦️.ts");
-  await registerTests1(import.meta.vitest, { renderTree }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️Tests
 // #endregion 🌳️TreeWindowKit

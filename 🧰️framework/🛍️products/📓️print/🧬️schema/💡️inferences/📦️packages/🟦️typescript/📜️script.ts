@@ -9,7 +9,8 @@ import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/�
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { VIZ_INFERENCE_LEVELS, vizInferenceChecks, type Level } from "./🔬️probes/🟦️.ts";
+import { vizInferenceChecks } from "./🔬️probes/🟦️.ts";
+import { VIZ_INFERENCE_LEVELS, type Level } from "./🔬️probes/🧰️probe-kit/🟦️.ts";
 
 //#region 🔖️Comparison
 type Failure = { readonly path: string; readonly ours: unknown; readonly oracle: unknown };

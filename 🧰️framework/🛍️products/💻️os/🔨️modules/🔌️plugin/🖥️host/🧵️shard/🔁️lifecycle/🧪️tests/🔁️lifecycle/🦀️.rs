@@ -3,7 +3,7 @@ use semio_framework_actor::{ActorId, PackageHash, PackageId};
 use semio_framework_plugin_host_shard::{AdmissionLimit, CancelCursor, DeferredAuthority, IssuedShardTurn, LifecycleRetry, SHARD_DEFERRED_BYTES, ShardFrame, ShardLoop, ShardRegistrationReason, ShardTransports, turn_budget_from_grant};
 use std::sync::Arc;
 use semio_framework::kernel::Event;
-use semio_framework_plugin_host_guest_runtime::{GuestRuntimes, PackageRef};
+use semio_framework_plugin_host_guest_runtime::{GuestRuntime, GuestRuntimes, PackageRef};
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_plugin_host_shard::{LoopbackTransport, fixture_instance_close_event};
 #[cfg(any(test, feature = "testkit"))]

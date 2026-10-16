@@ -4,9 +4,9 @@
  */
 
 import { type AppDefinition } from "@semio-tech/framework";
-import { hopTrace } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
-import { type ContinuationCancel, type ContinuationScheduler, hostContinuations } from "../../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
-import { importChunkArguments, importPayloadChunks } from "../../../../../../../../🔨️modules/🎠️kernel/🗄️file-open-import/🟦️.ts";
+import { hopTrace } from "@semio-tech/framework/trace";
+import { type ContinuationCancel, type ContinuationScheduler, hostContinuations } from "@semio-tech/framework/async/continuation";
+import { importChunkArguments, importPayloadChunks } from "@semio-tech/framework";
 import { type EffectDispatchOne, requestFileOpen } from "../🔩️plumbing/🟦️.ts";
 
 //#region ShellHelpers

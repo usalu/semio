@@ -49,7 +49,7 @@ import {
   setTerminology,
   setTheme,
   type UiPreferencesConfigMutation
-} from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+} from "@semio-tech/framework/config/mutations";
 import { EMPTY_SHELL_LOCKS, type ResolvedShellLocks, type ShellAction } from "../../🐚️Shell/🟦️.tsx";
 import type { PluginManifest } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import {

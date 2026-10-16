@@ -1,5 +1,4 @@
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 #[test]
 fn sqlite_snapshot_fem3d_declared_capability_is_owned() {
  let codec = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::io().native.codec;

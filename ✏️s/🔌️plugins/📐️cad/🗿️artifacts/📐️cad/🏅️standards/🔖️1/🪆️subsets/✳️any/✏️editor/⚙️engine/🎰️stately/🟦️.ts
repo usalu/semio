@@ -6,18 +6,12 @@
 import { EventId, GuardId, NodeId, ROOT, init, macrostep, NullInspector, type Command, type GuardFn, type Machine, type MachineDefinition, type MachineSpec, type NodeDef, type Snapshot, type StatechartEvent, type TransitionDef } from "@semio-tech/framework/machine";
 import type { Vec3 } from "@semio-tech/framework/3d";
 import { emptyMeshTransfer, solidRef } from "@semio-tech/framework/3d";
-import {
-  Model,
-  defaultModelDefinitionId,
-  initialContextForSpec,
-  listSpatialInteractionsForModelDefinition,
-  type InteractionEvent,
-  type InteractionSpec,
-  type EdgeRef,
-  type FaceRef,
-  type VertexRef,
-  type WireRef,
-} from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type EdgeRef, type FaceRef, type VertexRef, type WireRef } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { initialContextForSpec, type InteractionSpec } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎰️interaction-spec/🟦️.ts";
+import { defaultModelDefinitionId } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
+import { Model } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { listSpatialInteractionsForModelDefinition } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
+import { type InteractionEvent } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import { isEmptyModelDiff, type SpatialKernel, type ModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { applyTransition, pureTsStateEngineProvider, type ActionRegistry, type StateEngine, type StateEngineProvider, type StateEngineSendResult } from "../🎬️actions/🟦️.ts";
 import { createInteractionRuntime, loadSpatialInteraction, type InteractionRuntime } from "../🗿️artifact/🟦️.ts";

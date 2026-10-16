@@ -262,7 +262,7 @@ fn nth_free(excluded: &[usize], nth: usize) -> usize {
 struct Held<R, K: KeyOf<R>>(Vec<Option<R>>, std::marker::PhantomData<fn() -> K>);
 
 impl<R, K: KeyOf<R>> Held<R, K> {
-    fn new(rows: Vec<Option<R>>) -> Self {
+    pub fn new(rows: Vec<Option<R>>) -> Self {
         Self(rows, std::marker::PhantomData)
     }
 }

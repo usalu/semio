@@ -1,12 +1,10 @@
 //! 🔬️ Actual Forms SQL ownership settles full requests while comparing every literal variant.
-#[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use semio_framework_value::ToValue;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits}};
-#[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
-mod observed;
+use semio_framework_io_sqlite_snapshot_testing_backing as observed;
 #[path = "📏️preflight/🦀️.rs"]
 mod preflight;
 fn verify_literals(actual:&FormsSnapshot,expected:&FormsSnapshot){

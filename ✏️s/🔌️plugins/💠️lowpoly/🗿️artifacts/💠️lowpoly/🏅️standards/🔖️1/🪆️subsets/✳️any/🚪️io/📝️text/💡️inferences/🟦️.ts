@@ -49,5 +49,5 @@ export const lowpolyLowpolyInferenceTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseLowpolyInferenceText(value: unknown, at = "$"): LowpolyInferenceText {
-  return lowpolyLowpolyInferenceTextGuardObject(value, `${at}`);
+  return lowpolyLowpolyInferenceTextGuardString(value, `${at}`);
 }

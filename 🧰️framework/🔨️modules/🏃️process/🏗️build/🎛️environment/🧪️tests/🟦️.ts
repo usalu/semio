@@ -1,6 +1,6 @@
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
-import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{Database}from"bun:sqlite";
 import{readFileSync}from"node:fs";
 import{join}from"node:path";

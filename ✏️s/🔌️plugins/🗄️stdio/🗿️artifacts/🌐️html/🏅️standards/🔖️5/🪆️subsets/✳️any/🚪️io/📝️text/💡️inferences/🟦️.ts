@@ -49,5 +49,5 @@ export const stdioHtml5AnyInferenceTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseHtmlInferenceText(value: unknown, at = "$"): HtmlInferenceText {
-  return stdioHtml5AnyInferenceTextGuardObject(value, `${at}`);
+  return stdioHtml5AnyInferenceTextGuardString(value, `${at}`);
 }

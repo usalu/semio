@@ -9,7 +9,7 @@ pub use retained_insert::NumericInsertCursor;
 mod set;
 pub use set::{NumericSet,NumericSetIter};
 
-struct Node<K,V>{key:K,value:Option<V>,generation:u64,count_generation:u64,count:usize,height:u8,left:Option<usize>,right:Option<usize>,parent:Option<usize>}
+struct Node<K,V>{key:K,value:Option<V>,generation:u64,count_generation:u64,pub count:usize,height:u8,left:Option<usize>,right:Option<usize>,parent:Option<usize>}
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for Node<K,V>{
  fn retirement(self)->Box<dyn RetirementCursor>{crate::retirement::sequence(vec![crate::retirement::deferred(self.key),crate::retirement::deferred(self.value),crate::retirement::deferred(self.generation),crate::retirement::deferred(self.count_generation),crate::retirement::deferred(self.count),crate::retirement::deferred(self.height),crate::retirement::deferred(self.left),crate::retirement::deferred(self.right),crate::retirement::deferred(self.parent)])}
  fn retirement_birth_bytes(&self)->Option<usize>{crate::retirement::sequence_birth_bytes(&[crate::retirement::deferred_birth_bytes_for(&self.key),crate::retirement::deferred_birth_bytes_for(&self.value),crate::retirement::deferred_birth_bytes::<u64>(),crate::retirement::deferred_birth_bytes::<u64>(),crate::retirement::deferred_birth_bytes::<usize>(),crate::retirement::deferred_birth_bytes::<u8>(),crate::retirement::deferred_birth_bytes::<Option<usize>>(),crate::retirement::deferred_birth_bytes::<Option<usize>>(),crate::retirement::deferred_birth_bytes::<Option<usize>>()])}
@@ -17,15 +17,15 @@ impl<K:RetireOwned,V:RetireOwned> RetireOwned for Node<K,V>{
 }
 
 /// 🌳️ Retains tombstones and backing pages while live-key operations remain logarithmic.
-pub struct NumericIndex<K,V>{nodes:PagedList<Node<K,V>,1048576>,root:Option<usize>,generation:u64}
+pub struct NumericIndex<K,V>{nodes:PagedList<Node<K,V>,1048576>,#[doc(hidden)] pub root:Option<usize>,generation:u64}
 impl<K,V> Default for NumericIndex<K,V>{fn default()->Self{Self{nodes:PagedList::empty(),root:None,generation:1}}}
 impl<K:Copy+Ord,V> NumericIndex<K,V>{
  pub fn new()->Self{Self::default()}
  fn node(&self,index:usize)->&Node<K,V>{self.nodes.get(index).unwrap()}
  fn node_mut(&mut self,index:usize)->&mut Node<K,V>{self.nodes.get_mut(index).unwrap()}
- fn height(&self,index:Option<usize>)->u8{index.map_or(0,|i|self.node(i).height)}
- fn count(&self,index:Option<usize>)->usize{index.map_or(0,|i|{let n=self.node(i);if n.count_generation==self.generation{n.count}else{0}})}
- fn find(&self,key:&K)->Option<usize>{let mut current=self.root;while let Some(index)=current{let node=self.node(index);match key.cmp(&node.key){Ordering::Less=>current=node.left,Ordering::Greater=>current=node.right,Ordering::Equal=>return Some(index)}}None}
+ pub fn height(&self,index:Option<usize>)->u8{index.map_or(0,|i|self.node(i).height)}
+ pub fn count(&self,index:Option<usize>)->usize{index.map_or(0,|i|{let n=self.node(i);if n.count_generation==self.generation{n.count}else{0}})}
+ pub fn find(&self,key:&K)->Option<usize>{let mut current=self.root;while let Some(index)=current{let node=self.node(index);match key.cmp(&node.key){Ordering::Less=>current=node.left,Ordering::Greater=>current=node.right,Ordering::Equal=>return Some(index)}}None}
  fn update(&mut self,index:usize){let n=self.node(index);let (left,right,alive)=(n.left,n.right,n.generation==self.generation&&n.value.is_some());let count=self.count(left)+self.count(right)+usize::from(alive);let height=1+self.height(left).max(self.height(right));let generation=self.generation;let n=self.node_mut(index);n.count=count;n.count_generation=generation;n.height=height;}
  fn replace_child(&mut self,parent:Option<usize>,before:usize,after:usize){if let Some(parent)=parent{let n=self.node_mut(parent);if n.left==Some(before){n.left=Some(after)}else{n.right=Some(after)}}else{self.root=Some(after)}self.node_mut(after).parent=parent;}
  fn rotate_left(&mut self,index:usize)->usize{let (parent,right)={let n=self.node(index);(n.parent,n.right.unwrap())};let middle=self.node(right).left;self.replace_child(parent,index,right);self.node_mut(index).right=middle;if let Some(middle)=middle{self.node_mut(middle).parent=Some(index)}self.node_mut(right).left=Some(index);self.node_mut(index).parent=Some(right);self.update(index);self.update(right);right}
@@ -61,6 +61,3 @@ impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericIndex<K,V>{
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

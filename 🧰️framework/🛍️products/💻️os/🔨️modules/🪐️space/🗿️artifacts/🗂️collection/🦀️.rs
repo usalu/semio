@@ -1,10 +1,8 @@
 //! 🗂️ Composable persisted collection artifact.
 
 #[cfg(test)]
-pub(crate) use semio_framework_trace_memory_testing as test_allocation;
-#[cfg(test)]
 #[global_allocator]
-static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -955,6 +953,10 @@ pub use package::{admit_collection_package_declaration, package_descriptor, Coll
 #[cfg(test)]
 #[path = "🧪️tests/🗂️collection/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧰️support/🦀️.rs"]
+mod test_inputs;
 
 #[cfg(test)]
 #[path="🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]

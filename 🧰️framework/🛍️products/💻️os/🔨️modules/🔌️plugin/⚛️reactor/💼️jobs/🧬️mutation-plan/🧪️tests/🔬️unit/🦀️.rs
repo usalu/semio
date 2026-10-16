@@ -1,6 +1,11 @@
-use super::super::*;
-use super::super::tests::{slice_fixture,start_fixture,terminal_fixture,cancel_fixture};
-use super::job_test_mutation_fixture::{AddValue, JobTestOp, JobTestSnapshot};
+use crate::{BoundedJob, JOB_KIND_MUTATION_PLAN, PHASE_DECODED, checkpoint_jobs, fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+use std::future::Future;
+use semio_framework_actor::OriginalJobStep as JobStep;
+use crate::tests::{slice_fixture, start_fixture, terminal_fixture, cancel_fixture};
+use crate::mutation_plan::job_test_mutation_fixture::mutations::add_value::AddValue;
+use crate::mutation_plan::job_test_mutation_fixture::mutations::JobTestOp;
+use crate::mutation_plan::job_test_mutation_fixture::JobTestSnapshot;
 use pack::snapshot::ArtifactPack;
 use store::OpBinary;
 
@@ -10,15 +15,15 @@ use store::OpBinary;
 /// `contributed_mutation_wire_tests::commit_test_contribution` fixture recipe (that helper is
 /// private to its own test module, so this is a from-scratch copy, not a shared import).
 async fn commit_job_test_contribution(artifact_kind: &str, target_artifact_schema: &str, contributor: &str) -> String {
-    let contribution = crate::artifact_registration::ArtifactContribution::builder(artifact_kind).await.mutation::<JobTestSnapshot, JobTestOp, AddValue>(target_artifact_schema, 1, 1).await.build();
+    let contribution = semio_framework_plugin_decl_registry::artifact_registration::ArtifactContribution::builder(artifact_kind).await.mutation::<JobTestSnapshot, JobTestOp, AddValue>(target_artifact_schema, 1, 1).await.build();
     let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
     let mutation_id = descriptor.mutations[0].mutation_id.clone();
-    crate::artifact_registration::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");
+    semio_framework_plugin_decl_registry::artifact_registration::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");
     mutation_id
 }
 
 async fn request_wire_bytes(artifact_kind: &str, mutation_id: &str, payload: Vec<u8>) -> Vec<u8> {
-    let request = crate::artifact_registration::WireArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: 42, generation: 9, snapshot_pack: JobTestSnapshot { value: 10 }.encode_pack(), payload };
+    let request = semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: 42, generation: 9, snapshot_pack: JobTestSnapshot { value: 10 }.encode_pack(), payload };
     store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&request))
 }
 
@@ -29,7 +34,7 @@ async fn request_wire_bytes(artifact_kind: &str, mutation_id: &str, payload: Vec
 #[semio_framework_async_macros::async_test]
 async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered_kind() {
     let mutation_id = commit_job_test_contribution("s.jobtest.mutation-echo", "jobtest.mutation-echo.document", "jobtest-contributor-a").await;
-    let payload = crate::artifact_registration::encode_contributed_wire(&AddValue { delta: 5 }).await;
+    let payload = semio_framework_plugin_decl_registry::artifact_registration::encode_contributed_wire(&AddValue { delta: 5 }).await;
     let input = request_wire_bytes("s.jobtest.mutation-echo", &mutation_id, payload).await;
     start_fixture(300, JOB_KIND_MUTATION_PLAN, input.clone(), None);
 
@@ -49,7 +54,7 @@ async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered
     match slice_fixture(300) {
         JobStep::Done(bytes) => {
             let value = store::pack_rt::decode_wire_value(&bytes).expect("wire value decodes");
-            let result: crate::artifact_registration::WireArtifactMutationPlanResult = semio_framework_value::FromValue::from_value(value).expect("result decodes");
+            let result: semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanResult = semio_framework_value::FromValue::from_value(value).expect("result decodes");
             assert_eq!(result.mutation_id, mutation_id);
             assert_eq!(result.label, semio_framework_ui_locale::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"), "the whole locale matrix crosses the job wire, not a pre-resolved string");
             assert_eq!(result.owner_ops.len(), 1);
@@ -69,7 +74,7 @@ async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered
 #[semio_framework_async_macros::async_test]
 async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
     let mutation_id = commit_job_test_contribution("s.jobtest.mutation-checkpoint", "jobtest.mutation-checkpoint.document", "jobtest-contributor-b").await;
-    let payload = crate::artifact_registration::encode_contributed_wire(&AddValue { delta: 3 }).await;
+    let payload = semio_framework_plugin_decl_registry::artifact_registration::encode_contributed_wire(&AddValue { delta: 3 }).await;
     let input = request_wire_bytes("s.jobtest.mutation-checkpoint", &mutation_id, payload).await;
 
     start_fixture(301, JOB_KIND_MUTATION_PLAN, input.clone(), None);

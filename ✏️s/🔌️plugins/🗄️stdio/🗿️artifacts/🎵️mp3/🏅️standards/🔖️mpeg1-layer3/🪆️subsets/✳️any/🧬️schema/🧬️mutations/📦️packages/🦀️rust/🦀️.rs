@@ -45,8 +45,7 @@ pub mod standards {
                         #[path = "../../../../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
                     }
-                    #[path = "../../../../🚪️io/🏷️metadata/🦀️.rs"]
-                    pub mod metadata;
+                    pub use semio_s_artifact_stdio_mp3_io_metadata as metadata;
                 }
                 #[path = "."]
                 pub mod schema {

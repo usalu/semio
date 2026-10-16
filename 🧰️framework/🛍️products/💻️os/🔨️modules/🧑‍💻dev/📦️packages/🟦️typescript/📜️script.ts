@@ -8,10 +8,8 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 class CanonicalArchitectureScript extends BundleScript {
   async run(): Promise<void> {
     const { proveDevLocalHubProviderContract } = await import("../../🚀️local-hub/🧪️tests/🔬️contract/🟦️.ts");
-    const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const { TestScript } = await import("../../🧪️tests/🏃️execution/🟦️.ts");
-    const artifacts = nextestArtifactLocation(this.repoRoot).directory;
-    await proveDevLocalHubProviderContract(this.repoRoot, artifacts);
+    await proveDevLocalHubProviderContract();
     await new TestScript(this.root, this.repoRoot, this.invocation).run(["dev-contribution"]);
   }
 }
@@ -92,7 +90,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("closed-browser-component-factory-check", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
       if (segments.length) throw new Error("closed-browser-component-factory-check accepts no arguments");
-      const { testClosedBrowserComponentFactory } = await import("../../../🔌️plugin/🌐️browser-bundle/📜️script.ts");
+      const { testClosedBrowserComponentFactory } = await import("../../../🔌️plugin/🌐️browser-bundle/🏃️execution/🟦️.ts");
       await testClosedBrowserComponentFactory(this.repoRoot, this.invocation);
     }
   })
@@ -126,7 +124,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("canonical-architecture", CanonicalArchitectureScript)
   .registerLazy("index-lint", async () => (await import("../../🧪️tests/🧹️export-path-policy/🟦️.ts")).PluginIndexExportPathLintScript)
   .registerLazy("host-handle-lint", async () => (await import("../../🧪️tests/🧹️host-handle-policy/🟦️.ts")).HostHandleReachLintScript)
-  .registerLazy("channel-version", async () => (await import("../../🔖️channel-version/🟦️.ts")).ChannelVersionScript)
+  .registerLazy("channel-version", async () => (await import("../../🔖️channel-version/🏃️execution/🟦️.ts")).ChannelVersionScript)
   .register("parity", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
       if (segments[0] === "journey") {

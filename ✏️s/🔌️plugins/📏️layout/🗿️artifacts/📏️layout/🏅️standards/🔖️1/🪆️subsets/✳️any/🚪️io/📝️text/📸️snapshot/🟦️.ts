@@ -49,5 +49,5 @@ export const layoutLayoutSnapshotTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseLayoutSnapshotText(value: unknown, at = "$"): LayoutSnapshotText {
-  return layoutLayoutSnapshotTextGuardObject(value, `${at}`);
+  return layoutLayoutSnapshotTextGuardString(value, `${at}`);
 }

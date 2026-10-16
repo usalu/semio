@@ -25,7 +25,8 @@ def load_real_owners():
     for k, root in uo.real_crates().items():
         REAL_SET.add(k)
         for f, parent, n in T.tree(root):
-            REAL_OWNER[rel(f)] = k
+            if not rel(f).startswith(("🧪️testing/🎟️caller/",)):
+                REAL_OWNER[rel(f)] = k
 
 
 def owner_of(relpath):

@@ -74,7 +74,7 @@
       "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
     },
     {
-      "manifest": "✏️s/🔌️plugins/🌀️procedural/🫀️core/Cargo.toml",
+      "manifest": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/Cargo.toml",
       "native": 29,
       "wasm": 38,
       "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"

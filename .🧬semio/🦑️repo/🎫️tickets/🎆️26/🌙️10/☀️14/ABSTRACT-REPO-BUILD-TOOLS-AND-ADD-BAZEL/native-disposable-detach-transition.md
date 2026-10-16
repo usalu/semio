@@ -1,0 +1,25 @@
+# Disposable Detach Transition
+
+Root's actual private macOS run 36432 entered the success body, committed allocation `6d5cc8e9da7f003d24fc6a0441bf6b21` and verified payload SHA-256, then failed with `Exact created Native physical identity required`. Child removal did not complete; parent ordinary retirement returned hdiutil Resource busy. The exact first failing path/field was not included in that retained error. This report does not claim a field-specific runtime diagnosis.
+
+The inspected Source has a concrete ordering hazard in both Persistent macOS and Fixed Linux/Windows: the owned deactivate command repeatedly verifies and finally verifies after its process closes, while its caller keeps active=true until the command returns. Successful detach reveals the underlying directory before that final verifier, so the active-root identity guard can reject the expected transition.
+
+The narrow fix separates immutable enrollment/exact EX/retained-parent authorization from root-state verification. Only the actual owned deactivate command receives a private transition verifier. It accepts the captured mounted root or the exact authenticated underlying mount-directory identity while preserving backing, receipt and parent checks; once underlying is observed, a return to mounted refuses. The global identity guards remain intact. After successful command return, strict inactive facts and kernel association absence are still required before owned deletion and the parent metadata barrier. Command failure still retains custody.
+
+## Evidence
+
+The language-neutral schema/corpus has eight transitions/faults shared by both owners. The law evaluates the actual deactivate call expression and actual private fact/verifier bodies against explicit physical ports. SQLite independently derives monotonicity/absence/fault acceptance; Ajv validates rows. `native-detach-transition-semantic-red.log`: actual terminal 1 on the original active-only callsite for the valid mounted-to-underlying transition. `native-detach-transition-semantic-green.log`: actual terminal 0, 50 assertions across both owners. An earlier extract setup failure is retained separately and is not semantic RED. `native-detach-transition-strict.log`: fourteen focused roots, actual terminal 0. Full parent/disposable law receipt is appended after completion.
+
+Low read the scoped transition and found no blocker. Five combined current Source snapshots (including preserved peer bytes in shared backend files), hashes and path lengths are retained in `native-detach-transition-source-held.json`; no new production file, runtime dependency or command was added.
+
+## Retained Fixture Observation And Recovery Boundary
+
+Read-only host lstat/receipt inspection of `G/nd-MwpyGy/p/m/disposable-success` found the child backing still at receipt dev16777297/ino22/size33554432 and child m at receipt-authored underlying dev16777297/ino21. Parent m remained dev16777297/ino2. This proves those observed filesystem identities, not a fresh kernel mapping census or journal state. No Native image, system command or canonical store was opened in this execution lane.
+
+Root owns recovery. Existing canonical custody should open the actual parent, bind the retained child via the genuine parent-owned scope, observe the actual ledger and exact known allocation, and settle any remaining allocation only through the existing retirement port under actual custody and output/empty-root proof. Capture the exact backing/receipt retirement expectation while genuinely held; drain/close the child before ordinary canonical exact-child retirement, then close/retire the parent. Do not recreate old opaque terminal tokens, resurrect cancelled controls, remove raw paths, or infer an empty ledger from the inactive directory view. Source ordering suggests journal settlement preceded detach only if this concrete post-detach hazard caused the runtime failure; actual observation remains required. Physical success and all-platform qualification remain Root's separate receipts.
+
+## Final Held Source Receipts
+
+`native-detach-transition-full-pool.log`: actual terminal 0, two laws, 706 assertions, 26.76 seconds. All 21 genuine owned SQLite workers and the eight shared transition rows completed. The previous serial aggregate reached its 45-second test allowance at the deadline case; that timeout is retained and is not a semantic failure. The test now runs at most two independent workers over distinct private generated directories and awaits both with allSettled before propagating any failure. Each directory is removed only after owned capture settles. Original 60 seconds, test 45 seconds, terminal reserve 10 seconds, total cases and production grants are unchanged.
+
+`native-detach-transition-pool-strict.log`: actual terminal 0, fourteen focused roots. Five current combined Source hashes were refreshed after the test-only worker pool change. Production transition Source remains held for Root's canonical recovery and separate actual physical retry. No physical success is inferred from these Source receipts.

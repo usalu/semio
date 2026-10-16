@@ -16,7 +16,13 @@ use infinite_world::world::{
     begin_world3d_dynamic_retirement, enqueue_world3d_event, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, world3d_dynamic_retirement_terminal_is_empty,
     World3dBuildContext, World3dSceneBridgeStep, World3dSnapshotApplyStep, World3dState, WorldCursorWakeAuthority, WorldDrawRebuildStep, WorldInteractionAuthorityStep, WorldInteractionIntent,
 };
-use ui_wgpu::wgpu::{Board2dScene, DrawList, FontAtlas, IconAtlas, InputState, SurfaceKind, TiledMapScene, UiPresence, World3dScene};
+use semio_framework_ui_declaration::ui::SurfaceKind;
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_layout::layout::UiPresence;
+use semio_framework_ui_scene_plane::{Board2dScene, TiledMapScene};
+use semio_framework_ui_scene_world3d::World3dScene;
+use semio_framework_ui_text::FontAtlas;
+use ui_wgpu::wgpu::InputState;
 
 const ENGINE_SURFACES_FIXTURE: &str = include_str!("../🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json");
 const MAP_GESTURE_LIFECYCLE_FIXTURE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json");
@@ -94,7 +100,7 @@ fn retained_map_record(id: u64, key: &str, scene: &TiledMapScene) -> ui_contract
     let mut record = ui_contract::UiNodeRecord {
         id: ui_contract::UiNodeId(id),
         key: ui_contract::UiText::try_from_str(key).expect("bounded map node key"),
-        component: ui_contract::Component::Surface(ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TiledMap, scene).expect("bounded Map scene encodes")),
+        component: ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::TiledMap, scene).expect("bounded Map scene encodes")),
         layout: Default::default(),
         style: Default::default(),
         activity: Default::default(),
@@ -111,10 +117,10 @@ fn retained_map_record(id: u64, key: &str, scene: &TiledMapScene) -> ui_contract
 
 fn retained_surface_record(scene: &UiComponentSceneNode) -> ui_contract::UiNodeRecord {
     let component = match scene.component_kind {
-        SurfaceKind::NodeGraph => ui_contract::Component::Surface(ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, scene.node_graph.as_ref().expect("NodeGraph scene payload")).expect("bounded NodeGraph scene encodes")),
-        SurfaceKind::TiledMap => ui_contract::Component::Surface(ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TiledMap, scene.tiled_map.as_ref().expect("TiledMap scene payload")).expect("bounded TiledMap scene encodes")),
-        SurfaceKind::Board2d => ui_contract::Component::Surface(ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Board2d, scene.board2d.as_ref().expect("Board2d scene payload")).expect("bounded Board2d scene encodes")),
-        SurfaceKind::TextEditor => ui_contract::Component::Surface(ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TextEditor, scene.text_editor.as_ref().expect("TextEditor scene payload")).expect("bounded TextEditor scene encodes")),
+        SurfaceKind::NodeGraph => ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::NodeGraph, scene.node_graph.as_ref().expect("NodeGraph scene payload")).expect("bounded NodeGraph scene encodes")),
+        SurfaceKind::TiledMap => ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::TiledMap, scene.tiled_map.as_ref().expect("TiledMap scene payload")).expect("bounded TiledMap scene encodes")),
+        SurfaceKind::Board2d => ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::Board2d, scene.board2d.as_ref().expect("Board2d scene payload")).expect("bounded Board2d scene encodes")),
+        SurfaceKind::TextEditor => ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::TextEditor, scene.text_editor.as_ref().expect("TextEditor scene payload")).expect("bounded TextEditor scene encodes")),
         kind => panic!("retained EngineCanvas fixture does not support {kind:?}"),
     };
     let mut record = ui_contract::UiNodeRecord {
@@ -540,15 +546,15 @@ fn world3d_pointer_down_law(surface_id: &str) {
     let camera = state.camera.orbit.to_camera();
     let point = &fixture["world3d"]["expect"]["pickWorldPosition"];
     let point = ui_wgpu::wgpu::Vec3::new(point[0].as_f64().unwrap() as f32, point[1].as_f64().unwrap() as f32, point[2].as_f64().unwrap() as f32);
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), point, bounds.w, bounds.h).expect("the original solid pick target projects");
+    let screen = semio_framework_ui_scene_picking::project_point(camera.view_proj(bounds.w, bounds.h), point, bounds.w, bounds.h).expect("the original solid pick target projects");
     let tolerance = fixture["world3d"]["expect"]["pickEdgeScreenTolerancePx"].as_f64().unwrap() as f32;
     for mesh in fixture["world3d"]["meshesJson"].as_array().unwrap() {
         if mesh["data"]["indices"].as_array().is_some_and(|indices| !indices.is_empty()) { continue; }
         if let Some(edges) = mesh["data"]["edgePositions"].as_array() {
             for edge in edges.chunks_exact(6) {
-                let project = |index: usize| ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), ui_wgpu::wgpu::Vec3::new(edge[index].as_f64().unwrap() as f32, edge[index + 1].as_f64().unwrap() as f32, edge[index + 2].as_f64().unwrap() as f32), bounds.w, bounds.h).unwrap();
+                let project = |index: usize| semio_framework_ui_scene_picking::project_point(camera.view_proj(bounds.w, bounds.h), ui_wgpu::wgpu::Vec3::new(edge[index].as_f64().unwrap() as f32, edge[index + 1].as_f64().unwrap() as f32, edge[index + 2].as_f64().unwrap() as f32), bounds.w, bounds.h).unwrap();
                 let (a, b) = (project(0usize), project(3usize));
-                let distance = ui_wgpu::wgpu::screen_segment_distance(screen[0], screen[1], a[0], a[1], b[0], b[1]);
+                let distance = semio_framework_ui_scene_picking::screen_segment_distance(screen[0], screen[1], a[0], a[1], b[0], b[1]);
                 assert!(distance > tolerance, "original solid aim intersects independent wire screen tolerance: {distance} <= {tolerance}");
             }
         }

@@ -537,7 +537,7 @@ fn pre_wrap_keeps_repeated_spaces_and_hangs_the_ones_ending_a_line() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn actual_font_pair_queries_match_swash_without_retaining_native_cache_storage() {
-    use crate::test_allocation::observe_backing as measured;
+    use semio_framework_trace_memory_testing::observe_backing as measured;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔤️text-advances/🔣️.json")).unwrap();
     let (mut original, births, frees) = measured(super::PairKerning::default);
     assert_eq!((births, frees), (0, 0));
@@ -574,4 +574,4 @@ fn actual_font_pair_queries_match_swash_without_retaining_native_cache_storage()
     println!("[DEBUG] actual original borrowed font pairs={checked} independentSwash=true queryBirths=0 queryFrees=0 terminalDrop=0 originalStaticPointers=true");
 }
 
-include!("../../🧪️testing/🔤️text-reference/🦀️.rs");
+use super::text_reference::{reference_break_indices,KERNED_PANGRAM};

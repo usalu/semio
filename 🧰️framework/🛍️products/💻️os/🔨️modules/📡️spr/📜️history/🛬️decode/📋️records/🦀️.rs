@@ -54,6 +54,3 @@ impl<T> RetainedHistoryRecords<T>{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.receipt.is_none()&&self.records.is_empty()&&(self.records.capacity()==0||size_of::<T>()==0)}
 }
 impl<T> Drop for RetainedHistoryRecords<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original history records abandoned typed payload or native index custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.records)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

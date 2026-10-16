@@ -11,7 +11,7 @@ pub struct PagedUtf8AppendCursor {
     end: usize,
     pending: Option<String>,
     closing: bool,
-    complete: bool,
+    #[doc(hidden)] pub complete: bool,
     controlled_close: crate::retained_clone::RetainedCloneClose,
 }
 
@@ -130,6 +130,3 @@ impl Drop for PagedUtf8AppendCursor {
     fn drop(&mut self) { assert!((self.source.is_none() && self.destination.is_none() && self.pending.is_none() && self.controlled_close.is_empty()) || std::thread::panicking(), "native UTF-8 append cursor dropped before exact closure"); }
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

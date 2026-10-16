@@ -177,7 +177,7 @@ pub struct HistoryReadPlan {
 }
 
 impl HistoryReadPlan {
-    pub(crate) fn new(target: Option<MutationId>, drafts: protocol::HistoryInputDrafts, edits: usize, report: bool) -> Self {
+    pub fn new(target: Option<MutationId>, drafts: protocol::HistoryInputDrafts, edits: usize, report: bool) -> Self {
         Self {
             target, drafts, positions: protocol::HistoryFoldIndex::new(), first_input: edits, last_draft: None, order: semio_framework_os_vcs::HistoryPageStack::empty(), counts: semio_framework_os_vcs::HistoryPageStack::empty(), cursor: 0, located_target: false, located_draft: None, located_inputs: false, operations: 0,
             supersessions: EffectiveSupersessions::new(), copied: None, copying_drafts: false, report,
@@ -358,7 +358,7 @@ pub struct ArtifactStoreRevisionAccumulatorRetirement {
 }
 
 impl ArtifactStoreRevisionAccumulatorRetirement {
-    pub(crate) fn new(accumulator: CursorRevisionAccumulator) -> Self {
+    pub fn new(accumulator: CursorRevisionAccumulator) -> Self {
         Self { owner: semio_framework_value::retirement::controlled::ControlledRetirement::new(accumulator).unwrap_or_else(|_| unreachable!("Store revision schema declares controlled retirement")) }
     }
 }
@@ -377,7 +377,7 @@ pub struct ArtifactStoreCursorRetirement {
 }
 
 impl ArtifactStoreCursorRetirement {
-    pub(crate) fn new(cursor: ArtifactCursor) -> Self {
+    pub fn new(cursor: ArtifactCursor) -> Self {
         Self { owner: semio_framework_value::retirement::controlled::ControlledRetirement::new(cursor).unwrap_or_else(|_| unreachable!("Store cursor declares controlled retirement")) }
     }
 }
@@ -422,7 +422,7 @@ pub struct ArtifactStoreMutationDagRetirement {
 }
 
 impl ArtifactStoreMutationDagRetirement {
-    pub(crate) fn new(dag: semio_framework_os_spr::MutationDag) -> Self {
+    pub fn new(dag: semio_framework_os_spr::MutationDag) -> Self {
         Self { dag: std::mem::ManuallyDrop::new(Some(dag)), envelope: std::mem::ManuallyDrop::new(None), identity: std::mem::ManuallyDrop::new(None) }
     }
     pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -644,7 +644,7 @@ pub fn artifact_history_ledger_handoff<T: Send + 'static, F: ArtifactOwnedValueR
 }
 
 impl<P, Mutation> ArtifactStoreVcsRetirement<P, Mutation> {
-    pub(crate) fn new(vcs: ArtifactVcs<AdmittedArtifactGenesis<P>, Mutation>, initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self {
+    pub fn new(vcs: ArtifactVcs<AdmittedArtifactGenesis<P>, Mutation>, initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self {
         Self { vcs: std::mem::ManuallyDrop::new(Some(vcs)), active: std::mem::ManuallyDrop::new(None), phase: ArtifactStoreVcsRetirementPhase::Mutations, initial_snapshot_factory: std::mem::ManuallyDrop::new(Some(initial_snapshot_factory)), mutation_factory: std::mem::ManuallyDrop::new(Some(mutation_factory)), closing_factories: std::mem::ManuallyDrop::new([None, None]) }
     }
 }
@@ -778,7 +778,7 @@ pub struct ArtifactStoreEnvelopeRetirement<P, Mutation> {
 }
 
 impl<P, Mutation> ArtifactStoreEnvelopeRetirement<P, Mutation> {
-    pub(crate) fn new(envelope: ArtifactEnvelope<P, Mutation>, snapshots: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, mutations: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self {
+    pub fn new(envelope: ArtifactEnvelope<P, Mutation>, snapshots: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, mutations: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self {
         let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction } = envelope.into_owners();
         Self {
             vcs: std::mem::ManuallyDrop::new(Some(ArtifactStoreVcsRetirement::new(vcs, snapshots, mutations))),
@@ -829,7 +829,7 @@ pub struct ArtifactGenesisRetirement<P: Send + Sync + 'static> {
 }
 
 impl<P: Send + Sync + 'static> ArtifactGenesisRetirement<P> {
-    pub(crate) fn new(genesis: AdmittedArtifactGenesis<P>, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>) -> Self {
+    pub fn new(genesis: AdmittedArtifactGenesis<P>, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>) -> Self {
         let (snapshot, pack) = genesis.into_owners();
         Self { snapshot: std::mem::ManuallyDrop::new(Some(ReturnedSnapshotReadRetirement::new(snapshot, factory))), pack: std::mem::ManuallyDrop::new(Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(pack))) }
     }
@@ -959,7 +959,7 @@ pub struct ArtifactStoreDisplacedRetirements {
 
 
 impl ArtifactStoreDisplacedRetirements {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { owners: std::mem::ManuallyDrop::new(VecDeque::with_capacity(ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY)), owner_reservations: [None; ARTIFACT_STORE_DISPLACED_RESERVATION_CAPACITY], owner_generation: 0 }
     }
 

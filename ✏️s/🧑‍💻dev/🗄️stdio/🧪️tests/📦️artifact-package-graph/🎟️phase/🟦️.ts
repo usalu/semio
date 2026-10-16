@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import fixture from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
-import {validateJsonSchemaSubset} from "../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 
 /** 🎟️ Executes the actual metadata body against independently ordered phase ports without storage effects. */
 export async function verifyStdioCargoPhaseV1(root:string):Promise<void>{

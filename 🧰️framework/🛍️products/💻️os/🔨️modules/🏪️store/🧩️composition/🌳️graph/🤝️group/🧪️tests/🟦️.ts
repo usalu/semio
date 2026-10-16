@@ -3,6 +3,7 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync,mkdirSync,writeFileSync} from "node:fs";
 import {resolve} from "node:path";
+import { valueOrderedRetirementSchemaUrl } from "../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 test("ownership group roots match SQLite cycle and atomic publication oracle",()=>{
  const f=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  const db=new Database(":memory:");db.exec("create table owns(child text primary key,parent text not null,slot text not null)");
@@ -41,7 +42,7 @@ test("actual production ownership root executes the neutral forest in isolation"
 test("ownership forest retirement keeps independent work and physical release axes",()=>{
  const f=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).closeAxes;
  const db=new Database(":memory:");db.exec("create table owner(capacity integer not null)");for(const capacity of f.stringCapacities)db.query("insert into owner values(?)").run(capacity);
- const schema=JSON.parse(readFileSync(resolve(process.cwd(),"🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json"),"utf8"));const validate=new Ajv().compile(schema.$defs.Grant);
+ const schema=JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8"));const validate=new Ajv().compile(schema.$defs.Grant);
  const rowBytes=f.rowWords*f.wordBytes;expect(rowBytes).toBe(f.retirement.copiedBytes);expect((db.query("select sum(capacity) as total from owner").get() as {total:number}).total).toBe(f.retirement.releasedBytes);
  expect(validate({maximumItems:1,maximumCopyBytes:-1,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:1})).toBe(false);
  for(const grant of f.grants){expect(validate({maximumItems:grant.items,maximumCopyBytes:grant.copyBytes,maximumCapacityBytes:grant.capacityBytes,maximumReleaseBytes:grant.releaseBytes,maximumDepth:grant.depth})).toBe(true);const accepted=grant.items>=1&&grant.copyBytes>=rowBytes&&grant.depth>=1;expect(accepted).toBe(grant.expectedMove);console.log("[DEBUG] forest common close independent="+JSON.stringify({grant,accepted,copy:rowBytes,release:0}));}

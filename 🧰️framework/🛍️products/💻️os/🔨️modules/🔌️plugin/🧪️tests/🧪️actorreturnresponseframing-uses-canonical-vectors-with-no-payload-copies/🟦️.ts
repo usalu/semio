@@ -1,3 +1,4 @@
+import { loadReturnResponseFramingSchema, loadReturnResponseFramingFixture, loadActorReturnResponseFixture, loadActorReturnFixture, loadActorReturnSchema, loadCreditMetadataInboxFixture, loadResponseCreditMetadataFixture, loadActorReturnResponseSchema, loadReturnResponseCreditSchema, loadReturnResponseCreditFixture } from "../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts"), "createActorBytePage"> & Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts"), "ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES" | "ActorReturnResponseFraming" | "decodeActorReturnResponse" | "encodeActorReturnResponse" | "fault" | "readActorReturnResponseHeader" | "uint">, testSource: TestSource): Promise<void> {
@@ -12,9 +13,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   };
   it("ActorReturnResponseFraming uses canonical vectors with no payload copies or backing escape", async () => {
     const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts");
-    const { default: schema } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧬️schema/🔣️.json"); const { default: framing } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧪️tests/🧫️fixtures/🔣️.json");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"); const { default: returned } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
-    const { default: returnedSchema } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json"); const { default: value } = await import("../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json"); const { actorInstanceLifecycleSchema: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts"); const { actorBytePageSchema: page } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
+    const schema = await loadReturnResponseFramingSchema(); const framing = await loadReturnResponseFramingFixture();
+    const fixture = await loadActorReturnResponseFixture(); const returned = await loadActorReturnFixture();
+    const returnedSchema = await loadActorReturnSchema(); const { valueSchema: value } = await import("@semio-tech/value-ts/schema"); const { actorInstanceLifecycleSchema: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts"); const { actorBytePageSchema: page } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
     const { default: Ajv } = await import("ajv"); const uint = await oracle();
     const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returnedSchema).addSchema(schema);
     expect(ajv.validate(schema, framing)).toBe(true);
@@ -46,8 +47,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
   });
   it("ActorReturnResponseFraming keeps malformed bodies and incomplete authority failed", async () => {
-    const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts"); const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json");
-    const { default: returned } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
+    const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts"); const fixture = await loadActorReturnResponseFixture();
+    const returned = await loadActorReturnFixture();
     const reject = (bytes: readonly number[]) => {
       const parser = new api.ActorReturnResponseFraming();
       expect(() => { for (const byte of bytes) parser.push(byte); parser.finish(); }).toThrow();
@@ -78,7 +79,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect([...program.getSyntacticDiagnostics(source), ...program.getSemanticDiagnostics(source)].map(item => ts.flattenDiagnosticMessageText(item.messageText, "\n"))).toEqual([]);
   });
   it("ActorWorkerInboxInventory binds mixed message kinds and logical shells to current source", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadCreditMetadataInboxFixture();
     const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
     const shardPath = new URL("../../📮️shard-client/🟦️.ts", testSource.url);
     const shard = ts.createSourceFile(shardPath.pathname, readFileSync(shardPath, "utf8"), ts.ScriptTarget.Latest, true);
@@ -141,7 +142,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(worker.text.includes("msg.returnDrive")).toBe(false);
   });
   it("ActorWorkerInboxInventory executes generated heartbeat, ordinary reply and awaited effect traffic together", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/📥️inbox/🧪️tests/🧫️fixtures/🔣️.json"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs"); const vm = await import("node:vm");
+    const fixture = await loadCreditMetadataInboxFixture(); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs"); const vm = await import("node:vm");
     const path = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", testSource.url);
     const source = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
     const producers = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
@@ -192,8 +193,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(fixture.currentFaultTraces.semanticallyAccepted).toBe(false);
   });
   it("ActorReturnResponseMetadata matches actual fixed source records and separately prices the projection graph", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/📋️metadata/🧪️tests/🧫️fixtures/🔣️.json");
-    const { default: resident } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json");
+    const fixture = await loadResponseCreditMetadataFixture();
+    const { residentSchema: resident } = await import("@semio-tech/value-ts/resident/schema");
     const { default: Ajv } = await import("ajv"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
     const paths = { output: "../../🪪️activation/🚪️instance/📥️output/🟦️.ts", shard: "../../📮️shard-client/🟦️.ts", response: "./🟦️.ts", result: "../🟦️.ts" };
     const totals = new Map<string, { bytes: bigint; slots: bigint; owners: bigint }>();
@@ -211,7 +212,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     totals.set("framing", { bytes: framing.bytes + BigInt(graph.records * fixture.model.recordBytes + graph.fields * fixture.model.fieldBytes), slots: framing.slots + BigInt(graph.records), owners: framing.owners + BigInt(graph.records) });
     for (const [group, expected] of Object.entries(fixture.minimumEnvelopes)) expect(Object.fromEntries(Object.entries(totals.get(group)!).map(([axis, count]) => [axis, Number(count)]))).toEqual(expected);
     expect(fixture.boundaries.finalMountEnvelope).toBe(false); expect(fixture.boundaries.neutralIntrinsicRecordsIncluded).toBe(false); expect(fixture.boundaries.rawBytesIncluded).toBe(false);
-    const { default: responses } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"); let maximumRecords = 0; let maximumFields = 0;
+    const responses = await loadActorReturnResponseFixture(); let maximumRecords = 0; let maximumFields = 0;
     for (const row of responses.vectors) {
       const bytes = Buffer.from(row.hex, "hex"); const parser = new ActorReturnResponseFraming(); const freeze = Object.freeze; const records: object[] = [];
       const spy = vi.spyOn(Object, "freeze").mockImplementation(value => { if (value !== null && typeof value === "object") records.push(value); return freeze(value); });
@@ -221,12 +222,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect({ records: maximumRecords, fields: maximumFields }).toEqual(fixture.projectionMaximum);
   });
   it("ActorReturnResponse declaration matches strict schemas and independent envelope encoding", async () => {
-    const { default: schema } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧬️schema/🔣️.json");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json");
+    const schema = await loadActorReturnResponseSchema();
+    const fixture = await loadActorReturnResponseFixture();
     
-    const { default: value } = await import("../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json"); const { actorInstanceLifecycleSchema: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+    const { valueSchema: value } = await import("@semio-tech/value-ts/schema"); const { actorInstanceLifecycleSchema: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
     const { actorBytePageSchema: page } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
-    const { default: returned } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json");
+    const returned = await loadActorReturnSchema();
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);
     
@@ -242,13 +243,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     for (const value of [0, -1, 9007199254740992, 1.5]) expect(ajv.getSchema(`${schema.$id}#/$defs/Response`)!({ ...fixture.vectors[0]!.value, transportRequestSequence: value })).toBe(false);
   });
   it("ActorReturnResponseCredit declaration validates exact one-reply and retained-fault transitions", async () => {
-    const { default: schema } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧬️schema/🔣️.json");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧪️tests/🧫️fixtures/🔣️.json");
+    const schema = await loadReturnResponseCreditSchema();
+    const fixture = await loadReturnResponseCreditFixture();
     
-    const { default: response } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧬️schema/🔣️.json");
-    const { default: value } = await import("../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json"); const { actorInstanceLifecycleSchema: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+    const response = await loadActorReturnResponseSchema();
+    const { valueSchema: value } = await import("@semio-tech/value-ts/schema"); const { actorInstanceLifecycleSchema: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
     const { actorBytePageSchema: page } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
-    const { default: returned } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json");
+    const returned = await loadActorReturnSchema();
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
     const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(response).addSchema(schema);
      
@@ -290,7 +291,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse header routing preserves exact authority without decoding malformed bodies", async () => {
     const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorReturnResponseFixture();
     const uint = await oracle();
     for (const row of fixture.headerCases) {
       const raw = backing(row.hex); const expected = hydrate(row.header);
@@ -313,7 +314,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse codec preserves transport correlation and closed fault variants", async () => {
     const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorReturnResponseFixture();
     for (const row of fixture.vectors) {
       const value = hydrate(row.value);
       const encoded = api.encodeActorReturnResponse(value);
@@ -329,8 +330,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse maximum page is exact and decoder rejects non-owning backings", async () => {
     const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json");
-    const { default: returned } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorReturnResponseFixture();
+    const returned = await loadActorReturnFixture();
     const { createActorBytePage } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
     const row = returned.pageResultVectors[fixture.maximumPage.sharedPageVector]!;
     const bytes = Uint8Array.from({ length: row.pageLength }, (_, index) => (index * 37 + 11) % 256);
@@ -347,7 +348,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse actual Node transfer detaches the whole fixed backing and preserves exact bytes", async () => {
     const { execFileSync } = await import("node:child_process");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorReturnResponseFixture();
     const source = `
       import { MessageChannel } from "node:worker_threads";
       import { once } from "node:events";
@@ -367,7 +368,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorReturnResponse actual Node codec rejects shared resizable detached and view backings", async () => {
     const { execFileSync } = await import("node:child_process");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorReturnResponseFixture();
     const source = `
       const api = await import(process.argv[1]);
       const bytes = Buffer.from(process.argv[2], "hex");

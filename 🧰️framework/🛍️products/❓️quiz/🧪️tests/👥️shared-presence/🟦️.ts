@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/👥️presence/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type CursorState, type Place, type PresenceState, type ThinkingState, cursorProblem, presenceProblem, roomScope, rosterScope, thinkingProblem, thinkingScope } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://👥️shared-presence/🔣️.json";

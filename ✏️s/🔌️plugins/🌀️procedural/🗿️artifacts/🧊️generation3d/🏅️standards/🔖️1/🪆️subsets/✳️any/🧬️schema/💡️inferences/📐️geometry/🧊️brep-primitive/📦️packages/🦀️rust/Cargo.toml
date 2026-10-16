@@ -28,4 +28,5 @@ semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-s-artifact-procedural-3d-io-text = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-oracle-support = { workspace = true }
 

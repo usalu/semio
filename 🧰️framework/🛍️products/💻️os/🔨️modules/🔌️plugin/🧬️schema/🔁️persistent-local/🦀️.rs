@@ -33,11 +33,11 @@ pub mod component_persistent_local {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! component_persistent_local {
-    ($( $(#[$attribute:meta])* static $name:ident: $value_type:ty = $initialize:expr; )+) => {
+    ($( $(#[$attribute:meta])* $vis:vis static $name:ident: $value_type:ty = $initialize:expr; )+) => {
         $(
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
             $(#[$attribute])*
-            static $name: $crate::component_persistent_local::ComponentPersistentLocal<$value_type> =
+            $vis static $name: $crate::component_persistent_local::ComponentPersistentLocal<$value_type> =
                 $crate::component_persistent_local::ComponentPersistentLocal::new(|| $initialize);
         )+
 
@@ -45,7 +45,7 @@ macro_rules! component_persistent_local {
         std::thread_local! {
             $(
                 $(#[$attribute])*
-                static $name: $value_type = $initialize;
+                $vis static $name: $value_type = $initialize;
             )+
         }
     };

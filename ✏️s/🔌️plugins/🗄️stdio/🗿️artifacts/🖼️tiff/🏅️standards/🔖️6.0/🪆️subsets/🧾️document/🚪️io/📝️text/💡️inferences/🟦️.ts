@@ -49,5 +49,5 @@ export const stdioTiff60DocumentInferenceTextGuardConstant = <T extends string |
 //#endregion 🚪️Parsers
 
 export function parseTiffInferenceText(value: unknown, at = "$"): TiffInferenceText {
-  return stdioTiff60DocumentInferenceTextGuardObject(value, `${at}`);
+  return stdioTiff60DocumentInferenceTextGuardString(value, `${at}`);
 }

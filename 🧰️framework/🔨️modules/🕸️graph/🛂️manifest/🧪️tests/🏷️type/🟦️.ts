@@ -5,12 +5,13 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import fixture from "../🧫️fixtures/🏷️type/🔣️.json";
+import { valueTypeFixtureUrl } from "../../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 const ajv = new Ajv({strict: true, allErrors: true});
 
 test("Graph has a closed property corpus with the exact canonical type snapshot", () => {
-  const lower = JSON.parse(readFileSync(resolve(root, "🧰️framework/🔨️modules/🌱️value/🏷️type/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
+  const lower = JSON.parse(readFileSync(valueTypeFixtureUrl, "utf8"));
   expect(fixture.types).toEqual(lower.types);
   
 });

@@ -14,12 +14,13 @@
 //! Oracle: `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`; its TypeScript twin is
 //! `🧑‍🎨engine/🧪️tests/🧲️engine-surface-retention/🟦️.ts`.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::{paint_component_pointer_documents, tree_pointer_record};
 use super::*;
 use serde_json::Value;
 
 #[test]
 fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route() {
-    let _serialized = crate::engine_canvas::engine_surface_law_guard();
+    let _serialized = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard();
     let fixture = law();
     let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == "every-composited-kind-is-retained-alike").expect("cross-kind retained-surface case");
     let rows = case["frames"][0]["drain"].as_array().expect("painted surface rows");
@@ -33,29 +34,29 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
         let controller = row["controllerId"].as_str().expect("controller id");
         let surface_doc = match row["kind"].as_str().expect("surface kind") {
             "nodeGraph" => {
-                let scene: ui_wgpu::wgpu::NodeGraphScene = serde_json::from_value(serde_json::json!({
+                let scene: semio_framework_ui_scene_node_graph::NodeGraphScene = serde_json::from_value(serde_json::json!({
                     "nodes": [],
                     "edges": [],
                     "viewport": { "x": 0.0, "y": 0.0, "zoom": 1.0 }
                 }))
                 .expect("NodeGraph pointer fixture decodes");
-                ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, &scene).expect("bounded NodeGraph scene encodes")
+                semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::NodeGraph, &scene).expect("bounded NodeGraph scene encodes")
             }
             "tiledMap" => {
-                let mut scene = ui_wgpu::wgpu::TiledMapScene::base("{}".into(), "{}".into());
+                let mut scene = semio_framework_ui_scene_plane::TiledMapScene::base("{}".into(), "{}".into());
                 scene.selection_method = row["selectionMethod"].as_str().unwrap_or("rectangle").into();
-                ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TiledMap, &scene).expect("bounded TiledMap scene encodes")
+                semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::TiledMap, &scene).expect("bounded TiledMap scene encodes")
             }
-            "board2d" => ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Board2d, &ui_wgpu::wgpu::Board2dScene::base(row["snapshotJson"].as_str().unwrap_or("{}").into(), "{}".into(), true)).expect("bounded Board2d scene encodes"),
+            "board2d" => semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::Board2d, &semio_framework_ui_scene_plane::Board2dScene::base(row["snapshotJson"].as_str().unwrap_or("{}").into(), "{}".into(), true)).expect("bounded Board2d scene encodes"),
             kind => panic!("unsupported retained surface kind {kind}"),
         };
-        let records = vec![super::shell_input_tests::tree_pointer_record(1, surface, ui_contract::Component::Surface(surface_doc), &[], None)];
+        let records = vec![tree_pointer_record(1, surface, ui_contract::Component::Surface(surface_doc), &[], None)];
         let document = shell.windows.publish_surface_records(window, records).expect("component scene document publishes");
         documents.push((surface.to_string(), window.to_string(), controller.to_string(), rect(&row["bounds"]), document));
     }
     shell.dock.dock_window_plan = documents.iter().map(|(_, window, _, bounds, _)| (window.clone(), *bounds)).collect();
     let paint_rows: Vec<_> = documents.iter().map(|(_, window, controller, bounds, document)| (window.as_str(), controller.as_str(), document, *bounds)).collect();
-    let mut input = super::shell_input_tests::paint_component_pointer_documents(&mut shell, &paint_rows);
+    let mut input = paint_component_pointer_documents(&mut shell, &paint_rows);
     SessionCtx::of(&mut shell).sync_engine_surface_states();
     let theme = Theme::default();
     for probe in case["expectedResolve"].as_array().unwrap() {
@@ -65,7 +66,7 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
         let (control, (bounds, target)) = shell.input
             .retained_scene_hits
             .iter()
-            .find(|(_, (_, target))| matches!(&target.key, ui_wgpu::wgpu::NodeKey::Explicit(key) if key == surface))
+            .find(|(_, (_, target))| matches!(&target.key, semio_framework_ui_retained_tree::tree::NodeKey::Explicit(key) if key == surface))
             .map(|(control, retained)| (control.clone(), retained.clone()))
             .unwrap_or_else(|| panic!("accepted ComponentScene hit for {surface}"));
         let expected_window = documents.iter().find(|(authored, _, _, _, _)| authored == surface).map(|(_, window, _, _, _)| window).expect("authored surface owner");
@@ -89,16 +90,16 @@ fn rect(value: &Value) -> Rect {
 }
 
 /// 🧩️ One authored drain entry, built as the very `EngineSurfaceRegistration` the paint pass pushes.
-fn registration(value: &Value) -> crate::engine_canvas::EngineSurfaceRegistration {
+fn registration(value: &Value) -> semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceRegistration {
     let kind = value["kind"].as_str().expect("surface kind");
     let detail = match kind {
-        "nodeGraph" => crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph,
-        "tiledMap" => crate::engine_canvas::EngineSurfaceKindDetail::TiledMap { selection_method: value["selectionMethod"].as_str().unwrap_or("rectangle").to_string() },
-        "board2d" => crate::engine_canvas::EngineSurfaceKindDetail::Board2d { snapshot_json: value["snapshotJson"].as_str().unwrap_or_default().to_string() },
-        "world3d" => crate::engine_canvas::EngineSurfaceKindDetail::World3d { status_json: value["statusJson"].as_str().map(str::to_owned) },
+        "nodeGraph" => semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::NodeGraph,
+        "tiledMap" => semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::TiledMap { selection_method: value["selectionMethod"].as_str().unwrap_or("rectangle").to_string() },
+        "board2d" => semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::Board2d { snapshot_json: value["snapshotJson"].as_str().unwrap_or_default().to_string() },
+        "world3d" => semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::World3d { status_json: value["statusJson"].as_str().map(str::to_owned) },
         other => panic!("unknown surface kind {other}"),
     };
-    crate::engine_canvas::EngineSurfaceRegistration {
+    semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceRegistration {
         host_id: value["hostId"].as_str().unwrap_or_else(|| value["surfaceId"].as_str().expect("surface id")).to_string(),
         surface_id: value["surfaceId"].as_str().expect("surface id").to_string(),
         engine_token: None,
@@ -123,7 +124,7 @@ struct SurfaceMirror {
 
 impl SurfaceMirror {
     fn frame(&mut self, frame: &Value) -> Vec<String> {
-        let registrations: Vec<crate::engine_canvas::EngineSurfaceRegistration> = frame["drain"].as_array().expect("frame drain").iter().map(registration).collect();
+        let registrations: Vec<semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceRegistration> = frame["drain"].as_array().expect("frame drain").iter().map(registration).collect();
         let live: Vec<String> = frame["liveWindows"].as_array().expect("live windows").iter().map(|id| id.as_str().expect("window id").to_string()).collect();
         let live: Vec<&str> = live.iter().map(String::as_str).collect();
         mirror_engine_surface_states(&mut self.node_graph_states, &mut self.tiled_map_states, &mut self.board2d_states, &mut self.world3d_status, &mut self.world3d_window_ids, registrations, &live)
@@ -195,14 +196,14 @@ fn the_mirror_never_evicts_a_world3d_surface() {
     let mut node_graph_states = AdmittedSurfaceMap::<NodeGraphSurface>::default();
     let mut tiled_map_states = AdmittedSurfaceMap::<TiledMapSurface>::default();
     let mut board2d_states = AdmittedSurfaceMap::<Board2dSurface>::default();
-    let registration = crate::engine_canvas::EngineSurfaceRegistration {
+    let registration = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceRegistration {
         host_id: "scene.1.0.0.1".into(),
         surface_id: "procedural-preview-world".into(),
         engine_token: None,
         window_id: "procedural-preview".into(),
         bounds: Rect { x: 0.0, y: 0.0, w: 10.0, h: 10.0 },
         controller_id: "procedural".into(),
-        detail: crate::engine_canvas::EngineSurfaceKindDetail::World3d { status_json: Some("{\"phase\":\"evaluating\"}".into()) },
+        detail: semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::World3d { status_json: Some("{\"phase\":\"evaluating\"}".into()) },
         created: true,
     };
     mirror_engine_surface_states(&mut node_graph_states, &mut tiled_map_states, &mut board2d_states, &mut world3d_status, &mut world3d_window_ids, vec![registration], &["procedural-preview"]);

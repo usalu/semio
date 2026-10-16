@@ -1,10 +1,12 @@
+import{projectExactCargoPreparationV1}from"./📋️request/🟦️.ts";
 import {isAbsolute} from "node:path";
 import schema from "./🧬️schema/🔣️.json";
 import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {runOwnedCommand} from "../../../../🎛️owned-execution/🟦️.ts";
 import {captureOwnedProcess} from "../../../../📥️capture/🟦️.ts";
-import {scriptInvocationEnvironment} from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import {checkScriptInvocation,advanceScriptInvocation} from "../../../../🧭️routing/📥️invocation/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,scriptResourceProcessEnvironmentV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{compilerAdmissionBudgetV1}from"../../../../🏗️build/🎟️capacity/🟦️.ts";
+import {advanceScriptInvocation} from "../../../../🧭️routing/📥️invocation/🟦️.ts";
 import {exactExecutableFingerprint,originalNativeLibraryDirectory,type ExactCargoLawPort} from "../🟦️.ts";
 
 /** 📋️ Declares the caller-owned preparation executable and finite transport independently of Cargo discovery. */
@@ -13,15 +15,16 @@ export type ExactCargoLawPreparationV1=Readonly<{version:1;command:string;args:r
 export function readExactCargoLawPreparationV1(value:unknown):ExactCargoLawPreparationV1{if(validateJsonSchemaSubset(schema,value).length)throw Error("Complete exact Cargo preparation descriptor required");const descriptor=value as ExactCargoLawPreparationV1;if(!isAbsolute(descriptor.cwd)||[descriptor.command,...descriptor.args].some(value=>value.includes("\0")))throw Error("Exact Cargo preparation paths or arguments refused");return descriptor;}
 /** 🔌️ Preserves the original build grant across caller preparation and compiler capture. */
 export function exactCargoLawPreparationPortV1(input:ExactCargoLawPreparationV1,host:Readonly<{execute:typeof runOwnedCommand;capture:ExactCargoLawPort["probe"];fingerprint:ExactCargoLawPort["fingerprint"];nativeLibraryDirectory?:ExactCargoLawPort["nativeLibraryDirectory"]}>={execute:runOwnedCommand,capture:captureOwnedProcess,fingerprint:exactExecutableFingerprint,nativeLibraryDirectory:originalNativeLibraryDirectory}):ExactCargoLawPort{
- const descriptor=readExactCargoLawPreparationV1(input);
+ const captured=readExactCargoLawPreparationV1(input),descriptor=Object.freeze({...captured,args:Object.freeze([...captured.args]),environment:Object.freeze({...captured.environment})}),execute=host.execute;
  return {fingerprint:host.fingerprint,nativeLibraryDirectory:host.nativeLibraryDirectory,probe:host.capture,async prepare(command,args,capture){
   if(command!=="cargo")return;
-  const original=capture.invocation;if(!original)throw Error("Original exact Cargo preparation invocation required");const started=performance.now();
-  const budget=()=>{checkScriptInvocation(original);const remaining=original.control.remainingMilliseconds(),phase=capture.budgetMs===0?null:capture.budgetMs-(performance.now()-started),left=remaining===null?phase:phase===null?remaining:Math.min(remaining,phase);if(left!==null&&left<=0)throw Error("Original exact Cargo preparation deadline exhausted");return left??0;};
-  budget();await advanceScriptInvocation(original,"exact-cargo:preparation","running");
-  const bounded=Object.fromEntries(["CARGO_HOME","CARGO_TARGET_DIR","CARGO_BUILD_BUILD_DIR","TMPDIR","TMP","TEMP","SEMIO_TEST_ARTIFACT_DIR"].flatMap(key=>capture.env?.[key]===undefined?[]:[[key,capture.env[key]]]));
-  await host.execute(descriptor.command,[...descriptor.args,...args],descriptor.cwd,"exact-cargo:preparation",budget(),{env:scriptInvocationEnvironment(original,{...capture.env,...descriptor.environment,...bounded}),signal:original.control.signal,stdout:"stderr",output:{maximumBytes:capture.maxOutputBytes,maximumLines:descriptor.maximumOutputLines},onProgress:async()=>{await advanceScriptInvocation(original,"exact-cargo:preparation","running");}});
-  budget();
+  const original=capture.invocation,control=capture.control;if(!original)throw Error("Original exact Cargo preparation invocation required");requireIssuedResourceControlInvocationV1(control,original);compilerAdmissionBudgetV1(control);
+  const request=projectExactCargoPreparationV1(descriptor,args,capture.env),maximumOutputBytes=capture.maxOutputBytes;
+  return withIssuedResourceOperationV1(control,async()=>{
+   compilerAdmissionBudgetV1(control);await advanceScriptInvocation(original,"exact-cargo:preparation","running");compilerAdmissionBudgetV1(control);
+   await execute(request.command,[...request.args],request.cwd,"exact-cargo:preparation",compilerAdmissionBudgetV1(control),{env:scriptResourceProcessEnvironmentV1(control,request.environment),signal:control.signal,stdout:"stderr",output:{maximumBytes:maximumOutputBytes,maximumLines:request.maximumOutputLines},onProgress:async()=>{compilerAdmissionBudgetV1(control);await advanceScriptInvocation(original,"exact-cargo:preparation","running");compilerAdmissionBudgetV1(control);}});
+   compilerAdmissionBudgetV1(control);
+  });
  }};
 }
 /** 📥️ Receives preparation from the calling launcher without discovering any product owner. */

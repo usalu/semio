@@ -1,9 +1,7 @@
 use super::*;
 use infinite_world::world::{World3dMeshAppearance, World3dPrimitiveMaterial};
-use ui_wgpu::wgpu::{
-    mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, Mesh3dSchema, SceneAuthoredMaterial3d,
-    SceneMaterialAlpha3d,
-};
+use semio_framework_ui_scene_mesh::{mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, Mesh3dSchema};
+use semio_framework_ui_scene_pass::{SceneAuthoredMaterial3d, SceneMaterialAlpha3d};
 
 pub fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/📤️svg-export/🔣️.json")).expect("SVG export fixture")

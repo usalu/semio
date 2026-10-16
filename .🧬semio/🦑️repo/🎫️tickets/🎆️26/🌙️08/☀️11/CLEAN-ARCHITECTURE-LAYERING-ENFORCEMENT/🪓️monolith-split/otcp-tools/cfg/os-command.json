@@ -1,0 +1,73 @@
+{
+ "id": "os-command",
+ "pkg": "semio_framework_os_command",
+ "trees": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command"
+ ],
+ "inputs_units": [
+  "os-command-lib-test-semio-framework-os-command"
+ ],
+ "p_lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+ "p_dirs": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command"
+ ],
+ "comps": [
+  {
+   "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧷️companion/🦀️.rs"
+  }
+ ],
+ "ext": [
+  "semio_framework_ui_locale",
+  "protocol",
+  "semio_framework_value",
+  "semio_framework_value_derive",
+  "semio_framework_hash",
+  "semio_framework_pack_json",
+  "semio_framework_diagnostic",
+  "semio_framework_schema_state",
+  "semio_framework_os_vcs",
+  "serde",
+  "serde_json",
+  "semio_framework_async_macros",
+  "semio_framework_dsl_record",
+  "semio_framework_dsl_record_derive",
+  "semio_framework_trace",
+  "semio_framework_os_pack",
+  "dsl_derive"
+ ],
+ "base_features": [],
+ "features": [
+  "mutation-testing"
+ ],
+ "traits": [
+  "DslVariants",
+  "FromValue",
+  "MutationLeaf",
+  "ToValue",
+  "Mutation",
+  "MutationKind",
+  "CompositeMutationKind",
+  "SemanticMutation",
+  "DiffAlgebra",
+  "MutationDiff",
+  "DiffRegions",
+  "OpText",
+  "OpBinary",
+  "Identified",
+  "Patchable"
+ ],
+ "glob_names": {
+  "protocol::mutation": [
+   "Edit",
+   "ForeignStep",
+   "ForeignStepSource",
+   "Mutation",
+   "MutationApplyError",
+   "MutationMessage",
+   "MutationMeta",
+   "MutationOrigin",
+   "MutationOutcome",
+   "apply_diff"
+  ]
+ }
+}

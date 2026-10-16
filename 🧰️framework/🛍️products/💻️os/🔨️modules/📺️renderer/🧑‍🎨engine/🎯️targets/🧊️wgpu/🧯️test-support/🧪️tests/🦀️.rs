@@ -1,6 +1,7 @@
 //! 🧪️ Closed-fixture laws of the module tree reader; the TypeScript `🟦️.ts` beside the fixture proves the same expectations against the independent `readModuleTreeSource`.
 
 use super::{inspect_module_children, read_module_tree_files, read_module_tree_source, slice_module_tree_source, ModuleChild, ModuleVia};
+use crate::repo_reader::{engine_root, renderer_source, repo_root, repo_text, repo_texts, shell_source, ENGINE_CANVAS_SOURCE_FILES, INTERPRETER_SOURCE_FILES, RENDERER_SOURCE_FILES, SCENES_SOURCE_FILES, SHELL_SOURCE_ROOTS};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -124,4 +125,22 @@ fn the_renderer_hubs_resolve_below_their_roots() {
         }
         Err(error) => assert!(error.contains("mount missing"), "{error}"),
     }
+}
+
+#[test]
+fn repo_texts_read_what_the_standard_reader_reads() {
+    let manifest = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
+    let relative = manifest.strip_prefix(repo_root()).expect("the manifest sits below the repository root").to_string_lossy().into_owned();
+    assert_eq!(repo_text(&relative), std::fs::read_to_string(&manifest).expect("reads"));
+    assert_eq!(repo_texts(&[&relative, &relative]).trim_end(), format!("{0}\n{0}", repo_text(&relative).trim_end()));
+}
+
+#[test]
+fn every_source_set_file_exists_below_the_engine_folder() {
+    let engine = engine_root();
+    for file in RENDERER_SOURCE_FILES.iter().chain(SCENES_SOURCE_FILES).chain(ENGINE_CANVAS_SOURCE_FILES).chain(INTERPRETER_SOURCE_FILES).chain(SHELL_SOURCE_ROOTS) {
+        assert!(engine.join(file).is_file(), "{file}");
+    }
+    assert!(renderer_source().contains("fn "));
+    assert!(shell_source().contains("ShellState"));
 }

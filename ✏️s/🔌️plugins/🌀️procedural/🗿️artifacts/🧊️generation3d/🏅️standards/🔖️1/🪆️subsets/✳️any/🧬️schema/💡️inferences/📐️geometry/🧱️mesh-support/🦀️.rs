@@ -19,8 +19,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
 #[cfg(test)]
-#[path = "🧪️tests/🧰️mesh-harness/🦀️.rs"]
-pub mod harness;
+pub use semio_s_artifact_procedural_3d_geometry_mesh_harness as harness;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

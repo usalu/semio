@@ -1,0 +1,29 @@
+{
+ "🧰️framework/🔨️modules/🌱️value/🧬️clone/🦀️.rs": {
+  "forward": [
+   "reserve_vec_with"
+  ]
+ },
+ "🧰️framework/🔨️modules/🌱️value/🏷️type/🛬️controlled/🦀️.rs": {
+  "forward": [
+   "decode",
+   "encode"
+  ]
+ },
+ "🧰️framework/🔨️modules/🌱️value/🏷️type/🦀️.rs": {
+  "reexport": [
+   "super::controlled::testkit::*"
+  ]
+ },
+ "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️graphql/🔢️int64/🦀️.rs": {
+  "forward": [
+   "decimal"
+  ]
+ },
+ "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs": {
+  "name": "internals",
+  "raw": [
+   "pub use super::types::testkit as types;"
+  ]
+ }
+}

@@ -6,14 +6,13 @@ import { join } from "node:path";
 import Ajv from "ajv";
 import { KernelOriginalBootstrapStock, originalBootstrapStockFromWire } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts";
 import { originalOperationWorkerSource, type OriginalOperationReceipt } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts";
-import stockFixture from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/📋️composition.json";
-import stockSchema from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧬️schema/🔣️.json";
+import { turnBootstrapCompositionFixture as stockFixture, retainedTurnBootstrapSchema as stockSchema, actorLifetimeFixtureUrl } from "../../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
 
 test("actor instance close worker activation preserves the new generation across a delayed dispose", async () => {
     const { readFileSync } = await import("node:fs");
     const materializeSpecifier = new URL("../../🟦️.ts", import.meta.url).href;
     const { shardWorkerSource } = await import(/* @vite-ignore */ materializeSpecifier);
-    const fixture = JSON.parse(readFileSync(new URL("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+    const fixture = JSON.parse(readFileSync(actorLifetimeFixtureUrl, "utf8"));
     const prior = BigInt(fixture.reopen.prior.activationGeneration);
     const current = prior + 1n;
     expect(new Ajv({ strict: true }).validate(stockSchema, stockFixture)).toBe(true);

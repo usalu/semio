@@ -7,7 +7,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 // #region 🔌️Adapters
 import { csvParse, dsvFormat } from "d3-dsv";
 import { readFileSync } from "node:fs";
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { probeProjection, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 

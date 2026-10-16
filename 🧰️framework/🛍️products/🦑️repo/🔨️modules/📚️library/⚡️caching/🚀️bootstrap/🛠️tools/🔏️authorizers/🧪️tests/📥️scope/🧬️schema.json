@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "version",
+    "storeMilliseconds",
+    "compilerMilliseconds",
+    "cases",
+    "publications"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "storeMilliseconds": {
+      "const": 5000
+    },
+    "compilerMilliseconds": {
+      "const": 120000
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "compiler-worker",
+              "snapshot-node"
+            ]
+          },
+          "title": {
+            "enum": [
+              "release authorizer compiler consumes exact funded snapshot bytes in actual Node",
+              "captured authorizer bytes survive later Source edits and match independent esbuild and Node"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "publications": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "resolutions"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "enum": [
+              "relative-only",
+              "private-workspace"
+            ]
+          },
+          "resolutions": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "specifier",
+                "path"
+              ],
+              "properties": {
+                "specifier": {
+                  "const": "@semio-tech/fixture"
+                },
+                "path": {
+                  "const": "packages/fixture/entry.ts"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -10,7 +10,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { acquireCliSlot, releaseCliSlot } from "../🎩️globals/🟦️.ts";
 import { execAsync, execFileAsync, extractRepoResult, getGitHubRepoBaseUrl, getRepoCommand, getWorkspaceRoot, logError, parseRepoEvents } from "../🎼️utilities/🟦️.ts";
-import { openFileAtLine } from "../🎵️path-helpers/🟦️.ts";
+import { openFileAtLine } from "../🎵️path-navigation/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏬️URI Resolution

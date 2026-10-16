@@ -9,7 +9,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { cleanup, render } from "@semio-tech/ui-react/test";
-import type { PresencePeerInput } from "@semio-tech/framework-replication";
+import type { PresencePeerInput } from "@semio-tech/framework/replication";
 import { CanvasPresenceOverlayV1 } from "../../🟦️.tsx";
 import { clearArtifactPresenceRosterV1, publishArtifactPresenceRosterV1 } from "../../🟦️.ts";
 import fixture from "../../../../🧪️tests/🧫️fixtures/👕️canvas-presence/🔣️.json";

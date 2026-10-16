@@ -92,3 +92,7 @@ pub fn reconstruct(d:&SqliteDatabase,tables:&Tables,c:&mut SqliteSnapshotControl
 }
 /// 📦️ Transfers the one admitted pixel field into its actual bitmap owner.
 pub fn take(values:&mut Vec<(i64,String)>,owner:i64)->Result<String,ValueError>{let index=values.iter().position(|value|value.0==owner).ok_or_else(||invalid("bitmap native pixel field is missing"))?;Ok(values.swap_remove(index).1)}
+
+#[cfg(feature = "testing")]
+#[path = "🧪️tests/🦀️.rs"]
+pub mod pixel_laws;

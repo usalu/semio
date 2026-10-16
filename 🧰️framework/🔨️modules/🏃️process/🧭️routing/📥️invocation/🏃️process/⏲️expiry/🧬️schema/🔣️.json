@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases"],
+  "properties": {
+    "version": {"const": 1},
+    "cases": {
+      "type": "array", "minItems": 8, "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["kind", "parentMilliseconds", "requestedMilliseconds", "waitMilliseconds", "expectedAborted", "expectedInherited", "expectedRejected"],
+        "properties": {
+          "kind": {"enum": ["requested", "inherited", "ancestor", "retired", "alias", "descendant", "cancelled", "draining"]},
+          "parentMilliseconds": {"type": "integer", "minimum": 1, "maximum": 20000},
+          "requestedMilliseconds": {"type": "integer", "minimum": 0, "maximum": 40000},
+          "waitMilliseconds": {"type": "integer", "minimum": 0, "maximum": 100},
+          "expectedAborted": {"type": "boolean"},
+          "expectedInherited": {"type": "boolean"},
+          "expectedRejected": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

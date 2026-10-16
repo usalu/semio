@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { MEDIA_VIDEO_RENDER_CAPABILITY, type VideoRenderProgram } from "../../../../../../../../../🔨️modules/🎠️kernel/🎥️video-render-program/🟦️.ts";
-import { VideoRenderJobLedger } from "../../../../../../../../../🔨️modules/🎠️kernel/🧵️video-render-job/🟦️.ts";
-import { AvcPcmEncoder, avcDecoderConfigurationRecord } from "../../../../../../../../../🔨️modules/🖌️raster/🎥️video/🟦️.ts";
+import { MEDIA_VIDEO_RENDER_CAPABILITY, type VideoRenderProgram } from "@semio-tech/framework";
+import { VideoRenderJobLedger } from "@semio-tech/framework";
+import { AvcPcmEncoder, avcDecoderConfigurationRecord } from "@semio-tech/framework/raster/video";
 import { cancelVideoRenderExportV1, drawVideoRenderSceneV1, runVideoRenderExportV1, subscribeVideoRenderExportJobsV1, type VideoRenderContext2dV1, type VideoRenderEnvironmentV1, videoRenderExportJobLogV1, videoRenderExportJobsSnapshotV1, videoRenderExportTaskIdV1, videoRenderPath2dV1, type WebCodecsVideoEncoderPortV1 } from "../../🟦️.ts";
+import { videoRenderProgramFixtureUrl } from "../../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 🎥️ Laws of the browser video host, run without a browser: a recording 2D context stands in for the canvas (it fills
  * its pixels with the last fill colour, and a drawn image with a colour derived from its crop, so the first-party tier
@@ -18,7 +19,7 @@ interface ProgramFixture {
 
 function programs(): ProgramFixture {
   const here = dirname(fileURLToPath(import.meta.url));
-  return JSON.parse(readFileSync(join(here, "../../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🎞️video-render-program/🔣️.json"), "utf8")) as ProgramFixture;
+  return JSON.parse(readFileSync(videoRenderProgramFixtureUrl, "utf8")) as ProgramFixture;
 }
 
 class RecordingPath {

@@ -6,7 +6,7 @@ import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { createDevPluginSource } from "@semio-tech/framework";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
-import { rendererResidentLedger } from "../../💾️resident/🟦️.ts";
+import { rendererResidentLedger } from "../../../../../../../🔨️modules/🖼️canvas/💾️renderer-resident/🟦️.ts";
 import residentFixture from "../../💾️resident/🧪️tests/🧫️fixtures/🔣️.json";
 import {
   BootstrapStatusNotice,
@@ -21,7 +21,7 @@ import { localProgramsV1, programPluginIdV1, sessionProgramsV1, upsertLoadedProg
 import { extensionProgramForV1, invocationPluginIdV1, spaceIndexOpeningArgsV1 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import { SpaceDirectoryHistoryV1 } from "../../🧱️elements/🏛️ShellHost/📇️space-directory/🟦️.ts";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
-import valueResidentSchema from "../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json" with { type: "json" };
+import { valueResidentSchema } from "../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 
 describe("renderer quick contracts", () => {
   it("validates the language-neutral renderer resident capacity with the Node oracle", () => {

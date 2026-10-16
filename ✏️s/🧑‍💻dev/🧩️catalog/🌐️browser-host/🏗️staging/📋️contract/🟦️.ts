@@ -1,7 +1,7 @@
 import{createHash}from"node:crypto";
 import{join,isAbsolute}from"node:path";
-import{validateJsonSchemaSubset}from"../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import{readBuildMode,type BuildMode}from"../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{readBuildMode,type BuildMode}from"@semio-tech/process/build-mode";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 export const testBrowserHostStageLimitsV1=Object.freeze({...schema.definitions.Policy.const});
 /** 📋️ Names immutable selected Source DATA without granting storage or reader custody. */

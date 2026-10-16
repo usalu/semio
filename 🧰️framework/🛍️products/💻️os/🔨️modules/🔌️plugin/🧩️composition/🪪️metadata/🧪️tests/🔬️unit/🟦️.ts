@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { applyPatch } from "fast-json-patch";
 import publicationFixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import fixture from "../../../../../🏪️store/🧩️composition/🚪️open/🌱️genesis/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
+import { compositionOpenGenesisFixture as fixture } from "../../../../../🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
 test("private child metadata admits the independent complete identity corpus", () => {
   
   for (const row of fixture.cases) {
@@ -78,7 +78,7 @@ test("common publication group identity is independent of original optional tran
   }
   
   const source = readFileSync(resolve(import.meta.dir, "../../🦀️.rs"), "utf8");
-  expect(source.includes("pub(crate) group_id: Option<&'a str>")).toBe(true);
+  expect(source.includes("pub group_id: Option<&'a str>")).toBe(true);
   expect(source.includes("group_present: Option<bool>")).toBe(true);
   console.log("[DEBUG] unpooled Buffer + RFC6902: nine independent group/transaction combinations preserve absent, empty, Unicode identities and original optional transaction");
 });

@@ -163,3 +163,19 @@ export function parseMdListItemAdded(value: unknown, at = "$"): MdListItemAdded 
     item: stdioMdCommonmarkAnyDiffGuardArray(row["item"], `${at}.item`).map((item, index) => stdioMdCommonmarkAnyDiffGuardObject(item, `${at}.item[${index}]`)),
   };
 }
+
+export function parseMdBlockDiff(value: unknown, at = "$"): MdBlockDiff {
+  return ((row0) => { switch (stdioMdCommonmarkAnyDiffGuardMember(row0["kind"], `${at}.kind`, ["heading", "paragraph", "list", "codeBlock", "blockQuote", "thematicBreak", "htmlBlock", "replace"] as const)) { case "heading": return { kind: "heading", level: row0["level"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardInteger(row0["level"], `${at}.level`), inlines: row0["inlines"] === undefined ? undefined : [...stdioMdCommonmarkAnyDiffGuardArray(row0["inlines"], `${at}.inlines`)] }; case "paragraph": return { kind: "paragraph", inlines: row0["inlines"] === undefined ? undefined : [...stdioMdCommonmarkAnyDiffGuardArray(row0["inlines"], `${at}.inlines`)] }; case "list": return { kind: "list", ordered: row0["ordered"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardBoolean(row0["ordered"], `${at}.ordered`), start: row0["start"] === undefined ? undefined : parseNullableUint32(row0["start"], `${at}.start`), tight: row0["tight"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardBoolean(row0["tight"], `${at}.tight`), items: row0["items"] === undefined ? undefined : parseMdListItemsDiff(row0["items"], `${at}.items`) }; case "codeBlock": return { kind: "codeBlock", info: row0["info"] === undefined ? undefined : parseNullableString(row0["info"], `${at}.info`), literal: row0["literal"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardString(row0["literal"], `${at}.literal`) }; case "blockQuote": return { kind: "blockQuote", blocks: row0["blocks"] === undefined ? undefined : parseMdBlocksDiff(row0["blocks"], `${at}.blocks`) }; case "thematicBreak": return { kind: "thematicBreak" }; case "htmlBlock": return { kind: "htmlBlock", raw: row0["raw"] === undefined ? undefined : stdioMdCommonmarkAnyDiffGuardString(row0["raw"], `${at}.raw`) }; case "replace": return { kind: "replace", block: stdioMdCommonmarkAnyDiffGuardObject(row0["block"], `${at}.block`) }; } })(stdioMdCommonmarkAnyDiffGuardObject(value, `${at}`));
+}
+
+export type NullableString = string | null;
+
+export function parseNullableString(value: unknown, at = "$"): NullableString {
+  return (value === null ? null : stdioMdCommonmarkAnyDiffGuardString(value, `${at}`));
+}
+
+export type NullableUint32 = number | null;
+
+export function parseNullableUint32(value: unknown, at = "$"): NullableUint32 {
+  return (value === null ? null : stdioMdCommonmarkAnyDiffGuardInteger(value, `${at}`, {"minimum": 0}));
+}

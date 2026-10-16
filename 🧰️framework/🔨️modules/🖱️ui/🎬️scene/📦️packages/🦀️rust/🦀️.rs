@@ -16,7 +16,6 @@ pub use semio_framework_ui_scene_node_graph::{
     NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene,
     NodeGraphSceneLane, NODE_GRAPH_SCENE_LANE_BODY_KEYS, NODE_GRAPH_SCENE_LANE_FIELDS, NODE_GRAPH_SCENE_LANE_NAMES,
 };
-pub use semio_framework_ui_scene_pack as pack;
 pub use semio_framework_ui_scene_plane::{
     board2d_default_brush_weights_json, board2d_default_glyph_catalogs_json, board2d_default_grid_factor, board2d_default_highlighted_ids_json, board2d_default_lod_mode, board2d_default_placement_compatibility_json, board2d_default_selection_json,
     board2d_default_selection_method, board2d_default_true, board2d_highlights_nothing, canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close,

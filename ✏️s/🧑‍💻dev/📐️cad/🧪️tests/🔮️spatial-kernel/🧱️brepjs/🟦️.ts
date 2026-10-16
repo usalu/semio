@@ -1,7 +1,7 @@
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** 🧭️ `@semio-tech/cad-js/brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM, kept ONLY as a vitest differential oracle (see `import.meta.vitest`-guarded exports below and `🎫️tickets/…/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME/📓️w4a-spatial-kernel-first-party.md`). The production runtime kernel is `🧠️semio/🟦️.ts`; pure preview math moved to `🧮️preview/🟦️.ts`. */
+/** 🧭️ `@semio-tech/cad-js/brepjs` — `SpatialKernel` backed by brepjs + OpenCascade WASM, kept ONLY as a vitest differential oracle (see `import.meta.vitest`-guarded exports below and `🎫️tickets/…/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME/📓️w4a-spatial-kernel-first-party.md`). The production runtime kernel is `🧠️semio/🟦️.ts`; pure preview math moved to the `🧮️preview` modules. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -64,51 +64,19 @@ import {
   type OwnedBrepWire as Wire,
 } from "../../../../../🔌️plugins/📐️cad/⚙️engine/🧱️brepjs/🟦️.ts";
 import { applyModelDiff, isEmptyModelDiff, type SpatialKernel, type ModelDiff, type EdgeRecordDiff } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import { Model, ModelSpace, type ModelJson, defaultModelDefinitionId, type ModelSpaceJson } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type ModelJson } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { ModelSpace, type ModelSpaceJson } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🌌️model-space/🟦️.ts";
+import { defaultModelDefinitionId } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
+import { Model } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
 import { emptyMeshTransfer, kernelGeometry, type EdgeCurve, type EdgeInfo, type FaceInfo, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/framework-3d-js";
-import {
-  PreciseSpatialKernelMath,
-  aabbDifferencePieces,
-  aabbIntersect,
-  arcEndFromAngle,
-  arcEndOnCircle,
-  arcSamplePoints,
-  boxModelDiff,
-  circleFromCenterRadiusPoint,
-  derivedFacePoints,
-  edgeCurveLength,
-  ellipseSamplePoints,
-  faceCentroid,
-  faceNormalFromPoints,
-  fuseSolidsToExternalFaces,
-  geom,
-  meshFaceModelDiff,
-  modelObjectAabb,
-  nurbsCurveFromPoles,
-  nurbsDisplaySamplePoints,
-  readVec3,
-  vec3Add,
-  vec3Cross,
-  vec3Distance,
-  vec3Dot,
-  vec3Length,
-  vec3Normalize,
-  vec3Scale,
-  vec3Sub,
-  type EdgeRecord,
-  type EdgeRef,
-  type FaceRecord,
-  type FaceRef,
-  type MutableSolidRecord,
-  type ShellRef,
-  type SolidPrimitive,
-  type SolidRecord,
-  type SolidRef,
-  type VertexRecord,
-  type VertexRef,
-  type WireRecord,
-  type WireRef,
-} from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import { PreciseSpatialKernelMath, boxModelDiff, meshFaceModelDiff } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import { aabbDifferencePieces, aabbIntersect, modelObjectAabb } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/📦️aabb/🟦️.ts";
+import { arcEndFromAngle, arcEndOnCircle, arcSamplePoints, circleFromCenterRadiusPoint, edgeCurveLength, ellipseSamplePoints, nurbsCurveFromPoles, nurbsDisplaySamplePoints } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🌀️curve-sampling/🟦️.ts";
+import { derivedFacePoints, faceCentroid, fuseSolidsToExternalFaces } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🔺️face-geometry/🟦️.ts";
+import { faceNormalFromPoints } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/⚓️anchor-placement/🟦️.ts";
+import { geom, type EdgeRecord, type EdgeRef, type FaceRecord, type FaceRef, type MutableSolidRecord, type ShellRef, type SolidPrimitive, type SolidRecord, type SolidRef, type VertexRecord, type VertexRef, type WireRecord, type WireRef } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🔷️brep-records/🟦️.ts";
+import { readVec3 } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🎚️preview-params/🟦️.ts";
+import { vec3Add, vec3Cross, vec3Distance, vec3Dot, vec3Length, vec3Normalize, vec3Scale, vec3Sub } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/📏️vec3/🟦️.ts";
 export { kernelGeometry };
 // #endregion 🔌️Adapters
 

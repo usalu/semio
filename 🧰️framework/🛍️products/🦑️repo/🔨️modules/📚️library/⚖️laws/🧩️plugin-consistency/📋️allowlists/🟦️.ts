@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: shrink-only allowlists and exemptions.
+/** 📃️ Wave 4 plugin consistency policy: shrink-only allowlists and exemptions.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 

@@ -1,0 +1,214 @@
+{
+  "version": 1,
+  "parameters": [
+    "root",
+    "graph",
+    "args",
+    "invocation",
+    "phaseControl",
+    "options"
+  ],
+  "cases": [
+    {
+      "name": "cancelled-before-watch",
+      "phase": "cancelled",
+      "child": "raw",
+      "stop": "pre-admission",
+      "failure": "none",
+      "admitted": false,
+      "finite": false,
+      "drained": false
+    },
+    {
+      "name": "expired-before-watch",
+      "phase": "expired",
+      "child": "raw",
+      "stop": "pre-admission",
+      "failure": "none",
+      "admitted": false,
+      "finite": false,
+      "drained": false
+    },
+    {
+      "name": "copied-phase-before-watch",
+      "phase": "copied",
+      "child": "raw",
+      "stop": "pre-admission",
+      "failure": "none",
+      "admitted": false,
+      "finite": false,
+      "drained": false
+    },
+    {
+      "name": "foreign-original-before-watch",
+      "phase": "foreign",
+      "child": "raw",
+      "stop": "pre-admission",
+      "failure": "none",
+      "admitted": false,
+      "finite": false,
+      "drained": false
+    },
+    {
+      "name": "cancelled-after-awaited-import",
+      "phase": "issued",
+      "child": "raw",
+      "stop": "after-import",
+      "failure": "none",
+      "admitted": false,
+      "finite": false,
+      "drained": false
+    },
+    {
+      "name": "finite-raw-command",
+      "phase": "issued",
+      "child": "raw",
+      "stop": "after-child",
+      "failure": "none",
+      "admitted": true,
+      "finite": true,
+      "drained": false
+    },
+    {
+      "name": "finite-owned-descendant",
+      "phase": "issued",
+      "child": "owned",
+      "stop": "after-child",
+      "failure": "none",
+      "admitted": true,
+      "finite": true,
+      "drained": false
+    },
+    {
+      "name": "narrower-abort-drains-raw",
+      "phase": "issued",
+      "child": "raw",
+      "stop": "abort-child",
+      "failure": "none",
+      "admitted": true,
+      "finite": true,
+      "drained": true
+    },
+    {
+      "name": "narrower-abort-drains-owned",
+      "phase": "issued",
+      "child": "owned",
+      "stop": "abort-child",
+      "failure": "none",
+      "admitted": true,
+      "finite": true,
+      "drained": true
+    },
+    {
+      "name": "undefined-primary-drains-child",
+      "phase": "issued",
+      "child": "raw",
+      "stop": "watch-error",
+      "failure": "undefined",
+      "admitted": true,
+      "finite": true,
+      "drained": true
+    },
+    {
+      "name": "frozen-primary-drains-child",
+      "phase": "issued",
+      "child": "owned",
+      "stop": "watch-error",
+      "failure": "frozen",
+      "admitted": true,
+      "finite": true,
+      "drained": true
+    },
+    {
+      "name": "finite-deadline-stops-idle-watch",
+      "phase": "issued",
+      "child": "raw",
+      "stop": "deadline-idle",
+      "failure": "none",
+      "admitted": true,
+      "finite": false,
+      "drained": false
+    },
+    {
+      "name": "undefined-child-primary-with-concurrent-stop",
+      "phase": "issued",
+      "child": "raw",
+      "stop": "child-error",
+      "failure": "undefined",
+      "admitted": true,
+      "finite": true,
+      "drained": true
+    },
+    {
+      "name": "frozen-child-primary-with-concurrent-stop",
+      "phase": "issued",
+      "child": "owned",
+      "stop": "child-error",
+      "failure": "frozen",
+      "admitted": true,
+      "finite": true,
+      "drained": true
+    }
+  ],
+  "childParameters": [
+    "root",
+    "args",
+    "parent",
+    "phaseControl",
+    "changes"
+  ],
+  "childCases": [
+    {
+      "phase": "issued",
+      "accepted": true,
+      "executed": 1,
+      "projected": true
+    },
+    {
+      "phase": "cancelled",
+      "accepted": false,
+      "executed": 0,
+      "projected": false
+    },
+    {
+      "phase": "copied",
+      "accepted": false,
+      "executed": 0,
+      "projected": false
+    },
+    {
+      "phase": "foreign",
+      "accepted": false,
+      "executed": 0,
+      "projected": false
+    },
+    {
+      "phase": "expired",
+      "accepted": false,
+      "executed": 0,
+      "projected": false
+    },
+    {
+      "phase": "after-project",
+      "accepted": false,
+      "executed": 0,
+      "projected": false
+    },
+    {
+      "phase": "after-progress",
+      "accepted": false,
+      "executed": 0,
+      "projected": true
+    },
+    {
+      "phase": "after-run",
+      "accepted": false,
+      "executed": 1,
+      "projected": true
+    }
+  ],
+  "receiverCases": [
+    "fallback",
+    "child"
+  ]
+}

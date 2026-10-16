@@ -81,7 +81,7 @@ pub fn claim_inherited_local_hub_credential(expected_class: &str) -> Result<Arc<
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn claim_local_hub_credential_with(claimed: &OnceLock<ClaimedLocalHubCredential>, expected_class: &str, read: impl FnOnce(&str) -> Result<LocalHubCredential, super::client::DirectoryClientError>) -> Result<Arc<LocalHubCredential>, IdentityError> {
+#[doc(hidden)] pub fn claim_local_hub_credential_with(claimed: &OnceLock<ClaimedLocalHubCredential>, expected_class: &str, read: impl FnOnce(&str) -> Result<LocalHubCredential, super::client::DirectoryClientError>) -> Result<Arc<LocalHubCredential>, IdentityError> {
     let claimed = claimed.get_or_init(|| ClaimedLocalHubCredential { client_class: expected_class.to_string(), result: read(expected_class).map(Arc::new).map_err(|_| IdentityError) });
     if claimed.client_class != expected_class {
         return Err(IdentityError);
@@ -108,9 +108,3 @@ pub async fn restore_claimed<T: DirectoryTransport>(ctx: &OperationContext, tran
     })
 }
 //#endregion 🔖️Bootstrap
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

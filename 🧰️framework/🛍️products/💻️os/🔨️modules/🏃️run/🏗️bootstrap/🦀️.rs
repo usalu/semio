@@ -15,8 +15,7 @@ extern crate semio_framework as store;
 extern crate semio_framework_artifact_workflow_workflow as workflow;
 extern crate semio_framework_os_kernel as protocol;
 
-#[path = "../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/🦀️.rs"]
-mod workspace_identity;
+use semio_framework_process_routing_workspace as workspace_identity;
 
 /// 🏠️ Admits only a declared package workspace with regular build authority.
 fn is_repository_root(path: &Path) -> Result<bool, String> {

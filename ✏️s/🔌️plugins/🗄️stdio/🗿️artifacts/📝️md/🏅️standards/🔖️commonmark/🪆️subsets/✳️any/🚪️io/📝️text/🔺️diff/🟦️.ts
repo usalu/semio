@@ -49,5 +49,5 @@ export const stdioMdCommonmarkAnyDiffTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseMdDiffText(value: unknown, at = "$"): MdDiffText {
-  return stdioMdCommonmarkAnyDiffTextGuardObject(value, `${at}`);
+  return stdioMdCommonmarkAnyDiffTextGuardString(value, `${at}`);
 }

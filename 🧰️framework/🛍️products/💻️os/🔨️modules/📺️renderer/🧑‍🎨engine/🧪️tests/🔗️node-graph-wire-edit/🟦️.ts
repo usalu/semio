@@ -112,7 +112,7 @@ describe("node graph wire edit", () => {
   it("spells a removal the way the guest reads it, in both renderers", () => {
     // 🩸️ The wgpu renderer wrote `edgeId` — the engine's private numbering's name — while the guest's
     // `disconnect` reads `synapseId`: a well-formed command silently dropped.
-    const guest = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🛠️tool-machine/🦀️.rs"), "utf8");
+    const guest = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🔨️modules/🛠️tool-machine/🦀️.rs"));
     const guestDisconnect = guest.slice(guest.indexOf('"disconnect" =>'));
     const guestField = /closed\(&\["operation", "(\w+)"\]\)/u.exec(guestDisconnect)?.[1];
     expect(guestField).toBe("synapseId");

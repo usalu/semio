@@ -62,7 +62,7 @@ bun repo run os-hub:build        # cargo build --release --bin os-hub → dist/b
 bun repo run os-hub:build-dev    # dev profile, what the dev launcher execs
 ```
 
-`build` is the release target (`📦️packages/🦀️rust/📜️script.ts`, `BuildScript` →
+`build` is the release target (`🎛️commands/🏗️build-and-dev/🟦️.ts`, `BuildScript` →
 `["--release", "--bin", "os-hub"]`). Optional cargo features select the swappable backends:
 `sqlite` (on by default for the directory), `postgres`, `neo4j`, `native-artifact-execution`. A
 backend named by an env var whose feature was not compiled in is a boot error naming the backend.

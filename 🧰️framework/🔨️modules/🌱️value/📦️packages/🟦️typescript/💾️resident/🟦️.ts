@@ -1,0 +1,3 @@
+/** 💾️ Public entry `@semio-tech/value-ts/resident`: the explicit surface that importers outside the module use. */
+export { OwnedResidentAdmission, OwnedResidentAdmissionResult, OwnedResidentBackingCustody, OwnedResidentExternalBacking, OwnedResidentLedger, OwnedResidentOwner, OwnedResidentPage, OwnedResidentReader, OwnedResidentRecord, OwnedResidentRecordDetachment, OwnedResidentRetirement } from "../../../💾️resident/🟦️.ts";
+export type { ResidentAdmissionKind, ResidentCapacity, ResidentExternalAdmission, ResidentGrant, ResidentOwnerAdmission, ResidentPageAdmission, ResidentPartition, ResidentReaderAdmission, ResidentRecordAdmission, ResidentResources, ResidentStep } from "../../../💾️resident/🟦️.ts";

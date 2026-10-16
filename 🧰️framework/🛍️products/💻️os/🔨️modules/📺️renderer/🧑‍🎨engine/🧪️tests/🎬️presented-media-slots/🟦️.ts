@@ -6,7 +6,7 @@ import draft7 from "ajv/dist/refs/json-schema-draft-07.json";
 import fixture from "../🧫️fixtures/🎬️presented-media-slots/🔣️.json";
 import contract from "../../🎯️targets/🧊️wgpu/🎬️media-slots/🧬️contract/🔣️.json";
 import mediaContract from "../../../../🔌️plugin/🪟️window-kits/🎬️media/🧬️contract/🔣️.json";
-import reservation from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎬️media-transport-reservation/🔣️.json";
+import { mediaTransportReservationFixture as reservation } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 describe("🎬️ presented media slots", () => {
   test("admissible UI labels reach the aggregate descriptor byte ceiling before the slot ceiling", () => {

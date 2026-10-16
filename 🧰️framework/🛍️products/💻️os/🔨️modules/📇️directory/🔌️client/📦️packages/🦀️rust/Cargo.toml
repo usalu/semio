@@ -23,6 +23,7 @@ path = "../../🧩️composition/🦀️.rs"
 
 [features]
 default = []
+testkit = []
 ureq = ["dep:ureq", "dep:semio-framework-actor"]
 sync = ["ureq", "dep:tokio-tungstenite", "dep:semio-framework-os-services"]
 
@@ -41,9 +42,6 @@ semio-framework-os-channel = { path = "../../../../📡️spr/🧵️channel/�
 semio-framework-plugin-component-receipt = { path = "../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-
-[dev-dependencies]
-semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 ureq = { version = "2", optional = true }

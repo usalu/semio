@@ -1,12 +1,12 @@
 # Source Inventory
 
-The owned inventory contains 2247 paths: 1839 source/interface/owned-product paths and 408 retained ticket inputs/reports. Exact paths are recorded in `📥️files.json`.
+The owned inventory contains 2570 paths: 1962 source/interface/owned-product paths and 608 retained ticket inputs/reports. Exact paths are recorded in `📥️files.json`.
 
 Read-only scoped Git whitespace validation exited 0. 0 existing recorded paths exceed 256 UTF-16 units including the absolute workspace root. No modifying Git command was used.
 
 ## Removed Paths
 
-131 recorded paths are absent; these preserve removed ownership locations, the intermediate declaration path and old artifact marker filenames.
+134 recorded paths are absent; these preserve removed ownership locations, the intermediate declaration path and old artifact marker filenames.
 
 - `.🧬semio/🦑️repo/⚡️cache/tools/native-executables/semio-wgpu-native/4913bb3cd98aab28f0cde27f3362fd9e3d2befeb0fa300864432ff2ffe1eed38/.nx-artifact.json`
 - `.🧬semio/🦑️repo/⚡️cache/tools/tectonic/0.16.9/aarch64-apple-darwin/.nx-artifact.json`
@@ -97,6 +97,9 @@ Read-only scoped Git whitespace validation exited 0. 0 existing recorded paths e
 - `🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
 - `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/prototype/.nx-artifact.json`
 - `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/release/.nx-artifact.json`
+- `🧰️framework/🔨️modules/🎠️kernel/🫧️transient/📋️project.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/📋️schema.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/🔣️.json`
 - `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/dist/wasm/prototype/.nx-artifact.json`
 - `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/.nx-artifact.json`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts/.nx-artifact.json`

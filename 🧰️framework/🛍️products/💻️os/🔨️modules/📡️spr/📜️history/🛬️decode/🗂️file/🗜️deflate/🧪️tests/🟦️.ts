@@ -5,11 +5,12 @@ import { inflateRawSync } from "node:zlib";
 import { readFileSync, existsSync } from "node:fs";
 import schema from "../🧬️schema/🔣️.json";
 import law from "./🧫️fixtures/🔣️.json";
+import { formatVerificationFixtureUrl } from "../../../../../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/🟦️.ts";
 
 test("original compressed History frame retains paid paged source and exact Deflate output",()=>{
   expect(new Ajv().compile(schema)(law)).toBe(true);
   const read=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8");
-  const reference=JSON.parse(read("../../../../../../../../../🔨️modules/📡️replication/📐️format/🔎️verification/🧪️tests/🧫️fixtures/🔣️.json"));
+  const reference=JSON.parse(readFileSync(formatVerificationFixtureUrl,"utf8"));
   const frame=reference.compressed.find((row:{id:string})=>row.id===law.fixture);
   expect(frame.error).toBe(null);
   const output=inflateRawSync(Buffer.from(frame.storedHex,"hex"));expect(output.toString("hex")).toBe(frame.rawHex);expect(output.length).toBe(9);

@@ -12,7 +12,7 @@
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
 import { canonicalEventLine, canonicalJson, eventChecksum } from "../../📦️packages/🟦️typescript/📡️events.ts";
-import { defineTestAdapter } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 //#endregion 🔌️Adapters
 
 //#region 🔮️Oracle

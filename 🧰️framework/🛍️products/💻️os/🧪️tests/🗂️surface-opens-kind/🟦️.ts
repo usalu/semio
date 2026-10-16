@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { surfaceOpensArtifactKindV1, type SurfaceArtifactKindV1, type SurfaceKindAppV1 } from "../../🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { surfaceOpensArtifactKindV1, type SurfaceArtifactKindV1, type SurfaceKindAppV1 } from "@semio-tech/framework/directory/schema";
 
 type SurfaceOpensKindCase = {
   readonly name: string;

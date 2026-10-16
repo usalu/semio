@@ -1,0 +1,49 @@
+{
+ "crate_dir": "🧰️framework/🔨️modules/⏳️async",
+ "lib_name": "semio_framework_async",
+ "companion_dir": "🧰️framework/🔨️modules/⏳️async/🧪️tests/🍰️companion-wasm-pool",
+ "doc": "//! 🍰️ Companion tests of the cooperative wasm worker pool of async, run natively through the `wasm-pool-host` feature.\n//!\n//! 🧭️ The laws sit below a wrapper that stands for the `wasm_pool` module: it restates the module's imports and uses the crate's `wasm_internals` hooks.",
+ "preamble": [
+  "",
+  "use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};",
+  "",
+  "pub fn product_directory() -> &'static Path {",
+  "    static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();",
+  "    DIRECTORY.get_or_init(|| Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../..\"))",
+  "}",
+  "",
+  "fn leaked(relative: &str) -> &'static [u8] {",
+  "    static READ: OnceLock<Mutex<HashMap<String, &'static [u8]>>> = OnceLock::new();",
+  "    let mut read = READ.get_or_init(Default::default).lock().unwrap();",
+  "    read.entry(relative.to_owned()).or_insert_with(|| {",
+  "        let path = product_directory().join(relative);",
+  "        Box::leak(std::fs::read(&path).unwrap_or_else(|error| panic!(\"test input {}: {error}\", path.display())).into_boxed_slice())",
+  "    })",
+  "}",
+  "",
+  "pub fn text(relative: &str) -> &'static str {",
+  "    std::str::from_utf8(leaked(relative)).unwrap_or_else(|error| panic!(\"test input {relative} is not UTF-8: {error}\"))",
+  "}",
+  "",
+  "pub fn bytes(relative: &str) -> &'static [u8] {",
+  "    leaked(relative)",
+  "}",
+  ""
+ ],
+ "modules": [
+  {
+   "name": "wasm_pool",
+   "emoji": "🕸",
+   "folder": "wasm-pool",
+   "lib_file": "🕸️wasm-pool/🦀️.rs",
+   "tests": "🧪️tests/🔬️wasm-pool-cooperative/🦀️.rs",
+   "glob": "semio_framework_async::*",
+   "doc": "The cooperative wasm worker pool laws, run natively through the `wasm-pool-host` feature.",
+   "include": true,
+   "extra": [
+    "use semio_framework_async::wasm_internals::{CooperativePoolSnapshot, WorkerPool, WorkerPoolUse};",
+    "use std::{sync::{Arc, Mutex, atomic::{AtomicU32, Ordering}}, task::Waker};"
+   ]
+  }
+ ]
+}

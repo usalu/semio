@@ -138,7 +138,7 @@
         "packSchemaHash": {
           "type": "string",
           "pattern": "^(?!0{64}$)[a-f0-9]{64}$",
-          "description": "🧬️ The codec's structural pack-schema fingerprint (`os_pack::schema_hash`), generated from the live Rust receipt by the gis `native-codec-projection` verb; the trusted-catalog bootstrap reads it verbatim."
+          "description": "🧬️ The codec's structural pack-schema fingerprint (`pack::record::schema_hash`), generated from the live Rust receipt by the gis `native-codec-projection` verb; the trusted-catalog bootstrap reads it verbatim."
         }
       }
     },

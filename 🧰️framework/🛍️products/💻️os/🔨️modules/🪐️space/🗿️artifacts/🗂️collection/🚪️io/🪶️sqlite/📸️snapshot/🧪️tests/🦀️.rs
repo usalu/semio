@@ -72,11 +72,11 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use semio_framework_os_kernel as store;
 use store::sqlite_snapshot::*;
-#[path="../../../../../../🧪️tests/🪶️sqlite/🔬️oracle/🦀️.rs"]mod oracle;
-#[path="../../../../../../🧪️tests/🪶️sqlite/🫴️native-caller/🦀️.rs"]mod native_caller;
+use semio_framework_os_space_testing_sqlite_oracle as oracle;
+use semio_framework_os_space_testing_sqlite_native_caller as native_caller;
 use native_caller::*;
 const SQL:&str=include_str!("../🗄️.sql");
-fn f()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn f()->serde_json::Value{serde_json::from_str(crate::test_inputs::text("🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn fixture()->CollectionSnapshot{{let f=f();let mut value:CollectionSnapshot=serde_json::from_value(f["nativeSnapshot"].clone()).unwrap();let mut sizes=f["blobSizes"].as_array().unwrap().iter();for entry in&mut value.entries{if let ArtifactBody::Blob{blob}=entry.body.as_mut(){blob.size=sizes.next().unwrap().as_str().unwrap().parse().unwrap();}}value}}
 fn database()->SqliteDatabase{oracle::database(&f(),SQL)}
 fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:S_COLLECTION_SCHEMA.into(),standard:"1".into(),subset:"*".into()}}
@@ -101,22 +101,21 @@ fn sqlite_snapshot_framework_collection_native_input_retained_materialization_us
  }
 }
 
-#[path="../../../../../../🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs"]
-mod public_preflight;
+use semio_framework_os_space_testing_sqlite_preflight as public_preflight;
 #[test]
 fn sqlite_snapshot_framework_collection_public_borrowed_native_preflight_admits_actual_owner(){
- let facet:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📏️preflight/🔣️.json")).unwrap();
+ let facet:serde_json::Value=serde_json::from_str(crate::test_inputs::text("🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️preflight/🔣️.json")).unwrap();
  let mut short=fixture();short.name=facet["textUnit"].as_str().unwrap().into();
  let mut long=short.clone();long.name=facet["textUnit"].as_str().unwrap().repeat(usize::try_from(facet["repeat"].as_u64().unwrap()).unwrap());
  let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(facet["callerGrant"].clone()).unwrap();let maximum=facet["nativeMaximumBytes"].as_u64().unwrap()as usize;let mut receive=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{assert!(event.owned_bytes<=maximum);true};let mut emit=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(event.owned_bytes<=maximum);true};let mut receive_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut emit_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut receive);let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut emit);decode.install_retirement_recipient(&mut receive_recipient).unwrap();encode.install_retirement_recipient(&mut emit_recipient).unwrap();let mut original_io=store::io::io_mechanism::IoRunControl::new(&mut decode,&mut encode,grant);
- public_preflight::verify(&short,&long,SQL,usize::try_from(facet["rows"].as_u64().unwrap()).unwrap(),long.name.len(),usize::try_from(facet["cancelAt"].as_u64().unwrap()).unwrap(),|operation|crate::test_allocation::observe(operation),&mut original_io);
+ public_preflight::verify(&short,&long,SQL,usize::try_from(facet["rows"].as_u64().unwrap()).unwrap(),long.name.len(),usize::try_from(facet["cancelAt"].as_u64().unwrap()).unwrap(),|operation|semio_framework_trace_memory_testing::observe(operation),&mut original_io);
 }
 
 
 #[test]
 fn sqlite_snapshot_framework_collection_original_borrowed_variants_match_serde_owner(){
     use semio_framework_dsl_record::{DslVariants,native_encoding::FieldProjectionView as V};
-    let schema:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🏭️native-schema/🔣️.json")).unwrap();
+    let schema:serde_json::Value=serde_json::from_str(crate::test_inputs::text("🧪️tests/🧫️fixtures/🏭️native-schema/🔣️.json")).unwrap();
     let neutral=f();let source=fixture();let mut sizes=neutral["blobSizes"].as_array().unwrap().iter();let mut witnessed=std::collections::BTreeSet::new();
     let authored_entries=neutral["nativeSnapshot"]["entries"].as_array().unwrap();assert_eq!(source.entries.len(),authored_entries.len());
     for(entry,authored)in source.entries.iter().zip(authored_entries){
@@ -143,7 +142,7 @@ fn semantic_role_source(index:usize,text:&str)->CollectionSnapshot{let mut sourc
 #[test]
 fn sqlite_snapshot_framework_collection_complete_native_semantic_text_roles_and_columns(){
  use store::os_store::serialization::ArtifactSqliteSnapshotHost;use std::io::Write;use std::process::{Command,Stdio};
- let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
+ let plan:serde_json::Value=serde_json::from_str(crate::test_inputs::text("🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
  
  let defaults=SqliteDatabaseLimits::default();let text=plan["text"].as_str().unwrap();assert_eq!(text.len(),plan["textBytes"].as_u64().unwrap()as usize);
  for(index,sample)in plan["cases"].as_array().unwrap().iter().enumerate(){
@@ -174,7 +173,7 @@ fn sqlite_snapshot_framework_collection_complete_native_semantic_text_roles_and_
 #[test]
 fn sqlite_snapshot_framework_collection_actual_borrowed_wire_matches_public_file_for_every_text_role(){
  use semio_framework_value::NativeEncodeControl;
- let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
+ let plan:serde_json::Value=serde_json::from_str(crate::test_inputs::text("🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
  for(index,_)in plan["cases"].as_array().unwrap().iter().enumerate(){
   let source=semantic_role_source(index,plan["text"].as_str().unwrap());
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
@@ -200,7 +199,7 @@ fn sqlite_snapshot_framework_collection_actual_borrowed_wire_matches_public_file
 #[test]
 fn sqlite_snapshot_framework_collection_borrowed_semantic_gate_uses_closed_exact_cells_before_typed_construction(){
  use store::os_store::serialization::ArtifactSqliteSnapshotHost;
- let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();let defaults=SqliteDatabaseLimits::default();
+ let plan:serde_json::Value=serde_json::from_str(crate::test_inputs::text("🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();let defaults=SqliteDatabaseLimits::default();
  for(index,sample)in plan["cases"].as_array().unwrap().iter().enumerate(){
   let source=semantic_role_source(index,plan["text"].as_str().unwrap());let bytes=sample["semanticBytes"].as_u64().unwrap()as usize;let rows=plan["rows"].as_u64().unwrap()as usize;let schema=CollectionSnapshot::SQLITE_SCHEMA.len();
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=payload(&source,encoding);

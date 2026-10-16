@@ -1,0 +1,207 @@
+def imports_parser(source: str, name: str) -> bool:
+    return re.search(rf"import\s*(?:type\s*)?\{{[^}}]*\bparse{re.escape(name)}\b[^}}]*\}}\s*from", source) is not None
+
+
+def build_index() -> dict[str, Owner]:
+    """Every schema document under `✏️s`, by `$id`, so a `$ref` into another document finds that document's TypeScript leaf."""
+    index: dict[str, Owner] = {}
+    for module in modules("✏️s"):
+        for path in documents(module):
+            try:
+                with open(os.path.join(REPO, path), encoding="utf-8") as handle:
+                    document = json.load(handle)
+            except Exception:  # noqa: BLE001
+                continue
+            identifier = document.get("$id")
+            if not isinstance(identifier, str):
+                continue
+            facet = os.path.dirname(path[len(module) + 1 :])
+            ts = os.path.join(REPO, module, facet, LEAF["🟦️typescript"]) if facet else os.path.join(REPO, module, LEAF["🟦️typescript"])
+            index[identifier] = Owner(ts, set(exports_of(document)))
+    return index
+
+
+def read_text(path: str, cache: dict[str, str]) -> str:
+    if path not in cache:
+        try:
+            with open(path, encoding="utf-8") as handle:
+                cache[path] = handle.read()
+        except OSError:
+            cache[path] = ""
+    return cache[path]
+
+
+def import_lines(target: str, wanted: dict[str, set[str]]) -> str:
+    lines = []
+    for owner in sorted(wanted):
+        relative = os.path.relpath(owner, os.path.dirname(target)).replace(os.sep, "/")
+        relative = relative if relative.startswith(".") else f"./{relative}"
+        lines.append(f"import {{ {', '.join(f'parse{name}' for name in sorted(wanted[owner]))} }} from {json.dumps(relative, ensure_ascii=False)};")
+    return "\n".join(lines)
+
+
+def with_imports(source: str, lines: str) -> str:
+    if not lines:
+        return source
+    if source.startswith("/**"):
+        end = source.find("*/")
+        if end != -1:
+            cut = source.find("\n", end) + 1
+            return f"{source[:cut]}{lines}\n{source[cut:]}"
+    return f"{lines}\n{source}"
+
+
+def settle(plans: dict[str, dict], closing: bool, texts: dict[str, str], refused: list[str]) -> set[tuple[str, str]]:
+    """Decide which parsers are emitted. A parser is emitted only when every parser it calls is declared on disk or emitted in the
+    same pass, so a call can never dangle; `closing` narrows the set to the parsers that existing code already calls but never declared."""
+    candidates = {(target, name): entry for target, plan in plans.items() for name, entry in plan["entries"].items() if entry["parser"] is not None and entry["typed"]}
+    emit = set(candidates)
+    if closing:
+        needed: set[tuple[str, str]] = set()
+        stack = []
+        for target, plan in plans.items():
+            source = read_text(target, texts)
+            for name in set(re.findall(r"\bparse([A-Z][A-Za-z0-9]*)\(", source)):
+                if name in plan["exports"] and not declares_parser(source, name) and not imports_parser(source, name):
+                    stack.append((target, name))
+        while stack:
+            key = stack.pop()
+            if key in needed:
+                continue
+            if key not in candidates:
+                refused.append(f"dangling parse{key[1]} {os.path.relpath(key[0], REPO)} has no renderable parser")
+                continue
+            needed.add(key)
+            entry = candidates[key]
+            for name in entry["local"]:
+                if not declares_parser(read_text(key[0], texts), name):
+                    stack.append((key[0], name))
+            for owner, name in entry["foreign"]:
+                if not declares_parser(read_text(owner, texts), name):
+                    stack.append((owner, name))
+        emit = needed
+
+    def available(owner: str, name: str) -> bool:
+        return (owner, name) in emit or declares_parser(read_text(owner, texts), name) or imports_parser(read_text(owner, texts), name)
+
+    changed = True
+    while changed:
+        changed = False
+        for key in sorted(emit):
+            entry = candidates[key]
+            missing = [f"parse{name}" for name in sorted(entry["local"]) if not available(key[0], name)] + [f"parse{name}" for owner, name in sorted(entry["foreign"]) if not available(owner, name)]
+            if missing:
+                refused.append(f"parser {key[1]} {os.path.relpath(key[0], REPO)} needs {', '.join(missing)}")
+                emit.discard(key)
+                changed = True
+    return emit
+
+
+def main() -> None:
+    mode = sys.argv[1] if len(sys.argv) > 1 else "report"
+    under = sys.argv[sys.argv.index("--under") + 1] if "--under" in sys.argv else "✏️s"
+    wanted = set((sys.argv[sys.argv.index("--formats") + 1]).split(",")) if "--formats" in sys.argv else {"🔗️graphql", "🛰️protobuf", "🟦️typescript"}
+    closing = "--closing" in sys.argv
+    index = build_index()
+    added = collections.Counter()
+    refused: list[str] = []
+    rust_absent: list[str] = []
+    touched: set[str] = set()
+    texts: dict[str, str] = {}
+    plans: dict[str, dict] = {}
+    for module in modules(under):
+        provided = {fmt: leaf for fmt, leaf in LEAF.items() if os.path.exists(os.path.join(REPO, module, leaf))}
+        for path in documents(module):
+            try:
+                with open(os.path.join(REPO, path), encoding="utf-8") as handle:
+                    document = json.load(handle)
+            except Exception:  # noqa: BLE001
+                continue
+            facet = os.path.dirname(path[len(module) + 1 :])
+            exports = exports_of(document)
+            if not exports:
+                continue
+            for fmt in provided:
+                if fmt == "🔣️jsonschema":
+                    continue
+                target = os.path.join(REPO, module, facet, LEAF[fmt]) if facet else os.path.join(REPO, module, LEAF[fmt])
+                if not os.path.exists(target):
+                    continue
+                relative = os.path.relpath(target, REPO)
+                source = read_text(target, texts)
+                appended: list[str] = []
+                helper = helper_prefix(document.get("$id"))
+                plan = plans.setdefault(target, {"entries": {}, "exports": set(exports), "helper": helper}) if fmt == "🟦️typescript" else None
+                for name, definition in exports.items():
+                    restricted = definition.get("x-semio-formats")
+                    if isinstance(restricted, list) and fmt not in restricted:
+                        continue
+                    present = declares(fmt, source, name)
+                    type_text = None
+                    if not present and fmt in wanted and not (closing and fmt == "🟦️typescript"):
+                        rendered = {"🔗️graphql": lambda: render_graphql(name, definition, document.get("$defs") or {}), "🛰️protobuf": lambda: render_proto(name, definition), "🟦️typescript": lambda: render_ts_type(name, definition)}[fmt]()
+                        if rendered is None:
+                            refused.append(f"{fmt} {name} {relative}")
+                            continue
+                        type_text = rendered
+                        if fmt != "🟦️typescript":
+                            appended.append(rendered)
+                            added[fmt] += 1
+                        present = True
+                    elif not present and fmt == "🟦️typescript" and closing:
+                        type_text = render_ts_type(name, definition)
+                        present = type_text is not None
+                    elif not present and fmt == "🦀️rust":
+                        rust_absent.append(f"{name} {relative}")
+                        continue
+                    if fmt == "🟦️typescript" and not declares_parser(source, name):
+                        context = Context(helper, document.get("$id"), index)
+                        rendered = render_parser(name, definition, context, declared_optional_fields(source, name)) if present else None
+                        if rendered is None and present:
+                            refused.append(f"parser {name} {relative}")
+                        plan["entries"][name] = {"type": type_text, "typed": present, "parser": rendered, "local": context.local - {name}, "foreign": set(context.foreign)}
+                if fmt == "🟦️typescript" or not appended or mode != "apply":
+                    continue
+                block = "\n".join(appended)
+                with open(target, "w", encoding="utf-8") as handle:
+                    handle.write(f"{source.rstrip()}\n\n{block.rstrip()}\n")
+                touched.add(relative)
+    emit = settle(plans, closing, texts, refused)
+    for target, plan in plans.items():
+        keep = sorted(name for owner, name in emit if owner == target)
+        if not keep:
+            continue
+        source = read_text(target, texts)
+        blocks = []
+        foreign: dict[str, set[str]] = collections.defaultdict(set)
+        for name in keep:
+            entry = plan["entries"][name]
+            if entry["type"] is not None and not declares("🟦️typescript", source, name):
+                blocks.append(entry["type"])
+                added["🟦️typescript"] += 1
+            blocks.append(entry["parser"])
+            added["parser"] += 1
+            for owner, callee in entry["foreign"]:
+                if owner != target and not declares_parser(source, callee) and not imports_parser(source, callee):
+                    foreign[owner].add(callee)
+        relative = os.path.relpath(target, REPO)
+        touched.add(relative)
+        if mode != "apply":
+            continue
+        block = "\n".join(blocks)
+        if PARSER_REGION not in source:
+            block = f"{helpers_block(plan['helper'])}\n{block}"
+        updated = with_imports(f"{source.rstrip()}\n\n{block.rstrip()}\n", import_lines(target, foreign))
+        with open(target, "w", encoding="utf-8") as handle:
+            handle.write(updated)
+    print(json.dumps({"mode": mode, "under": under, "closing": closing, "added": dict(added), "filesTouched": len(touched), "refused": len(refused), "rustAbsent": len(rust_absent)}, ensure_ascii=False))
+    for row in refused[:60]:
+        print("REFUSED", row)
+    for row in rust_absent[:30]:
+        print("RUST-ABSENT", row)
+    for relative in sorted(touched):
+        print("TOUCHED", relative)
+
+
+if __name__ == "__main__":
+    main()

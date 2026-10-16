@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🦴️rig/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type Affine, type Pose, compose, invert, restPose, solveRig, transform } from "../../🔨️modules/🦴️rig/🟦️.ts";
 import type { Species } from "../../🧬️schema/🟦️.ts";
 

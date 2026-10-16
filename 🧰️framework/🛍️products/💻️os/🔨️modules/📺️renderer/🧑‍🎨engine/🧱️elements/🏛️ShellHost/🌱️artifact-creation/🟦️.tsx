@@ -1,4 +1,4 @@
-import type { BackboneWorkerResponse, SpaceArtifactCreationCatalogStatusV1, SpaceArtifactCreationPhaseV1 } from "@semio-tech/framework-os";
+import type { BackboneWorkerResponse, SpaceArtifactCreationCatalogStatusV1, SpaceArtifactCreationPhaseV1 } from "@semio-tech/framework/backbone";
 import React from "react";
 
 export const ARTIFACT_CREATION_PROGRESS_CAPACITY = 8;

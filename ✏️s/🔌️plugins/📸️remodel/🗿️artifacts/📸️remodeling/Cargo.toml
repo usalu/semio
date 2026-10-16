@@ -3,6 +3,7 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/📦️packages/🦀️rust",
   "📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🌟️feature/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🌫️dense/📦️packages/🦀️rust",
@@ -374,6 +375,9 @@ features = [ "derive" ]
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]
+
+[workspace.dependencies.semio-s-artifact-remodel-remodeling-mut-vectors]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

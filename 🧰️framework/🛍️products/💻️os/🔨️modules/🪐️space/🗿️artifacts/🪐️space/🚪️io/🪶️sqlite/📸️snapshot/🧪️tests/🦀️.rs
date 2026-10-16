@@ -72,8 +72,8 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use semio_framework_os_kernel as store;
 use store::sqlite_snapshot::*;
-#[path="../../../../../../🧪️tests/🪶️sqlite/🔬️oracle/🦀️.rs"]mod oracle;
-#[path="../../../../../../🧪️tests/🪶️sqlite/🫴️native-caller/🦀️.rs"]mod native_caller;
+use semio_framework_os_space_testing_sqlite_oracle as oracle;
+use semio_framework_os_space_testing_sqlite_native_caller as native_caller;
 use native_caller::*;
 const SQL:&str=include_str!("../🗄️.sql");
 fn f()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
@@ -101,15 +101,14 @@ fn sqlite_snapshot_framework_space_native_input_retained_materialization_uses_sa
  }
 }
 
-#[path="../../../../../../🧪️tests/🪶️sqlite/📏️preflight/🦀️.rs"]
-mod public_preflight;
+use semio_framework_os_space_testing_sqlite_preflight as public_preflight;
 #[test]
 fn sqlite_snapshot_framework_space_public_borrowed_native_preflight_admits_actual_owner(){
  let facet:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📏️preflight/🔣️.json")).unwrap();
  let mut short=fixture();short.name=facet["textUnit"].as_str().unwrap().into();
  let mut long=short.clone();long.name=facet["textUnit"].as_str().unwrap().repeat(usize::try_from(facet["repeat"].as_u64().unwrap()).unwrap());
  let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(facet["callerGrant"].clone()).unwrap();let maximum=facet["nativeMaximumBytes"].as_u64().unwrap()as usize;let mut receive=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{assert!(event.owned_bytes<=maximum);true};let mut emit=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(event.owned_bytes<=maximum);true};let mut receive_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut emit_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut receive);let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut emit);decode.install_retirement_recipient(&mut receive_recipient).unwrap();encode.install_retirement_recipient(&mut emit_recipient).unwrap();let mut original_io=store::io::io_mechanism::IoRunControl::new(&mut decode,&mut encode,grant);
- public_preflight::verify(&short,&long,SQL,usize::try_from(facet["rows"].as_u64().unwrap()).unwrap(),long.name.len(),usize::try_from(facet["cancelAt"].as_u64().unwrap()).unwrap(),|operation|crate::test_allocation::observe(operation),&mut original_io);
+ public_preflight::verify(&short,&long,SQL,usize::try_from(facet["rows"].as_u64().unwrap()).unwrap(),long.name.len(),usize::try_from(facet["cancelAt"].as_u64().unwrap()).unwrap(),|operation|semio_framework_trace_memory_testing::observe(operation),&mut original_io);
 }
 
 #[test]
@@ -126,17 +125,17 @@ fn sqlite_snapshot_framework_space_from_sqlite_full_owned_backing_is_paid(){
  let defaults=SqliteDatabaseLimits::default();
  let mut callback=|_|true;
  let mut control=SqliteSnapshotControl::new(&mut callback,defaults);
- let(result,requested)=crate::test_allocation::observe(||<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut control));
+ let(result,requested)=semio_framework_trace_memory_testing::observe(||<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut control));
  assert_eq!(result.unwrap(),source);
  assert!(requested>0,"the complete actual owner requires real backing");
  assert_eq!(defaults.max_allocation_bytes-control.allocation_remaining_bytes(),requested,"./full SQL schema/frontier/retained field requests must be admitted by the actual caller");
  let mut callback=|_|true;
  let mut exact=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits{max_allocation_bytes:requested,..defaults});
- let(result,exact_requests)=crate::test_allocation::observe(||<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut exact));
+ let(result,exact_requests)=semio_framework_trace_memory_testing::observe(||<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut exact));
  assert_eq!(result.unwrap(),source);assert_eq!(exact_requests,requested);assert_eq!(exact.allocation_remaining_bytes(),0);
  for maximum in[requested-1,0]{
   let mut callback=|_|true;let mut denied=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits{max_allocation_bytes:maximum,..defaults});
-  let(result,observed)=crate::test_allocation::observe(||<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut denied));
+  let(result,observed)=semio_framework_trace_memory_testing::observe(||<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut denied));
   let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);
   assert_eq!(observed,maximum-denied.allocation_remaining_bytes()+diagnostic_capacity(&error),"a refused producer retains only paid requests and its exact returned diagnostic backing");
  }
@@ -147,12 +146,12 @@ fn sqlite_snapshot_framework_space_from_sqlite_full_owned_backing_is_paid(){
  assert_eq!(<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut cumulative).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);
  assert_eq!(cumulative.allocation_remaining_bytes(),0,"retired transient scratch must not refund admitted backing");
  let mut start=false;let mut callback=|_:SqliteSnapshotProgress|{start=true;false};let mut canceled=SqliteSnapshotControl::new(&mut callback,defaults);
- let(result,observed)=crate::test_allocation::observe(||<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut canceled));
+ let(result,observed)=semio_framework_trace_memory_testing::observe(||<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut canceled));
  let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);assert_eq!(canceled.allocation_remaining_bytes(),defaults.max_allocation_bytes);assert_eq!(observed,diagnostic_capacity(&error));drop(canceled);assert!(start);
  let mut interior=false;let field_bytes=source.name.len();let cancel_at=usize::try_from(demand["cancelAt"].as_u64().unwrap()).unwrap();
  let mut callback=|event:SqliteSnapshotProgress|{let stop=event.phase==SqliteSnapshotPhase::ReconstructSnapshot&&event.total==field_bytes&&event.completed>=cancel_at&&event.completed<event.total;interior|=stop;!stop};
  let mut canceled=SqliteSnapshotControl::new(&mut callback,defaults);
- let(result,observed)=crate::test_allocation::observe(||<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut canceled));
+ let(result,observed)=semio_framework_trace_memory_testing::observe(||<SpaceSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut canceled));
  let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);
  let paid=defaults.max_allocation_bytes-canceled.allocation_remaining_bytes();assert!(paid>=field_bytes,"interior literal cancellation keeps its admitted full backing");
  assert_eq!(observed,paid+diagnostic_capacity(&error),"canceled owner construction retains its actual paid ledger");drop(canceled);assert!(interior);

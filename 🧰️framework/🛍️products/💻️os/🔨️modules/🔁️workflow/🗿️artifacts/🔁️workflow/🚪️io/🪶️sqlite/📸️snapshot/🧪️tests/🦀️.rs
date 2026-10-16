@@ -1,4 +1,4 @@
-#[path="../../../../../../../🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/🦀️.rs"]mod native_caller;
+use semio_framework_os_space_testing_sqlite_native_caller as native_caller;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use native_caller::*;
 use crate::{WorkflowSnapshot,WorkflowMutation,S_WORKFLOW_SCHEMA,read_node};

@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv/dist/2020";
-import currencies from "../../../../🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json";
+import { retainedCloneContractSchema as currencies } from "@semio-tech/value-ts/retained-clone/contract/schema";
 import {toByteArray,fromByteArray} from "base64-js";
 import {resolve} from "node:path";
 import fonts from "./🧫️fixtures/🔤️fonts/🔣️.json";

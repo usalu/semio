@@ -1,5 +1,5 @@
 import {frameworkOsEngineFacetV1} from "../../🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {repositoryCachePartitionRootDataV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 
 import {frameworkOsViteArtifactInputsV1} from "../../🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
@@ -32,9 +32,9 @@ import {ActivationScript} from "../🏃️execution/🟦️.ts";
 
 import {reportServeStagedModuleFreshness} from "../🔍️freshness/🟦️.ts";
 
-import {ensureDevLocalHub} from "../../🚀️local-hub/🏃️execution/🟦️.ts";
+import {withDevLocalHubSessionV1} from "../../🚀️local-hub/🎫️session/🟦️.ts";
 
-import {DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV} from "../../🚀️local-hub/🧬️schema/🟦️.ts";
+
 
 
 
@@ -62,16 +62,11 @@ class ServeScript extends BundleScript {
     void reportServeStagedModuleFreshness(variant, "react", profile, runtime, receipt);
     const resolved = resolvePlaygroundFilter(variant);
     const contribution = loadDevContribution(this.repoRoot, resolved);
-    const boot = new AbortController();
-    const cancelBoot = () => boot.abort();
-    process.once("SIGINT", cancelBoot);
-    process.once("SIGTERM", cancelBoot);
-    let hub: Awaited<ReturnType<typeof ensureDevLocalHub>>;
-    try { hub = await ensureDevLocalHub(this.repoRoot, { provider: contribution?.localHub, hubUrl: process.env.S_HUB_URL || undefined, signal: boot.signal }); }
-    finally { process.removeListener("SIGINT", cancelBoot); process.removeListener("SIGTERM", cancelBoot); }
-    if (boot.signal.aborted) return;
-    const localHubEnv = hub ? { S_HUB_URL: hub.hubUrl, [DEV_LOCAL_HUB_DATA_ENV]: hub.dataDir, [DEV_LOCAL_HUB_PROFILE_ENV]: hub.profileId } : {};
-    await runViteBunxDev(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"vite:activation",0), this.root, serverArgs, { artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootDataV1(this.repoRoot, "products"), {version:1,mode:profile,renderer:"react",command:"serve",engines:frameworkOsEngineFacetV1(contribution?.browserSessionFactories??[])}), config: contribution ? resolveDevContributionFile(this.repoRoot, contribution.viteConfig, contribution.ownerRoot) : "../../🏗️builder/🌐️vite/🟦️.ts", portEnv: "S_OS_PORT", defaultPort: String(selected.ports.react), fixedPort: true, env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_BRAND: resolved.brand ?? "", VITE_SEMIO_PLUGIN: variant, VITE_SEMIO_RENDERER: renderer, VITE_SEMIO_APP_ID: resolved.appId ?? "", ...frameworkOsLockedPrefsEnv(), ...localHubEnv } });
+    const phase=scriptCompilerAdmissionControlV1(this.invocation,"vite:activation",0);
+    await withDevLocalHubSessionV1(this.invocation,phase,{localOnly:process.env.S_LOCAL_ONLY==="1"||process.env.S_LOCAL_ONLY==="true",...(process.env.S_HUB_URL?{hubUrl:process.env.S_HUB_URL}:{}),...(contribution?.localHub?{provider:contribution.localHub}:{})},async(hub,actualPhase)=>{
+    const localHubEnv={S_HUB_URL:"",...hub?.environment};
+    await runViteBunxDev(this.invocation,actualPhase, this.root, serverArgs, {runtimeChannels:hub?.runtimeChannels??[], artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootDataV1(this.repoRoot, "products"), {version:1,mode:profile,renderer:"react",command:"serve",engines:frameworkOsEngineFacetV1(contribution?.browserSessionFactories??[])}), config: contribution ? resolveDevContributionFile(this.repoRoot, contribution.viteConfig, contribution.ownerRoot) : "../../🏗️builder/🌐️vite/🟦️.ts", portEnv: "S_OS_PORT", defaultPort: String(selected.ports.react), fixedPort: true, env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_BRAND: resolved.brand ?? "", VITE_SEMIO_PLUGIN: variant, VITE_SEMIO_RENDERER: renderer, VITE_SEMIO_APP_ID: resolved.appId ?? "", ...frameworkOsLockedPrefsEnv(), ...localHubEnv } });
+    });
   }
 }
 

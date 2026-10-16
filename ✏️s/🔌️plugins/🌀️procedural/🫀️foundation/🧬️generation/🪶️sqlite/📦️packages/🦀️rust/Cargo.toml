@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-procedural-core-generation-sqlite"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation SQLite: the typed relational projection, reconstruction and native preflight of the owned host and generation fields"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-flow-contract = { workspace = true }
+semio-framework-os-playbook-contract = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value = { workspace = true }
+

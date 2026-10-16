@@ -14,8 +14,10 @@
  * @see ../../../../../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts */
 // #endregion 🧲️Header
 
-import { decodeDocumentArchiveBytes, decodePackValue, encodeDocumentArchiveBytes, encodePackValue, type PersistenceBinding } from "@semio-tech/framework-os";
-import type { MutationEnvelope } from "@semio-tech/framework-replication";
+import { decodePackValue, encodePackValue } from "@semio-tech/framework/packs";
+import { decodeDocumentArchiveBytes, encodeDocumentArchiveBytes } from "@semio-tech/framework/wire-contracts";
+import { type PersistenceBinding } from "@semio-tech/framework/backbone";
+import type { MutationEnvelope } from "@semio-tech/framework/replication";
 import {
   admitLocalDocument,
   applyLocalCatalogConfigMutation,
@@ -23,8 +25,8 @@ import {
   type LocalCatalog,
   type LocalCatalogConfigMutation,
   type LocalDocument,
-  type LocalDocumentStorage,
-} from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+  type LocalDocumentStorage
+} from "@semio-tech/framework/config/mutations";
 
 //#region 🔖️Contract
 /** 🧭️ The lane's two guest commands and the landing app's re-hydration action. */

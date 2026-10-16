@@ -49,7 +49,7 @@ export function testSingleEnqueuePublicationFixture(): void {
   
   const tuple = (state: Record<string, string>): Buffer => {
     const bytes = Buffer.alloc(24);
-    for (const [index, field] of fixture.fields.entries()) bytes.writeBigUInt64LE(BigInt(state[field]), index * 8);
+    for (const [index, field] of fixture.fields.entries()) {const observed=state[field];if(observed===undefined)throw Error("Declared input tuple field required");bytes.writeBigUInt64LE(BigInt(observed), index * 8);}
     return bytes;
   };
   for (const state of ["old", "half", "committed"] as const) assert.equal(tuple(fixture[state]).toString("hex"), fixture[state].leHex);

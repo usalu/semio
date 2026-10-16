@@ -126,7 +126,6 @@ impl<T:Send+Sync+'static> Drop for Cursor<T>{fn drop(&mut self){assert!(std::thr
 mod tests;
 
 #[cfg(test)]
-#[path="../../../🧪️testing/💾️allocator/🦀️.rs"]
-mod allocation_testing;
+use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;

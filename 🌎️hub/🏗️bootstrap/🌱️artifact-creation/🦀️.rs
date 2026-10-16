@@ -20,7 +20,7 @@ use directory::os_directory::access_policy::DirectoryAccessActionV1;
 use semio_hub_directory_contract::error::DirectoryError;
 use semio_hub_directory_contract::model::SocketSessionBindingStatus;
 use semio_hub_directory_dispatch::HubDirectories;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{AuthSessionDirectory, SpaceDirectory};
 use semio_hub_directory_contract::LocalBootstrapTransport;
 use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use std::collections::BTreeMap;

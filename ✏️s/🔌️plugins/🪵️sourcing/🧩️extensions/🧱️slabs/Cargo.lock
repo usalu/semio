@@ -823,6 +823,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-native-build-compiler-resources"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+]
+
+[[package]]
 name = "semio-framework-number"
 version = "0.1.0"
 
@@ -1041,6 +1048,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -1053,13 +1061,10 @@ name = "semio-framework-os-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
- "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-pack-record-token",
  "semio-framework-replication",
  "semio-framework-value",
  "serde_json",
@@ -1208,10 +1213,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-pack-record-token"
+name = "semio-framework-pack-record-schema"
 version = "0.1.0"
 dependencies = [
- "semio-framework-pack",
+ "semio-framework-dsl-record",
+ "semio-framework-hash",
+ "semio-framework-pack-error",
+ "semio-framework-pack-json",
+ "semio-framework-pack-schema-index",
+ "semio-framework-replication-codec",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-pack-schema-index"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
  "semio-framework-value",
 ]
 
@@ -1295,6 +1313,28 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-replication-codec"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-deflate",
+ "semio-framework-diagnostic",
+ "semio-framework-io-base64",
+ "semio-framework-pack-error",
+ "semio-framework-replication-error",
+ "semio-framework-value",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-replication-error"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-pack-error",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -1604,6 +1644,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "syn",
 ]
 
@@ -2897,6 +2938,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-plugin-sourcing-catalog-oracle"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-plugin-sourcing-slabs"
 version = "0.1.0"
 dependencies = [
@@ -2907,6 +2955,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-sourcing-curation",
+ "semio-s-plugin-sourcing-catalog-oracle",
  "serde_json",
 ]
 

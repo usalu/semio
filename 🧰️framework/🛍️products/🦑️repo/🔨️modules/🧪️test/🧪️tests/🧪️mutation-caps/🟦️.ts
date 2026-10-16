@@ -7,7 +7,8 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import Parser from "web-tree-sitter";
-import { mutationAggregateGeneric, mutationCapFindings, mutationLeafBound, rustMutationAggregates } from "../../🧬️schema/📋️orchestration/🟦️.ts";
+import { mutationAggregateGeneric, mutationCapFindings, mutationLeafBound } from "../../🧬️schema/📋️orchestration/🐘️mutation-caps/🟦️.ts";
+import { rustMutationAggregates } from "../../🧬️schema/📋️orchestration/🌳️mutation-tree/🟦️.ts";
 
 type Case = { readonly id: string; readonly leaves: readonly { readonly directory: string; readonly variant: string; readonly input: { readonly schema: Record<string, unknown> } }[]; readonly aggregates: readonly { readonly path: string; readonly rust: string }[]; readonly findings: readonly string[] };
 

@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "parameters",
+    "cases",
+    "childParameters",
+    "childCases",
+    "receiverCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "parameters": {
+      "const": [
+        "root",
+        "graph",
+        "args",
+        "invocation",
+        "phaseControl",
+        "options"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "phase",
+          "child",
+          "stop",
+          "failure",
+          "admitted",
+          "finite",
+          "drained"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "phase": {
+            "enum": [
+              "issued",
+              "cancelled",
+              "expired",
+              "copied",
+              "foreign"
+            ]
+          },
+          "child": {
+            "enum": [
+              "raw",
+              "owned"
+            ]
+          },
+          "stop": {
+            "enum": [
+              "pre-admission",
+              "after-import",
+              "after-child",
+              "abort-child",
+              "watch-error",
+              "deadline-idle",
+              "child-error"
+            ]
+          },
+          "failure": {
+            "enum": [
+              "none",
+              "undefined",
+              "frozen"
+            ]
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "finite": {
+            "type": "boolean"
+          },
+          "drained": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "childParameters": {
+      "const": [
+        "root",
+        "args",
+        "parent",
+        "phaseControl",
+        "changes"
+      ]
+    },
+    "childCases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "accepted",
+          "executed",
+          "projected"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "issued",
+              "cancelled",
+              "copied",
+              "foreign",
+              "expired",
+              "after-project",
+              "after-progress",
+              "after-run"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "executed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "projected": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "receiverCases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "enum": [
+          "fallback",
+          "child"
+        ]
+      }
+    }
+  }
+}

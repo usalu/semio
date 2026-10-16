@@ -49,5 +49,5 @@ export const femFem3dMutationsTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseFem3dMutationsText(value: unknown, at = "$"): Fem3dMutationsText {
-  return femFem3dMutationsTextGuardObject(value, `${at}`);
+  return femFem3dMutationsTextGuardString(value, `${at}`);
 }

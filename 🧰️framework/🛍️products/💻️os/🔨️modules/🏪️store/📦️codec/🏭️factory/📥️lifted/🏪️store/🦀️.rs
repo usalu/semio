@@ -208,7 +208,7 @@ where
         native_identity: ArtifactNativeSnapshotIdentity::typed::<P>(),
         snapshot_sqlite: P::sqlite_snapshot_codec(),
         pack_schema_hash: match P::record_spec() {
-            Some(spec) => semio_framework_os_pack::schema_hash(&spec),
+            Some(spec) => pack::record::schema_hash(&spec),
             None => [0u8; 32],
         },
         compile_dsl: compile_dsl_impl::<P, Mutation>,

@@ -1,3 +1,4 @@
+import "../📋️contract/🧪️tests/🟦️.ts";
 import "./📥️inputs/🟦️.ts";
 import { phaseCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../🎛️owned-execution/🟦️.ts";
@@ -11,7 +12,8 @@ import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { readUnitHistoryV1, unitHistoryPathV1 } from "../../🎟️admission/🟦️.ts";
 import { lawSourceBoundaryV1, lawStoragePolicyV1, schedulerBinaries, withLawStorageV1, type LawStorageV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 import { readTimelineV1 } from "../../📈️telemetry/🟦️.ts";
-import { nativeBuildComponentStagePathV1, admitNativeBuildPlanV1, announcedRunIdentityV1, announcedUnitIdentityV1, componentBatchesV1, reclaimablePassFilesV1, unitFootprintKindV1, unitGraphHistoryKeyV1, componentArtifactV1, NATIVE_BUILD_DRIVER_POLICY_V1, nativeBuildGenerationKindV1, nativeBuildGenerationV1, nativeBuildPassArgsV1, nativeBuildJobWorkerBudgetV1, profileBuildModeV1, runNativeBuildDriverV1, unitGraphClosuresV1, unitGraphIdentityV1, type LinkedComponentV1, type NativeBuildJobV1, type NativeBuildOutcomeV1, type NativeBuildPassV1, type NativeBuildPlanV1, type NativeBuildStageV1 } from "../🟦️.ts";
+import { nativeBuildComponentStagePathV1, announcedRunIdentityV1, announcedUnitIdentityV1, componentBatchesV1, reclaimablePassFilesV1, unitFootprintKindV1, unitGraphHistoryKeyV1, componentArtifactV1, NATIVE_BUILD_DRIVER_POLICY_V1, nativeBuildGenerationKindV1, nativeBuildGenerationV1, nativeBuildPassArgsV1, nativeBuildJobWorkerBudgetV1, profileBuildModeV1, runNativeBuildDriverV1, unitGraphClosuresV1, unitGraphIdentityV1, type LinkedComponentV1, type NativeBuildOutcomeV1, type NativeBuildStageV1 } from "../🟦️.ts";
+import{admitNativeBuildPlanV1,type NativeBuildJobV1,type NativeBuildPassV1,type NativeBuildPlanV1} from "../📋️contract/🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
 mkdirSync(artifacts, { recursive: true });
@@ -222,7 +224,7 @@ test("jobs start as soon as their completions happen, post-link stages stream pe
   const checked: Record<string, number> = {};
   const plan: NativeBuildPlanV1 = { version: 1, passes: [pass], jobs: [stubJob(root, "tool", [], 50), stubJob(root, "pages", ["job:tool", "components:check"], 10)] };
   let units: any, report = "";
-  const outcome = await runStub(root, plan, cargo, { stages: (component) => [{ name: "check", after: ["job:tool"], run: async () => { checked[component.package.name] = Date.now(); } }] }, "ok", ({ outcome: run }) => { if (!run) return; units = JSON.parse(readFileSync(join(run.generation.report, "units.json"), "utf8")); report = readFileSync(run.report, "utf8"); });
+  const outcome = await runStub(root, plan, cargo, { stages: (component) => [{ name: "check", capacity: "single", after: ["job:tool"], run: async () => { checked[component.package.name] = Date.now(); } }] }, "ok", ({ outcome: run }) => { if (!run) return; units = JSON.parse(readFileSync(join(run.generation.report, "units.json"), "utf8")); report = readFileSync(run.report, "utf8"); });
   expect(outcome.failed).toEqual([]);
   const jobs = readFileSync(join(root, "jobs.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line)), byId = Object.fromEntries(jobs.map((row) => [row.id, row]));
   const calls = readFileSync(cargo.calls, "utf8").trim().split("\n").map((line) => JSON.parse(line)), passStart = calls.find((row) => row.at).at;
@@ -257,7 +259,7 @@ test("exclusive compiler jobs and stages hold the whole pool without deadlocking
   const root = mkdtempSync(join(artifacts, "x-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
   const jobs = ["a", "b"].map((id) => ({ ...stubJob(root, id, [], 15), workerProtocol: "exclusive" as const }));
   const stages: { start: number; end: number; workers: number; mode: string | undefined }[] = [];
-  const outcome = await runStub(root, { version: 1, passes: [pass], jobs }, cargo, { stages: () => [{ name: "whole-host", after: [], workerProtocol: "exclusive", run: async (context) => {
+  const outcome = await runStub(root, { version: 1, passes: [pass], jobs }, cargo, { stages: () => [{ name: "whole-host", capacity: "whole-host", after: [], run: async (context) => {
     const start = Date.now();
     expect(context.environment.SEMIO_COMPILER_CAPACITY_HELD).toBe("true");
     expect(context.environment.CARGO_MAKEFLAGS).toBeUndefined();
@@ -279,7 +281,7 @@ test("a component Cargo did not link fails every stage and job that waits for it
   const root = mkdtempSync(join(artifacts, "k-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
   let ran = 0;
   const plan: NativeBuildPlanV1 = { version: 1, passes: [pass], jobs: [stubJob(root, "pages", ["components:check"], 0), stubJob(root, "broken", [], 0, 3)] };
-  await expect(runStub(root, plan, cargo, { stages: () => [{ name: "check", after: [], run: async () => { ran++; } }] }, "omit-last")).rejects.toThrow(/Native build failed: (?=.*comp-b)(?=.*job:broken)/u);
+  await expect(runStub(root, plan, cargo, { stages: () => [{ name: "check", capacity: "single", after: [], run: async () => { ran++; } }] }, "omit-last")).rejects.toThrow(/Native build failed: (?=.*comp-b)(?=.*job:broken)/u);
   expect(ran).toBe(1);
   expect(readFileSync(join(root, "jobs.jsonl"), "utf8")).not.toContain('"pages"');
 }, 120_000);
@@ -288,7 +290,7 @@ test("a lane job runs inside its profile's Cargo lane before that lane's passes,
   const root = mkdtempSync(join(artifacts, "l-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release");
   const widths: number[] = [];
   const plan: NativeBuildPlanV1 = { version: 1, passes: [pass], jobs: [{ ...stubJob(root, "module", [], 200), lane: "release", profile: "release", target: "wasm32-unknown-unknown" }] };
-  const outcome = await runStub(root, plan, cargo, { stages: () => [{ name: "wide", after: [], run: async (context) => { widths.push(context.widen(3)); } }] });
+  const outcome = await runStub(root, plan, cargo, { stages: () => [{ name: "wide", capacity: "available", after: [], run: async (context) => { widths.push(context.parallelism); } }] });
   expect(outcome.failed).toEqual([]);
   const module = JSON.parse(readFileSync(join(root, "jobs.jsonl"), "utf8").trim()), passStart = readFileSync(cargo.calls, "utf8").trim().split("\n").map((line) => JSON.parse(line)).find((row) => row.at).at;
   expect(module.end).toBeLessThanOrEqual(passStart);
@@ -301,9 +303,9 @@ test("a finalizer runs once its stages settled, also after one failed, and the f
   const root = mkdtempSync(join(artifacts, "z-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
   const finalized: Record<string, { after: number; outcome: string }> = {}, failedAt: Record<string, number> = {};
   const stages = (component: LinkedComponentV1): readonly NativeBuildStageV1[] => [
-    { name: "assemble", after: [], run: async () => { if (component.package.name === "comp-b") { failedAt[component.package.name] = Date.now(); throw Error("assembly refused"); } } },
-    { name: "publish", after: ["assemble"], run: async () => undefined },
-    { name: "discard", after: ["publish"], finalizer: true, run: async (context) => { finalized[component.package.name] = { after: Date.now(), outcome: context.signal.aborted ? "aborted" : "settled" }; } },
+    { name: "assemble", capacity: "single", after: [], run: async () => { if (component.package.name === "comp-b") { failedAt[component.package.name] = Date.now(); throw Error("assembly refused"); } } },
+    { name: "publish", capacity: "single", after: ["assemble"], run: async () => undefined },
+    { name: "discard", capacity: "cleanup", after: ["publish"], run: async (context) => { finalized[component.package.name] = { after: Date.now(), outcome: context.signal.aborted ? "aborted" : "settled" }; } },
   ];
   await expect(runStub(root, { version: 1, passes: [pass] }, cargo, { stages })).rejects.toThrow(/Native build failed: comp-b \(assemble\)/u);
   expect(Object.keys(finalized).sort()).toEqual(["comp-a", "comp-b"]);
@@ -363,7 +365,7 @@ test("pending stages and finalizers retain original numeric authority and settle
     const start = performance.now(), original = { signal: controller.signal, remainingMilliseconds: () => fractional ? law.fractionalRemaining : law.milliseconds - (performance.now() - start), publish: async (progress: { resource: string }) => { await Bun.sleep(5); if (progress.resource === "native-stage-law") published++; }, yieldContinuation: async () => { await Bun.sleep(5); if (entered) continued++; } };
     const safety = setTimeout(() => controller.abort(Error("Test safety cancellation")), law.safetyMilliseconds);
     try {
-      await expect(runStub(root, { version: 1, passes: [pass] }, cargo, { control: original, stages: () => [{ name: "authority", after: [], finalizer: stage === "finalizer", run: async (context) => {
+      await expect(runStub(root, { version: 1, passes: [pass] }, cargo, { control: original, stages: () => [{ name: "authority", capacity: stage === "finalizer"?"cleanup":"single", after: [], run: async (context) => {
         entered = true;
         expect(context.signal).toBe(original.signal);
         expect(context.control.signal).toBe(original.signal);

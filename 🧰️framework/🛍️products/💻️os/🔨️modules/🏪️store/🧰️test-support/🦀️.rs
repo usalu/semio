@@ -294,7 +294,7 @@ where
     P: ArtifactPack + PartialEq + std::fmt::Debug,
 {
     let spec = P::record_spec().unwrap_or_else(|| panic!("{} declares no pack record spec", std::any::type_name::<P>()));
-    let hash = semio_framework_os_pack::schema_hash(&spec);
+    let hash = pack::record::schema_hash(&spec);
     assert_ne!(hash, [0u8; 32], "pack schema hash must be nonzero");
     let decoded = P::decode_pack(&snapshot.encode_pack()).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
     assert_eq!(&decoded, snapshot, "pack round trip diverged from source snapshot");

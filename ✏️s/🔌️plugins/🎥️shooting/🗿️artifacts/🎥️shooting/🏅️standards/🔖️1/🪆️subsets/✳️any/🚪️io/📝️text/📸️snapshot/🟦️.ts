@@ -49,5 +49,5 @@ export const shootingShootingSnapshotTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseShootingSnapshotText(value: unknown, at = "$"): ShootingSnapshotText {
-  return shootingShootingSnapshotTextGuardObject(value, `${at}`);
+  return shootingShootingSnapshotTextGuardString(value, `${at}`);
 }

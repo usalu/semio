@@ -4,7 +4,7 @@
  */
 
 import { type ShellDialogOriginV1 } from "../🗨️dialog-origin/🟦️.ts";
-import { type DocumentCheckInStatusV1 } from "../../../../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
+import { type DocumentCheckInStatusV1 } from "@semio-tech/framework/document/check-in";
 import { OwnedTutorialRunV1 } from "../🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 // #region 🔌️Adapters
 import {
@@ -32,7 +32,8 @@ import {
   type Fault,
   type Severity
 } from "@semio-tech/framework";
-import { type DocumentScope, type DocumentArchivePack } from "@semio-tech/framework-os";
+import { type DocumentScope } from "@semio-tech/framework/document/scope";
+import { type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
 import {
   createSealedInstanceLedgerV1,
   createSessionAppSwitchGateV1,
@@ -43,7 +44,7 @@ import {
 } from "../🔀️surface-switch/🟦️.ts";
 import { programHistoryKeyV1, programHistoryProjectionsAfterPatchV1, createProgramHistoryStoreV1 } from "../🪟️spawned-program/🟦️.ts";
 import { type InputOutcomeV1, type ShellInputActionV1 } from "../🎯️input-ledger/🟦️.ts";
-import { type UiPreferencesConfigMutation } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { type UiPreferencesConfigMutation } from "@semio-tech/framework/config/mutations";
 import {
   type ContextMenuItem,
   DEFAULT_UI_DRIVER,

@@ -6,7 +6,6 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖥️host/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🌉️abi/🦀️.rs",
       "sharedGlobals"
     ]
   },

@@ -443,7 +443,7 @@ test("SQLite allocation ledger retains failed ownership and rejects canceled adm
 });
 
 
-import {NativeDecodeControl} from "../../../../🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
 test("SQLite native allocation bridge settles real interior cancellation before a later typed copy",async()=>{
   const f=allocationFixture.nativeBridge,authority=new SqliteAllocationControl({maxAllocationBytes:f.maximumBytes}),source=new Uint8Array(f.cancelBytes).fill(7);
   const success=await authority.stage(maximum=>new NativeDecodeControl(maximum,()=>true),c=>c.copyBytes(source.subarray(0,f.successBytes)));expect(success.byteLength).toBe(f.successBytes);

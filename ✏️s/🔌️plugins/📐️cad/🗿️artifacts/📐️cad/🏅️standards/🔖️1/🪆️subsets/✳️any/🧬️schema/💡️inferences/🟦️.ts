@@ -22,26 +22,16 @@ export interface CadInference {
 
 // #region 🔌️Adapters
 import { kernelGeometry, type Vec3 } from "@semio-tech/framework/3d";
-import {
-  Model,
-  buildTypologyToEntityKindMapForModelDefinition,
-  applyTransformation,
-  loadTransformation,
-  actionAvailableInModelDefinition,
-  defaultModelDefinitionId,
-  type Expr,
-  type ExprBinop,
-  type ExprField,
-  type ExprVar,
-  type ModelEntityKind,
-  type ModelEntityRef,
-  type ObjectRef,
-  type AttributeTable,
-  type TypologyRef,
-  type SelectionTarget,
-  evalExpr,
-  type ExprEnv,
-} from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type ModelEntityKind, type ObjectRef, type TypologyRef } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { defaultModelDefinitionId } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
+import { applyTransformation } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🔁️transformation-apply/🟦️.ts";
+import { loadTransformation } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🔄️transformation-spec/🟦️.ts";
+import { type ModelEntityRef, type AttributeTable } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🗺️paths/🟦️.ts";
+import { Model } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { actionAvailableInModelDefinition } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
+import { type Expr, type ExprBinop, type ExprField, type ExprVar, evalExpr, type ExprEnv } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧮️expressions/🟦️.ts";
+import { buildTypologyToEntityKindMapForModelDefinition } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧾️primitive-document/🟦️.ts";
+import { type SelectionTarget } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import { applyModelDiff, EMPTY_MODEL_DIFF, type SpatialKernel, type ModelDiff } from "../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import {
   type ActionRegistry,

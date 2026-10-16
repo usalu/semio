@@ -1,0 +1,13 @@
+# Windows Native Journal Integration Review
+
+Root and Low read the in-progress metadata integration and existing Native storage transaction. The Windows State capability alone does not cover all Native build storage: storageCustodyV1 still syncs root directory descriptors directly after a first journal creation and checkpoint rename. The new repository derived-charge receipt writer also initially used direct directory sync. The Windows metadata proposal explicitly does not establish a Node directory-handle sync implementation.
+
+At11:51UTC both execution owners were asked to coordinate a domain-neutral Native storage metadata-barrier design that reuses the actual owned Windows fixed-volume flush and existing POSIX descriptor implementation. The Native journal owns its authoritative append/checkpoint; the repository owns its derived receipt and layout. A first-party physical port/backing contract must preserve that boundary and actual image/control custody without importing repository types, accepting caller-supplied volume authority, introducing a runtime dependency or creating a storage/platform initialization cycle.
+
+The journal lease and actual Native operation must remain held through any awaited successful durability barrier. A failure after an append or rename cannot imply rollback; later recovery must use the authoritative current state and retained filesystem facts. Arbitrary primary, cancellation and accepted child/descriptor drain remain required. Checkpoint plus later unrelated-event recovery remains part of the charge tests.
+
+At11:52UTC Root read the concrete Native Journal Integration Addendum and approved the contained Source extension. NativeStoragePortV1 gains mandatory syncMetadata(backing,directory,actualControl). Real retained image ports implement it; ordinary ports refuse and test ports label their modeled effect. Generic storage imports no platform runtime. Lease owns the interface/actual port/State/fixture census; the charge owner integrates the journal transaction and derived receipt.
+
+Dirty state and projection invalidation must precede a potentially mutating append/rename, because file fsync may throw after changing bytes. A single actual barrier and postchecks precede successful return/cache publication/unlock. Queue and Native borrower remain held through the await. Failure is not rollback. Source fault laws, strict compilation and independent review are required before physical release.
+
+No physical Windows operation, privilege grant, UAC/service installation or timeout increase is authorized or claimed. [Windows proposal](windows-state-metadata-port-proposal.md), [Root review](windows-metadata-root-review.md) and [charge proposal](cache-charge-atomic-layout-proposal.md) retain exact limits.

@@ -4,7 +4,7 @@
  * and each is shown only when it is an absolute http(s) address. While no language is known the footer speaks every
  * offered language at once.
  *
- * @see ../🧭️session/🟦️.ts — the persisted local-only slices the notice names
+ * @see ../🧭️session/💾️restore/🟦️.ts — the persisted local-only slices the notice names
  * @see ../👥️presence/🟦️.tsx — what is shared live and never stored
  */
 

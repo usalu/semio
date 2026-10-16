@@ -1,15 +1,15 @@
 /** 📋 Renderer types, owned declarative controls, external slots and declarative forms parity. */
 import { createElement } from "react";
 import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
-import sliderPresentationFixture from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎚️slider-presentation/🔣️.json" with { type: "json" };
-import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/⚖️action-semantics.json";
-import presenceOverlayFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/👥️presence-overlay.json";
+import { presenceOverlayFixture, sliderPresentationFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { manifestActionSemanticsFixture as actionSemanticsFixture, loadContextExtensionInputFixture, loadManifestViewContextSchema } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { actionSemanticsForKind } from "@semio-tech/framework";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🎛️declarative-controls/🟦️.tsx";
 import { appBreadcrumb, appWindowLabel, UiDocumentStore, type UiInterpreterContext, UiPresenceOverlayContext, type UiPresenceOverlayEntry, resolveAppBreadcrumb, flattenPanelTabLeaves, interpretUiNode, dagOverlayLabelFill, dagOverlayLabelFillHex } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { CONTRACT_LEAF_LAYOUT, buildContractSnapshot, noopAction, renderContractTree } from "../🧰️engine-contract-helpers/🟦️.ts";
+import { loadKernelHostSlotsFixture, loadKernelExternalSlotsFixture } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
 
 describe("framework renderer types", () => {
   it("matches native action-semantics defaults without claiming migrated interactivity", () => {
@@ -179,7 +179,7 @@ describe("owned declarative controls", () => {
 describe("framework external slots", () => {
   it("preserves explicitly owned host extensions before contributor resolution at any depth", async () => {
     const { resolveExternalSlots } = await import("@semio-tech/framework");
-    const { default: fixture } = await import("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧩️host-slots/🔣️.json");
+    const fixture = await loadKernelHostSlotsFixture();
     
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv();
@@ -206,8 +206,8 @@ describe("framework external slots", () => {
   });
 
   it("admits isolated extension render inputs against the neutral schema", async () => {
-    const { default: fixture } = await import("../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🧫️fixtures/🧩️extension-input/🔣️.json");
-    const { default: schema } = await import("../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json");
+    const fixture = await loadContextExtensionInputFixture();
+    const schema = await loadManifestViewContextSchema();
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).compile(schema);
     for (const row of fixture.cases) {
@@ -224,7 +224,7 @@ describe("framework external slots", () => {
 
   it("renders canonical contributor bodies with isolated instances and current inputs", async () => {
     const { resolveExternalSlots } = await import("@semio-tech/framework");
-    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧩️external-slots/🔣️.json");
+    const law = await loadKernelExternalSlotsFixture();
     const created: string[] = [];
     const destroyed: number[] = [];
     const requests: { instanceId: number; request: any }[] = [];
@@ -273,7 +273,7 @@ describe("framework external slots", () => {
 
   it("shares pending creations and retires the exact detached contributor", async () => {
     const { ensureContributorInstance, retireContributorInstances } = await import("@semio-tech/framework");
-    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧩️external-slots/🔣️.json");
+    const law = await loadKernelExternalSlotsFixture();
     let release!: (id: number) => void;
     const destroyed: number[] = [];
     let created = 0;
@@ -298,7 +298,7 @@ describe("framework external slots", () => {
 
   it("does not render or recreate an extension after its parent retires during creation", async () => {
     const { resolveExternalSlots, retireContributorInstances } = await import("@semio-tech/framework");
-    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧩️external-slots/🔣️.json");
+    const law = await loadKernelExternalSlotsFixture();
     let release!: (id: number) => void;
     let refreshes = 0;
     const destroyed: number[] = [];
@@ -322,7 +322,7 @@ describe("framework external slots", () => {
 
   it("discards effects from a refresh that finishes after retirement", async () => {
     const { resolveExternalSlots, retireContributorInstances } = await import("@semio-tech/framework");
-    const { default: law } = await import("../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧩️external-slots/🔣️.json");
+    const law = await loadKernelExternalSlotsFixture();
     let release!: (response: any) => void;
     let started!: () => void;
     const refreshing = new Promise<void>((resolve) => { started = resolve; });

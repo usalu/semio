@@ -1,4 +1,4 @@
-import { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_LOAD_STAGES, BROWSER_ACTOR_CHILD_SCHEMA, childBindingMatches, childRecord, childRejectionReason, childSha256, measureChildValue, type BrowserActorChildBinding, type BrowserActorChildLoadStageV1, type BrowserActorChildRejectionV1 } from "../🧬️schema/🟦️.ts";
+import { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_LOAD_STAGES, BROWSER_ACTOR_CHILD_SCHEMA, childBindingMatches, childRecord, childRejectionReason, childSha256, measureChildValue, type BrowserActorChildBinding, type BrowserActorChildLoadStageV1, type BrowserActorChildRejectionV1 } from "../../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
 
 type Actor = { invoke(path: string[], args: unknown[]): Promise<unknown>; close(): Promise<void> };
 const child = globalThis as unknown as DedicatedWorkerGlobalScope;

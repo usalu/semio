@@ -140,7 +140,7 @@
         "^production",
         "{projectRoot}/../../🏅️standards/**/*",
         "{projectRoot}/../../🦀️.rs",
-        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🫀️core/🧬️generation/🪶️sqlite/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🧬️generation/🪶️sqlite/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
@@ -158,7 +158,7 @@
         "^production",
         "{projectRoot}/../../🏅️standards/**/*",
         "{projectRoot}/../../🦀️.rs",
-        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🫀️core/🧬️generation/🪶️sqlite/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🧬️generation/🪶️sqlite/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
@@ -176,7 +176,7 @@
         "^production",
         "{projectRoot}/../../🏅️standards/**/*",
         "{projectRoot}/../../🦀️.rs",
-        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🫀️core/🧬️generation/🪶️sqlite/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🧬️generation/🪶️sqlite/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],

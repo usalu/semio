@@ -9,12 +9,9 @@ import surfaceBehavior from "../../../../🧪️tests/🧫️fixtures/🎬️sur
 
 import Ajv2020 from "ajv/dist/2020";
 
-import catalogueTerminal from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛒️canvas-catalogue-terminal/🔣️.json" with { type: "json" };
-import cataloguePointerTransfer from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🛒️canvas-catalogue-pointer-transfer/🔣️.json" with { type: "json" };
-import cameraGestures from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json" with { type: "json" };
+import { canvasCatalogueTerminalFixture as catalogueTerminal, cataloguePointerTransferFixture as cataloguePointerTransfer, canvas2dCameraGesturesFixture as cameraGestures, uiSceneFramingFixture as framingFixture, uiArrowChordsFixture as arrowChords } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { Tree, catalogueTreeDragController, getActiveCataloguePointerDragData } from "@semio-tech/ui-react";
 
-import framingFixture from "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📷️framing/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 
 import { mountedHost, canvasInputSessions, settle, bounds, type HostAction } from "../../🔮️oracles/🖱️mounted-input/🟦️.tsx";
 import { Canvas2dHost, wheelCameraAtScreen } from "../../🟦️.tsx";
@@ -600,7 +597,6 @@ it("publishes initial framing once and keeps navigation through same-window refr
 
 });
 
-import arrowChords from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/⌨️arrow-chords/🔣️.json" with {type:"json"};
 import {keyboardEventMatchesChord} from "../../../🛠️ShellHelpers/🟦️.tsx";
 
 it("matches neutral arrow chords against independently dispatched DOM events",()=>{

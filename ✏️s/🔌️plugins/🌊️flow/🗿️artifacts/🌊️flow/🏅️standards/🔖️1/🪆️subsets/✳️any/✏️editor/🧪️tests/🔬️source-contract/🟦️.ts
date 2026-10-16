@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import stableStringify from "fast-json-stable-stringify";
 import { applyPatches, enablePatches, produceWithPatches } from "immer";
 import { encodeScalarRecordFixture } from "@semio-tech/framework/pack/value/scalar-witness/testing";
-import { testBuiltTreeRetirementFixture } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
+import { testBuiltTreeRetirementFixture } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 testBuiltTreeRetirementFixture();
@@ -191,23 +191,23 @@ assert.match(artifactSource, /InputSlider\s*\{\s*id: String,\s*label: String,/);
 assert.match(artifactSource, /Widget::InputSlider \{ label, \.\. \} => \(label\.clone\(\), label\.clone\(\)/);
 //#endregion 🏷️AuthoredSliderLabels
 //#region ↩️DeleteCascadeOracle
-const cascade = await Bun.file(new URL("../🧫️fixtures/🧹️delete-cascade/🔣️.json", import.meta.url)).json();
+const {default:cascade}=await import("../🧫️fixtures/🧹️delete-cascade/🔣️.json");
 
 
 const cascadeBase = structuredClone(cascade.scene);
-cascadeBase.widgets[1].label = cascade.label.unit.repeat(cascade.label.repetitions);
-assert.equal(Buffer.byteLength(cascadeBase.widgets[1].label), cascade.label.expectedBytes);
+const removedWidget=cascadeBase.widgets[1];assert(removedWidget,"Actual cascade target fixture required");removedWidget.label = cascade.label.unit.repeat(cascade.label.repetitions);
+assert.equal(Buffer.byteLength(removedWidget.label), cascade.label.expectedBytes);
 const severed = cascadeBase.synapses.filter((edge: any) => edge.from === cascade.targetId || edge.to === cascade.targetId);
 assert.deepEqual([...severed.map((edge: any) => ({ kind: "remove-edge", id: edge.id })), { kind: "remove-node", id: cascade.targetId }], cascade.expectedLeaves);
 enablePatches();
-const [cascadePost, , oracleInverse] = produceWithPatches(cascadeBase, (draft: any) => {
+const [cascadePost, , oracleInverse] = produceWithPatches(cascadeBase, draft => {
   draft.widgets.splice(draft.widgets.findIndex((widget: any) => widget.id === cascade.targetId), 1);
   draft.synapses = draft.synapses.filter((edge: any) => edge.from !== cascade.targetId && edge.to !== cascade.targetId);
 });
 assert.deepEqual(cascadePost.synapses.map((edge: any) => edge.id), cascade.expectedForwardSynapses);
 const byId = (scene: any) => ({ widgets: [...scene.widgets].sort((a: any, b: any) => a.id.localeCompare(b.id)), synapses: [...scene.synapses].sort((a: any, b: any) => a.id.localeCompare(b.id)), layout: scene.layout });
 const appended = structuredClone(cascadePost);
-appended.widgets.push(structuredClone(cascadeBase.widgets[1]));
+appended.widgets.push(structuredClone(removedWidget));
 for (const edge of [...severed].reverse()) appended.synapses.push(structuredClone(edge));
 assert.deepEqual(byId(appended), byId(cascadeBase));
 assert.deepEqual(byId(appended), byId(applyPatches(cascadePost, oracleInverse)));
@@ -344,7 +344,8 @@ assert.deepEqual([...classified.entries()].filter(([, job]) => job !== "Migrated
 const toolIdList = (name: string) => {
   const block = editorSource.match(new RegExp(`const ${name}: &\\[&str\\] = &\\[([^\\]]*)\\];`));
   assert(block, `${name} must be a declared tool-id list`);
-  return [...block[1].matchAll(/"([A-Za-z0-9]+)"/g)].map((row) => row[1]);
+  const contents=block[1];assert(contents!==undefined,`${name} contents required`);
+  return [...contents.matchAll(/"([A-Za-z0-9]+)"/g)].map((row) => row[1]);
 };
 const factoryToolIds = {
   FlowDirectStoreJobFactory: toolIdList("FLOW_DIRECT_STORE_TOOL_IDS"),

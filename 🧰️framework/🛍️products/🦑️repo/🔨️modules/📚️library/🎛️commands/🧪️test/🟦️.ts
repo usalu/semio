@@ -1,4 +1,4 @@
-/** 🧭️ `test` and `bench` commands: the thin test router and the bench pointer.
+/** 🧪️ `test` and `bench` commands: the thin test router and the bench pointer.
  * @see 📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";

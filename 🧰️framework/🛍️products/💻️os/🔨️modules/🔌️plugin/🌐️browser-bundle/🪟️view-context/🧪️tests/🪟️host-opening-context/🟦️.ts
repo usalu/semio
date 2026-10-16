@@ -1,10 +1,10 @@
 /** 🧪️ Verifies host-only context envelopes with a neutral schema and wire round trip. */
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import { parseBrowserActorViewStateRequest } from "../../🟦️.ts";
-import { encodeBackboneWorkerRequest, decodeBackboneWorkerRequest } from "../../../../../🧵️backbone/🟦️.ts";
+import { parseBrowserActorViewStateRequest } from "../../../../../../../../🔨️modules/🌐️browser-bundle/🪟️view-context/🟦️.ts";
+import { encodeBackboneWorkerRequest, decodeBackboneWorkerRequest } from "../../../../../../../../🔨️modules/🛰️backbone/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import viewSchema from "../../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
+import { manifestViewContextSchema as viewSchema } from "../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import fixture from "../🧫️fixtures/🪟️host-opening-context/🔣️.json";
 
 export function testBrowserActorHostContext(): void {

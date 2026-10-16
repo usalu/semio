@@ -1,5 +1,8 @@
-use super::super::*;
-use super::super::tests::{slice_fixture,start_fixture,terminal_fixture};
+use crate::{BoundedJob, JOB_KIND_MIGRATE, PHASE_DECODED, cancel_job, checkpoint_jobs, fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+use std::future::Future;
+use semio_framework_actor::OriginalJobStep as JobStep;
+use crate::tests::{slice_fixture, start_fixture, terminal_fixture};
 
 
 fn append_job_test_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
@@ -22,7 +25,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     (from.to_coordinate(), to.to_coordinate())
 }
 
-async fn input_bytes(from: &str, to: &str, pack: Vec<u8>) -> Vec<u8> {
+#[doc(hidden)]
+pub async fn input_bytes(from: &str, to: &str, pack: Vec<u8>) -> Vec<u8> {
     serde_json::to_vec(&serde_json::json!({ "from": from, "to": to, "pack": pack })).expect("test input encodes")
 }
 

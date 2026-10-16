@@ -1,4 +1,4 @@
-/** 🧭️ Tool-job coverage: import preparation, dispatch, publication freshness and bounded publication laws.
+/** 📤️ Tool-job coverage: import preparation, dispatch, publication freshness and bounded publication laws.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { toolJobProductionSource, toolJobRustBlock } from "../📋️inventory/🟦️.ts";

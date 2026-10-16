@@ -112,7 +112,7 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
       | insert-run          | 📥insert-run          | 📥️inserts |
       | remove-run          | 🗑️remove-run         | 🚫️removes                        |
       | edit-run            | ✏️edit-run           | ✍️rewrites              |
-      | change-run-language | 🌐change-run-language | 🇩retags               |
+      | change-run-language | 🌐change-run-language | 🏷️retags               |
       | reorder-runs        | 🔀reorder-runs        | 🧭️moves                |
       | add-mark            | ➕add-mark            | 🔗️adds       |
       | remove-mark         | ➖remove-mark         | ➖️detaches         |

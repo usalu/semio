@@ -49,5 +49,5 @@ export const stdioJsonRfc8259BaseInferenceTextGuardConstant = <T extends string 
 //#endregion 🚪️Parsers
 
 export function parseJsonInferenceText(value: unknown, at = "$"): JsonInferenceText {
-  return stdioJsonRfc8259BaseInferenceTextGuardObject(value, `${at}`);
+  return stdioJsonRfc8259BaseInferenceTextGuardString(value, `${at}`);
 }

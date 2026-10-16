@@ -42,4 +42,17 @@ semio-framework-async = { workspace = true }
 web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasElement", "OffscreenCanvas", "CanvasRenderingContext2d", "Element", "Event", "MouseEvent", "WheelEvent", "KeyboardEvent", "InputEvent", "ResizeObserver", "ResizeObserverEntry", "DomRect", "Performance", "WorkerGlobalScope", "Request", "RequestInit", "RequestMode", "Response", "Headers", "Blob", "Url", "HtmlAnchorElement", "console", "MediaQueryList"] }
 
 [dev-dependencies]
+semio-framework-os-renderer-wgpu-host-plumbing = { path = "../../../🔧️host-plumbing/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-shell-input = { path = "../../../🕹️shell-input/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-shell-view-chrome = { path = "../../../🍱️shell-view-chrome/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-renderer-wgpu-shell-view-panels = { path = "../../../🪀️shell-view-panels/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-ui-prepared = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
+ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }

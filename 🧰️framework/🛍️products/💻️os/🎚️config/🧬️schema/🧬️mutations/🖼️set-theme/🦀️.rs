@@ -33,13 +33,3 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetT
         vec!["theme-id".to_string()]
     }
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️sets-theme/🦀️.rs"]
-mod tests_sets_theme;
-
-#[cfg(test)]
-#[path = "🧪️tests/🟰️keeps-theme/🦀️.rs"]
-mod tests_keeps_theme;
-//#endregion 🧪️Tests

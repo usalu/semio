@@ -92,21 +92,21 @@ pub const MODEL_DATA_COLUMN_SHARE: f64 = 1.0 - MODEL_VIEWPORT_SHARE;
 //#endregion 🔖️Definition
 
 //#region 🛠️Tools
-pub mod tools {
-    #[path = "../🛠️tools/⚡️simulation/🦀️.rs"]
+#[path = "🛠️tools"] pub mod tools {
+    #[path = "⚡️simulation/🦀️.rs"]
     pub mod simulation;
 }
 //#endregion 🛠️Tools
 
 //#region 🪟️Windows
-pub mod windows {
-    #[path = "../🪟️windows/🧊️model/🦀️.rs"]
+#[path = "🪟️windows"] pub mod windows {
+    #[path = "🧊️model/🦀️.rs"]
     pub mod model;
-    #[path = "../🪟️windows/⚡️simulation/🦀️.rs"]
+    #[path = "⚡️simulation/🦀️.rs"]
     pub mod simulation;
-    #[path = "../🪟️windows/🌳️structure/🦀️.rs"]
+    #[path = "🌳️structure/🦀️.rs"]
     pub mod structure;
-    #[path = "../🪟️windows/📊️zones/🦀️.rs"]
+    #[path = "📊️zones/🦀️.rs"]
     pub mod zones;
 }
 //#endregion 🪟️Windows

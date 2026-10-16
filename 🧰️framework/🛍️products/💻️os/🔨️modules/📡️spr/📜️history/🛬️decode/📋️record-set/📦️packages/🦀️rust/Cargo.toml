@@ -20,6 +20,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 protocol = { path = "../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -29,8 +32,3 @@ semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/
 semio-framework-os-history-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-history-codec = { path = "../../../../⚙️codec/📦️packages/🦀️rust" }
 semio-framework-os-history-identity = { path = "../../../../🛂️identity/📦️packages/🦀️rust" }
-
-[dev-dependencies]
-semio-framework-trace-memory-testing = { path = "../../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
-serde_json = "1.0.140"
-semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

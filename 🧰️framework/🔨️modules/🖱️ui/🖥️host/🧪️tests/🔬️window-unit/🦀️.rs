@@ -133,11 +133,11 @@ struct BrowserFixtureState {
 struct BrowserFixturePort(std::rc::Rc<std::cell::RefCell<BrowserFixtureState>>);
 
 impl AbiPort for BrowserFixturePort {
-    fn try_send(&mut self, message: AbiMessage, _budget: AbiWorkBudget) -> Result<(), crate::abi::AbiPortRejection> {
+    fn try_send(&mut self, message: AbiMessage, _budget: AbiWorkBudget) -> Result<(), semio_framework_abi::AbiPortRejection> {
         let mut state = self.0.borrow_mut();
         if state.reject_next {
             state.reject_next = false;
-            return Err(crate::abi::AbiPortRejection { code: AbiErrorCode::Interrupted, message });
+            return Err(semio_framework_abi::AbiPortRejection { code: AbiErrorCode::Interrupted, message });
         }
         state.sent.push(message);
         Ok(())
@@ -201,7 +201,7 @@ fn attach_browser(host: &mut CanvasHost<BrowserFixturePort, BrowserFixtureDelega
         host.step(AbiWorkBudget::credits(1)).unwrap();
     }
     let body = AbiBytes::try_new([vec![1], 1_u32.to_le_bytes().to_vec(), 1_u32.to_le_bytes().to_vec()].concat()).unwrap();
-    port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id: AbiRequestId(1), generation: 1, status: crate::abi::AbiStatus::OK, bytes: body }));
+    port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id: AbiRequestId(1), generation: 1, status: semio_framework_abi::AbiStatus::OK, bytes: body }));
     host.step(AbiWorkBudget::credits(1)).unwrap();
     for _ in 0..8 {
         assert!(matches!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Progress(_)));
@@ -215,7 +215,7 @@ fn browser_event(code: u16, sequence: u32, tail: Vec<u8>, generation: u32) -> Ab
     bytes.extend_from_slice(&1_u32.to_le_bytes());
     bytes.extend_from_slice(&1_u32.to_le_bytes());
     bytes.extend_from_slice(&tail);
-    AbiMessage::Event(AbiEvent { request_id: AbiRequestId(100 + sequence as u64), generation, sequence, event: crate::abi::AbiEventCode::try_new(code).unwrap(), status: crate::abi::AbiStatus::OK, bytes: AbiBytes::try_new(bytes).unwrap() })
+    AbiMessage::Event(AbiEvent { request_id: AbiRequestId(100 + sequence as u64), generation, sequence, event: semio_framework_abi::AbiEventCode::try_new(code).unwrap(), status: semio_framework_abi::AbiStatus::OK, bytes: AbiBytes::try_new(bytes).unwrap() })
 }
 
 fn raw_browser_event(body_bytes: usize) -> AbiMessage {
@@ -223,8 +223,8 @@ fn raw_browser_event(body_bytes: usize) -> AbiMessage {
         request_id: AbiRequestId(900),
         generation: 1,
         sequence: 1,
-        event: crate::abi::AbiEventCode::try_new(crate::event::BROWSER_EVENT_TEXT).unwrap(),
-        status: crate::abi::AbiStatus::OK,
+        event: semio_framework_abi::AbiEventCode::try_new(crate::event::BROWSER_EVENT_TEXT).unwrap(),
+        status: semio_framework_abi::AbiStatus::OK,
         bytes: AbiBytes::try_new(vec![0; body_bytes]).unwrap(),
     })
 }
@@ -245,7 +245,7 @@ fn browser_missing_objects_and_interrupted_send_are_owned_failures() {
     }
     assert_eq!(host.step(AbiWorkBudget::credits(1)), Err(BrowserHostError::Abi(AbiErrorCode::Interrupted)));
     host.step(AbiWorkBudget::credits(1)).unwrap();
-    port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id: AbiRequestId(1), generation: 1, status: crate::abi::AbiStatus { code: AbiStatusCode::Failed, error: None }, bytes: AbiBytes::try_new(vec![2]).unwrap() }));
+    port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id: AbiRequestId(1), generation: 1, status: semio_framework_abi::AbiStatus { code: AbiStatusCode::Failed, error: None }, bytes: AbiBytes::try_new(vec![2]).unwrap() }));
     host.step(AbiWorkBudget::credits(1)).unwrap();
     assert_eq!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Unavailable(BrowserHostUnavailable::Document));
     for (code, expected) in [(1, BrowserHostUnavailable::Window), (3, BrowserHostUnavailable::Canvas), (4, BrowserHostUnavailable::Clipboard)] {
@@ -253,7 +253,7 @@ fn browser_missing_objects_and_interrupted_send_are_owned_failures() {
         while port.0.borrow().sent.is_empty() {
             host.step(AbiWorkBudget::credits(1)).unwrap();
         }
-        port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id: AbiRequestId(1), generation: 1, status: crate::abi::AbiStatus { code: AbiStatusCode::Failed, error: None }, bytes: AbiBytes::try_new(vec![code]).unwrap() }));
+        port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id: AbiRequestId(1), generation: 1, status: semio_framework_abi::AbiStatus { code: AbiStatusCode::Failed, error: None }, bytes: AbiBytes::try_new(vec![code]).unwrap() }));
         host.step(AbiWorkBudget::credits(1)).unwrap();
         assert_eq!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Unavailable(expected));
     }
@@ -345,7 +345,7 @@ fn browser_clipboard_cancel_before_during_after_and_close_are_deterministic() {
     while after_port.0.borrow().sent.len() == sent {
         after.step(AbiWorkBudget::credits(1)).unwrap();
     }
-    after_port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id, generation: 1, status: crate::abi::AbiStatus::OK, bytes: AbiBytes::try_new(b"x".to_vec()).unwrap() }));
+    after_port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id, generation: 1, status: semio_framework_abi::AbiStatus::OK, bytes: AbiBytes::try_new(b"x".to_vec()).unwrap() }));
     after.step(AbiWorkBudget::credits(1)).unwrap();
     assert!(matches!(after.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Clipboard { text: Some(text), .. } if text == "x"));
     assert_eq!(after.cancel_clipboard().unwrap(), false);
@@ -362,7 +362,7 @@ fn browser_clipboard_cancel_before_during_after_and_close_are_deterministic() {
             });
             if let Some((request_id, generation)) = detach {
                 assert!(!during.terminal_is_empty());
-                during_port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id, generation, status: crate::abi::AbiStatus::OK, bytes: AbiBytes::default() }));
+                during_port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id, generation, status: semio_framework_abi::AbiStatus::OK, bytes: AbiBytes::default() }));
                 detach_replied = true;
             }
         }
@@ -385,9 +385,9 @@ fn browser_listener_aba_and_event_decoder_terminal_laws() {
     assert_eq!(crate::event::CanvasId::try_new(0), Err(AbiErrorCode::UnknownHandle));
     let (mut host, port) = browser_fixture();
     attach_browser(&mut host, &port);
-    port.0.borrow_mut().incoming.push_back(AbiMessage::Control(AbiControl::Close { handle: crate::abi::AbiHandle::try_new(1, 2).unwrap() }));
+    port.0.borrow_mut().incoming.push_back(AbiMessage::Control(AbiControl::Close { handle: semio_framework_abi::AbiHandle::try_new(1, 2).unwrap() }));
     assert_eq!(host.step(AbiWorkBudget::credits(1)), Err(BrowserHostError::Abi(AbiErrorCode::StaleGeneration)));
-    port.0.borrow_mut().incoming.push_back(AbiMessage::Control(AbiControl::Close { handle: crate::abi::AbiHandle::try_new(2, 1).unwrap() }));
+    port.0.borrow_mut().incoming.push_back(AbiMessage::Control(AbiControl::Close { handle: semio_framework_abi::AbiHandle::try_new(2, 1).unwrap() }));
     assert_eq!(host.step(AbiWorkBudget::credits(1)), Err(BrowserHostError::Abi(AbiErrorCode::UnknownHandle)));
 }
 
@@ -396,7 +396,7 @@ fn browser_linear_memory_exact_envelope_retry_and_preflight_laws() {
     use super::browser::linear_memory_test_import::{self as seam, AfterProbe};
 
     seam::reset();
-    let empty = crate::abi::encode_abi_message(&raw_browser_event(0));
+    let empty = semio_framework_abi::encode_abi_message(&raw_browser_event(0));
     assert_eq!(empty.len(), BROWSER_HOST_EVENT_ENVELOPE_BYTES);
     seam::enqueue(empty);
     let mut port = LinearMemoryBrowserHostPort;
@@ -404,7 +404,7 @@ fn browser_linear_memory_exact_envelope_retry_and_preflight_laws() {
     assert_eq!(seam::census(), (vec![BROWSER_HOST_INITIAL_POLL_BYTES], 1, 0, false));
 
     seam::reset();
-    let maximum = crate::abi::encode_abi_message(&raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES));
+    let maximum = semio_framework_abi::encode_abi_message(&raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES));
     assert_eq!(maximum.len(), BROWSER_HOST_MAX_ENCODED_EVENT_BYTES);
     seam::enqueue(maximum);
     assert!(matches!(port.poll(AbiWorkBudget::credits(1)).unwrap(), AbiPortPoll::Message(AbiMessage::Event(event)) if event.bytes.len() == BROWSER_HOST_MAX_EVENT_BODY_BYTES));
@@ -422,23 +422,23 @@ fn browser_linear_memory_exact_envelope_retry_and_preflight_laws() {
     assert_eq!(seam::sent_lengths(), vec![BROWSER_HOST_MAX_ENCODED_EVENT_BYTES]);
 
     seam::reset();
-    let oversized = crate::abi::encode_abi_message(&raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES + 1));
+    let oversized = semio_framework_abi::encode_abi_message(&raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES + 1));
     assert_eq!(oversized.len(), BROWSER_HOST_MAX_ENCODED_EVENT_BYTES + 1);
     seam::enqueue(oversized);
     assert_eq!(port.poll(AbiWorkBudget::credits(1)), Err(AbiErrorCode::LimitExceeded));
     assert_eq!(seam::census(), (vec![BROWSER_HOST_INITIAL_POLL_BYTES], 0, 1, false));
 
     seam::reset();
-    let page = AbiPage::try_new(crate::abi::AbiHandle::try_new(1, 1).unwrap(), 0, vec![7; BROWSER_HOST_MAX_PAGE_BODY_BYTES]).unwrap();
-    let encoded_page = crate::abi::encode_abi_message(&AbiMessage::Page(page));
+    let page = AbiPage::try_new(semio_framework_abi::AbiHandle::try_new(1, 1).unwrap(), 0, vec![7; BROWSER_HOST_MAX_PAGE_BODY_BYTES]).unwrap();
+    let encoded_page = semio_framework_abi::encode_abi_message(&AbiMessage::Page(page));
     assert_eq!(encoded_page.len(), BROWSER_HOST_MAX_ENCODED_EVENT_BYTES);
     seam::enqueue(encoded_page);
     assert!(matches!(port.poll(AbiWorkBudget::credits(1)).unwrap(), AbiPortPoll::Message(AbiMessage::Page(page)) if page.bytes.len() == BROWSER_HOST_MAX_PAGE_BODY_BYTES));
     assert_eq!(seam::census(), (vec![BROWSER_HOST_INITIAL_POLL_BYTES, BROWSER_HOST_MAX_ENCODED_EVENT_BYTES], 1, 0, false));
 
     seam::reset();
-    let oversized_page = AbiPage::try_new(crate::abi::AbiHandle::try_new(1, 1).unwrap(), 0, vec![7; BROWSER_HOST_MAX_PAGE_BODY_BYTES + 1]).unwrap();
-    let encoded_page = crate::abi::encode_abi_message(&AbiMessage::Page(oversized_page));
+    let oversized_page = AbiPage::try_new(semio_framework_abi::AbiHandle::try_new(1, 1).unwrap(), 0, vec![7; BROWSER_HOST_MAX_PAGE_BODY_BYTES + 1]).unwrap();
+    let encoded_page = semio_framework_abi::encode_abi_message(&AbiMessage::Page(oversized_page));
     assert_eq!(encoded_page.len(), BROWSER_HOST_MAX_ENCODED_EVENT_BYTES + 1);
     seam::enqueue(encoded_page);
     assert_eq!(port.poll(AbiWorkBudget::credits(1)), Err(AbiErrorCode::LimitExceeded));
@@ -446,7 +446,7 @@ fn browser_linear_memory_exact_envelope_retry_and_preflight_laws() {
 
     for (action, expected, closed) in [(AfterProbe::Cancel, AbiPortPoll::Pending, false), (AfterProbe::Close, AbiPortPoll::Closed, true)] {
         seam::reset();
-        seam::enqueue(crate::abi::encode_abi_message(&raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES)));
+        seam::enqueue(semio_framework_abi::encode_abi_message(&raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES)));
         seam::after_probe(action);
         assert_eq!(port.poll(AbiWorkBudget::credits(1)).unwrap(), expected);
         assert_eq!(seam::census(), (vec![BROWSER_HOST_INITIAL_POLL_BYTES, BROWSER_HOST_MAX_ENCODED_EVENT_BYTES], 0, 0, closed));
@@ -473,7 +473,7 @@ fn browser_exact_event_and_page_are_credited_and_acknowledged_once() {
     let event_acks = port.0.borrow().sent.iter().filter(|message| matches!(message, AbiMessage::Reply(reply) if reply.request_id == AbiRequestId(101))).count();
     assert_eq!(event_acks, 1);
 
-    let handle = crate::abi::AbiHandle::try_new(9, 1).unwrap();
+    let handle = semio_framework_abi::AbiHandle::try_new(9, 1).unwrap();
     let page = AbiPage::try_new(handle, 0, vec![5; BROWSER_HOST_MAX_PAGE_BODY_BYTES]).unwrap();
     port.0.borrow_mut().incoming.push_back(AbiMessage::Page(page));
     assert!(matches!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Progress(_)));

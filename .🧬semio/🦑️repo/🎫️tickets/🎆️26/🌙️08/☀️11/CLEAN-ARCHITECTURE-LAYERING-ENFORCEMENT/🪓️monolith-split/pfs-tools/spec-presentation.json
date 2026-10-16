@@ -1,0 +1,93 @@
+{
+ "file": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts",
+ "label": "presentation",
+ "childRoot": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript",
+ "deleteParent": true,
+ "children": [
+  {
+   "folder": "🧱️vocabulary",
+   "doc": "/** 🧱️ Presentation vocabulary: how strongly a participant is emphasised, the transition into a slide, the participant itself, the metadata of an arrangement, the dispositions that place and style a participant and the language kinds a presentation is written in.\n *\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "7",
+    "12",
+    "355",
+    "363",
+    "409-456",
+    "876"
+   ]
+  },
+  {
+   "folder": "🎭️embodiments",
+   "doc": "/** 🎭️ Presentation embodiments: the text morph roots and every embodiment a participant takes — text, figure, video, pdf, iframe, markdown, json, bullets, authors and affiliations — with the media scroll origin and the morph labels of the affiliation steps.\n *\n * @see ../🧱️vocabulary/🟦️.ts — emphasis and dispositions\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "19-350"
+   ]
+  },
+  {
+   "folder": "🔭️scope",
+   "doc": "/** 🔭️ Presentation scope: the participants and embodiments an artifact scope holds and the resolution scope built from thoughts.\n *\n * @see ../🎭️embodiments/🟦️.ts — the embodiments a scope holds\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "368-393"
+   ]
+  },
+  {
+   "folder": "🎞️structure",
+   "doc": "/** 🎞️ Presentation structure: arrangements, slides, thoughts, sequences, chapters and the presentation, and the scope an arrangement resolves in.\n *\n * @see ../🔭️scope/🟦️.ts — the scopes the structure resolves in\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "396",
+    "826-871",
+    "879-891"
+   ]
+  },
+  {
+   "folder": "🧩️tiles",
+   "doc": "/** 🧩️ Presentation tiles: tiling figures, splitting a figure grid into tiles and the tile play that seeds, moves and resizes tile drafts and builds their morph prompt.\n *\n * @see ../🎭️embodiments/🟦️.ts — the figure embodiment\n * @see ../🧱️vocabulary/🟦️.ts — the dispositions\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "461-821"
+   ]
+  },
+  {
+   "folder": "📐️resolution",
+   "doc": "/** 📐️ Presentation resolution: resolved dispositions with their bounds and centring, the expansion of thoughts into render slides and the resolution of embodiments and arrangements in a scope.\n *\n * @see ../🎞️structure/🟦️.ts — thoughts, slides and arrangements\n * @see ../🔭️scope/🟦️.ts — the resolution scope\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "898-1159"
+   ]
+  },
+  {
+   "folder": "🔖️bookmarks",
+   "doc": "/** 🔖️ Presentation bookmarks: the query parameters and hash of a slide url, the bookmark names of entities and the collection of every slide of a presentation.\n *\n * @see ../📐️resolution/🟦️.ts — the expansion into slides\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "1162-1301"
+   ]
+  },
+  {
+   "folder": "📂️slide-files",
+   "doc": "/** 📂️ Presentation slide files: the types and file paths of slide and thought files, the assembly of thoughts and chapters from them and the intro specification a thought file may carry.\n *\n * @see ../🎞️structure/🟦️.ts — the structure assembled\n * @see ../🔭️scope/🟦️.ts — the artifact scope merged\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "1306-1476",
+    "1538"
+   ]
+  },
+  {
+   "folder": "🎬️intro",
+   "doc": "/** 🎬️ Presentation intro: the template that turns title, description, goal, authors and affiliations into the slides and thought file of an introduction.\n *\n * @see ../📂️slide-files/🟦️.ts — the slide files the intro writes\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "1563-1878"
+   ]
+  },
+  {
+   "folder": "🧭️slide-glob",
+   "doc": "/** 🧭️ Presentation slide glob: loading a whole presentation from a glob of slide modules and thought files.\n *\n * @see ../📂️slide-files/🟦️.ts — the slide files\n * @see ../🎬️intro/🟦️.ts — the intro thought files that expand to slide modules\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "1478-1483"
+   ]
+  },
+  {
+   "folder": "🔄️analogy-and-play",
+   "doc": "/** 🔄️ Presentation analogy and play: the analogy template between a source and a target and the definitions of the play apps.\n *\n * @see ../🎞️structure/🟦️.ts — the structure an analogy builds\n * @see ../🟦️.ts — the package entry that publishes this module\n */",
+   "stmts": [
+    "1882-2010"
+   ]
+  }
+ ]
+}

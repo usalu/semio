@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/⛰️challenge/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type Answer, type Challenge, type Scale, type SheetTask, type Task, type TaskKind, acted, challengeMeets, challengeRank, challengeRules, hintsOf, misses, points, reach, taskSeconds } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://⛰️challenge-rules/🔣️.json";

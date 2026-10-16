@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/leases/cleanup/component.json",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumLoans": 32,
+        "maximumDatabaseBytes": 1048576,
+        "reacquireMode": "exclusive",
+        "ordinaryControl": false,
+        "retirementFailure": "retain-actual-exclusive",
+        "maximumUnresolvedWriters": 32
+      }
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actualLease",
+        "actualToken",
+        "sameBody",
+        "leaseReleased",
+        "phase",
+        "used"
+      ],
+      "properties": {
+        "actualLease": {
+          "type": "boolean"
+        },
+        "actualToken": {
+          "type": "boolean"
+        },
+        "sameBody": {
+          "type": "boolean"
+        },
+        "leaseReleased": {
+          "type": "boolean"
+        },
+        "phase": {
+          "enum": [
+            "body",
+            "cleanup",
+            "retired"
+          ]
+        },
+        "used": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$ref": "#/definitions/Observation"
+}

@@ -1,5 +1,6 @@
 /** 🔏 Retained UI patch preparation and atomic publication, store transactions, per-node subscriptions and emitIntent. */
 import { TEST_STYLE, container, leaf, type UiNodeRecord, createTypedWireSupport, type TypedWireVitest, type TypedWireDependencies, type TypedWireSource } from "../🪛️typedwire-helpers/🟦️.tsx";
+import { loadUiRetainedPatchFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 export async function registerRetainedAndStoreTests(vitest: TypedWireVitest, dependencies: TypedWireDependencies, source: TypedWireSource): Promise<void> {
   const { DEFAULT_UI_DOCUMENT_LIMITS, RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, UiDocumentStore, applyUiPatch, emitIntent, uiDocumentStateFromSnapshot } = dependencies;
@@ -17,7 +18,7 @@ export async function registerRetainedAndStoreTests(vitest: TypedWireVitest, dep
 
   type UiSnapshot = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiSnapshot;
 
-  const { default: retainedFixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🩹️patch/🔣️.json");
+  const retainedFixture = await loadUiRetainedPatchFixture();
 
   function snapshot(root: number, nodes: readonly UiNodeRecord[]): UiSnapshot {
     return { surface: "s", revision: 0, root, nodes: [...nodes], layoutEpoch: 0n };
@@ -311,7 +312,7 @@ export async function registerRetainedAndStoreTests(vitest: TypedWireVitest, dep
     it("hands the displayed store intent to its exact browser actor mailbox without a descriptor projection", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const { BrowserActorActionMailboxV1 } = await import("../../../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts");
+      const { BrowserActorActionMailboxV1 } = await import("../../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts");
       const { decodeAppCommand, decodePackValue, packUInt, encodeBackboneWorkerRequest, decodeBackboneWorkerRequest } = await import("@semio-tech/framework-os");
       const fixture = JSON.parse(readFileSync(new URL("../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const authored = fixture.uiIntent;

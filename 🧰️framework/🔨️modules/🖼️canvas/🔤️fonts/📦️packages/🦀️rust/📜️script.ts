@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {verifyCapturedCargoArtifactsV1} from "../../../../🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import {buildRepositoryCargoArtifacts} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { buildBudgetMs } from '../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';

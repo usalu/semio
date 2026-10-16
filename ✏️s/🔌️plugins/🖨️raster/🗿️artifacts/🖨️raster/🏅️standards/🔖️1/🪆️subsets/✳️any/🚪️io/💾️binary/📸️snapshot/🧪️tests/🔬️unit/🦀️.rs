@@ -99,7 +99,7 @@ async fn pack_round_trips_representative_document() {
     };
     store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::snapshot::retire_raster_snapshot);
     let spec = <RasterSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("raster declares its pack record spec");
-    assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);
+    assert_ne!(pack::record::schema_hash(&spec), [0u8; 32]);
     let decoded = decode(&encode(&document)).expect("decode");
     let image = |snapshot: &RasterSnapshot| snapshot.assets.iter().next().and_then(|(_, child)| child.local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>()).map(|image| image.as_ref().clone());
     let (before, after) = (image(&document), image(&decoded));

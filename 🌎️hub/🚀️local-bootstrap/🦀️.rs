@@ -4,7 +4,7 @@ use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
 use semio_hub_directory_contract::model::{AuthSessionIssue, AuthSessionKind, IssuedAuthSession};
 use semio_hub_directory_contract::{constant_time_digest_eq, identity_subject_digest, validate_bounded_auth_text, IdentityVerificationContext, IdentityVerificationControl, LocalBootstrapAcceptFuture, LocalBootstrapClientClass, LocalBootstrapIssueFuture, LocalBootstrapRejectCode, LocalBootstrapTerminalFuture, LocalBootstrapTransport, VerifiedLocalBootstrapRequest, AUTH_TEXT_MAX_BYTES, DEVICE_INSTANCE_MAX_BYTES};
 use semio_hub_directory_dispatch::HubDirectories;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{AuthSessionDirectory, UserDirectory};
 use semio_framework_hash::{hex_lower, Sha256};
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};

@@ -7,49 +7,28 @@
         "maximumLines": 256,
         "readChunkBytes": 65536,
         "variants": [
+          "build",
+          "serve",
+          "release",
+          "offline",
           "parity-nx",
-          "parity-bazel"
+          "parity-bazel",
+          "cancel",
+          "parallel-failure",
+          "refusal-early",
+          "refusal-ended"
         ]
       }
     },
     "Receipt": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "version",
-        "variant",
-        "wireSha256",
-        "policy",
-        "deadlineEpochMilliseconds",
-        "capabilities"
-      ],
-      "properties": {
-        "version": {
-          "const": 1
+      "oneOf": [
+        {
+          "$ref": "#/definitions/PositiveReceipt"
         },
-        "variant": {
-          "enum": [
-            "parity-nx",
-            "parity-bazel"
-          ]
-        },
-        "wireSha256": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$"
-        },
-        "policy": {
-          "type": "object"
-        },
-        "deadlineEpochMilliseconds": {
-          "type": [
-            "integer",
-            "null"
-          ]
-        },
-        "capabilities": {
-          "type": "object"
+        {
+          "$ref": "#/definitions/NegativeReceipt"
         }
-      }
+      ]
     },
     "Cases": {
       "type": "array",
@@ -74,6 +53,101 @@
           "accepted": {
             "type": "boolean"
           }
+        }
+      }
+    },
+    "PositiveReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "variant",
+        "wireSha256",
+        "policy",
+        "deadlineEpochMilliseconds",
+        "capabilities",
+        "parentWireSha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "variant": {
+          "enum": [
+            "build",
+            "serve",
+            "release",
+            "offline",
+            "parity-nx",
+            "parity-bazel"
+          ]
+        },
+        "wireSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "policy": {
+          "type": "object"
+        },
+        "deadlineEpochMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "capabilities": {
+          "type": "object"
+        },
+        "parentWireSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "NegativeReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "variant",
+        "wireSha256",
+        "policy",
+        "deadlineEpochMilliseconds",
+        "capabilities",
+        "wire"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "variant": {
+          "enum": [
+            "cancel",
+            "parallel-failure",
+            "refusal-early",
+            "refusal-ended"
+          ]
+        },
+        "wireSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "policy": {
+          "type": "object"
+        },
+        "deadlineEpochMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "capabilities": {
+          "type": "object"
+        },
+        "wire": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536
         }
       }
     }

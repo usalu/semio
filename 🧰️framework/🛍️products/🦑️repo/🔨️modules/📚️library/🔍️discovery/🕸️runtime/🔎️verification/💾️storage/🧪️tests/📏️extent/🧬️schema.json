@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "source": "pub const ORIGINAL: u8 = 7;\n",
+    "expectedBytes": 28,
+    "maximumBytes": [
+      8,
+      262144
+    ]
+  }
+}

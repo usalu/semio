@@ -49,5 +49,5 @@ export const stdioIfc4AnySnapshotTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseIfcSnapshotText(value: unknown, at = "$"): IfcSnapshotText {
-  return stdioIfc4AnySnapshotTextGuardObject(value, `${at}`);
+  return stdioIfc4AnySnapshotTextGuardString(value, `${at}`);
 }

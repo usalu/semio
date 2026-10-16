@@ -5,7 +5,35 @@
   "exports": {
     "./ordered/numeric": "./🗂️ordered/🔢️numeric/🟦️.ts",
     "./refusal": "./⚠️refusal/🟦️.ts",
-    "./ieee754": "./🔢️ieee754/🟦️.ts"
+    "./ieee754": "./🔢️ieee754/🟦️.ts",
+    "./decode": "./🛬️decode/🟦️.ts",
+    "./dictionary": "./🧾️dictionary/🟦️.ts",
+    "./dictionary/native-json": "./🧾️dictionary/🪪️native-json/🟦️.ts",
+    "./ordered/numeric/scratch": "./🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts",
+    "./ordered/numeric/scratch/schema": "./🗂️ordered/🔢️numeric/🧮️scratch/🧬️schema/🟦️.ts",
+    "./ordered/numeric/scratch/testing": "./🗂️ordered/🔢️numeric/🧮️scratch/🧪️testing/🟦️.ts",
+    "./ordered/retirement/schema": "./🗂️ordered/♻️retirement/🧬️schema/🟦️.ts",
+    "./ordered/testing/source-contract": "./🗂️ordered/🧪️testing/🧪️source-contract/🟦️.ts",
+    "./refusal/codec": "./⚠️refusal/🔁️codec/🟦️.ts",
+    "./refusal/codec/schema": "./⚠️refusal/🔁️codec/🧬️schema/🟦️.ts",
+    "./refusal/schema": "./⚠️refusal/🧬️schema/🟦️.ts",
+    "./refusal/testing": "./⚠️refusal/🧪️testing/🟦️.ts",
+    "./resident": "./💾️resident/🟦️.ts",
+    "./resident/admission": "./💾️resident/📨️admission/🟦️.ts",
+    "./resident/schema": "./💾️resident/🧬️schema/🟦️.ts",
+    "./resident/testing": "./💾️resident/🧪️testing/🟦️.ts",
+    "./retained-clone/contract": "./🧬️retained-clone/🧬️contract/🟦️.ts",
+    "./retained-clone/contract/schema": "./🧬️retained-clone/🧬️contract/🧬️schema/🟦️.ts",
+    "./retained-clone/wire": "./🧬️retained-clone/🌐️wire/🟦️.ts",
+    "./retained-clone/wire/schema": "./🧬️retained-clone/🌐️wire/🧬️schema/🟦️.ts",
+    "./retirement/contract/schema": "./♻️retirement/🧬️contract/🧬️schema/🟦️.ts",
+    "./retirement/factory/boxed": "./♻️retirement/🏭️factory/📦️boxed/🟦️.ts",
+    "./schema": "./🧬️schema/🟦️.ts",
+    "./schema/intrinsic": "./🧬️schema/🌳️intrinsic/🟦️.ts",
+    "./schema/intrinsic/json": "./🧬️schema/🌳️intrinsic/🔣️json/🟦️.ts",
+    "./testing/json-projection": "./🧪️testing/🔣️json-projection/🟦️.ts",
+    "./text": "./📝️text/🟦️.ts",
+    "./type": "./🏷️type/🟦️.ts"
   },
   "scripts": {
     "test-numeric-api": "bun --cwd \"../../../../..\" repo run @semio-tech/value-ts:test-numeric-api",
@@ -13,5 +41,8 @@
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/schema-ts": "workspace:*"
   }
 }

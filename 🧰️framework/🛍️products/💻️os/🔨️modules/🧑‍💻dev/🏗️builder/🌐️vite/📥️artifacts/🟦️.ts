@@ -1,6 +1,6 @@
 import {frameworkOsEngineDeliveriesV1} from "./🕸️engines/🟦️.ts";
 import {flowBrowserPackageRequestV1} from "../../../../🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {fontAssetPublicationRootV1} from "../../../../../../../🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🟦️.ts";
 import {runtimeAssetStageTrees} from "../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🟦️.ts";
 import {rendererWasmPublicationV1} from "../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📦️publication/🟦️.ts";

@@ -1,32 +1,34 @@
+use semio_framework_value::retirement::controlled::ControlledRetirement;
 #[derive(Clone,Copy,PartialEq,Eq)]
 pub(crate) enum PendingPublicationOutcomePhase{Uncaptured,Captured,Released}
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum PendingPublicationDisposition{Accepted,Rejected,Lenient}
-pub(crate) struct PendingPublicationOutcome{pub(crate) phase:PendingPublicationOutcomePhase,disposition:PendingPublicationDisposition,report:Option<ArtifactBoundedToolFault>}
+#[doc(hidden)]
+pub struct PendingPublicationOutcome{pub phase:PendingPublicationOutcomePhase,pub disposition:PendingPublicationDisposition,pub report:Option<ArtifactBoundedToolFault>}
 impl PendingPublicationOutcome{
- pub(crate) const fn new()->Self{Self{phase:PendingPublicationOutcomePhase::Uncaptured,disposition:PendingPublicationDisposition::Accepted,report:None}}
- fn pending(&self)->bool{self.phase!=PendingPublicationOutcomePhase::Uncaptured}
- fn copy_demand(&self)->usize{if self.report.is_some(){super::completion_fault::borrowed_report_copy_bytes()}else{0}}
+ pub const fn new()->Self{Self{phase:PendingPublicationOutcomePhase::Uncaptured,disposition:PendingPublicationDisposition::Accepted,report:None}}
+ pub fn pending(&self)->bool{self.phase!=PendingPublicationOutcomePhase::Uncaptured}
+ fn copy_demand(&self)->usize{if self.report.is_some(){semio_framework_plugin_decl_app::borrowed_report_copy_bytes()}else{0}}
 }
 impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
- pub(crate) fn close_fault_pending(&self)->bool{self.retained_close_fault.is_some()||self.retained_close_fault_retirement.is_some()||self.retained_close_fault_refusal.is_some()}
- pub(crate) fn close_fault_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+ pub fn close_fault_pending(&self)->bool{self.retained_close_fault.is_some()||self.retained_close_fault_retirement.is_some()||self.retained_close_fault_refusal.is_some()}
+ pub fn close_fault_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.retained_close_fault_refusal.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
   if let Some(owner)=self.retained_close_fault_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
-  if self.retained_close_fault.is_some()&&self.terminal_fault.is_none(){return Ok(RetirementDemand{copy_bytes:super::completion_fault::borrowed_report_copy_bytes(),depth:1,..Default::default()});}
+  if self.retained_close_fault.is_some()&&self.terminal_fault.is_none(){return Ok(RetirementDemand{copy_bytes:semio_framework_plugin_decl_app::borrowed_report_copy_bytes(),depth:1,..Default::default()});}
   store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.retained_close_fault)
  }
- pub(crate) fn close_fault_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn close_fault_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.close_fault_demands(grant.maximum_copy_bytes)?;
   if !plugin_grant_funds(demand,grant)||self.retained_close_fault_refusal.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(original)=self.retained_close_fault.as_ref(){if self.terminal_fault.is_none(){self.terminal_fault=Some(super::completion_fault::borrowed_report(original.origin,&original.code.0,original.severity,&original.message,original.retryable));if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}}
+  if let Some(original)=self.retained_close_fault.as_ref(){if self.terminal_fault.is_none(){self.terminal_fault=Some(semio_framework_plugin_decl_app::borrowed_report(original.origin,&original.code.0,original.severity,&original.message,original.retryable));if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}}
   let result=if self.retained_close_fault_retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained_close_fault_retirement,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retained_close_fault,&mut self.retained_close_fault_retirement,grant)};
   match result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(original)=>{self.retained_close_fault_refusal=Some(original);Ok(RetainedCloneStep::Progress(Default::default()))}}
  }
 
- pub(crate) fn granted_retirement_ready(&self)->bool{self.result_page.is_none()&&(self.stage==MountedTypedCommandFullOperationStage::Retiring||self.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)||self.pending_child_publication.as_ref().is_some_and(|owner|matches!(owner.phase,PendingChildGroupPublicationPhase::Acknowledged|PendingChildGroupPublicationPhase::Closing)))}
- pub(crate) fn granted_retirement_pending(&self)->bool{self.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)||self.pending_child_publication.as_ref().is_some_and(|owner|matches!(owner.phase,PendingChildGroupPublicationPhase::Acknowledged|PendingChildGroupPublicationPhase::Closing))||(self.stage==MountedTypedCommandFullOperationStage::Retiring&&(self.actor_capture.is_some()||self.reserved_producer.is_some()||self.raw_input.is_some()||self.pending_artifact_publication.is_some()||self.pending_child_publication.is_some()||self.publication.is_some()||self.publication_retirement.is_some()||self.completion.is_some()||self.completion_retirement.is_some()||self.output_chunks.is_some()||self.output_retirement.is_some()))}
- pub(crate) fn granted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+ pub fn granted_retirement_ready(&self)->bool{self.result_page.is_none()&&(self.stage==MountedTypedCommandFullOperationStage::Retiring||self.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)||self.pending_child_publication.as_ref().is_some_and(|owner|matches!(owner.phase,PendingChildGroupPublicationPhase::Acknowledged|PendingChildGroupPublicationPhase::Closing)))}
+ pub fn granted_retirement_pending(&self)->bool{self.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)||self.pending_child_publication.as_ref().is_some_and(|owner|matches!(owner.phase,PendingChildGroupPublicationPhase::Acknowledged|PendingChildGroupPublicationPhase::Closing))||(self.stage==MountedTypedCommandFullOperationStage::Retiring&&(self.actor_capture.is_some()||self.reserved_producer.is_some()||self.raw_input.is_some()||self.pending_artifact_publication.is_some()||self.pending_child_publication.is_some()||self.publication.is_some()||self.publication_retirement.is_some()||self.completion.is_some()||self.completion_retirement.is_some()||self.output_chunks.is_some()||self.output_retirement.is_some()))}
+ pub fn granted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(owner)=self.actor_capture.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
   if let Some(producer)=self.reserved_producer.as_ref(){
    if producer.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<ArtifactReservedToolJob>(),depth:1,..Default::default()});}
@@ -45,7 +47,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
   if let Some(owner)=self.output_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
   Ok(RetirementDemand{depth:usize::from(self.output_chunks.is_some()),..Default::default()})
  }
- pub(crate) fn granted_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
+ pub fn granted_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
   use semio_framework_value::retained_clone::RetainedCloneStep;
   if !self.granted_retirement_ready()||self.publication_ownership_progress.is_some()||self.original_retirement_receipt.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let demand=self.granted_retirement_demands(grant.maximum_copy_bytes)?;
@@ -82,13 +84,15 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  }
 }
 /// 🧱️ A blank mounted operation for laws that read one retained field of it.
-#[cfg(test)]
-pub(crate) fn test_blank_mounted_operation<A:ArtifactApp>()->MountedTypedCommandFullOperation<A>{
+#[doc(hidden)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
+pub fn test_blank_mounted_operation<A:ArtifactApp>()->MountedTypedCommandFullOperation<A>{
  MountedTypedCommandFullOperation::<A>{verb:String::new(),meta:ActionMeta{actor:Default::default(),instance_id:19,view_state:None},operation:semio_framework_job::Operation::new(semio_framework_job::OperationId(23),semio_framework_job::RevisionId(0),semio_framework_job::Generation(1),0),source_identity:(semio_framework_job::OperationId(17),semio_framework_job::Generation(9)),canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,terminal_seen:false,worker_resume_pending:false,publication:None,pending_artifact_publication:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:false,interaction_revalidated:false,retained_close_fault:None,retained_close_fault_retirement:None,retained_close_fault_refusal:None,terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing}
 }
 /// 🚨️ An operation retains a structural refusal exactly when its close fault or its refused owner can never retire: the language-agnostic corpus decides which retained causes are structural.
-#[cfg(test)]
-pub(crate) fn test_retained_structural_refusal<A:ArtifactApp>(){
+#[doc(hidden)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
+pub fn test_retained_structural_refusal<A:ArtifactApp>(){
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../🚨️structural-refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let structural=corpus["structuralRefusalKinds"].as_array().unwrap().iter().map(|kind|kind.as_str().unwrap()).collect::<Vec<_>>();
  assert_eq!(structural,["UnsupportedOwner"]);
@@ -104,8 +108,9 @@ pub(crate) fn test_retained_structural_refusal<A:ArtifactApp>(){
   assert_eq!(mounted.retained_structural_refusal(),row["expected"].as_str().map(str::to_owned),"{}",row["name"]);
  }
 }
-#[cfg(test)]
-pub(crate) fn test_original_mounted_child_frontier<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
+#[doc(hidden)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
+pub fn test_original_mounted_child_frontier<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
  let(mut mounted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
   let mut child=PendingChildGroupPublication::<A>::new(original(),vec![ChildEmit::open("original","child",0)],Some(protocol::TransactionRef{id:"original".repeat(1171),tool:"original-tool".into()})).unwrap();child.begin_dispatch().unwrap();child.commit(ChildPublicationResultV1{invocation_id:"original-invocation".repeat(457),committed_members:1,child_content_generation:1}).unwrap();
   let mut mounted=MountedTypedCommandFullOperation::<A>{verb:String::new(),meta:ActionMeta{actor:Default::default(),instance_id:19,view_state:None},operation:semio_framework_job::Operation::new(semio_framework_job::OperationId(23),semio_framework_job::RevisionId(0),semio_framework_job::Generation(1),0),source_identity:(semio_framework_job::OperationId(17),semio_framework_job::Generation(9)),canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,terminal_seen:true,worker_resume_pending:false,publication:None,pending_artifact_publication:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:Some(child),owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:false,interaction_revalidated:false,retained_close_fault:None,retained_close_fault_retirement:None,retained_close_fault_refusal:None,terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing};

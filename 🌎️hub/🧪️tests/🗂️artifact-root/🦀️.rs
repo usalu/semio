@@ -24,3 +24,23 @@ pub fn hub_source(relative: &str) -> &'static str {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..").join(relative);
     Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("hub source {relative}: {error}")).into_boxed_str())
 }
+
+/// 🌳️ A hub Rust source together with every module it mounts through `#[path = "…"]`, parent first and then each child in declaration order, with the `🧪️tests` mounts left out; `relative` is relative to the hub workspace root. Source-text laws read a split file through this so they keep seeing what the unsplit file held.
+pub fn hub_module_tree(relative: &str) -> &'static str {
+    fn walk(path: &std::path::Path, text: &mut String) {
+        let source = std::fs::read_to_string(path).unwrap_or_else(|error| panic!("hub source {}: {error}", path.display()));
+        text.push_str(&source);
+        text.push('\n');
+        let directory = path.parent().expect("hub source directory");
+        for line in source.lines() {
+            if let Some(child) = line.trim().strip_prefix("#[path = \"").and_then(|rest| rest.strip_suffix("\"]")) {
+                if !child.contains("🧪️tests") {
+                    walk(&directory.join(child), text);
+                }
+            }
+        }
+    }
+    let mut text = String::new();
+    walk(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..").join(relative), &mut text);
+    Box::leak(text.into_boxed_str())
+}

@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import {
+  type DocumentScope
+} from "@semio-tech/framework/document/scope";
+import {
   decodeBackboneWorkerResponse,
   documentRuntimeKeyV1,
   encodeBackboneWorkerRequest,
-  type BackboneWorkerRequest,
-  type DocumentExecutionTargetLeaseFieldsV1,
-  type DocumentScope,
-} from "@semio-tech/framework-os";
+  type BackboneWorkerRequest
+} from "@semio-tech/framework/backbone";
+import {
+  type DocumentExecutionTargetLeaseFieldsV1
+} from "@semio-tech/framework/directory/schema";
 import type { PresencePeer } from "@semio-tech/ui-react";
 import { scopedPresencePeersV1 } from "../🟦️.ts";
 

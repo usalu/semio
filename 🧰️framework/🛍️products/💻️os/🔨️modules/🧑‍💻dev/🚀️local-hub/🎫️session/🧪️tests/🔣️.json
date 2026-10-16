@@ -1,0 +1,97 @@
+{
+  "proxyCases": [
+    {
+      "endpoint": "http://127.0.0.1:7777/session",
+      "accepted": true
+    },
+    {
+      "endpoint": "http://foreign:7777/session",
+      "accepted": false
+    },
+    {
+      "endpoint": "http://127.0.0.1:7777/../session",
+      "accepted": false
+    },
+    {
+      "endpoint": "http://127.0.0.1:99999/session",
+      "accepted": false
+    }
+  ],
+  "serviceCases": [
+    {
+      "value": {
+        "version": 1,
+        "service": "local-hub",
+        "defaultProfileId": "developer"
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "owner": {
+          "program": "bun",
+          "args": [
+            "-e",
+            "arbitrary"
+          ]
+        },
+        "defaultProfileId": "developer"
+      },
+      "accepted": false
+    }
+  ],
+  "joinCases": [
+    {
+      "ready": false,
+      "elapsedMilliseconds": 0,
+      "expected": "wait"
+    },
+    {
+      "ready": false,
+      "elapsedMilliseconds": 119999,
+      "expected": "wait"
+    },
+    {
+      "ready": false,
+      "elapsedMilliseconds": 120000,
+      "expected": "gave-up"
+    },
+    {
+      "ready": true,
+      "elapsedMilliseconds": 119999,
+      "expected": "ready"
+    }
+  ],
+  "ioSchedules": [
+    {
+      "stages": [
+        "admit",
+        "start",
+        "stop-transport",
+        "join",
+        "release"
+      ],
+      "accepted": true
+    },
+    {
+      "stages": [
+        "admit",
+        "start",
+        "join",
+        "stop-transport",
+        "release"
+      ],
+      "accepted": false
+    },
+    {
+      "stages": [
+        "start",
+        "admit",
+        "stop-transport",
+        "join",
+        "release"
+      ],
+      "accepted": false
+    }
+  ]
+}

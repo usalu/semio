@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 /** 🧬️ Shared stdio artifact contract package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { runContributionChecks } from "../../🧪️tests/📇️contributions/🟦️.ts";
@@ -14,7 +15,7 @@ class OriginalOwnershipScript extends BundleScript {
   if(segments.length)throw Error("test-original-ownership accepts no arguments");
   if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned generated output");
   console.log(`[DEBUG] Stdio original independent neutral twin assertions=${runOriginalCopyCloseChecks()}`);
-  const receipts=await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),cwd:this.repoRoot,env:process.env,groups:[{package:"semio-s-artifact-stdio-contract-part21",target:{kind:"lib"},laws:[
+  const receipts=await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),cwd:this.repoRoot,env:process.env,groups:[{package:"semio-s-artifact-stdio-contract-part21",target:{kind:"lib"},laws:[
     "controlled::tests::part21_original_decoder_returns_every_success_and_cancelled_prefix_to_actual_recipient",
     "controlled::tests::part21_rejected_nested_child_preserves_owned_parent_text_and_siblings",
     "controlled::tests::part21_cohort_retirement_releases_original_capacity_without_literal_byte_credit",

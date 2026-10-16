@@ -38,7 +38,7 @@ import { useMediaQuery } from "@semio-tech/ui-react/chrome";
 import type { Menagerie, PetMode, Slug } from "@semio-tech/pets";
 import type { PetLayerHandle, PetLayerProps } from "@semio-tech/pets-react";
 import type { QuizLocale, QuizText } from "../🌐️i18n/🟦️.ts";
-import type { QuizState } from "../🧭️session/🟦️.ts";
+import type { QuizState } from "../🧭️session/🧮️state/🟦️.ts";
 import type { PetDeed } from "./🎪️stage/🟦️.tsx";
 
 //#region 🎚️Choice

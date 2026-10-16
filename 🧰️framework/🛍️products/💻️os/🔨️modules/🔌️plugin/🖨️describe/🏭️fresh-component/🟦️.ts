@@ -1,4 +1,8 @@
-import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type {CompletedCargoCompilationViewV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📥️snapshot/🟦️.ts";
+import {withNativeBuildCompilationTaskV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
+import compilerRetentionPolicy from "../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧬️schema/🔣️.json";
+import {requireIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {type CompilerAdmissionControl} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import {buildModePolicy} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
@@ -241,12 +245,13 @@ export function freshComponentReceiptV1(repoRoot: string, request: Pick<FreshCom
 }
 
 /** 🫴️ Loans a private bounded copy once and drains its consumer before retiring the capability. */
-async function withFreshComponentLease<T>(component: Uint8Array, control: FreshBuildControlV1, derive: (lease: FreshComponentLeaseV1) => Promise<T>): Promise<T> {
+async function withFreshComponentLease<T>(component: Uint8Array, control: FreshBuildControlV1, phaseControl: ResourceLeaseControl, derive: (lease: FreshComponentLeaseV1) => Promise<T>): Promise<T> {
+  requireIssuedResourceControlV1(phaseControl);checkResourceLeaseControl(phaseControl);
   let open = true,
     used = false,
     pending: Promise<unknown> | undefined;
   const lease: FreshComponentLeaseV1 = Object.freeze({
-    consume<R>(consumer: (bytes: Uint8Array<ArrayBuffer>) => Promise<R>): Promise<R> {
+    consume<R>(consumer: (bytes: Uint8Array<ArrayBuffer>, phaseControl: ResourceLeaseControl) => Promise<R>): Promise<R> {
       if (!open) return Promise.reject(new Error("fresh component lease expired"));
       if (used) return Promise.reject(new Error("fresh component lease already consumed"));
       used = true;
@@ -259,7 +264,9 @@ async function withFreshComponentLease<T>(component: Uint8Array, control: FreshB
             loan.set(component.subarray(offset, Math.min(offset + FRESH_IO_CHUNK_BYTES, component.byteLength)), offset);
           }
           freshCheckpoint(control, "derive", 7, 8);
-          const result = await consumer(loan);
+          checkResourceLeaseControl(phaseControl);
+          const result = await consumer(loan, phaseControl);
+          checkResourceLeaseControl(phaseControl);
           freshCheckpoint(control, "derive", 8, 8);
           return result;
         } finally {
@@ -293,8 +300,10 @@ export async function stageFreshComponentInputs<T>(
   witExports: readonly string[],
   componentReceipt: ComponentReceiptV1,
   control: FreshBuildControlV1,
+  phaseControl: ResourceLeaseControl,
   derive: (lease: FreshComponentLeaseV1) => Promise<T>,
 ): Promise<FreshComponentProducedV1<T>> {
+  requireIssuedResourceControlV1(phaseControl);checkResourceLeaseControl(phaseControl);const original=control,{cancelled,remainingMs,checkpoint,diagnosticsRoot}=original;control=Object.freeze({diagnosticsRoot,cancelled:()=>phaseControl.signal.aborted||cancelled.call(original),remainingMs:()=>Math.min(checkResourceLeaseControl(phaseControl)??Infinity,remainingMs.call(original)),checkpoint:(stage:string,completed:number,total:number)=>{checkResourceLeaseControl(phaseControl);checkpoint.call(original,stage,completed,total);checkResourceLeaseControl(phaseControl);}});
   const ownedFiles: string[] = [];
   try {
     const componentPath = join(stageRoot, "component.wasm"),
@@ -314,7 +323,7 @@ export async function stageFreshComponentInputs<T>(
       componentReceipt,
       witExports: Object.freeze([...witExports]),
     });
-    const derived = await withFreshComponentLease(snapshot.componentBytes, control, derive);
+    const derived = await withFreshComponentLease(snapshot.componentBytes, control, phaseControl, derive);
     freshCheckpoint(control, "complete", 8, 8);
     return Object.freeze({ receipt, derived });
   } catch (error) {
@@ -326,19 +335,21 @@ export async function stageFreshComponentInputs<T>(
   }
 }
 
-export interface FreshCompilerObservationV1{readonly kind:"component"|"emitter";readonly pass:string;readonly bytes:Uint8Array;readonly sha256:string}
-export interface FreshComponentEvidenceV1{readonly control:CompilerAdmissionControl;readonly observations:readonly FreshCompilerObservationV1[];withEmitter<T>(body:(tool:Readonly<{path:string;sha256:string;control:CompilerAdmissionControl;recheck():Promise<void>}>)=>Promise<T>):Promise<T>}
+export interface FreshCompilerObservationV1{readonly kind:"component"|"emitter";readonly pass:string;readonly bytes:Uint8Array;readonly sha256:string;readonly originalArtifact:Readonly<{path:string;sha256:string;byteLength:number}>|null}
+export interface FreshComponentEvidenceV1{withCompilation<T>(kind:"component"|"emitter",pass:string,body:(view:CompletedCargoCompilationViewV1)=>Promise<T>):Promise<T>;readonly control:CompilerAdmissionControl;readonly observations:readonly FreshCompilerObservationV1[];withEmitter<T>(body:(tool:Readonly<{path:string;sha256:string;control:CompilerAdmissionControl;recheck():Promise<void>}>)=>Promise<T>):Promise<T>}
 export type FreshComponentProductionControlV1=FreshBuildControlV1&Readonly<{invocation:ScriptInvocation;compiler:CompilerAdmissionControl}>;
 /** 🧬️ Consumes a genuinely fresh canonical model and real compiler observations before the driver cleans its generation. */
 export async function produceFreshComponentV1<T>(repoRoot:string,request:FreshComponentRequestV1,packageStageRoot:string,control:FreshComponentProductionControlV1,derive:(lease:FreshComponentLeaseV1,evidence:FreshComponentEvidenceV1)=>Promise<T>):Promise<FreshComponentProducedV1<T>>{
  requireIssuedResourceControlInvocationV1(control.compiler,control.invocation);const authority=readNativeCallerAuthorityV1(control.invocation.capabilities),mode=authority.original.buildMode,target=componentStageTargetV1(repoRoot,join(repoRoot,componentSourceManifestV1(repoRoot,request.cargoPackage)));
  if(repoRoot!==authority.repositoryRoot||request.componentProfile!==buildModePolicy(mode).cargoProfile||target.pluginId!==request.pluginId||target.packageId!==request.componentPackageId||target.packageName!==request.cargoPackage||request.outputName!==request.cargoPackage.replaceAll("-","_")+".wasm"||typeof derive!=="function")throw Error("Exact actual Original fresh component selection required");const stage=freshRoot(packageStageRoot,"fresh component stage root");await buildDescriptorEmitterV1(repoRoot,control.invocation,control.compiler);let completed=false,produced:FreshComponentProducedV1<T>|undefined;
- await withDescriptorEmitterV1(repoRoot,control.invocation,control.compiler,emitter=>withDescriptorEmitterTaskV1(emitter,control.invocation,tool=>buildComponentClosureV1(repoRoot,new Set([request.pluginId]),{invocation:control.invocation,facet:"model",network:repositoryCargoNetworkV1(control.invocation,repoRoot),control:tool.control,generation:"fresh",maximumObservationBytes:authority.transport.maximumBytes,consume:async(outcome,phase)=>{
+ await withDescriptorEmitterV1(repoRoot,control.invocation,control.compiler,(emitter,emitterPhase)=>buildComponentClosureV1(repoRoot,new Set([request.pluginId]),{invocation:control.invocation,facet:"model",network:repositoryCargoNetworkV1(control.invocation,repoRoot),control:emitterPhase,generation:"fresh",retainCompilationBytes:compilerRetentionPolicy.properties.maximumBytes.const,maximumObservationBytes:authority.transport.maximumBytes,consume:async(outcome,phase)=>withDescriptorEmitterTaskV1(emitter,control.invocation,async tool=>{
   const observations:FreshCompilerObservationV1[]=[],maximum=authority.transport.maximumBytes;let retained=0;
-  try{for(const row of outcome.observations){const bytes=await readArtifactBytesV1(row.path,maximum-retained,phase.signal);retained+=bytes.length;const record=decodeCargoProvenanceV1(new TextDecoder("utf-8",{fatal:true}).decode(bytes));if(record.status!==0||record.cancelled)throw Error("Actual successful fresh compiler observation required");observations.push(Object.freeze({kind:"component",pass:row.pass,bytes,sha256:createHash("sha256").update(bytes).digest("hex")}));}const emitterBytes=new TextEncoder().encode(tool.observation);if(emitterBytes.length>maximum-retained||!observations.length)throw Error("Finite actual component and emitter observations required");observations.push(Object.freeze({kind:"emitter",pass:"descriptor-emitter",bytes:emitterBytes,sha256:createHash("sha256").update(emitterBytes).digest("hex")}));
-   await withComponentModelV1(repoRoot,control.invocation,{version:1,mode,pluginId:request.pluginId,cratePath:target.cratePath},phase,async model=>{const componentBytes=await readArtifactBytesV1(model.component,SHIPPED_COMPONENT_MAX_BYTES,model.control.signal);let snapshot:Awaited<ReturnType<typeof captureFreshComponentInputs>>|undefined;try{snapshot=await captureFreshComponentInputs(repoRoot,request,componentBytes,{descriptorPack:model.descriptorPack,descriptorJson:model.descriptor},control);await model.recheck();const evidence:FreshComponentEvidenceV1=Object.freeze({control:model.control,observations:Object.freeze(observations),withEmitter:<R>(body:(actual:Readonly<{path:string;sha256:string;control:CompilerAdmissionControl;recheck():Promise<void>}>)=>Promise<R>)=>withDescriptorEmitterTaskV1(emitter,control.invocation,body)});produced=await stageFreshComponentInputs(request,snapshot,stage,await freshComponentWitExportsV1(repoRoot,control.invocation,model,control),model.receipt,control,lease=>derive(lease,evidence));completed=true;await model.recheck();}finally{componentBytes.fill(0);snapshot?.descriptorBytes.fill(0);}});await tool.recheck();
+  try{for(const row of outcome.observations){const bytes=await readArtifactBytesV1(row.path,maximum-retained,phase.signal);retained+=bytes.length;const record=decodeCargoProvenanceV1(new TextDecoder("utf-8",{fatal:true}).decode(bytes));if(record.status!==0||record.cancelled)throw Error("Actual successful fresh compiler observation required");observations.push(Object.freeze({kind:"component",pass:row.pass,bytes,sha256:createHash("sha256").update(bytes).digest("hex"),originalArtifact:null}));}const emitterBytes=new TextEncoder().encode(tool.observation);if(emitterBytes.length>maximum-retained||!observations.length)throw Error("Finite actual component and emitter observations required");observations.push(Object.freeze({kind:"emitter",pass:"descriptor-emitter",bytes:emitterBytes,sha256:createHash("sha256").update(emitterBytes).digest("hex"),originalArtifact:null}));
+   await withComponentModelV1(repoRoot,control.invocation,{version:1,mode,pluginId:request.pluginId,cratePath:target.cratePath},phase,async model=>{const componentBytes=await readArtifactBytesV1(model.component,SHIPPED_COMPONENT_MAX_BYTES,model.control.signal);let snapshot:Awaited<ReturnType<typeof captureFreshComponentInputs>>|undefined;try{snapshot=await captureFreshComponentInputs(repoRoot,request,componentBytes,{descriptorPack:model.descriptorPack,descriptorJson:model.descriptor},control);await model.recheck();const withCompilation=<R>(kind:"component"|"emitter",pass:string,body:(view:CompletedCargoCompilationViewV1)=>Promise<R>):Promise<R>=>{if(kind==="emitter"&&pass==="descriptor-emitter")return withDescriptorEmitterTaskV1(emitter,control.invocation,actual=>body(actual.compilation));const row=kind==="component"?outcome.compilations.find(row=>row.pass===pass):undefined;if(!row)throw Error("Exact actual completed fresh compiler pass required");return withNativeBuildCompilationTaskV1(row.capture,body);},bound:FreshCompilerObservationV1[]=[];let selectedComponents=0;
+   for(const row of observations)await withCompilation(row.kind,row.pass,async actual=>{if(actual.observationSha256!==row.sha256||createHash("sha256").update(actual.observation).digest("hex")!==row.sha256)throw Error("Exact unchanged actual completed compiler receipt required");const record=decodeCargoProvenanceV1(actual.observation),expected=row.kind==="component"?model.receipt.wasmSha256:tool.sha256,matches=record.units.filter(unit=>row.kind==="emitter"||unit.message.manifest_path===join(repoRoot,target.cratePath,"Cargo.toml")).flatMap(unit=>unit.artifacts.filter(artifact=>artifact.sha256===expected));if(matches.length>1||row.kind==="emitter"&&matches.length!==1)throw Error("One actual selected component or emitter compiler output required");const match=matches[0];let originalArtifact:FreshCompilerObservationV1["originalArtifact"]=null;if(match){const file=actual.files.get("blobs/"+match.sha256);if(!file||file.sha256!==expected||row.kind==="component"&&(file.byteLength!==model.receipt.wasmBytes||createHash("sha256").update(componentBytes).digest("hex")!==expected))throw Error("Real model/emitter bytes differ from its exact compiler output");originalArtifact=Object.freeze({path:match.path,sha256:file.sha256,byteLength:file.byteLength});if(row.kind==="component")selectedComponents++;}bound.push(Object.freeze({...row,originalArtifact}));await actual.recheck();});if(selectedComponents!==1)throw Error("Exactly one actual compiler output must bind the selected model");
+   const evidence:FreshComponentEvidenceV1=Object.freeze({control:model.control,observations:Object.freeze(bound),withCompilation,withEmitter:<R>(body:(actual:Readonly<{path:string;sha256:string;control:CompilerAdmissionControl;recheck():Promise<void>}>)=>Promise<R>)=>withDescriptorEmitterTaskV1(emitter,control.invocation,body)});produced=await stageFreshComponentInputs(request,snapshot,stage,await freshComponentWitExportsV1(repoRoot,control.invocation,model,control),model.receipt,control,model.control,lease=>derive(lease,evidence));completed=true;await model.recheck();}finally{componentBytes.fill(0);snapshot?.descriptorBytes.fill(0);}});await tool.recheck();
   }finally{for(const row of observations)row.bytes.fill(0);}
- }})));
+ })}));
  if(!completed||!produced)throw Error("Actual fresh model consumer did not complete");return produced;
 }
 

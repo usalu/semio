@@ -11,7 +11,7 @@ import {
   useState
 } from "react";
 import { type LocalizedLabel, type VideoRenderJobRow } from "@semio-tech/framework";
-import { encodeBackboneWorkerRequest } from "@semio-tech/framework-os";
+import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 // #region 🔌️Adapters
 import {
   type UiPreferencesConfigMutation,
@@ -24,7 +24,7 @@ import {
   setLocale,
   setTerminology,
   setTheme
-} from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+} from "@semio-tech/framework/config/mutations";
 import {
   buildKeysByActionId,
   builtinUiDrivers,
@@ -80,8 +80,8 @@ import {
   type SettingsHostApi
 } from "../../📌️ChromePanels/🟦️.tsx";
 // #endregion 🔌️Adapters
-import { hubCatalogOnlyPluginsV1 } from "../../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
-import type { TrustedPluginModuleIndexV1 } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
+import { hubCatalogOnlyPluginsV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
+import type { TrustedPluginModuleIndexV1 } from "@semio-tech/framework/plugin-module";
 import { AgentChatPanel } from "../../💬️AgentChatPanel/🟦️.tsx";
 import {
   TaskManagerWindow,

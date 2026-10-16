@@ -1,5 +1,7 @@
 import type { AppRole } from "@semio-tech/framework";
-import { emptyDirectoryReadModel, foldAll, type DirectoryEvent, type PersistenceBinding } from "@semio-tech/framework-os";
+import { emptyDirectoryReadModel, foldAll } from "@semio-tech/framework/directory";
+import { type DirectoryEvent } from "@semio-tech/framework/directory/schema";
+import { type PersistenceBinding } from "@semio-tech/framework/backbone";
 import accessPolicy from "../../../../../📇️directory/🛡️access-policy/🔣️.json" with { type: "json" };
 import { directoryAccessPermits, parseDirectoryAccessPolicyV1 } from "../../../../../📇️directory/🛡️access-policy/🧬️schema/🟦️.ts";
 

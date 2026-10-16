@@ -19,7 +19,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::broadcast;
 use directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
 use semio_hub_runtime::presence::document_scope_key_v1;
-use semio_hub_directory::published_artifact_checkpoint;
+use semio_hub_directory::{published_artifact_checkpoint, DocumentDirectory};
 use crate::document_socket::wire_rebootstrap;
 
 //#region 🔖️Rest

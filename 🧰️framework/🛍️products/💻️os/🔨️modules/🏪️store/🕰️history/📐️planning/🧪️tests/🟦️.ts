@@ -4,6 +4,7 @@ import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {applyPatch} from "fast-json-patch";
 import Ajv from "ajv";
+import { valueOrderedRetirementSchemaUrl } from "../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 test("🖼️ completed preview moves its projection while retaining original input residue",()=>{
   const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
   for(const frontier of law.cancelAt){const original={inputs:structuredClone(law.drafts),snapshot:law.previewSnapshot,frontier};const result=applyPatch(structuredClone(original),[{op:"remove",path:"/snapshot"}],true).newDocument;expect(result).toEqual({inputs:law.drafts,frontier});expect(original.snapshot).toEqual(law.previewSnapshot);}
@@ -11,7 +12,7 @@ test("🖼️ completed preview moves its projection while retaining original in
   const actor=readFileSync(new URL("../../../../🔌️plugin/⏪️time-travel/🦀️.rs",import.meta.url),"utf8");expect(actor.includes("self.cancel_preview(store)?;\n        let (preview, outcome)")).toBe(true);
 });
 test("⏪️ original raw replay routes preserve parent custody after child completion",()=>{
-  const grantSchema=JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+  const grantSchema=JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8"));
   const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
   const validate=new Ajv({strict:true}).addSchema(grantSchema).compile({$ref:grantSchema.$id+"#/$defs/Grant"});for(const copy of law.copyGrants){expect(validate({maximumItems:1,maximumCopyBytes:copy,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:1})).toBe(true);}
   const db=new Database(":memory:");try{db.run("CREATE TABLE owners(child INTEGER, header INTEGER, registry INTEGER, issuer INTEGER)");for(const route of law.replayRetirementRoutes){db.run("DELETE FROM owners");db.run("INSERT INTO owners VALUES(1,1,?,1)",route==="derived"?1:0);db.run("UPDATE owners SET child=0");expect((db.query("SELECT header+registry+issuer AS pending FROM owners").get()as{pending:number}).pending).toBeGreaterThan(0);const original={route,inputs:structuredClone(law.drafts),result:law.previewSnapshot};expect(applyPatch(structuredClone(original),[],true).newDocument).toEqual(original);db.run("UPDATE owners SET header=0,registry=0,issuer=0");expect(db.query("SELECT child+header+registry+issuer AS pending FROM owners").get()).toEqual({pending:0});}}finally{db.close();}
@@ -48,7 +49,7 @@ test("♻️ completed planning transfers result fields and retains original res
 test("original history cleanup authority is independent of its retirement demand",()=>{
  const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  expect(law.cleanup).toBeDefined();
- const contract=JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+ const contract=JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8"));
  const validate=new Ajv({strict:false}).compile({...contract,$ref:"#/$defs/Grant"});
  expect(validate(law.cleanup)).toBe(true);
  expect(law.bodyRefusalCapacityBytes).toBe(0);

@@ -13,7 +13,7 @@ describe("mounted GIS map probe", () => {
     expect(ownerExport("MountedGisMapProbeSourceV1")(mountedGisMapProbeFixture.source)).toBe(true);
     expect(ownerExport("MountedGisMapProbeV1")(mountedGisMapProbeFixture.expected)).toBe(true);
     expect(mountedGisMapProbeFixture.hostile.every((row) => ownerExport("MountedGisMapProbeRefusalV1")(row))).toBe(true);
-    const { encodePackValue } = await import("@semio-tech/framework-os");
+    const { encodePackValue } = await import("@semio-tech/framework/packs");
     const source = mountedGisMapProbeFixture.source;
     const storeFor = (kind: "tiled-map" | "canvas-2d", regions: readonly unknown[], bytes?: readonly number[]): UiDocumentStore => {
       const store = new UiDocumentStore(source.surface);

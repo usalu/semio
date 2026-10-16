@@ -10,6 +10,11 @@
     "test-refusal": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-schema-rs:test-refusal"
   },
   "devDependencies": {
+    "@semio-tech/framework": "workspace:*",
     "@semio-tech/process": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/schema-ts": "workspace:*",
+    "@semio-tech/value-ts": "workspace:*"
   }
 }

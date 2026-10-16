@@ -34,13 +34,3 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetC
         vec!["custom-themes".to_string(), self.theme_id.clone()]
     }
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️sets-custom-theme/🦀️.rs"]
-mod tests_sets_custom_theme;
-
-#[cfg(test)]
-#[path = "🧪️tests/🟰️keeps-custom-theme/🦀️.rs"]
-mod tests_keeps_custom_theme;
-//#endregion 🧪️Tests

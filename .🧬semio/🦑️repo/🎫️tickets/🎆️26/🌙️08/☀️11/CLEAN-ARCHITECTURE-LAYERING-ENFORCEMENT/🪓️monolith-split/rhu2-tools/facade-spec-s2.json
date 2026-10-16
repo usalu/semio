@@ -1,0 +1,115 @@
+[
+ {
+  "sub": "./backbone",
+  "file": "🧵️backbone/🟦️.ts",
+  "emoji": "🧵️",
+  "sources": [
+   "🧰️framework/🔨️modules/🧵️backbone/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory",
+  "file": "📇️directory/🟦️.ts",
+  "emoji": "📇️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory/schema",
+  "file": "📇️directory/🧬️schema/🟦️.ts",
+  "emoji": "🧬️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🧬️schema/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory/schema/session-authority-v1",
+  "file": "📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
+  "emoji": "🪪️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory/io/text",
+  "file": "📇️directory/🚪️io/📝️text/🟦️.ts",
+  "emoji": "📝️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory/sign-in",
+  "file": "📇️directory/🔐️sign-in/🟦️.ts",
+  "emoji": "🔐️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory/spaces",
+  "file": "📇️directory/🏘️spaces/🟦️.ts",
+  "emoji": "🏘️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🏘️spaces/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory/first-run",
+  "file": "📇️directory/🎓️first-run/🟦️.ts",
+  "emoji": "🎓️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🎓️first-run/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory/delegations",
+  "file": "📇️directory/🤖️delegations/🟦️.ts",
+  "emoji": "🤖️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🤖️delegations/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory/local-session",
+  "file": "📇️directory/🎫️local-session/🟦️.ts",
+  "emoji": "🎫️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🎫️local-session/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory/session-refresh",
+  "file": "📇️directory/🪪️session-refresh/🟦️.ts",
+  "emoji": "🪪️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory/session-refresh/session-port",
+  "file": "📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts",
+  "emoji": "🪪️",
+  "sources": [
+   "🧰️framework/🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./directory-client",
+  "file": "📞️directory-client/🟦️.ts",
+  "emoji": "📞️",
+  "sources": [
+   "🧰️framework/🔨️modules/📞️directory-client/🟦️.ts"
+  ]
+ },
+ {
+  "sub": "./inference/service",
+  "file": "💡️inference/🔌️service/🟦️.ts",
+  "emoji": "🔌️",
+  "sources": [
+   "🧰️framework/🔨️modules/💡️inference/🔌️service/🟦️.ts"
+  ],
+  "extend": true
+ }
+]

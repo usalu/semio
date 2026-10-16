@@ -16,7 +16,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { browserWasiInterfaces } from "./🌐️wasi/🟦️.ts";
-import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
+import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../../../../🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
 import { readStableBuildFile } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
 
@@ -32,7 +32,7 @@ const browserActorRepoRoot = resolve(import.meta.dir, "../../../../../..");
 type SchemaValidator = ((value: unknown) => boolean) & { readonly errors?: unknown };
 
 /** 🧬️ Compiles one named export of the browser-bundle schema module against the repository draft-07 dialect. */
-async function browserBundleValidator(exportId: string): Promise<SchemaValidator> {
+export async function browserBundleValidator(exportId: string): Promise<SchemaValidator> {
   const { default: Ajv } = await import("ajv");
   const document = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
@@ -42,8 +42,8 @@ async function browserBundleValidator(exportId: string): Promise<SchemaValidator
   return validate as SchemaValidator;
 }
 let browserActorBuildOccupied = false;
-const browserActorInterfaces = Object.freeze(["semio:framework/pure@1.0.0", "semio:framework/host-async@1.0.0", ...browserWasiInterfaces].sort());
-const browserActorAsyncImports = Object.freeze([
+export const browserActorInterfaces = Object.freeze(["semio:framework/pure@1.0.0", "semio:framework/host-async@1.0.0", ...browserWasiInterfaces].sort());
+export const browserActorAsyncImports = Object.freeze([
   "wasi:io/poll#poll", "wasi:io/poll#[method]pollable.block",
   "wasi:io/streams#[method]input-stream.blocking-read", "wasi:io/streams#[method]input-stream.blocking-skip",
   "wasi:io/streams#[method]output-stream.blocking-flush", "wasi:io/streams#[method]output-stream.blocking-write-and-flush",
@@ -202,7 +202,7 @@ export function browserActorImportAdmissionV1(component: Uint8Array): BrowserAct
 type BrowserActorCodegenManifest = Readonly<{ version: "1.34.0"; runtime: "bun@1.3.14"; importInterfaces: readonly string[]; files: readonly string[] }>;
 
 /** 🛂️ Admits exact canonical generated-file and interface names independently of the codegen subprocess. */
-function parseBrowserActorCodegenManifest(value: unknown): BrowserActorCodegenManifest {
+export function parseBrowserActorCodegenManifest(value: unknown): BrowserActorCodegenManifest {
   const denied = (): never => { throw new Error("browser actor artifact: invalid generated manifest"); };
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join(",") !== "files,importInterfaces,runtime,version") return denied();
   const record = value as Record<string, unknown>;
@@ -218,7 +218,7 @@ function parseBrowserActorCodegenManifest(value: unknown): BrowserActorCodegenMa
 }
 
 /** 🧊️ Replaces the compiler's exact two file loaders with captured core bytes and rejects residual module IO. */
-function closeBrowserCodegenModule(source: string, cores: readonly BrowserComponentCore[]): string {
+export function closeBrowserCodegenModule(source: string, cores: readonly BrowserComponentCore[]): string {
   const denied = (): never => { throw new Error("browser actor artifact: compiler capsule"); };
   if (Buffer.byteLength(source) > 8 * 1024 * 1024 || /source(?:Mapping)?URL\s*=/.test(source) || cores.length !== 2) return denied();
   const inputs = new Map<string, Uint8Array>();
@@ -277,7 +277,7 @@ type BrowserCodegenSourceDigest = Readonly<{ logicalPath: string; sha256: string
 type BrowserActorRuntimeSnapshot = ReadonlyMap<string, Readonly<{ bytes: Uint8Array; path: string; row: BrowserCodegenSourceDigest }>>;
 
 /** 🫙️ Captures the only two first-party actor runtime modules before asynchronous code generation. */
-function captureBrowserActorRuntime(root: string, check: () => void): BrowserActorRuntimeSnapshot {
+export function captureBrowserActorRuntime(root: string, check: () => void): BrowserActorRuntimeSnapshot {
   const admission = { remaining: 1024 * 1024 };
   return new Map(["host", "wasi"].map(name => {
     const logicalPath = `🌐️${name}/🟦️.ts`;
@@ -287,7 +287,7 @@ function captureBrowserActorRuntime(root: string, check: () => void): BrowserAct
 }
 
 /** 🔏️ Owns a canonical immutable policy value and its content digest independently of evidence files. */
-function sealBrowserCodegenPolicy<T>(input: T): Readonly<{ record: T; canonical: string; sha256: string }> {
+export function sealBrowserCodegenPolicy<T>(input: T): Readonly<{ record: T; canonical: string; sha256: string }> {
   const canonical = canonicalJson(input);
   if (Buffer.byteLength(canonical) > 256 * 1024) throw new Error("browser actor artifact: policy bound");
   const record = JSON.parse(canonical) as T;
@@ -357,14 +357,14 @@ async function ownedBrowserBundleWorker(request: Parameters<typeof bundleVirtual
 }
 
 /** 📚️ Supplies bounded captured JS to Bun and proves every metafile input was captured exactly once. */
-async function captureBrowserCodegenSources(entrypoint: string, roots: readonly Readonly<{ name: string; path: string }>[], check: () => void, invocation: ScriptInvocation, compiler:CompilerAdmissionControl, captured?: (path: string) => void): Promise<Readonly<{ source: string; inputs: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
+export async function captureBrowserCodegenSources(entrypoint: string, roots: readonly Readonly<{ name: string; path: string }>[], check: () => void, invocation: ScriptInvocation, compiler:CompilerAdmissionControl, captured?: (path: string) => void): Promise<Readonly<{ source: string; inputs: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
   check();
   const result = await ownedBrowserBundleWorker({ version: 1, kind: "snapshot", mode: readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode, entrypoint, roots, observe: captured !== undefined }, check, invocation, compiler, captured ? line => { if (line.startsWith("[bun-worker] captured ")) captured(JSON.parse(line.slice("[bun-worker] captured ".length))); } : undefined);
   return Object.freeze({ source: result.source, inputs: Object.freeze(result.inputs), physicalInputs: Object.freeze(result.physicalInputs) });
 }
 
 /** 🧬️ Closes the public browser compiler entry with its two component cores in one private build directory. */
-async function buildBrowserCodegenModule(evidence: string, check: () => void, invocation: ScriptInvocation, phase:CompilerAdmissionControl): Promise<Readonly<{ path: string; sha256: string; byteLength: number; inputs: readonly BrowserCodegenSourceDigest[]; cores: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
+export async function buildBrowserCodegenModule(evidence: string, check: () => void, invocation: ScriptInvocation, phase:CompilerAdmissionControl): Promise<Readonly<{ path: string; sha256: string; byteLength: number; inputs: readonly BrowserCodegenSourceDigest[]; cores: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
   check();
   const entrypoint = fileURLToPath(import.meta.resolve("@bytecodealliance/jco/component"));
   const vendor = fileURLToPath(import.meta.resolve("@bytecodealliance/jco-transpile/component"));
@@ -417,7 +417,7 @@ export async function buildClosedBrowserActorArtifactV1(component: Uint8Array, i
 }
 
 /** 🗝️ Retains the one build owner; only in-module laws may retain diagnostic scratch. */
-async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invocation: ScriptInvocation, phase:CompilerAdmissionControl, control: BrowserActorBuildControl, evidenceRoot?: string): Promise<ClosedBrowserActorArtifactV1> {
+export async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invocation: ScriptInvocation, phase:CompilerAdmissionControl, control: BrowserActorBuildControl, evidenceRoot?: string): Promise<ClosedBrowserActorArtifactV1> {
   requireIssuedResourceControlInvocationV1(phase,invocation);const check = () => { phase.signal.throwIfAborted();if (control.cancelled?.()) throw new Error("browser actor artifact: cancelled"); };
   check();
   if (browserActorBuildOccupied) throw new Error("browser actor artifact: build capacity");
@@ -626,7 +626,7 @@ export async function closedBrowserActorBundle(source: string, cores: readonly B
 }
 
 /** 🎬️ Closes the generated actor over exact retained runtime modules without reopening source paths. */
-async function closedBrowserActorBundleFromRuntime(source: string, cores: readonly BrowserComponentCore[], control: BrowserComponentFactoryControl, runtime: BrowserActorRuntimeSnapshot, invocation: ScriptInvocation, compiler:CompilerAdmissionControl): Promise<string> {
+export async function closedBrowserActorBundleFromRuntime(source: string, cores: readonly BrowserComponentCore[], control: BrowserComponentFactoryControl, runtime: BrowserActorRuntimeSnapshot, invocation: ScriptInvocation, compiler:CompilerAdmissionControl): Promise<string> {
   requireIssuedResourceControlInvocationV1(compiler,invocation);const names = control.importInterfaces ?? [];
   const known = { "semio:framework/pure@1.0.0": "pure", "semio:framework/host-async@1.0.0": "hostAsync" };
   if (names.some(name => !Object.hasOwn(known, name) && !browserWasiInterfaces.includes(name))) throw new Error("browser actor bundle: unsupported import interface");
@@ -895,17 +895,6 @@ export type BrowserBundleTestDependencies = Readonly<{
   readonly ts: typeof ts;
   readonly writeFileSync: typeof writeFileSync;
 }>;
-/** 🧪️ Loads component isolation examples only for an explicit test invocation. */
-async function browserBundleTestOwners() {
-  const { createBrowserBundleTests } = await import("../🧪️tests/🌐️browser-bundle/🟦️.ts");
-  return createBrowserBundleTests({ browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
-}
-
-/** 🧪️ Executes existing component isolation laws through their explicit test owner. */
-export async function testClosedBrowserComponentFactory(repoRoot:string,invocation:ScriptInvocation):Promise<void> {await (await browserBundleTestOwners()).testClosedBrowserComponentFactory(repoRoot,invocation);}
-/** 🧾️ Executes actual closed actor producer observations and independent JCO byte oracles. */
-export async function testClosedBrowserActorProducerV1(repoRoot:string,invocation:ScriptInvocation):Promise<void> {await (await browserBundleTestOwners()).testClosedBrowserActorBundle(repoRoot,invocation);}
-
 if (import.meta.main) {
   if (process.argv[2] === "test" && process.argv[3] === "descriptor-contract") {
     const result = Bun.spawn([process.execPath, "test", join(import.meta.dir, "🛂️descriptor/🧪️tests/🟦️.ts")], { stdout: "inherit", stderr: "inherit" });
@@ -914,7 +903,7 @@ if (import.meta.main) {
   const command = process.argv[2] ?? "runtime-check";
   assert(["runtime-check", "pending-host-close-check"].includes(command), `actor import test: unknown command ${command}`);
   const { testCanonicalActorAsyncImport } = await import("./🧪️tests/🌊️actor-import/🟦️.ts");
-  const run = (invocation: ScriptInvocation) => testCanonicalActorAsyncImport(browserActorRepoRoot, invocation, join(import.meta.dir, "dist", command), undefined, (source, cores, control) => closedBrowserActorBundle(source, cores, invocation, scriptCompilerAdmissionControlV1(invocation,"browser:canonical",0),control), true);
+  const run = (invocation: ScriptInvocation) => testCanonicalActorAsyncImport(browserActorRepoRoot, invocation, join(import.meta.dir, "dist", command), undefined, { close: (source, cores, control) => closedBrowserActorBundle(source, cores, invocation, scriptCompilerAdmissionControlV1(invocation,"browser:canonical",0),control), build: buildClosedBrowserActorArtifactV1 }, true);
   if (process.env[SCRIPT_PROCESS_INVOCATION_ENV] !== undefined) await receiveScriptProcessInvocation(process.env, run);
   else await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "browser-bundle", maximumElapsedMilliseconds: 0 }, {}, Date.now()), run);
 }

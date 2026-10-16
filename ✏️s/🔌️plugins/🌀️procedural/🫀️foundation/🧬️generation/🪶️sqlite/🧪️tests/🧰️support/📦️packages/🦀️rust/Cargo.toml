@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-procedural-core-generation-sqlite-test-support"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Explicit shared native fixture for the two actual procedural persisted type pairs"
+
+[package.metadata.semio]
+role = "test"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-flow-contract = { workspace = true }
+semio-framework-os-playbook-contract = { workspace = true }
+semio-framework-value = { workspace = true }
+serde_json = "1"

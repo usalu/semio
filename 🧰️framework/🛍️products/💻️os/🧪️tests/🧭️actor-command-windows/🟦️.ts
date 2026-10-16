@@ -19,8 +19,8 @@ export async function registerActorCommandWindowTests(vitest: Vitest, dependenci
         readonly windows: readonly string[];
         readonly cases: readonly Readonly<{ name: string; address: Readonly<{ kind: "window" | "command"; appId?: string; windowKindId?: string; windowInstanceId?: string }>; view: Readonly<Record<string, string>>; admitted?: string; refused?: string }>[];
       };
-      const { createBrowserActorAppCommandRequestV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts");
-      const { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts");
+      const { createBrowserActorAppCommandRequestV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/command");
+      const { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } = await import("@semio-tech/framework/browser-bundle/action-handoff");
       const fields = { package: { pluginId: corpus.pluginId }, surface: { appId: corpus.appId, windowKindId: corpus.leaseWindow } } as unknown as Parameters<typeof testSeams.browserActorAppCommandV1>[1];
       const windows = new Set(corpus.windows);
       expect(corpus.cases.filter((row) => row.admitted !== undefined).map((row) => row.admitted)).toEqual(expect.arrayContaining([...windows]));

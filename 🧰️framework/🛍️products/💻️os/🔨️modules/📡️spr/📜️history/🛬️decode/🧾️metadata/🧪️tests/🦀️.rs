@@ -4,7 +4,7 @@ use semio_framework_value::native_decoding::{NativeDecodeAllocation,NativeDecode
 struct OriginalPages<'a>{pages:&'a[&'a[u8]],page_bytes:usize,identity:OriginalWireSourceIdentity}
 impl RetainedWireByteSource for OriginalPages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{self.identity}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.identity.extent{return None}self.pages.get(index/self.page_bytes)?.get(index%self.page_bytes).copied()}}
 fn hex(value:&str)->Vec<u8>{value.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(operation)}
 fn receipt(owner:&mut RetainedHistoryOpMetaDecode,g:RetainedCloneGrant,born:usize,released:usize)->RetainedCloneProgress{let(issued,p)=owner.take_receipt().unwrap();assert_eq!(issued,g);assert!(p.fits(g));assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));p}
 fn close_owned<T:semio_framework_value::retirement::RetireOwned>(original:T,control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant)->(usize,usize){
  let birth=owned_retirement_birth_bytes::<T>();assert!(birth<=g.maximum_capacity_bytes);control.charge(birth).unwrap();let(result,born,released)=observe(||admit_owned_retirement(original,g));let(mut owner,p)=result.map_err(|(error,_)|error).unwrap();assert!(p.fits(g));assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));let(mut births,mut releases)=(born,released);

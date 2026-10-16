@@ -49,5 +49,5 @@ export const stdioCsvRfc4180AnyDiffTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseCsvDiffText(value: unknown, at = "$"): CsvDiffText {
-  return stdioCsvRfc4180AnyDiffTextGuardObject(value, `${at}`);
+  return stdioCsvRfc4180AnyDiffTextGuardString(value, `${at}`);
 }

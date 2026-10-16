@@ -1,0 +1,3 @@
+/** 🌐️ Public entry `@semio-tech/framework/directory/schema/browser-actor`: the explicit surface that importers outside the module use. */
+export { DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, documentBrowserActorLeaseFromPlanV1, parseDocumentExecutionTargetBrowserActorV1, parseDocumentOpenBrowserActorV1, sameDocumentBrowserActorV1 } from "../../../../../🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
+export type { DocumentBrowserActorSourceV1, DocumentClosedBrowserActorV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1 } from "../../../../../🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";

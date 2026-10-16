@@ -1,25 +1,33 @@
 //! 🧪️ Normal job tests use original owned admissions and the actual mandatory caller context.
-use super::*;
-use semio_framework_job::{Generation,OperationId,StepBudget,StepContext,root_cancel_token};
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
+use crate::{BUILTIN_JOB_KINDS, BoundedJob, BoundedJobFactory, JOBS, JOB_KIND_IO_SNIFF, JobBody, WORK_UNITS_EXECUTE, admit_original_job, builtin_factory, cancel_job, checkpoint_jobs, close_original, has_owned_jobs, original_job_admission_demands, register_bounded_job_kind, start_job, step_job};
+use semio_framework_value_derive::{FromValue, ToValue};
+use std::future::Future;
+use semio_framework_os_kernel::io::io_mechanism::IoRunControl;
+use semio_framework_actor::OriginalJobStep as JobStep;
+use semio_framework::kernel::OriginalJobSource as OriginalJobAdmission;
+use semio_framework_job::OriginalTurnFailure;
+use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl;
+use semio_framework_job::{Generation, OperationId, StepBudget, StepContext, root_cancel_token};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, ValueError, ValueRefusalKind};
 
 fn fixture_grant()->RetainedCloneGrant{let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧩️extension/🧪️tests/🧫️fixtures/📨️invoke/🔣️.json")).unwrap();let grant=&fixture["executionGrant"];RetainedCloneGrant{maximum_items:grant["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:grant["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:grant["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:grant["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:grant["maximumDepth"].as_u64().unwrap()as usize}}
-fn fixture_identity()->(OperationId,Generation){let value:serde_json::Value=serde_json::from_str(include_str!("../../../../🧩️extension/🧪️tests/🧫️fixtures/📨️invoke/🔣️.json")).unwrap();(OperationId(value["caller"]["operation"].as_u64().unwrap()),Generation(value["caller"]["generation"].as_u64().unwrap()))}
+#[doc(hidden)]
+pub fn fixture_identity()->(OperationId,Generation){let value:serde_json::Value=serde_json::from_str(include_str!("../../../../🧩️extension/🧪️tests/🧫️fixtures/📨️invoke/🔣️.json")).unwrap();(OperationId(value["caller"]["operation"].as_u64().unwrap()),Generation(value["caller"]["generation"].as_u64().unwrap()))}
 
 pub(super) fn admit_fixture(source:&mut Option<OriginalJobAdmission>,grant:RetainedCloneGrant)->Result<bool,ValueError>{
  let(operation,generation)=fixture_identity();let cancel=root_cancel_token();let mut sequence=0;let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(1,u64::MAX,grant),cancel,||Some(1),&mut sequence,&mut receipt);
- let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::__async::poll::resolve_ready(start_job(source,&mut cx)));
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(start_job(source,&mut cx)));
  assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes));result
 }
 
 pub(super) fn step_fixture(job:u64,fuel:u64)->Result<JobStep,OriginalTurnFailure>{
  let grant=fixture_grant();let(operation,generation)=fixture_identity();let cancel=root_cancel_token();let mut sequence=0;let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(fuel,u64::MAX,grant),cancel,||Some(1),&mut sequence,&mut receipt);
  let mut decode_callback=|_|true;let mut encode_callback=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut decode_callback);let mut encode=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut encode_callback);let mut original=IoRunControl::new(&mut decode,&mut encode,grant);let mut snapshot_callback=|_|true;let mut snapshot=SqliteSnapshotControl::new(&mut snapshot_callback,Default::default());
- let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::__async::poll::resolve_ready(step_job(job,&mut original,&mut snapshot,&mut cx)));
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(step_job(job,&mut original,&mut snapshot,&mut cx)));
  assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes),"normal step must report every real allocation and release");assert!(cx.retained_progress().fits(grant));result
 }
 
-pub(super) fn cancel_fixture(job:u64){let(operation,generation)=fixture_identity();let grant=fixture_grant();let mut sequence=0;let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(1,u64::MAX,grant),root_cancel_token(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::__async::poll::resolve_ready(cancel_job(job,&mut cx)));assert!(result.unwrap());assert_eq!(cx.retained_progress(),RetainedCloneProgress{copied_items:1,..Default::default()});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+pub(super) fn cancel_fixture(job:u64){let(operation,generation)=fixture_identity();let grant=fixture_grant();let mut sequence=0;let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(1,u64::MAX,grant),root_cancel_token(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(cancel_job(job,&mut cx)));assert!(result.unwrap());assert_eq!(cx.retained_progress(),RetainedCloneProgress{copied_items:1,..Default::default()});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
 pub(super) fn terminal_fixture(job:u64)->JobStep{for _ in 0..100000{match step_fixture(job,WORK_UNITS_EXECUTE).unwrap(){JobStep::Running(_)=>{},terminal=>return terminal}}panic!("original fixture exceeded its finite step bound")}
 fn admit_body_fixture(job:u64){for _ in 0..10000{if JOBS.with(|slots|slots.borrow().iter().flatten().find(|slot|slot.job==job).is_some_and(|slot|matches!(slot.body,Some(JobBody::Bounded(_))))){return}assert!(matches!(step_fixture(job,1).unwrap(),JobStep::Running(None)))}panic!("original fixture factory admission exceeded finite turns")}
 pub(super) fn source_fixture(job:u64,kind:&str,input:Vec<u8>,checkpoint:Option<Vec<u8>>)->Option<OriginalJobAdmission>{Some(OriginalJobAdmission{job,kind:kind.into(),input:Some(input),checkpoint})}
@@ -27,7 +35,7 @@ pub(super) fn source_fixture(job:u64,kind:&str,input:Vec<u8>,checkpoint:Option<V
 pub(super) fn start_fixture(job:u64,kind:&str,input:Vec<u8>,checkpoint:Option<Vec<u8>>){let mut source=source_fixture(job,kind,input,checkpoint);assert!(admit_fixture(&mut source,fixture_grant()).unwrap(),"original fixture admission refused")}
 pub(super) fn slice_fixture(job:u64)->JobStep{for _ in 0..100000{match step_fixture(job,WORK_UNITS_EXECUTE).unwrap(){JobStep::Running(None)=>{},step=>return step}}panic!("original fixture exceeded its finite slice bound")}
 
-struct FixedOriginalFixture{source:Option<(Vec<u8>,Option<Vec<u8>>)>,closing:Option<semio_framework_value::retirement::controlled::ControlledRetirement<(Vec<u8>,Option<Vec<u8>>)>>,tick:u8,restored:bool,never:bool,failed:bool}
+struct FixedOriginalFixture{pub source:Option<(Vec<u8>,Option<Vec<u8>>)>,pub closing:Option<semio_framework_value::retirement::controlled::ControlledRetirement<(Vec<u8>,Option<Vec<u8>>)>>,pub tick:u8,pub restored:bool,pub never:bool,pub failed:bool}
 impl BoundedJob for FixedOriginalFixture{
  fn step(&mut self,_:&mut IoRunControl<'_,'_>,_:&mut SqliteSnapshotControl<'_>,cx:&mut StepContext<'_>)->Result<JobStep,OriginalTurnFailure>{
   if cx.should_yield()||self.never{return Ok(JobStep::Running(None))}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(JobStep::Running(None))}
@@ -80,7 +88,7 @@ fn original_job_body_failure_retains_exact_owner_and_error_until_paid_close(){
  let pointer=JOBS.with(|slots|{let slots=slots.borrow();let slot=slots.iter().flatten().find(|slot|slot.job==job).unwrap();let Some(JobBody::Bounded(owner))=slot.body.as_ref()else{panic!("original admitted body")};owner.as_ref()as *const dyn BoundedJob as *const()});
  let(owned,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||has_owned_jobs(operation.0,generation.0));assert!(owned);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!has_owned_jobs(operation.0+1,generation.0));assert!(!has_owned_jobs(operation.0,generation.0+1));
  assert!(matches!(step_fixture(job,1).unwrap(),JobStep::Running(None)));
- JOBS.with(|slots|{let slots=slots.borrow();let slot=slots.iter().flatten().find(|slot|slot.job==job).unwrap();assert_eq!(slot.failed_owner.as_ref().unwrap().as_ref()as *const dyn BoundedJob as *const(),pointer);assert!(!slot.failed_owner.as_ref().unwrap().terminal_drop_is_shallow());let Some(JobBody::Refused(Some(crate::component::extension_invocation_failure::ExtensionInvocationCause::Value(error)),None))=slot.body.as_ref()else{panic!("original whole body refusal")};assert_eq!(error.kind.as_str(),failure["code"].as_str().unwrap());assert_eq!(error.message,failure["message"].as_str().unwrap());assert!(slot.source.is_some());assert!(slot.outcome.is_none());});
+ JOBS.with(|slots|{let slots=slots.borrow();let slot=slots.iter().flatten().find(|slot|slot.job==job).unwrap();assert_eq!(slot.failed_owner.as_ref().unwrap().as_ref()as *const dyn BoundedJob as *const(),pointer);assert!(!slot.failed_owner.as_ref().unwrap().terminal_drop_is_shallow());let Some(JobBody::Refused(Some(semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(error)),None))=slot.body.as_ref()else{panic!("original whole body refusal")};assert_eq!(error.kind.as_str(),failure["code"].as_str().unwrap());assert_eq!(error.message,failure["message"].as_str().unwrap());assert!(slot.source.is_some());assert!(slot.outcome.is_none());});
  let mut bytes=None;for _ in 0..100000{assert!(has_owned_jobs(operation.0,generation.0));match step_fixture(job,WORK_UNITS_EXECUTE).unwrap(){JobStep::Running(None)=>{},JobStep::Failed(output)=>{bytes=Some(output);break},_=>panic!("original body refusal published another outcome")}}
  assert!(!has_owned_jobs(operation.0,generation.0));let output=bytes.as_ref().expect("original body failure reaches publication");let decoded:serde_json::Value=semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value(output).unwrap().into();assert_eq!(decoded["code"],failure["code"]);assert_eq!(decoded["message"],failure["message"]);
  let mut closing=None;let cancel=root_cancel_token();let mut sequence=0;for _ in 0..10000{let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(1,u64::MAX,fixture_grant()),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(done,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_original(&mut bytes,&mut closing,&mut cx));assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes));if done.unwrap(){break}}assert!(bytes.is_none()&&closing.is_none());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop((bytes,closing)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
@@ -109,7 +117,7 @@ fn original_job_source_close_uses_exact_one_unit_caller_work(){
 /// 🧮️ The normal typed fault encoder and every child close use original caller CPU authority.
 #[test]
 fn original_job_failure_projection_uses_exact_one_unit_caller_work(){
- use crate::component::extension_invocation_failure::{ExtensionInvocationCause,RetainedExtensionFaultReply};
+ use semio_framework_plugin_extension::extension_invocation_failure::{ExtensionInvocationCause,RetainedExtensionFaultReply};
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🧩️extension/🧪️tests/🧫️fixtures/📨️invoke/🔣️.json")).unwrap();let work=&corpus["jobCloseWork"];let(operation,generation)=fixture_identity();let cancel=root_cancel_token();let mut sequence=0;
  for copy in work["copyGrants"].as_array().unwrap(){let grant=RetainedCloneGrant{maximum_copy_bytes:copy.as_u64().unwrap()as usize,..fixture_grant()};let mut reply=RetainedExtensionFaultReply::new(ExtensionInvocationCause::Value(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original fixture body failed").into()));let mut bytes=None;
   for(fuel,deadline)in [(0,2),(1,1)]{let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(fuel,deadline,grant),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(output,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||reply.advance(&mut cx));assert!(output.unwrap().is_none());assert_eq!(cx.retained_progress(),RetainedCloneProgress::default());assert_eq!(cx.fuel_remaining(),fuel);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
@@ -122,7 +130,7 @@ fn original_job_failure_projection_uses_exact_one_unit_caller_work(){
 
 /// 🧳️ Checkpoint publication retains its original replay input after actual body admission.
 #[test]
-fn original_checkpoint_keeps_replay_input(){register_fixture();let mut source=source_fixture(9001,"test.fixed-original",b"fixed".to_vec(),None);assert!(admit_fixture(&mut source,fixture_grant()).unwrap());admit_body_fixture(9001);let entries=crate::__async::poll::resolve_ready(checkpoint_jobs());let replay=entries.iter().find(|entry|entry.job==9001).unwrap();assert_eq!(replay.input.as_deref(),Some(b"fixed".as_slice()),"checkpoint must capture the same funded original replay input");cancel_fixture(9001);assert!(matches!(terminal_fixture(9001),JobStep::Failed(_)))}
+fn original_checkpoint_keeps_replay_input(){register_fixture();let mut source=source_fixture(9001,"test.fixed-original",b"fixed".to_vec(),None);assert!(admit_fixture(&mut source,fixture_grant()).unwrap());admit_body_fixture(9001);let entries=semio_framework_async::poll::resolve_ready(checkpoint_jobs());let replay=entries.iter().find(|entry|entry.job==9001).unwrap();assert_eq!(replay.input.as_deref(),Some(b"fixed".as_slice()),"checkpoint must capture the same funded original replay input");cancel_fixture(9001);assert!(matches!(terminal_fixture(9001),JobStep::Failed(_)))}
 
 /// 🧮️ Builtin semantic decode/execute may not hide allocation behind a fuel-only phase price.
 #[test]

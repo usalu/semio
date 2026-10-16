@@ -4,7 +4,7 @@
  * @see ../../🔨️modules/🪢️swing/🟦️.ts
  * @see ../../🔨️modules/🏞️terrain/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { FALL_SPEED, fallStep, GRAVITY } from "../../🔨️modules/🏞️terrain/🟦️.ts";
 import {
   canopyOf,

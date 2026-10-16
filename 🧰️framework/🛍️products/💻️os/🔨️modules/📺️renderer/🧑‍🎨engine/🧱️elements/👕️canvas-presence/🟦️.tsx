@@ -10,8 +10,8 @@ import {
   peerOverlayPath,
   peersForWindow,
   presenceColorCss,
-  type PresencePeerInput,
-} from "@semio-tech/framework-replication";
+  type PresencePeerInput
+} from "@semio-tech/framework/replication";
 import {
   artifactPresenceRosterV1,
   localPresenceActorV1,

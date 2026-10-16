@@ -15,9 +15,9 @@ pub mod os_pack {
     #[cfg(not(target_arch = "wasm32"))]
     pub use semio_framework_os_pack_tools as cli;
 
-    // 🎒️ The `.spk` container (header/footer/segments/manifest/recovery/sources) is owned by
-    // `🧰️framework/🔨️modules/🎒️pack`, and its codec floor by the replication crate. What stays os-side
-    // below is only the schema-driven half: the record value codec and its test-only laws.
+    // 🎒️ The `.spk` container (header/footer/segments/manifest/recovery/sources) and the schema-driven record
+    // codec are owned by `🧰️framework/🔨️modules/🎒️pack` (`pack::record`), and its codec floor by the replication
+    // crate. What stays os-side is only the pack runtime bridge, the stored-hash read and the test-only laws.
     pub use pack::async_;
     pub use pack::codec;
     pub use pack::codec::ids;

@@ -1,3 +1,4 @@
+import cargoReferenceSchema from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🧬️schema/🔣️.json";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
@@ -10,8 +11,8 @@ const syntaxErrors=(source:ts.SourceFile)=>ts.transpileModule(source.text,{compi
 const cases=()=>fixture.cases.map(row=>{const value=structuredClone(fixture.evidence);for(const change of row.changes){let parent:Record<string|number,unknown>=value;for(const part of change.path.slice(0,-1))parent=parent[part] as Record<string|number,unknown>;parent[change.path.at(-1)!]=change.value;}return{...row,value};});
 const authority=()=>{const controller=new AbortController(),started=performance.now(),progress:unknown[]=[];return{controller,progress,control:{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>controller.signal.aborted,remainingMs:()=>60000-(performance.now()-started),onProgress:(event:unknown)=>{progress.push(event);}}};};
 test("complete neutral selected actor evidence agrees with independent schema and JSON parsing",async()=>{
- const oracle=new Ajv({strict:false}).compile(schema),jsonc=await import("jsonc-parser");
- for(const row of cases()){expect(oracle(row.value),row.name+JSON.stringify(oracle.errors)).toBe(row.accepted);expect(validateJsonSchemaSubset(schema,row.value).length===0,row.name).toBe(row.accepted);if(row.accepted)expect(jsonc.parse(JSON.stringify(row.value))).toEqual(row.value);}
+ const oracle=new Ajv({strict:false}).addSchema(cargoReferenceSchema).compile(schema),jsonc=await import("jsonc-parser");
+ for(const row of cases()){expect(oracle(row.value),row.name+JSON.stringify(oracle.errors)).toBe(row.accepted);expect(validateJsonSchemaSubset(schema,row.value,schema,[cargoReferenceSchema]).length===0,row.name).toBe(row.accepted);if(row.accepted)expect(jsonc.parse(JSON.stringify(row.value))).toEqual(row.value);}
  console.log("[DEBUG] complete portable actor evidence vectors matched first-party schema validation and independent Ajv/JSON parser output");
 });
 test("required neutral publication port admits typed evidence and keeps acquisition explicit",async()=>{
@@ -52,7 +53,7 @@ test("actual graph package coverage is explicit caller authority with portable r
 
 test("selected actor paid recomputation requires actual carried invocation and phase",()=>{
  const oracle=new Ajv({strict:false}).compile({const:["invocation","phaseControl"]});expect(oracle(fixture.compilerPorts)).toBe(true);
- const hubPath=join(process.cwd(),"🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts"),hub=ts.createSourceFile(hubPath,readFileSync(hubPath,"utf8"),ts.ScriptTarget.Latest,true),definition=hub.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="runtimeSelectedActorsV1");expect(syntaxErrors(hub)).toEqual([]);expect(definition&&ts.isFunctionDeclaration(definition)&&definition.parameters[2]?.type?.getText(hub)).toContain("phaseControl:ResourceLeaseControl");expect(definition&&ts.isFunctionDeclaration(definition)&&definition.parameters[2]?.type?.getText(hub)).toContain("invocation:ScriptInvocation");
+ const hubPath=join(process.cwd(),"🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts"),hub=ts.createSourceFile(hubPath,readFileSync(hubPath,"utf8"),ts.ScriptTarget.Latest,true),definition=hub.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="runtimeSelectedActorsV1");expect(syntaxErrors(hub)).toEqual([]);const context=hub.statements.find(row=>ts.isTypeAliasDeclaration(row)&&row.name.text==="SelectedHubActorContextV1");expect(definition&&ts.isFunctionDeclaration(definition)&&definition.parameters[2]?.type?.getText(hub)).toBe("SelectedHubActorContextV1");expect(context?.getText(hub)).toContain("phaseControl:ResourceLeaseControl");expect(context?.getText(hub)).toContain("invocation:ScriptInvocation");
  const portPath=resolve(import.meta.dir,"../🧬️schema/🟦️.ts"),port=ts.createSourceFile(portPath,readFileSync(portPath,"utf8"),ts.ScriptTarget.Latest,true),contract=port.statements.find(row=>ts.isInterfaceDeclaration(row)&&row.name.text==="SelectedRuntimeActorPublicationPortV1");expect(syntaxErrors(port)).toEqual([]);expect(contract&&ts.isInterfaceDeclaration(contract)&&contract.members.filter(ts.isMethodSignature).every(row=>row.parameters.length===3&&row.parameters.every(parameter=>!parameter.questionToken&&!parameter.initializer))).toBe(true);
  console.log("[DEBUG] Neutral compiler ports agree with Ajv; actual Hub context and both publication operations require carried Original and phase");
 });

@@ -5,7 +5,9 @@
 use super::*;
 use serde_json::Value;
 
-const ROWS: &str = include_str!("../🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+fn rows_text() -> &'static str {
+    crate::fixture_text("🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")
+}
 
 fn dsl(value: &Value) -> protocol::DslValue {
     match value {
@@ -19,7 +21,7 @@ fn dsl(value: &Value) -> protocol::DslValue {
 }
 
 fn cases(group: &str) -> Vec<(String, protocol::DslValue)> {
-    let fixture: Value = serde_json::from_str(ROWS).expect("the row fixture parses");
+    let fixture: Value = serde_json::from_str(rows_text()).expect("the row fixture parses");
     fixture[group].as_array().expect("a case group").iter().map(|case| (case["id"].as_str().expect("case id").to_string(), dsl(&case["row"]))).collect()
 }
 

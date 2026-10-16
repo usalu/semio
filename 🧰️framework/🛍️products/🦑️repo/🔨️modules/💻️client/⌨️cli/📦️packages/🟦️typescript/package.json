@@ -12,5 +12,8 @@
   "bundleKind": "binary",
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/schema-ts": "workspace:*"
   }
 }

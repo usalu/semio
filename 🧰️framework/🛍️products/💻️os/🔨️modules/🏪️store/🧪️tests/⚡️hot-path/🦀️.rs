@@ -62,7 +62,7 @@ fn settle(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
     }
 }
 
-async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, n: i32, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, n: i32, _identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     test_support::dispatch_test_command(store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("a plain edit applies");
     settle(store);
 }
@@ -71,11 +71,11 @@ async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, n: i32, _i
 async fn local_steps_cost_o_change_however_long_the_history() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let corpus: Corpus = serde_json::from_str(include_str!("../🧫️fixtures/⚡️hot-path/🔣️.json")).expect("hot path corpus");
     assert_eq!(corpus.schema, "semio.store.hot-path/v1");
     for vector in &corpus.vectors {
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &vector.id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &vector.id, DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
         let started = std::time::Instant::now();
         for n in 0..vector.warmup {
             apply(&mut store, n as i32, &mut identity).await;

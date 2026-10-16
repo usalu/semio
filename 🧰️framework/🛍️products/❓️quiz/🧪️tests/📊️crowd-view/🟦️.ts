@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/👁️views/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type Quiz, type RunResult, crowdView } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://📊️crowd-view/🔣️.json";

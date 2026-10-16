@@ -1,0 +1,51 @@
+{
+ "file": "🧰️framework/🛍️products/❓️quiz/🧪️tests/🚶️learner-journey/🟦️.tsx",
+ "label": "learner-journey",
+ "childRoot": "🧰️framework/🛍️products/❓️quiz/🧪️tests",
+ "deleteParent": true,
+ "children": [
+  {
+   "folder": "🧰️learner-journey-kit",
+   "doc": "/** 🧰️ Shared kit of the learner-journey suites (the topics sit in the sibling folders `🚶️journey-and-tabs`, `🫡️deputy-and-contract`, `⛰️challenge-session` and `🧷️run-truth`): the quiz and the catalog, the proctor double and the builders of sessions, runs and answers. Together the suites check the whole learner journey against a proctor double speaking the framework wire (design §9a) and deciding with\n * the core's own pure deciders: introduction → identity → home → run (keyboard answers, a short outage) → submit →\n * results → leaderboard, then a reload that resumes locally in the chosen language — and the session on every\n * challenge: the sheet of each, switching voids the open run, the clock of an expert run on the session clock (openings,\n * time up, a submission with tasks unanswered, openings decided on the device and delivered before their answers), the\n * hints of an easy run with and without a deputy, points by challenge, and stored runs and learner views restored only\n * in the shape of the challenges — and that what the device shows of a run stays true to its answers: hints never\n * outlive the answer they were given for (a change, a waiting answer, a stale or overtaken read, a closed run), another\n * tab's copy merges its openings and hints, a refused answer is read again whatever waits for other runs, a revised quiz\n * voids a run whose opening the deputy decided, and an answer is judged at the instant of its own last edit — and a\n * proctor that cannot take what the device sends: one of an older or newer contract (asked nothing but its contract,\n * also when it replaces the proctor in the middle of a run), a network's sign-in page in its place and views outside\n * the contract are waited out without a loss or a word, and a screen that fails shows what happened in its place.\n *\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the client under test\n */",
+   "stmts": [
+    "96-456",
+    "710-733",
+    "1088-1121",
+    "1528-1561"
+   ]
+  },
+  {
+   "folder": "🚶️journey-and-tabs",
+   "doc": "/** 🚶️ The whole learner journey from the introduction through a submitted run to the leaderboard and a reload that resumes in the chosen language, several tabs, cancellation and other devices, and presence through the whole app.\n *\n * @see ../🧰️learner-journey-kit/🟦️.tsx — the shared quiz, proctor double and builders\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the client under test\n */",
+   "stmts": [
+    "458",
+    "735",
+    "942"
+   ]
+  },
+  {
+   "folder": "🫡️deputy-and-contract",
+   "doc": "/** 🫡️ The deputy while the proctor is away, a proctor of another contract and a screen that fails.\n *\n * @see ../🧰️learner-journey-kit/🟦️.tsx — the shared quiz, proctor double and builders\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the client under test\n */",
+   "stmts": [
+    "1123",
+    "1352",
+    "1359",
+    "1498"
+   ]
+  },
+  {
+   "folder": "⛰️challenge-session",
+   "doc": "/** ⛰️ The challenges through the session: the sheet of each, switching voids the open run, the clock of an expert run, the hints of an easy run, points by challenge and stored runs restored only in the shape of the challenges.\n *\n * @see ../🧰️learner-journey-kit/🟦️.tsx — the shared quiz, proctor double and builders\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the client under test\n */",
+   "stmts": [
+    "1563"
+   ]
+  },
+  {
+   "folder": "🧷️run-truth",
+   "doc": "/** 🧷️ What the device shows of a run stays true to its answers: hints never outlive the answer they were given for, another tab's copy merges, a refused answer is read again and an answer is judged at the instant of its own last edit.\n *\n * @see ../🧰️learner-journey-kit/🟦️.tsx — the shared quiz, proctor double and builders\n * @see ../../🎯️targets/⚛️react/🟦️.tsx — the client under test\n */",
+   "stmts": [
+    "1884-1912"
+   ]
+  }
+ ]
+}

@@ -6,7 +6,9 @@
     "test-shape": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-validator-ts:test-shape"
   },
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./format-policy": "./🏷️format-policy/🟦️.ts",
+    "./testing": "./🧪️testing/🟦️.ts"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

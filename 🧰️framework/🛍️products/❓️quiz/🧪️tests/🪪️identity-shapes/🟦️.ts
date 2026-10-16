@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/✅️validation/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type Command, type Query, commandRejection, handleActorId, normalizeHandle, queryRejection } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://🪪️identity-shapes/🔣️.json";

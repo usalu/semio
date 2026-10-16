@@ -170,6 +170,25 @@
           "type": "boolean"
         }
       }
+    },
+    "OperationProtocol": {
+      "const": {
+        "version": 1,
+        "maximumPending": 32,
+        "maximumAccepted": 32,
+        "settlementObservation": "wait-only",
+        "selfWait": false
+      }
+    },
+    "BodyCustodyProtocol": {
+      "const": {
+        "version": 1,
+        "actualAncestry": true,
+        "sameEnrollment": true,
+        "sameDeadline": true,
+        "issuesControl": false,
+        "ordinaryEffects": false
+      }
     }
   }
 }

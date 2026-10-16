@@ -3,10 +3,10 @@ import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../.
 import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
 import {viteStorageLayoutV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import {scriptInvocationEnvironment,withScriptInvocationSignalV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import publicationSchema from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 import {open,lstat} from "node:fs/promises";
 import {createHash} from "node:crypto";

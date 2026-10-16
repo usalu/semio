@@ -1,14 +1,24 @@
 //! 🛡️ Public action wire limits, envelope validation and addressed action admission.
 
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework::{Fault, FaultFrom};
+use semio_framework_value::{FromValue, ToValue};
+use semio_framework_plugin_reactor_lifecycle::life_app_cell::{HostInstanceGuard, RuntimeAppCell};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_plugin_program::PluginProgram;
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry::{PluginRuntime, RuntimeInstanceRegistry};
+use serde_json::Value;
+use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 // 🚫️async: E1-adjacent pure lookup consumed by `with_instances_mut`'s sync callback
 // (`FnOnce(&mut Vec<AppInstance>) -> Result<R, Fault>`, itself required sync by the
 // single-threaded `RefCell::borrow_mut` reentrancy guard) — see R9.
-pub(super) fn find_instance<'a, PA: PluginApp>(list: &'a RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>, instance_id: u32) -> Result<HostInstanceGuard<'a, PA>, Fault> {
+#[doc(hidden)]
+pub fn find_instance<'a, PA: PluginApp>(list: &'a RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>, instance_id: u32) -> Result<HostInstanceGuard<'a, PA>, Fault> {
     let cell = list.get(instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))?;
     cell.host_instance().ok_or_else(|| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))
 }
-pub(super) fn runtime_instance_cell<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Result<std::sync::Arc<RuntimeAppCell<PA>>, Fault> {
+#[doc(hidden)]
+pub fn runtime_instance_cell<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Result<std::sync::Arc<RuntimeAppCell<PA>>, Fault> {
     runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?.get(instance_id).cloned().ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))
 }
 /// 📏️ The ONE public invocation envelope, read off the language-neutral contract
@@ -17,11 +27,13 @@ pub(super) fn runtime_instance_cell<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
 /// it. `setContributions` is the host pack crossing: it keeps the body cap and skips the per-string
 /// cap so one scoped contributions pack can land without 4 KiB paging
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-const MAX_PUBLIC_ACTION_BODY_BYTES: usize = semio_framework::PUBLIC_INVOCATION_BODY_BYTES;
-const MAX_PUBLIC_ACTION_STRING_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
+#[doc(hidden)]
+pub const MAX_PUBLIC_ACTION_BODY_BYTES: usize = semio_framework::PUBLIC_INVOCATION_BODY_BYTES;
+#[doc(hidden)]
+pub const MAX_PUBLIC_ACTION_STRING_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
 const MAX_PUBLIC_ACTION_DEPTH: usize = semio_framework::PUBLIC_INVOCATION_DEPTH;
 const HOST_CONTRIBUTIONS_PACK_COMMAND_ID: &str = "setContributions";
-fn dff_interactive_wire_limit(owner: crate::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, addressed_controller_id: &str, command_id: &str, app_contracts: &[crate::tool_contract::ArtifactToolPublicContract]) -> Result<Option<usize>, Fault> {
+fn dff_interactive_wire_limit(owner: semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, addressed_controller_id: &str, command_id: &str, app_contracts: &[semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<Option<usize>, Fault> {
     let registration = app_contracts.iter().find(|registration| registration.controller_id == addressed_controller_id && registration.tool_id == command_id);
     match registration {
         Some(registration) if runtime_controller_id == addressed_controller_id && registration.owner == owner && !registration.schema_id.is_empty() => Ok(Some(registration.max_raw_wire_bytes)),
@@ -29,7 +41,7 @@ fn dff_interactive_wire_limit(owner: crate::tool_contract::ToolOwnerWitness, run
         None => Ok(None),
     }
 }
-fn dff_invocation_wire_limit(body: &str, identifier_key: &str, label: &str, owner: crate::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[crate::tool_contract::ArtifactToolPublicContract]) -> Result<Option<usize>, Fault> {
+fn dff_invocation_wire_limit(body: &str, identifier_key: &str, label: &str, owner: semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<Option<usize>, Fault> {
     let bytes = body.as_bytes();
     let mut cursor = 0usize;
     let mut depth = 0usize;
@@ -152,7 +164,8 @@ fn public_address_command_id(body: &str) -> Option<String> {
 fn validate_public_json_envelope(body: &str, label: &str) -> Result<(), Fault> {
     validate_public_json_envelope_with(body, label, true)
 }
-fn validate_public_command_json(body: &str) -> Result<(), Fault> {
+#[doc(hidden)]
+pub fn validate_public_command_json(body: &str) -> Result<(), Fault> {
     let cap_strings = public_address_command_id(body).as_deref() != Some(HOST_CONTRIBUTIONS_PACK_COMMAND_ID);
     validate_public_json_envelope_with(body, "command", cap_strings)
 }
@@ -202,7 +215,8 @@ fn validate_public_json_envelope_with(body: &str, label: &str, cap_strings: bool
     }
     Ok(())
 }
-fn validate_public_action_envelope(body: &str, owner: crate::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[crate::tool_contract::ArtifactToolPublicContract]) -> Result<(), Fault> {
+#[doc(hidden)]
+pub fn validate_public_action_envelope(body: &str, owner: semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<(), Fault> {
     validate_public_json_envelope(body, "action")?;
     if let Some(limit) = dff_invocation_wire_limit(body, "actionId", "action", owner, runtime_controller_id, app_contracts)? {
         if body.len() > limit {
@@ -211,7 +225,8 @@ fn validate_public_action_envelope(body: &str, owner: crate::tool_contract::Tool
     }
     Ok(())
 }
-fn validate_public_command_envelope(body: &str, owner: crate::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[crate::tool_contract::ArtifactToolPublicContract]) -> Result<(), Fault> {
+#[doc(hidden)]
+pub fn validate_public_command_envelope(body: &str, owner: semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness, runtime_controller_id: &str, app_contracts: &[semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract]) -> Result<(), Fault> {
     validate_public_command_json(body)?;
     if let Some(limit) = dff_invocation_wire_limit(body, "commandId", "command", owner, runtime_controller_id, app_contracts)? {
         if body.len() > limit {
@@ -220,14 +235,12 @@ fn validate_public_command_envelope(body: &str, owner: crate::tool_contract::Too
     }
     Ok(())
 }
-#[cfg(test)]
-include!("../../../../🧪️tests/🔬️plugin-runtime-dff-public-action-admission/🦀️.rs");
 fn debug_action_dispatch_branch(action_id: &str) -> &'static str {
-    if !crate::reserved_jobs::is_framework_reserved_action_id(action_id) {
+    if !semio_framework_plugin_job::reserved_jobs::is_framework_reserved_action_id(action_id) {
         "catalog"
     } else if matches!(action_id, "copy" | "cut" | "paste") {
         "clipboard-instack"
-    } else if crate::tool_jobs::is_tool_run_action_id(action_id) || crate::app_contract::is_time_travel_action_id(action_id) || action_id == crate::app_views::CANCEL_TYPED_OPERATION_ACTION_ID || action_id == semio_framework::HOST_EVENT_ACTION_ID {
+    } else if semio_framework_plugin_job::lifted_job::is_tool_run_action_id(action_id) || semio_framework_plugin_decl_app::is_time_travel_action_id(action_id) || action_id == semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID || action_id == semio_framework::HOST_EVENT_ACTION_ID {
         "host-driven"
     } else {
         "spawn-admit"

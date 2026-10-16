@@ -1,11 +1,15 @@
 //! ⚠️ Bounded typed Fault binding donates original strings and domain cells without cloning the parsed donor.
-use super::*;
-use semio_framework_diagnostic::FaultSource;
-use semio_framework::{Fault,FaultCode,FaultScope,FaultOrigin,FaultCause,FaultParams,Severity};
-pub(super) struct FaultCursor{output:ManuallyDrop<Option<Fault>>,closing:ManuallyDrop<Option<ControlledRetirement<Fault>>>,field:usize,nested:usize,kind:u8,cause:usize,cause_field:usize,seen:u8,progress_seen:u8,cause_seen:bool,reserved:bool,closed:bool}
+use crate::original_receiving::completed::CompletedInput;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::{DslValue, RetainedCloneProgress, ValueError, ValueRefusalKind};
+use std::mem::ManuallyDrop;
+use semio_framework_job::{OriginalTurnFailure, StepContext};
+use crate::original_receiving::metadata;
+use semio_framework::{Fault, FaultCode, FaultScope, FaultOrigin, FaultCause, FaultParams, Severity};
+pub(super) struct FaultCursor{pub output:ManuallyDrop<Option<Fault>>,pub closing:ManuallyDrop<Option<ControlledRetirement<Fault>>>,pub field:usize,pub nested:usize,pub kind:u8,pub cause:usize,cause_field:usize,pub seen:u8,progress_seen:u8,cause_seen:bool,pub reserved:bool,pub closed:bool}
 impl FaultCursor{
- pub(super) const fn empty()->Self{Self{output:ManuallyDrop::new(None),closing:ManuallyDrop::new(None),field:0,nested:0,kind:0,cause:0,cause_field:0,seen:0,progress_seen:0,cause_seen:false,reserved:false,closed:false}}
- pub(super) fn step(&mut self,source:&mut DslValue,cx:&mut StepContext<'_>)->Result<Option<Fault>,OriginalTurnFailure>{
+ pub const fn empty()->Self{Self{output:ManuallyDrop::new(None),closing:ManuallyDrop::new(None),field:0,nested:0,kind:0,cause:0,cause_field:0,seen:0,progress_seen:0,cause_seen:false,reserved:false,closed:false}}
+ pub fn step(&mut self,source:&mut DslValue,cx:&mut StepContext<'_>)->Result<Option<Fault>,OriginalTurnFailure>{
   if self.output.is_none(){let bytes=std::mem::size_of::<FaultScope>();let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(None)}cx.consume_fuel(1);let scope=Box::default();*self.output=Some(Fault{retained_progress:Default::default(),origin:FaultOrigin::Framework,code:FaultCode(String::new()),severity:Severity::Error,message:String::new(),scope,span:None,source:None,domain:None,causes:Vec::new(),params:None,retryable:false});cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})?;return Ok(None)}
   let DslValue::Object(fields)=source else{return Err(invalid())};
   if self.field==fields.len(){if self.seen!=31{return Err(invalid())}if !metadata(cx)?{return Ok(None)}return Ok(self.output.take())}
@@ -60,15 +64,19 @@ impl FaultCursor{
   if self.nested==fields.len(){if !metadata(cx)?{return Ok(None)}self.kind=0;self.field+=1;self.nested=0;self.reserved=false;return Ok(None)}
   let(name,value)=&mut fields[self.nested];if self.cause_field<name.len(){if !metadata(cx)?{return Ok(None)}let byte=name.as_bytes()[self.cause_field];if !(if self.cause_field==0{byte.is_ascii_lowercase()}else{byte.is_ascii_alphanumeric()}){return Err(invalid())}self.cause_field+=1;return Ok(None)}if name.is_empty(){return Err(invalid())}if !metadata(cx)?{return Ok(None)}let text=take_text(value)?;params.push((std::mem::take(name),text));self.nested+=1;self.cause_field=0;Ok(None)
  }
- pub(super) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){semio_framework_job::close_original_retained_step(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|owner.step(grant))?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.closing.take();return Ok(false)}
   if self.output.is_some(){if !metadata(cx)?{return Ok(false)}let output=self.output.take().unwrap();match ControlledRetirement::new(output){Ok(owner)=>*self.closing=Some(owner),Err((error,output))=>{*self.output=Some(output);return Err(error.into())}}return Ok(false)}
   if !metadata(cx)?{return Ok(false)}self.closed=true;Ok(true)
  }
 }
-fn invalid()->OriginalTurnFailure{ValueError::literal(ValueRefusalKind::InvalidValue,"original Fault field violates its closed typed schema").into()}
-fn object(value:&mut DslValue)->Result<&mut Vec<(String,DslValue)>,OriginalTurnFailure>{match value{DslValue::Object(fields)=>Ok(fields),_=>Err(invalid())}}
+#[doc(hidden)]
+pub fn invalid()->OriginalTurnFailure{ValueError::literal(ValueRefusalKind::InvalidValue,"original Fault field violates its closed typed schema").into()}
+#[doc(hidden)]
+pub fn object(value:&mut DslValue)->Result<&mut Vec<(String,DslValue)>,OriginalTurnFailure>{match value{DslValue::Object(fields)=>Ok(fields),_=>Err(invalid())}}
 fn take_text(value:&mut DslValue)->Result<String,OriginalTurnFailure>{if !matches!(value,DslValue::String(_)){return Err(invalid())}let DslValue::String(text)=std::mem::replace(value,DslValue::Null)else{unreachable!()};Ok(text)}
-fn unsigned(value:&DslValue)->Result<u64,OriginalTurnFailure>{value.as_u64().ok_or_else(invalid)}
-fn progress(target:&mut RetainedCloneProgress,seen:&mut u8,name:&str,value:&DslValue)->Result<(),OriginalTurnFailure>{let(index,slot)=match name{"copiedItems"=>(0,&mut target.copied_items),"copiedBytes"=>(1,&mut target.copied_bytes),"retainedCapacityBytes"=>(2,&mut target.retained_capacity_bytes),"releasedBytes"=>(3,&mut target.released_bytes),_=>return Err(invalid())};*slot=usize::try_from(unsigned(value)?).map_err(|_|invalid())?;*seen|=1<<index;Ok(())}
+#[doc(hidden)]
+pub fn unsigned(value:&DslValue)->Result<u64,OriginalTurnFailure>{value.as_u64().ok_or_else(invalid)}
+#[doc(hidden)]
+pub fn progress(target:&mut RetainedCloneProgress,seen:&mut u8,name:&str,value:&DslValue)->Result<(),OriginalTurnFailure>{let(index,slot)=match name{"copiedItems"=>(0,&mut target.copied_items),"copiedBytes"=>(1,&mut target.copied_bytes),"retainedCapacityBytes"=>(2,&mut target.retained_capacity_bytes),"releasedBytes"=>(3,&mut target.released_bytes),_=>return Err(invalid())};*slot=usize::try_from(unsigned(value)?).map_err(|_|invalid())?;*seen|=1<<index;Ok(())}
 impl Drop for FaultCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.closed,"original Fault binder requires complete typed source retirement")}}

@@ -1,8 +1,7 @@
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../🧩️composition/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import schema from "../../../../../../../../🔨️modules/🖼️assets/🗺️tile-proxy/🧬️schema/🔣️.json" with { type: "json" };
-import corpus from "../../../../../../../../🔨️modules/🖼️assets/🗺️tile-proxy/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
+import { assetsTileProxySchema as schema, assetsTileProxyFixture as corpus } from "../../../../../../../../🔨️modules/🖼️assets/🧪️tests/🧫️fixtures/🟦️.ts";
 import { parseTileProxyAssetSpecV1 } from "../../../../../../../../🔨️modules/🖼️assets/🗺️tile-proxy/🟦️.ts";
 
 /** 🧪️ Compares the owner-neutral portable transport corpus with independent Ajv and JSON oracles. */

@@ -34,7 +34,7 @@ fn integral(a:f64,b:f64,height:f64)->f64 {
 fn x_at(edge:Edge,y:f64)->f64 {edge.x+(y-edge.y)*edge.dx}
 
 #[derive(semio_framework_value::RetireOwned)]
-struct MergeSort {source:Vec<usize>,target:Vec<usize>,width:usize,left:usize,i:usize,j:usize,k:usize,mid:usize,end:usize,writes:usize}
+struct MergeSort {pub source:Vec<usize>,target:Vec<usize>,pub width:usize,left:usize,i:usize,j:usize,k:usize,mid:usize,end:usize,writes:usize}
 impl MergeSort {
     fn new(source:Vec<usize>)->Self {
         let mut sorter=Self {target:vec![0;source.len()],source,width:1,left:0,i:0,j:0,k:0,mid:0,end:0,writes:0};sorter.setup();sorter
@@ -52,8 +52,8 @@ impl MergeSort {
 /// ⏱️ Owned, budgeted sweep with exact polygon area integration and cancellable candidates.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct CoverageJob {
-    input:CoverageInput,mask:CoverageMask,areas:Vec<f64>,edges:Vec<Edge>,events:Vec<SweepEvent>,positions:Vec<usize>,active:Vec<usize>,event_ids:Vec<usize>,
-    sorted:Vec<usize>,copied:Vec<usize>,sorter:Option<MergeSort>,stage:Stage,cancelled:bool,failed:Option<PixelEditError>,work:u64,
+    #[doc(hidden)] pub input:CoverageInput,#[doc(hidden)] pub mask:CoverageMask,areas:Vec<f64>,edges:Vec<Edge>,events:Vec<SweepEvent>,positions:Vec<usize>,active:Vec<usize>,event_ids:Vec<usize>,
+    sorted:Vec<usize>,copied:Vec<usize>,sorter:Option<MergeSort>,#[doc(hidden)] pub stage:Stage,cancelled:bool,#[doc(hidden)] pub failed:Option<PixelEditError>,#[doc(hidden)] pub work:u64,
     contour:usize,point:usize,prepared:usize,preparation_total:usize,first:Option<[f64;2]>,previous:Option<[f64;2]>,
     event:usize,copy:usize,scan:usize,row:usize,y:f64,end:f64,winding:i32,left:usize,span_left:usize,span_right:usize,pixel:usize,pixel_end:usize,dirty_start:usize,dirty_end:usize,
 }
@@ -161,6 +161,9 @@ impl CoverageJob {
 
 semio_framework_value::artifact_retire_leaf!(CoverageRule,CoveragePhase,Edge,SweepEvent,Stage);
 physical_work_retirement!(CoverageRetirement,CoverageJob,&'static str,|_:&str|"Coverage retirement refused its physical grant");
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub type Stage = super::Stage;
+}

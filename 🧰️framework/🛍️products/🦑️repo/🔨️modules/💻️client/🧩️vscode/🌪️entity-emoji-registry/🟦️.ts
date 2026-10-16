@@ -4,7 +4,7 @@
  */
 
 // #region 🔌️Adapters
-import { ENTITY_KIND_BY_EMOJI } from "../../../../../../🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🟦️.ts";
+import { ENTITY_KIND_BY_EMOJI } from "@semio-tech/schema-ts/generated/entity-kinds";
 // #endregion 🔌️Adapters
 
 // #region 🎞️Constants

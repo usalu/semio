@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/birth/component.json",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumStages": 8,
+        "stages": [
+          "accepted",
+          "parent-reader",
+          "journal-loan",
+          "parent-reserved",
+          "child-owned",
+          "child-retained",
+          "child-retired",
+          "parent-retired",
+          "complete"
+        ],
+        "authority": false,
+        "renewal": false,
+        "paths": [
+          [
+            "accepted",
+            "parent-reader",
+            "journal-loan",
+            "parent-reserved",
+            "child-owned",
+            "child-retired",
+            "parent-retired",
+            "complete"
+          ],
+          [
+            "accepted",
+            "parent-reader",
+            "journal-loan",
+            "parent-reserved",
+            "child-owned",
+            "child-retained",
+            "complete"
+          ]
+        ]
+      }
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "stage",
+        "accepted"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "stage": {
+          "enum": [
+            null,
+            "accepted",
+            "parent-reader",
+            "journal-loan",
+            "parent-reserved",
+            "child-owned",
+            "child-retained",
+            "child-retired",
+            "parent-retired",
+            "complete"
+          ]
+        },
+        "accepted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        }
+      }
+    }
+  },
+  "$ref": "#/definitions/State"
+}

@@ -1,0 +1,21 @@
+{
+ "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false,
+  "types": [
+   "bun",
+   "node",
+   "react",
+   "react-dom",
+   "vite/client"
+  ]
+ },
+ "include": [],
+ "files": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📽️presentation-core/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🧭️slide-glob-assembly/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🟦️.tsx"
+ ]
+}

@@ -1,0 +1,13 @@
+import { readFileSync } from "node:fs";
+import { policyReadRustPolicySource } from "../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
+import { interactivityMcpHttpTransportFailures } from "../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🌱️database-lifecycle/🟦️.ts";
+const repoRoot = "/Users/ueli/Documents/semio";
+const snap = `${repoRoot}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/osm-work/snap-mcp`;
+const M = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp";
+const before = (p: string) => readFileSync(`${snap}/${p}`, "utf8");
+const T = `${M}/🚚️transport/🦀️.rs`, B = `${M}/🧵️bridge/🦀️.rs`, S = `${M}/🧵️bridge/🪢️session/🦀️.rs`, R = `${M}/🦀️.rs`;
+const fb = interactivityMcpHttpTransportFailures(before(T), before(B) + before(S), readFileSync(`${repoRoot}/${R}`, "utf8"));
+const fa = interactivityMcpHttpTransportFailures(policyReadRustPolicySource(repoRoot, T), policyReadRustPolicySource(repoRoot, B) + policyReadRustPolicySource(repoRoot, S), policyReadRustPolicySource(repoRoot, R));
+console.log("before failures:", JSON.stringify(fb));
+console.log("after failures:", JSON.stringify(fa));
+console.log("identical:", JSON.stringify(fb) === JSON.stringify(fa));

@@ -3,23 +3,22 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-    "🏅️standards/4️⃣4/🪆️subsets/✳️any/📦️packages/🦀️rust",
-    "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
-    "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
-    "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
-    "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-    "🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/📦️packages/🦀️rust",
-    "🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/📦️packages/🦀️rust",
-    "🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/📦️packages/🦀️rust",
-    "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust",
-    "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
-    "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
-    "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
-    "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-    "📦️packages/🦀️rust",
+  "🏅️standards/4️⃣4/🪆️subsets/✳️any/📦️packages/🦀️rust",
+  "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+  "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "📦️packages/🦀️rust",
 ]
 exclude = [
-    "**/🏅️standards/**",
     "**/🏭️bridge/**",
     "**/👽️guest/**",
     "**/🔮️oracles/**",
@@ -29,10 +28,9 @@ exclude = [
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
-  "**/🏅️standards/**",
   "**/👽️guest/**",
   "**/🔮️oracles/**",
-  "**/🏭️bridge/**"
+  "**/🏭️bridge/**",
 ]
 member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 

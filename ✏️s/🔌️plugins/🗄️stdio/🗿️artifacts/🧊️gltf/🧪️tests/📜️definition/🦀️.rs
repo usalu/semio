@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn native_codec_identity_matches_structural_graph_and_independent_blake3() {
     let spec = <GltfSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("GLTF typed pack record");
-    let graph = store::os_pack::PackSchemaGraph::of(&spec);
+    let graph = pack::record::PackSchemaGraph::of(&spec);
     let bytes = graph.canonical_bytes();
     let independent = *blake3::hash(&bytes).as_bytes();
     let codec = native_codec();

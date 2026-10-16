@@ -1,9 +1,19 @@
 //! 🎟️ Actual failed media command retirement returns the same native cause through one finite initiating caller.
-use super::*;
-use semio_framework_job::{OriginalJobFixtureCaller,OriginalTurnFailure};
-use semio_framework_value::{ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
-fn clock()->Option<u64>{Some(1000)}
-fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework::FaultFrom;
+use semio_framework_value::{FromValue, ToValue};
+use semio_framework_plugin_reactor_app::PluginApp;
+use crate::ops_ingress::{PluginCommandIngress, PluginCommandIngressStep};
+use semio_framework_plugin_plugin_program::PluginProgram;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use serde_json::Value;
+use semio_framework_job::{OriginalJobFixtureCaller, OriginalTurnFailure};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+#[doc(hidden)]
+pub fn clock()->Option<u64>{Some(1000)}
+#[doc(hidden)]
+pub fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
 #[test]
 fn original_failed_media_decoded_source_same_cause_denials_and_full_paid_close(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();let stock:RetainedCloneGrant=serde_json::from_value(policy["grant"].clone()).unwrap();

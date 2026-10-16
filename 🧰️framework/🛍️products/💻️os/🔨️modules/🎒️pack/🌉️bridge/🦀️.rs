@@ -1,9 +1,9 @@
-//! 🧵️ Thin runtime bridge to `crate::{encode_document, decode_document}`, resolved as
+//! 🧵️ Thin runtime bridge to `pack::record::{encode_document, decode_document}`, resolved as
 //! `::semio_framework_os_kernel::os_pack::pack_rt::...` by `dsl_derive`'s generated `ArtifactPack` impl (app crates depend on
 //! `vcs`, never on `pack` directly — same seam `::crate::os_dsl::RecordSpec`/`RecordValue` already use). Also
 //! hosts the schema-less `DslValue` bridge behind `impl ArtifactPack for DslValue` below.
 
-use super::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, PackRefusal};
+use super::{PackDecodeOptions, PackEncodeOptions, PackError, PackRefusal};
 use semio_framework_value::DslValue;
 use semio_framework_dsl_record::FieldSpec;
 use semio_framework_dsl_record::FieldValue;
@@ -14,47 +14,32 @@ use semio_framework_dsl_record::RecordValue;
 use semio_framework_dsl_record::Shape;
 use std::collections::HashMap;
 
-pub use crate::{RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
+pub use pack::record::{decode_document_controlled, decode_record_body_exact_controlled, encode_document_controlled, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
 pub use pack::{
     MAGIC, RETAINED_PACK_MAXIMUM_PAGES, RETAINED_PACK_PAGE_BYTES, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent,
     RetainedPackCatalogFault, RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep,
     RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress,
 };
 
-/// 🚪️ Forwards to `crate::encode_document`.
+/// 🚪️ Forwards to `pack::record::encode_document`, widening its refusal to [`PackError`].
 pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-    crate::encode_document(spec, record, options)
+    pack::record::encode_document(spec, record, options).map_err(PackError::from)
 }
 
-/// 🛫️ Emits complete Pack documents under the caller's cumulative ownership control.
-pub fn encode_document_controlled(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Vec<u8>, PackRefusal> {
-    crate::encode_document_controlled(spec, record, options, control)
-}
 
-/// 🚪️ Forwards to `crate::decode_document`.
-pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions) -> Result<(RecordValue, crate::DecodeReport), PackError> {
-    crate::decode_document(bytes, spec, options)
-}
-/// 🛬️ Keeps complete physical Pack reading and typed reconstruction on one caller control.
-pub fn decode_document_controlled(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(RecordValue, crate::DecodeReport), PackRefusal> {
-    crate::decode_document_controlled(bytes, spec, options, control)
+/// 🚪️ Forwards to `pack::record::decode_document`, widening its refusal to [`PackError`].
+pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions) -> Result<(RecordValue, pack::record::DecodeReport), PackError> {
+    pack::record::decode_document(bytes, spec, options).map_err(PackError::from)
 }
 
 /// 🎯️ P6: container-less record body helpers for handcrafted OpBinary impls.
 pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-    crate::encode_record_body(spec, record, options)
+    pack::record::encode_record_body(spec, record, options).map_err(PackError::from)
 }
-pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions) -> Result<(RecordValue, crate::DecodeReport), PackError> {
-    crate::decode_record_body(bytes, spec, options)
+pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions) -> Result<(RecordValue, pack::record::DecodeReport), PackError> {
+    pack::record::decode_record_body(bytes, spec, options).map_err(PackError::from)
 }
-/// 🛬️ Keeps terminal Pack parsing and typed construction under one ownership control.
-pub fn decode_record_body_exact_controlled(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<RecordValue, PackRefusal> {
-    crate::decode_record_body_exact_controlled(bytes, spec, options, control)
-}
-pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
-    crate::write_varint_u64(out, value);
-}
-pub use crate::ByteReader;
+pub use crate::{write_varint_u64, ByteReader};
 /// 🎯️ Format byte every encoded operation starts with (handcrafted OpBinary convention).
 pub const OP_BINARY_FORMAT: u8 = 1;
 
@@ -90,7 +75,7 @@ pub fn encode_wire_value(value: &DslValue) -> Vec<u8> {
     let mut fields = semio_framework_dsl_record::RecordFields::default();
     fields.insert(VALUE_BRIDGE_FIELD_ID, semio_framework_dsl_record::FieldValue::Value(value.clone()));
     let record = RecordValue { fields };
-    crate::encode_record_body(&value_bridge_spec(), &record, &PackEncodeOptions::default()).expect("wire value encode is infallible for a well-formed DslValue")
+    pack::record::encode_record_body(&value_bridge_spec(), &record, &PackEncodeOptions::default()).expect("wire value encode is infallible for a well-formed DslValue")
 }
 
 /// 🪶️ Inverse of `encode_wire_value`.
@@ -100,28 +85,28 @@ pub fn decode_wire_value(bytes: &[u8]) -> Result<DslValue, PackRefusal> {
 
 /// 🛡️ Decodes one exact wire value using caller-owned limits without a second tree clone.
 pub fn decode_wire_value_with_options(bytes: &[u8], options: &PackDecodeOptions) -> Result<DslValue, PackRefusal> {
-    crate::decode_value_record_body_exact(bytes, VALUE_BRIDGE_FIELD_ID, &options.limits)
+    pack::record::decode_value_record_body_exact(bytes, VALUE_BRIDGE_FIELD_ID, &options.limits)
 }
 
 /// 🎞️ Encodes the borrowed intrinsic owner under the caller's cumulative output control.
 pub fn encode_wire_value_controlled(value:&DslValue,options:&PackEncodeOptions,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
-    crate::encode_value_record_body_controlled(VALUE_BRIDGE_FIELD_ID,value,options,control)
+    pack::record::encode_value_record_body_controlled(VALUE_BRIDGE_FIELD_ID,value,options,control)
 }
 
 /// 🎞️ Materializes the full terminal intrinsic owner under the caller's decode control.
 pub fn decode_wire_value_controlled(bytes:&[u8],options:&PackDecodeOptions,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
-    crate::decode_value_record_body_exact_controlled(bytes,VALUE_BRIDGE_FIELD_ID,options,control)
+    pack::record::decode_value_record_body_exact_controlled(bytes,VALUE_BRIDGE_FIELD_ID,options,control)
 }
 
 
 /// 🎞️ Appends the exact declared intrinsic field to the caller's owned operation sink.
 pub fn encode_wire_value_into(value:&DslValue,options:&PackEncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
-    crate::record::encode_value_record_body_into(VALUE_BRIDGE_FIELD_ID,value,options,output,control)
+    pack::record::encode_value_record_body_into(VALUE_BRIDGE_FIELD_ID,value,options,output,control)
 }
 
 /// 🎞️ Decodes the exact declared intrinsic field by borrowing the complete caller source.
 pub fn decode_wire_value_span(bytes:crate::ByteSpan<'_>,options:&PackDecodeOptions,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
-    crate::record::decode_value_record_body_span_exact_controlled(bytes,VALUE_BRIDGE_FIELD_ID,options,control)
+    pack::record::decode_value_record_body_span_exact_controlled(bytes,VALUE_BRIDGE_FIELD_ID,options,control)
 }
 
 /// 🧩️ Compose-only bridge — external technology; converts through `DslValue` without JSON on the wire.

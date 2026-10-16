@@ -1,0 +1,11 @@
+import{test,expect}from"bun:test";
+import Ajv from"ajv/dist/2020.js";
+import{Writer}from"protobufjs";
+import{unsignedLebOracleV1}from"../🟦️.ts";
+import corpus from"../../../../../../📡️replication/🚪️io/💾️binary/🧪️tests/🧫️fixtures/🔣️.json";
+import schema from"../../../../../../📡️replication/🚪️io/💾️binary/🧬️schema/🔣️.json";
+test("neutral framework checked LEB oracle preserves complete exact integer corpus",()=>{
+ expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);const oracle=unsignedLebOracleV1();let cases=0;for(const row of corpus.cases){if(row.kind!=="u64"&&row.kind!=="u64Exact")continue;if(typeof row.value!=="number"&&typeof row.value!=="string")throw Error("Exact integer fixture required");const value=BigInt(row.value),input=Buffer.alloc(8);input.writeBigUInt64LE(value);const encoded=oracle.encodeUnsignedBuffer(input);expect(Buffer.from(encoded).toString("hex")).toBe(row.hex);expect(Buffer.from(Writer.create().uint64(row.value).finish())).toEqual(Buffer.from(encoded));expect(oracle.decodeUnsigned64(encoded,0)).toEqual({decimal:value.toString(),nextIndex:encoded.length});if(value<=0xffffffffn)expect(oracle.encodeUnsigned32(Number(value))).toEqual(encoded);cases++;}expect(cases).toBeGreaterThan(2);for(const value of[-1,NaN,Infinity,0x100000000,0.5])expect(()=>oracle.encodeUnsigned32(value)).toThrow();expect(()=>oracle.encodeUnsignedBuffer(new Uint8Array(9))).toThrow();console.log("[DEBUG] checked LEB oracle corpus="+cases+" protobuf byte parity and invalid input refusal");
+});
+
+test("neutral framework pack and ordered corpus retain independent SQL and JSON oracles",async()=>{const pack=await import("../../../../../🌱️value/📜️script.ts");await pack.proveWireValueMaterializationFixture(process.cwd());await import("@semio-tech/value-ts/ordered/testing/source-contract");});

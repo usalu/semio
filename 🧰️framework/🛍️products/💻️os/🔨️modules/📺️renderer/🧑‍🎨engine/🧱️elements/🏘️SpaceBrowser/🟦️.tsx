@@ -12,15 +12,15 @@
 // #region 🔌️Adapters
 import { useId, useState, type FormEvent, type ReactElement } from "react";
 import { Button, PresenceBar, useLabel, type PresencePeer } from "@semio-tech/ui-react";
-import type { DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework-os";
+import type { DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility } from "@semio-tech/framework/directory/schema";
 import {
   INVITE_TTL_CHOICES_SECS_V1,
   spaceRowInvitableV1,
   spaceRowWritableV1,
   type SpaceBrowserPhaseV1,
   type SpaceMemberPresenceV1,
-  type SpaceRowV1,
-} from "../../../../📇️directory/🏘️spaces/🟦️.ts";
+  type SpaceRowV1
+} from "@semio-tech/framework/directory/spaces";
 import { hubUiLabel, type HubInviteCapabilityV1, type HubRedemptionStateV1 } from "../🔗️HubConnection/🟦️.tsx";
 // #endregion 🔌️Adapters
 

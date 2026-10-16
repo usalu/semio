@@ -1,3 +1,9 @@
+import{mcpJsonPathV1,mcpJsonArrayV1}from"./📡️stdio/🎫️session/📋️data/🟦️.ts";
+import{withMcpClientSessionV1,type McpClientSessionV1}from"./📡️stdio/🎫️session/🟦️.ts";
+export{withMcpClientSessionV1}from"./📡️stdio/🎫️session/🟦️.ts";
+export type{McpClientSessionV1}from"./📡️stdio/🎫️session/🟦️.ts";
+import{type ScriptInvocation}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{type ResourceLeaseControl}from"@semio-tech/process/leases";
 /** 🌉️ TypeScript surface of the `🌉️mcp` module (packet `P5-conformance-tests`) — the pieces the
  * conformance test suite under `📦️packages/🟦️typescript` shares: where the real `semio-os-mcp`
  * stdio binary lives, a minimal raw newline-delimited JSON-RPC client for the modern era the
@@ -8,8 +14,7 @@
 
 import { type ChildProcessByStdio, spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { accessSync, chmodSync, constants as fsConstants, copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { accessSync, constants as fsConstants, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, posix, win32 } from "node:path";
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
@@ -270,7 +275,6 @@ export type McpClientStep = { readonly step: string; readonly ok: boolean; reado
 
 /** 📨️ A JSON-RPC envelope as it arrives on a server's stdout — a response (`id` present) or a
  * server-initiated notification (`method` present, no `id`), which is how progress travels. */
-type McpEnvelope = { readonly jsonrpc: "2.0"; readonly id?: number | string | null; readonly method?: string; readonly params?: unknown; readonly result?: any; readonly error?: { readonly code: number; readonly message: string; readonly data?: unknown } };
 
 /** 🛠️ The tool-call reply shape every `tools/call` answers with — `isError` is the TOOL's own verdict
  * and is independent of the JSON-RPC `error` channel, which only carries protocol faults. */
@@ -416,91 +420,6 @@ export function capabilitySearchRankingVerdict(hits: ReadonlyArray<Record<string
   return faults.length === 0 ? { ok: true, detail: `${hits.length} mutation hit(s) of \`${filteredArtifactKind}\`, scores ${scores[0]}…${scores[scores.length - 1]} monotonically non-increasing, ids unique, all audience=agent, \`${mustReach}\` at rank ${rank}` } : { ok: false, detail: faults.join("; ") };
 }
 
-/** 🔌️ An id-correlated newline-delimited JSON-RPC client over a spawned server's stdio. Unlike
- * `spawnRawMcp`'s next-line reader it never assumes the next stdout line answers the last request:
- * responses are matched by id and everything else (server notifications, `notifications/progress`)
- * is retained, which is the only way a long tool call and its progress stream can be read from one
- * connection. */
-export class McpClientSession {
-  private readonly child: ChildProcessByStdio<Writable, Readable, Readable>;
-  private readonly pending = new Map<number, { resolve: (envelope: McpEnvelope) => void; reject: (error: Error) => void }>();
-  private readonly notifications: McpEnvelope[] = [];
-  private readonly diagnostics: string[] = [];
-  private nextId = 1;
-  private exited: number | null = null;
-
-  constructor(entry: McpServerEntry, extraArgs: readonly string[], repoRoot: string) {
-    this.child = spawn(entry.command, [...entry.args, ...extraArgs], { cwd: repoRoot, stdio: ["pipe", "pipe", "pipe"], env: { ...process.env, ...MCP_CLIENT_HARNESS_ENVIRONMENT } }) as ChildProcessByStdio<Writable, Readable, Readable>;
-    createInterface({ input: this.child.stdout }).on("line", (line) => this.deliver(line));
-    this.child.stderr.on("data", (chunk: Buffer) => {
-      for (const line of chunk.toString("utf8").split("\n")) if (line.trim()) this.diagnostics.push(line.trim());
-    });
-    this.child.once("exit", (code) => {
-      this.exited = code ?? 0;
-      for (const waiter of this.pending.values()) waiter.reject(new Error(`server exited (code ${code}) with pending requests; stderr tail: ${this.diagnostics.slice(-2).join(" | ")}`));
-      this.pending.clear();
-    });
-  }
-
-  private deliver(line: string): void {
-    const trimmed = line.trim();
-    if (!trimmed) return;
-    let envelope: McpEnvelope;
-    try {
-      envelope = JSON.parse(trimmed) as McpEnvelope;
-    } catch {
-      this.diagnostics.push(`non-JSON stdout line: ${trimmed.slice(0, 200)}`);
-      return;
-    }
-    if (typeof envelope.id === "number" && this.pending.has(envelope.id)) {
-      const waiter = this.pending.get(envelope.id);
-      this.pending.delete(envelope.id);
-      waiter?.resolve(envelope);
-      return;
-    }
-    this.notifications.push(envelope);
-  }
-
-  notify(method: string, params: unknown): void {
-    this.child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method, params })}\n`);
-  }
-
-  async request(method: string, params: unknown, budgetMs = 240_000): Promise<McpEnvelope> {
-    if (this.exited !== null) throw new Error(`server already exited (code ${this.exited})`);
-    const id = this.nextId++;
-    const answered = new Promise<McpEnvelope>((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
-      setTimeout(() => {
-        if (!this.pending.delete(id)) return;
-        reject(new Error(`${method} did not answer within ${budgetMs}ms; stderr tail: ${this.diagnostics.slice(-2).join(" | ")}`));
-      }, budgetMs).unref?.();
-    });
-    this.child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", id, method, params })}\n`);
-    return answered;
-  }
-
-  /** 🛠️ `tools/call`, with the protocol-level error folded into the tool-level reply so a caller
-   * asserts one shape; a transport fault can never masquerade as a tool that answered. */
-  async call(name: string, args: Record<string, unknown>, budgetMs?: number): Promise<McpToolReply> {
-    const response = await this.request("tools/call", { name, arguments: args }, budgetMs);
-    if (response.error) return { isError: true, structuredContent: { code: `JSONRPC_${response.error.code}`, message: response.error.message } };
-    return (response.result ?? {}) as McpToolReply;
-  }
-
-  serverNotifications(): readonly McpEnvelope[] {
-    return this.notifications;
-  }
-
-  stderrLines(): readonly string[] {
-    return this.diagnostics;
-  }
-
-  stop(): void {
-    this.child.stdin.end();
-    this.child.kill();
-  }
-}
-
 function mcpStepFailure(step: string, detail: string, wire?: unknown): McpClientStep {
   return { step, ok: false, detail, wire };
 }
@@ -567,7 +486,7 @@ function untrustedContent(reply: McpToolReply): Record<string, unknown> {
 /** 📄️ Walks one cursor-paginated list method exactly as a spec-strict client does: page one, then
  * every `nextCursor` until there is none. Bounded by a page cap so a server that ever returned a
  * non-advancing cursor fails this gate instead of hanging it. */
-async function paginationWalk(session: McpClientSession, method: string, key: string, identify: (entry: any) => string): Promise<{ ok: boolean; detail: string; pages: number; visited: string[]; firstCursor?: string }> {
+async function paginationWalk(session: McpClientSessionV1, method: string, key: string, identify: (entry: any) => string): Promise<{ ok: boolean; detail: string; pages: number; visited: string[]; firstCursor?: string }> {
   const visited: string[] = [];
   const seenCursors = new Set<string>();
   let cursor: string | undefined;
@@ -595,7 +514,7 @@ async function paginationWalk(session: McpClientSession, method: string, key: st
  * gateway's own workspace documents, not a guest's), so undo/redo/rollback are verified against a
  * fresh live read rather than against the report that claimed the change. The preparation itself is
  * pure — it reads history and stages a handle, it never commits. */
-async function headRevision(session: McpClientSession, capabilityId: string, input: Record<string, unknown>): Promise<RevisionStampWire | undefined> {
+async function headRevision(session: McpClientSessionV1, capabilityId: string, input: Record<string, unknown>): Promise<RevisionStampWire | undefined> {
   const probe = await session.call("action_prepare", { capabilityId, input });
   if (probe.isError === true) return undefined;
   const handle = probe.structuredContent?.preparedHandle as string | undefined;
@@ -605,28 +524,25 @@ async function headRevision(session: McpClientSession, capabilityId: string, inp
 
 /** 🤝️ Drives the `repo` server exactly as `.mcp.json` launches it: handshake, resource listing and a
  * real read of `repo://goals` — the resource family the repo client exists to serve. */
-export async function runRepoMcpClientJourney(repoRoot: string): Promise<readonly McpClientStep[]> {
+export async function runRepoMcpClientJourney(repoRoot: string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl): Promise<readonly McpClientStep[]> {
   const entry = mcpServerEntries(repoRoot).repo;
   if (!entry) return [mcpStepFailure("repo: .mcp.json entry", "`.mcp.json` declares no `repo` server")];
-  const session = new McpClientSession(entry, [], repoRoot);
+  return withMcpClientSessionV1(invocation,phaseControl,{command:entry.command,args:[...entry.args,...[]],cwd:repoRoot,environment:{...process.env,...MCP_CLIENT_HARNESS_ENVIRONMENT}},async session=>{
   const steps: McpClientStep[] = [];
-  try {
-    const initialized = await session.request("initialize", { protocolVersion: MCP_CLIENT_PROTOCOL_VERSION, capabilities: { roots: { listChanged: true }, sampling: {}, elicitation: {} }, clientInfo: { name: "semio-mcp-client-e2e", title: "semio MCP client e2e", version: "1" } });
+    const initialized = await session.request("initialize", { protocolVersion: MCP_CLIENT_PROTOCOL_VERSION, capabilities: { roots: { listChanged: false } }, clientInfo: { name: "semio-mcp-client-e2e", title: "semio MCP client e2e", version: "1" } });
     if (initialized.error) return [...steps, mcpStepFailure("repo: initialize", JSON.stringify(initialized.error))];
-    session.notify("notifications/initialized", {});
-    announce(steps, { step: "repo: initialize", ok: true, detail: `server=${initialized.result?.serverInfo?.name}@${initialized.result?.serverInfo?.version} protocol=${initialized.result?.protocolVersion}`, wire: initialized.result });
+    await session.notify("notifications/initialized", {});
+    announce(steps, { step: "repo: initialize", ok: true, detail: `server=${mcpJsonPathV1(initialized.result,["serverInfo","name"])}@${mcpJsonPathV1(initialized.result,["serverInfo","version"])} protocol=${initialized.result?.protocolVersion}`, wire: initialized.result });
 
     const resources = await session.request("resources/list", {});
     const uris = ((resources.result?.resources ?? []) as Array<{ uri: string }>).map((resource) => resource.uri).sort();
     announce(steps, { step: "repo: resources/list", ok: !resources.error && uris.includes("repo://goals"), detail: `${uris.length} resources: ${uris.join(", ")}`, wire: resources.result });
 
     const goals = await session.request("resources/read", { uri: "repo://goals" });
-    const body = String((goals.result?.contents ?? [])[0]?.text ?? "");
+    const body = String(mcpJsonPathV1(goals.result,["contents",0,"text"]) ?? "");
     announce(steps, { step: "repo: resources/read repo://goals", ok: !goals.error && body.length > 0, detail: goals.error ? JSON.stringify(goals.error) : `${body.length} byte(s): ${body.slice(0, 120).replace(/\s+/g, " ")}`, wire: goals.result });
     return steps;
-  } finally {
-    session.stop();
-  }
+  });
 }
 
 /** 🚀️ Drives the `semio` (os gateway) server end to end as a real MCP client would — every step a
@@ -637,7 +553,7 @@ export async function runRepoMcpClientJourney(repoRoot: string): Promise<readonl
  * `inference_run` with its job progress and a cancel. `folder` binds the headless workspace; the
  * capability catalog itself is always compiled from the repo's installed plugin registry, so a
  * throwaway folder still sees every real plugin. */
-export async function runOsMcpClientJourney(repoRoot: string, folder: string, pins: McpClientE2ePinsV1): Promise<readonly McpClientStep[]> {
+export async function runOsMcpClientJourney(repoRoot: string, folder: string, pins: McpClientE2ePinsV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl): Promise<readonly McpClientStep[]> {
   const entry = mcpServerEntries(repoRoot).semio;
   if (!entry) return [mcpStepFailure("os: .mcp.json entry", "`.mcp.json` declares no `semio` server")];
   // 🔒️ `--no-bridge` PINS this gate to the headless lane. Without it the gateway publishes a
@@ -646,13 +562,12 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
   //    human's open document instead of the workspace it names (measured 2026-09-20, WR3 §5.0:
   //    "the shell reports 1 open instance(s)" in a run against a throwaway tmpdir). The shell route
   //    has its own permanent gate, `live-agent-loop-check`; this one owns the headless route.
-  const session = new McpClientSession(entry, ["--folder", folder, "--no-bridge"], repoRoot);
+  return withMcpClientSessionV1(invocation,phaseControl,{command:entry.command,args:[...entry.args,...["--folder", folder, "--no-bridge"]],cwd:repoRoot,environment:{...process.env,...MCP_CLIENT_HARNESS_ENVIRONMENT}},async session=>{
   const steps: McpClientStep[] = [];
-  try {
-    const initialized = await session.request("initialize", { protocolVersion: MCP_CLIENT_PROTOCOL_VERSION, capabilities: { roots: { listChanged: true }, sampling: {}, elicitation: {} }, clientInfo: { name: "semio-mcp-client-e2e", title: "semio MCP client e2e", version: "1" } });
+    const initialized = await session.request("initialize", { protocolVersion: MCP_CLIENT_PROTOCOL_VERSION, capabilities: { roots: { listChanged: false } }, clientInfo: { name: "semio-mcp-client-e2e", title: "semio MCP client e2e", version: "1" } });
     if (initialized.error) return [...steps, mcpStepFailure("os: initialize", JSON.stringify(initialized.error))];
-    session.notify("notifications/initialized", {});
-    announce(steps, { step: "os: initialize", ok: true, detail: `server=${initialized.result?.serverInfo?.name}@${initialized.result?.serverInfo?.version} protocol=${initialized.result?.protocolVersion}`, wire: initialized.result });
+    await session.notify("notifications/initialized", {});
+    announce(steps, { step: "os: initialize", ok: true, detail: `server=${mcpJsonPathV1(initialized.result,["serverInfo","name"])}@${mcpJsonPathV1(initialized.result,["serverInfo","version"])} protocol=${initialized.result?.protocolVersion}`, wire: initialized.result });
 
     // 🧭️ Step 0 of the gate proper: WHICH lane is this run measuring? `context_resolve` takes the
     //    session's channel decision and is sticky, so the value read here is the value every later
@@ -690,7 +605,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     // 📄️ Cursor pagination, walked as a spec-strict client walks it: page one, then every
     // `nextCursor` until there is none, and the concatenation must equal the whole stable list.
     const walk = await paginationWalk(session, "tools/list", "tools", (tool: any) => String(tool.name));
-    announce(steps, { step: "os: tools/list pagination walk", ok: walk.ok && walk.visited.join(" ") === toolNames.join(" "), detail: walk.ok ? `${walk.pages} page(s), ${walk.visited.length} tool(s), order identical to the unpaged list` : walk.detail, wire: { pages: walk.pages, firstCursor: walk.firstCursor } });
+    announce(steps, { step: "os: tools/list pagination walk", ok: walk.ok && walk.visited.join("\0") === toolNames.join("\0"), detail: walk.ok ? `${walk.pages} page(s), ${walk.visited.length} tool(s), order identical to the unpaged list` : walk.detail, wire: { pages: walk.pages, firstCursor: walk.firstCursor } });
     const foreignCursor = await session.request("tools/list", { cursor: "someone-elses-cursor" });
     announce(steps, { step: "os: tools/list rejects a foreign cursor", ok: foreignCursor.error?.code === -32602, detail: foreignCursor.error ? `code=${foreignCursor.error.code} ${foreignCursor.error.message}` : "a cursor this server never minted was ACCEPTED", wire: foreignCursor.error ?? foreignCursor.result });
     const resourcesWalk = await paginationWalk(session, "resources/list", "resources", (resource: any) => String(resource.uri));
@@ -706,7 +621,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
 
     const artifactId = `mcp-client-e2e-${Date.now().toString(36)}`;
     const created = await session.call("artifact_create", { artifactId, kind: "os.agent.probe/v1", initial: { note: "created by the MCP client e2e" } });
-    announce(steps, { step: "os: artifact_create", ok: created.isError !== true, detail: created.isError === true ? JSON.stringify(created.structuredContent) : `artifactId=${created.structuredContent?.artifactId} revision=${created.structuredContent?.revision?.cursor ?? "<none>"}`, wire: created.structuredContent });
+    announce(steps, { step: "os: artifact_create", ok: created.isError !== true, detail: created.isError === true ? JSON.stringify(created.structuredContent) : `artifactId=${created.structuredContent?.artifactId} revision=${mcpJsonPathV1(created.structuredContent,["revision","cursor"]) ?? "<none>"}`, wire: created.structuredContent });
     if (created.isError === true) return steps;
 
     const opened = await session.call("artifact_open", { artifactId });
@@ -722,9 +637,9 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     announce(steps, { step: "os: capabilities_search ranking properties", ok: mutations.isError !== true && ranking.ok, detail: mutations.isError === true ? JSON.stringify(mutations.structuredContent).slice(0, 240) : ranking.detail, wire: mutationHits.slice(0, 5) });
 
     const described = await session.call("capabilities_describe", { capabilityId: pins.capabilityId });
-    const inputSchema = described.structuredContent?.inputSchema ?? described.structuredContent?.capability?.inputSchema;
+    const inputSchema = described.structuredContent?.inputSchema ?? mcpJsonPathV1(described.structuredContent,["capability","inputSchema"]);
     const input = minimalInputForSchema(inputSchema);
-    const describedKind = String(described.structuredContent?.artifactKind ?? described.structuredContent?.capability?.artifactKind ?? "");
+    const describedKind = String(described.structuredContent?.artifactKind ?? mcpJsonPathV1(described.structuredContent,["capability","artifactKind"]) ?? "");
     announce(steps, {
       step: "os: capabilities_describe (the pinned verb)",
       ok: described.isError !== true && describedKind === pins.artifactKind,
@@ -836,7 +751,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     announce(steps, {
       step: "os: an action that changes nothing answers no-change, never INTERNAL",
       ok: noChange.isError !== true && noChange.structuredContent?.status === "SUCCEEDED" && noChangeWarnings.some((warning) => warning.startsWith("no-change:")) && JSON.stringify(noChange.structuredContent?.revisionAfter) === JSON.stringify(noChange.structuredContent?.revisionBefore) && noChange.structuredContent?.undoToken == null,
-      detail: noChange.isError === true ? `${pins.noChangeCapabilityId}: ${JSON.stringify(noChange.structuredContent).slice(0, 300)}` : `status=${noChange.structuredContent?.status} opsCount=${JSON.stringify(noChangePrepared.structuredContent?.preview?.opsCount)} warnings=${noChangeWarnings.join(" / ").slice(0, 120)} undoToken=${noChange.structuredContent?.undoToken ?? "none"}`,
+      detail: noChange.isError === true ? `${pins.noChangeCapabilityId}: ${JSON.stringify(noChange.structuredContent).slice(0, 300)}` : `status=${noChange.structuredContent?.status} opsCount=${JSON.stringify(mcpJsonPathV1(noChangePrepared.structuredContent,["preview","opsCount"]))} warnings=${noChangeWarnings.join(" / ").slice(0, 120)} undoToken=${noChange.structuredContent?.undoToken ?? "none"}`,
       wire: noChange.structuredContent,
     });
 
@@ -882,20 +797,20 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     //    journey's own 240 s and the row says so.
     const inferenceEnvelope = await session
       .request("tools/call", { name: "inference_run", arguments: { artifactKind: service.artifactKind, inferenceSchema: service.inferenceSchema, pluginId: pins.inferencePluginId, artifactId: inferenceArtifactId, cancellationId: `${artifactId}-cancel` }, _meta: { progressToken } })
-      .catch((error: Error): McpEnvelope => ({ jsonrpc: "2.0", id: null, error: { code: -32000, message: error.message } }));
+;
     const inference = (inferenceEnvelope.error ? { isError: true, structuredContent: { code: `JSONRPC_${inferenceEnvelope.error.code}`, message: inferenceEnvelope.error.message } } : (inferenceEnvelope.result ?? {})) as McpToolReply;
     const progressRows = session.serverNotifications().slice(progressBefore).filter((envelope) => envelope.method === "notifications/progress" && (envelope.params as any)?.progressToken === progressToken);
     announce(steps, { step: "os: notifications/progress for _meta.progressToken", ok: progressRows.length > 0, detail: progressRows.length > 0 ? `${progressRows.length} progress row(s), last progress=${(progressRows[progressRows.length - 1]?.params as any)?.progress}` : `no progress notification carried token ${progressToken} — the job reported none, or the push is not wired`, wire: progressRows.map((envelope) => envelope.params) });
     // 🛑️ MCP's own request-scoped cancellation. stdio dispatches one request at a time, so this
     // arrives after the call it names returned: what it proves here is that the server accepts the
     // notification, answers nothing (JSON-RPC's rule for notifications) and stays responsive.
-    session.notify("notifications/cancelled", { requestId: inferenceEnvelope.id ?? 0, reason: "client-e2e cancellation probe" });
+    await session.notify("notifications/cancelled", { requestId: inferenceEnvelope.id ?? 0, reason: "client-e2e cancellation probe" });
     // ⏳️ Same law as the `inference_run` call above, and for the same reason: this `ping` follows a
     //    call that can still be busy in the guest, and an uncaught rejection here abandons the
     //    journey before it prints a tally or a single `FAIL` line. Measured 2026-09-22 (slice CE3):
     //    a `s.wfc.bitmap.solve` that did not return inside its own 240 s budget left this `ping`
     //    unanswered too, and the whole gate died with a stack trace at 27 printed rows.
-    const stillAlive = await session.request("ping", {}).catch((error: Error): McpEnvelope => ({ jsonrpc: "2.0", id: null, error: { code: -32000, message: error.message } }));
+    const stillAlive = await session.request("ping", {});
     announce(steps, { step: "os: notifications/cancelled is accepted and unanswered", ok: !stillAlive.error, detail: stillAlive.error ? `the server stopped answering after notifications/cancelled: ${JSON.stringify(stillAlive.error)}` : "cancelled accepted with no response; ping still answers", wire: stillAlive.result });
     // 🏃️ A REFUSED inference still minted a job — the gateway registers the row before it dispatches
     //    and reports it back inside the error's own `details` — so the job rows below are read from
@@ -915,16 +830,14 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
       announce(steps, mcpStepFailure("os: inference job progress", "inference_run minted no jobId", inference.structuredContent));
     }
     return steps;
-  } finally {
-    session.stop();
-  }
+  });
 }
 
 /** 🏁️ Both `.mcp.json` servers, one report. Returns every step so a caller can print the table and
  * exit non-zero on the first red — the gate never summarises a failure away. */
-export async function runMcpClientEndToEnd(repoRoot: string, folder: string, pins: McpClientE2ePinsV1): Promise<readonly McpClientStep[]> {
-  const os = await runOsMcpClientJourney(repoRoot, folder, pins);
-  const repo = await runRepoMcpClientJourney(repoRoot);
+export async function runMcpClientEndToEnd(repoRoot: string, folder: string, pins: McpClientE2ePinsV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl): Promise<readonly McpClientStep[]> {
+  const os = await runOsMcpClientJourney(repoRoot, folder, pins,invocation,phaseControl);
+  const repo = await runRepoMcpClientJourney(repoRoot,invocation,phaseControl);
   return [...os, ...repo];
 }
 //#endregion 🔖️ClientEndToEnd
@@ -999,31 +912,3 @@ export function readMcpGatewaySource(repoRoot: string, readFile: (path: string) 
   return files.map((file) => readFile(file)).join("\n");
 }
 //#endregion 🔖️GatewaySourceTree
-
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts");
-  await registerTests1(
-    import.meta.vitest,
-    {
-      chmodSync,
-      copyFileSync,
-      ensureMcpBinary,
-      join,
-      mcpBinaryFreshness,
-      mkdirSync,
-      mkdtempSync,
-      readFileSync,
-      requireMcpBinary,
-      resolveBuiltMcpBinaryPath,
-      resolveMcpBinarySourcesPath,
-      resolveMcpBinaryPath,
-      rmSync,
-      tmpdir,
-      utimesSync,
-      writeFileSync,
-    },
-    { directory: import.meta.dir, url: import.meta.url },
-  );
-}
-//#endregion 🧪️Tests

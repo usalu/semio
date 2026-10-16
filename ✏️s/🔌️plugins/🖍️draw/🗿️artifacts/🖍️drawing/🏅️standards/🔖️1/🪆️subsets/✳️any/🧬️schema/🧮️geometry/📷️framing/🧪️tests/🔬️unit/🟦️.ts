@@ -2,14 +2,16 @@
 import { expect,test } from "bun:test";
 import { Box2,CubicBezierCurve,Matrix3,QuadraticBezierCurve,Vector2 } from "three";
 import fixture from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️framing/🔣️.json";
-import { drawingSceneBounds,type FramingNode } from "../../🟦️.ts";
+import { parseDrawingArtboard } from "../../../../🟦️.ts";
+import { drawingSceneBounds } from "../../🟦️.ts";
+import { drawingWords,framingNodesFixture } from "../../../../../🧪️tests/🧫️fixtures/🟦️.ts";
 test("framing fixtures conform to their neutral schema",() => expect(new Set(fixture.cases.map(row=>row.name)).size).toBe(fixture.cases.length));
 for (const item of fixture.cases) test(item.name,() => {
-  const nodes = item.nodes as FramingNode[];
-  const artboard = "artboard" in item ? item.artboard : undefined;
-  const actual = drawingSceneBounds(artboard,nodes);
+  const nodes = framingNodesFixture(item.nodes);
+  const authored = "artboard" in item ? item.artboard : undefined;
+  const actual = drawingSceneBounds(authored && parseDrawingArtboard(drawingWords(authored)),nodes);
   const box = new Box2();
-  if (artboard) box.set(new Vector2(0,0),new Vector2(artboard.width,artboard.height));
+  if (authored) box.set(new Vector2(0,0),new Vector2(authored.width,authored.height));
   for (const node of nodes.filter(node => node.visible && node.opacity > 0)) {
     const lines = node.text?.content.split(/\r\n|[\r\n]/);
     const rectangle = node.image ? [0,0,node.image.width,node.image.height] : node.text ? [0,0,Math.max(...lines!.map(line => Array.from(line).length))*node.text.size*0.6,lines!.length*node.text.size*1.2] : null;

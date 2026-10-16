@@ -1,6 +1,6 @@
 /** 🔮️ Actual actor output ownership laws with independent immutable mutation oracles. */
 import { describe, expect, spyOn, test } from "bun:test";
-import { OwnedResidentLedger } from "../../../../../../🌱️value/💾️resident/🟦️.ts";
+import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 import { OwnedActorTurnOutput, OwnedActorTurnOutputs, cancelEmpty } from "../../🟦️.ts";
 import { registerTests1 } from "../🧪️ownedactorturnoutput/🟦️.ts";
 

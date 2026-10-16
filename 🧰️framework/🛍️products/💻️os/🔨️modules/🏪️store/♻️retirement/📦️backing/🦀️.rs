@@ -58,7 +58,7 @@ pub struct SourceIterator<T: semio_framework_value::retirement::RetireOwned> {
 }
 
 impl<T: semio_framework_value::retirement::RetireOwned> SourceIterator<T> {
-    pub(super) fn new(source: Vec<T>) -> Self {
+    pub fn new(source: Vec<T>) -> Self {
         let source_bytes = extent::<T>(source.capacity());
         Self { source: std::mem::ManuallyDrop::new(source.into_iter()), source_bytes, pending: std::mem::ManuallyDrop::new(None), active: None, terminal: false }
     }
@@ -140,7 +140,7 @@ pub struct PagedSourceIterator<T:semio_framework_value::retirement::RetireOwned,
     terminal:bool,
 }
 impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> PagedSourceIterator<T,N>{
-    pub(super) fn new(source:semio_framework_value::list::PagedList<T,N>,vacant:fn()->T)->Self{Self{source:std::mem::ManuallyDrop::new(Some(source)),position:0,vacant,active:None,terminal:false}}
+    pub fn new(source:semio_framework_value::list::PagedList<T,N>,vacant:fn()->T)->Self{Self{source:std::mem::ManuallyDrop::new(Some(source)),position:0,vacant,active:None,terminal:false}}
     pub fn peek(&self)->Option<&T>{self.source.as_ref().and_then(|source|source.get(self.position))}
     pub fn publication_complete(&self)->bool{self.source.as_ref().is_none_or(|source|self.position==source.len())}
     pub fn backing_bytes(&self)->usize{self.source.as_ref().map_or(0,semio_framework_value::list::PagedList::allocated_bytes)}

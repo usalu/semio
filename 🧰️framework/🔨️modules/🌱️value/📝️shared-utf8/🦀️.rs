@@ -63,6 +63,3 @@ impl RetireOwned for SharedUtf8 {
     fn retirement_birth_bytes(&self)->Option<usize>{self.0.as_ref().map_or_else(||None::<Arc<String>>.retirement_birth_bytes(),|_|Some(size_of::<SharedControlledRetirement<String>>()))}
     fn controlled_retirement_supported()->bool{true}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import Ajv from "ajv";
 
 /** 🧬️ Uses independent JSON schema admission and exact neutral/owner source boundaries. */
@@ -16,7 +17,7 @@ export async function testCredentialProtocolSourceV1(root: string): Promise<void
   assert.ok(source.includes("pub struct CredentialExchangeProtocolV1"));
   assert.ok(!source.includes("semio.hub.agent-credential/v1"));
   assert.ok(!source.includes("delegation.v1."));
-  const remote = readFileSync(join(general, "../🏠️workspace/🔗️remote/🦀️.rs"), "utf8");
+  const remote = readModuleTreeSource(join(general, "../🏠️workspace/🔗️remote/🦀️.rs"), { crates: false });
   assert.ok(!remote.includes("/auth/agent-sessions"));
   const authSchema = JSON.parse(readFileSync(join(root, "🌎️hub/🔐️auth/🧬️schema/🔣️.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(root, "🌎️hub/🔐️auth/🔌️client/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));

@@ -1,13 +1,16 @@
-import { devLocalHubDataDir } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts";
+import producerSchema from "./🧬️schema/🔣️.json";
+import { retentionReferenceSchema as cargoReferenceSchema } from "@semio-tech/process/artifacts/native-build/receipt/retention/reference/schema";
+import {compileJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, writeFileSync, existsSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import {observePhysicalFileV1,readPhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
-import {decodeCargoProvenanceV1,encodeCargoProvenanceV1,type CargoProvenanceV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import {observePhysicalFileV1,readPhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "@semio-tech/framework/filesystem/observation";
+import {readCompletedCargoPublicationReferenceV1,type CompletedCargoPublicationReferenceV1} from "@semio-tech/process/artifacts/native-build/receipt/retention/reference";
 
+const generationContract=compileJsonSchemaSubset(producerSchema.$defs.GenerationProducerV1,producerSchema,[cargoReferenceSchema]);
 export type TrustedCatalogByteClaimV1 = Readonly<{relativePath:string;sha256:string;byteLength:number}>;
 export type ActorProducerV1 = Readonly<{schema:"semio.os.closed-browser-actor-producer/v1";actor:TrustedCatalogByteClaimV1;component:TrustedCatalogByteClaimV1;descriptor:TrustedCatalogByteClaimV1;policyCanonical:string;policySha256:string;runtime:PhysicalFileClaimV1;compiler:PhysicalFileClaimV1;inputs:readonly Readonly<{logicalPath:string;path:string;sha256:string;byteLength:number}>[]}>;
-export type PackageProducerV1 = Readonly<{pluginId:string;packageId:string;cargoPackage:string;component:TrustedCatalogByteClaimV1;descriptor:TrustedCatalogByteClaimV1;cargoInvocations:readonly PhysicalFileClaimV1[];browserActor:PhysicalFileClaimV1|null}>;
+export type PackageProducerV1 = Readonly<{pluginId:string;packageId:string;cargoPackage:string;component:TrustedCatalogByteClaimV1;descriptor:TrustedCatalogByteClaimV1;cargoInvocations:readonly CompletedCargoPublicationReferenceV1[];browserActor:PhysicalFileClaimV1|null}>;
 export type GenerationProducerV1 = Readonly<{schema:"semio.hub.trusted-catalog-producer/v1";profileId:string;generationId:string;bundle:TrustedCatalogByteClaimV1;packages:readonly PackageProducerV1[]}>;
 export type TrustedCatalogPublicationProducerV1 = Readonly<{schema:"semio.hub.trusted-catalog-publication-producer/v1";dataRoot:string;profileId:string;generationId:string;publicationRevision:string;pointer:{path:string;sha256:string;byteLength:number};bundle:{path:string;sha256:string;byteLength:number};producer:{path:string;sha256:string;byteLength:number}}>;
 
@@ -52,25 +55,15 @@ export async function readTrustedCatalogPublicationProvenanceV1(dataRoot:string,
   if(record.bundle.path!==bundlePath||record.bundle.sha256!==current.bundleSha256||!inside(join(dataRoot,"trusted-catalog","provenance","generations",record.generationId),record.producer.path))throw new Error("trusted producer selected paths refused");
   for(const claim of [record.pointer,record.bundle,record.producer])await matches(claim.path,claim,dataRoot,control);
   const generation=await parsedClaim(record.producer.path,record.producer,control) as GenerationProducerV1;
+  if(generationContract.validate(generation).length)throw Error("Closed actual generation producer schema required");
   if(generation.schema!=="semio.hub.trusted-catalog-producer/v1"||generation.profileId!==record.profileId||generation.generationId!==record.generationId||!Array.isArray(generation.packages)||generation.packages.length===0)throw new Error("trusted producer generation envelope refused");
   const claims=[generation.bundle,...generation.packages.flatMap((row:any)=>[row.component,row.descriptor])];
   const observationRoot=join(dataRoot,"trusted-catalog","provenance","generations",record.generationId);
-  for(const claim of generation.packages.flatMap((row:any)=>[...row.cargoInvocations,...(row.browserActor?[row.browserActor]:[])])){if(typeof claim?.path!=="string"||!inside(observationRoot,claim.path))throw new Error("trusted producer observation claim escaped");await matches(claim.path,claim,dataRoot,control);}
+  for(const row of generation.packages)for(const claim of row.cargoInvocations)readCompletedCargoPublicationReferenceV1(claim);
+  for(const claim of generation.packages.flatMap((row:any)=>row.browserActor?[row.browserActor]:[])){if(typeof claim?.path!=="string"||!inside(observationRoot,claim.path))throw new Error("trusted producer observation claim escaped");await matches(claim.path,claim,dataRoot,control);}
   for(const claim of claims){if(typeof claim?.relativePath!=="string")throw new Error("trusted producer byte claim missing");const file=resolve(generationRoot,claim.relativePath);if(!inside(generationRoot,file))throw new Error("trusted producer byte claim escaped");await matches(file,claim,dataRoot,control);}
   for(const claim of [record.producer,record.bundle,record.pointer])await matches(claim.path,claim,dataRoot,control);
   return {path,record,generationPath:record.producer.path,generation};
 }
 
-/** 🗄️ Resolves the existing standalone or development Hub storage owner. */
-export function trustedCatalogDataRootV1(repoRoot:string,mode:"development"|"standalone",environment:Readonly<Record<string,string|undefined>>=process.env):string {return mode==="development"?devLocalHubDataDir(repoRoot,environment):resolve(environment.OS_HUB_DATA??join(repoRoot,".🧬semio","🌐hub"));}
 
-/** 📦️ Records actual final custody while preserving the original completed compiler observation. */
-export async function retainTrustedCargoInvocationV1(source:string,destination:string,stagedPaths:ReadonlyMap<string,string>,control:FileObservationControlV1):Promise<PhysicalFileClaimV1> {
-  const claim=await observePhysicalFileV1(source,control),input=await bytes(source,control);
-  let observation:CargoProvenanceV1;
-  try{if(input.length!==claim.byteLength||createHash("sha256").update(input).digest("hex")!==claim.sha256)throw new Error("trusted producer parsed bytes changed");observation=decodeCargoProvenanceV1(new TextDecoder("utf-8",{fatal:true}).decode(input));}finally{input.fill(0);}
-  if(observation.status!==0||observation.cancelled!==false||observation.units.length===0)throw new Error("trusted Cargo producer did not complete");
-  let units=observation.units;
-  for(const [original,staged]of stagedPaths){const matches=units.flatMap(unit=>unit.artifacts.filter(row=>row.path===original));if(matches.length!==1)throw new Error("trusted staged artifact lacks one original compiler witness");const claimed=await observePhysicalFileV1(staged,control);if(claimed.sha256!==matches[0]!.sha256)throw new Error("trusted staged artifact differs from compiler bytes");units=units.map(unit=>({...unit,artifacts:unit.artifacts.map(row=>row.path===original?{...row,stagedPath:staged,stagedSha256:claimed.sha256}:row)}));}
-  mkdirSync(dirname(destination),{recursive:true,mode:0o700});writeFileSync(destination,await encodeCargoProvenanceV1({...observation,units}),{flag:"wx",mode:0o600});return observePhysicalFileV1(destination,control);
-}

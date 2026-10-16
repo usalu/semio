@@ -1,0 +1,23 @@
+import{readIssuedResourceControlCapabilitiesV1}from"../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../../../🔒️leases/🟦️.ts";
+import{createRequire}from"node:module";
+import{win32}from"node:path";
+import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import schema from"./🧬️schema.json"with{type:"json"};
+const systemLibrary=createRequire(import.meta.url),contract=JSON.parse(JSON.stringify(schema))as typeof schema,protocol=Object.freeze({...contract.definitions.Protocol.const});
+
+/** 🗂️ Projects authenticated Windows API directory facts into fixed system command paths. */
+export function readNativeFixedWindowsSystemV1(value:unknown):Readonly<{version:1;windows:string;system:string;powershell:string;modulePath:string}>{
+ if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Closed Windows system directory facts required");const captured:Record<string,unknown>={};for(const key of Reflect.ownKeys(value)){const descriptor=Object.getOwnPropertyDescriptor(value,key)!;if(typeof key!=="string"||!("value"in descriptor))throw Error("Windows system primitive facts required");Object.defineProperty(captured,key,{value:descriptor.value,enumerable:true});}if(validateJsonSchemaSubset(contract.definitions.Request,captured,contract).length)throw Error("Closed Windows system directory facts required");
+ const path=(value:string)=>{const text=/^[A-Za-z]:$/u.test(value)?value+"\\":value;if(!/^[A-Za-z]:\\/u.test(text)||/[\u0000-\u001f<>:"|?*\/]/u.test(text.slice(2))||text.slice(3).split("\\").some(part=>/[. ]$/u.test(part))||win32.normalize(text)!==text||text.length>3&&text.endsWith("\\")||text.length>protocol.maximumPathUnits)throw Error("Canonical local Windows system directory required");return text;},windows=path(captured.windows as string),system=path(captured.system as string),inside=win32.relative(windows,system);if(!inside||inside.startsWith("..")||win32.isAbsolute(inside))throw Error("Actual Windows system directory ancestry required");const powershell=win32.join(system,"WindowsPowerShell","v1.0","powershell.exe"),modulePath=win32.join(system,"WindowsPowerShell","v1.0","Modules");for(const value of[powershell,modulePath])path(value);return Object.freeze({version:1,windows,system,powershell,modulePath});
+}
+
+/** 📏️ Decodes one complete bounded UTF-16 result without accepting truncation or missing termination. */
+function readWindowsSystemDirectoryV1(read:(buffer:Buffer,capacity:number)=>number):string{const buffer=Buffer.alloc(protocol.bufferUnits*2,0xff),length=read(buffer,protocol.bufferUnits);if(!Number.isSafeInteger(length)||length<1||length>protocol.maximumPathUnits||buffer.readUInt16LE(length*2)!==0)throw Error("Complete bounded Windows system directory required");for(let index=0;index<length;index++)if(buffer.readUInt16LE(index*2)===0)throw Error("One Windows system directory required");return new TextDecoder("utf-16le",{fatal:true}).decode(buffer.subarray(0,length*2));}
+
+/** 🪟️ Reads only the actual current operating system's shared Windows and system directories.
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemwindowsdirectoryw
+ */
+export function nativeFixedWindowsSystemV1(control?:ResourceLeaseControl):ReturnType<typeof readNativeFixedWindowsSystemV1>{
+ if(process.platform!=="win32")throw Error("Actual Windows system directory receiver required");if(control){const capabilities=readIssuedResourceControlCapabilitiesV1(control)as{windowsSystem?:unknown;native?:{windowsSystem?:unknown}},captured=capabilities.native?.windowsSystem??capabilities.windowsSystem;if(captured!==undefined){const system=readNativeFixedWindowsSystemV1(captured);readIssuedResourceControlCapabilitiesV1(control);return system;}}if(!process.versions.bun)throw Error("Original Windows system directory capability required in Node");const{dlopen,FFIType}=systemLibrary("bun:ffi")as typeof import("bun:ffi"),kernel=dlopen("kernel32.dll",{GetSystemDirectoryW:{args:[FFIType.ptr,FFIType.u32],returns:FFIType.u32},GetSystemWindowsDirectoryW:{args:[FFIType.ptr,FFIType.u32],returns:FFIType.u32}});let result:ReturnType<typeof readNativeFixedWindowsSystemV1>|undefined,failed=false,failure:unknown;try{const system=readWindowsSystemDirectoryV1(kernel.symbols.GetSystemDirectoryW),windows=readWindowsSystemDirectoryV1(kernel.symbols.GetSystemWindowsDirectoryW);result=readNativeFixedWindowsSystemV1({version:1,windows,system});}catch(error){failed=true;failure=error;}try{kernel.close();}catch(error){if(!failed){failed=true;failure=error;}}if(failed)throw failure;if(control)readIssuedResourceControlCapabilitiesV1(control);return result!;
+}

@@ -49,5 +49,5 @@ export const shootingShootingDiffTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseShootingDiffText(value: unknown, at = "$"): ShootingDiffText {
-  return shootingShootingDiffTextGuardObject(value, `${at}`);
+  return shootingShootingDiffTextGuardString(value, `${at}`);
 }

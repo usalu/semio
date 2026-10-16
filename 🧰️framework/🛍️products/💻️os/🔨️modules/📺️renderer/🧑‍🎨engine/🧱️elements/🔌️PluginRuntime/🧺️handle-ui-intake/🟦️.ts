@@ -10,8 +10,8 @@ import { OwnedUiPatchIntake } from "../../📃️UiDocumentStore/📥️intake/�
 import { type OwnedUiPatchAcknowledgementEntry, type ShardInstanceLifecycleLease } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import type { RetainedUiNodeRecord } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
-import { hostContinuations } from "../../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
-import { hopTrace } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { hostContinuations } from "@semio-tech/framework/async/continuation";
+import { hopTrace } from "@semio-tech/framework/trace";
 import { retainedSurfaceId, wirePatchSurfaceId, type WireTurnResult, type WireVariant } from "../🪝️wire-codec/🟦️.ts";
 import { ownedUiComponentToBuilt } from "../🪟️retained-ui-patch/🟦️.ts";
 import { serializePerActor, submitPluginLifecycleTurn } from "../🧵️turn-dispatch/🟦️.ts";

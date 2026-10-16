@@ -15,12 +15,12 @@ pub use add_n::AddN;
 mod assign_n;
 pub use assign_n::AssignN;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_os_dsl::Mutations, semio_framework_dsl_record_derive::DslEnum)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = DemoSnapshot, diff = DemoDiff, schema = "demo.doc")]
-pub(crate) enum DemoMutation {
+pub enum DemoMutation {
     SetN(SetN),
     DeleteN(DeleteN),
     AddN(AddN),

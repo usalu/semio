@@ -49,5 +49,5 @@ export const flowFlowDiffTextGuardConstant = <T extends string | number | boolea
 //#endregion 🚪️Parsers
 
 export function parseFlowDiffText(value: unknown, at = "$"): FlowDiffText {
-  return flowFlowDiffTextGuardObject(value, `${at}`);
+  return flowFlowDiffTextGuardString(value, `${at}`);
 }

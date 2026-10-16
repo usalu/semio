@@ -1,4 +1,4 @@
-/** 🧭️ Plugin-crate and target scope for `verify rust-warnings`.
+/** ⚠️ Plugin-crate and target scope for `verify rust-warnings`.
  * @see 📜️script.ts
  */
 import { readFileSync } from "node:fs";

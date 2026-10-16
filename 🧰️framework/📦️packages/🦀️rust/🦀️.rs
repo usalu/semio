@@ -27,7 +27,6 @@ pub use semio_framework_abi as abi;
 pub use semio_framework_action_bus as action_bus;
 pub use semio_framework_action_bus::platform;
 pub use semio_framework_interaction as interaction;
-pub use semio_framework_source_projection as source_projection;
 
 //#region 🧩️ReservedFeatures
 pub use semio_framework_time_travel_actions as history_edit;

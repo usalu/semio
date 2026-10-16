@@ -17,14 +17,15 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-abi = { path = "../../../../🌉️abi/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 ui_render = { path = "../../../🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 raw-window-handle = "0.6"
 
-[dev-dependencies]
-serde_json = { workspace = true }
-semio-framework-async = { path = "../../../../⏳️async/📦️packages/🦀️rust" }
+[features]
+# 🪝️ Exposes the `testkit` hooks (forwarders of crate-private items) for the companion crate `semio-framework-ui-host-tests`.
+testkit = []
 
 # 🪟️ Native windowing. Absent on wasm, where the browser canvas host takes over.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

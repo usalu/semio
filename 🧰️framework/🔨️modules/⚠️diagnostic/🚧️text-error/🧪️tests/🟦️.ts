@@ -6,7 +6,7 @@ import { TextError } from "../🟦️.ts";
 import { ValueError, type ValueRefusalKind } from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import diagnosticSchema from "../../🧬️schema/🎛️controlled/🔣️.json" with { type: "json" };
-import valueSchema from "../../../🌱️value/⚠️refusal/🧬️schema/🔣️.json" with { type: "json" };
+import { refusalSchema as valueSchema } from "@semio-tech/value-ts/refusal/schema";
 
 test("owned TextError scalar construction preserves schema kind wire and display against Ajv and SQLite", () => {
   const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(diagnosticSchema);

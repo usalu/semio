@@ -6,7 +6,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 
 // #region 🔌️Adapters
 import { contours } from "d3-contour";
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 

@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import {Graph,alg} from "graphlib";
 import {applyPatch} from "fast-json-patch";
 import schema from "../../../🗿️artifacts/🌊️flow/🧵️retained/🧬️schema/🔣️.json";
-import grant from "../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
+import { orderedRetirementSchema as grant } from "@semio-tech/value-ts/ordered/retirement/schema";
 import fixture from "./🧫️fixtures/🔣️.json";
 
 test("original Host source duplicate cycle port and nested custody corpus agrees with independent authorities",()=>{

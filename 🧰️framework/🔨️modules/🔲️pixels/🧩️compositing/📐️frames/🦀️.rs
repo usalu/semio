@@ -27,6 +27,3 @@ pub fn reframe(transform:CompositeAffine,source:CompositeAffine,target:Composite
     inverse(result)?;Ok(result)
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

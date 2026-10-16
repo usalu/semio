@@ -21,7 +21,12 @@ import { contagion, nudge, pledge, reconcile, sulk } from "../💞️sociability
 import { COMFORT_GAP, clearway, roomsFor } from "../📏️spacing/🟦️.ts";
 import { clamp } from "../📐️trigonometry/🟦️.ts";
 import { actorKey, astir, clipAt, clipOf, enter, feel, indexOf, perform, present, purr, release, settle, shift, standing, stand, trickOf, type Draft, type Launch } from "../📝️draft/🟦️.ts";
-import { daze, geared, hopsOf, launch, leave, paced, postTo, pushAt, reaches, setOut, stroll, unfoot, unpush, type Venture } from "../🚶️locomotion/🟦️.ts";
+import { daze, unfoot } from "../🚶️locomotion/⚓️footing/🟦️.ts";
+import { reaches, setOut } from "../🚶️locomotion/🧳️trips/🟦️.ts";
+import { postTo, pushAt, unpush } from "../🚶️locomotion/🪄️mischief/🟦️.ts";
+import { geared, type Venture } from "../🚶️locomotion/🪜️outings/🟦️.ts";
+import { leave } from "../🚶️locomotion/🚪️leaving/🟦️.ts";
+import { hopsOf, launch, paced, stroll } from "../🚶️locomotion/🛫️departure/🟦️.ts";
 import { FRIENDS, MODE_LIMITS, activityWeights, affinityOf, dwellOf, needsAfter } from "../🧠️behavior/🟦️.ts";
 import { gripFor, ladderTo } from "../🧗️climbing/🟦️.ts";
 import { LIFT_BRACE, LIFT_RETURNS, LIFT_SHOVE, LIFT_TICKS, LIFT_WOBBLE, THROW_LIFT, THROW_SPEED, chosenFixture, thrownOff } from "../🪄️mischief/🟦️.ts";

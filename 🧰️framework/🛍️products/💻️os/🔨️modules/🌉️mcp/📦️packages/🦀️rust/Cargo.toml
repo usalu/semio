@@ -75,10 +75,11 @@ framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️p
 semio-framework = { workspace = true }
 semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
 semio-framework-async = { workspace = true }
+semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 tokio = { workspace = true, features = ["full"] }
-semio-framework-os-mcp-foundation = { path = "../../🧱️foundation/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-trace-memory-testing = { path = "../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-os-mcp-capabilities = { path = "../../🧰️capabilities/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-mcp-port = { path = "../../🔌️channel-port/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-mcp-bridge-codec = { path = "../../🧶️bridge-codec/📦️packages/🦀️rust" }

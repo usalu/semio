@@ -10,12 +10,13 @@
 //! does: what they assert is that a browser-only code path EXISTS, and `cfg(target_arch = "wasm32")`
 //! never compiles into a native test binary, so running the native build can prove nothing about it.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::{tour_introduction, tour_shell};
 use super::*;
 
 /// 🌳️ `…/🧑‍🎨engine`, the root the source-reading laws resolve their files against — the same
 /// derivation `🧪️tests/🧭️boot-axis-parity/🦀️.rs` uses.
 fn engine_root() -> std::path::PathBuf {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root")
+    semio_framework_os_renderer_wgpu_test_support::engine_root()
 }
 
 fn wgpu_shell_source() -> String {
@@ -28,9 +29,9 @@ fn preferences_with_appearance(appearance: Option<OsUiAppearance>) -> UiPreferen
 }
 
 fn lock_appearance(locked: &str) {
-    let mut descriptor = crate::boot_descriptor();
+    let mut descriptor = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();
     descriptor.locks.appearance = locked.to_string();
-    crate::apply_boot_descriptor(descriptor).expect("appearance lock is a bounded field");
+    semio_framework_os_renderer_wgpu_host_base::apply_boot_descriptor(descriptor).expect("appearance lock is a bounded field");
 }
 
 //#region 🌓️Appearance
@@ -47,13 +48,13 @@ fn lock_appearance(locked: &str) {
 #[test]
 fn appearance_resolves_lock_then_store_then_host_then_system() {
     lock_appearance("");
-    crate::set_host_appearance(crate::HostAppearance::default());
+    semio_framework_os_renderer_wgpu_host_base::set_host_appearance(semio_framework_os_renderer_wgpu_host_base::HostAppearance::default());
 
     assert_eq!(resolve_appearance_id(&preferences_with_appearance(None)), "system", "no lock, no stored event, no host read is React's own `\"system\"` seed");
     assert_eq!(resolve_appearance_id(&preferences_with_appearance(Some(OsUiAppearance::Light))), "light");
     assert_eq!(resolve_appearance_id(&preferences_with_appearance(Some(OsUiAppearance::Dark))), "dark");
 
-    crate::set_host_appearance(crate::HostAppearance { preference: crate::HostAppearancePreference::Dark, system_dark: false });
+    semio_framework_os_renderer_wgpu_host_base::set_host_appearance(semio_framework_os_renderer_wgpu_host_base::HostAppearance { preference: semio_framework_os_renderer_wgpu_host_base::HostAppearancePreference::Dark, system_dark: false });
     assert_eq!(resolve_appearance_id(&preferences_with_appearance(None)), "dark", "the host's read of the SAME store answers where this realm's own store cannot");
     assert_eq!(resolve_appearance_id(&preferences_with_appearance(Some(OsUiAppearance::Light))), "light", "the host read is a fallback, never an override");
 
@@ -62,14 +63,14 @@ fn appearance_resolves_lock_then_store_then_host_then_system() {
     lock_appearance("");
 
     for (system_dark, system_is_dark) in [(false, false), (true, true)] {
-        crate::set_host_appearance(crate::HostAppearance { preference: crate::HostAppearancePreference::Unset, system_dark });
-        assert!(!crate::appearance_is_dark("light"));
-        assert!(crate::appearance_is_dark("dark"));
-        assert_eq!(crate::appearance_is_dark("system"), system_is_dark);
-        assert_eq!(crate::appearance_is_dark(""), system_is_dark, "an unspelled appearance follows `system`, exactly as React's `else` arm does");
-        assert_eq!(crate::resolve_theme("system").background, if system_is_dark { Theme::dark().background } else { Theme::light().background });
+        semio_framework_os_renderer_wgpu_host_base::set_host_appearance(semio_framework_os_renderer_wgpu_host_base::HostAppearance { preference: semio_framework_os_renderer_wgpu_host_base::HostAppearancePreference::Unset, system_dark });
+        assert!(!semio_framework_os_renderer_wgpu_host_base::appearance_is_dark("light"));
+        assert!(semio_framework_os_renderer_wgpu_host_base::appearance_is_dark("dark"));
+        assert_eq!(semio_framework_os_renderer_wgpu_host_base::appearance_is_dark("system"), system_is_dark);
+        assert_eq!(semio_framework_os_renderer_wgpu_host_base::appearance_is_dark(""), system_is_dark, "an unspelled appearance follows `system`, exactly as React's `else` arm does");
+        assert_eq!(semio_framework_os_renderer_wgpu_host_base::resolve_theme("system").background, if system_is_dark { Theme::dark().background } else { Theme::light().background });
     }
-    crate::set_host_appearance(crate::HostAppearance::default());
+    semio_framework_os_renderer_wgpu_host_base::set_host_appearance(semio_framework_os_renderer_wgpu_host_base::HostAppearance::default());
 }
 
 /// 🧪️ The default is LIGHT, not dark — `resolveElementsSurfaceChromeDark`'s `typeof window ===
@@ -77,12 +78,12 @@ fn appearance_resolves_lock_then_store_then_host_then_system() {
 /// agrees with React on a host whose preference nobody could read, instead of disagreeing with it.
 #[test]
 fn an_unpublished_host_appearance_reads_light() {
-    crate::set_host_appearance(crate::HostAppearance::default());
-    assert!(!crate::appearance_is_dark("system"));
-    assert_eq!(crate::host_appearance_preference(), None);
-    assert_eq!(crate::HostAppearancePreference::from_id("nonsense"), crate::HostAppearancePreference::Unset);
+    semio_framework_os_renderer_wgpu_host_base::set_host_appearance(semio_framework_os_renderer_wgpu_host_base::HostAppearance::default());
+    assert!(!semio_framework_os_renderer_wgpu_host_base::appearance_is_dark("system"));
+    assert_eq!(semio_framework_os_renderer_wgpu_host_base::host_appearance_preference(), None);
+    assert_eq!(semio_framework_os_renderer_wgpu_host_base::HostAppearancePreference::from_id("nonsense"), semio_framework_os_renderer_wgpu_host_base::HostAppearancePreference::Unset);
     for id in ["system", "light", "dark"] {
-        assert_eq!(crate::HostAppearancePreference::from_id(id).as_id(), id, "the wire spelling round-trips");
+        assert_eq!(semio_framework_os_renderer_wgpu_host_base::HostAppearancePreference::from_id(id).as_id(), id, "the wire spelling round-trips");
     }
 }
 
@@ -92,7 +93,7 @@ fn an_unpublished_host_appearance_reads_light() {
 /// (the realm that runs it has no `window` to ask).
 #[test]
 fn the_browser_appearance_door_is_wired_end_to_end() {
-    let renderer = crate::RENDERER_SOURCE;
+    let renderer = semio_framework_os_renderer_wgpu_test_support::renderer_source();
     assert!(renderer.contains("js_name = semioWgpuSetHostAppearance"), "the renderer exports the appearance hook");
     let code_asks_the_window = renderer.lines().any(|line| line.contains("match_media") && !line.trim_start().starts_with("//"));
     assert!(!code_asks_the_window, "the renderer no longer asks a `window` it does not have — the phrase survives only in the docstring that explains why");
@@ -113,75 +114,6 @@ fn the_browser_appearance_door_is_wired_end_to_end() {
 //#endregion 🌓️Appearance
 
 //#region 🎓️BootTour
-
-pub(crate) fn tour_app(introduction: Option<semio_framework::onboarding::IntroductionDefinition>) -> AppDefinition {
-    AppDefinition {
-        id: "tour-app".into(),
-        role: semio_framework::manifest::AppRole::Editor,
-        dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.tour".into(), standard: "1".into(), subset: "*".into() },
-        label: LocalizedLabel::data("Tour App"),
-        breadcrumb: vec!["semio".into(), "tour".into()],
-        icon_id: None,
-        controller_id: "tour".into(),
-        modes: semio_framework::Modes::one(semio_framework::ModeDefinition { id: "default".into(), label: LocalizedLabel::data("Default"), icon_id: "pencil".into(), tools: vec![], layout_id: None, commands: vec![] }),
-        default_mode_id: "default".into(),
-        window_kinds: semio_framework::WindowKinds::try_from(vec![semio_framework::WindowKindDefinition {
-            initial_utility_id: None,
-            id: "main".into(),
-            label: LocalizedLabel::data("Main"),
-            body_key: "main.body".into(),
-            surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
-            icon_id: "app-window".into(),
-            options: Default::default(),
-            actions: vec![],
-            utilities: vec![],
-            interactions: vec![],
-            params_schema: None,
-            artifact_snapshot_schema: None,
-            input_event_schema: None,
-            output_schema: None,
-            capabilities: vec![],
-        }])
-        .expect("non-empty"),
-        panel_tabs: vec![],
-        keybindings: vec![],
-        actions: vec![],
-        utilities: vec![],
-        tools: vec![],
-        commands: vec![],
-        interactions: vec![],
-        named_layouts: vec![],
-        default_layout: None,
-        terminologies: vec!["de".into()],
-        terminology_breadcrumbs: HashMap::new(),
-        introduction,
-        tutorials: Vec::new(),
-        dialogs: Vec::new(),
-        media_inputs: Vec::new(),
-        media_outputs: Vec::new(),
-        artifact_kinds: Vec::new(),
-        config: semio_framework_async::block_on(semio_framework::ConfigSpec::empty()),
-        command_grammar: semio_framework_async::block_on(semio_framework::CommandGrammar::empty()),
-        io: semio_framework::AppIo::default(),
-        fault_notices: Vec::new(),
-    }
-}
-
-pub(crate) fn tour_introduction() -> semio_framework::onboarding::IntroductionDefinition {
-    semio_framework::onboarding::IntroductionDefinition {
-        title: LocalizedLabel::data("Welcome"),
-        steps: vec![
-            semio_framework::onboarding::IntroductionStepDefinition::new("one", LocalizedLabel::data("One"), LocalizedLabel::data("First")),
-            semio_framework::onboarding::IntroductionStepDefinition::new("two", LocalizedLabel::data("Two"), LocalizedLabel::data("Second")),
-        ],
-    }
-}
-
-pub(crate) fn tour_shell(introduction: Option<semio_framework::onboarding::IntroductionDefinition>) -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.docs.session = Some(ActiveSession { plugin_id: "tour".into(), instance_id: 1, app: tour_app(introduction), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    shell
-}
 
 #[test]
 fn tutorial_dialog_restoration_uses_declared_dialog_construction() {
@@ -347,7 +279,6 @@ fn the_footer_pills_are_not_gated_off_the_browser_build() {
 }
 //#endregion 🚦️FooterPills
 
-
 /// 🎓️ Embedded and background shells obey the same authored first-frame policy as React.
 #[test]
 fn embedded_host_introduction_policy_matches_neutral_vectors() {
@@ -358,27 +289,26 @@ fn embedded_host_introduction_policy_matches_neutral_vectors() {
     }
 }
 
-
 /// 🪆️ Suppression retires only the tour and leaves the device-local answer unchanged.
 #[test]
 fn live_host_introduction_policy_preserves_the_unanswered_tour() {
-    crate::set_host_introduction_suppressed(false);
+    semio_framework_os_renderer_wgpu_host_base::set_host_introduction_suppressed(false);
     let mut shell = tour_shell(Some(tour_introduction()));
     let key = shell.docs.introduction_seen_key().unwrap();
     shell.docs.auto_start_introduction(&key, false, &mut shell.chrome, &shell.tutorial);
     assert!(shell.chrome.chrome_build.tour_is_open());
-    crate::set_host_introduction_suppressed(true);
+    semio_framework_os_renderer_wgpu_host_base::set_host_introduction_suppressed(true);
     shell.docs.reconcile_host_introduction_policy(&mut shell.chrome, &shell.tutorial);
     assert!(!shell.chrome.chrome_build.tour_is_open());
     assert!(!shell.chrome.chrome_build.introduction_was_seen(&key));
     assert!(shell.chrome.chrome_build.introduction_seen_writes.is_empty());
-    crate::set_host_introduction_suppressed(false);
+    semio_framework_os_renderer_wgpu_host_base::set_host_introduction_suppressed(false);
     shell.docs.reconcile_host_introduction_policy(&mut shell.chrome, &shell.tutorial);
     assert!(shell.chrome.chrome_build.tour_is_open());
     shell.chrome.chrome_build.dismiss_introduction(&key);
-    crate::set_host_introduction_suppressed(true);
+    semio_framework_os_renderer_wgpu_host_base::set_host_introduction_suppressed(true);
     shell.docs.reconcile_host_introduction_policy(&mut shell.chrome, &shell.tutorial);
-    crate::set_host_introduction_suppressed(false);
+    semio_framework_os_renderer_wgpu_host_base::set_host_introduction_suppressed(false);
     shell.docs.reconcile_host_introduction_policy(&mut shell.chrome, &shell.tutorial);
     assert!(!shell.chrome.chrome_build.tour_is_open());
 }

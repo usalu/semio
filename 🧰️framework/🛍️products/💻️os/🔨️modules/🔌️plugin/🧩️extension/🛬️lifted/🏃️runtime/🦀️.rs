@@ -4,15 +4,30 @@
 //!
 //! 🧭️ WP4 cut (`RESULT-PLUGIN-WP4.md`): the region 5189 to 5496 of the old runtime file, the two inference wire entry points of `runtime-instances` (`plugin_wire_list_artifact_inference_services`, `plugin_wire_artifact_infer_cold`) and, by plan defect PD7, `cancel_extension_inference` and `with_extension_inference_context`, which read the `EXTENSION_BUNDLE` static of this crate and therefore cannot sit in `plugin-program`. `extension_exports!` is not here: it is a facade macro (12.5.6) in `📣️macros/⚛️wp4-reactor`. The file is mounted by the old `plugin_runtime` module (`mod extension_runtime_lift; pub use extension_runtime_lift::*;`); WP3 wires it in the crate root and removes that mount in the same change, or `EXTENSION_BUNDLE` exists twice.
 
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework::kernel::{CapabilityRequest, CapabilityRequirement};
+use semio_framework_value::{DslValue, FromValue, RetirementDemand, ToValue};
+use semio_framework::{ExecutionMode, Fault, FaultCode, FaultFrom, FaultOrigin, TopicContribution};
+use semio_framework_plugin_plugin_program::{Plugin, PluginProgram};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use std::cell::RefCell;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use serde::Serialize;
+use serde_json::Value;
+use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+#[cfg(test)]
+use std::mem::size_of;
+use std::mem::size_of_val;
 /// 💡️ Lists only inference services frozen into the installed plugin assembly.
 ///
 /// 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` (no real suspension
 /// point: the found-plugin branch resolves a frozen in-memory assembly).
-pub async fn plugin_wire_list_artifact_inference_services<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Result<Vec<u8>, crate::artifact_inference::ArtifactInferenceExecutionError> {
+pub async fn plugin_wire_list_artifact_inference_services<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Result<Vec<u8>, semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError> {
     {
         let plugin = runtime.plugin.borrow();
-        let plugin = plugin.as_ref().ok_or_else(|| crate::artifact_inference::ArtifactInferenceExecutionError::new("artifact-inference.not-registered", "no plugin bundle is installed"))?;
+        let plugin = plugin.as_ref().ok_or_else(|| semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError::new("artifact-inference.not-registered", "no plugin bundle is installed"))?;
         Ok(plugin.wire_list_artifact_inference_services())
     }
 }
@@ -20,10 +35,10 @@ pub async fn plugin_wire_list_artifact_inference_services<PA: PluginApp>(runtime
 ///
 /// 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` (no real suspension
 /// point: the found-plugin branch resolves a frozen in-memory assembly).
-pub async fn plugin_wire_artifact_infer_cold<PA: PluginApp>(runtime: &PluginRuntime<PA>, request: &[u8],operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, crate::artifact_inference::ArtifactInferenceExecutionError> {
+pub async fn plugin_wire_artifact_infer_cold<PA: PluginApp>(runtime: &PluginRuntime<PA>, request: &[u8],operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError> {
     {
         let plugin = runtime.plugin.borrow();
-        let plugin = plugin.as_ref().ok_or_else(|| crate::artifact_inference::ArtifactInferenceExecutionError::new("artifact-inference.not-registered", "no plugin bundle is installed"))?;
+        let plugin = plugin.as_ref().ok_or_else(|| semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError::new("artifact-inference.not-registered", "no plugin bundle is installed"))?;
         plugin.wire_artifact_infer_cold(request,operation,generation,cx)
     }
 }
@@ -32,20 +47,21 @@ enum ExtensionRequestHandler {
     Plain(fn(&[u8],&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault>),
     Owned,
 }
+#[doc(hidden)]
 #[path = "../../🚪️retirement/🦀️.rs"]
-mod extension_retirement;
-pub use extension_retirement::{ExtensionResourceOwner,ExtensionInvokeStep};
-use extension_retirement::{ExtensionBundleRegistry, MetadataRetirement};
+pub mod extension_retirement;
+pub use crate::extension_runtime_lift::extension_retirement::{ExtensionResourceOwner, ExtensionInvokeStep};
+use crate::extension_runtime_lift::extension_retirement::{ExtensionBundleRegistry, MetadataRetirement};
 /// 🧩️ Extension guest bundle — no apps; contributes + invoke handlers.
 pub struct ExtensionBundle {
     pub manifest: std::mem::ManuallyDrop<ExtensionManifest>,
-    handlers: std::mem::ManuallyDrop<Vec<(String, ExtensionRequestHandler)>>,
-    resource_owner: std::mem::ManuallyDrop<Option<Box<dyn ExtensionResourceOwner>>>,
-    pub(crate) closing: bool,
+    pub handlers: std::mem::ManuallyDrop<Vec<(String, ExtensionRequestHandler)>>,
+    pub resource_owner: std::mem::ManuallyDrop<Option<Box<dyn ExtensionResourceOwner>>>,
+    pub closing: bool,
     close_cancelled: bool,
     manifest_retired: bool,
-    metadata_retirement: std::mem::ManuallyDrop<MetadataRetirement>,
-    inference_gateway:std::mem::ManuallyDrop<std::sync::Mutex<Option<crate::ArtifactInferenceGateway>>>,
+    pub metadata_retirement: std::mem::ManuallyDrop<MetadataRetirement>,
+    pub inference_gateway:std::mem::ManuallyDrop<std::sync::Mutex<Option<crate::inference_gateway::ArtifactInferenceGateway>>>,
 }
 /// 🌉️ `CapabilityRequirement`/`PluginDependency`/`ArtifactContributionDescriptor`/`ExecutionMode`
 /// are foreign (owned by the `semio-framework` crate's kernel/manifest vocabulary) and only
@@ -182,13 +198,13 @@ impl ExtensionBundle {
     /// `crate::app::register_contributions` and committed to the same process-global runtime
     /// registries `PluginBuilder::try_build` commits to. Panics on a gate violation — same idiom as
     /// `.extends`/`.depends_on` above.
-    pub async fn contributes(mut self, contribution: crate::artifact_registration::ArtifactContribution) -> Self {
+    pub async fn contributes(mut self, contribution: semio_framework_plugin_decl_registry::artifact_registration::ArtifactContribution) -> Self {
         let contributor = self.manifest.extension_id.clone();
         let (descriptor, inference_services, mutation_runtime) = contribution.resolve(&contributor);
-        crate::artifact_registration::register_contributions(&contributor, &self.manifest.dependencies, std::slice::from_ref(&descriptor)).unwrap_or_else(|error| panic!("extension {contributor:?} contribution rejected: {error}"));
+        semio_framework_plugin_decl_registry::artifact_registration::register_contributions(&contributor, &self.manifest.dependencies, std::slice::from_ref(&descriptor)).unwrap_or_else(|error| panic!("extension {contributor:?} contribution rejected: {error}"));
         crate::artifact_inference::preflight_artifact_inference_services(&inference_services).unwrap_or_else(|error| panic!("extension {contributor:?} contributed inference service conflict: {error}"));
         crate::artifact_inference::register_artifact_inference_services(inference_services).unwrap_or_else(|error| panic!("extension {contributor:?} contributed inference service registration failed: {error}"));
-        crate::artifact_registration::commit_contributed_mutation_services(mutation_runtime).await.unwrap_or_else(|error| panic!("extension {contributor:?} contributed mutation registration failed: {error}"));
+        semio_framework_plugin_decl_registry::artifact_registration::commit_contributed_mutation_services(mutation_runtime).await.unwrap_or_else(|error| panic!("extension {contributor:?} contributed mutation registration failed: {error}"));
         self.manifest.contributions.push(descriptor);
         self
     }
@@ -214,11 +230,7 @@ impl ExtensionBundle {
         self
     }
 }
-#[cfg(test)]
-include!("../../../🧪️tests/🔬️plugin-runtime-extension-bundle-dependency/🦀️.rs");
-#[cfg(test)]
-include!("../../../🧪️tests/🔬️extension-retirement/🦀️.rs");
-crate::component_persistent_local! {
+semio_framework_plugin_abi::component_persistent_local! {
     static EXTENSION_BUNDLE: RefCell<ExtensionBundleRegistry> = RefCell::new(ExtensionBundleRegistry::new());
 }
 /// 📤️ Admits one replacement while retaining the current owner; refusal leaves the candidate untouched.
@@ -270,7 +282,8 @@ pub fn extension_cancel_close() {
 pub fn extension_resume_close() {
     EXTENSION_BUNDLE.with(|slot| slot.borrow_mut().resume_close());
 }
-pub(crate) fn extension_retirement_turn(cx:&mut semio_framework_job::StepContext<'_>) -> Result<(bool, PluginLifecycleStep), semio_framework_job::OriginalTurnFailure> {
+#[doc(hidden)]
+pub fn extension_retirement_turn(cx:&mut semio_framework_job::StepContext<'_>) -> Result<(bool, PluginLifecycleStep), semio_framework_job::OriginalTurnFailure> {
     EXTENSION_BUNDLE.with(|slot| {
         let mut registry = slot.try_borrow_mut().map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"extension retirement authority is busy"))?;
         if !registry.has_retirement() {
@@ -299,7 +312,8 @@ pub async fn extension_invoke(capability: &str, request: &[u8], cx:&mut semio_fr
     EXTENSION_BUNDLE.with(|slot| slot.try_borrow_mut().map_err(|_| plugin_internal_fault("extension invocation authority is busy"))?.invoke(capability, request, cx))
 }
 /// 🧷️ Supplies the current extension's retained inference context to the standard gateway.
-pub(crate) fn cancel_extension_inference(cancellation_id: &str) -> bool {
+#[doc(hidden)]
+pub fn cancel_extension_inference(cancellation_id: &str) -> bool {
     EXTENSION_BUNDLE.with(|slot| slot.try_borrow().ok().and_then(|state| state.current().and_then(|bundle| bundle.resource_owner.as_ref()).map(|owner| owner.cancel_inference(cancellation_id))).unwrap_or(false))
 }
 pub(crate) fn with_original_extension_inference_context<T>(run:impl FnOnce(Option<&dyn std::any::Any>)->Result<T,semio_framework_value::ValueError>)->Result<T,semio_framework_value::ValueError>{
@@ -310,12 +324,13 @@ pub(crate) fn with_original_extension_inference_context<T>(run:impl FnOnce(Optio
         run(bundle.and_then(|bundle|bundle.resource_owner.as_ref()).and_then(|owner|owner.inference_context()))
     })
 }
-pub(crate) fn with_extension_inference_context<T>(run: impl FnOnce(Option<&dyn std::any::Any>) -> Result<T, crate::artifact_inference::ArtifactInferenceExecutionError>) -> Result<T, crate::artifact_inference::ArtifactInferenceExecutionError> {
+#[doc(hidden)]
+pub fn with_extension_inference_context<T>(run: impl FnOnce(Option<&dyn std::any::Any>) -> Result<T, semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError>) -> Result<T, semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError> {
     EXTENSION_BUNDLE.with(|slot| {
-        let registry = slot.try_borrow().map_err(|_| crate::artifact_inference::ArtifactInferenceExecutionError::new("artifact-inference.context-busy", "extension inference owner is busy"))?;
+        let registry = slot.try_borrow().map_err(|_| semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError::new("artifact-inference.context-busy", "extension inference owner is busy"))?;
         let bundle = registry.current();
         if bundle.is_some_and(|bundle| bundle.closing) {
-            return Err(crate::artifact_inference::ArtifactInferenceExecutionError::new("artifact-inference.context-closing", "extension inference owner is closing"));
+            return Err(semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError::new("artifact-inference.context-closing", "extension inference owner is closing"));
         }
         run(bundle.and_then(|bundle| bundle.resource_owner.as_ref()).and_then(|owner| owner.inference_context()))
     })

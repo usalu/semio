@@ -15,7 +15,7 @@ import {
   parseDirectoryProjectionReceiptV1,
   startedDirectoryOperationIdV1,
 } from "../../🧱️elements/🏛️ShellHost/📇️directory-bootstrap/🟦️.tsx";
-import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
+import { directorySchema } from "../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
 import fixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/📇️directory-bootstrap/🔣️.json";
 
 afterEach(cleanup);

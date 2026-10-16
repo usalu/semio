@@ -110,15 +110,29 @@ export type OracleDiagnostic = string;
 /** 🪤️ One rustc error with the facts the cascade filter needs. */
 export type OracleEntry = Readonly<{ code: string; message: string; label: string; file: string; line: number; sourceLine: string }>;
 
-/** 🪤️ Drops the `unresolved import` errors that only repeat a re-export of an external crate the sandbox does not link: a failed external import leaves no binding, so every further `use` of its name reports an error that the compiled crate does not have. Both sides of a differential go through the same filter. */
-export function dropUnlinkedCascades(entries: readonly OracleEntry[]): OracleEntry[] {
+/** 🧭️ The module path without the crate prefix, the combined-layout mount segments and the empty segments: the form in which a diagnostic names a module and a module resolution lists it. */
+export const plainModulePath = (segments: readonly string[]): string => segments.filter((segment) => segment !== "" && segment !== "crate" && !segment.startsWith("__c_")).join("::");
+
+/** 🪤️ Drops the `unresolved import` errors that only repeat a re-export of an external crate the sandbox does not link: a failed external import leaves no binding, so every further `use` of its name reports an error that the compiled crate does not have. A module that glob-re-exports an unlinked crate (`pub use ext::*;`, `pub use ext::{self as graph, *};`) gives no binding for any name, so an import through that module (`globModules` lists them by plain module path) is such a cascade as well. Both sides of a differential go through the same filter. */
+export function dropUnlinkedCascades(entries: readonly OracleEntry[], globModules: ReadonlySet<string> = new Set()): OracleEntry[] {
   const tainted = new Set<string>();
   for (const entry of entries) if (entry.message.includes("unlinked crate") || entry.label.includes("unlinked crate")) for (const match of entry.sourceLine.matchAll(/[A-Za-z_][A-Za-z0-9_]*/gu)) tainted.add(match[0]);
   return entries.filter((entry) => {
     if (entry.code !== "E0432" || !entry.message.startsWith("unresolved import")) return true;
-    const names = [...entry.message.matchAll(/`([^`]+)`/gu)].map((match) => match[1]!.split("::").at(-1)!);
-    return names.length === 0 || !names.every((name) => tainted.has(name));
+    const paths = [...entry.message.matchAll(/`([^`]+)`/gu)].map((match) => match[1]!.split("::"));
+    return paths.length === 0 || !paths.every((path) => tainted.has(path.at(-1)!) || globModules.has(plainModulePath(path.slice(0, -1))));
   });
+}
+
+/** 🌐️ The plain module paths of the modules whose file glob-re-exports an unlinked external crate, read from the oracle entries that name such a glob. */
+export function unlinkedGlobModules(sandboxRoot: string, rootFile: string, entries: readonly OracleEntry[]): Set<string> {
+  const files = new Set(entries.filter((entry) => (entry.message.includes("unlinked crate") || entry.label.includes("unlinked crate")) && /\buse\b[^;]*\*/u.test(entry.sourceLine)).map((entry) => entry.file));
+  const modules = new Set<string>();
+  if (!files.size) return modules;
+  try {
+    for (const module of resolveCrateModules(sandboxRoot, rootFile)) if (module.file !== null && files.has(module.file)) modules.add(plainModulePath(module.path.replace(/::<component>$/u, "").split("::")));
+  } catch { return modules; }
+  return modules;
 }
 
 /** 🔬️ Runs the full-resolution oracle on one crate root and returns normalised diagnostics. */
@@ -135,7 +149,7 @@ export function runResolutionOracle(sandboxRoot: string, rootFile: string, crate
       entries.push({ code: message.code?.code ?? "", message: (message.message ?? "").replaceAll(sandboxRoot, "<sandbox>").replaceAll(/\bcomponent::/gu, ""), label: primary?.label ?? "", file, line: primary?.line_start ?? 0, sourceLine: primary?.text?.[0]?.text ?? "" });
     } catch { continue; }
   }
-  const kept = dropUnlinkedCascades(entries);
+  const kept = dropUnlinkedCascades(entries, unlinkedGlobModules(sandboxRoot, rootFile, entries));
   return { diagnostics: kept.map((entry) => [entry.code, entry.message, entry.file, entry.label].join("\t")), locations: kept.map((entry) => (entry.file ? `${entry.file}:${entry.line}` : "")), exit: result.status };
 }
 
@@ -224,4 +238,24 @@ export function checkOrphanRules(crates: readonly { name: string; sources: Reado
     violations.push({ crate: crate.name, file, trait: header.trait, selfType: header.self, definedIn: [...owners] });
   }
   return violations;
+}
+
+/** 🔁️ One source file that the module trees of more than one package reach, with the manifests of those packages. */
+export type SharedMount = Readonly<{ file: string; manifests: readonly string[] }>;
+
+/** 🔁️ Lists the source files reached from more than one package: every package contributes the closure of its lib, test and bin roots (explicit `#[path]` mounts followed, missing generated files tolerated). A file with a second owner is the same source compiled into two crates, so each owner must be the single crate that the others depend on. `within` keeps only the files that at least one matching manifest reaches. */
+export function sharedMountFiles(repoRoot: string, manifests: readonly string[], within: (manifest: string) => boolean = () => true): SharedMount[] {
+  const owners = new Map<string, Set<string>>();
+  const read = (file: string): string => (existsSync(file) ? readFileSync(file, "utf8") : "");
+  for (const manifest of manifests) {
+    const absolute = resolve(repoRoot, manifest);
+    if (!existsSync(absolute)) continue;
+    let parsed: { package?: unknown; lib?: { path?: string }; test?: { path?: string; name?: string }[]; bin?: { path?: string; name?: string }[] };
+    try { parsed = Bun.TOML.parse(readFileSync(absolute, "utf8")) as typeof parsed; } catch { continue; }
+    if (!parsed.package) continue;
+    const directory = dirname(absolute);
+    const roots = [parsed.lib?.path ?? "src/lib.rs", ...(parsed.test ?? []).map((entry) => entry.path ?? `tests/${entry.name}.rs`), ...(parsed.bin ?? []).map((entry) => entry.path ?? `src/bin/${entry.name}.rs`)].map((path) => resolve(directory, path)).filter((path) => existsSync(path));
+    for (const root of roots) for (const file of new Set([relativePosix(repoRoot, root), ...resolveCrateModules(repoRoot, root, read).flatMap((module) => (module.file !== null && module.file !== "unresolved" ? [module.file] : []))])) owners.set(file, new Set([...(owners.get(file) ?? []), manifest]));
+  }
+  return [...owners].filter(([, set]) => set.size > 1 && [...set].some(within)).map(([file, set]) => ({ file, manifests: [...set].sort() })).sort((left, right) => left.file.localeCompare(right.file));
 }

@@ -1,0 +1,537 @@
+/** 🚧 Scene mesh kind references and node-graph surface sizing, attachment and built-node store reloads. */
+import { createElement, useLayoutEffect } from "react";
+import { createBuiltNodeStoreCacheV1, publishBuiltNodesV1, publishPanelBodiesV1 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
+import { world3dMarqueeOverlayShape } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { openSurfaceContextMenu } from "../../🧱️elements/🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
+import { createFlowBrowserRuntime } from "@semio-tech/flow-core/🌐️flow-browser.js";
+import { MockFlowBridge } from "../../../../🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts";
+import flowAbi from "../../../../🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json" with { type: "json" };
+import { render, waitFor } from "@semio-tech/ui-react/test";
+import { describe, expect, it, test, vi } from "vitest";
+import { type BuiltNode, type NodeGraphScene, pendingPanelUiNode } from "@semio-tech/framework";
+import { FlowGraphCanvasHost, InterpretedUiNode, builtNodeToSnapshot, resizeCanvasBackingStore, panelTabDefinitionToNode } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import sceneMeshKindFixture from "../../../../../../../🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json";
+import { buildContractNode, noopAction } from "../🧰️engine-contract-helpers/🟦️.ts";
+import { surfaceHostRetentionFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+
+//#region 🥽️SceneMeshKindReferences
+/** 🥽️ The local-space bounding box a resolved kind occupies — the ONE property the fixture pins across
+ * the two generators (Rust `mesh_from_kind`, this host's `meshDataFromKind`). */
+function meshKindBounds(kind: string): { min: number[]; max: number[] } {
+  const positions = meshDataFromKind(kind).positions;
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (let index = 0; index < positions.length; index += 3) {
+    for (let axis = 0; axis < 3; axis += 1) {
+      min[axis] = Math.min(min[axis]!, positions[index + axis]!);
+      max[axis] = Math.max(max[axis]!, positions[index + axis]!);
+    }
+  }
+  return { min, max };
+}
+
+describe("world-3d scene mesh kind references", () => {
+  it("resolves every built-in kind to the language-neutral fixture's local bounding box", () => {
+    expect(sceneMeshKindFixture.kinds.length).toBeGreaterThan(0);
+    for (const entry of sceneMeshKindFixture.kinds) {
+      const bounds = meshKindBounds(entry.kind);
+      for (let axis = 0; axis < 3; axis += 1) {
+        expect(Math.abs(bounds.min[axis]! - entry.min[axis]!)).toBeLessThanOrEqual(sceneMeshKindFixture.tolerance);
+        expect(Math.abs(bounds.max[axis]! - entry.max[axis]!)).toBeLessThanOrEqual(sceneMeshKindFixture.tolerance);
+      }
+      expect(meshDataFromKind(entry.kind).indices.length).toBeGreaterThan(0);
+      expect(meshDataFromKind(entry.kind).normals.length).toBe(meshDataFromKind(entry.kind).positions.length);
+    }
+  });
+
+  it("falls back to the fixture's fallback kind for a kind it never authored", () => {
+    expect(meshKindBounds("totally-unknown-kind")).toEqual(meshKindBounds(sceneMeshKindFixture.fallbackKind));
+  });
+
+  it("memoizes each kind so a scene refresh never re-tessellates", () => {
+    expect(meshDataFromKind("vortex-marker")).toBe(meshDataFromKind("vortex-marker"));
+  });
+});
+//#endregion 🥽️SceneMeshKindReferences
+
+
+//#region 🥽️HiddenTabSurfaceSizing
+describe("node-graph surface sizing", () => {
+  it("adopts its container's size on mount without any animation frame", () => {
+    const container = new DOMRect(0, 0, 966, 836);
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(container);
+    // 🙈️ A hidden/background tab never runs a frame callback — the regression this guards is a canvas
+    // that only ever reached its real size from inside one (`📓️runtime-verification-2026-09-09.md` #3).
+    const frame = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 0);
+    // The wasm surface never settles here either, so nothing but the container observer can size these.
+    const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockReturnValue(new Promise(() => {}));
+    vi.stubGlobal("devicePixelRatio", 2);
+    const view = render(
+      createElement(FlowGraphCanvasHost, {
+        scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostSnapshotJson: '{"schema":"flow.host_snapshot","widgets":[]}' },
+        controllerId: "procedural",
+        surfaceId: "procedural.main",
+        editable: true,
+        keyboardPort: { current: null },
+        onAction: noopAction,
+      }),
+    );
+    try {
+      const canvases = [...view.container.querySelectorAll("canvas")];
+      expect(canvases.length).toBe(2);
+      for (const canvas of canvases) {
+        expect([canvas.width, canvas.height]).toEqual([1932, 1672]);
+        expect([canvas.style.width, canvas.style.height]).toEqual(["966px", "836px"]);
+      }
+      expect(frame.mock.results.every((result) => result.value === 0)).toBe(true);
+    } finally {
+      view.unmount();
+      vi.unstubAllGlobals();
+      session.mockRestore();
+      frame.mockRestore();
+      bounds.mockRestore();
+    }
+  });
+
+  it("keeps the exact device-pixel store the shared helper computes", () => {
+    const canvas = document.createElement("canvas");
+    expect([canvas.width, canvas.height]).toEqual([300, 150]);
+    expect(resizeCanvasBackingStore(canvas, 966, 836, 1.5)).toBe(true);
+    expect([canvas.width, canvas.height]).toEqual([1449, 1254]);
+    expect(resizeCanvasBackingStore(canvas, 966, 836, 1.5)).toBe(false);
+    expect(resizeCanvasBackingStore(canvas, 0, 0, 1)).toBe(true);
+    expect([canvas.width, canvas.height]).toEqual([1, 1]);
+    expect(resizeCanvasBackingStore(null, 966, 836, 1)).toBe(false);
+  });
+});
+//#endregion 🥽️HiddenTabSurfaceSizing
+
+
+//#region 🥽️HiddenTabSurfaceAttach
+/** 🍄️ The served `hexagonal-mushroom-column` shape the boot report measured: seven nodes, six edges. */
+function hexagonalMushroomColumnScene(): NodeGraphScene {
+  const port = (id: string) => [{ id, label: id }];
+  const nodes = ["sides", "radius", "height", "profile", "extrusion-axis", "extrude", "column-preview"].map((id, index) => ({
+    id,
+    label: id,
+    x: index * 180,
+    y: (index % 2) * 120,
+    width: 140,
+    height: 64,
+    inputs: port("in"),
+    outputs: port("out"),
+  }));
+  const edges = [
+    ["sides", "profile"],
+    ["radius", "profile"],
+    ["height", "extrusion-axis"],
+    ["profile", "extrude"],
+    ["extrusion-axis", "extrude"],
+    ["extrude", "column-preview"],
+  ].map(([source, target]) => ({ id: `${source}->${target}`, sourceNodeId: source!, sourcePortId: "out", targetNodeId: target!, targetPortId: "in" }));
+  return {
+    nodes,
+    edges,
+    viewport: { x: 0, y: 0, zoom: 1.78 },
+    editable: true,
+    hostSnapshotJson: JSON.stringify({ schema: "flow.host_snapshot", widgets: nodes.map((node) => ({ id: node.id, x: node.x, y: node.y })) }),
+  };
+}
+
+/** 🖌️ Recording stand-in for a 2D context — jsdom implements none, so this is the only way to witness
+ * that a paint actually reached a canvas rather than merely being scheduled. */
+function recordingCanvasContext(operations: string[]): CanvasRenderingContext2D {
+  const record =
+    (name: string) =>
+    (...args: unknown[]) => {
+      operations.push(`${name}(${args.join(",")})`);
+    };
+  return new Proxy({} as CanvasRenderingContext2D, {
+    get: (_target, key) => (typeof key === "string" ? record(key) : undefined),
+    set: () => true,
+  });
+}
+
+describe("node-graph surface attachment in a hidden tab", () => {
+  it("attaches, feeds the scene and draws without any animation frame", async () => {
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 966, 836));
+    // 🙈️ The exact boot condition of `📓️runtime-verification-2026-09-09.md` #4: a hidden tab, so no frame
+    // callback ever runs, on a host with no `navigator.gpu` at all (jsdom ships none).
+    const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+    const frame = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 0);
+    const painted = new Map<HTMLCanvasElement, string[]>();
+    const context = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(function (this: HTMLCanvasElement) {
+      const operations = painted.get(this) ?? [];
+      painted.set(this, operations);
+      return recordingCanvasContext(operations);
+    } as unknown as HTMLCanvasElement["getContext"]);
+    const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));
+    const runtime = await createFlowBrowserRuntime({ source: bridge.exports });
+    const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => runtime.openSession() as unknown as flowSessionLoader.FlowWasmSession);
+    vi.stubGlobal("devicePixelRatio", 1);
+    const view = render(
+      createElement(FlowGraphCanvasHost, {
+        scene: hexagonalMushroomColumnScene(),
+        controllerId: "procedural",
+        surfaceId: "procedural.main",
+        editable: true,
+        keyboardPort: { current: null },
+        onAction: noopAction,
+      }),
+    );
+    try {
+      expect(globalThis.navigator.gpu).toBeUndefined();
+      await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.renderFrame));
+      expect(bridge.operations).toContain(flowAbi.operations.attachSurface);
+      expect(bridge.operations).toContain(flowAbi.operations.surfaceStatus);
+      expect(bridge.operations).toContain(flowAbi.operations.synchronizeSnapshotJson);
+      expect(bridge.operations).toContain(flowAbi.operations.setCamera);
+      expect(bridge.operations).toContain(flowAbi.operations.setSize);
+      await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.labelOverlayPaintStateJson));
+      const canvases = [...view.container.querySelectorAll("canvas")];
+      expect(canvases.length).toBe(2);
+      await waitFor(() => {
+        for (const canvas of canvases) expect((painted.get(canvas) ?? []).some((operation) => operation.startsWith("clearRect("))).toBe(true);
+      });
+      // 📏️ A frame that carries no size of its own must not collapse the store the host measured.
+      for (const canvas of canvases) expect([canvas.width, canvas.height]).toEqual([966, 836]);
+      expect(painted.get(canvases[0]!)).toContain("clearRect(0,0,966,836)");
+      // 🚫️ The placeholder this replaced drew one `fillRect(x-60,y-24,120,48)` per widget at RAW
+      // world coordinates, in the 2D default black because it never set a fill style. A frame that
+      // carries no draw list must now paint nothing at all rather than invent a picture.
+      expect((painted.get(canvases[0]!) ?? []).filter((operation) => operation.startsWith("fillRect("))).toEqual([]);
+      expect(frame).not.toHaveBeenCalled();
+    } finally {
+      view.unmount();
+      vi.unstubAllGlobals();
+      session.mockRestore();
+      context.mockRestore();
+      frame.mockRestore();
+      hidden.mockRestore();
+      bounds.mockRestore();
+      await runtime.close().catch(() => {});
+    }
+  });
+
+  it("replaces a canvas that can no longer give a 2D context and re-attaches its surface to the successor", async () => {
+    // 🚨️ The live defect this pins: `wgpu` binds a `webgpu` context to the element before it finds
+    // out there is no adapter, and a canvas admits exactly one context kind for its whole life — so
+    // the frame correctly falls back to `present: "2d"` onto an element that can never give a 2D
+    // context, and the graph stays blank forever with nothing in the console. A frame that reports
+    // `unpresentable` must retire that element and let the presentation be decided again for a new
+    // one. Measured on 6018 before this: canvas 0 `not-2d`, 0 ink pixels, every frame.
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 966, 836));
+    const frame = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 0);
+    const painted = new Map<HTMLCanvasElement, string[]>();
+    const poisoned = new Set<HTMLCanvasElement>();
+    const context = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(function (this: HTMLCanvasElement) {
+      if (poisoned.has(this)) return null;
+      const operations = painted.get(this) ?? [];
+      painted.set(this, operations);
+      return recordingCanvasContext(operations);
+    } as unknown as HTMLCanvasElement["getContext"]);
+    const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));
+    // 🖥️ The surface must really be presenting on the GPU, because only a canvas that was handed to
+    // the WebGPU presenter can be poisoned — a host that never had a device is a host with no 2D
+    // canvas either, and replacing its element would remount forever.
+    let boundToTheGpuPresenter = 0;
+    const runtime = await createFlowBrowserRuntime({
+      source: bridge.exports,
+      bindings: {
+        flowAttachSurfaceCanvas: async () => {
+          boundToTheGpuPresenter += 1;
+          return boundToTheGpuPresenter === 1;
+        },
+      },
+    });
+    vi.stubGlobal("navigator", { ...globalThis.navigator, gpu: { requestAdapter: async () => ({}) } });
+    const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => runtime.openSession() as unknown as flowSessionLoader.FlowWasmSession);
+    vi.stubGlobal("devicePixelRatio", 1);
+    const view = render(
+      createElement(FlowGraphCanvasHost, {
+        scene: hexagonalMushroomColumnScene(),
+        controllerId: "procedural",
+        surfaceId: "procedural.main",
+        editable: true,
+        keyboardPort: { current: null },
+        onAction: noopAction,
+      }),
+    );
+    try {
+      const first = view.container.querySelectorAll("canvas")[0]!;
+      poisoned.add(first);
+      const attaches = () => bridge.operations.filter((operation) => operation === flowAbi.operations.attachSurface).length;
+      await waitFor(() => expect(attaches()).toBeGreaterThanOrEqual(2));
+      const successor = view.container.querySelectorAll("canvas")[0]!;
+      expect(successor).not.toBe(first);
+      expect(view.container.querySelectorAll("canvas").length).toBe(2);
+      // ⏳️ The successor's backing store is sized by its own layout effect, which runs after the
+      // attach this test waited on — reading it in the same tick catches the jsdom default 300x150.
+      await waitFor(() => expect([successor.width, successor.height]).toEqual([966, 836]));
+      await waitFor(() => expect((painted.get(successor) ?? []).some((operation) => operation.startsWith("clearRect("))).toBe(true));
+      expect(painted.has(first)).toBe(false);
+      // 🔚️ Exactly one successor: it re-attaches without a device, so it stays 2D-capable and the
+      // host never asks for another. A replacement loop is the failure mode this bound rules out.
+      await new Promise((settle) => setTimeout(settle, 50));
+      expect(view.container.querySelectorAll("canvas")[0]).toBe(successor);
+      expect(attaches()).toBe(2);
+    } finally {
+      view.unmount();
+      vi.unstubAllGlobals();
+      session.mockRestore();
+      context.mockRestore();
+      frame.mockRestore();
+      bounds.mockRestore();
+      await runtime.close().catch(() => {});
+    }
+  });
+
+  /** 🪪️ The host half of the surface-retention law (`🧫️fixtures/🪪️surface-host-retention.json`): a
+   * refresh is a SCENE change, never a lifecycle event. Every refresh of `window:procedural-main`
+   * carries a different eval status map, and the host must answer each of them by patching the flow
+   * session it already owns — one `createFlowSession`, one `attachSurface`, one wasm-side surface —
+   * and never by opening a second one. Measured on the live page before the reconciliation-key fix:
+   * two mounts, two sessions and `flow surface created surface=2`, costing 5.7 s of attach and a
+   * graph that stayed blank for 39 s (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+  it("retained surface host — patches the session it already owns across consecutive refreshes, one session and one attach", async () => {
+    const retention = surfaceHostRetentionFixture;
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 966, 836));
+    const context = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => recordingCanvasContext([]) as never);
+    const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));
+    const runtime = await createFlowBrowserRuntime({ source: bridge.exports });
+    const opened: unknown[] = [];
+    const released: ReturnType<typeof vi.spyOn>[] = [];
+    const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => {
+      const next = runtime.openSession();
+      opened.push(next);
+      released.push(vi.spyOn(next, "free"));
+      return next as unknown as flowSessionLoader.FlowWasmSession;
+    });
+    vi.stubGlobal("devicePixelRatio", 1);
+    const sceneFor = (statusJson: string) => ({ ...hexagonalMushroomColumnScene(), statusJson });
+    const view = render(
+      createElement(FlowGraphCanvasHost, {
+        scene: sceneFor(retention.refreshes[0]!.statusJson),
+        controllerId: "29",
+        surfaceId: retention.surface,
+        editable: true,
+        keyboardPort: { current: null },
+        onAction: noopAction,
+      }),
+    );
+    try {
+      await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.attachSurface));
+      for (let index = 1; index < retention.refreshes.length; index += 1) {
+        const refresh = retention.refreshes[index]!;
+        // 🪪️ `controllerId` is the DFS-minted record id, and it MOVES with the body (29 → 33 on the
+        // measured refresh). A host that re-attached on it would fail here and nowhere else.
+        view.rerender(
+          createElement(FlowGraphCanvasHost, {
+            scene: sceneFor(refresh.statusJson),
+            controllerId: String(29 + index * 2),
+            surfaceId: retention.surface,
+            editable: true,
+            keyboardPort: { current: null },
+            onAction: noopAction,
+          }),
+        );
+        await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.synchronizeSnapshotJson));
+      }
+      const attaches = bridge.operations.filter((operation: number) => operation === flowAbi.operations.attachSurface).length;
+      expect(attaches, `${retention.refreshes.length} refreshes must dispatch exactly one attach`).toBe(retention.expected.surfaceAttaches);
+      expect(opened.length, "one flow session per window instance, never one per refresh").toBe(retention.expected.surfaceHostMounts);
+      expect(view.container.querySelectorAll("canvas").length, "the two canvases the host owns, never a second pair").toBe(2);
+      for (const release of released) expect(release).not.toHaveBeenCalled();
+      view.unmount();
+      await waitFor(() => {
+        for (const release of released) expect(release).toHaveBeenCalledTimes(1);
+      });
+    } finally {
+      view.unmount();
+      vi.unstubAllGlobals();
+      session.mockRestore();
+      context.mockRestore();
+      bounds.mockRestore();
+      await runtime.close().catch(() => {});
+    }
+  });
+});
+//#endregion 🥽️HiddenTabSurfaceAttach
+
+
+//#region 🥽️BuiltNodeStoreReload
+describe("built-node store reloads", () => {
+  const contractNode = (value: string): BuiltNode => buildContractNode({ key: "window.body", component: { type: "text", value, emphasize: null, dataAttributes: null } });
+
+  it("loads a new key inline and defers every later reload to the flush", () => {
+    const cache = createBuiltNodeStoreCacheV1();
+    const first = contractNode("first");
+    const store = cache.storeFor("window:procedural-main", first);
+    const rootId = store.getState().root;
+    expect(rootId).not.toBeNull();
+    const textOf = () => (store.getNodeSnapshot(store.getState().root ?? 0)?.component as { readonly value?: string } | undefined)?.value;
+    expect(textOf()).toBe("first");
+    let notifications = 0;
+    const unsubscribe = store.subscribeNode(rootId ?? 0)(() => {
+      notifications += 1;
+    });
+    try {
+      expect(cache.storeFor("window:procedural-main", first)).toBe(store);
+      expect(cache.pendingReloadKeys()).toEqual([]);
+      expect(notifications).toBe(0);
+      const second = contractNode("second");
+      expect(cache.storeFor("window:procedural-main", second)).toBe(store);
+      expect(cache.pendingReloadKeys()).toEqual(["window:procedural-main"]);
+      expect(notifications).toBe(0);
+      expect(textOf()).toBe("first");
+      const revisionBefore = store.getRevisionSnapshot();
+      cache.flushPendingReloads();
+      expect(cache.pendingReloadKeys()).toEqual([]);
+      expect(textOf()).toBe("second");
+      expect(notifications).toBeGreaterThan(0);
+      expect(store.getRevisionSnapshot()).toBeGreaterThan(revisionBefore);
+      const settled = notifications;
+      expect(cache.storeFor("window:procedural-main", second)).toBe(store);
+      cache.flushPendingReloads();
+      expect(notifications).toBe(settled);
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it("publishes a body no render owns straight into its store: a new key loads, a changed body reloads and notifies at once, an unchanged one is a no-op", () => {
+    const cache = createBuiltNodeStoreCacheV1();
+    expect(cache.storeOf("spawned:puzzle-2::puzzle3d-main")).toBeNull();
+    const first = contractNode("first");
+    publishBuiltNodesV1(cache, [["spawned:puzzle-2::puzzle3d-main", first]]);
+    const store = cache.storeOf("spawned:puzzle-2::puzzle3d-main");
+    expect(store).not.toBeNull();
+    const textOf = () => (store!.getNodeSnapshot(store!.getState().root ?? 0)?.component as { readonly value?: string } | undefined)?.value;
+    expect(textOf()).toBe("first");
+    let notifications = 0;
+    const unsubscribe = store!.subscribeNode(store!.getState().root ?? 0)(() => {
+      notifications += 1;
+    });
+    try {
+      publishBuiltNodesV1(cache, [["spawned:puzzle-2::puzzle3d-main", first]]);
+      expect(notifications).toBe(0);
+      const revisionBefore = store!.getRevisionSnapshot();
+      publishBuiltNodesV1(cache, [["spawned:puzzle-2::puzzle3d-main", contractNode("hovered")]]);
+      expect(cache.storeOf("spawned:puzzle-2::puzzle3d-main")).toBe(store);
+      expect(textOf()).toBe("hovered");
+      expect(notifications).toBeGreaterThan(0);
+      expect(store!.getRevisionSnapshot()).toBeGreaterThan(revisionBefore);
+      expect(cache.pendingReloadKeys()).toEqual([]);
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it("forceReload queues loadSnapshot even when the node identity did not change", () => {
+    const cache = createBuiltNodeStoreCacheV1();
+    const first = contractNode("first");
+    const store = cache.storeFor("window:puzzle3d-main-perspective", first);
+    const textOf = () => (store.getNodeSnapshot(store.getState().root ?? 0)?.component as { readonly value?: string } | undefined)?.value;
+    expect(textOf()).toBe("first");
+    const patched = contractNode("preview");
+    cache.forceReload("window:puzzle3d-main-perspective", patched);
+    expect(cache.pendingReloadKeys()).toEqual(["window:puzzle3d-main-perspective"]);
+    expect(textOf()).toBe("first");
+    cache.flushPendingReloads();
+    expect(textOf()).toBe("preview");
+    cache.forceReload("window:puzzle3d-main-perspective", patched);
+    expect(cache.pendingReloadKeys()).toEqual(["window:puzzle3d-main-perspective"]);
+    cache.flushPendingReloads();
+    expect(textOf()).toBe("preview");
+  });
+
+  it("never updates a subscribed UiNodeView while another component renders", () => {
+    const messages: string[] = [];
+    const consoleError = vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => {
+      messages.push(args.map(String).join(" "));
+    });
+    const renderPhaseUpdates = () => messages.filter((message) => message.includes("while rendering a different component"));
+    const cache = createBuiltNodeStoreCacheV1();
+    const deferred = ({ node }: { readonly node: BuiltNode }) => {
+      const store = cache.storeFor("window:procedural-main", node);
+      useLayoutEffect(() => cache.flushPendingReloads());
+      return createElement(InterpretedUiNode, { store, onAction: noopAction, onIntent: noopAction, requestContextMenu: undefined });
+    };
+    const eager = ({ node }: { readonly node: BuiltNode }) => {
+      const store = cache.storeFor("window:procedural-eager", node);
+      store.loadSnapshot(builtNodeToSnapshot("window:procedural-eager", node));
+      return createElement(InterpretedUiNode, { store, onAction: noopAction, onIntent: noopAction, requestContextMenu: undefined });
+    };
+    const view = render(createElement(deferred, { node: contractNode("first") }));
+    try {
+      expect(view.container.textContent).toContain("first");
+      view.rerender(createElement(deferred, { node: contractNode("second") }));
+      expect(view.container.textContent).toContain("second");
+      expect(renderPhaseUpdates()).toEqual([]);
+      // 🧪️ Control: the pre-fix shape (a `loadSnapshot` in the render body of a store that already has
+      // mounted subscribers) is exactly what React reports as a cross-component render-phase update.
+      const control = render(createElement(eager, { node: contractNode("first") }));
+      control.rerender(createElement(eager, { node: contractNode("second") }));
+      expect(renderPhaseUpdates().length).toBeGreaterThan(0);
+      control.unmount();
+    } finally {
+      view.unmount();
+      consoleError.mockRestore();
+    }
+  });
+
+  it("panel bodies publish into one store per panel key: a new body reloads it in place, the tab keeps its tree config, and the store answers its node", () => {
+    const cache = createBuiltNodeStoreCacheV1();
+    const historyTab = { kind: { kind: "app" as const, id: "framework.panel.history" }, label: "History", group: "settings" as const, bodyKey: "framework.body.history", children: [] };
+    const overlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {}, exampleLabels: {}, actionArgLabels: {}, dialogLabels: {}, introductionLabels: {}, groupLabels: {} };
+    const configs: Parameters<typeof panelTabDefinitionToNode>[9] = new Map();
+    const store = publishPanelBodiesV1(cache, [["framework.panel.history", contractNode("first")]])[0]![1];
+    const onAction = (): void => undefined;
+    const configOf = () => {
+      const tab = panelTabDefinitionToNode(historyTab, "settings", { "framework.panel.history": store }, onAction, 1, overlay, undefined, undefined, null, configs);
+      const tree = tab.kind === "leaf" ? tab.trees[0]!.tree : null;
+      return tree !== null && "resolveTree" in tree ? tree.resolveTree() : tree;
+    };
+    const before = configOf();
+    const second = contractNode("second");
+    expect(publishPanelBodiesV1(cache, [["framework.panel.history", second]])[0]![1], "one store per panel key").toBe(store);
+    expect(cache.nodeOf(store)).toBe(second);
+    expect(configOf(), "the tab's tree config survives the body change, so the mounted tree is never remounted").toBe(before);
+    expect(publishPanelBodiesV1(cache, [["framework.panel.history", undefined]])[0]![1]).toBe(store);
+    expect(cache.nodeOf(store), "a panel the refresh did not re-serialize keeps its body").toBe(second);
+    const pending = publishPanelBodiesV1(cache, [["framework.panel.inspection", undefined]])[0]![1];
+    expect(cache.nodeOf(pending)?.key, "a panel with no body yet starts on the pending body").toBe(pendingPanelUiNode().key);
+  });
+});
+//#endregion 🥽️BuiltNodeStoreReload
+
+test("world3d rectangle marquee draws a rectangle and pick draws nothing", () => {
+  expect(world3dMarqueeOverlayShape("rectangle")).toBe("rect");
+  expect(world3dMarqueeOverlayShape("lasso")).toBe("polygon");
+  expect(world3dMarqueeOverlayShape("pick")).toBe("rect");
+});
+
+test("InterpretedUiNode hands every surface host the shell's plugin context-menu resolver", () => {
+  // 🖱️ No `<InterpretedUiNode>` call site passes `requestContextMenu` as a prop — ShellHost publishes it
+  // through `PluginSurfaceActionsContext` instead — so until wave B11 every `ComponentSceneHost` saw
+  // `undefined` and `openSurfaceContextMenu` was unreachable in the React renderer: a right-click on a
+  // world/board/canvas surface could only ever produce ShellHost's window-level fallback menu. This is a
+  // source law because the wiring is one `??` that no render test would notice going missing again.
+  const body = String((InterpretedUiNode as unknown as { readonly type: (...args: never[]) => unknown }).type);
+  expect(body).toContain("usePluginSurfaceActions");
+  expect(body).toMatch(/requestContextMenu:\s*requestContextMenu\s*\?\?/);
+});
+
+test("openSurfaceContextMenu keeps an empty plugin answer off the shell fallback", async () => {
+  const shell = [{ id: "setActiveExample", label: "Set Active Example" }];
+  const guest = async () => [];
+  const mapped = await openSurfaceContextMenu(
+    guest,
+    { menu: { id: "world3d", args: null }, point: { x: 0, y: 0 } } as never,
+    (specs) => [...specs] as never,
+    () => shell as never,
+  );
+  expect(mapped.items).toEqual([]);
+});

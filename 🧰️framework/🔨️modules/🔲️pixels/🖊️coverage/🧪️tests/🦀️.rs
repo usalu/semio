@@ -1,7 +1,7 @@
 //! 🧫️ Shared exact coverage vectors and interruption contracts for native export.
 use super::*;
 
-fn fixtures() -> serde_json::Value {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn fixtures() -> serde_json::Value {serde_json::from_str(crate::text("🖊️coverage/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn input(value:&serde_json::Value)->CoverageInput {
     let v=&value["input"];
     CoverageInput {width:v["width"].as_u64().unwrap() as u32,height:v["height"].as_u64().unwrap() as u32,
@@ -43,7 +43,7 @@ fn malformed_input_and_grants_are_rejected() {
 
 #[test]
 fn coverage_retirement_transfers_actual_masks_and_drains_private_sweep_owners() {
-    let sources=fixtures();let cases:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
+    let sources=fixtures();let cases:serde_json::Value=serde_json::from_str(crate::text("🖊️coverage/🧪️tests/🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
     for row in cases.as_array().unwrap() {for grant in [1,7,4096] {
         let source=sources.as_array().unwrap().iter().find(|source|source["name"]==row["source"]).unwrap();let mut value=input(source);let stop=row["stop"].as_str().unwrap();
         if stop=="failure" {value.contours[0][0][0]=1_000_000_001.0;}

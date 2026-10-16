@@ -15,20 +15,20 @@
 use super::super::super::{OpeningDiff, OpeningPreferences};
 use super::super::OpeningConfigMutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/🧹clear-default-app/✏️unpins-the-cad-editor-and-keeps-the-viewer-pin/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn before() -> OpeningPreferences {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before opening preferences decode")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before opening preferences decode")
 }
 fn expected_after() -> OpeningPreferences {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after opening preferences decode")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after opening preferences decode")
 }
 fn mutation() -> OpeningConfigMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("clear-default-app mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("clear-default-app mutation decodes")
 }
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
@@ -68,14 +68,14 @@ fn repinning_the_cleared_app_restores_before() {
 /// payload carries only the coordinate, never the app it happens to be dropping.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: OpeningPreferences = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("opening preferences decode");
         let reencoded = json_value(&decoded);
         let original: serde_json::Value = serde_json::from_str(text).expect("opening preferences reparse");
         assert_eq!(reencoded, original, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: committed {label} preferences JSON is not canonical");
     }
     let reencoded = json_value(&mutation());
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("clearDefaultApp payload reparses");
+    let original: serde_json::Value = serde_json::from_str(MUTATION.as_str()).expect("clearDefaultApp payload reparses");
     assert_eq!(reencoded, original, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: committed clearDefaultApp JSON is not canonical");
 }
 
@@ -83,7 +83,7 @@ fn committed_json_is_canonical() {
 /// the declared `applied` outcome must be message-free.
 #[test]
 fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: this fixture declares an applied outcome");
     let produced = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: clearing a real pin must not raise mutation.no-op");
@@ -95,24 +95,24 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let outcome = <OpeningConfigMutation as protocol::Mutation<OpeningPreferences>>::diff(&mutation(), &before());
     let produced = json_value(outcome.diff());
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(produced, committed, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff decodes to the facet's sparse diff type and re-encodes unchanged.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed clear-default-app diff decodes");
+    let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed clear-default-app diff decodes");
     assert_eq!(decoded.pins.len(), 1, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: the sparse diff names exactly the touched coordinate");
     let reencoded = json_value(&decoded);
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff reparses");
     assert_eq!(reencoded, original, "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed diff carries the before-record to the after-record through the central applier.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed clear-default-app diff decodes");
+    let decoded: OpeningDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed clear-default-app diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-preferences");
     assert_eq!(produced, expected_after(), "clear-default-app/unpins-the-cad-editor-and-keeps-the-viewer-pin: committed diff did not carry before to after");
 }

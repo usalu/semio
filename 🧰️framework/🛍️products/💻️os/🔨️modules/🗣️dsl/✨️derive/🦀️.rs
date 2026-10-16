@@ -5,24 +5,16 @@ use quote::quote;
 use std::{collections::{BTreeMap, HashSet}, fs, path::{Component, Path, PathBuf}};
 use syn::{Data, DeriveInput, Fields, Type, parse_macro_input};
 
-#[cfg(test)]
-#[path = "🧪️tests/📤️macro-exports/🦀️.rs"]
-mod macro_export_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🪪️mandatory-mutation-descriptor/🦀️.rs"]
-mod mandatory_mutation_descriptor_tests;
-
 //#region 🔖️MutationSourceAuthority
 #[derive(Debug)]
-struct MutationSourceAuthority {
-    workspace_root: PathBuf,
-    mutation_root: PathBuf,
-    owner: String,
+#[doc(hidden)] pub struct MutationSourceAuthority {
+    #[doc(hidden)] pub workspace_root: PathBuf,
+    #[doc(hidden)] pub mutation_root: PathBuf,
+    #[doc(hidden)] pub owner: String,
     expected_semantic_kind: Option<String>,
-    source_path: PathBuf,
-    descriptor_path: PathBuf,
-    taxonomy_path: PathBuf,
+    #[doc(hidden)] pub source_path: PathBuf,
+    #[doc(hidden)] pub descriptor_path: PathBuf,
+    #[doc(hidden)] pub taxonomy_path: PathBuf,
 }
 
 type MutationDomainOperations = Vec<(String, String)>;
@@ -30,13 +22,13 @@ type MutationDomainOperations = Vec<(String, String)>;
 /// 🧭️ Workspace-relative locator of the taxonomy's generated mutation-source-authority projection (`bun repo run
 /// @semio-tech/dsl-derive-rs:generate`), the only authority file an expansion reads and tracks, so an edit elsewhere in the taxonomy,
 /// `package.json` or any `📋️project.json` never invalidates a crate that derives mutations.
-const MUTATION_AUTHORITY_LOCATOR: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔣️mutation-authority.json";
+#[doc(hidden)] pub const MUTATION_AUTHORITY_LOCATOR: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔣️mutation-authority.json";
 
 /// 🪪️ Schema id the projection must declare (`MutationSourceAuthorityProjectionV1` in `🧬️schema/🔣️.json`).
-const MUTATION_AUTHORITY_SCHEMA: &str = "semio.dsl.mutation-source-authority/v1";
+#[doc(hidden)] pub const MUTATION_AUTHORITY_SCHEMA: &str = "semio.dsl.mutation-source-authority/v1";
 
 /// 🗂️ Workspace-relative locator of the generated schema-document index (`bun repo run @semio-tech/dsl-derive-rs:generate-schema-index`).
-const MUTATION_SCHEMA_INDEX_LOCATOR: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json";
+#[doc(hidden)] pub const MUTATION_SCHEMA_INDEX_LOCATOR: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json";
 
 /// 🪪️ Schema id the index must declare (`MutationSchemaDocumentIndexV1` in `🧬️schema/🔣️.json`).
 const MUTATION_SCHEMA_INDEX_SCHEMA: &str = "semio.dsl.mutation-schema-document-index/v1";
@@ -48,27 +40,27 @@ struct MutationAuthorityCommon {
     taxonomy_path: PathBuf,
     mutation_collection: String,
     mutation_payload_facet: String,
-    source_filename: String,
-    descriptor_filename: String,
+    #[doc(hidden)] pub source_filename: String,
+    #[doc(hidden)] pub descriptor_filename: String,
     domain_owners: BTreeMap<String, MutationDomainOperations>,
     aggregate_sources: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Debug)]
 struct MutationAggregateSourceAuthority {
-    workspace_root: PathBuf,
-    mutation_root: PathBuf,
-    #[cfg(test)]
-    source_path: PathBuf,
-    taxonomy_path: PathBuf,
+    #[doc(hidden)] pub workspace_root: PathBuf,
+    #[doc(hidden)] pub mutation_root: PathBuf,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)] pub source_path: PathBuf,
+    #[doc(hidden)] pub taxonomy_path: PathBuf,
     mutation_payload_facet: String,
-    source_filename: String,
-    descriptor_filename: String,
-    domain_operations: Option<MutationDomainOperations>,
+    #[doc(hidden)] pub source_filename: String,
+    #[doc(hidden)] pub descriptor_filename: String,
+    #[doc(hidden)] pub domain_operations: Option<MutationDomainOperations>,
     component_roots: Vec<(String, Option<MutationDomainOperations>)>,
 }
 
-fn mutation_authority_common(source: &Path, compiler_cwd: &Path) -> Result<MutationAuthorityCommon, String> {
+#[doc(hidden)] pub fn mutation_authority_common(source: &Path, compiler_cwd: &Path) -> Result<MutationAuthorityCommon, String> {
     let source_path = mutation_authority_normalize(source, compiler_cwd)?;
     let workspace_root = mutation_authority_workspace_root(&source_path)?;
     mutation_authority_no_follow(&workspace_root, &source_path, false)?;
@@ -85,7 +77,7 @@ fn mutation_authority_common(source: &Path, compiler_cwd: &Path) -> Result<Mutat
     Ok(MutationAuthorityCommon { workspace_root, source_path, taxonomy_path, mutation_collection, mutation_payload_facet, source_filename, descriptor_filename, domain_owners, aggregate_sources })
 }
 
-fn mutation_source_authority(source: &Path, compiler_cwd: &Path) -> Result<MutationSourceAuthority, String> {
+#[doc(hidden)] pub fn mutation_source_authority(source: &Path, compiler_cwd: &Path) -> Result<MutationSourceAuthority, String> {
     let common = mutation_authority_common(source, compiler_cwd)?;
     let MutationAuthorityCommon { workspace_root, source_path, taxonomy_path, mutation_collection, mutation_payload_facet, source_filename, descriptor_filename, domain_owners, .. } = common;
     if source_path.file_name().and_then(|name| name.to_str()) != Some(source_filename.as_str()) { return Err("source is not the taxonomy canonical mutation primary".to_string()); }
@@ -117,7 +109,7 @@ fn mutation_source_authority(source: &Path, compiler_cwd: &Path) -> Result<Mutat
     Ok(authority)
 }
 
-fn mutation_aggregate_source_authority(source: &Path, compiler_cwd: &Path) -> Result<MutationAggregateSourceAuthority, String> {
+#[doc(hidden)] pub fn mutation_aggregate_source_authority(source: &Path, compiler_cwd: &Path) -> Result<MutationAggregateSourceAuthority, String> {
     let common = mutation_authority_common(source, compiler_cwd)?;
     if common.source_path.file_name().and_then(|name| name.to_str()) != Some(common.source_filename.as_str()) { return Err("aggregate source is not the taxonomy canonical mutation primary".to_string()); }
     let mutation_root = common.source_path.parent().ok_or_else(|| "aggregate source has no mutation collection directory".to_string())?;
@@ -136,7 +128,7 @@ fn mutation_aggregate_source_authority(source: &Path, compiler_cwd: &Path) -> Re
     Ok(MutationAggregateSourceAuthority {
         workspace_root: common.workspace_root,
         mutation_root: mutation_root.to_path_buf(),
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         source_path: common.source_path,
         taxonomy_path: common.taxonomy_path,
         mutation_payload_facet: common.mutation_payload_facet,
@@ -147,7 +139,7 @@ fn mutation_aggregate_source_authority(source: &Path, compiler_cwd: &Path) -> Re
     })
 }
 
-fn mutation_authority_aggregate_sources(taxonomy: &serde_json::Value, collection: &str) -> Result<BTreeMap<String, Vec<String>>, String> {
+#[doc(hidden)] pub fn mutation_authority_aggregate_sources(taxonomy: &serde_json::Value, collection: &str) -> Result<BTreeMap<String, Vec<String>>, String> {
     let mut result = BTreeMap::new();
     let Some(registry) = taxonomy.get("mutationAggregateSources") else { return Ok(result); };
     let roots = registry.as_object().ok_or_else(|| "mutationAggregateSources must be an exact-root object".to_string())?;
@@ -166,7 +158,7 @@ fn mutation_authority_aggregate_sources(taxonomy: &serde_json::Value, collection
     Ok(result)
 }
 
-fn mutation_authority_domain_owners(taxonomy: &serde_json::Value, collection: &str) -> Result<BTreeMap<String, MutationDomainOperations>, String> {
+#[doc(hidden)] pub fn mutation_authority_domain_owners(taxonomy: &serde_json::Value, collection: &str) -> Result<BTreeMap<String, MutationDomainOperations>, String> {
     let mut result = BTreeMap::new();
     let Some(registry) = taxonomy.get("mutationDomainOwners") else { return Ok(result); };
     let roots = registry.as_object().ok_or_else(|| "mutationDomainOwners must be an exact-root object".to_string())?;
@@ -250,7 +242,7 @@ fn mutation_authority_raw_lexical(path: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn mutation_authority_workspace_root(source: &Path) -> Result<PathBuf, String> {
+#[doc(hidden)] pub fn mutation_authority_workspace_root(source: &Path) -> Result<PathBuf, String> {
     for ancestor in source.parent().into_iter().flat_map(Path::ancestors) {
         let package = ancestor.join("package.json");
         match mutation_authority_node(&package) {
@@ -299,7 +291,7 @@ fn mutation_authority_no_follow(root: &Path, target: &Path, directory: bool) -> 
     Ok(())
 }
 
-fn mutation_authority_locator(root: &Path, locator: &str) -> Result<PathBuf, String> {
+#[doc(hidden)] pub fn mutation_authority_locator(root: &Path, locator: &str) -> Result<PathBuf, String> {
     if locator.is_empty() || locator.contains('\0') || locator.contains('\\') || locator.starts_with('/') || locator.as_bytes().get(1) == Some(&b':') { return Err("mutation authority locator is not a normalized repository-relative path".to_string()); }
     let mut target = root.to_path_buf();
     for segment in locator.split('/') {
@@ -309,11 +301,11 @@ fn mutation_authority_locator(root: &Path, locator: &str) -> Result<PathBuf, Str
     Ok(target)
 }
 
-fn mutation_authority_segment(authority: &serde_json::Value, key: &str) -> Result<String, String> {
+#[doc(hidden)] pub fn mutation_authority_segment(authority: &serde_json::Value, key: &str) -> Result<String, String> {
     authority.get(key).and_then(serde_json::Value::as_str).filter(|value| mutation_authority_owner_segment(value)).map(str::to_string).ok_or_else(|| format!("mutation authority projection {key} is not one portable path segment"))
 }
 
-fn mutation_authority_relative(root: &Path, path: &Path) -> Result<String, String> {
+#[doc(hidden)] pub fn mutation_authority_relative(root: &Path, path: &Path) -> Result<String, String> {
     let relative = path.strip_prefix(root).map_err(|_| "owner escapes workspace root".to_string())?;
     let mut segments = Vec::new();
     for component in relative.components() {
@@ -326,13 +318,6 @@ fn mutation_authority_relative(root: &Path, path: &Path) -> Result<String, Strin
     Ok(segments.join("/"))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mutation-source-authority/🦀️.rs"]
-mod mutation_source_authority_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mutation-aggregate-source-authority/🦀️.rs"]
-mod mutation_aggregate_source_authority_tests;
 //#endregion 🔖️MutationSourceAuthority
 
 //#region 🔣️MutationLeafJson
@@ -367,7 +352,7 @@ struct MutationLeafJson {
     outcome_classes: Vec<MutationLeafOutcomeClass>,
     composition: MutationLeafComposition,
     required_language_surfaces: Vec<MutationLeafLanguageSurface>,
-    editable: bool,
+    #[doc(hidden)] pub editable: bool,
 }
 
 const MUTATION_LEAF_DESCRIPTOR_KEYS: [&str; 14] = ["schemaVersion", "owner", "semanticKind", "displayName", "emoji", "aggregateVariant", "payloadSchema", "textOpcode", "binaryTag", "invertibility", "diffParticipation", "outcomeClasses", "composition", "requiredLanguageSurfaces"];
@@ -375,7 +360,7 @@ const MUTATION_LEAF_DESCRIPTOR_KEYS: [&str; 14] = ["schemaVersion", "owner", "se
 /// ✏️ The one optional descriptor key: `false` declares the leaf withdraw-only (design §22.20); absent means editable.
 const MUTATION_LEAF_EDITABLE_KEY: &str = "editable";
 
-fn parse_mutation_leaf_descriptor(raw: &[u8], authority: &MutationSourceAuthority) -> Result<MutationLeafJson, String> {
+#[doc(hidden)] pub fn parse_mutation_leaf_descriptor(raw: &[u8], authority: &MutationSourceAuthority) -> Result<MutationLeafJson, String> {
     mutation_leaf_reject_duplicate_keys(raw)?;
     let value: serde_json::Value = serde_json::from_slice(raw).map_err(|error| format!("malformed mutation descriptor JSON: {error}"))?;
     let object = value.as_object().ok_or_else(|| "mutation descriptor must be an object".to_string())?;
@@ -475,7 +460,7 @@ fn mutation_leaf_json_value_end(raw: &[u8], index: usize) -> Option<usize> {
 fn mutation_leaf_balanced_end(raw: &[u8], mut index: usize, open: u8, close: u8) -> Option<usize> { let mut depth = 0usize; while let Some(byte) = raw.get(index) { if *byte == b'\"' { index = mutation_leaf_string_end(raw, index)?; continue; }
         if *byte == open { depth += 1; } else if *byte == close { depth -= 1; if depth == 0 { return Some(index + 1); } } index += 1; } None }
 
-fn emit_mutation_leaf_descriptor(contract: &syn::Path, descriptor: &MutationLeafJson) -> proc_macro2::TokenStream {
+#[doc(hidden)] pub fn emit_mutation_leaf_descriptor(contract: &syn::Path, descriptor: &MutationLeafJson) -> proc_macro2::TokenStream {
     let schema_version = descriptor.schema_version; let owner = &descriptor.owner; let semantic_kind = &descriptor.semantic_kind; let display_name = &descriptor.display_name; let emoji = &descriptor.emoji; let aggregate_variant = &descriptor.aggregate_variant; let payload_schema = &descriptor.payload_schema;
     let text_opcode = descriptor.text_opcode.as_ref().map_or_else(|| quote!(::core::option::Option::None), |value| quote!(::core::option::Option::Some(#value))); let binary_tag = descriptor.binary_tag.map_or_else(|| quote!(::core::option::Option::None), |value| quote!(::core::option::Option::Some(#value)));
     let invertibility = match &descriptor.invertibility { MutationLeafInvertibility::SelfInvertible => quote!(#contract::MutationInvertibility::SelfInvertible), MutationLeafInvertibility::ExplicitMutation => quote!(#contract::MutationInvertibility::ExplicitMutation), MutationLeafInvertibility::Plan => quote!(#contract::MutationInvertibility::Plan), MutationLeafInvertibility::NonInvertible => quote!(#contract::MutationInvertibility::NonInvertible) };
@@ -486,16 +471,13 @@ fn emit_mutation_leaf_descriptor(contract: &syn::Path, descriptor: &MutationLeaf
     quote!(#contract::MutationLeafDescriptor { schema_version: #schema_version, owner: #owner, semantic_kind: #semantic_kind, display_name: #display_name, emoji: #emoji, aggregate_variant: #aggregate_variant, payload_schema: #payload_schema, text_opcode: #text_opcode, binary_tag: #binary_tag, invertibility: #invertibility, diff_participation: #diff_participation, outcome_classes: &[#(#outcome_classes),*], composition: #composition, required_language_surfaces: &[#(#required_language_surfaces),*] })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mutation-leaf-json/🦀️.rs"]
-mod mutation_leaf_json_tests;
 //#endregion 🔣️MutationLeafJson
 
 //#region 🪪️MutationLeaf
 #[derive(Debug)]
-struct MutationLeafAttrs { contract: syn::Path, payload: Option<syn::Ident>, input_schema: Option<syn::Path> }
+#[doc(hidden)] pub struct MutationLeafAttrs { contract: syn::Path, payload: Option<syn::Ident>, input_schema: Option<syn::Path> }
 
-fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAttrs> {
+#[doc(hidden)] pub fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAttrs> {
     let mut contract = None;
     let mut payload = None;
     let mut input_schema = None;
@@ -535,7 +517,7 @@ fn parse_mutation_leaf_attrs(input: &DeriveInput) -> syn::Result<MutationLeafAtt
     Ok(MutationLeafAttrs { contract, payload, input_schema })
 }
 
-fn mutation_leaf_portable_path(path: &Path) -> Result<String, String> { path.to_str().map(|path| path.replace('\\', "/")).filter(|path| !path.is_empty()).ok_or_else(|| "metadata path is not UTF-8".to_string()) }
+#[doc(hidden)] pub fn mutation_leaf_portable_path(path: &Path) -> Result<String, String> { path.to_str().map(|path| path.replace('\\', "/")).filter(|path| !path.is_empty()).ok_or_else(|| "metadata path is not UTF-8".to_string()) }
 
 /// 🧭️ Canonical path without the Windows verbatim prefix, so a canonical root and a canonical member share one prefix on every platform.
 fn mutation_authority_canonical(path: &Path) -> Result<PathBuf, String> {
@@ -543,7 +525,7 @@ fn mutation_authority_canonical(path: &Path) -> Result<PathBuf, String> {
     Ok(match canonical.to_str().and_then(|value| value.strip_prefix(r"\\?\")) { Some(plain) => PathBuf::from(plain), None => canonical })
 }
 
-fn mutation_authority_workspace_token(workspace_root: &Path, taxonomy_path: &Path) -> Result<[u8; 32], String> {
+#[doc(hidden)] pub fn mutation_authority_workspace_token(workspace_root: &Path, taxonomy_path: &Path) -> Result<[u8; 32], String> {
     let workspace_root = mutation_authority_canonical(workspace_root)?;
     let taxonomy_path = mutation_authority_canonical(taxonomy_path)?;
     let workspace = mutation_leaf_portable_path(&workspace_root)?;
@@ -553,7 +535,7 @@ fn mutation_authority_workspace_token(workspace_root: &Path, taxonomy_path: &Pat
     Ok(semio_framework_hash::Sha256::digest(&input))
 }
 
-fn mutation_leaf_workspace_token(authority: &MutationSourceAuthority) -> Result<[u8; 32], String> { mutation_authority_workspace_token(&authority.workspace_root, &authority.taxonomy_path) }
+#[doc(hidden)] pub fn mutation_leaf_workspace_token(authority: &MutationSourceAuthority) -> Result<[u8; 32], String> { mutation_authority_workspace_token(&authority.workspace_root, &authority.taxonomy_path) }
 
 fn mutation_leaf_include_path(path: &Path) -> Result<String, String> { mutation_leaf_portable_path(path) }
 
@@ -562,7 +544,7 @@ fn mutation_leaf_include_path(path: &Path) -> Result<String, String> { mutation_
 /// (`mutation_payload_round_trip_failures`) holds an inert leaf to that. `from_input_value` stays the trait's: feature rows and
 /// fixtures still decode the leaf from its payload. Such a leaf declares neither `payload` nor `input_schema` — both name an
 /// editable payload.
-fn mutation_leaf_withdraw_only(name: &syn::Ident, descriptor: &MutationLeafJson, attrs: &MutationLeafAttrs) -> syn::Result<Option<proc_macro2::TokenStream>> {
+#[doc(hidden)] pub fn mutation_leaf_withdraw_only(name: &syn::Ident, descriptor: &MutationLeafJson, attrs: &MutationLeafAttrs) -> syn::Result<Option<proc_macro2::TokenStream>> {
     if descriptor.editable { return Ok(None); }
     if let Some(variant) = &attrs.payload { return Err(syn::Error::new_spanned(variant, "a withdraw-only leaf (descriptor editable: false) declares no mutation_leaf payload")); }
     if let Some(path) = &attrs.input_schema { return Err(syn::Error::new_spanned(path, "a withdraw-only leaf (descriptor editable: false) declares no mutation_leaf input_schema")); }
@@ -709,7 +691,7 @@ fn mutation_leaf_inverse_rows_body(rows: &MutationLeafInverseRows, payload: Opti
 
 /// 🧬️ The descriptor's `payloadSchema`, resolved beside the descriptor: a normalized relative path of portable
 /// segments that stays inside the leaf and names a regular file reached without a symlink.
-fn mutation_leaf_payload_schema_path(authority: &MutationSourceAuthority, payload_schema: &str) -> Result<PathBuf, String> {
+#[doc(hidden)] pub fn mutation_leaf_payload_schema_path(authority: &MutationSourceAuthority, payload_schema: &str) -> Result<PathBuf, String> {
     let leaf = authority.descriptor_path.parent().ok_or_else(|| "descriptor has no leaf directory".to_string())?;
     if payload_schema.starts_with('/') || payload_schema.contains('\\') || payload_schema.contains('\0') { return Err("payloadSchema is not a relative portable path".to_string()); }
     let mut path = leaf.to_path_buf();
@@ -759,7 +741,7 @@ fn mutation_schema_example_collection(path: &Path) -> bool {
 
 /// 🗂️ The `$id` documents of `root` from the generated schema index. The index file is the only directory-freshness input:
 /// adding a schema rewrites it, and rustc tracks that one file instead of every walked directory.
-fn mutation_schema_document_index(root: &Path) -> Result<std::rc::Rc<BTreeMap<String, PathBuf>>, String> {
+#[doc(hidden)] pub fn mutation_schema_document_index(root: &Path) -> Result<std::rc::Rc<BTreeMap<String, PathBuf>>, String> {
     let workspace = mutation_authority_workspace_root(root)?;
     let index = mutation_schema_index(&workspace)?;
     if mutation_schema_example_collection(root) { return Ok(std::rc::Rc::new(BTreeMap::new())); }
@@ -829,10 +811,6 @@ fn mutation_schema_document_references(path: &Path) -> Result<(Option<String>, V
 }
 //#endregion 🪪️MutationLeaf
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mutation-leaf-derive/🦀️.rs"]
-mod mutation_leaf_derive_tests;
-
 /// ✉️ Owns artifact envelope metadata independently from canonical Record fields.
 pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -879,7 +857,7 @@ pub fn expand_diff_text(input: TokenStream) -> TokenStream {
     diff_text_tokens(&name).into()
 }
 
-fn diff_text_tokens(name: &Type) -> proc_macro2::TokenStream {
+#[doc(hidden)] pub fn diff_text_tokens(name: &Type) -> proc_macro2::TokenStream {
     quote! {
         impl ::semio_framework_os_kernel::DiffText for #name {
             fn print_diff(&self) -> String {
@@ -899,7 +877,7 @@ pub fn expand_diff_binary(input: TokenStream) -> TokenStream {
     diff_binary_tokens(&name).into()
 }
 
-fn diff_binary_tokens(name: &Type) -> proc_macro2::TokenStream {
+#[doc(hidden)] pub fn diff_binary_tokens(name: &Type) -> proc_macro2::TokenStream {
     quote! {
         impl ::semio_framework_os_kernel::DiffBinary for #name {
             fn encode_diff(&self) -> Result<Vec<u8>, ::semio_framework_os_kernel::ProtocolError> {
@@ -926,7 +904,7 @@ struct MutationsAttrs {
 }
 
 // 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn parse_mutations_attrs(input: &DeriveInput) -> syn::Result<MutationsAttrs> {
+#[doc(hidden)] pub fn parse_mutations_attrs(input: &DeriveInput) -> syn::Result<MutationsAttrs> {
     let mut out = MutationsAttrs::default();
     for attr in &input.attrs {
         if !attr.path().is_ident("mutations") {
@@ -953,10 +931,6 @@ fn parse_mutations_attrs(input: &DeriveInput) -> syn::Result<MutationsAttrs> {
     Ok(out)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mutation-attrs/🦀️.rs"]
-mod mutation_attrs_tests;
-
 pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let source = match input.ident.span().unwrap().local_file() {
@@ -977,7 +951,7 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
     }
 }
 
-fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuthority) -> syn::Result<proc_macro2::TokenStream> {
+#[doc(hidden)] pub fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuthority) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
     let Data::Enum(data) = &input.data else {
         return Err(syn::Error::new_spanned(input, "#[derive(Mutations)] only supports enums"));
@@ -1299,12 +1273,6 @@ fn mutation_relative_path(from: &Path, to: &Path) -> Option<String> {
 }
 //#endregion 🔖️Mutations
 
-//#region 🧪️MandatoryMutations
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mandatory-mutations/🦀️.rs"]
-mod mandatory_mutations_tests;
-//#endregion 🧪️MandatoryMutations
-
 //#region 🔖️CompositeMutation
 /// 🌉️ `#[composite(snapshot = ..., op = ...)]` container attrs for
 /// `#[derive(CompositeMutation)]` — see that macro's doc.
@@ -1315,7 +1283,7 @@ struct CompositeAttrs {
 }
 
 // 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn parse_composite_attrs(input: &DeriveInput) -> syn::Result<CompositeAttrs> {
+#[doc(hidden)] pub fn parse_composite_attrs(input: &DeriveInput) -> syn::Result<CompositeAttrs> {
     let mut out = CompositeAttrs::default();
     for attr in &input.attrs {
         if !attr.path().is_ident("composite") {
@@ -1335,10 +1303,6 @@ fn parse_composite_attrs(input: &DeriveInput) -> syn::Result<CompositeAttrs> {
     Ok(out)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️composite-attrs/🦀️.rs"]
-mod composite_attrs_tests;
-
 pub fn expand_derive_composite_mutation(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match expand_composite_mutation(&input) {
@@ -1347,7 +1311,7 @@ pub fn expand_derive_composite_mutation(input: TokenStream) -> TokenStream {
     }
 }
 
-fn expand_composite_mutation(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+#[doc(hidden)] pub fn expand_composite_mutation(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = input.ident.clone();
     let attrs = parse_composite_attrs(input)?;
     let (Some(snapshot_ty), Some(op_ty)) = (attrs.snapshot, attrs.op) else {
@@ -1391,12 +1355,6 @@ fn expand_composite_mutation(input: &DeriveInput) -> syn::Result<proc_macro2::To
 }
 //#endregion 🔖️CompositeMutation
 
-//#region 🧪️CompositeTimestamp
-#[cfg(test)]
-#[path = "🧪️tests/🔬️composite-timestamp/🦀️.rs"]
-mod composite_timestamp_tests;
-//#endregion 🧪️CompositeTimestamp
-
 //#region 🔖️VariantHelpers
 /// 🔡️ Converts a Rust identifier (`PascalCase`/`camelCase`/`snake_case`, any mix) into
 /// lowercase `kebab-case` — the unified syntax law's key/keyword/tag convention. Falls back to
@@ -1438,11 +1396,3 @@ fn to_kebab(name: &str) -> String {
 }
 
 //#endregion 🔖️VariantHelpers
-
-#[cfg(test)]
-#[path = "🧪️tests/🪆️record-owner/🦀️.rs"]
-mod canonical_product_macro_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🚪️diff-codecs/🦀️.rs"]
-mod diff_codec_tests;

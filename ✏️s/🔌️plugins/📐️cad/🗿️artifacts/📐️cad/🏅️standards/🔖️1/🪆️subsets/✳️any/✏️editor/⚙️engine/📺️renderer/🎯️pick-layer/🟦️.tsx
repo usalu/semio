@@ -12,21 +12,14 @@ import {
   type Ray as ThreeRay
 } from "@semio-tech/framework/ui/targets/react";
 import { type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import {
-  defaultModelDefinitionId,
-  modelDefinitionUsesGeometryPicking,
-  listModelObjectsForModelDefinition,
-  objectPrimitiveEntries,
-  resolvePrimitiveRefKind,
-  Model,
-  type InteractionEvent,
-  type InteractionSpec,
-  type SelectionTarget,
-  type ModelEntityKind,
-  resolveTypologyStyle,
-  type ResolvedTypologyStyle,
-  type SpatialEntityFlags
-} from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type ModelEntityKind } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { resolveTypologyStyle } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎨️typology/🟦️.ts";
+import { type InteractionSpec } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎰️interaction-spec/🟦️.ts";
+import { defaultModelDefinitionId, type ResolvedTypologyStyle } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
+import { type SpatialEntityFlags } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🗺️paths/🟦️.ts";
+import { objectPrimitiveEntries, resolvePrimitiveRefKind, Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { modelDefinitionUsesGeometryPicking, listModelObjectsForModelDefinition } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
+import { type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import { mergeInteractionSpatial } from "../../🎬️actions/🟦️.ts";
 import { isInteractionSessionActive } from "../../🗿️artifact/🟦️.ts";
 import { Line, type SolidRef, THREE } from "../🔌️ports/🟦️.ts";

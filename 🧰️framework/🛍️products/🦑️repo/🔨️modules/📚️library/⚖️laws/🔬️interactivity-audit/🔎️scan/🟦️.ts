@@ -1,4 +1,4 @@
-/** 🧭️ Interactivity audit: reachability predicates, comment masking and the file scan.
+/** 🔎️ Interactivity audit: reachability predicates, comment masking and the file scan.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🏁️run/🟦️.ts
  */
 import { policyMaskLiterals, policyTestModSpans, policyLineInTestMod, interactivityCfgTestItemSpans } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";

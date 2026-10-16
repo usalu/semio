@@ -1,8 +1,8 @@
 /** 🚪️ GIS service declarations preserve the installed protocol through the framework's explicit typed and wire IO. */
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
-import {admitDocumentServiceDeclarationV1} from "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts";
-import {admitDocumentServiceWireDeclarationV1,encodeDocumentServiceWireDeclarationV1} from "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts";
+import {admitDocumentServiceDeclarationV1} from "@semio-tech/framework/inference/service";
+import {admitDocumentServiceWireDeclarationV1,encodeDocumentServiceWireDeclarationV1} from "@semio-tech/framework/inference/service/io";
 import {gisMapDocumentServiceDeclarationV1} from "../../🟦️.ts";
 import {gisMapDocumentServiceWireDeclarationV1} from "../../🚪️io/🟦️.ts";
 

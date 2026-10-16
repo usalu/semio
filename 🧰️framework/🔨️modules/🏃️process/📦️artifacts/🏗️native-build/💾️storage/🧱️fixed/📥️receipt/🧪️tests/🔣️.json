@@ -1,0 +1,33 @@
+{
+  "expectation": {
+    "version": 1,
+    "directory": "D:\\owned",
+    "receipt": "D:\\owned\\image.json",
+    "directoryDevice": "7",
+    "directoryInode": "11",
+    "receiptDevice": "7",
+    "receiptInode": "12",
+    "receiptBytes": 199
+  },
+  "cases": [
+    "value",
+    "changed-directory",
+    "changed-receipt",
+    "wrong-volume",
+    "changed-mount",
+    "wrong-filesystem",
+    "flush-fault",
+    "not-closed",
+    "extra",
+    "malformed",
+    "oversize",
+    "reordered"
+  ],
+  "publisher": [
+    "nested",
+    "host",
+    "stopped",
+    "changed-parent",
+    "flush-fault"
+  ]
+}

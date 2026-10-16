@@ -1,7 +1,6 @@
 //! 🔬️ Full Run field ownership measured through actual allocator requests.
 use super::*;
-#[path = "../../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
-mod observed;
+use semio_framework_io_sqlite_snapshot_testing_backing as observed;
 
 fn literal_equal(actual: &RunArtifact, expected: &RunArtifact) {
     assert_eq!(actual.node_records.len(), expected.node_records.len());
@@ -17,7 +16,7 @@ fn literal_equal(actual: &RunArtifact, expected: &RunArtifact) {
 
 #[test]
 fn sqlite_semantic_run_full_concrete_requests_preserve_every_field_and_raw_word() {
-    let plan: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/💰️backing/🔬️requests/🔣️.json")).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(crate::text("🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/💰️backing/🔬️requests/🔣️.json")).unwrap();
     assert_eq!(plan["phases"], serde_json::json!(["projectSnapshot", "reconstructSnapshot"]));
     let words = laws();
     for hex in words["binary64Words"].as_array().unwrap() {

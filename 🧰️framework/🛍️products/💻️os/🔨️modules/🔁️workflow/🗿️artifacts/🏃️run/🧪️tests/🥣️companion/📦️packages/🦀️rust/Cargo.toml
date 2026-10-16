@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-artifact-workflow-run-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion tests of the workflow run artifact: package contract, admission, replay, mutation descriptors and SQLite snapshot laws"
+publish = false
+
+[package.metadata.semio]
+role = "artifact"
+id = "workflow-run-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-workflow-run = { path = "../../../../📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-pack = { path = "../../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-async-macros = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
+semio-framework-os-space-testing-sqlite-native-caller = { path = "../../../../../../../🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust" }

@@ -5,6 +5,7 @@ resolver = "2"
 members = [
     "🎮️commands/📤️jobs/📦️packages/🦀️rust",
     "🎮️commands/🧵️retained/📦️packages/🦀️rust",
+    "🔨️modules/🎲️board/🎬️scene/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",

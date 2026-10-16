@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-os-directory-client-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion tests of os-directory-client: client unit tests, native transports, document HTTP and identity"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "os-directory-client-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-directory-client = { path = "../../../../📦️packages/🦀️rust", features = ["ureq", "sync", "testkit"] }
+semio-framework-async = { path = "../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-schema-validator = { path = "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-actor = { path = "../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
+semio-framework-os-services = { path = "../../../../../../🛎️services/📦️packages/🦀️rust" }
+tokio-tungstenite = { version = "0.26", features = ["rustls-tls-webpki-roots"] }

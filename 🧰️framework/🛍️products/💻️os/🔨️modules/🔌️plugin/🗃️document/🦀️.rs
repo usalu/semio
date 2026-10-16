@@ -749,7 +749,7 @@ where
 
     /// 🔎️ The first leg's refusal as its typed fault, for a caller that must name why a stalled
     /// replacement never reached its target state.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn refusal_fault(&self) -> Option<Fault> {
         self.refusal.map(ArtifactStoreReplacementRefusal::into_fault)
     }
@@ -775,7 +775,7 @@ where
     }
 
     /// 🧪️ Borrows the terminal retained store frame through its exact replacement authority.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn terminal_store_frame_bytes(&self) -> Option<usize> {
         if !matches!(self.state, ActiveArtifactStoreReplacementState::RetiringRejectedCandidate | ActiveArtifactStoreReplacementState::RetiringCommittedStore) { return None; }
         self.retained_store.as_ref().filter(|owner| owner.close_owned_store_terminal_is_empty()).map(|owner| std::mem::size_of_val(owner.as_ref()))

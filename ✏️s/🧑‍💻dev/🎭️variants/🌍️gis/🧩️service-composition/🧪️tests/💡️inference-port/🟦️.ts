@@ -1,13 +1,13 @@
 /** 💡️ The host-owned GIS Map inference port driven through a fake authenticated transport, and the retained inference job across a refused successor opening. */
 import { idleGisMapInferencePortStatusV1 } from "../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts";
 import { gisMapDocumentServiceWireDeclarationV1 } from "../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🚪️io/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { workerLawFakesV1, WORKER_LAW_CAPABILITY } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
 import type { ServiceCompositionTestDependenciesV1, InferenceOperationV1 } from "../🧰️dependencies/🟦️.ts";
 
 type BackboneWorkerResponse = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").BackboneWorkerResponse;
-type DocumentExecutionTargetLeaseFieldsV1 = import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentExecutionTargetLeaseFieldsV1;
+type DocumentExecutionTargetLeaseFieldsV1 = import("@semio-tech/framework/directory/schema").DocumentExecutionTargetLeaseFieldsV1;
 type GisMapInferencePortStatusV1 = import("../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts").GisMapInferencePortStatusV1;
 type GisMapInferencePreviewV1 = import("../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts").GisMapInferencePreviewV1;
 type Vitest = NonNullable<ImportMeta["vitest"]>;

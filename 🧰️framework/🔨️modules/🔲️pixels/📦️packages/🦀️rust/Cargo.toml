@@ -22,10 +22,6 @@ semio-framework-io-binary-source = { path = "../../../🚪️io/🔢️binary/�
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-deflate = { path = "../../../🗜️deflate/📦️packages/🦀️rust" }
 
-[dev-dependencies]
-semio-framework-2d = { path = "../../../◻️2d/📦️packages/🦀️rust" }
-base64 = "0.22.1"
-percent-encoding = "2.3.2"
-png = "0.17.16"
-serde_json = { workspace = true }
-image = { version = "0.25", default-features = false, features = ["jpeg"] }
+[features]
+# 🪝️ Exposes the `testkit` hooks (aliases and forwarders of crate-private items) for the companion crate `semio-framework-pixels-tests`.
+testkit = []

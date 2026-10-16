@@ -2,8 +2,8 @@ use super::*;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
-#[path = "../../../🧪️tests/🧰️oracle-support/🦀️.rs"]
-mod support;
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_geometry_oracle_support as support;
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✅️analysis-check/🔣️.json");
 
@@ -17,12 +17,12 @@ fn case_named(name: &str) -> Value {
 
 #[test]
 fn the_compute_table_and_the_fixture_cover_exactly_the_catalogue_kinds() {
-    support::assert_category("analysis.check", COMPUTES, FIXTURE);
+    support::assert_category(catalogue(), "analysis.check", COMPUTES, FIXTURE);
 }
 
 #[test]
 fn every_fixture_case_holds_at_fuel_one_and_at_unbounded_fuel() {
-    assert!(support::run_fixture(FIXTURE, COMPUTES) >= 28);
+    assert!(support::run_fixture(catalogue(), FIXTURE, COMPUTES) >= 28);
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn the_winding_census_agrees_with_the_kernels_consistency_flag_on_every_fixture_
 #[test]
 fn a_boolean_that_needs_the_kernels_job_is_advanced_in_slices_and_equals_the_whole_run() {
     let case = case_named("a cylinder and a box interfere in a circular segment");
-    let kind = support::kind_of("analysis.interference");
+    let kind = support::kind_of(catalogue(), "analysis.interference");
     let mut job = start_of("analysis.interference")(kind, support::inputs_of(kind, &case));
     let mut slices = 0;
     let stepped = loop {
@@ -57,7 +57,7 @@ fn a_boolean_that_needs_the_kernels_job_is_advanced_in_slices_and_equals_the_who
 #[test]
 fn cancelling_an_interference_job_mid_run_ends_it_with_a_cancelled_fault() {
     let case = case_named("a cylinder and a box interfere in a circular segment");
-    let kind = support::kind_of("analysis.interference");
+    let kind = support::kind_of(catalogue(), "analysis.interference");
     let mut job = start_of("analysis.interference")(kind, support::inputs_of(kind, &case));
     assert!(matches!(job.step(1), WidgetStep::Working { .. }));
     job.cancel();
@@ -70,7 +70,7 @@ fn cancelling_an_interference_job_mid_run_ends_it_with_a_cancelled_fault() {
 #[test]
 fn an_empty_intersection_is_an_answer_not_a_fault_and_has_no_shape() {
     let case = case_named("separated boxes do not interfere");
-    let kind = support::kind_of("analysis.interference");
+    let kind = support::kind_of(catalogue(), "analysis.interference");
     let evaluation = support::evaluate(kind, support::inputs_of(kind, &case), COMPUTES, usize::MAX);
     assert!(evaluation.fault.is_none());
     assert_eq!(evaluation.outputs.iter().map(|(port, _)| port).map(String::as_str).collect::<Vec<_>>(), ["interferes", "volume"]);
@@ -88,7 +88,7 @@ fn a_report_lists_every_kernel_finding_before_the_verdict() {
 
 #[test]
 fn a_non_mesh_input_is_a_fault_at_that_port() {
-    let kind = support::kind_of("analysis.meshQuality");
+    let kind = support::kind_of(catalogue(), "analysis.meshQuality");
     let values = BTreeMap::from([("mesh".to_string(), GeometryValue::Number(1.0))]);
     let fault = support::drive(start_of("analysis.meshQuality")(kind, WidgetInputs::new_cold("w", kind, values)), 1).fault.expect("a fault");
     assert_eq!((fault.code.as_str(), fault.port.as_deref()), ("generation3d.geometry.input-type", Some("mesh")));

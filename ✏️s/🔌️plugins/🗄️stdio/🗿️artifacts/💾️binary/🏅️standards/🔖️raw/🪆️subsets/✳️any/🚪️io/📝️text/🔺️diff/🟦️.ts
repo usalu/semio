@@ -49,5 +49,5 @@ export const stdioBinaryRawAnyDiffTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseBinaryDiffText(value: unknown, at = "$"): BinaryDiffText {
-  return stdioBinaryRawAnyDiffTextGuardObject(value, `${at}`);
+  return stdioBinaryRawAnyDiffTextGuardString(value, `${at}`);
 }

@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-test-original-snapshot-owners"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original caller authorities for artifact tests: the native snapshot owners and the SQLite recipient every snapshot codec receives from its caller."
+
+[package.metadata.semio]
+role = "test"
+id = "test-original-snapshot-owners"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }

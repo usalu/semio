@@ -10,7 +10,7 @@ import schema from "../🧬️schema/🔣️.json";
 import invocation from "./🧫️fixtures/📨️invocation.json";
 import invocationSchema from "../🧬️schema/📨️invocation.json";
 import mediaCustody from "../../../../🏃️runtime/🎞️command/📥️custody/🧪️tests/🧫️fixtures/🔣️.json";
-import grant from "../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import { retainedCloneWireSchema as grant } from "@semio-tech/value-ts/retained-clone/wire/schema";
 import resourceTurns from "./🧫️fixtures/🚪️resources.json";
 import resourceSchema from "../🧬️schema/🚪️resources.json";
 import renderInput from "./🧫️fixtures/🎬️render.json";
@@ -20,6 +20,8 @@ import serviceSchema from "../🧬️schema/💡️service.json";
 import { readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { readPluginRuntimeSource } from "../../../../🏃️runtime/📖️source-text/🟦️.ts";
 const original=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
+/** 📖️ The text the unsplit reactor module held: the core root tree and the module trees of the crates its pieces moved into. */
+const reactorSource=():string=>["🦀️.rs","⏲️tasks/🦀️.rs","🔄️turn/🦀️.rs","📨️pending/🦀️.rs","🩹️patches/🦀️.rs","📥️cold-pair/🦀️.rs"].map(piece=>readModuleTreeSource(new URL("../../../../"+piece,import.meta.url))).join("\n");
 /** 🎬️ Pending native mesh preparation keeps its original surface and publishes only a completed tree. */
 test("original render context reaches the actual instance before tree publication",()=>{
  expect(new Ajv({strict:true}).compile(renderSchema)(renderInput)).toBe(true);
@@ -54,7 +56,7 @@ test("Retained extension failure returns to original Entry without a poisoned pe
 
 /** 🧹️ The actual retiring lane lends the initiating context and returns the complete native cause. */
 test("failed decoded ingress retirement preserves the same original caller and whole failure",()=>{
- const turn=readFileSync(new URL("../../../../🔄️turn/🦀️.rs",import.meta.url),"utf8"),reactor=readModuleTreeSource(new URL("../../../../🦀️.rs", import.meta.url));
+ const turn=readFileSync(new URL("../../../../🔄️turn/🦀️.rs",import.meta.url),"utf8"),reactor=reactorSource();
  expect(turn).toContain("command.retire_failed_step_on_original(cx)");expect(turn).toContain("OriginalCommandIngressRetirement::Failed(failure)=>return Err(failure)");expect(turn).toContain("retire_command_ingress(entry.state,cx)?");expect(turn).toContain("step_retiring_command_ingress(cx)?");expect(reactor).toContain("turn::close_command_ingress_step(state.key,cx)?");
  const db=new Database(":memory:");try{for(const key of ["primary","receipt","context"]as const){const source=mediaCustody.failure[key];const row=db.query("SELECT ? AS cause").get(source)as{cause:string};expect(row.cause).toBe(source);}}finally{db.close()}
  console.log("[DEBUG] actualRetiringIngressSameOriginalContext=true wholeNativeCauseReturn=true independentSQLiteThreeCauses=true NativePaidClose=authored");
@@ -69,7 +71,7 @@ test("public fixture preview and lifecycle helpers preserve their original sourc
 
 /** 🧬️ Checks the owned response contract against independent exact integer and JSON output. */
 test("actual extension response carries original Fault separately into typed command",()=>{
- const reactor=readModuleTreeSource(new URL("../../../../🦀️.rs", import.meta.url)),runtime=readPluginRuntimeSource(),native=readFileSync(new URL("../../../../🧪️tests/🔬️extension-continuation/🦀️.rs",import.meta.url),"utf8"),fixture=JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/owned-extension-response.json",import.meta.url),"utf8"));
+ const reactor=reactorSource(),runtime=readPluginRuntimeSource(),native=readFileSync(new URL("../../../../🧪️tests/🔬️extension-continuation/🦀️.rs",import.meta.url),"utf8"),fixture=JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/owned-extension-response.json",import.meta.url),"utf8"));
  const start=reactor.indexOf("pub fn extension_response_args"),end=reactor.indexOf("pub(crate) fn take_extension_response",start),body=reactor.slice(start,end);expect(body).toContain("outcome: Result<Vec<u8>, semio_framework::Fault>");expect(body).toContain("Some(fault)");expect(body).not.toContain("fault.message.clone()");expect(body).not.toContain("fault.code.0.clone()");expect(body).not.toContain("Fault::from_value");expect(runtime).toContain("handle_response_action(action, args, original_fault, &meta, identity, cx)");expect(native).toContain("original_extension_response_donates_full_native_fault_into_typed_dispatch");
  const db=new Database(":memory:",{safeIntegers:true});try{const exact=db.query("SELECT ? AS scalar").get(fixture.exactUnsigned)as{scalar:string};expect(exact.scalar).toBe(BigInt(fixture.exactUnsigned).toString());const progress=db.query("SELECT ? AS copied, ? AS released").get(fixture.fault.retainedProgress.copiedBytes,fixture.fault.retainedProgress.releasedBytes)as{copied:bigint;released:bigint};expect(progress).toEqual({copied:577n,released:8537n});expect(JSON.parse(JSON.stringify(fixture.expected))).toEqual({ok:false,output:null});}finally{db.close();}
  console.log("[DEBUG] ownedNativeResponseContract=true originalFaultHeader=true independentSQLiteExactUnsigned=true NativeSourcePointerLaw=authored");

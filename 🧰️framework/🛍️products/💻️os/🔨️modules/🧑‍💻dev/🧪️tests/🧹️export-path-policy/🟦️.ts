@@ -50,6 +50,7 @@ class PluginIndexExportPathLintScript extends BundleScript {
       const deadSpecs: string[] = [];
       let total = 0;
       for (const [, spec] of source.matchAll(PLUGIN_BARREL_RELATIVE_EXPORT_PATTERN)) {
+        if(spec===undefined)throw Error("Actual relative barrel export capture required");
         total++;
         if (!resolvesPluginBarrelExport(baseDir, spec)) deadSpecs.push(spec);
       }

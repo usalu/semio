@@ -1,9 +1,9 @@
 /** 🧬️ SemioBrepArtifact schema — full artifact state, mirrors `SemioBrepSnapshot` field for
  * field (see the `🦀️.rs` sibling for the real source of truth). */
-export {
+export type {
   BrepCoedge, BrepCurve, BrepCurve2, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioPoint2, SemioPoint3,
 } from "./📸️snapshot/🟦️.ts";
-import { BrepCoedge, BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex } from "./📸️snapshot/🟦️.ts";
+import type { BrepCoedge, BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex } from "./📸️snapshot/🟦️.ts";
 
 export interface SemioBrepArtifact {
   /** @state artifact */ schema: string;

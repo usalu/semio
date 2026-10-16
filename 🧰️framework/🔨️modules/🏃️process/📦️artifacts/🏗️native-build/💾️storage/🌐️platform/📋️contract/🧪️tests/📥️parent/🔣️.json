@@ -1,0 +1,345 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "actual normal child",
+      "mode": "body",
+      "parent": "actual",
+      "custody": "none",
+      "stopped": false,
+      "accepted": true,
+      "mutate": false
+    },
+    {
+      "name": "actual maintenance child",
+      "mode": "maintenance",
+      "parent": "actual",
+      "custody": "actual",
+      "stopped": false,
+      "accepted": true,
+      "mutate": false
+    },
+    {
+      "name": "copied normal parent",
+      "mode": "body",
+      "parent": "copy",
+      "custody": "none",
+      "stopped": false,
+      "accepted": false,
+      "mutate": false
+    },
+    {
+      "name": "copied maintenance parent",
+      "mode": "maintenance",
+      "parent": "copy",
+      "custody": "actual",
+      "stopped": false,
+      "accepted": false,
+      "mutate": false
+    },
+    {
+      "name": "copied maintenance custody",
+      "mode": "maintenance",
+      "parent": "actual",
+      "custody": "copy",
+      "stopped": false,
+      "accepted": false,
+      "mutate": false
+    },
+    {
+      "name": "missing maintenance custody",
+      "mode": "maintenance",
+      "parent": "actual",
+      "custody": "none",
+      "stopped": false,
+      "accepted": false,
+      "mutate": false
+    },
+    {
+      "name": "stopped normal phase",
+      "mode": "body",
+      "parent": "actual",
+      "custody": "none",
+      "stopped": true,
+      "accepted": false,
+      "mutate": false
+    },
+    {
+      "name": "stopped maintenance phase",
+      "mode": "maintenance",
+      "parent": "actual",
+      "custody": "actual",
+      "stopped": true,
+      "accepted": false,
+      "mutate": false
+    },
+    {
+      "name": "mutable normal request keeps captured phase and path",
+      "mode": "body",
+      "parent": "actual",
+      "custody": "none",
+      "stopped": false,
+      "accepted": true,
+      "mutate": true
+    },
+    {
+      "name": "mutable maintenance request keeps captured phase and path",
+      "mode": "maintenance",
+      "parent": "actual",
+      "custody": "actual",
+      "stopped": false,
+      "accepted": true,
+      "mutate": true
+    }
+  ],
+  "lifetimes": [
+    {
+      "name": "external parent close drains actual child callback",
+      "body": "value",
+      "close": "ok",
+      "expected": "value"
+    },
+    {
+      "name": "undefined primary wins child close failure",
+      "body": "undefined",
+      "close": "frozen",
+      "expected": "undefined"
+    },
+    {
+      "name": "frozen primary wins child close failure",
+      "body": "frozen",
+      "close": "frozen",
+      "expected": "frozen"
+    },
+    {
+      "name": "child close failure reaches caller",
+      "body": "value",
+      "close": "frozen",
+      "expected": "close"
+    }
+  ],
+  "disposable": [
+    {
+      "name": "actual complete disposable child",
+      "body": "value",
+      "terminal": "ok",
+      "binding": "actual",
+      "expected": "value"
+    },
+    {
+      "name": "undefined body is retained",
+      "body": "undefined",
+      "terminal": "ok",
+      "binding": "actual",
+      "expected": "undefined"
+    },
+    {
+      "name": "frozen body is retained",
+      "body": "frozen",
+      "terminal": "ok",
+      "binding": "actual",
+      "expected": "frozen"
+    },
+    {
+      "name": "cancelled body still retires",
+      "body": "cancel",
+      "terminal": "ok",
+      "binding": "actual",
+      "expected": "cancel"
+    },
+    {
+      "name": "accepted body descendants drain before terminal",
+      "body": "accepted-failure",
+      "terminal": "ok",
+      "binding": "actual",
+      "expected": "accepted-failure"
+    },
+    {
+      "name": "unbound empty child can settle",
+      "body": "value",
+      "terminal": "ok",
+      "binding": "none",
+      "expected": "value"
+    },
+    {
+      "name": "foreign reservation refuses before user effects",
+      "body": "value",
+      "terminal": "ok",
+      "binding": "foreign",
+      "expected": "cleanup"
+    },
+    {
+      "name": "duplicate reservation refuses",
+      "body": "value",
+      "terminal": "ok",
+      "binding": "duplicate",
+      "expected": "cleanup"
+    },
+    {
+      "name": "extra allocation refuses terminal",
+      "body": "value",
+      "terminal": "ok",
+      "binding": "extra",
+      "expected": "cleanup"
+    },
+    {
+      "name": "busy terminal writer retains custody",
+      "body": "value",
+      "terminal": "busy",
+      "binding": "actual",
+      "expected": "cleanup"
+    },
+    {
+      "name": "changed parent refuses terminal",
+      "body": "value",
+      "terminal": "parent-changed",
+      "binding": "actual",
+      "expected": "cleanup"
+    },
+    {
+      "name": "undefined body plus cleanup failure is observable",
+      "body": "undefined",
+      "terminal": "failure",
+      "binding": "actual",
+      "expected": "aggregate"
+    },
+    {
+      "name": "frozen body plus cleanup failure is observable",
+      "body": "frozen",
+      "terminal": "failure",
+      "binding": "actual",
+      "expected": "aggregate"
+    },
+    {
+      "name": "cancelled at ex retains pre-effect anchor",
+      "body": "cancel-ex",
+      "terminal": "ok",
+      "binding": "none",
+      "expected": "cancel"
+    },
+    {
+      "name": "cancelled at ready retains pre-effect anchor",
+      "body": "cancel-ready",
+      "terminal": "ok",
+      "binding": "none",
+      "expected": "cancel"
+    },
+    {
+      "name": "cancelled at sh retains pre-effect anchor",
+      "body": "cancel-sh",
+      "terminal": "ok",
+      "binding": "none",
+      "expected": "cancel"
+    },
+    {
+      "name": "cancelled at prebody retains pre-effect anchor",
+      "body": "cancel-prebody",
+      "terminal": "ok",
+      "binding": "none",
+      "expected": "cancel"
+    },
+    {
+      "name": "terminal deadline retains unresolved writer",
+      "body": "value",
+      "terminal": "deadline",
+      "binding": "actual",
+      "expected": "cleanup"
+    },
+    {
+      "name": "copied pre-effect anchor refuses",
+      "body": "value",
+      "terminal": "loan-copy",
+      "binding": "actual",
+      "expected": "cleanup"
+    },
+    {
+      "name": "different current image lease refuses",
+      "body": "value",
+      "terminal": "lease-substitution",
+      "binding": "actual",
+      "expected": "cleanup"
+    },
+    {
+      "name": "pre-effect anchor cannot replay",
+      "body": "value",
+      "terminal": "loan-replay",
+      "binding": "actual",
+      "expected": "cleanup"
+    }
+  ],
+  "transitions": [
+    {
+      "name": "owned detach reveals exact underlying creator",
+      "states": [
+        "mounted",
+        "underlying"
+      ],
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "name": "successful command must actually detach",
+      "states": [
+        "mounted",
+        "mounted"
+      ],
+      "fault": "none",
+      "accepted": false
+    },
+    {
+      "name": "mounted root cannot return after detach",
+      "states": [
+        "mounted",
+        "underlying",
+        "mounted"
+      ],
+      "fault": "none",
+      "accepted": false
+    },
+    {
+      "name": "foreign root refuses during detach",
+      "states": [
+        "mounted",
+        "foreign"
+      ],
+      "fault": "none",
+      "accepted": false
+    },
+    {
+      "name": "changed backing refuses during detach",
+      "states": [
+        "mounted",
+        "underlying"
+      ],
+      "fault": "backing",
+      "accepted": false
+    },
+    {
+      "name": "changed receipt refuses during detach",
+      "states": [
+        "mounted",
+        "underlying"
+      ],
+      "fault": "receipt",
+      "accepted": false
+    },
+    {
+      "name": "changed parent refuses during detach",
+      "states": [
+        "mounted",
+        "underlying"
+      ],
+      "fault": "parent",
+      "accepted": false
+    },
+    {
+      "name": "changed underlying creator refuses",
+      "states": [
+        "mounted",
+        "underlying"
+      ],
+      "fault": "underlying",
+      "accepted": false
+    }
+  ]
+}

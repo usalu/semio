@@ -1,0 +1,15 @@
+{
+ "label": "bb1",
+ "children": [
+  {
+   "folder": "🔄️backbone-envelope-retry",
+   "doc": "/** 🔄️ Backbone envelope io: reading retries a transient transport failure without a real sleep, and writing keeps its bounded window.\n *\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "8-101"
+   ]
+  }
+ ],
+ "file": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/📍️stage1.ts",
+ "childRoot": "🧰️framework/🛍️products/💻️os/🧪️tests",
+ "deleteParent": true
+}

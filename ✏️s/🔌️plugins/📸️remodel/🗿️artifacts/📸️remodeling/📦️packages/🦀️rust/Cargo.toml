@@ -59,6 +59,7 @@ semio-s-artifact-remodel-remodeling-mut-results = { workspace = true }
 semio-s-artifact-remodel-remodeling-panels = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
 
 [[test]]
 name = "editor"

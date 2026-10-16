@@ -4,14 +4,16 @@ import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🦑�
 import { closeSync, existsSync, fstatSync, lstatSync, openSync, readdirSync, readFileSync, readSync, realpathSync, statSync } from "node:fs";
 import { isAbsolute, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { getWorkspaceRoot, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { APP_CHANNEL_VERSION, decodePackValue, encodePackValue, packValueToExactJson } from "../../../../🟦️.ts";
 import type { PackValue } from "../../../../🟦️.ts";
 import { declaredComponentKind } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { CATALOG_ID, COMPONENT_PACKAGE_ID, DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1 } from "../🔎️discovery/🟦️.ts";
 import { tomlBlocksAfterHeader } from "../🔎️discovery/🟦️.ts";
-import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_MAX_BYTES, SHIPPED_COMPONENT_MAX_BYTES, componentReceiptBindsV1, parseComponentReceiptV1, type ComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_MAX_BYTES, SHIPPED_COMPONENT_MAX_BYTES, componentReceiptBindsV1, parseComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
+import { type ComponentReceiptV1 } from "../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
 import { dialectCoordinate } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import { exampleBodyAssetPrefix, examplesForApp, normalizeManifestExamples, type PluginManifest } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
@@ -712,7 +714,7 @@ export function createFreshCatalogCommitMarker(source: StrictCatalogDescriptor, 
   if (!Buffer.from(staged).equals(Buffer.from(source.packBytes))) throw new Error(`${source.entry.pluginId}: staged descriptor is not the committed semantic descriptor`);
   const raw = catalogArtifactReceipt(join(rowRoot, rawRelative), exactRoot, rawRelative, source.entry.pluginId, "raw", control);
   const receipt = parseComponentReceiptV1(Buffer.from(readCatalogFile(join(rowRoot, receiptRelative), exactRoot, COMPONENT_RECEIPT_MAX_BYTES)).toString("utf8"));
-  if (!componentReceiptBindsV1(receipt, { pluginId: source.entry.pluginId, packageId, wasmSha256: raw.sha256, semanticDescriptorSha256: source.semanticSha256 }) || receipt.wasmBytes !== raw.bytes) throw new Error(`${source.entry.pluginId}: staged receipt does not bind the staged component to the committed semantic descriptor`);
+  if (!componentReceiptBindsV1(receipt, { profile: "release", pluginId: source.entry.pluginId, packageId, wasmSha256: raw.sha256, semanticDescriptorSha256: source.semanticSha256 }) || receipt.wasmBytes !== raw.bytes) throw new Error(`${source.entry.pluginId}: staged receipt does not bind the staged component to the committed semantic descriptor`);
   return {
     schemaVersion: 2,
     packageId,
@@ -793,7 +795,7 @@ export function createFreshCatalogBuildVerifier(repoRoot: string, buildRoot: str
       } catch (error) {
         throw new Error(`${entry.pluginId}: staged receipt does not decode: ${boundedCatalogDiagnostic(error)}`);
       }
-      if (!componentReceiptBindsV1(receipt, { pluginId: entry.pluginId, packageId: entry.packageId, wasmSha256: raw.sha256, semanticDescriptorSha256: descriptor.sha256 }) || receipt.wasmBytes !== raw.bytes.byteLength) throw new Error(`${entry.pluginId}: staged receipt does not bind the staged component to its semantic descriptor`);
+      if (!componentReceiptBindsV1(receipt, { profile: "release", pluginId: entry.pluginId, packageId: entry.packageId, wasmSha256: raw.sha256, semanticDescriptorSha256: descriptor.sha256 }) || receipt.wasmBytes !== raw.bytes.byteLength) throw new Error(`${entry.pluginId}: staged receipt does not bind the staged component to its semantic descriptor`);
       if (!Buffer.from(readCatalogFile(markerPath, exactRoot, CATALOG_COMMIT_MARKER_MAX_BYTES)).equals(Buffer.from(markerBytes))) throw new Error(`${entry.pluginId}: catalog commit marker changed during verification`);
       return {
         pluginId: entry.pluginId,

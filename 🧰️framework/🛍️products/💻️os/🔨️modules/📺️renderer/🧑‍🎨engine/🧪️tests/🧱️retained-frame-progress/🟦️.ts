@@ -5,10 +5,11 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
+import { retainedFrameProgressFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧱️retained-frame-progress/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(retainedFrameProgressFixtureUrl, "utf8"));
 
 describe("🧱️ retained frame progress and origin", () => {
   it("retains the accepted viewport publication policy", () => {

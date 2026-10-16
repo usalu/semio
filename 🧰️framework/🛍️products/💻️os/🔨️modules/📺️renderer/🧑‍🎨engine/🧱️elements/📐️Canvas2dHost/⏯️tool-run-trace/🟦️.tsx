@@ -22,7 +22,7 @@ import {
   type ToolRunTraceRecordStore,
   type ToolRunTraceVisibility,
 } from "../../🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx";
-import type { ToolRunTraceCursor } from "../../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
+import type { ToolRunTraceCursor } from "@semio-tech/framework/tool-run";
 // #endregion 🔌️Adapters
 
 //#region 🖌️Paint

@@ -1,0 +1,17 @@
+{
+ "moves": [
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🧩️plugin-module/🌎️hub-source/🧬️schema/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🔣️.json",
+   "to": "🧰️framework/🔨️modules/🧩️plugin-module/🌎️hub-source/🧬️schema/🔣️.json"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🧩️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts"
+  }
+ ],
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/rhu2-snap-pm2.json"
+}

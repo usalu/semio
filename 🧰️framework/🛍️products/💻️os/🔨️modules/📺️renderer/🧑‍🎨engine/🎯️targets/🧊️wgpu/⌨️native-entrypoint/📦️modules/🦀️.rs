@@ -30,14 +30,15 @@ impl NativeRuntimeManifest {
         if reader.limit() == 0 {
             return Err("Native runtime manifest exceeds 1 MiB".into());
         }
-        if value.version != 1 || value.variant != variant || !matches!(value.profile.as_str(), "dev" | "release") || value.modules.is_empty() || value.modules.len() > 1024 {
+        let valid_variant = !value.variant.is_empty() && value.variant.len() <= 64 && value.variant.split('-').all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit()));
+        if value.version != 1 || value.variant != variant || !valid_variant || !matches!(value.profile.as_str(), "prototype" | "release") || value.modules.is_empty() || value.modules.len() > 128 {
             return Err("Native runtime manifest identity mismatch".into());
         }
         let mut ids = BTreeSet::new();
         for module in &value.modules {
-            let valid_id = module.plugin_id.split('-').all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit()));
+            let valid_id = !module.plugin_id.is_empty() && module.plugin_id.len() <= 64 && module.plugin_id.split('-').all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit()));
             let valid_hash = module.wasm_sha256.len() == 64 && module.wasm_sha256.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte));
-            let valid_paths = [&module.wasm_path, &module.descriptor_path].into_iter().all(|path| !path.is_empty() && path.chars().count() <= 4096 && !path.starts_with('/') && !path.chars().any(|character| character <= '\u{1f}' || "\\:<>\"|?*".contains(character)) && path.split('/').all(|part| !part.is_empty() && part != "."));
+            let valid_paths = module.wasm_path == format!("{}/📦️component.wasm", module.plugin_id) && module.descriptor_path == format!("{}/🔣️.json", module.plugin_id);
             if !valid_id || !valid_hash || !valid_paths || !ids.insert(&module.plugin_id) {
                 return Err("Invalid native runtime module".into());
             }

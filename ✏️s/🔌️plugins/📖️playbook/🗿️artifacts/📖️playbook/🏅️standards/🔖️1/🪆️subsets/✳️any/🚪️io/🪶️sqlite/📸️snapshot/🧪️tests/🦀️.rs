@@ -1,8 +1,7 @@
 use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteDatabaseLimits, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::SnapshotEncoding};
 use semio_framework_value::{NativeDecodeControl, NativeEncodeControl};
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::{text};
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::PlaybookSnapshot;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};

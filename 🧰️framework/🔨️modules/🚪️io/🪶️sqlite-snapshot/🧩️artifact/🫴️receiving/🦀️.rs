@@ -17,8 +17,8 @@ impl<'a,'b> ReceivingSettlement<'a,'b>{
  /// 🧳️ Returns the original callback or allocation refusal without cloning its complete cause.
  pub fn refused(&self,owned:usize,error:ValueError)->ValueError{match self.settle(owned){Err(cause)=>cause,Ok(())=>self.cause.borrow_mut().take().unwrap_or(error)}}
 }
-type Result<T>=std::result::Result<T,ValueError>;
-fn error(kind:ValueRefusalKind,message:&'static str)->ValueError{ValueError::literal(kind,message)}
+#[doc(hidden)] pub type Result<T>=std::result::Result<T,ValueError>;
+#[doc(hidden)] pub fn error(kind:ValueRefusalKind,message:&'static str)->ValueError{ValueError::literal(kind,message)}
 fn invalid(message:&'static str)->ValueError{error(ValueRefusalKind::InvalidValue,message)}
 /// 🎟️ Runs paid destination operations through an existing original wallet without creating authority.
 pub trait ReceivingWallet{
@@ -117,7 +117,3 @@ pub fn validate_schema_sql<B:ReceivingWallet>(database:&SqliteDatabase,sql:&str,
  if count!=database.tables.len(){return Err(invalid("SQLite snapshot requires its authored table census"))}
  for(index,table)in database.tables.iter().enumerate(){let mut declarations=Tokens::new(sql);let mut depth=0usize;let mut names=0usize;while let Some(token)=declarations.next(port)?{if depth==0&&token.eq_ignore_ascii_case("CREATE"){declarations.next(port)?;let token=declarations.next(port)?.ok_or_else(||invalid("SQLite authored table name is missing"))?;if identifier_matches(&table.name,token,port)?{names=names.checked_add(1).ok_or_else(||error(ValueRefusalKind::WorkLimit,"SQLite authored identity census overflow"))?}}else{match token{"("=>depth+=1,")"=>depth=depth.saturating_sub(1),_=>{}}}}if names!=1{return Err(invalid("SQLite authored table identity must occur exactly once"))}for previous in &database.tables[..index]{port.work(1,0)?;if same_token(&table.name,&previous.name,port)?{return Err(invalid("SQLite authored table identity is duplicated"))}}}Ok(())
 }
-
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

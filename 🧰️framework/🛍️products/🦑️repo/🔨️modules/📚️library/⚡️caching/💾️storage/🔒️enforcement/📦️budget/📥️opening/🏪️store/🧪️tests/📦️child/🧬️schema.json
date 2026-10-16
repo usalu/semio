@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "lifetimes",
+    "cleanup",
+    "readerLifetimes",
+    "acquisitions",
+    "childControls",
+    "groups",
+    "ownerLifetimes",
+    "disposableBridges"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "parent",
+          "authority",
+          "outcome",
+          "accepted"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "reader",
+              "maintenance"
+            ]
+          },
+          "parent": {
+            "enum": [
+              "partition",
+              "child"
+            ]
+          },
+          "authority": {
+            "enum": [
+              "actual",
+              "copied",
+              "released",
+              "outside",
+              "foreign-control",
+              "missing-custody",
+              "mutation"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "value",
+              "undefined",
+              "frozen"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "cleanup": {"type":"array","minItems":4,"maxItems":4,"items":{"enum":["undefined","frozen","sealed","absent"]}},
+    "readerLifetimes":{"type":"array","minItems":3,"maxItems":3,"items":{"enum":["self-close","external-close","failure"]}},
+    "acquisitions":{"type":"array","minItems":5,"maxItems":5,"items":{"enum":["root-undefined","root-frozen","backing-undefined","backing-frozen","value"]}},
+    "childControls":{"type":"array","minItems":4,"maxItems":4,"items":{"enum":["actual","descendant","widened","stopped"]}},
+    "groups":{"type":"array","minItems":4,"maxItems":4,"items":{"enum":["success","undefined","frozen","cleanup-failure"]}},
+    "ownerLifetimes":{"type":"array","minItems":2,"maxItems":2,"items":{"enum":[0,2000]}},
+    "disposableBridges":{"type":"array","minItems":4,"maxItems":4,"items":{"enum":["actual","copied","mutation","frozen"]}},
+    "lifetimes": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "value",
+              "undefined",
+              "frozen"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,14 +2,35 @@
   "project": "@semio-tech/framework-os-dev",
   "variant": "fixture",
   "profile": "prototype",
-  "renderers": ["react", "wgpu"],
-  "profiles": ["prototype", "release"],
-  "variants": ["fixture", "another"],
+  "renderers": [
+    "react",
+    "wgpu"
+  ],
+  "profiles": [
+    "prototype",
+    "release"
+  ],
+  "variants": [
+    "fixture",
+    "another"
+  ],
   "plugin": "sample",
   "payload": "prepared component bytes",
   "cycles": [
-    { "deleteLiveState": false, "preparations": 1, "activations": 1 },
-    { "deleteLiveState": false, "preparations": 1, "activations": 2 },
-    { "deleteLiveState": true, "preparations": 1, "activations": 3 }
+    {
+      "deleteLiveState": false,
+      "preparations": 1,
+      "activations": 1
+    },
+    {
+      "deleteLiveState": false,
+      "preparations": 2,
+      "activations": 2
+    },
+    {
+      "deleteLiveState": true,
+      "preparations": 3,
+      "activations": 3
+    }
   ]
 }

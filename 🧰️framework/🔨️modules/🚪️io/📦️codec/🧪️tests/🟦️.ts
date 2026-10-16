@@ -1,8 +1,9 @@
-import {readRustSourceClosureV1} from "../../../🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import {readRustSourceClosureV1} from "@semio-tech/process/artifacts/native-build/source";
 import {readFile} from "node:fs/promises";
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
+import {readModuleTreeSource} from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import Ajv from "ajv";
 import {parse} from "smol-toml";
 import {Database} from "bun:sqlite";
@@ -10,7 +11,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
 test("IO codec owns bounded domain-neutral contracts and original laws",async()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
- const owner=join(import.meta.dir,".."),manifest=parse(readFileSync(join(owner,"📦️packages/🦀️rust/Cargo.toml"),"utf8")) as {package:{name:string;metadata:{semio:Record<string,unknown>}};dependencies:Record<string,unknown>},source=readFileSync(join(owner,"🦀️.rs"),"utf8"),laws=readFileSync(join(owner,"🧪️tests/🦀️.rs"),"utf8"),original=readFileSync(join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs"),"utf8");
+ const owner=join(import.meta.dir,".."),manifest=parse(readFileSync(join(owner,"📦️packages/🦀️rust/Cargo.toml"),"utf8")) as {package:{name:string;metadata:{semio:Record<string,unknown>}};dependencies:Record<string,unknown>},source=readFileSync(join(owner,"🦀️.rs"),"utf8"),laws=readFileSync(join(owner,"🧪️tests/🦀️.rs"),"utf8"),original=readModuleTreeSource(join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs"));
  expect(manifest.package.name).toBe(fixture.owner);expect(Object.keys(manifest.dependencies).sort()).toEqual(fixture.productionDependencies);expect(manifest.package.metadata.semio["rust-source-boundary"]).toEqual(fixture.sourceBoundary);
  for(const name of fixture.definitions){const pattern=new RegExp("pub (?:struct|enum|trait|type) "+name+"\\b");expect(pattern.test(source),name).toBe(true);expect(pattern.test(original),name).toBe(false);}
  for(const name of fixture.originalNativeLaws)expect(laws).toContain("fn "+name+"(");

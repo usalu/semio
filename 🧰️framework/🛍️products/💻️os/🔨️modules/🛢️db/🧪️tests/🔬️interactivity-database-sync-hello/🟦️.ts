@@ -1,4 +1,4 @@
-import { interactivityDatabaseSyncHelloFailures } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
+import { interactivityDatabaseSyncHelloFailures } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🌱️database-lifecycle/🟦️.ts";
 
 /** 🧪️ Executes interactivity database sync hello policy assertions. */
 export function interactivityDatabaseSyncHelloSelfTests(sync: string, engine: string, hub: string, wal: string, protocol: string, contract: string): void {

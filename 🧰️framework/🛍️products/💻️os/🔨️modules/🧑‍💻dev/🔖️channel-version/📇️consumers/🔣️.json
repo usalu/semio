@@ -16,10 +16,6 @@
       "guest": true
     },
     {
-      "path": "🔨️modules/📇️directory/🧬️schema/🟦️.ts",
-      "occurrences": 1
-    },
-    {
       "path": "🔨️modules/📇️directory/🧬️schema/🔣️.json",
       "occurrences": 3
     },
@@ -34,10 +30,6 @@
         13
       ],
       "hostileOccurrences": 1
-    },
-    {
-      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
-      "occurrences": 1
     },
     {
       "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json",

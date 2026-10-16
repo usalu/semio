@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { join, resolve, dirname } from "node:path";
 import {createBuildBootstrapCapabilitiesV1} from "./📥️caller/📤️child/🟦️.ts";
@@ -55,11 +55,11 @@ export class BuildScript extends Script {
 class TestScript extends Script {
   async run(args: string[]): Promise<void> {
     if(args[0]==="bazel"){
-      const commands=bazelTestCommandsV1(args.slice(1)),{repoTestArtifactEnvironment}=await import("../🏃️process/🌿️environment/🧪️test-output/🟦️.ts"),source=resolve(import.meta.dir,"🔧️tools/🏗️bazel/🧪️tests/🟦️.ts");
+      const original=this.invocation,root=this.repoRoot,environment=Object.freeze({...process.env}),initial=createIssuedResourceControlV1(original,"build:bazel",0),commands=bazelTestCommandsV1(args.slice(1)),{repoTestArtifactEnvironment}=await import("../🏃️process/🌿️environment/🧪️test-output/🟦️.ts"),source=resolve(import.meta.dir,"🔧️tools/🏗️bazel/🧪️tests/🟦️.ts");
       for(const command of commands){
-        const label="build:bazel:"+(command.phase??"source-parity");await advanceScriptInvocation(this.invocation,label,"running");
-        await runOwnedCommand(process.execPath,["test",source,"--test-name-pattern",command.pattern],this.repoRoot,label,scriptInvocationBudget(this.invocation,command.maximumMilliseconds),{env:scriptInvocationEnvironment(this.invocation,{...process.env,...repoTestArtifactEnvironment(this.repoRoot,"build-bazel"),SEMIO_WORKSPACE_ROOT:this.repoRoot,SEMIO_BAZEL_INTEGRATION:"1",SEMIO_BAZEL_FIXTURE_PHASE:command.phase??undefined}),signal:this.invocation.control.signal,onProgress:()=>advanceScriptInvocation(this.invocation,label,"running")});
-        await advanceScriptInvocation(this.invocation,label,"complete");
+        const label="build:bazel:"+(command.phase??"source-parity");await advanceScriptInvocation(original,label,"running");
+        await withRequestedIssuedResourceControlV1(initial,command.maximumMilliseconds,async phase=>{const progress=async()=>{checkResourceLeaseControl(phase);await advanceScriptInvocation(original,label,"running");checkResourceLeaseControl(phase);};checkResourceLeaseControl(phase);await runOwnedCommand(process.execPath,["test",source,"--test-name-pattern",command.pattern],root,label,compilerAdmissionBudgetV1(phase),{env:scriptResourceProcessEnvironmentV1(phase,{...environment,...repoTestArtifactEnvironment(root,"build-bazel"),SEMIO_WORKSPACE_ROOT:root,SEMIO_BAZEL_INTEGRATION:"1",SEMIO_BAZEL_FIXTURE_PHASE:command.phase??undefined}),signal:phase.signal,onProgress:progress});checkResourceLeaseControl(phase);});
+        await advanceScriptInvocation(original,label,"complete");
       }
       return;
     }
@@ -122,7 +122,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
     }
     if(command==="cargo"){
       const {readRepositoryCargoLaunchV1,launchRepositoryCargoV1}=await import("../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts");
-      process.exitCode=await launchRepositoryCargoV1(invocation,root,readRepositoryCargoLaunchV1(resolved.args.slice(1),process.env),process.cwd(),process.env,{maximumMilliseconds:0,output:"stream"});return;
+      process.exitCode=await launchRepositoryCargoV1(invocation,createIssuedResourceControlV1(invocation,"cargo:build-entry",0),root,readRepositoryCargoLaunchV1(resolved.args.slice(1),process.env),process.cwd(),process.env,{maximumMilliseconds:0,output:"stream"});return;
     }
     if(command==="tools"){
       if(resolved.args[1]!=="setup"||resolved.args.length>3)throw Error("Expected repo tools setup [nx|bazel|all]");
@@ -162,7 +162,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
     const {withRepositoryBuildGraphArtifactV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts");
     await withRepositoryBuildGraphArtifactV1(root,graph,invocation,rustPhase,async(pinned,artifactPhase)=>{
     process.env.SEMIO_BUILD_GRAPH_PATH=pinned.path;process.env.SEMIO_BUILD_GRAPH_DIGEST=pinned.digest;process.env.SEMIO_BUILD_REUSE_GRAPH="true";
-    if(command==="watch"){const selection=await import("./🧭️selection/🟦️.ts");await selection.watchBuildInvocationV1(root,graph,resolved.args,invocation);return;}
+    if(command==="watch"){const selection=await import("./🧭️selection/🟦️.ts");await selection.watchBuildInvocationV1(root,graph,resolved.args,invocation,artifactPhase);return;}
     if(selected.tool==="nx"){
       const {runOwnedNxInvocationV1,publishBootstrapSources}=await import("../⚡️caching/🚀️bootstrap/📜️script.ts");
       publishBootstrapSources(root);
@@ -186,7 +186,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       const controller=new AbortController(),{withRequestedIssuedResourceControlV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
       await withRequestedIssuedResourceControlV1(artifactPhase,0,async childPhase=>{let watching:Promise<void>|undefined;
       try{
-        await adapter.runBazelTasksV1(root,graph,request,invocation,childPhase,()=>{watching=selection.watchBuildInvocationV1(root,graph,["watch","--all","--include-global-files","--",process.execPath,join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"),"repo","run",resolved.watch!,"--output=stream"],invocation,{initial:true});watching.catch(error=>controller.abort(error));});
+        await adapter.runBazelTasksV1(root,graph,request,invocation,childPhase,()=>{watching=selection.watchBuildInvocationV1(root,graph,["watch","--all","--include-global-files","--",process.execPath,join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"),"repo","run",resolved.watch!,"--output=stream"],invocation,childPhase,{initial:true});watching.catch(error=>controller.abort(error));});
       }finally{controller.abort();await watching?.catch(error=>{if(!controller.signal.aborted)throw error;});}},controller.signal);
       return;
     }

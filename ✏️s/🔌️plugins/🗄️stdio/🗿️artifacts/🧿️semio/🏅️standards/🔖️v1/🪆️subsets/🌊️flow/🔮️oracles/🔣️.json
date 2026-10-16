@@ -39,7 +39,7 @@
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": ".dsl.semio; .pack.semio; ../🚪️io/📝️text/📸️snapshot/📖️.grammar.semio; ../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio; ../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/✉️base/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio",
+        "specificationSource": ".dsl.semio; .pack.semio; ../🚪️io/📝️text/📸️snapshot/📖️.grammar.semio; ../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio; ../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio; ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio",
         "fixtureCoverage": {
           "vectors": 12,
           "capabilitiesCovered": [

@@ -13,8 +13,7 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
-#[path = "../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/🦀️.rs"]
-mod workspace_identity;
+use semio_framework_process_routing_workspace as workspace_identity;
 
 /// 🏠️ Admits only a declared package workspace with regular build authority.
 pub fn is_repository_root(path: &std::path::Path) -> Result<bool, String> {
@@ -320,7 +319,7 @@ pub struct ArtifactMailboxReceiver {
 
 #[derive(Clone)]
 pub struct ArtifactMailboxClose {
-    authority: std::sync::Arc<ArtifactMailboxAuthority>,
+    pub authority: std::sync::Arc<ArtifactMailboxAuthority>,
     generation: u64,
 }
 
@@ -707,9 +706,9 @@ pub fn decode_document_backbone_message_exact(message: &[u8]) -> Result<Vec<Muta
 
 #[derive(Default)]
 pub struct DocumentBackboneRetentionV1 {
-    entries: std::collections::HashMap<String, (usize, usize)>,
-    bytes: usize,
-    messages: usize,
+    pub entries: std::collections::HashMap<String, (usize, usize)>,
+    pub bytes: usize,
+    pub messages: usize,
 }
 
 impl DocumentBackboneRetentionV1 {
@@ -1694,7 +1693,7 @@ pub fn presence_tool_run_clamped(tool_run: PresenceToolRun) -> PresenceToolRun {
 pub struct PresenceHeartbeatProducer {
     interval_ms: u64,
     last_sent_at_ms: Option<u64>,
-    pending: Option<PresencePeer>,
+    pub pending: Option<PresencePeer>,
     observed_tool_run: Option<Option<PresenceToolRun>>,
 }
 

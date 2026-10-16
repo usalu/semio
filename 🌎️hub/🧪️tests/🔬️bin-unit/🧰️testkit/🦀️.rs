@@ -46,6 +46,7 @@ use tokio_tungstenite::tungstenite::Message as WsMessage;
 use semio_hub_artifact_creation::io::artifact_creation_command_digest_v1;
 use semio_hub_session_routes::access_grants::{issue_document_open_plan_inner, issue_document_plan_socket_grant_inner};
 use semio_hub_routes::router;
+use semio_hub_directory::{ArtifactCasDirectory, ArtifactCreationDirectory, AuthSessionDirectory, DocumentDirectory, UserDirectory};
 
 /// 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
 pub const STUDIO: &str = "default";

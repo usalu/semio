@@ -20,7 +20,7 @@ import type * as DomAccessibilityApi from "dom-accessibility-api" with { "resolu
 import { argControl, createMemoryStoragePort, mutationInputDefs, OsShellConfig } from "@semio-tech/framework";
 import { shellLabel, syncAttachDocumentIdV1, syncShellLabelLocale } from "../../../../🛠️ShellHelpers/🟦️.tsx";
 import { commitLocalFoldersConfigMutationV1, LocalFolderReconnectBand, localFolderNameV1, localFolderReconnectOfferV1, readLocalFolderBindingsV1, readLocalFolderEventsV1 } from "../../🟦️.tsx";
-import { LOCAL_FOLDERS_CONFIG_SCHEMA, type LocalFolderBinding, type LocalFoldersConfigMutation } from "../../../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { LOCAL_FOLDERS_CONFIG_SCHEMA, type LocalFolderBinding, type LocalFoldersConfigMutation } from "@semio-tech/framework/config/mutations";
 
 const { computeAccessibleName } = createRequire(import.meta.url)("dom-accessibility-api") as typeof DomAccessibilityApi;
 const here = dirname(fileURLToPath(import.meta.url));

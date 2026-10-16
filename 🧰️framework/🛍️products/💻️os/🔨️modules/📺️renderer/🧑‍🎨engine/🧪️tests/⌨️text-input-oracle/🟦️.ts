@@ -10,7 +10,7 @@ import { chromium, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TEXT_EDITOR_READ_ONLY_REFUSALS, reconcileTextEditorEchoV1, refuseTextEditorEditV1, type TextEditorEchoStateV1 } from "../../🧱️elements/✏️TextEditor/🟦️.tsx";
 import localEcho from "../../🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/🔁️local-echo/🔣️.json";
-import fixture from "../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json";
+import { editorTextInputFixture as fixture } from "../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧪️Harness

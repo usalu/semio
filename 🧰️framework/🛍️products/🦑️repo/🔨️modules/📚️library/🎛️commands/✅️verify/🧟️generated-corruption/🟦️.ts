@@ -1,4 +1,4 @@
-/** 🧭️ Generated-corruption census behind `verify generated-corruption`.
+/** 🧟️ Generated-corruption census behind `verify generated-corruption`.
  * @see 📜️script.ts
  */
 import { readFileSync, readdirSync, type Dirent } from "node:fs";

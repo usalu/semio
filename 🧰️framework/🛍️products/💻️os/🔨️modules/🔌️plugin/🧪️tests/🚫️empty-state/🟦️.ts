@@ -2,7 +2,7 @@ import { test } from "vitest";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { parseSchemaRecord } from "../../../../../../🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/schema-ts/record";
 
 type EmptyStateFixture = Record<"json" | "text" | "pack", readonly { value: unknown; accepted: boolean }[]>;
 

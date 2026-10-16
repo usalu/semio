@@ -18,6 +18,8 @@
   "bundleKind": "asset",
   "dependencies": {
     "@napi-rs/canvas": "^1.0.2",
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/schema-validator-ts": "workspace:*",
     "pdfjs-dist": "^6.1.200",
     "sharp": "^0.34.5"
   },

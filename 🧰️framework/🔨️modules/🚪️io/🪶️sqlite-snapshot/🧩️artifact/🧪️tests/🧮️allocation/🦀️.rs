@@ -2,7 +2,7 @@
 use super::{Cell,FloatColumn,Projection,ordered_row_refs,insert_ieee754,project_text,reconstruct_text,reconstruct_blob};
 use super::super::{SqliteDatabaseLimits,SqliteSnapshotControl as Control,SqliteSnapshotPhase as Phase,SqliteSnapshotProgress,SqliteTable,SqliteRow,SqliteValue,ValueError,ValueRefusalKind};
 use std::cell::Cell as Local;
-use crate::test_allocation::observe;
+use semio_framework_trace_memory_testing::observe;
 
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🧮️allocation/🔣️.json")).unwrap()}
 fn n(f:&serde_json::Value,key:&str)->usize{f[key].as_u64().unwrap()as usize}

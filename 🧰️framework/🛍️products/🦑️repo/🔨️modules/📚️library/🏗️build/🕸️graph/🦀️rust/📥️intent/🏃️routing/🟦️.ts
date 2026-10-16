@@ -1,7 +1,8 @@
 import {verifyCapturedCargoArtifactsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import {readFileSync,lstatSync} from "node:fs";
 import {resolve,join} from "node:path";
-import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkScriptInvocation,createIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {readRustBuildIntentV1,rustBuildIntentArgumentsV1,readRustBuildFallbackDecisionV1,type RustBuildIntentV1,type RustBuildFallbackDecisionV1} from "../🟦️.ts";
 
 /** 🚦️ Refuses a task that reached its old aggregate command without selected compiler graft consumption. */
@@ -21,12 +22,12 @@ export function declaredRustBuildFallbackV1(project:string,target:string,intent:
 
 /** 🔀️ Sends direct package builds into the canonical owned graph while preserving original cancellation and compiler resources. */
 export async function runDeclaredRustBuildV1(workspace:string,project:string,packageRoot:string,invocation:ScriptInvocation,args:readonly string[]=[],target="build"):Promise<void>{
- checkScriptInvocation(invocation);const file=join(resolve(packageRoot),"📋️project.json"),facts=lstatSync(file);if(file.length>256||!facts.isFile()||facts.isSymbolicLink()||facts.nlink!==1||facts.size>4194304)throw Error("Physical declared Rust project required");const declaration=JSON.parse(readFileSync(file,"utf8"));if(declaration.name!==project)throw Error("Original declared Rust project changed");const intent=readRustBuildIntentV1(declaration.targets?.[target]?.metadata?.semio?.rustBuildIntent),fallback=declaredRustBuildFallbackV1(project,target,intent,process.env);
+ checkScriptInvocation(invocation);const phaseControl=createIssuedResourceControlV1(invocation,"rust:declared-build",0);const file=join(resolve(packageRoot),"📋️project.json"),facts=lstatSync(file);if(file.length>256||!facts.isFile()||facts.isSymbolicLink()||facts.nlink!==1||facts.size>4194304)throw Error("Physical declared Rust project required");const declaration=JSON.parse(readFileSync(file,"utf8"));if(declaration.name!==project)throw Error("Original declared Rust project changed");const intent=readRustBuildIntentV1(declaration.targets?.[target]?.metadata?.semio?.rustBuildIntent),fallback=declaredRustBuildFallbackV1(project,target,intent,process.env);
  if(fallback){
-  const {buildRepositoryCargoArtifacts}=await import("../../../../../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"),{repositoryCargoNetworkV1}=await import("../../../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts"),{scriptCompilerAdmissionControlV1}=await import("../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts");
-  console.log("[DEBUG] Selected Rust bounded Cargo fallback "+JSON.stringify({project,target,adapters:fallback.adapters,cache:false}));
-  await buildRepositoryCargoArtifacts(resolve(workspace,intent.manifest),[...rustBuildIntentArgumentsV1(intent),...args],workspace,{producer:"artifact",invocation:invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(invocation,workspace),control:scriptCompilerAdmissionControlV1(invocation,"cargo:bounded-fallback",0),environment:process.env});return;
+  const {buildRepositoryCargoArtifacts}=await import("../../../../../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"),{repositoryCargoNetworkV1}=await import("../../../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts");
+  checkResourceLeaseControl(phaseControl);console.log("[DEBUG] Selected Rust bounded Cargo fallback "+JSON.stringify({project,target,adapters:fallback.adapters,cache:false}));
+  await buildRepositoryCargoArtifacts(resolve(workspace,intent.manifest),[...rustBuildIntentArgumentsV1(intent),...args],workspace,{producer:"artifact",invocation:invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(invocation,workspace),control:phaseControl,environment:process.env});checkResourceLeaseControl(phaseControl);return;
  }
  const request=declaredRustBuildArgumentsV1(project,args,process.env,target),{runOwnedBuildChildInvocationV1}=await import("../../../../📥️caller/📤️child/🟦️.ts");
- await runOwnedBuildChildInvocationV1(workspace,request,invocation);
+ checkResourceLeaseControl(phaseControl);await runOwnedBuildChildInvocationV1(workspace,request,invocation,phaseControl);checkResourceLeaseControl(phaseControl);
 }

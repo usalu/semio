@@ -222,7 +222,11 @@ test("registers the ordinary Bun Nx route without losing HTML source inputs", ()
     "{projectRoot}/🧪️tests/🧱️command-composition-source/🟦️.ts",
     "{projectRoot}/🧫️fixtures/🧱️command-composition-source/🔣️.json",
     "{projectRoot}/🧫️fixtures/🧱️command-composition-source/🐍️.py",
-    "{projectRoot}/🧪️tests/🧪️test-platform/🟦️.ts",
+    "{projectRoot}/🧪️tests/🧰️repository-scan/🟦️.ts",
+    "{projectRoot}/🧪️tests/🔍️discovery-contract/🟦️.ts",
+    "{projectRoot}/🧪️tests/⚖️comparison-profiles/🟦️.ts",
+    "{projectRoot}/🧪️tests/🔮️oracle-governance/🟦️.ts",
+    "{projectRoot}/🧪️tests/🦠️mutation-catalogs/🟦️.ts",
     "{projectRoot}/🖥️host/🐍️.py",
   ])
     expect(inputs.has(path), path).toBe(true);

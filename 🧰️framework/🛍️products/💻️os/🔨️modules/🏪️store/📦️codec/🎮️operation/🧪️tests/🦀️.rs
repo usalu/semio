@@ -1,6 +1,6 @@
 use super::*;
 use crate::os_store::document_store_owners::bounded_artifact_store_owners;
-use super::super::{tests::DemoSnapshot, fixture_mutations::demo::DemoMutation};
+use semio_framework_os_store_testing_fixtures::{DemoSnapshot, demo::DemoMutation};
 
 #[test]
 fn original_retained_codec_catalog_preserves_input_receipt_and_cancellation_heap() {

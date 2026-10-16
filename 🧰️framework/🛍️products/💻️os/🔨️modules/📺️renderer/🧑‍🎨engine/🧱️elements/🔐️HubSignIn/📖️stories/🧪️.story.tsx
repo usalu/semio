@@ -10,7 +10,7 @@
 // #region 🔌️Adapters
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { HubSignInPane } from "@semio-tech/framework-renderer-react";
-import type { HubConnectionBookV1, HubSessionStateV1 } from "@semio-tech/framework-os";
+import type { HubConnectionBookV1, HubSessionStateV1 } from "@semio-tech/framework/directory/sign-in";
 // #endregion 🔌️Adapters
 
 // #region 🔐️HubSignIn

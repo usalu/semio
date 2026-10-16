@@ -24,7 +24,7 @@ import { abortExtensionRequestsForActor, declareSurfaceCancelAction, inFlightExt
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 
 import inboundRequestFixture from "../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/📥️inbound-request/🔣️.json";
-import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
+import { extensionInvocationWireFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
 
 type SubmittedEvent = { readonly kind: string; readonly payload: unknown };
 type RequestEvent = { readonly req: bigint; readonly params: { readonly origin: WireVariant; readonly capability: string; readonly payload: readonly number[] } };

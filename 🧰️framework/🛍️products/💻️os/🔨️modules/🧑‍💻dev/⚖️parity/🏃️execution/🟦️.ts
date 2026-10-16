@@ -18,7 +18,8 @@ import { PLAYWRIGHT_MODULE_SPECIFIER, playgroundCatalog } from "../../../🔌️
 
 import { ParityServerHandle, findFreeParityPortPair, parityDevUrl, parityPortsForShard, prebuildParityPlugin, startParityDevServer, stopParityDevServer } from "../🌐️server-pool/🟦️.ts";
 
-import { BootStatus, ParityPlaygroundReport, ParityRenderer, compareParityStructural, dumpReactStructure, dumpWgpuFrameStats, dumpWgpuStructure } from "../🏗️structure/🟦️.ts";
+import type { ParityPlaygroundReport } from "../📋️playground-report/🟦️.ts";
+import { BootStatus, ParityRenderer, compareParityStructural, dumpReactStructure, dumpWgpuFrameStats, dumpWgpuStructure } from "../🏗️structure/🟦️.ts";
 
 import { parityOutDir, writeParityReport } from "../📊️report/🟦️.ts";
 import { parityVerdict } from "../✅️verdict/🟦️.ts";

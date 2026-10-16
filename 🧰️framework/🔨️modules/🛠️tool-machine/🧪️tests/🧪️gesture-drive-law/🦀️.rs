@@ -6,17 +6,24 @@
 //! counting tool as a real statechart on the shared runner.
 
 use super::*;
+use machine::Command;
+use machine::Host;
+use machine::TimerId;
+use protocol::ActorId;
+use protocol::TransactionRef;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 
-const GESTURE_DRIVE_LAW: &str = include_str!("../🧫️fixtures/🧫️gesture-drive-law/🔣️.json");
+fn gesture_drive_law_text() -> &'static str {
+    crate::fixture_text("🧪️tests/🧫️fixtures/🧫️gesture-drive-law/🔣️.json")
+}
 
 thread_local! {
     static ABORTED: RefCell<Vec<ToolAbortReason>> = const { RefCell::new(Vec::new()) };
 }
 
 fn law() -> Value {
-    serde_json::from_str(GESTURE_DRIVE_LAW).expect("the gesture-drive law parses")
+    serde_json::from_str(gesture_drive_law_text()).expect("the gesture-drive law parses")
 }
 
 fn text(value: &Value) -> &str {

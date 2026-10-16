@@ -19,7 +19,7 @@ use semio_hub_artifact_creation::ArtifactCreationCommitAuthorityV1;
 use directory::os_directory::access_policy::DirectoryAccessActionV1;
 use semio_hub_directory_contract::model::DirectoryPrincipalV1;
 use directory::os_directory::DocumentScope;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{AuthSessionDirectory, EventLog, PrincipalAuthority, SpaceDirectory};
 use semio_hub_directory_contract::{LocalBootstrapTransport, AUTH_TEXT_MAX_BYTES};
 use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use serde::Deserialize;
@@ -53,7 +53,7 @@ async fn revalidate_directory_event_page_caller(state: &HubState, caller: &Authe
     Ok(current)
 }
 
-/// 🧑‍🤝‍🧑 The spaces `principal` holds a role in ([`HubDirectory::principal_ceiling`]), read ONCE per event page:
+/// 🧑‍🤝‍🧑 The spaces `principal` holds a role in ([`PrincipalAuthority::principal_ceiling`]), read ONCE per event page:
 /// raw directory events are member-only ([`event_visible`]), so this set decides every row of the page. The page used to
 /// read the space and the caller's role per event — two directory round trips per row, 256 for a full page (ticket
 /// 26/09/23 WG8).

@@ -1,3 +1,7 @@
+import * as ModuleUnderTest from "../../../../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
@@ -71,3 +75,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(isChildRejectionReason(hostileRow)).toBe(false);
   });
 }
+
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../🟦️.ts")).href;
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { BROWSER_ACTOR_CHILD_REJECTION_LIMITS: ModuleUnderTest.BROWSER_ACTOR_CHILD_REJECTION_LIMITS, BROWSER_ACTOR_CHILD_REJECTION_PHASES: ModuleUnderTest.BROWSER_ACTOR_CHILD_REJECTION_PHASES, boundChildText: ModuleUnderTest.boundChildText, childRejectionFrame: ModuleUnderTest.childRejectionFrame, childRejectionReason: ModuleUnderTest.childRejectionReason, childRejectionText: ModuleUnderTest.childRejectionText, isChildRejectionReason: ModuleUnderTest.isChildRejectionReason }, { directory: (await import("node:url")).fileURLToPath(new URL(".", moduleUnderTestUrl)), url: moduleUnderTestUrl });

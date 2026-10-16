@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owned Child Finite Input",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/Text"
+    },
+    {
+      "$ref": "#/definitions/Binary"
+    }
+  ],
+  "definitions": {
+    "Text": {
+      "type": "object",
+      "required": [
+        "version",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 65536
+        }
+      }
+    },
+    "Binary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "base64"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "base64": {
+          "type": "string",
+          "maxLength": 5592408,
+          "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+        }
+      }
+    },
+    "Policy": {
+      "const": {
+        "maximumBytes": 65536,
+        "maximumBinaryBytes": 4194304,
+        "maximumEncodedBinaryCharacters": 5592408
+      }
+    }
+  }
+}

@@ -36,7 +36,7 @@ export function retainTreeFocus(root: HTMLElement): () => void {
     if (!owner || owner.target.isConnected || !root.isConnected) return;
     if (document.activeElement && document.activeElement !== document.body) { owner = undefined; return; }
     let target = owner.id ? candidate(document.getElementById(owner.id)) : undefined;
-    for (let index = owner.path.length - 1; !target && index >= 0; index--) target = candidate(document.getElementById(owner.path[index]));
+    for (let index = owner.path.length - 1; !target && index >= 0; index--) {const id=owner.path[index];if(id!==undefined)target=candidate(document.getElementById(id));}
     owner = undefined;
     (target ?? root).focus({preventScroll:true});
   });

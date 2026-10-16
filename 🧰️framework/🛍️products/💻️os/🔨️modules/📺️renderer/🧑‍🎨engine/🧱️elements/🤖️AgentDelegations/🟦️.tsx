@@ -23,8 +23,8 @@ import {
   type AgentAudienceV1,
   type AgentDelegationErrorCodeV1,
   type AgentDelegationPhaseV1,
-  type AgentDelegationRowV1,
-} from "../../../../📇️directory/🤖️delegations/🟦️.ts";
+  type AgentDelegationRowV1
+} from "@semio-tech/framework/directory/delegations";
 import { hubUiLabel, type HubAgentCredentialV1, type HubAgentMcpClientV1 } from "../🔗️HubConnection/🟦️.tsx";
 // #endregion 🔌️Adapters
 

@@ -1,0 +1,29 @@
+# Actual Control To Child Process Projection
+
+The canonical Core routing owner now projects a live private resource control into child wire DATA at the actual owned spawn. The projected policy ceiling and absolute deadline are bounded by the actual Original and every ancestor control. Remaining time is consumed rather than reset. A private WeakMap retains the minimum projected deadline, so repeated or descendant projection cannot advance it. Actual cancellation and child-tree lifetime remain held by the parent owned capture; AbortSignal is not serialized. The helper neither creates another Original/control nor adopts caller envelope DATA as authority.
+
+The existing owned capture uses this projection immediately before spawning its already enrolled child, overriding even a caller-supplied unrelated process wire. The routing package explicitly reexports the new helper. Authentication precedes environment property access. Copied, retired, expired and cancelled controls refuse; a cancellation retains its exact Error. Policy values that cannot be expressed by the existing closed wire schema refuse without a replacement grant.
+
+## Actual Source Validation
+
+The first red1 was a Root-authored incorrect relative capture import; red2 was the genuine missing API export before implementation. Both failed epochs remain retained. Final green4 prototype and release each completed one test, zero failures and34 parent assertions. A real owned child additionally validated its genuine received5s Original while its actual parent Original was120s; its two assertions are separate from the34 parent assertions. Neutral schema/corpus ceilings20s/5s/20s/2s were checked against Ajv and an independent SQLite minimum oracle. Repeated projections consumed time. Narrow actual imports strict/noUncheckedIndexedAccess types4 prototype/release both exited0. All four final handles are terminal.
+
+Owned binary-input regression projected6 prototype/release also exited0: each executed the two existing independently received files, eight tests and156 parent assertions. All accepted stdin/capture children settled. No physical Native, real Hub/MCP/compiler, cache-size/performance, Windows/Linux/devcontainer or publication qualification follows from these ordinary Source laws. The unbounded-control delegation branch uses the existing canonical writer but has no new actual unbounded Original proof in this finite-parent epoch. Global/default publication HOLD remains.
+
+## Exact Source And Evidence
+
+`🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts` SHA-256 `1b20231752c504075a4ae50859afc735c07145f97765700e59fad85cd5ac8aac`, UTF16 path units 105, bytes 28128  
+`🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts` SHA-256 `2639df5408f60a7f7fe07d1509d47599f7f007c4fce848c109a49e70acd399f8`, UTF16 path units 131, bytes 413  
+`🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts` SHA-256 `0012cf2f899ec87eba9c83f6610ca03bbdcd476a02a6b62e1ca419122c7f9397`, UTF16 path units 99, bytes 11061  
+`🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📤️child/🧬️schema/🔣️.json` SHA-256 `92cd9d0027b5c495750f9eaccdc394fe66997886cc70d27fd537f0d43e206759`, UTF16 path units 126, bytes 873  
+`🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📤️child/🧪️tests/🔣️.json` SHA-256 `89b6cf1076189d9896e6c0a0d392d5f90a8845b694c74674fda6c4d97d09896d`, UTF16 path units 125, bytes 385  
+`🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📤️child/🧪️tests/🟦️.ts` SHA-256 `fe1aff37ddd1ac61f9e4a32d590cfc90c88f260cf94edd273b2efe281d4b7e72`, UTF16 path units 123, bytes 4835  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/typescript-artifact/📜️script.ts` SHA-256 `f6b5138e6d487605fb322a61a82f449da89bf7217a3ea9b979cc76f799256583`, UTF16 path units 147, bytes 53506  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/control-child-projection-red1-prototype.log` SHA-256 `ffbccdaa2ccc3a954df9ee93e99a9fcdbe794fd5342886ac34cc869940d64542`, UTF16 path units 171, bytes 5174  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/control-child-projection-red2-prototype.log` SHA-256 `12bb18a24109eab19d3ff648357aa90e5af1d1a97747d348fdab1fdd4b61a554`, UTF16 path units 171, bytes 5148  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/control-child-projection-green4-prototype.log` SHA-256 `f6787df8a148c9e62f47e44865ce69768e9354348d055c48bae7542fbead2159`, UTF16 path units 173, bytes 607  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/control-child-projection-green4-release.log` SHA-256 `ca10bc8f038d0bb349c96eb99674190ba11eb0240604adb1c99ce8a845b9311b`, UTF16 path units 171, bytes 607  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/control-child-projection-types4-prototype.log` SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, UTF16 path units 173, bytes 0  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/control-child-projection-types4-release.log` SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, UTF16 path units 171, bytes 0  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/owned-binary-input-projected6-prototype.log` SHA-256 `20fa0dabef9843c25bc019b35c9052f4415bc8c83b1ce05e2b869528420bb6f0`, UTF16 path units 171, bytes 3585  
+`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/owned-binary-input-projected6-release.log` SHA-256 `91988ec022ef27334bf11b8a33bc64e278fd32466a3e6a34c77c89e90898f505`, UTF16 path units 169, bytes 3584  

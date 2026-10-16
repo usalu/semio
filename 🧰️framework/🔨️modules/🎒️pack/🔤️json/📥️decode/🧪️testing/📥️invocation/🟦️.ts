@@ -1,5 +1,5 @@
 import schema from "./🧬️schema/🔣️.json";
-import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {checkScriptInvocation, scriptInvocationBudget, type ScriptInvocation} from "../../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 📥️ Declares the original JSON source command and its independently authored child ceiling. */

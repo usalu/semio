@@ -1,2 +1,2 @@
-export { setTheme } from "../🟦️.ts";
-export type { SetTheme } from "../🟦️.ts";
+export { setTheme } from "@semio-tech/framework/config/mutations";
+export type { SetTheme } from "@semio-tech/framework/config/mutations";

@@ -1,0 +1,25 @@
+{
+ "moves": [
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🔣️.json",
+   "to": "🧰️framework/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🔣️.json"
+  }
+ ],
+ "snapshot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/rhu2-snap-dir1.json"
+}

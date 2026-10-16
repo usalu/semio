@@ -1,0 +1,61 @@
+{
+ "label": "bb2",
+ "children": [
+  {
+   "folder": "🛠️backbone-wire-helpers",
+   "doc": "/** 🛠️ Shared helpers of the backbone wire suites: the source locator of the package entry, the document archive fixture and the app channel value types.\n *\n * @see ../../🟦️.ts — the package entry the suites read fixtures relative to\n */",
+   "stmts": [
+    "13-16",
+    "35-37",
+    "45-45",
+    "73-73"
+   ]
+  },
+  {
+   "folder": "🧵️backbone-uris-and-workflow",
+   "doc": "/** 🧵️ Backbone uris and workflow planning: classifying backbone uris and planning os workflows over media contracts.\n *\n * @see ../🛠️backbone-wire-helpers/🟦️.ts — the shared helpers\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "49-49",
+    "61-61",
+    "65-67",
+    "75-213"
+   ]
+  },
+  {
+   "folder": "🎁️pack-value-codecs",
+   "doc": "/** 🎁️ Pack value codecs: byte-exact pack values, dynamic integers and the scene pack codec.\n *\n * @see ../🛠️backbone-wire-helpers/🟦️.ts — the shared helpers\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "69-71",
+    "215-374"
+   ]
+  },
+  {
+   "folder": "🧾️app-channel-codec",
+   "doc": "/** 🧾️ App channel codec: channel version admission, app commands and frames, window config, media export wire.\n *\n * @see ../🛠️backbone-wire-helpers/🟦️.ts — the shared helpers\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "47-47",
+    "376-940"
+   ]
+  },
+  {
+   "folder": "📞️app-channel-client",
+   "doc": "/** 📞️ App channel client: local interaction queries, turn outcomes, conflicts, merge and dispatch reports, handshake and request sequences.\n *\n * @see ../🛠️backbone-wire-helpers/🟦️.ts — the shared helpers\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "39-43",
+    "51-59",
+    "63-63",
+    "942-1601"
+   ]
+  },
+  {
+   "folder": "🕸️plugin-graph-and-routers",
+   "doc": "/** 🕸️ Plugin graph validation, instance directory and artifact routers.\n *\n * @see ../🛠️backbone-wire-helpers/🟦️.ts — the shared helpers\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "1609-1790"
+   ]
+  }
+ ],
+ "file": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/📍️stage2.ts",
+ "childRoot": "🧰️framework/🛍️products/💻️os/🧪️tests",
+ "deleteParent": true
+}

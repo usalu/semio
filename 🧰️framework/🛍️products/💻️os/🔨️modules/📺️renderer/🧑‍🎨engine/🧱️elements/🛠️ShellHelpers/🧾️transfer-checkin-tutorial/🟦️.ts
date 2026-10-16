@@ -21,10 +21,10 @@ import {
   SAVE_ARTIFACT_FILE_ACTION_ID
 } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
-import { type ArtifactSyncStatus } from "@semio-tech/framework-os";
+import { type ArtifactSyncStatus } from "@semio-tech/framework/backbone";
 import { type Anchor, ANCHORS } from "@semio-tech/ui-react";
 import { useEffect } from "react";
-import type { DomainSelection, InteractionState } from "../../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
+import type { DomainSelection, InteractionState } from "@semio-tech/framework/interaction";
 import type { ShellDialogV1 } from "../../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
 import { type ActiveSession, type ShellAction, type ShellState } from "../../🐚️Shell/🟦️.tsx";
 import { type FrozenLabel, frozenLabelText } from "../🏷️labels/🟦️.tsx";

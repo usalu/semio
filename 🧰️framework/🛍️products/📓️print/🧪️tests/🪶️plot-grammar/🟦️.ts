@@ -7,7 +7,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
  * for the pipeline as a whole.
  */
 import { scaleBand, scaleLinear } from "d3-scale";
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { planVizChart } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 import { type ProbeProjection, type ProbeRecord, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 

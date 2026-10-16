@@ -41,6 +41,3 @@ impl ToolRunIdentityReceiving{
  pub fn terminal_is_empty(&self)->bool{self.phase==Phase::Closed&&self.identity.is_none()&&self.receipt.is_none()}
 }
 impl Drop for ToolRunIdentityReceiving{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original typed identity abandoned its receipt or semantic recipient")}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

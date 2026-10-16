@@ -44,27 +44,14 @@ import {
 import { canvasPickTargetKey } from "@semio-tech/framework";
 import { worldProjectionFamily, type WorldProjectionSpec } from "@semio-tech/infinite-world-r3f";
 import { type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import {
-  expandSelectionTargetsForAccept,
-  getActiveSelectionSpec,
-  interactionCanConfirmSelection,
-  isShapeModelDefinition,
-  defaultModelDefinitionId,
-  listModelDefinitionManifests,
-  listTransformationsFromModelDefinition,
-  listTransformationsIntoModelDefinition,
-  listSpatialInteractionsForModelDefinition,
-  modelDefinitionSelectionEntityKinds,
-  modelDefinitionUsesGeometryPicking,
-  countViewObjectsForModelDefinition,
-  resolveModelDefinitionScope,
-  qualifiedTransformationId,
-  isFinalInteractionState,
-  Model,
-  type InteractionEvent,
-  type SelectionTarget,
-  type ModelEntityKind
-} from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type ModelEntityKind } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { getActiveSelectionSpec, interactionCanConfirmSelection, isFinalInteractionState } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎰️interaction-spec/🟦️.ts";
+import { isShapeModelDefinition, defaultModelDefinitionId, listModelDefinitionManifests } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
+import { listTransformationsFromModelDefinition, listTransformationsIntoModelDefinition, qualifiedTransformationId } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🔄️transformation-spec/🟦️.ts";
+import { Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { listSpatialInteractionsForModelDefinition, modelDefinitionUsesGeometryPicking, countViewObjectsForModelDefinition } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
+import { modelDefinitionSelectionEntityKinds, resolveModelDefinitionScope } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧷️selection-operations/🟦️.ts";
+import { expandSelectionTargetsForAccept, type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import { applyModelDiff, isEmptyModelDiff, type ModelDiff } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import {
   abortActiveInteractionSession,

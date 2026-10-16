@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1, runRepositoryCargoLintV1 as runCargoLintV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
@@ -13,15 +14,17 @@ import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️ty
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.repoRoot, "🧰️framework/Cargo.toml"), packages: PACKAGES, cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.repoRoot, "🧰️framework/Cargo.toml"), packages: PACKAGES, cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 
 /** 🧹️Zero-warning clippy gate: `cargo clippy` over every sampling package `--all-targets -- -D warnings`. */
 class LintScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCargoLintV1({manifestPath:resolve(this.repoRoot,"🧰️framework/Cargo.toml"),packages:PACKAGES,cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
+    await runCargoLintV1({manifestPath:resolve(this.repoRoot,"🧰️framework/Cargo.toml"),packages:PACKAGES,cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 

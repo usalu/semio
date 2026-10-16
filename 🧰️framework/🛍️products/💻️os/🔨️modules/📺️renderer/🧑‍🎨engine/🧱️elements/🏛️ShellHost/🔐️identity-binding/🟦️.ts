@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | ShellHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { type HubConnectionStorageV1 } from "../../../../../📇️directory/🔐️sign-in/🟦️.ts";
+import { type HubConnectionStorageV1 } from "@semio-tech/framework/directory/sign-in";
 // #region 🔌️Adapters
 import {
   type AppRole,
@@ -16,14 +16,15 @@ import {
   type ShellBrand,
   type StoragePort
 } from "@semio-tech/framework";
-import { STREAM_MUX_ANNOUNCEMENT, type DocumentScope, documentRuntimeKeyV1 } from "@semio-tech/framework-os";
-import { type MutationEnvelope } from "@semio-tech/framework-replication";
-import { IDENTITY_CONFIG_SCHEMA } from "../../../../../🏪️store/👷️worker/🟦️.ts";
-import { type Identity, type IdentityConfigMutation, applyIdentityConfigMutation } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { type DocumentScope } from "@semio-tech/framework/document/scope";
+import { STREAM_MUX_ANNOUNCEMENT, documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
+import { type MutationEnvelope } from "@semio-tech/framework/replication";
+import { IDENTITY_CONFIG_SCHEMA } from "@semio-tech/framework/backbone/config-lane";
+import { type Identity, type IdentityConfigMutation, applyIdentityConfigMutation } from "@semio-tech/framework/config/mutations";
 import { type UiLocale } from "@semio-tech/ui-react";
 import { type AppSurfaceSessionFactory } from "../../🪪️WasmSessionLoader/🟦️.tsx";
 import { type FrameworkOsDefaults, type ResolvedShellLocks } from "../../🐚️Shell/🟦️.tsx";
-import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, type StreamMuxEndpointV1 } from "../../../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
+import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, type StreamMuxEndpointV1 } from "@semio-tech/framework/io/stream-mux";
 import type { PluginCatalog } from "@semio-tech/framework";
 import { type InstalledServicePresentationV1 } from "../🪪️host-bootstrap/🟦️.tsx";
 

@@ -1,0 +1,32 @@
+{
+  "bindings": [
+    {
+      "name": "invocation",
+      "role": "original"
+    },
+    {
+      "name": "invocationNode",
+      "role": "source-node"
+    }
+  ],
+  "conflict": [
+    {
+      "name": "invocation",
+      "role": "original"
+    },
+    {
+      "name": "invocation",
+      "role": "source-node"
+    }
+  ],
+  "delegation": {
+    "input": [
+      "show",
+      "projects"
+    ],
+    "expected": [
+      "show",
+      "projects"
+    ]
+  }
+}

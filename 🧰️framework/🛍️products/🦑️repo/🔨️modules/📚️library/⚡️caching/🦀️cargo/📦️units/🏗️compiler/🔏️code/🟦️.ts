@@ -4,7 +4,7 @@ import {AsyncLocalStorage} from "node:async_hooks";
 import {createHash,randomUUID} from "node:crypto";
 import {lstat,mkdir,readFile,writeFile,rename,rm,readdir} from "node:fs/promises";
 import {join,relative,resolve} from "node:path";
-import {captureNxAuthorizerSourcesV1} from "../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
+import {captureNxAuthorizerSourcesV1,type NxAuthorizerSourceManifestV1} from "../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
 import {snapshotNxAuthorizerSourcesV1,compileNxAuthorizerSnapshotV1} from "../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {acquireResourceLease,acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
@@ -25,7 +25,7 @@ const hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest(
 /** 🎟️ Admits only canonical compiler-code artifacts inside the first-party tools partition. */
 export function readRustUnitCodeV1(value:unknown):RustUnitCodeV1 {if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed Rust compiler code receipt required");const code=value as RustUnitCodeV1,prefix=".cache/b/t/m/rc/"+code.digest+"/";if(code.program!==prefix+"entry.mjs"||code.receipt!==prefix+"receipt.json"||code.digest!==hash(JSON.stringify({sourceDigest:code.sourceDigest,programDigest:code.programDigest})))throw Error("Original Rust compiler code identity required");return code;}
 /** 📜️ Authenticates a complete captured code receipt without accepting current mutable Source as historical evidence. */
-export function readRustUnitCodeReceiptV1(value:unknown):Readonly<{version:1;source:{version:1;mode:"release";entry:string;sources:readonly{path:string;sha256:string}[]};sourceDigest:string;sourceSha256:string;compiler:Readonly<Record<string,string|boolean>>;programDigest:string;programBytes:number}>{
+export function readRustUnitCodeReceiptV1(value:unknown):Readonly<{version:1;source:NxAuthorizerSourceManifestV1;sourceDigest:string;sourceSha256:string;compiler:Readonly<Record<string,string|boolean>>;programDigest:string;programBytes:number}>{
  if(validateJsonSchemaSubset(receiptSchema,value).length)throw Error("Closed sealed Rust code receipt required");const receipt=value as ReturnType<typeof readRustUnitCodeReceiptV1>,paths=receipt.source.sources.map(row=>row.path),portable=(path:string)=>!path.startsWith("/")&&!/[\\:\u0000-\u001f]/u.test(path)&&path.split("/").every(part=>part!==""&&part!=="."&&part!=="..");if(!portable(receipt.source.entry)||!paths.includes(receipt.source.entry)||paths.some((path,index)=>!portable(path)||index>0&&paths[index-1]!>=path)||hash(JSON.stringify(receipt.source)+"\n")!==receipt.sourceSha256||hash(JSON.stringify({source:receipt.sourceSha256,compiler:receipt.compiler}))!==receipt.sourceDigest)throw Error("Original sealed Rust code Source identity changed");return receipt;
 }
 /** 🔎️ Retains the actual tools image and exact immutable code reader for bounded artifact inspection. */

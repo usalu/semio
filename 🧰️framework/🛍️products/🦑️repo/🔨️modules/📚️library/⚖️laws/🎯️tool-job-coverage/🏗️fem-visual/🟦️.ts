@@ -1,4 +1,4 @@
-/** 🧭️ Tool-job coverage: FEM live visual publication law.
+/** 🏗️ Tool-job coverage: FEM live visual publication law.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { toolJobRustBlock } from "../📋️inventory/🟦️.ts";

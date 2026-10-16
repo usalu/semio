@@ -9,8 +9,8 @@ import type {VizChartSnapshot} from "../../🧬️schema/📸️snapshot/🟦️
 import { scaleLinear } from "d3-scale";
 import { renderVizScene } from "../../🧬️schema/💡️inferences/🖼️render/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020.js";
-import { defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import schema from "../../🚪️io/📝️text/💡️inferences/🔣️.json";
 import vectors from "./🔣️.json";
 function values(): unknown[] { return vectors.cases.map(entry => { if ("result" in entry) return entry.result; const value = structuredClone(vectors.base) as unknown as Record<string, unknown>; if ("path" in entry) { if (entry.path === undefined) throw Error("Neutral mutation requires an explicit path"); let parent = value; for (const key of entry.path.slice(0, -1)) parent = parent[key] as Record<string, unknown>; const key = entry.path.at(-1)!; if ("remove" in entry) delete parent[key]; else parent[key] = entry.value; } return value; }); }

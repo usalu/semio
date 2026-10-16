@@ -1,23 +1,23 @@
 use super::*;
 
-#[path = "../../../🧪️tests/🧰️oracle-support/🦀️.rs"]
-mod support;
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_geometry_oracle_support as support;
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🔢️math-values/🔣️.json");
 
 #[test]
 fn the_compute_table_and_the_fixture_cover_exactly_the_catalogue_kinds() {
-    support::assert_category("math.values", COMPUTES, FIXTURE);
+    support::assert_category(catalogue(), "math.values", COMPUTES, FIXTURE);
 }
 
 #[test]
 fn every_fixture_case_holds_at_fuel_one_and_at_unbounded_fuel() {
-    assert_eq!(support::run_fixture(FIXTURE, COMPUTES), 11);
+    assert_eq!(support::run_fixture(catalogue(), FIXTURE, COMPUTES), 11);
 }
 
 #[test]
 fn a_value_of_the_wrong_type_is_a_localized_fault_never_a_conversion() {
-    let kind = support::kind_of("math.integer");
+    let kind = support::kind_of(catalogue(), "math.integer");
     let inputs = WidgetInputs::new_cold("w", kind, [("value".to_string(), GeometryValue::Number(2.0))].into_iter().collect());
     let evaluation = support::drive(integer(kind, inputs), 1);
     let fault = evaluation.fault.expect("a number is no integer");

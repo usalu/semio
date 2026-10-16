@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import TOML from "@iarna/toml";
 import Ajv from "ajv";
-import { readRustSourceClosureV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import { readRustSourceClosureV1 } from "@semio-tech/process/artifacts/native-build/source";
 
 const db = resolve(import.meta.dir, "../.."), workspace = resolve(db, "../../../../.."), read = (path: string) => readFileSync(resolve(db, path), "utf8");
 type Edge = { package?: string; path?: string };

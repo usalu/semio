@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "filesystemBytes": 67108864,
+  "maximumPhysicalBytes": 68157440,
+  "previousBytes": 62914560,
+  "currentBytes": 33554432,
+  "phaseMilliseconds": 50000,
+  "runnerMilliseconds": 60000,
+  "payload": "current original rebudget payload",
+  "owner": "fixture:native-rebudget"
+}

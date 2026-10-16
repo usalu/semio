@@ -28,6 +28,181 @@
       ]
     },
     {
+      "kind": "retired-public",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🪪️wire-entries/🦀️.rs",
+      "names": [
+        "FixedCommandPage",
+        "CommandPageSet",
+        "PagedCommand",
+        "PagedCommandReader",
+        "CommandEnvelope",
+        "CommandBatch",
+        "CommandEnvelopeSet",
+        "RejectedCommandBuild",
+        "RejectedCommandBuildRegistry",
+        "CommandBatchProgress",
+        "CommandBatchDriver",
+        "CommandDriverRegistry",
+        "CommandPageCursor",
+        "CommandIngressStatus",
+        "COMMAND_PAGE_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_PAGES",
+        "COMMAND_BATCH_MAXIMUM_ITEMS",
+        "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+      ]
+    },
+    {
+      "kind": "retired-public",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🚚️archive-load/🦀️.rs",
+      "names": [
+        "FixedCommandPage",
+        "CommandPageSet",
+        "PagedCommand",
+        "PagedCommandReader",
+        "CommandEnvelope",
+        "CommandBatch",
+        "CommandEnvelopeSet",
+        "RejectedCommandBuild",
+        "RejectedCommandBuildRegistry",
+        "CommandBatchProgress",
+        "CommandBatchDriver",
+        "CommandDriverRegistry",
+        "CommandPageCursor",
+        "CommandIngressStatus",
+        "COMMAND_PAGE_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_PAGES",
+        "COMMAND_BATCH_MAXIMUM_ITEMS",
+        "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+      ]
+    },
+    {
+      "kind": "retired-public",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/👥️presence-roster/🦀️.rs",
+      "names": [
+        "FixedCommandPage",
+        "CommandPageSet",
+        "PagedCommand",
+        "PagedCommandReader",
+        "CommandEnvelope",
+        "CommandBatch",
+        "CommandEnvelopeSet",
+        "RejectedCommandBuild",
+        "RejectedCommandBuildRegistry",
+        "CommandBatchProgress",
+        "CommandBatchDriver",
+        "CommandDriverRegistry",
+        "CommandPageCursor",
+        "CommandIngressStatus",
+        "COMMAND_PAGE_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_PAGES",
+        "COMMAND_BATCH_MAXIMUM_ITEMS",
+        "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+      ]
+    },
+    {
+      "kind": "retired-public",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧩️command-decode/🦀️.rs",
+      "names": [
+        "FixedCommandPage",
+        "CommandPageSet",
+        "PagedCommand",
+        "PagedCommandReader",
+        "CommandEnvelope",
+        "CommandBatch",
+        "CommandEnvelopeSet",
+        "RejectedCommandBuild",
+        "RejectedCommandBuildRegistry",
+        "CommandBatchProgress",
+        "CommandBatchDriver",
+        "CommandDriverRegistry",
+        "CommandPageCursor",
+        "CommandIngressStatus",
+        "COMMAND_PAGE_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_PAGES",
+        "COMMAND_BATCH_MAXIMUM_ITEMS",
+        "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+      ]
+    },
+    {
+      "kind": "retired-public",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/📨️app-command/🦀️.rs",
+      "names": [
+        "FixedCommandPage",
+        "CommandPageSet",
+        "PagedCommand",
+        "PagedCommandReader",
+        "CommandEnvelope",
+        "CommandBatch",
+        "CommandEnvelopeSet",
+        "RejectedCommandBuild",
+        "RejectedCommandBuildRegistry",
+        "CommandBatchProgress",
+        "CommandBatchDriver",
+        "CommandDriverRegistry",
+        "CommandPageCursor",
+        "CommandIngressStatus",
+        "COMMAND_PAGE_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_PAGES",
+        "COMMAND_BATCH_MAXIMUM_ITEMS",
+        "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+      ]
+    },
+    {
+      "kind": "retired-public",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🎞️app-frame/🦀️.rs",
+      "names": [
+        "FixedCommandPage",
+        "CommandPageSet",
+        "PagedCommand",
+        "PagedCommandReader",
+        "CommandEnvelope",
+        "CommandBatch",
+        "CommandEnvelopeSet",
+        "RejectedCommandBuild",
+        "RejectedCommandBuildRegistry",
+        "CommandBatchProgress",
+        "CommandBatchDriver",
+        "CommandDriverRegistry",
+        "CommandPageCursor",
+        "CommandIngressStatus",
+        "COMMAND_PAGE_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_PAGES",
+        "COMMAND_BATCH_MAXIMUM_ITEMS",
+        "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+      ]
+    },
+    {
+      "kind": "retired-public",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🗜️codec/🦀️.rs",
+      "names": [
+        "FixedCommandPage",
+        "CommandPageSet",
+        "PagedCommand",
+        "PagedCommandReader",
+        "CommandEnvelope",
+        "CommandBatch",
+        "CommandEnvelopeSet",
+        "RejectedCommandBuild",
+        "RejectedCommandBuildRegistry",
+        "CommandBatchProgress",
+        "CommandBatchDriver",
+        "CommandDriverRegistry",
+        "CommandPageCursor",
+        "CommandIngressStatus",
+        "COMMAND_PAGE_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_BYTES",
+        "COMMAND_MAXIMUM_PAGES",
+        "COMMAND_BATCH_MAXIMUM_ITEMS",
+        "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+      ]
+    },
+    {
       "kind": "retired-reexport",
       "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
       "names": [
@@ -41,9 +216,38 @@
         "FixedCommandPage",
         "CommandPageSet",
         "PagedCommand",
-        "PagedCommandReader",
         "COMMAND_PAGE_MAXIMUM_BYTES",
-        "COMMAND_MAXIMUM_BYTES",
+        "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+      ],
+      "namespace": "::protocol::wire::command_ingress"
+    },
+    {
+      "kind": "private-import",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/👥️presence-roster/🦀️.rs",
+      "names": [
+        "FixedCommandPage",
+        "COMMAND_PAGE_MAXIMUM_BYTES"
+      ],
+      "namespace": "::protocol::wire::command_ingress"
+    },
+    {
+      "kind": "private-import",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧩️command-decode/🦀️.rs",
+      "names": [
+        "PagedCommand",
+        "PagedCommandReader",
+        "COMMAND_MAXIMUM_BYTES"
+      ],
+      "namespace": "::protocol::wire::command_ingress"
+    },
+    {
+      "kind": "private-import",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🗜️codec/🦀️.rs",
+      "names": [
+        "FixedCommandPage",
+        "CommandPageSet",
+        "PagedCommand",
+        "COMMAND_PAGE_MAXIMUM_BYTES",
         "COMMAND_MAXIMUM_PAGES",
         "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
       ],

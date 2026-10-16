@@ -1,0 +1,16 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts",
+ "out": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/📍️stage3.ts",
+ "fn": "registerTests3",
+ "header": "/** 📍️ stage */",
+ "sourceExpr": {
+  "directory": "nodePath.resolve(nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url)), \"../..\")",
+  "url": "new URL(\"../../🟦️.ts\", import.meta.url).href"
+ },
+ "extraImports": [
+  "import * as nodePath from \"node:path\";",
+  "import * as nodeUrl from \"node:url\";"
+ ],
+ "host": "🧰️framework/🛍️products/💻️os/🟦️.ts",
+ "hostWins": true
+}

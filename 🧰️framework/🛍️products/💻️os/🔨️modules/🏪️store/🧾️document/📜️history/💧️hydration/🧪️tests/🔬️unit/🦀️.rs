@@ -28,14 +28,14 @@ fn wide_grant() -> RetainedCloneGrant {
 
 #[test]
 fn persisted_hydration_release_store_entry_refuses_foreign_target_without_consuming_original_owners() {
-    type Snapshot = super::tests::DemoSnapshot;
-    type Mutation = super::fixture_mutations::demo::DemoMutation;
+    type Snapshot = semio_framework_os_store_testing_fixtures::DemoSnapshot;
+    type Mutation = semio_framework_os_store_testing_fixtures::demo::DemoMutation;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️store-entry/🔣️.json")).unwrap();
     let pack = fixture["pack"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let expected = semio_framework_pack_json::from_json_str::<ArtifactRef>(&fixture["expected"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut hydration = RetainedPersistedDocumentHydration::<Snapshot, Mutation>::from_decoded_pack(
         Snapshot::default(), pack, [7; 32], semio_framework_os_spr::HistoryLog::default(), expected, None, "demo/v1".into(),
-        super::tests::demo_closable_store_owners(), OperationId(811), Generation(1), u64::MAX,
+        semio_framework_os_store_testing_doubles::demo_closable_store_owners(), OperationId(811), Generation(1), u64::MAX,
         PersistedDocumentHydrationTarget::Envelope, semio_framework_os_spr::ActorId("store-entry".into()),
     );
     let pack_identity = hydration.pack.as_ref().unwrap().as_ptr();
@@ -265,8 +265,8 @@ fn persisted_hydration_release_pages_are_independent_of_step_fuel() {
 
 #[test]
 fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
-    type Snapshot = super::tests::DemoSnapshot;
-    type Mutation = super::fixture_mutations::demo::DemoMutation;
+    type Snapshot = semio_framework_os_store_testing_fixtures::DemoSnapshot;
+    type Mutation = semio_framework_os_store_testing_fixtures::demo::DemoMutation;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️physical-demand/🔣️.json")).unwrap();
     let policy = &fixture["readyAuxiliaryPolicy"];
     let grant = RetainedCloneGrant { maximum_items: policy["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: policy["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: policy["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: policy["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: policy["maximumDepth"].as_u64().unwrap() as usize };

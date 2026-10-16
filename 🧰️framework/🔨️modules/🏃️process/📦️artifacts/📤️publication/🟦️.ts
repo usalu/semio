@@ -8,7 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { basename, dirname, resolve, join, isAbsolute, relative } from "node:path";
 import { acquireResourceLease, captureResourceLeaseWriterProofV1, requireResourceLeaseWriterProofV1, resourceLeasePathV1, checkResourceLeaseControl, type ResourceLeaseControl, type LeaseWait } from "../../🔒️leases/🟦️.ts";
 
-import{requireAcceptedPhysicalCleanupControlV1,readAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupControlV1,readAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 
 export type ArtifactPublicationOptions = { readonly control?: ResourceLeaseControl; readonly signal?: AbortSignal; readonly leaseDirectory: string; readonly onWait?: (progress: LeaseWait) => void };
@@ -80,30 +80,28 @@ async function executeArtifactPublicationV1(staging:string,owner:string,capture:
   const identical=await hasIdenticalArtifacts(staging,marker,owner,capture,metadata,signal,control);if(identical)await recheckArtifactCaptureV1(capture);signal.throwIfAborted();if(control)checkResourceLeaseControl(control);
   if(!identical){mkdirSync(dirname(staging),{recursive:true});parentIdentity=lstatSync(dirname(staging));temporary=artifactCaptureDirectoryV1(capture);temporaryIdentity=lstatSync(temporary);previous=temporary+".previous";await writeArtifactCaptureManifestV1(capture,owner);signal.throwIfAborted();if(control)checkResourceLeaseControl(control);const commit=await prepareArtifactCaptureCommitV1(capture,control?captureResourceLeaseWriterProofV1(lease,options.leaseDirectory,resource,control):undefined);const onWait=()=>options.onWait?.({resource,mode:"exclusive",elapsedMs:Date.now()-started});if(existsSync(staging)){previousIdentity=lstatSync(staging);await renameArtifactDirectory(staging,previous,signal,onWait,control);}try{await renameArtifactDirectory(temporary,staging,signal,onWait,control);commitArtifactCaptureV1(commit);published=true;}catch(error){failures.push(error);try{if(existsSync(previous)){const settledSignal=await cleanupSignal();if(cleanup)same(previous,previousIdentity);await renameArtifactDirectory(previous,staging,settledSignal,onWait);}}catch(rollback){failures.push(rollback);}}}
  }catch(error){failures.push(error);}
- try{await cleanupSignal();if(published&&previous&&existsSync(previous)){if(cleanup)same(previous,previousIdentity);rmSync(previous,{recursive:true,force:true});}if(cleanup)checkAcceptedPhysicalCleanupV1(cleanup);}catch(error){failures.push(error);}finally{guardLive=false;lease.release();}
+ try{await cleanupSignal();if(published&&previous&&existsSync(previous)){if(cleanup)same(previous,previousIdentity);rmSync(previous,{recursive:true,force:true});}if(cleanup)checkAcceptedPhysicalCleanupV1(cleanup);}catch(error){failures.push(error);}finally{guardLive=false;try{lease.release();}catch(error){failures.push(error);}}
  if(failures.length>1)throw new AggregateError(failures,"Artifact publication and retained cleanup failed");if(failures.length)throw failures[0];
 }
 
 /** 🧊️ Acquires immutable executable bytes before releasing the publisher's shared lease. */
-export async function pinExecutableArtifact(source: string, cacheDirectory: string, owner: string, options: ArtifactPublicationOptions): Promise<string> {
+export async function pinExecutableArtifact(source: string, cacheDirectory: string, owner: string, options: ArtifactPublicationOptions&Readonly<{control:ResourceLeaseControl}>): Promise<string> {
+  options=Object.freeze({...options});const control=options.control;requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);
   if (!isAbsolute(source) || !isAbsolute(cacheDirectory) || !isAbsolute(options.leaseDirectory)) throw Error("Explicit absolute executable publication paths required");
-  const control=options.control,signal=control?.signal??options.signal??new AbortController().signal;
-  if(control){checkResourceLeaseControl(control);if(options.signal&&options.signal!==signal)throw Error("Executable acquisition requires original signal");}
-  const lease=await acquireResourceLease({directory:options.leaseDirectory,resource:`artifact:${dirname(source)}`,mode:"shared",signal,control,onWait:options.onWait});
+  if(options.signal&&options.signal!==control.signal)throw Error("Executable acquisition requires original signal");const signal=control.signal,lease=await acquireResourceLease({directory:options.leaseDirectory,resource:`artifact:${dirname(source)}`,mode:"shared",signal,control,onWait:options.onWait});let failed=false,primary:unknown;
   try {
-    const digest=await executableDigest(source,signal,control),name=basename(source),directory=join(cacheDirectory,digest);
-    await stageArtifacts(directory,owner,new Map([[name,source]]),options);
+    checkResourceLeaseControl(control);const digest=await executableDigest(source,signal,control);checkResourceLeaseControl(control);const name=basename(source),directory=join(cacheDirectory,digest);
+    await stageArtifacts(directory,owner,new Map([[name,source]]),options);checkResourceLeaseControl(control);
     const executable=join(directory,name);
-    if(await executableDigest(executable,signal,control)!==digest)throw Error("Executable artifact changed during acquisition");
-    return executable;
-  } finally {lease.release();}
+    if(await executableDigest(executable,signal,control)!==digest)throw Error("Executable artifact changed during acquisition");checkResourceLeaseControl(control);return executable;
+  }catch(error){failed=true;primary=error;throw error;}finally{try{lease.release();}catch(error){if(!failed)throw error;if(primary instanceof Error&&Object.isExtensible(primary))try{Object.defineProperty(primary,"executablePinCleanupError",{value:error});}catch{}}}
 }
 
 /** 🔏️ Hashes executable bytes in bounded cancellable reads. */
 async function executableDigest(path: string, signal: AbortSignal, control?: ResourceLeaseControl): Promise<string> {
   signal.throwIfAborted();if(control)checkResourceLeaseControl(control);
-  const file=await open(path,"r"),hash=createHash("sha256"),bytes=Buffer.allocUnsafe(65536),started=Date.now();let chunks=0;
+  const file=await open(path,"r"),hash=createHash("sha256"),bytes=Buffer.allocUnsafe(65536),started=Date.now();let chunks=0,failed=false,primary:unknown;
   try {
-    for(;;){signal.throwIfAborted();if(control)checkResourceLeaseControl(control);const {bytesRead}=await file.read(bytes,0,bytes.length,null);signal.throwIfAborted();if(control)checkResourceLeaseControl(control);if(!bytesRead)return hash.digest("hex");hash.update(bytes.subarray(0,bytesRead));if(control&&++chunks%64===0){await control.publish({resource:`artifact:${path}`,mode:"shared",elapsedMs:Date.now()-started});checkResourceLeaseControl(control);await control.yieldContinuation();checkResourceLeaseControl(control);}}
-  } finally {await file.close();}
+    signal.throwIfAborted();if(control)checkResourceLeaseControl(control);for(;;){signal.throwIfAborted();if(control)checkResourceLeaseControl(control);const {bytesRead}=await file.read(bytes,0,bytes.length,null);signal.throwIfAborted();if(control)checkResourceLeaseControl(control);if(!bytesRead)return hash.digest("hex");hash.update(bytes.subarray(0,bytesRead));if(control&&++chunks%64===0){await control.publish({resource:`artifact:${path}`,mode:"shared",elapsedMs:Date.now()-started});checkResourceLeaseControl(control);await control.yieldContinuation();checkResourceLeaseControl(control);}}
+  }catch(error){failed=true;primary=error;throw error;}finally{try{await file.close();}catch(error){if(!failed)throw error;if(primary instanceof Error&&Object.isExtensible(primary))try{Object.defineProperty(primary,"executableDigestCloseError",{value:error});}catch{}}if(!failed){signal.throwIfAborted();if(control)checkResourceLeaseControl(control);}}
 }

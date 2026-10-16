@@ -8,7 +8,7 @@ use semio_framework_os_store_codec_registry::composer_registry::{ComposeError, C
 use semio_framework_io_schema::IoPayload;
 use semio_framework_os_io::{IoWireError, MAX_IO_WIRE_BYTES, MAX_IO_WIRE_DIALECT_COMPONENT_BYTES, compose_thunk, format_accept_filter, format_descriptor, io_compose_via, preflight_composer_entry_refs, preflight_format_descriptors, register_composer_entries, register_format_descriptors, wire_decode_composed_artifact};
 use semio_framework_os_store_codec_registry::lifted_io::{WireComposedArtifact, resolve};
-use crate::io::text;
+use semio_framework_os_io::text;
 use semio_framework_artifact_reference::{ArtifactKindId,ArtifactRef,is_canonical_artifact_kind};
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 

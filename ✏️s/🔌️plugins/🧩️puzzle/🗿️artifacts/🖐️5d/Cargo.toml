@@ -155,6 +155,12 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
     [workspace.dependencies.semio-s-plugin-puzzle-jobs]
     path = "../../🎮️commands/📤️jobs/📦️packages/🦀️rust"
 
+    [workspace.dependencies.semio-s-plugin-puzzle-board-scene]
+    path = "../../🔨️modules/🎲️board/🎬️scene/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-plugin-puzzle-retained]
+    path = "../../🎮️commands/🧵️retained/📦️packages/🦀️rust"
+
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"
 unused_lifetimes = "warn"

@@ -7,7 +7,7 @@ export const gltfEulerCharacteristicInference = {
 } as const;
 export type GltfEulerCharacteristicInference = typeof gltfEulerCharacteristicInference;
 
-import { exact, unavailable, type GltfTsGeometryContext, type GltfTsMeasure } from '../../🔨️geometry-core/🟦️.ts';
+import { exact, unavailable, type GltfTsGeometryContext, type GltfTsMeasure } from '../../🔨️geometry-kernel/🟦️.ts';
 
 export const inferGltfEulerCharacteristic = (context: GltfTsGeometryContext): GltfTsMeasure<number> => {
   const value = context.topology?.eulerCharacteristic;

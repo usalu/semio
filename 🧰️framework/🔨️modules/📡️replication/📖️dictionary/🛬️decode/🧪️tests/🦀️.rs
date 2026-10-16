@@ -1,5 +1,5 @@
 use super::*;
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(operation)}
 
 #[test]
 fn original_dictionary_native_ranges_keep_original_input_and_exact_paged_receipts(){

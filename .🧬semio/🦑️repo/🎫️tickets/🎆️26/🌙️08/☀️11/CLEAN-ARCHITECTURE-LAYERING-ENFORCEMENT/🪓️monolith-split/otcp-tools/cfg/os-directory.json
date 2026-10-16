@@ -1,0 +1,43 @@
+{
+ "id": "os-directory",
+ "pkg": "semio_framework_os_directory",
+ "trees": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory",
+  "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory"
+ ],
+ "inputs_units": [
+  "os-directory-lib-test-semio-framework-os-directory"
+ ],
+ "p_lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🦀️.rs",
+ "p_dirs": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory"
+ ],
+ "comps": [
+  {
+   "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🍯️companion-1/🦀️.rs"
+  },
+  {
+   "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🍰️companion-2/🦀️.rs"
+  }
+ ],
+ "ext": [
+  "semio_framework_value",
+  "protocol",
+  "semio_framework_value_derive",
+  "semio_framework_pack_json",
+  "semio_framework_hash",
+  "semio_framework_schema_validator",
+  "semio_framework_artifact_reference",
+  "semio_framework_async",
+  "semio_framework_os_identity",
+  "semio_framework_os_channel",
+  "semio_framework_plugin_component_receipt",
+  "serde",
+  "serde_json",
+  "semio_framework_async_macros"
+ ],
+ "base_features": [],
+ "features": [
+  "testkit"
+ ]
+}

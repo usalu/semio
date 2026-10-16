@@ -34,7 +34,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { actorBytePageSchema: pageSchema } = await import("../../../../../🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
     const { actorInstanceLifecycleSchema: lifetimeSchema } = await import("../../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
     const { actorUiPatchReceiptSchema: patchSchema } = await import("../../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts");
-    const { default: valueSchema } = await import("../../../../../🌱️value/🧬️schema/🔣️.json");
+    const { valueSchema } = await import("@semio-tech/value-ts/schema");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(pageSchema).addSchema(lifetimeSchema).addSchema(patchSchema);
     expect(ajv.addSchema(schema).getSchema(`${schema.$id}#/$defs/Content`)!(wire)).toBe(true);

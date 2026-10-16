@@ -1,7 +1,7 @@
 import{createHash}from"node:crypto";
-import{validateJsonSchemaSubset}from"./../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import{decodeBoundedArchiveV1}from"./../../../../🔨️modules/🏃️process/📦️artifacts/🗃️archive/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"./../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{decodeBoundedArchiveV1}from"@semio-tech/process/artifacts/archive";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import toolchain from"../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json"with{type:"json"};
 import toolchainSchema from"../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🧬️schema/🔣️.json"with{type:"json"};
 import bundle from"../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🔒️dependencies.json"with{type:"json"};

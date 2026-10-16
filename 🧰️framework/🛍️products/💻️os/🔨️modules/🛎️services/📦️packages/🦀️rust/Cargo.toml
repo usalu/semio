@@ -17,6 +17,9 @@ workspace = true
 name = "semio_framework_os_services"
 path = "🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
@@ -64,10 +67,6 @@ semio-framework-job = { workspace = true, features = ["testkit"] }
 # self-documenting from this line alone.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 tokio = { workspace = true, features = ["sync", "macros"] }
-# 🧵️ gate-services (universal-async residue sweep): every `HostAsyncRuntime` method this file's
-# tests exercise is `async fn` — every test needs a real async-test harness. Path dependency, same
-# pattern `🎭️actor`'s Cargo.toml already uses for this macro crate.
-semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
 

@@ -29,11 +29,3 @@ wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "co
 semio-framework-trace = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-
-[[test]]
-name = "original_host_deadline"
-path = "../../../🖥️host/⏱️deadline/🧪️tests/🦀️.rs"
-
-[[test]]
-name = "original_host_root"
-path = "../../../🖥️host/🔔️wake/🎟️root/🧪️tests/🦀️.rs"

@@ -165,7 +165,7 @@ fn gpu_candidate_executes_reuse_publication_changed_tuple_rejection_and_metrics_
 #[cfg(test)]
 #[test]
 fn rendered_target_transfers_to_the_table_without_an_unused_second_target() {
-    let source = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
+    let source = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
     let start = source.find("pub(crate) fn realize_step").unwrap_or(0);
     let end = source[start..].find("pub(crate) fn close_active_candidate_step").map(|offset| start + offset).unwrap_or(source.len());
     let mounted = &source[start..end];
@@ -183,27 +183,13 @@ fn rendered_target_transfers_to_the_table_without_an_unused_second_target() {
 #[cfg(test)]
 #[test]
 fn child_and_outer_surface_retirements_require_explicit_field_witnesses() {
-    let source = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
+    let source = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
     let start = source.find("struct EngineSurfaceRetirement").unwrap_or(0);
     let end = source[start..].find("//#region 📦️PreparedEngineCanvas").map(|offset| start + offset).unwrap_or(source.len());
     let retirement = &source[start..end];
     assert!(retirement.contains("let EngineSurface {"));
     assert!(retirement.contains("board_pending_events.terminal_is_empty()"));
     assert!(!retirement.contains("ManuallyDrop::drop(&mut self.surface)"));
-}
-
-#[cfg(test)]
-fn with_engine_close_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
-    let mut sequence = 0;
-    let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut sequence,
-    );
-    step(&mut context)
 }
 
 /// 🎬️ Drives ONE board surface's retained pointer authority to its terminal and publishes what it
@@ -298,26 +284,6 @@ fn populated_flow_surface_closes_history_and_cache_before_slot_reuse() {
     assert_ne!(token.generation, next.generation);
 }
 
-/// 🔒️ `ENGINE_SURFACES` is ONE process-wide registry and `take_engine_surface_registrations` drains it
-/// globally, so two laws attaching engine surfaces at the same time steal each other's registrations
-/// and each other's close tokens. Every law that attaches one holds this first
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(test)]
-pub(crate) static ENGINE_SURFACE_LAW_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
-/// 🔒️ The guard itself, poison-tolerant: a law that panicked already reported its own failure and
-/// must not turn every later law into a second, misleading one.
-#[cfg(test)]
-pub(crate) fn engine_surface_law_guard() -> std::sync::MutexGuard<'static, ()> {
-    ENGINE_SURFACE_LAW_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
-}
-
-/// 🧹️ Retires a test's directly attached host through the bounded engine close ladder.
-#[cfg(test)]
-pub(crate) fn retire_engine_surface_fixture(host_id: &str) {
-    node_graph_attach_tests::drop_engine_surface(host_id);
-}
-
 #[cfg(test)]
 pub fn node_graph_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
@@ -353,7 +319,7 @@ pub fn map_action(controller_id: &str, action: &str, args: Value) -> ActionDescr
 
 #[cfg(test)]
 pub fn map_interaction_actions(surface_id: &str, controller_id: &str, host: &MapHost) -> Vec<ActionDescriptor> {
-    vec![map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_CAMERA, json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) }))]
+    vec![map_action(controller_id, semio_framework_ui_declaration::ui::tiled_map_actions::SET_CAMERA, json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) }))]
 }
 
 #[cfg(test)]
@@ -374,7 +340,7 @@ fn saturated_map_action_queue_preserves_host_revision_and_camera() {
     for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY {
         input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
     }
-    assert_eq!(tiled_map_wheel_into(surface_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, false, &mut input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    assert_eq!(tiled_map_wheel_into(surface_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, false, &mut input), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits));
     let after = with_map_host(surface_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
     assert_eq!(after, before);
     ENGINE_SURFACES.with(|cell| {
@@ -401,7 +367,7 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     });
     let mut graph_input = ui_wgpu::wgpu::InputState::default();
     saturate(&mut graph_input, 0);
-    assert_eq!(node_graph_wheel_into(graph_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, false, &mut graph_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    assert_eq!(node_graph_wheel_into(graph_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, false, &mut graph_input), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits));
     let graph_after = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
@@ -413,7 +379,7 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
         let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
         host.selected_node_ids_json()
     });
-    assert_eq!(node_graph_pointer_down_into(graph_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, 0, false, false, false, false, &mut graph_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    assert_eq!(node_graph_pointer_down_into(graph_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, 0, false, false, false, false, &mut graph_input), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits));
     let graph_selection_after = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
@@ -427,12 +393,12 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     let board_before = with_board_host(board_id, |host| [host.scene.camera.x, host.scene.camera.y, host.scene.camera.zoom]).unwrap();
     let mut board_input = ui_wgpu::wgpu::InputState::default();
     saturate(&mut board_input, 1);
-    assert_eq!(board2d_wheel_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    assert_eq!(board2d_wheel_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, &mut board_input), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits));
     let board_after = with_board_host(board_id, |host| [host.scene.camera.x, host.scene.camera.y, host.scene.camera.zoom]).unwrap();
     assert_eq!(board_after, board_before);
     board2d_pointer_down_into(board_id, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 100.0, 100.0, 1, false, false, &mut board_input).expect("an idle board takes the press");
     board_input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
-    assert_eq!(board2d_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    assert_eq!(board2d_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut board_input), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits));
     assert!(with_board_host(board_id, |host| defers_descriptor_sync_from_js(&host.focus, &host.gestures)).unwrap());
     let mut retry = ui_wgpu::wgpu::InputState::default();
     assert_eq!(board2d_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut retry), Ok(true));

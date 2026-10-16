@@ -1,7 +1,7 @@
 /** 🔒️ `add-selection-constraint` wire twin: the leaf payload `AddSelectionConstraint`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireDefault, normWireInteger, normWireNullable, normWireObject, type NormWireReader, normWireRange, normWireRequired } from "../../../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireDefault, normWireInteger, normWireNullable, normWireObject, type NormWireReader, normWireRange, normWireRequired } from "@semio-tech/norm-js/registry/contract";
 import { parseSelectionConstraint, type SelectionConstraint } from "../../../📸️snapshot/🟦️.ts";
 
 export interface AddSelectionConstraint {

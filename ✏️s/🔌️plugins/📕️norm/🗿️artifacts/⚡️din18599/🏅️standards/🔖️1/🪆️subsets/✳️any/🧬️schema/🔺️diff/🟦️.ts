@@ -1,7 +1,7 @@
 /** 🔺️ `Din18599Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireDefault, normWireInteger, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireDefault, normWireInteger, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 import { type CoolingPlant, type Din18599Adjacency, type Din18599Attachment, type Din18599AutomationClass, type Din18599BuildingCategory, type Din18599CalculationMethod, type Din18599ElementKind, type Din18599UsageProfile, type Din18599UseClass, type EnvelopeElement, parseCoolingPlant, parseDin18599Adjacency, parseDin18599Attachment, parseDin18599AutomationClass, parseDin18599BuildingCategory, parseDin18599CalculationMethod, parseDin18599ElementKind, parseDin18599UsageProfile, parseDin18599UseClass, parseEnvelopeElement, parseThermalZone, type ThermalZone } from "../📸️snapshot/🟦️.ts";
 
 export interface Din18599Diff {

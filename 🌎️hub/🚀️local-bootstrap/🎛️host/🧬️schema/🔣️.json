@@ -1,0 +1,192 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "events"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "events": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "enum": [
+          "run-start",
+          "run-close",
+          "accept",
+          "settle",
+          "stop",
+          "close"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumActiveRuns": 8,
+        "maximumRunBirths": 64,
+        "maximumPendingOperations": 32,
+        "maximumOutputBytes": 1048576,
+        "maximumProfiles": 8,
+        "maximumPathUnits": 256,
+        "maximumReadinessBytes": 65536,
+        "maximumReadinessStallMilliseconds": 300000,
+        "maximumReadinessChunks": 1024,
+        "maximumDevelopmentServers": 2,
+        "maximumDevelopmentServerBirths": 2,
+        "maximumOutputChunks": 16384,
+        "maximumOutputLines": 65536
+      }
+    },
+    "Start": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profiles",
+        "options"
+      ],
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "profileId",
+              "subject",
+              "displayName",
+              "allowedClientClasses"
+            ],
+            "properties": {
+              "profileId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "subject": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "displayName": {
+                "type": "string",
+                "maxLength": 256
+              },
+              "allowedClientClasses": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "native",
+                    "mcp",
+                    "react-relay",
+                    "admin-relay"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "capture": {
+              "type": "boolean"
+            },
+            "isolatedSecuritySmoke": {
+              "type": "boolean"
+            },
+            "inferenceCheckpointControl": {
+              "type": "boolean"
+            },
+            "adminToken": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "adminSubjects": {
+              "type": "array",
+              "maxItems": 8,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            },
+            "credentialSignIn": {
+              "type": "boolean"
+            },
+            "traceLevel": {
+              "enum": [
+                "off",
+                "error",
+                "warn",
+                "info",
+                "debug",
+                "trace"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "FailureSchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "outcomes",
+        "lateAdmitted"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "outcomes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "enum": [
+              "error",
+              "undefined"
+            ]
+          }
+        },
+        "lateAdmitted": {
+          "const": false
+        }
+      }
+    },
+    "CloseSchedule": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "enum": [
+          "body-return",
+          "close-request",
+          "read-terminal",
+          "drain",
+          "release"
+        ]
+      }
+    }
+  }
+}

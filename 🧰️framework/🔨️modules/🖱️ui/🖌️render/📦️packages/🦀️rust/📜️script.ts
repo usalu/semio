@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -36,8 +38,9 @@ const RENDER_PACKAGES: readonly string[] = ["semio-framework-ui-render", "semio-
 //#region 🔖️test
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: RENDER_PACKAGES, cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: RENDER_PACKAGES, cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
     await runOwnedCommand("bun", ["../../🧪️tests/🖼️webgpu-surface/🟨️.js"], packageRoot, "tool:owner", buildBudgetMs(), {env: process.env});
   }
 }
@@ -46,7 +49,7 @@ class TestScript extends BundleScript {
 //#region 🔖️check-wasm
 class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-render", "--target", "wasm32-unknown-unknown"],packageRoot,process.env,buildBudgetMs());
+    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-render", "--target", "wasm32-unknown-unknown"],packageRoot,process.env,buildBudgetMs());
   }
 }
 //#endregion 🔖️check-wasm

@@ -55,14 +55,6 @@ pub fn register_value_schema_exports() -> Result<(), semio_framework_schema_regi
 }
 //#endregion 🔖️SchemaExports
 
-
-
-
-
-#[cfg(test)]
-#[path = "⚠️refusal/🧪️tests/🦀️.rs"]
-mod refusal_tests;
-
 #[path="🧬️schema/🌳️intrinsic/🔣️json/🦀️.rs"]
 pub mod intrinsic_json;
 

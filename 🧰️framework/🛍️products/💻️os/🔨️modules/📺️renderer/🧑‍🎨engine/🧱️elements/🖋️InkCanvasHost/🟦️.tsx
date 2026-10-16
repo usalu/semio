@@ -1076,8 +1076,8 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
             const screen = worldToScreen(document.camera, block.x + px, block.y + py);
             return { x: rect.left + screen.x, y: rect.top + screen.y };
           });
-          if (polyline.length === 0) return null;
-          return { point: polyline[Math.floor(polyline.length / 2)], polyline, visible: true };
+          const point=polyline[Math.floor(polyline.length/2)];if(!point)return null;
+          return{point,polyline,visible:true};
         }
         return null;
       },

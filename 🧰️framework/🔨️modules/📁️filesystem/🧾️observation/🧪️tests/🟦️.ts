@@ -34,6 +34,7 @@ export async function runFileObservationChecksV1():Promise<number>{
   }
   const path=join(directory,"invalid-control");writeFileSync(path,"a");
   for(const limits of[{maxBytes:-1,maxWork:6,chunkBytes:1},{maxBytes:1,maxWork:0,chunkBytes:1},{maxBytes:1,maxWork:6,chunkBytes:0},{maxBytes:1,maxWork:6,chunkBytes:1048577}])await assert.rejects(()=>observePhysicalFileV1(path,{...limits,cancelled:()=>false,remainingMs:()=>60_000,onProgress:()=>{}}),(error:unknown)=>error instanceof FileObservationErrorV1&&error.code==="invalid-control");
-  console.log(`[DEBUG] physical-file laws=${fixture.cases.length+8}; Noble/WebCrypto=4; exact retained reads=4; custody mutations=2`);return fixture.cases.length+8;
+  await assert.rejects(()=>observePhysicalFileV1(join(directory,"missing"),{maxBytes:1,maxWork:6,chunkBytes:1,cancelled:()=>false,remainingMs:()=>60_000,onProgress:()=>{}}),(error:unknown)=>error instanceof FileObservationErrorV1&&error.code==="io");
+  console.log(`[DEBUG] physical-file laws=${fixture.cases.length+9}; Noble/WebCrypto=4; exact retained reads=4; custody mutations=2`);return fixture.cases.length+9;
  }finally{rmSync(directory,{recursive:true,force:true});}
 }

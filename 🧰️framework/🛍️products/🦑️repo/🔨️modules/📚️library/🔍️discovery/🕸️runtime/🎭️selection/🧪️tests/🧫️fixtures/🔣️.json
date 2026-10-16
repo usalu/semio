@@ -56,9 +56,30 @@
             },
             "cargoInvocations": [
               {
-                "path": "/owned/source",
-                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                "byteLength": 1
+                "version": 1,
+                "mode": "release",
+                "kind": "component",
+                "pass": "component-release",
+                "receiptSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                "indexSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                "originalArtifact": {
+                  "path": "/repo/component.wasm",
+                  "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+                  "byteLength": 8
+                }
+              },
+              {
+                "version": 1,
+                "mode": "release",
+                "kind": "emitter",
+                "pass": "emitter-release",
+                "receiptSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "indexSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "originalArtifact": {
+                  "path": "/repo/emitter",
+                  "sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+                  "byteLength": 8
+                }
               }
             ],
             "browserActor": {

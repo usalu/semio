@@ -9,5 +9,9 @@
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
+  },
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/value-ts": "workspace:*"
   }
 }

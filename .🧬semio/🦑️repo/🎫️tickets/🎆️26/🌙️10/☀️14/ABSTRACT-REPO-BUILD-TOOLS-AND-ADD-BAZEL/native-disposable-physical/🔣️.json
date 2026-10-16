@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "journal-only",
+      "names": [
+        "storage-events.jsonl"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        }
+      },
+      "fault": "none",
+      "accept": true
+    },
+    {
+      "id": "owned-event-directory",
+      "names": [
+        "storage-events.jsonl",
+        ".fseventsd"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        },
+        ".fseventsd": {
+          "kind": "directory",
+          "dev": 101,
+          "nlink": 2
+        }
+      },
+      "fault": "none",
+      "accept": true
+    },
+    {
+      "id": "event-file",
+      "names": [
+        "storage-events.jsonl",
+        ".fseventsd"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        },
+        ".fseventsd": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "event-symlink",
+      "names": [
+        "storage-events.jsonl",
+        ".fseventsd"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        },
+        ".fseventsd": {
+          "kind": "symlink",
+          "dev": 101,
+          "nlink": 1
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "event-foreign-device",
+      "names": [
+        "storage-events.jsonl",
+        ".fseventsd"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        },
+        ".fseventsd": {
+          "kind": "directory",
+          "dev": 102,
+          "nlink": 2
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "unknown-extra",
+      "names": [
+        "storage-events.jsonl",
+        "foreign.bin"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "missing-journal",
+      "names": [],
+      "entries": {},
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "missing-event-fact",
+      "names": [
+        "storage-events.jsonl",
+        ".fseventsd"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "journal-directory",
+      "names": [
+        "storage-events.jsonl"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "directory",
+          "dev": 101,
+          "nlink": 2
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "journal-symlink",
+      "names": [
+        "storage-events.jsonl"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "symlink",
+          "dev": 101,
+          "nlink": 1
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "journal-foreign",
+      "names": [
+        "storage-events.jsonl"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 102,
+          "nlink": 1
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "journal-hardlink",
+      "names": [
+        "storage-events.jsonl"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 2
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "duplicate-journal",
+      "names": [
+        "storage-events.jsonl",
+        "storage-events.jsonl"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "over-limit",
+      "names": [
+        "storage-events.jsonl",
+        "storage-events.jsonl",
+        "storage-events.jsonl",
+        "storage-events.jsonl",
+        "storage-events.jsonl",
+        "storage-events.jsonl",
+        "storage-events.jsonl",
+        "storage-events.jsonl",
+        "storage-events.jsonl"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        }
+      },
+      "fault": "none",
+      "accept": false
+    },
+    {
+      "id": "undefined-primary",
+      "names": [
+        "storage-events.jsonl"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        }
+      },
+      "fault": "undefined",
+      "accept": false
+    },
+    {
+      "id": "frozen-primary",
+      "names": [
+        "storage-events.jsonl"
+      ],
+      "entries": {
+        "storage-events.jsonl": {
+          "kind": "file",
+          "dev": 101,
+          "nlink": 1
+        }
+      },
+      "fault": "frozen",
+      "accept": false
+    }
+  ]
+}

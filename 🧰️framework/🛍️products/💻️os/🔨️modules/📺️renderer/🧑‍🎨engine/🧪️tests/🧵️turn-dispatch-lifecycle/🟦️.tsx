@@ -426,9 +426,10 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         const payload = Buffer.from(fixture.wire.payload);
         const length = Buffer.alloc(4);
         length.writeUInt32LE(payload.length);
+        const pageLane=fixture.wire.lanes[0];if(pageLane===undefined)throw Error("Authored typed operation lane required");
         const pageEffect = (operation: number) => ({
           tag: "send-message",
-          val: { target: { tag: "shell", val: String(fixture.wire.receiver) }, payload: Array.from(Buffer.concat([Buffer.from("semio.typed-operation-page.v1\0"), tokenBytes(operation), Buffer.from([fixture.wire.lanes[0]]), length, payload])) },
+          val: { target: { tag: "shell", val: String(fixture.wire.receiver) }, payload: Array.from(Buffer.concat([Buffer.from("semio.typed-operation-page.v1\0"), tokenBytes(operation), Buffer.from([pageLane]), length, payload])) },
         });
         const crossings: string[][] = [];
         await withFakeShardClient(async (_actor, events) => {

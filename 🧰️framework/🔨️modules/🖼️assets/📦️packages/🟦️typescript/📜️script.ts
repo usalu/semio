@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { createChromiumSvgVideoRuntimeV1 } from "../../../🖌️raster/🎥️video/🖋️svg-export/🌐️browser/🟦️.ts";
+import { createChromiumSvgVideoRuntimeV1 } from "../../../../📦️packages/🟦️typescript/🖌️raster/🎥️video/🖋️svg-export/🌐️browser/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧬️ Routes deterministic catalog, metabolism, and animated logo tasks. */

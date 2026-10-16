@@ -1,12 +1,12 @@
 //! 🚪️ Extension resources and declarative payloads retain their owners through bounded close.
 
-use super::{plugin_internal_fault, ExtensionBundle, ExtensionManifest, ExtensionRequestHandler, Fault, FaultCode, FaultOrigin};
+use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use crate::extension_runtime_lift::{ExtensionBundle, ExtensionManifest, ExtensionRequestHandler};
+use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 
-#[cfg(test)]
-#[path="../🧪️tests/📨️invoke/🦀️.rs"]
-mod original_invocation_tests;
 
 /// 📬️ A pending invocation publishes no payload and preserves the actual original caller receipt.
 #[derive(semio_framework_value::RetireOwned)]
@@ -49,16 +49,19 @@ pub(super) fn cold_grant(demand: RetirementDemand) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
 }
 
-fn yields(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
+#[doc(hidden)]
+pub fn yields(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
     grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes
 }
 
-fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
+#[doc(hidden)]
+pub fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
     demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "extension retirement depth overflow"))?;
     Ok(demand)
 }
 
-fn close_fault(code: &str, message: &str) -> Fault {
+#[doc(hidden)]
+pub fn close_fault(code: &str, message: &str) -> Fault {
     Fault::new(FaultOrigin::Framework, FaultCode::new(code), message)
 }
 
@@ -129,13 +132,13 @@ impl ExtensionBundle {
     }
 
     /// 💡️ Public named inference transport shares the registered service wire gateway and owner.
-    pub fn artifact_infer(&self,request:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->crate::ArtifactInferenceGatewayStep {
-        let empty=|refusal|crate::ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal};
-        if self.closing{return empty(Some(crate::ArtifactInferenceGatewayFailure::Literal("extension inference owner is closing").into()))}
+    pub fn artifact_infer(&self,request:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->crate::inference_gateway::ArtifactInferenceGatewayStep {
+        let empty=|refusal|crate::inference_gateway::ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal};
+        if self.closing{return empty(Some(crate::artifact_inference::ArtifactInferenceGatewayFailure::Literal("extension inference owner is closing").into()))}
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||cx.should_yield(){return empty(None)}
         let context=self.resource_owner.as_ref().and_then(|owner|owner.inference_context());
-        let mut slot=match self.inference_gateway.lock(){Ok(slot)=>slot,Err(_)=>return empty(Some(crate::ArtifactInferenceGatewayFailure::Literal("original inference gateway owner is poisoned").into()))};
-        if slot.is_none(){*slot=Some(crate::ArtifactInferenceGateway::new(cx.operation().0,cx.generation().0,request));}
+        let mut slot=match self.inference_gateway.lock(){Ok(slot)=>slot,Err(_)=>return empty(Some(crate::artifact_inference::ArtifactInferenceGatewayFailure::Literal("original inference gateway owner is poisoned").into()))};
+        if slot.is_none(){*slot=Some(crate::inference_gateway::ArtifactInferenceGateway::new(cx.operation().0,cx.generation().0,request));}
         let answer=slot.as_mut().unwrap().step(request,cx,context);
         if answer.payload.is_some(){assert!(slot.as_ref().unwrap().terminal_is_empty(),"original inference source remains owned before publication");*slot=None;}
         answer
@@ -158,7 +161,7 @@ impl ExtensionBundle {
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{let step=self.close_source_step(same,loan,demand)?;Ok((step,self.terminal_is_empty()))}).map_err(Into::into)
     }
 
-    fn close_source_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+    fn close_source_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(PluginLifecycleStep::Complete(idle));
@@ -258,7 +261,7 @@ impl ExtensionBundle {
 }
 
 impl ExtensionManifest {
-    fn payload_is_empty(&self) -> bool {
+    pub fn payload_is_empty(&self) -> bool {
         self.package_id.capacity() == 0
             && self.extension_id.capacity() == 0
             && self.label.capacity() == 0
@@ -271,7 +274,7 @@ impl ExtensionManifest {
             && self.capability_requests.capacity() == 0
     }
 
-    pub(super) fn empty() -> Self {
+    pub fn empty() -> Self {
         Self {
             package_id: String::new(),
             extension_id: String::new(),
@@ -306,25 +309,26 @@ impl Drop for ExtensionBundle {
     }
 }
 
-pub(super) struct ExtensionBundleRegistry {
-    current: Option<ExtensionBundle>,
-    replacement: Option<ExtensionBundle>,
-    active: bool,
+#[doc(hidden)]
+pub struct ExtensionBundleRegistry {
+    pub current: Option<ExtensionBundle>,
+    pub replacement: Option<ExtensionBundle>,
+    pub active: bool,
     activation_requested: bool,
     retire_all: bool,
-    paused: bool,
+    pub paused: bool,
 }
 
 impl ExtensionBundleRegistry {
-    pub(super) const fn new() -> Self {
+    pub const fn new() -> Self {
         Self { current: None, replacement: None, active: false, activation_requested: false, retire_all: false, paused: false }
     }
 
-    pub(super) fn current(&self) -> Option<&ExtensionBundle> {
+    pub fn current(&self) -> Option<&ExtensionBundle> {
         self.current.as_ref()
     }
 
-    pub(super) fn install(&mut self, candidate: &mut Option<ExtensionBundle>) -> Result<bool, Fault> {
+    pub fn install(&mut self, candidate: &mut Option<ExtensionBundle>) -> Result<bool, Fault> {
         if candidate.is_none() {
             return Err(close_fault("extension.install-missing", "extension install candidate is absent"));
         }
@@ -345,7 +349,7 @@ impl ExtensionBundleRegistry {
         Ok(true)
     }
 
-    pub(super) fn activate(&mut self) -> Result<(), Fault> {
+    pub fn activate(&mut self) -> Result<(), Fault> {
         if self.replacement.is_some() && !self.retire_all {
             self.activation_requested = true;
             return Ok(());
@@ -358,7 +362,7 @@ impl ExtensionBundleRegistry {
         Ok(())
     }
 
-    pub(super) fn invoke(&mut self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> {
+    pub fn invoke(&mut self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> {
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(ExtensionInvokeStep{payload:None,retained_progress:Default::default(),refusal:None})}
         if !self.active {
             return Err(close_fault("extension.inactive", "extension not activated"));
@@ -366,7 +370,7 @@ impl ExtensionBundleRegistry {
         self.current.as_mut().ok_or_else(|| close_fault("extension.missing", "extension bundle not installed"))?.invoke(capability, request, cx)
     }
 
-    pub(super) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         self.active = false;
         self.activation_requested = false;
         self.retire_all = true;
@@ -375,14 +379,14 @@ impl ExtensionBundleRegistry {
         }
     }
 
-    pub(super) fn cancel_close(&mut self) {
+    pub fn cancel_close(&mut self) {
         self.paused = true;
         if let Some(current) = &mut self.current {
             current.cancel_close();
         }
     }
 
-    pub(super) fn resume_close(&mut self) {
+    pub fn resume_close(&mut self) {
         self.paused = false;
         if let Some(current) = &mut self.current {
             current.resume_close();
@@ -393,10 +397,10 @@ impl ExtensionBundleRegistry {
         self.current.as_ref().is_some_and(|bundle| bundle.closing) || self.replacement.is_some()
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.current.is_none() && self.replacement.is_none()
     }
-    pub(super) fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
         match self.current.as_ref() {
             Some(current) if !current.terminal_is_empty() => nested(current.retirement_demands(maximum_body_bytes)?),
             Some(_) => Ok(RetirementDemand { depth: 1, ..Default::default() }),
@@ -404,7 +408,7 @@ impl ExtensionBundleRegistry {
         }
     }
 
-    pub(super) fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+    pub fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
         if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(Default::default()))}
         let grant=cx.retained_grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if self.current.as_ref().is_some_and(|current|!current.terminal_is_empty()){
@@ -417,7 +421,7 @@ impl ExtensionBundleRegistry {
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{let step=self.close_source_step(same,loan,demand)?;Ok((step,self.terminal_is_empty()))}).map_err(Into::into)
     }
 
-    fn close_source_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+    fn close_source_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(PluginLifecycleStep::Complete(idle));
@@ -458,7 +462,8 @@ fn push_bytes_of<T>(_: &T) -> usize {
     push_bytes::<T>()
 }
 
-pub(super) trait MetadataOwner: Send + 'static {
+#[doc(hidden)]
+pub trait MetadataOwner: Send + 'static {
     fn release_bytes(&self) -> usize {
         size_of_val(self)
     }
@@ -469,24 +474,26 @@ pub(super) trait MetadataOwner: Send + 'static {
     fn expand(self: Box<Self>, close: &mut MetadataRetirement) -> Result<(), String>;
 }
 
-pub(super) struct PendingMetadata {
-    owner: Box<dyn MetadataOwner>,
+#[doc(hidden)]
+pub struct PendingMetadata {
+    pub owner: Box<dyn MetadataOwner>,
     next: Option<Box<PendingMetadata>>,
 }
 
+#[doc(hidden)]
 #[derive(Default)]
-pub(super) struct MetadataRetirement {
-    pending: std::mem::ManuallyDrop<Option<Box<PendingMetadata>>>,
+pub struct MetadataRetirement {
+    pub pending: std::mem::ManuallyDrop<Option<Box<PendingMetadata>>>,
 }
 
 impl MetadataRetirement {
-    pub(super) fn push<T: MetadataOwner>(&mut self, value: T) {
+    pub fn push<T: MetadataOwner>(&mut self, value: T) {
         *self.pending = Some(Box::new(PendingMetadata { owner: Box::new(value), next: self.pending.take() }));
     }
-    pub(super) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.pending.is_none()
     }
-    pub(super) fn retirement_demands(&self) -> RetirementDemand {
+    pub fn retirement_demands(&self) -> RetirementDemand {
         self.pending.as_ref().map_or_else(Default::default, |pending| RetirementDemand {
             capacity_bytes: pending.owner.expansion_bytes(),
             release_bytes: size_of::<PendingMetadata>().saturating_add(pending.owner.release_bytes()),
@@ -495,7 +502,7 @@ impl MetadataRetirement {
         })
     }
 
-    pub(super) fn step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub fn step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         let idle = RetainedCloneProgress::default();
         if self.is_empty() {
             return Ok(PluginLifecycleStep::Complete(idle));
@@ -539,7 +546,7 @@ impl MetadataOwner for String {
         Ok(())
     }
 }
-impl MetadataOwner for super::DslValue {
+impl MetadataOwner for semio_framework_value::DslValue {
     fn expansion_bytes(&self) -> usize {
         match self {
             Self::String(value) => push_bytes_of(value),

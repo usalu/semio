@@ -3,8 +3,8 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import grantSchema from "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
-import {parseRetainedCloneGrant} from "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";
+import {parseRetainedCloneGrant} from "@semio-tech/value-ts/retained-clone/wire";
 test("original sync identity has required independent authority and authentic provenance",async()=>{
  const ajv=new Ajv({strict:true});expect(ajv.compile(schema)(fixture)).toBe(true);const oracle=ajv.compile(grantSchema);expect(oracle(fixture.grant)).toBe(true);expect(parseRetainedCloneGrant(fixture.grant)).toBe(fixture.grant);
  for(const axis of Object.keys(fixture.grant)){const missing={...fixture.grant} as Record<string,number>;delete missing[axis];expect(oracle(missing)).toBe(false);expect(()=>parseRetainedCloneGrant(missing)).toThrow();}

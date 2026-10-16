@@ -1,6 +1,5 @@
 //! 🚪️ Genuine declared Process3d public routes compile before optional SQLite capability wiring.
-#[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use super::*;
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
 use store::io_schema::{IoPayload,IoFidelity,SQLITE_SNAPSHOT};

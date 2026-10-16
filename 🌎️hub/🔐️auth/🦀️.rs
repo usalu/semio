@@ -8,10 +8,10 @@
 //! is `POST /auth/sessions` in `🏗️bootstrap/🦀️.rs`.
 //!
 //! Sessions are never CRUD rows here: minting goes through
-//! [`crate::directory::HubDirectory::issue_auth_session`] (which appends a `session-issued` fact),
+//! [`crate::directory::AuthSessionDirectory::issue_auth_session`] (which appends a `session-issued` fact),
 //! revocation through `revoke_auth_session` (`session-revoked`), and every sign-in attempt —
 //! admitted or refused — appends a `credential-sign-in` fact through
-//! [`crate::directory::HubDirectory::append_credential_audit`].
+//! [`crate::directory::CredentialDirectory::append_credential_audit`].
 
 use serde::{Deserialize, Serialize};
 

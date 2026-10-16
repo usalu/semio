@@ -22,11 +22,37 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+
 [dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-io-schema = { path = "../../../../../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-snapshot = { path = "../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-os-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-codec-factory = { path = "../../../../📦️codec/🏭️factory/📦️packages/🦀️rust" }
+semio-framework-os-store-document = { path = "../../../../🧾️document/📦️packages/🦀️rust" }
+semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-framework-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-os-store-space = { path = "../../../../📜️space-history/🏠️space/📦️packages/🦀️rust" }
+semio-framework-os-store-space-history = { path = "../../../../📜️space-history/📦️packages/🦀️rust" }
+semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-store-test-support = { path = "../../../../🧰️test-support/📦️packages/🦀️rust" }
+semio-framework-os-store-testing-doubles = { path = "../../../../🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
 semio-framework-os-store-testing-fixtures = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-pack = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-pack-json-retained-schema = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-replication = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = "1.0.140"
 
 [dev-dependencies]
+semio-framework-os-space-testing-sqlite-preflight = { path = "../../../../../🪐️space/🧪️tests/🪶️sqlite/📏️preflight/📦️packages/🦀️rust" }
+semio-framework-os-space-testing-sqlite-oracle = { path = "../../../../../🪐️space/🧪️tests/🪶️sqlite/🔬️oracle/📦️packages/🦀️rust" }

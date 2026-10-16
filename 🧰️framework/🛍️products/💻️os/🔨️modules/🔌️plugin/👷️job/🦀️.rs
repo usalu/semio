@@ -149,14 +149,14 @@ pub struct TransactionProposalDraft {
 }
 
 #[doc(hidden)]
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub fn test_unregistered_tool_job_admission_rejected<A: ArtifactApp>(catalog: &AppActionRegistry, generated: &[&str]) -> bool {
     crate::reserved_jobs::tool_job_registration::<A>(catalog, A::APP_ID, A::DOCUMENT_SCHEMA, generated, &semio_framework::ActionBus::new(), &BTreeMap::new()).is_err()
 }
 
 /// 🧪 Executes hostile proof substitutions inside the private authority module in test builds only.
 #[doc(hidden)]
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub fn test_retained_factory_proof_join<A, F, G, W>(mut catalog: AppActionRegistry, controller: &'static str, tool: &'static str, factory: F)
 where
     A: ArtifactApp,
@@ -543,19 +543,19 @@ pub struct TypedCommandRoots<A: ArtifactApp> {
 }
 
 #[doc(hidden)]
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub fn test_artifact_owned_tool_job_context_identity_digest(app_instance_id: u32, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, children_digest: u64) -> u64 {
     artifact_owned_tool_job_context_identity_digest(app_instance_id, None, canonical_base_revision, draft_generation, transient_generation, children_digest, (None, None))
 }
 
 #[doc(hidden)]
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub fn test_window_transient_context_identity(snapshot: Option<&WindowTransientSnapshot>) -> u64 {
     artifact_owned_tool_job_context_identity_digest(7, None, [17; 32], 0, 0, 0, (None, snapshot))
 }
 
 #[doc(hidden)]
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub fn test_window_config_context_identity(snapshot: Option<&WindowConfigSnapshot>) -> u64 {
     artifact_owned_tool_job_context_identity_digest(7, None, [17; 32], 0, 0, 0, (snapshot, None))
 }

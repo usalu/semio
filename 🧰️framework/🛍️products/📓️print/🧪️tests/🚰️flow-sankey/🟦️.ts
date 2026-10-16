@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { sankey as d3Sankey, sankeyCenter, sankeyJustify, sankeyLeft, sankeyRight } from "d3-sankey";
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { compileVizProbeDocument, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 

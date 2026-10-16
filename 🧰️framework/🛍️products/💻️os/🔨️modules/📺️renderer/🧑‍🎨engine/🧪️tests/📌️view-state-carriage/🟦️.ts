@@ -18,7 +18,7 @@ import { parseResolvedPluginViewState, VIEW_CONTEXT_LONG_STRING_CHARS, type Plug
 import { decodePackValue, encodePackValue, isPackInteger, packValueToBase64, packValueFromBase64, viewContextWireValue } from "@semio-tech/framework-os";
 import { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState } from "../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts";
 import fixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/📌️panel-carriage/🔣️.json";
-import integerCarriers from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🧫️fixtures/🔢️integer-carriers/🔣️.json";
+import { contextIntegerCarriersFixture as integerCarriers } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const spawnedRoster = (count: number) =>
   Array.from({ length: count }, (_, index) => ({

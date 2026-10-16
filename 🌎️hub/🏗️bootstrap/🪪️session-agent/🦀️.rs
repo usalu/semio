@@ -18,7 +18,7 @@ use directory::os_directory::access_policy::DirectoryAccessActionV1;
 use semio_hub_auth::agent::{decide_agent_session, AgentDelegationListV1, AgentDelegationReceiptV1, AgentDelegationSummaryV1, AgentErrorCodeV1, AgentSessionDecisionV1, AgentSessionMintResponseV1, AgentSessionRequestV1, CreateAgentDelegationRequestV1};
 use semio_hub_auth::{decide_credential_change, decide_credential_sign_in, AuthErrorCodeV1, CredentialChangeDecisionV1, CredentialChangeRequestV1, CredentialSignInDecisionV1, CredentialSignInRequestV1, CredentialSubjectV1, SessionMintResponseV1};
 use semio_hub_directory_contract::model::{AgentDelegationRow, AuthSessionIssue, AuthSessionKind, AuthSessionRecord, CredentialAuditFactV1};
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{AgentDelegationDirectory, AuthSessionDirectory, CredentialDirectory, PrincipalAuthority, UserDirectory};
 use semio_hub_directory_contract::{identity_subject_digest, AgentDelegationCapability, IdentityAssertionVerifier, SessionCapability};
 use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use serde::Deserialize;

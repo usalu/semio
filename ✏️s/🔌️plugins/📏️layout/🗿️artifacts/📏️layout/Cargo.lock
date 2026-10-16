@@ -2935,6 +2935,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-io-sqlite-snapshot-testing-backing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+]
+
+[[package]]
 name = "semio-framework-job"
 version = "0.1.0"
 dependencies = [
@@ -3217,6 +3224,13 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-intrinsic",
  "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-native-build-compiler-resources"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
 ]
 
 [[package]]
@@ -4212,6 +4226,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -4278,13 +4293,10 @@ name = "semio-framework-os-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
- "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-pack-record-token",
  "semio-framework-pack-source",
  "semio-framework-replication",
  "semio-framework-value",
@@ -5000,15 +5012,16 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
+ "semio-framework-pack-schema-index",
  "semio-framework-replication-codec",
  "semio-framework-value",
 ]
 
 [[package]]
-name = "semio-framework-pack-record-token"
+name = "semio-framework-pack-schema-index"
 version = "0.1.0"
 dependencies = [
- "semio-framework-pack",
+ "semio-framework-dsl-record",
  "semio-framework-value",
 ]
 
@@ -5398,6 +5411,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-app-builder",
  "semio-framework-plugin-decl-app",
@@ -6795,6 +6809,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-test-original-snapshot-owners"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-time-travel"
 version = "0.1.0"
 dependencies = [
@@ -6914,6 +6936,7 @@ name = "semio-framework-ui-backend-webgpu"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
+ "semio-framework-abi",
  "semio-framework-ui-render",
  "semio-framework-value",
  "wgpu",
@@ -7646,6 +7669,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "semio-framework-hash",
+ "semio-framework-native-build-compiler-resources",
  "syn 2.0.119",
 ]
 
@@ -8154,12 +8178,14 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-io-sqlite-snapshot-testing-backing",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
+ "semio-framework-test-original-snapshot-owners",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",

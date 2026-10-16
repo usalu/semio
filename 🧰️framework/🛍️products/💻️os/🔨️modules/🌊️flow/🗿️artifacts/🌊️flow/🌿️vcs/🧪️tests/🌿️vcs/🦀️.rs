@@ -148,7 +148,7 @@ fn index_codecs_reject_overflow() {
         let text = semio_framework_dsl_record::print(&record, &spec, semio_framework_dsl_record::JoinMode::Inline);
         assert!(FlowMutation::parse_op(&text).is_err());
         let mut bytes = vec![1, u8::try_from(index).expect("nine leaves")];
-        bytes.extend(crate::os_pack::encode_record_body(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("wide UInt body"));
+        bytes.extend(crate::os_pack::record::encode_record_body(&spec, &record, &crate::os_pack::record::EncodeOptions::default()).expect("wide UInt body"));
         assert!(FlowMutation::decode_op(&bytes).is_err());
         retire_mutation(mutation);
     }

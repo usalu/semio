@@ -22,7 +22,9 @@
       "import": "./dist/🟦️.js"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/norm-js": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

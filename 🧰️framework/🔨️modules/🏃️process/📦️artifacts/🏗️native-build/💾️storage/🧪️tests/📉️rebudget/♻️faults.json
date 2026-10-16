@@ -1,0 +1,32 @@
+[
+  {
+    "body": "success",
+    "releaseFails": false,
+    "failed": false
+  },
+  {
+    "body": "success",
+    "releaseFails": true,
+    "failed": true
+  },
+  {
+    "body": "undefined",
+    "releaseFails": false,
+    "failed": true
+  },
+  {
+    "body": "undefined",
+    "releaseFails": true,
+    "failed": true
+  },
+  {
+    "body": "frozen",
+    "releaseFails": false,
+    "failed": true
+  },
+  {
+    "body": "frozen",
+    "releaseFails": true,
+    "failed": true
+  }
+]

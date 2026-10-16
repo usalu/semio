@@ -1,9 +1,9 @@
 use crate::{FactoryPayloadRetirement,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError};
 use crate::retirement::controlled::ControlledRetirement;
-pub(crate) struct OwnedFactory {pub(crate) payload:Vec<u8>}
+pub struct OwnedFactory {pub payload:Vec<u8>}
 #[derive(crate::FactoryPayloadRetirement)]
 #[value(crate="crate")]
-pub(crate) struct ScalarFactory {pub(crate) tag:u64,pub(crate) name:&'static str}
+pub struct ScalarFactory {pub tag:u64,pub name:&'static str}
 impl FactoryPayloadRetirement for OwnedFactory {
     type CloseState=Option<ControlledRetirement<Vec<u8>>>;
     fn close_state_birth_bytes(&self)->usize {0}
@@ -24,4 +24,4 @@ impl FactoryPayloadRetirement for OwnedFactory {
     }
     fn close_state_terminal_is_empty(state:&Self::CloseState)->bool {state.is_none()}
 }
-pub(crate) fn grant(capacity:usize,release:usize,depth:usize)->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}}
+pub fn grant(capacity:usize,release:usize,depth:usize)->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}}

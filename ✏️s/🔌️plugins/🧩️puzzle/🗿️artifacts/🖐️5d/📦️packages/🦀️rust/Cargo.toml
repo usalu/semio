@@ -75,12 +75,16 @@ machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️
 semio-framework-tool-machine = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-scene = { workspace = true }
+semio-s-plugin-puzzle-board-scene = { workspace = true }
+semio-s-plugin-puzzle-jobs = { workspace = true }
+semio-s-plugin-puzzle-retained = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }
 
 [dev-dependencies]
-semio-s-plugin-puzzle-jobs = { workspace = true }
+semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
+semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
@@ -92,3 +96,4 @@ rstar = "0.12"
 # 🔮 Test-only ZIP ORACLE (never a `[dependencies]` entry): the third-party `zip` reader opens the
 # document archive and reads its DSL member back.
 zip = { version = "6", default-features = false, features = ["deflate"] }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

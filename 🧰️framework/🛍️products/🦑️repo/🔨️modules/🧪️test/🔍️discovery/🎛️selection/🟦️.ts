@@ -1,4 +1,4 @@
-import { type TestEvidence, type Implementation } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type TestEvidence, type Implementation } from "@semio-tech/framework/test/adapter";
 import { type CoverageRow, type DiscoveredCase, type MutationManifest, discoverTestCases } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🎛️ Narrows discovery to the cases a command was pointed at (`--case`, `--owner`, `--owner-root`, `--project`). `--owner-root` selects exactly the cases of

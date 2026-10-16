@@ -23,7 +23,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 use std::collections::HashMap;
 
-use crate::abi::{AbiErrorCode, AbiEvent, AbiHandle};
+use semio_framework_abi::{AbiErrorCode, AbiEvent, AbiHandle};
 #[cfg(not(target_arch = "wasm32"))]
 use ui_render::ImeEvent;
 use ui_render::{DispatchEvent, EventModifiers, PointerButton, PointerId, PointerInfo, PointerKind};
@@ -757,11 +757,3 @@ pub fn key_dispatch_event(logical: String, modifiers: EventModifiers, pressed: b
 //#endregion 📥️DispatchEvent assembly
 
 //#endregion 🔖️Host
-
-//#region Tests
-
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️event-unit/🦀️.rs"]
-mod tests;
-
-//#endregion Tests

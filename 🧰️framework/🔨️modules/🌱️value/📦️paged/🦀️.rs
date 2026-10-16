@@ -162,7 +162,7 @@ impl<T: Utf8Text + ?Sized> Utf8Text for &T {
 }
 
 pub struct PagedUtf8<const N: usize> {
-    chunks: PagedList<String, N>,
+    #[doc(hidden)] pub chunks: PagedList<String, N>,
     byte_len: usize,
 }
 
@@ -671,6 +671,3 @@ impl<V: FromValue, const N: usize> FromValue for PagedMap<V, N> {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

@@ -24,7 +24,7 @@ import {
   uiDirtyScopeWantsSection,
   uiDirtyScopeWantsWindowBody,
   type UiDirtySection
-} from "../../../../../../../../🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts";
+} from "@semio-tech/framework";
 import { type ExtraWindowInstance } from "../../🐚️Shell/🟦️.tsx";
 
 //#region ShellHelpers

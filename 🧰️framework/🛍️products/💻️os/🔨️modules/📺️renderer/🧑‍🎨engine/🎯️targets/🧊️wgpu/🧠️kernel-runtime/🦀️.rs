@@ -17,7 +17,7 @@
 
 pub use semio_framework_os_renderer_wgpu_host_base::KernelPoolFuture;
 pub use semio_framework_os_renderer_wgpu_kernel_pool::KernelClient;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub use semio_framework_os_renderer_wgpu_kernel_protocol::CANCELLED_KERNEL_TURNS;
 pub use semio_framework_os_renderer_wgpu_kernel_protocol::{read_native_component, take_job_progress_presentation, ExchangeOutcome, JobProgressPresentationLease, KernelCloseHandle, KernelCloseStatus, MountedProductReplayAdmission};
 

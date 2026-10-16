@@ -12,7 +12,7 @@ import { act, cleanup, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BufferAttribute, BufferGeometry, Color, ColorManagement, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, Plane, SRGBColorSpace, Vector3 } from "three";
-import fixture from "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/📏️world3d-modelling/🔣️.json" with { type: "json" };
+import { sceneWorld3dModellingFixture as fixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const recorded = vi.hoisted(() => ({ frames: [] as ((state: unknown, delta: number) => void)[], camera: null as PerspectiveCamera | null, size: { width: 800, height: 600 } }));
 

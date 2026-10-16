@@ -46,15 +46,13 @@ import {
   type AgentCredentialInstallRequestV1,
   type AgentDelegationReceiptV1,
   type AgentDelegationRowV1,
-  type AgentDelegationSummaryV1,
-} from "../../../../../../📇️directory/🤖️delegations/🟦️.ts";
-import delegationListVectors from "../../../../../../📇️directory/🤖️delegations/🧪️tests/🧫️fixtures/📋️agent-delegation-list.json";
+  type AgentDelegationSummaryV1
+} from "@semio-tech/framework/directory/delegations";
+import { agentDelegationListFixture as delegationListVectors, directorySchema, mcpClientConfigFixture as mcpClientLaw } from "../../../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
 import { AgentDelegations, agentDelegationInstantV1 } from "../../🟦️.tsx";
 import Ajv from "ajv";
-import directorySchema from "../../../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
-import mcpClientLaw from "../../../../../../📇️directory/🤖️delegations/🧪️tests/🧫️fixtures/🔌️mcp-client-config.json" with { type: "json" };
 import { useHubConnection, type HubConnectionPortV1 } from "../../../🔗️HubConnection/🟦️.tsx";
-import { type HubConnectionStorageV1 } from "../../../../../../📇️directory/🔐️sign-in/🟦️.ts";
+import { type HubConnectionStorageV1 } from "@semio-tech/framework/directory/sign-in";
 // #endregion 🔌️Adapters
 
 afterEach(cleanup);

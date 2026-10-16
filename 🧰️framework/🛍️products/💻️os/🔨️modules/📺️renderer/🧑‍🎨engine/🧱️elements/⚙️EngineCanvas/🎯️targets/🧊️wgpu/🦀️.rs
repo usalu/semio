@@ -24,16 +24,21 @@ use semio_framework_os_node_graph::GraphHost;
 #[cfg(test)]
 use semio_framework_surface::tiled_map::{tiles as map_tiles, MapHost};
 #[cfg(test)]
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode};
+#[cfg(test)]
+use semio_framework_ui_layout::layout::ActionDescriptor;
+#[cfg(test)]
+use semio_framework_ui_text::FontAtlas;
+#[cfg(test)]
+use semio_framework_ui_theme::{geometry::Rect, Theme};
+#[cfg(test)]
 use serde_json::{json, Value};
 #[cfg(test)]
 use std::collections::HashMap;
 #[cfg(test)]
 use std::mem::ManuallyDrop;
 #[cfg(test)]
-use ui_wgpu::wgpu::{
-    ActionDescriptor, FontAtlas, KeyAction, PointerModifiers, Rect, SurfaceKind, Theme,
-    UiComponentSceneNode,
-};
+use ui_wgpu::wgpu::{KeyAction, PointerModifiers};
 
 use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry;
 pub(crate) use engine_surface_registry::{

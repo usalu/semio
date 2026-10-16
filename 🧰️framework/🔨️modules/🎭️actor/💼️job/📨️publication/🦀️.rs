@@ -2,13 +2,11 @@
 use std::mem::{ManuallyDrop,MaybeUninit};
 use semio_framework_value_derive::{FromValue,ToValue};
 use semio_framework_actor_vocabulary::*;
-pub use semio_framework_actor_pack as pack;
-pub use semio_framework_job as job;
 //#region 📜️FixedReplay
 pub const JOB_REPLAY_RECORD_CAPACITY: usize = 256;
 pub const JOB_REPLAY_RECORD_PAGE_CAPACITY: usize = 32;
 pub const JOB_REPLAY_PROCESS_PAGE_CAPACITY: usize = 4_096;
-pub const JOB_REPLAY_PAGE_BYTES: usize = job::JOB_PAYLOAD_PAGE_BYTES;
+pub const JOB_REPLAY_PAGE_BYTES: usize = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
 const JOB_REPLAY_SCALAR_TRANSFERS: u8 = 12;
 
 static JOB_REPLAY_PROCESS_PAGES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -373,7 +371,7 @@ impl JobReplayLog {
         self.last_checkpoint_index.and_then(|index| self.record_header(index))
     }
 
-    pub fn begin_capture(&mut self, cx: &mut job::StepContext<'_>, actor: ActorId, schedule: JobReplaySchedule, publication: JobPublication) -> Result<(), JobReplayRejected> {
+    pub fn begin_capture(&mut self, cx: &mut semio_framework_job::StepContext<'_>, actor: ActorId, schedule: JobReplaySchedule, publication: JobPublication) -> Result<(), JobReplayRejected> {
         let JobReplaySchedule { worker_count, worker_slot, granted_fuel, deadline_class_ms } = schedule;
         if self.closing || cx.is_cancelled() {
             return Err(replay_rejected(JobReplayFault::Cancelled, publication));
@@ -423,7 +421,7 @@ impl JobReplayLog {
         Ok(())
     }
 
-    pub fn capture_step(&mut self, cx: &mut job::StepContext<'_>) -> JobReplayStep {
+    pub fn capture_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> JobReplayStep {
         if self.pending.is_none() {
             return if self.ready_record.is_some() { JobReplayStep::PublicationReady } else { JobReplayStep::Complete };
         }
@@ -518,7 +516,7 @@ impl JobReplayLog {
         self.ready_record.is_some() && self.pending.as_ref().is_some_and(|pending| pending.publication.is_some())
     }
 
-    pub fn acknowledge_publication(&mut self, cx: &mut job::StepContext<'_>, policy: JobReplayPublicationPolicy) -> Result<(), JobReplayFault> {
+    pub fn acknowledge_publication(&mut self, cx: &mut semio_framework_job::StepContext<'_>, policy: JobReplayPublicationPolicy) -> Result<(), JobReplayFault> {
         if cx.is_cancelled() || cx.should_yield() {
             return Err(if cx.is_cancelled() { JobReplayFault::Cancelled } else { JobReplayFault::Deadline });
         }
@@ -546,7 +544,7 @@ impl JobReplayLog {
         Ok(())
     }
 
-    pub fn maintenance_step(&mut self, cx: &mut job::StepContext<'_>) -> JobReplayStep {
+    pub fn maintenance_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> JobReplayStep {
         let Some(pending) = self.pending.as_mut() else { return JobReplayStep::Complete };
         if !pending.acknowledged {
             return self.capture_step(cx);
@@ -602,7 +600,7 @@ impl JobReplayLog {
         self.closing = true;
     }
 
-    pub fn close_step(&mut self, cx: &mut job::StepContext<'_>) -> JobReplayCloseStep {
+    pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> JobReplayCloseStep {
         self.closing = true;
         if cx.is_cancelled() || cx.should_yield() {
             return JobReplayCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -1138,7 +1136,7 @@ impl JobProgressOverlayStore {
         Ok(())
     }
 
-    pub fn preflight(&mut self, cx: &mut job::StepContext<'_>, actor: ActorId, publication: &JobPublication, live: JobProgressLiveAuthority) -> Result<JobProgressAdmission, JobProgressFault> {
+    pub fn preflight(&mut self, cx: &mut semio_framework_job::StepContext<'_>, actor: ActorId, publication: &JobPublication, live: JobProgressLiveAuthority) -> Result<JobProgressAdmission, JobProgressFault> {
         let identity = JobProgressIdentity::from_publication(actor, publication);
         if cx.is_cancelled() || self.close_all || self.closing_actors.iter().flatten().any(|closing| *closing == actor) {
             return Err(JobProgressFault::Cancelled);
@@ -1247,7 +1245,7 @@ impl JobProgressOverlayStore {
         Ok(())
     }
 
-    pub fn publish_reserved(&mut self, cx: &mut job::StepContext<'_>, admission: JobProgressAdmission, publication: JobPublication, live: JobProgressLiveAuthority) -> Result<JobProgressReceipt, JobProgressRejected> {
+    pub fn publish_reserved(&mut self, cx: &mut semio_framework_job::StepContext<'_>, admission: JobProgressAdmission, publication: JobPublication, live: JobProgressLiveAuthority) -> Result<JobProgressReceipt, JobProgressRejected> {
         let identity = JobProgressIdentity::from_publication(admission.identity.actor, &publication);
         let slot_valid = self.active.get(admission.active_index).is_some_and(|slot| slot.epoch == admission.active_epoch && slot.reservation == Some(admission.token));
         if cx.is_cancelled() || cx.operation().0 != identity.operation || cx.generation().0 != identity.generation {
@@ -1454,7 +1452,7 @@ impl JobProgressOverlayStore {
         self.retirements.iter().any(|slot| slot.owner.is_some()) || self.closing_actors.iter().any(Option::is_some) || self.close_all
     }
 
-    pub fn close_step(&mut self, cx: &mut job::StepContext<'_>) -> JobProgressCloseStep {
+    pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> JobProgressCloseStep {
         if cx.should_yield() {
             return JobProgressCloseStep::Blocked;
         }
@@ -1556,7 +1554,7 @@ pub enum JobPublicationError {
     PreviewSequence { before: u64, after: u64 },
     Terminal,
     Retained(semio_framework_value::ValueError),
-    Original(job::OriginalTurnFailure),
+    Original(semio_framework_job::OriginalTurnFailure),
 }
 
 impl std::fmt::Display for JobPublicationError {
@@ -1577,7 +1575,7 @@ impl std::error::Error for JobPublicationError {}
 
 #[cfg(test)]
 struct JobOutcomeProjection {
-    descriptor: job::JobOutcomeDescriptor,
+    descriptor: semio_framework_job::JobOutcomeDescriptor,
     bytes: [Vec<u8>; 2],
     phase: usize,
     page: usize,
@@ -1585,19 +1583,19 @@ struct JobOutcomeProjection {
 
 #[cfg(test)]
 impl JobOutcomeProjection {
-    fn new(descriptor: job::JobOutcomeDescriptor) -> Self {
+    fn new(descriptor: semio_framework_job::JobOutcomeDescriptor) -> Self {
         Self { descriptor, bytes: [Vec::new(), Vec::new()], phase: 0, page: 0 }
     }
 
-    fn step<J: job::InteractiveJob + ?Sized>(&mut self, producer: &J, cx: &mut job::StepContext<'_>) -> Result<Option<JobStepOutcome>, semio_framework_value::ValueError> {
-        if !matches!(self.descriptor.kind(), job::JobOutcomeKind::Cancelled) && (cx.is_cancelled() || cx.fuel_remaining() == 0 || cx.latest_us().map(|now| now >= cx.deadline_us()).unwrap_or_else(|| cx.deadline_exceeded())) { return Ok(None); }
+    fn step<J: semio_framework_job::InteractiveJob + ?Sized>(&mut self, producer: &J, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<JobStepOutcome>, semio_framework_value::ValueError> {
+        if !matches!(self.descriptor.kind(), semio_framework_job::JobOutcomeKind::Cancelled) && (cx.is_cancelled() || cx.fuel_remaining() == 0 || cx.latest_us().map(|now| now >= cx.deadline_us()).unwrap_or_else(|| cx.deadline_exceeded())) { return Ok(None); }
         let view = producer.borrow_outcome(&self.descriptor)?;
         let originals = match view {
-            job::JobOutcomeView::PreviewReady { payload, .. } => [Some(payload), None],
-            job::JobOutcomeView::CheckpointReady { state, .. } => [Some(state), None],
-            job::JobOutcomeView::Complete { state, output, .. } => [state, output],
-            job::JobOutcomeView::Fault { detail, .. } => [Some(detail), None],
-            job::JobOutcomeView::Yield { .. } | job::JobOutcomeView::Cancelled { .. } => [None, None],
+            semio_framework_job::JobOutcomeView::PreviewReady { payload, .. } => [Some(payload), None],
+            semio_framework_job::JobOutcomeView::CheckpointReady { state, .. } => [Some(state), None],
+            semio_framework_job::JobOutcomeView::Complete { state, output, .. } => [state, output],
+            semio_framework_job::JobOutcomeView::Fault { detail, .. } => [Some(detail), None],
+            semio_framework_job::JobOutcomeView::Yield { .. } | semio_framework_job::JobOutcomeView::Cancelled { .. } => [None, None],
         };
         while self.phase < originals.len() {
             if let Some(page) = originals[self.phase].and_then(|original| original.page(self.page)) {
@@ -1613,7 +1611,7 @@ impl JobOutcomeProjection {
                     let pointer = std::ptr::NonNull::new(unsafe { std::alloc::alloc(layout) }).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "original actor projection allocation failed"))?;
                     *destination = unsafe { Vec::from_raw_parts(pointer.as_ptr(), 0, required) };
                 }
-                let progress = job::RetainedCloneProgress { copied_items: 1, copied_bytes: page.len(), retained_capacity_bytes: required, ..Default::default() };
+                let progress = semio_framework_job::RetainedCloneProgress { copied_items: 1, copied_bytes: page.len(), retained_capacity_bytes: required, ..Default::default() };
                 cx.consume_retained(progress).map_err(|error| error.with_retained_progress(progress))?;
                 destination.extend_from_slice(page);
                 self.page += 1;
@@ -1628,12 +1626,12 @@ impl JobOutcomeProjection {
         let first = std::mem::take(&mut self.bytes[0]);
         let second = std::mem::take(&mut self.bytes[1]);
         Ok(Some(match self.descriptor.kind() {
-            job::JobOutcomeKind::Yield => JobStepOutcome::Yield,
-            job::JobOutcomeKind::PreviewReady => JobStepOutcome::PreviewReady { preview: first },
-            job::JobOutcomeKind::CheckpointReady { applied_progress } => JobStepOutcome::CheckpointReady { checkpoint: JobCheckpoint { state: first, applied_progress } },
-            job::JobOutcomeKind::Complete => JobStepOutcome::Complete { candidate: JobCommitCandidate { state: first, output: second } },
-            job::JobOutcomeKind::Cancelled => JobStepOutcome::Cancelled,
-            job::JobOutcomeKind::Fault => JobStepOutcome::Fault { detail: first },
+            semio_framework_job::JobOutcomeKind::Yield => JobStepOutcome::Yield,
+            semio_framework_job::JobOutcomeKind::PreviewReady => JobStepOutcome::PreviewReady { preview: first },
+            semio_framework_job::JobOutcomeKind::CheckpointReady { applied_progress } => JobStepOutcome::CheckpointReady { checkpoint: JobCheckpoint { state: first, applied_progress } },
+            semio_framework_job::JobOutcomeKind::Complete => JobStepOutcome::Complete { candidate: JobCommitCandidate { state: first, output: second } },
+            semio_framework_job::JobOutcomeKind::Cancelled => JobStepOutcome::Cancelled,
+            semio_framework_job::JobOutcomeKind::Fault => JobStepOutcome::Fault { detail: first },
         }))
     }
 }
@@ -1641,61 +1639,61 @@ impl JobOutcomeProjection {
 /// 🌉️ Stateful actor bridge that advances at most one interactive job step or one retained payload page per turn.
 #[cfg(test)]
 pub struct JobTurnBridge {
-    operation: job::Operation,
+    operation: semio_framework_job::Operation,
     next_step_sequence: u64,
     terminal: bool,
     pending: Option<JobOutcomeProjection>,
-    original: job::RetainedCloneGrant,
-    progress: job::RetainedCloneProgress,
-    authority: Option<job::JobPayloadAuthority>,
+    original: semio_framework_job::RetainedCloneGrant,
+    progress: semio_framework_job::RetainedCloneProgress,
+    authority: Option<semio_framework_job::JobPayloadAuthority>,
 }
 
 #[cfg(test)]
 impl JobTurnBridge {
-    pub fn new(operation: job::Operation, original: job::RetainedCloneGrant) -> Result<Self, semio_framework_value::ValueError> {
-        let Some((authority, progress)) = job::JobPayloadAuthority::admit(operation.operation, operation.generation, original)? else {
+    pub fn new(operation: semio_framework_job::Operation, original: semio_framework_job::RetainedCloneGrant) -> Result<Self, semio_framework_value::ValueError> {
+        let Some((authority, progress)) = semio_framework_job::JobPayloadAuthority::admit(operation.operation, operation.generation, original)? else {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "actor bridge requires original payload authority admission"));
         };
         Ok(Self { operation, next_step_sequence: 0, terminal: false, pending: None, original, progress, authority: Some(authority) })
     }
 
-    pub fn close_step(&mut self, grant: job::RetainedCloneGrant) -> Result<job::RetainedCloneStep, semio_framework_value::ValueError> {
+    pub fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> Result<semio_framework_job::RetainedCloneStep, semio_framework_value::ValueError> {
         self.terminal = true;
         if let Some(pending) = self.pending.as_mut() {
-            if !pending.descriptor.is_acknowledged() { return Ok(job::RetainedCloneStep::Progress(pending.descriptor.acknowledge(grant).progress())); }
+            if !pending.descriptor.is_acknowledged() { return Ok(semio_framework_job::RetainedCloneStep::Progress(pending.descriptor.acknowledge(grant).progress())); }
             if let Some(bytes) = pending.bytes.iter_mut().find(|bytes| bytes.capacity() != 0) {
                 let released_bytes = bytes.capacity();
-                if grant.maximum_items == 0 || grant.maximum_release_bytes < released_bytes || grant.maximum_depth == 0 { return Ok(job::RetainedCloneStep::Progress(Default::default())); }
+                if grant.maximum_items == 0 || grant.maximum_release_bytes < released_bytes || grant.maximum_depth == 0 { return Ok(semio_framework_job::RetainedCloneStep::Progress(Default::default())); }
                 drop(std::mem::take(bytes));
-                return Ok(job::RetainedCloneStep::Progress(job::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }));
+                return Ok(semio_framework_job::RetainedCloneStep::Progress(semio_framework_job::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }));
             }
-            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(job::RetainedCloneStep::Progress(Default::default())); }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(semio_framework_job::RetainedCloneStep::Progress(Default::default())); }
             self.pending = None;
-            return Ok(job::RetainedCloneStep::Progress(job::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+            return Ok(semio_framework_job::RetainedCloneStep::Progress(semio_framework_job::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if let Some(authority) = self.authority.as_mut() {
-            if !authority.terminal_is_empty() { return authority.close_step(grant).map(|step| job::RetainedCloneStep::Progress(step.progress())); }
-            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(job::RetainedCloneStep::Progress(Default::default())); }
+            if !authority.terminal_is_empty() { return authority.close_step(grant).map(|step| semio_framework_job::RetainedCloneStep::Progress(step.progress())); }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(semio_framework_job::RetainedCloneStep::Progress(Default::default())); }
             self.authority = None;
-            return Ok(job::RetainedCloneStep::Progress(job::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+            return Ok(semio_framework_job::RetainedCloneStep::Progress(semio_framework_job::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
-        Ok(job::RetainedCloneStep::Complete(Default::default()))
+        Ok(semio_framework_job::RetainedCloneStep::Complete(Default::default()))
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.pending.is_none() && self.authority.is_none() }
 
     #[allow(clippy::too_many_arguments)]
-    pub fn step<J: job::InteractiveJob + ?Sized>(
+    pub fn step<J: semio_framework_job::InteractiveJob + ?Sized>(
         &mut self,
         job: &mut J,
         turn: JobTurn,
-        active_operation: job::OperationId,
-        live_revision: job::RevisionId,
-        live_generation: job::Generation,
+        active_operation: semio_framework_job::OperationId,
+        live_revision: semio_framework_job::RevisionId,
+        live_generation: semio_framework_job::Generation,
         site: &'static str,
-        stage: job::InteractiveStage,
-        budget: job::StepBudget,
-        cancel: job::CancelToken,
+        stage: semio_framework_job::InteractiveStage,
+        budget: semio_framework_job::StepBudget,
+        cancel: semio_framework_job::CancelToken,
         now_us: fn() -> Option<u64>,
     ) -> Result<JobPublication, JobPublicationError> {
         let next_step_sequence = self.next_step_sequence.checked_add(1).ok_or_else(|| JobPublicationError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original actor bridge sequence exhausted")))?;
@@ -1708,7 +1706,7 @@ impl JobTurnBridge {
         if turn.step_sequence != self.next_step_sequence {
             return Err(JobPublicationError::StepSequence { expected: self.next_step_sequence, published: turn.step_sequence });
         }
-        if !matches!(job::validate_commit(&self.operation, live_revision, live_generation), job::CommitValidation::Accepted)
+        if !matches!(semio_framework_job::validate_commit(&self.operation, live_revision, live_generation), semio_framework_job::CommitValidation::Accepted)
             || turn.operation.base_revision != live_revision.0
             || turn.operation.generation != live_generation.0
             || turn.operation.base_revision != self.operation.base_revision.0
@@ -1722,7 +1720,7 @@ impl JobTurnBridge {
             return Err(JobPublicationError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "actor bridge requires its original cumulative grant")));
         }
         let authority = self.authority.as_ref().ok_or_else(|| JobPublicationError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original actor bridge authority has closed")))?;
-        let mut context = job::StepContext::with_payload_authority(self.operation.operation, self.operation.generation, budget, &cancel, now_us, &mut self.operation.preview_sequence, &mut self.progress, authority).map_err(JobPublicationError::Retained)?;
+        let mut context = semio_framework_job::StepContext::with_payload_authority(self.operation.operation, self.operation.generation, budget, &cancel, now_us, &mut self.operation.preview_sequence, &mut self.progress, authority).map_err(JobPublicationError::Retained)?;
         let outcome = if let Some(projection) = self.pending.as_mut() {
             match projection.step(job, &mut context).map_err(JobPublicationError::Retained)? {
                 Some(outcome) => { self.pending = None; outcome }
@@ -1730,7 +1728,7 @@ impl JobTurnBridge {
             }
         } else {
             let before = context.preview_sequence();
-            let outcome = job::drive_step(job, &mut context, site, stage, &mut None).map_err(JobPublicationError::Original)?;
+            let outcome = semio_framework_job::drive_step(job, &mut context, site, stage, &mut None).map_err(JobPublicationError::Original)?;
             let after = context.preview_sequence();
             let Some(outcome) = outcome else {
                 self.next_step_sequence = next_step_sequence;
@@ -1738,7 +1736,7 @@ impl JobTurnBridge {
                 return Ok(JobPublication { turn: JobTurn { operation: JobOperation::from_job(self.operation), ..turn }, outcome: JobStepOutcome::Yield });
             };
             let mut descriptor = outcome.into_descriptor();
-            let preview = matches!(descriptor.kind(), job::JobOutcomeKind::PreviewReady);
+            let preview = matches!(descriptor.kind(), semio_framework_job::JobOutcomeKind::PreviewReady);
             if (preview && after != before.saturating_add(1)) || (!preview && after != before) {
                 let acknowledged = descriptor.acknowledge(context.retained_grant());
                 context.consume_retained(acknowledged.progress()).map_err(JobPublicationError::Retained)?;
@@ -1746,7 +1744,7 @@ impl JobTurnBridge {
                 return Err(JobPublicationError::PreviewSequence { before, after });
             }
             self.pending = Some(JobOutcomeProjection::new(descriptor));
-            if matches!(self.pending.as_ref().unwrap().descriptor.kind(), job::JobOutcomeKind::Yield | job::JobOutcomeKind::Cancelled) {
+            if matches!(self.pending.as_ref().unwrap().descriptor.kind(), semio_framework_job::JobOutcomeKind::Yield | semio_framework_job::JobOutcomeKind::Cancelled) {
                 let projected = self.pending.as_mut().unwrap().step(job, &mut context).map_err(JobPublicationError::Retained)?;
                 if let Some(projected) = projected { self.pending = None; projected } else { JobStepOutcome::Yield }
             } else { JobStepOutcome::Yield }

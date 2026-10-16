@@ -1,6 +1,7 @@
-/** 📚️ The worker-law suites: every browser-worker behaviour suite that runs against the neutral worker test bag, registered in their original order from the worker's in-source block. */
-import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
-import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
+/** 📚️ The worker-law suites: every browser-worker behaviour suite that runs against the neutral worker test bag. This module is a vitest test file that imports the worker and registers the suites in their original order; the worker imports no test. */
+import * as vitest from "vitest";
+import { documentWorkerTestDependenciesV1, documentWorkerTestSourceV1 } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
+import { workerLawSourceV1 } from "../🧰️worker-law-fakes/🟦️.ts";
 import { registerSessionBrokerPortTests } from "../../🔨️modules/📇️directory/🧪️tests/🔑️session-broker-port/🟦️.ts";
 import { registerSpaceArtifactCreationTests } from "../🏗️space-artifact-creation/🟦️.ts";
 import { registerDirectoryEventPageBootstrapTests } from "../../🔨️modules/📇️directory/🧪️tests/📄️event-page-bootstrap/🟦️.ts";
@@ -23,34 +24,27 @@ import { registerCheckpointPairDecoderTests } from "../📍️checkpoint-pair-de
 import { registerDocumentCatchUpTests } from "../🪜️document-catch-up/🟦️.ts";
 import { registerActorCommandWindowTests } from "../🧭️actor-command-windows/🟦️.ts";
 
-type Vitest = NonNullable<ImportMeta["vitest"]>;
+const dependencies = documentWorkerTestDependenciesV1();
+const source = workerLawSourceV1(documentWorkerTestSourceV1);
 
-/** 🔭️ Rebases the worker's own test source onto the OS root every fixture path is spelled against. */
-export function workerLawSourceV1(registrar: TestSource): TestSource {
-  return { directory: registrar.directory, url: new URL("../../../🟦️.ts", registrar.url).href };
-}
-
-export async function registerWorkerLawTests(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, registrar: TestSource): Promise<void> {
-  const source = workerLawSourceV1(registrar);
-  await registerSessionBrokerPortTests(vitest, dependencies, source);
-  await registerSpaceArtifactCreationTests(vitest, dependencies, source);
-  await registerDirectoryEventPageBootstrapTests(vitest, dependencies, source);
-  await registerHubSessionCapabilityTests(vitest, dependencies, source);
-  await registerDocumentActorRecoveryWorkerTests(vitest, dependencies, source);
-  await registerWireBridgeTests(vitest, dependencies, source);
-  await registerArtifactBootstrapRestoreTests(vitest, dependencies, source);
-  await registerIdentityConfigFacetTests(vitest, dependencies, source);
-  await registerConfigMutationParityTests(vitest, dependencies, source);
-  await registerSpaceAdministrationTests(vitest, dependencies, source);
-  await registerDirectoryLaneTests(vitest, dependencies, source);
-  await registerDocumentOpenTests(vitest, dependencies, source);
-  await registerExecutionTargetLeaseTests(vitest, dependencies, source);
-  await registerBrowserActorReservationTests(vitest, dependencies, source);
-  await registerDocumentBackboneBatchTests(vitest, dependencies, source);
-  await registerFolderWatchTests(vitest, dependencies, source);
-  await registerHubReconnectOutboxTests(vitest, dependencies, source);
-  await registerScopeSafePresenceTests(vitest, dependencies, source);
-  await registerCheckpointPairDecoderTests(vitest, dependencies, source);
-  await registerDocumentCatchUpTests(vitest, dependencies, source);
-  await registerActorCommandWindowTests(vitest, dependencies, source);
-}
+await registerSessionBrokerPortTests(vitest, dependencies, source);
+await registerSpaceArtifactCreationTests(vitest, dependencies, source);
+await registerDirectoryEventPageBootstrapTests(vitest, dependencies, source);
+await registerHubSessionCapabilityTests(vitest, dependencies, source);
+await registerDocumentActorRecoveryWorkerTests(vitest, dependencies, source);
+await registerWireBridgeTests(vitest, dependencies, source);
+await registerArtifactBootstrapRestoreTests(vitest, dependencies, source);
+await registerIdentityConfigFacetTests(vitest, dependencies, source);
+await registerConfigMutationParityTests(vitest, dependencies, source);
+await registerSpaceAdministrationTests(vitest, dependencies, source);
+await registerDirectoryLaneTests(vitest, dependencies, source);
+await registerDocumentOpenTests(vitest, dependencies, source);
+await registerExecutionTargetLeaseTests(vitest, dependencies, source);
+await registerBrowserActorReservationTests(vitest, dependencies, source);
+await registerDocumentBackboneBatchTests(vitest, dependencies, source);
+await registerFolderWatchTests(vitest, dependencies, source);
+await registerHubReconnectOutboxTests(vitest, dependencies, source);
+await registerScopeSafePresenceTests(vitest, dependencies, source);
+await registerCheckpointPairDecoderTests(vitest, dependencies, source);
+await registerDocumentCatchUpTests(vitest, dependencies, source);
+await registerActorCommandWindowTests(vitest, dependencies, source);

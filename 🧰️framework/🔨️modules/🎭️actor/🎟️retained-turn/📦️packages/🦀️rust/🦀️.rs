@@ -1,6 +1,5 @@
 //! 🎟️ The original retained turn implementation is the canonical native package owner.
 #![allow(async_fn_in_trait)]
-pub use semio_framework_actor_pack as pack;
 #[path="../../🦀️.rs"]
 pub mod retained_turn;
 pub use retained_turn::*;

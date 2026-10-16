@@ -12,8 +12,6 @@ use semio_framework_ui_locale::{Locale, Terminology};
 use semio_framework_plugin_window_kits_rich::tree_kit::{TreeWindows, tree_window_indexed_item, tree_window_section};
 use semio_framework_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
 use semio_framework_plugin_window_kits_rich::table_kit::{row_action, row_target};
-use crate::tool_jobs_time_travel as time_travel;
-use crate::command_history::lifted_panel::ui_history_panel;
 use semio_framework_plugin_window_transient::{ui_label, ui_text};
 
 /// 🕰️ Builds the framework's history panel body from a `HistoryView` as a pure side-panel
@@ -76,7 +74,7 @@ pub async fn ui_history_panel(
     view: &ViewModel,
 ) -> UiAssemblyResult<BuiltNode> {
     let frozen = time_travel.is_some();
-    let text_of = |text: time_travel::HistoryPanelText| text.text(locale);
+    let text_of = |text: semio_framework_plugin_command::lifted_command::HistoryPanelText| text.text(locale);
     let action_item = |id: &str, icon_id: IconName, label: &str, action: &str, enabled: bool| -> UiAssemblyResult<BuiltNode> {
         let action = ActionId::try_v1(controller_id, action).ok_or_else(|| ui_assembly_error("history-panel.action-id"))?;
         let button_id = UiText::try_format(format_args!("{id}.run")).ok_or_else(|| ui_assembly_error("history-panel.button-id"))?;
@@ -93,17 +91,17 @@ pub async fn ui_history_panel(
     let mut filter_builder = select(ui_text(history.command_filter.value(), "history-panel.filter-value")?);
     for filter in HistoryCommandFilter::ALL {
         let label = match filter {
-            HistoryCommandFilter::All => time_travel::HistoryPanelText::FilterAll,
-            HistoryCommandFilter::WithoutMutations => time_travel::HistoryPanelText::FilterWithoutMutations,
-            HistoryCommandFilter::OnlyMutations => time_travel::HistoryPanelText::FilterOnlyMutations,
+            HistoryCommandFilter::All => semio_framework_plugin_command::lifted_command::HistoryPanelText::FilterAll,
+            HistoryCommandFilter::WithoutMutations => semio_framework_plugin_command::lifted_command::HistoryPanelText::FilterWithoutMutations,
+            HistoryCommandFilter::OnlyMutations => semio_framework_plugin_command::lifted_command::HistoryPanelText::FilterOnlyMutations,
         };
         filter_builder = filter_builder.try_item(ui_text(filter.value(), "history-panel.filter-item-value")?, ui_label(text_of(label), "history-panel.filter-item-label")?).map_err(|_| ui_assembly_error("history-panel.filter-items"))?;
     }
     let filter_builder = filter_builder.try_id("framework.history.filter.control").map_err(|_| ui_assembly_error("history-panel.filter-id"))?;
-    let filter_builder = filter_builder.try_label(text_of(time_travel::HistoryPanelText::Filter)).map_err(|_| ui_assembly_error("history-panel.filter-label"))?;
+    let filter_builder = filter_builder.try_label(text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::Filter)).map_err(|_| ui_assembly_error("history-panel.filter-label"))?;
     let filter_action = ActionId::try_v1(controller_id, SET_HISTORY_COMMAND_FILTER_ACTION_ID).ok_or_else(|| ui_assembly_error("history-panel.filter-action"))?;
     let filter_select = filter_builder.try_on(Trigger::Change, filter_action).map_err(|_| ui_assembly_error("history-panel.filter-binding"))?.try_build().map_err(|_| ui_assembly_error("history-panel.filter-build"))?;
-    let filter_builder = tree_item(ui_label(text_of(time_travel::HistoryPanelText::Filter), "history-panel.filter-label")?).icon(ui_text(IconName::Filter.as_str(), "history-panel.filter-icon")?);
+    let filter_builder = tree_item(ui_label(text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::Filter), "history-panel.filter-label")?).icon(ui_text(IconName::Filter.as_str(), "history-panel.filter-icon")?);
     let filter_builder = filter_builder.try_id("framework.history.filter").map_err(|_| ui_assembly_error("history-panel.filter-item-id"))?;
     let filter_item = filter_builder.try_child(filter_select).map_err(|_| ui_assembly_error("history-panel.filter-child"))?.try_build().map_err(|_| ui_assembly_error("history-panel.filter-item-build"))?;
 
@@ -117,19 +115,19 @@ pub async fn ui_history_panel(
         })
         .collect();
     let windows = TreeWindows::for_body(view, FRAMEWORK_HISTORY_BODY_KEY);
-    let commands_section = tree_window_section(&windows, time_travel::HISTORY_COMMANDS_SECTION_KEY, ui_label(text_of(time_travel::HistoryPanelText::Commands), "history-panel.commands-label")?, true, &command_rows, |entry| {
+    let commands_section = tree_window_section(&windows, semio_framework_plugin_command::lifted_command::HISTORY_COMMANDS_SECTION_KEY, ui_label(text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::Commands), "history-panel.commands-label")?, true, &command_rows, |entry| {
         let entry_label = entry.label.resolve(Terminology::Native, locale);
         let label = if entry.count > 1 { UiText::clipped(&format!("{entry_label} x{}", entry.count)) } else { UiText::clipped(entry_label) };
-        let id = UiText::try_format(format_args!("{}{}", time_travel::HISTORY_ROW_KEY_PREFIX, entry.seq)).ok_or_else(|| ui_assembly_error("history-panel.command-id"))?;
+        let id = UiText::try_format(format_args!("{}{}", semio_framework_plugin_command::lifted_command::HISTORY_ROW_KEY_PREFIX, entry.seq)).ok_or_else(|| ui_assembly_error("history-panel.command-id"))?;
         let mutations: Vec<semio_framework::kernel::HistoryMutationEntry> = entry.mutations.iter().map(|mutation| history_mutation_entry(mutation, time_travel)).collect();
         let worst = mutations.iter().filter_map(|mutation| mutation.worst).max();
         let mut builder = tree_item(Label(label)).icon(ui_text(history_panel_icon_id(entry.kind).as_str(), "history-panel.command-icon")?);
         builder = builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.command-id"))?;
         let mut description = if entry.mutations.is_empty() { entry.op_lines.join(" \u{b7} ") } else { String::new() };
         if let Some(worst) = worst {
-            let severity = time_travel::history_severity_text(worst, locale);
+            let severity = semio_framework_plugin_command::lifted_command::history_severity_text(worst, locale);
             description = if description.is_empty() { severity.to_string() } else { format!("{severity} \u{b7} {description}") };
-            builder = builder.tone(time_travel::history_severity_tone(Some(worst)).0);
+            builder = builder.tone(semio_framework_plugin_command::lifted_command::history_severity_tone(Some(worst)).0);
         }
         if let Some(author) = entry.author.as_deref().filter(|_| entry.transition_id.is_some()) {
             description = if description.is_empty() { author.to_string() } else { format!("{author} \u{b7} {description}") };
@@ -143,7 +141,7 @@ pub async fn ui_history_panel(
         if entry.revertible && !read_only && !frozen {
             let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.row-action-args"))?;
             args.push("entrySeq".to_owned(), UiValue::Number(entry.seq as f64)).map_err(|_| ui_assembly_error("history-panel.row-action-args"))?;
-            let revert = row_action(IconName::RotateCcw.as_str(), text_of(time_travel::HistoryPanelText::Backwards), REVERT_TO_COMMAND_ACTION_ID, RowActionPlacement::Menu)?;
+            let revert = row_action(IconName::RotateCcw.as_str(), text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::Backwards), REVERT_TO_COMMAND_ACTION_ID, RowActionPlacement::Menu)?;
             builder = builder.try_row_action(revert).map_err(|_| ui_assembly_error("history-panel.row-actions"))?.target(row_target(controller_id, Some(UiValue::Map(args.finish())), None)?);
         }
         let blocking = |mutation: &semio_framework::kernel::HistoryMutationEntry| mutation.worst.is_some_and(|worst| protocol::MergePolicy::Normal.rejects(worst));
@@ -151,12 +149,12 @@ pub async fn ui_history_panel(
         let mut shown: Vec<&semio_framework::kernel::HistoryMutationEntry> = mutations.iter().filter(|mutation| blocking(*mutation)).collect();
         shown.extend(mutations.iter().filter(|mutation| flagged(*mutation) && !blocking(*mutation)));
         shown.extend(mutations.iter().filter(|mutation| !flagged(*mutation)));
-        let (projected, total) = time_travel::history_row_mutation_extent(entry);
+        let (projected, total) = semio_framework_plugin_command::lifted_command::history_row_mutation_extent(entry);
         if total == 0 {
             return builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"));
         }
         let page = pages.get(&entry.seq);
-        tree_window_indexed_item(&windows, builder, id.as_str(), time_travel::history_row_opens_by_default(&mutations), total, |index| {
+        tree_window_indexed_item(&windows, builder, id.as_str(), semio_framework_plugin_command::lifted_command::history_row_opens_by_default(&mutations), total, |index| {
             let paged;
             let mutation = match shown.get(index) {
                 Some(mutation) => *mutation,
@@ -168,7 +166,7 @@ pub async fn ui_history_panel(
                     None => return history_panel_unavailable_row(entry.seq, index, locale),
                 },
             };
-            history_panel_mutation_row(mutation, controller_id, locale, read_only, time_travel::mutation_row_refusals(time_travel, busy, &mutation.mutation_id, mutation.store.as_deref()))
+            history_panel_mutation_row(mutation, controller_id, locale, read_only, crate::panel_sections::mutation_row_refusals(time_travel, busy, &mutation.mutation_id, mutation.store.as_deref()))
         })
     })?;
 
@@ -176,7 +174,7 @@ pub async fn ui_history_panel(
         None
     } else {
         let pending = uncommitted_command_count(history);
-        let text = text_of(time_travel::HistoryPanelText::CheckIn);
+        let text = text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::CheckIn);
         let text = if pending > 0 { format!("{text} ({pending})") } else { text.to_string() };
         let icon = ui_text(IconName::GitCommit.as_str(), "history-panel.checkin-icon")?;
         let submit = ActionId::try_v1(FRAMEWORK_CHECKIN_CONTROLLER_ID, "submit").ok_or_else(|| ui_assembly_error("history-panel.checkin-action"))?;
@@ -190,11 +188,11 @@ pub async fn ui_history_panel(
     let mutable = !read_only && !frozen;
     let mut action_items = BuiltChildren::default();
     for item in [
-        Some(action_item("framework.history.undo", IconName::Undo, text_of(time_travel::HistoryPanelText::Undo), "undo", mutable)?),
-        Some(action_item("framework.history.redo", IconName::Redo, text_of(time_travel::HistoryPanelText::Redo), "redo", history.can_redo && mutable)?),
-        Some(action_item("framework.history.commitCheckpoint", IconName::GitCommit, text_of(time_travel::HistoryPanelText::CommitCheckpoint), "commitCheckpoint", mutable)?),
+        Some(action_item("framework.history.undo", IconName::Undo, text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::Undo), "undo", mutable)?),
+        Some(action_item("framework.history.redo", IconName::Redo, text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::Redo), "redo", history.can_redo && mutable)?),
+        Some(action_item("framework.history.commitCheckpoint", IconName::GitCommit, text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::CommitCheckpoint), "commitCheckpoint", mutable)?),
         checkin_item,
-        Some(action_item("framework.history.createAlternative", IconName::GitBranch, text_of(time_travel::HistoryPanelText::CreateAlternative), "createAlternative", mutable)?),
+        Some(action_item("framework.history.createAlternative", IconName::GitBranch, text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::CreateAlternative), "createAlternative", mutable)?),
         Some(filter_item),
     ]
     .into_iter()
@@ -202,26 +200,26 @@ pub async fn ui_history_panel(
     {
         action_items.try_push(item).map_err(|_| ui_assembly_error("history-panel.actions"))?;
     }
-    let actions_builder = tree_section(ui_label(text_of(time_travel::HistoryPanelText::Actions), "history-panel.actions-label")?).default_open(true);
+    let actions_builder = tree_section(ui_label(text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::Actions), "history-panel.actions-label")?).default_open(true);
     let actions_builder = actions_builder.try_id("framework.history.actions").map_err(|_| ui_assembly_error("history-panel.actions-id"))?;
     let actions_section = actions_builder.try_children(action_items).map_err(|_| ui_assembly_error("history-panel.actions"))?.try_build().map_err(|_| ui_assembly_error("history-panel.actions-build"))?;
     let alternatives_section = if history.alternatives.is_empty() {
         None
     } else {
-        Some(tree_window_section(&windows, "framework.history.alternatives", ui_label(text_of(time_travel::HistoryPanelText::Alternatives), "history-panel.alternatives-label")?, true, &history.alternatives, |alternative| {
+        Some(tree_window_section(&windows, "framework.history.alternatives", ui_label(text_of(semio_framework_plugin_command::lifted_command::HistoryPanelText::Alternatives), "history-panel.alternatives-label")?, true, &history.alternatives, |alternative| {
             history_panel_alternative_row(alternative, controller_id, locale, mutable)
         })?)
     };
     let mut sections = BuiltChildren::default();
     let remote_section = match reprojection {
-        Some(remote) => Some(time_travel::time_travel_reprojection_section(remote, time_travel.is_none() && !read_only, controller_id, locale)?),
+        Some(remote) => Some(crate::panel_sections::time_travel_reprojection_section(remote, time_travel.is_none() && !read_only, controller_id, locale)?),
         None => None,
     };
     let ordered: Vec<BuiltNode> = match time_travel {
         Some(panel) => {
-            let mut session = vec![time_travel::time_travel_band_section(panel, controller_id, locale)?];
+            let mut session = vec![crate::panel_sections::time_travel_band_section(panel, controller_id, locale)?];
             if let Some(editor) = panel.editor.as_ref().filter(|_| !read_only) {
-                session.extend(time_travel::time_travel_editor_sections(panel, editor, &windows, controller_id, locale)?);
+                session.extend(crate::panel_sections::time_travel_editor_sections(panel, editor, &windows, controller_id, locale)?);
             }
             session.into_iter().chain(remote_section).chain(alternatives_section).chain([actions_section, commands_section]).collect()
         }

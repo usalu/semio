@@ -2888,7 +2888,7 @@ enum Generation2dMutationDictionaryDestination {
 /// shapes and both are canonical: a field whose declared shape is `Shape::Table` (`Widget::Neuron`'s
 /// `params`) is columnar `TAG_TABLE_SOA`, while the same dictionary nested inside
 /// `neural::Value::Dictionary` carries no declared shape and falls back to `encode_seq` — a plain
-/// `TAG_LIST` of two-field entry records (`🎒️pack/🌱️value/🦀️.rs`'s `FieldValue::List` arm). The value
+/// `TAG_LIST` of two-field entry records (`🎒️pack/🌱️value/📝️record-encode/🦀️.rs`'s `FieldValue::List` arm). The value
 /// owner therefore addresses either a table row or a list entry.
 #[derive(Clone, Copy)]
 enum Generation2dMutationNeuralOwner {

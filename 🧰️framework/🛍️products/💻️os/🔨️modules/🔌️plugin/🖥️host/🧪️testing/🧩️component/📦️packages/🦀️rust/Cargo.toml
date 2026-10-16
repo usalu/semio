@@ -37,6 +37,7 @@ semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱
 semio-framework.workspace = true
 semio-framework-dispatch-macros.workspace = true
 semio-framework-plugin = { workspace = true }
+semio-framework-plugin-host-test-component-refusal = { path = "../../🗿️artifacts/🚫️snapshot-refusal/📦️packages/🦀️rust" }
 semio-framework-os-kernel.workspace = true
 semio-framework-schema.workspace = true
 semio-framework-value-derive.workspace = true

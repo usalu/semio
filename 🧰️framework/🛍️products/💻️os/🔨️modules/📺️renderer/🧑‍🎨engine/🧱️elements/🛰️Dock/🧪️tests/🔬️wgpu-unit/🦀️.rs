@@ -14,7 +14,7 @@ fn stack_tabs(ids: &[&str], active: &str) -> DockNode {
 use crate::shell::ShellState;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::PanelGroup,semio_framework::PanelTabDefinition,semio_framework::PanelTabKind,semio_framework::WindowKindDefinition};
 use semio_framework_ui_locale::LocalizedLabel;
-use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
+use semio_framework_ui_layout::layout::{create_default_layout, WindowOptions};
 
 fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
     AppDefinition {
@@ -35,7 +35,7 @@ fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinitio
                     id: (*id).into(),
                     label: LocalizedLabel::data(*id),
                     body_key: format!("{id}.body"),
-                    surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+                    surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
                     icon_id: "app-window".into(),
                     options: WindowOptions::default(),
                     actions: vec![],
@@ -536,7 +536,7 @@ fn apply_layout_diff_reanchors_active_and_maximized_stack_by_key() {
     dock.maximized_stack = Some(vec![1]);
     dock.split_resize_origin = vec![0.5, 0.5];
     let reversed = WindowLayout {
-        root: WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode {
+        root: WindowLayoutRoot::Axis(semio_framework_ui_layout::layout::WindowLayoutAxisNode {
             kind: "row".into(),
             size: None,
             children: vec![
@@ -813,10 +813,16 @@ fn active_utility_gates_actions_unless_allowed() {
     assert!(shell.windows.actions_enabled_for_window(&app, "main"));
 }
 
+/// 📇️ The first window kind whose resolved actions include `action_id` — the window the palette/keybinding
+/// redirect focuses to open an arg-carrying action's form (Architecture Decision 8, P3/P4).
+fn action_host_window_id(app: &AppDefinition, action_id: &str) -> Option<String> {
+    app.window_kinds.iter().find(|kind| semio_framework::resolve_window_actions(app, kind).iter().any(|action| action.id == action_id)).map(|kind| kind.id.clone())
+}
+
 #[test]
 fn action_host_window_id_finds_scoping_window() {
     let app = actions_utilities_app();
-    assert_eq!(crate::shell::action_host_window_id(&app, "withArgs").as_deref(), Some("main"));
+    assert_eq!(action_host_window_id(&app, "withArgs").as_deref(), Some("main"));
 }
 
 /// 🎯️ The Utility Options rail (`render_utility_options_rail`) resolves its content through
@@ -824,7 +830,7 @@ fn action_host_window_id_finds_scoping_window() {
 /// absent from BOTH buckets otherwise — untagged groups always stay in the general Measures rail.
 #[test]
 fn utility_options_partition_gates_tagged_group_by_active_utility() {
-    use ui_wgpu::wgpu::{partition_window_measures, ActionDescriptor, WindowMeasure};
+    use semio_framework_ui_layout::layout::{partition_window_measures, ActionDescriptor, WindowMeasure};
     let measures = vec![
         WindowMeasure::Group {
             id: "brush-params".into(),
@@ -850,15 +856,15 @@ fn utility_options_partition_gates_tagged_group_by_active_utility() {
         },
         WindowMeasure::Group { id: "grid".into(), label: "Grid".into(), default_open: Some(true), active_utility_id: None, value: None, min: None, max: None, step: None, ready: None, loading: None, waiting: None, on_change: None, children: vec![] },
     ];
-    let ui_wgpu::wgpu::component::layout::WindowMeasurePartition { general, utility_options } = partition_window_measures(&measures, Some("utility.a")).expect("bounded fixture measure partition");
+    let semio_framework_ui_layout::layout::WindowMeasurePartition { general, utility_options } = partition_window_measures(&measures, Some("utility.a")).expect("bounded fixture measure partition");
     assert_eq!(utility_options.len(), 1, "matching utility surfaces the tagged group in utility options");
     assert!(matches!(utility_options.get(0).copied(), Some(WindowMeasure::Toggle { id, .. }) if id == "brush-size"));
     assert_eq!(general.len(), 1, "untagged group stays in the general measures rail");
     assert!(matches!(general.get(0).copied(), Some(WindowMeasure::Group { id, .. }) if id == "grid"));
-    let ui_wgpu::wgpu::component::layout::WindowMeasurePartition { general: general_other, utility_options: utility_options_other } = partition_window_measures(&measures, Some("utility.b")).expect("bounded fixture measure partition");
+    let semio_framework_ui_layout::layout::WindowMeasurePartition { general: general_other, utility_options: utility_options_other } = partition_window_measures(&measures, Some("utility.b")).expect("bounded fixture measure partition");
     assert!(utility_options_other.is_empty(), "wrong active utility drops the tagged group");
     assert_eq!(general_other.len(), 1, "untagged group unaffected by active utility");
-    let ui_wgpu::wgpu::component::layout::WindowMeasurePartition { general: general_none, utility_options: utility_options_none } = partition_window_measures(&measures, None).expect("bounded fixture measure partition");
+    let semio_framework_ui_layout::layout::WindowMeasurePartition { general: general_none, utility_options: utility_options_none } = partition_window_measures(&measures, None).expect("bounded fixture measure partition");
     assert!(utility_options_none.is_empty(), "no active utility drops the tagged group");
     assert_eq!(general_none.len(), 1);
 }

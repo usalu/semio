@@ -429,8 +429,7 @@ pub fn helical_sweep(body: &mut Body, profile: FaceId, axis: (Pnt3, Vec3), radiu
 // #endregion 🔖️Sweep
 
 #[cfg(test)]
-#[path = "../../../🧪️tests/🧰️support/🦀️.rs"]
-pub(crate) mod test_support;
+pub(crate) use semio_framework_3d_testing_support as test_support;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

@@ -24,7 +24,8 @@ import { reach, type Answer, type CrowdView, type Icon, type Id, type MatchingTa
 import { TASK_KIND_LABELS, localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
 import { ceilSignificant, floorSignificant, formatFactor, formatQuantity, formatScore } from "../📏️quantity/🟦️.ts";
 import { CardAction, CardIcon, Glyph, IconLabel, Mark, QuizCard, Records, TABLE, TaskGlyph, cn } from "../🪟️chrome/🟦️.tsx";
-import { HOME_PAGES, runAwards, type QuizSession, type QuizState } from "../🧭️session/🟦️.ts";
+import { HOME_PAGES, runAwards, type QuizState } from "../🧭️session/🧮️state/🟦️.ts";
+import { type QuizSession } from "../🧭️session/🟦️.ts";
 import { PRESENCE_ANCHORS } from "../👥️presence/🟦️.tsx";
 import { ScoreFigure, TaskFigures, crowdGate, crowdShown, type OthersChoice } from "../🗳️crowd/🟦️.tsx";
 import { challengeScored } from "../⛰️challenge/🟦️.tsx";

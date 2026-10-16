@@ -1,6 +1,5 @@
 //! 🧪️ Independent byte-index edits and full raw-word owner equality share the closed corpus.
-#[path = "../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_os_kernel::{pack::snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
 use std::{io::Write,process::{Command,Stdio}};

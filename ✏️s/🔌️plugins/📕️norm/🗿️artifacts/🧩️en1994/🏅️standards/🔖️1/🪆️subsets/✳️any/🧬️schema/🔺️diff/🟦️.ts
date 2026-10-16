@@ -1,7 +1,7 @@
 /** 🔺️ `En1994Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireDefault, normWireInteger, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireDefault, normWireInteger, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 import { type AnnexChoice, type CompositeBeam, type CompositeColumn, type CompositeSlab, parseAnnexChoice, parseCompositeBeam, parseCompositeColumn, parseCompositeSlab } from "../📸️snapshot/🟦️.ts";
 
 export interface En1994Diff {

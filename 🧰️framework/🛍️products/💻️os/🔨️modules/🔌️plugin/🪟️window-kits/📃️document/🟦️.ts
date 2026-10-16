@@ -70,10 +70,4 @@ export function renderDocument(view: DocumentView): BuiltNode {
   return builtNode(DOCUMENT_WINDOW_KIND_ID, { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null }, DEFAULT_STACK_LAYOUT, children);
 }
 
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️renderdocument/🟦️.ts");
-  await registerTests1(import.meta.vitest, { renderDocument, editableDocumentDraft }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️Tests
 // #endregion 📄️DocumentWindowKit

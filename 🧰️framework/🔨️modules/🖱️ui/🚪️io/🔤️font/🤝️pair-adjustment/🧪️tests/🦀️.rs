@@ -8,7 +8,7 @@ fn font_pair_rejects_malformed_borrowed_sources_without_effects() {
     for value in law["adjustments"]["refused"].as_array().unwrap(){assert!(serde_json::from_value::<FontPairAdjustment>(value.clone()).is_err());}
     for row in law["malformedSources"].as_array().unwrap(){
         let original:Vec<u8>=serde_json::from_value(row["bytes"].clone()).unwrap();let pointer=original.as_ptr();
-        let(result,births,frees)=crate::test_allocation::observe_backing(||BorrowedFontPairSource::read(&original,*b"latn"));
+        let(result,births,frees)=semio_framework_trace_memory_testing::observe_backing(||BorrowedFontPairSource::read(&original,*b"latn"));
         let error=result.err().unwrap_or_else(||panic!("original malformed font accepted: {}",row["name"]));
         assert_eq!(serde_json::to_value(error.kind).unwrap(),row["kind"]);assert!(matches!(error.message,std::borrow::Cow::Borrowed(_)));
         assert_eq!((births,frees),(0,0));assert_eq!(original.as_ptr(),pointer);

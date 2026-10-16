@@ -5,7 +5,7 @@
 
 #![allow(dead_code)]
 
-use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_model::catalogue::Catalogue;
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_model::catalogue::Port;
 use semio_s_artifact_procedural_3d_model::catalogue::PortType;
@@ -28,8 +28,8 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Fixture
 /// 📚️ The kind with this id.
-pub fn kind_of(id: &str) -> &'static Kind {
-    catalogue().kind(id).unwrap_or_else(|| panic!("catalogue kind {id}"))
+pub fn kind_of(catalogue: &'static Catalogue, id: &str) -> &'static Kind {
+    catalogue.kind(id).unwrap_or_else(|| panic!("catalogue kind {id}"))
 }
 
 /// 🧾️ The cases of a fixture file.
@@ -332,11 +332,11 @@ pub fn assert_case(case: &Value, kind: &Kind, evaluation: &WidgetEvaluation, tol
 }
 
 /// 🧪️ Runs every case of a fixture at fuel 1 and at unbounded fuel, asserts both against the fixture and requires the two evaluations to be equal (stepping never changes a result).
-pub fn run_fixture(text: &str, entries: &[ComputeEntry]) -> usize {
+pub fn run_fixture(catalogue: &'static Catalogue, text: &str, entries: &[ComputeEntry]) -> usize {
     let (fixture, cases) = cases(text);
     let tolerance = fixture["tolerance"].as_f64().expect("fixture tolerance");
     for case in &cases {
-        let kind = kind_of(case["kind"].as_str().expect("case kind"));
+        let kind = kind_of(catalogue, case["kind"].as_str().expect("case kind"));
         let case_tolerance = case["tolerance"].as_f64().unwrap_or(tolerance);
         let stepped = evaluate(kind, inputs_of(kind, case), entries, 1);
         let whole = evaluate(kind, inputs_of(kind, case), entries, usize::MAX);
@@ -358,10 +358,10 @@ pub fn fixture_kinds(text: &str) -> Vec<String> {
 }
 
 /// 📚️ Asserts that the compute table of a category lists exactly the catalogue kinds of that category, and that the fixture states at least one case per kind and one fault case per kind that can fault.
-pub fn assert_category(category: &str, entries: &[ComputeEntry], text: &str) {
+pub fn assert_category(catalogue: &Catalogue, category: &str, entries: &[ComputeEntry], text: &str) {
     let mut registered: Vec<&str> = entries.iter().map(|entry| entry.id).collect();
     registered.sort();
-    let mut declared: Vec<&str> = catalogue().category(category).unwrap_or_else(|| panic!("category {category}")).kinds.iter().map(|kind| kind.id.as_str()).collect();
+    let mut declared: Vec<&str> = catalogue.category(category).unwrap_or_else(|| panic!("category {category}")).kinds.iter().map(|kind| kind.id.as_str()).collect();
     declared.sort();
     assert_eq!(registered, declared, "{category}: the compute table lists exactly the catalogue kinds");
     assert_eq!(fixture_kinds(text), declared, "{category}: the fixture covers exactly the catalogue kinds");

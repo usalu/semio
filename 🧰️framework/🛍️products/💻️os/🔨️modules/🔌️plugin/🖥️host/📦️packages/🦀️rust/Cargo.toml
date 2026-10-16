@@ -72,6 +72,7 @@ semio-framework-plugin-host-process-transport = { path = "../../🧵️shard/�
 semio-framework-plugin-host-routers = { path = "../../🧭️routers/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-plugin-host-shard = { path = "../../🧵️shard/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-plugin-interpreter = { workspace = true }
+semio-framework-plugin-interpreter-runtime = { workspace = true, features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

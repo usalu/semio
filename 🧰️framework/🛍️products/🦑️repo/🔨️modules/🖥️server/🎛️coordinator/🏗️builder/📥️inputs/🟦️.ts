@@ -1,7 +1,7 @@
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import {configuredSourceInputsV1,type ConfiguredSourceInputsV1} from "../../../../📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts";
 import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {withRepositoryCacheStoreV1} from "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {withBuildFileMembershipV1} from "../../../../📚️library/🏗️build/📥️inputs/📂️membership/🟦️.ts";
 import policy from "./🔣️policy.json" with {type:"json"};

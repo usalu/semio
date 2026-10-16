@@ -1,7 +1,21 @@
 //! 🏛️ Lift file: 1 item, about 20 lines, of `👷️job/🏛️reserved/🦀️.rs` that belong to crate `retained-command` (WP3).
 //!
 //! WP3 owns both crates: the framework reserved route capacity names `ArtifactRetainedWorkCapacity`, so it moves up from `job` to `retained-command`. Until `retained-command` is carved, the source module re-exports the item with `pub use`.
-use super::*;
+use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
+use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use semio_framework_os_kernel::ArtifactStoreInitializationAuthority;
+use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, Emit, ToolCommandCatalog};
+use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
+use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use crate as retained_command;
+use semio_framework::*;
 
 /// 🎛️ The one place a framework-reserved route id becomes its retained job. Deliberately a plain
 /// non-`async` fn OUTSIDE `dispatch_framework_reserved_action`'s generator: every arm erases into
@@ -21,5 +35,6 @@ use super::*;
 /// used to declare ONE work item against that TWO-row footprint, which is the same
 /// declaration-vs-arithmetic split `📓️fold-contract-2026-09-10.md` fixed one layer down
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub(crate) const FRAMEWORK_RESERVED_ROUTE_CAPACITY: crate::retained_command::ArtifactRetainedWorkCapacity =
-    crate::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS / store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
+#[doc(hidden)]
+pub const FRAMEWORK_RESERVED_ROUTE_CAPACITY: crate::ArtifactRetainedWorkCapacity =
+    crate::ArtifactRetainedWorkCapacity::for_invertible_items(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS / store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);

@@ -114,14 +114,14 @@ impl FromValue for FailClosedOp {
 }
 
 impl OpBinary for FailClosedOp {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> {
         if self.fault == Fault::Encode {
-            return Err(crate::os_spr::ProtocolError::LimitExceeded("the fixture refuses to encode this operation"));
+            return Err(semio_framework_os_spr::ProtocolError::LimitExceeded("the fixture refuses to encode this operation"));
         }
         self.operation.encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> {
         DemoMutation::decode_op(bytes).map(|operation| Self::of(operation, Fault::None))
     }
 }
@@ -156,19 +156,19 @@ impl FromValue for FailClosedDiff {
     }
 }
 
-impl crate::os_spr::DiffAlgebra<DemoSnapshot> for FailClosedDiff {
+impl semio_framework_os_spr::DiffAlgebra<DemoSnapshot> for FailClosedDiff {
     fn inverse(&self, base: &DemoSnapshot) -> Self {
-        Self { inner: crate::os_spr::DiffAlgebra::inverse(&self.inner, base), refuse: false }
+        Self { inner: semio_framework_os_spr::DiffAlgebra::inverse(&self.inner, base), refuse: false }
     }
     fn is_empty(&self) -> bool {
-        !self.refuse && crate::os_spr::DiffAlgebra::<DemoSnapshot>::is_empty(&self.inner)
+        !self.refuse && semio_framework_os_spr::DiffAlgebra::<DemoSnapshot>::is_empty(&self.inner)
     }
 }
 
 impl MutationDiff<DemoSnapshot> for FailClosedDiff {
-    fn apply(&self, base: &DemoSnapshot, capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
+    fn apply(&self, base: &DemoSnapshot, capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<DemoSnapshot> {
         if self.refuse {
-            return Err(crate::os_spr::MutationApplyError { code: "mutation.apply.fixture-refused".into(), message: "the fixture refuses to apply this diff".into(), target: Vec::new() });
+            return Err(semio_framework_os_spr::MutationApplyError { code: "mutation.apply.fixture-refused".into(), message: "the fixture refuses to apply this diff".into(), target: Vec::new() });
         }
         count(&PROJECTIONS_APPLIED);
         self.inner.apply(base, capability)
@@ -187,17 +187,17 @@ impl MutationDiff<DemoSnapshot> for FailClosedDiff {
 
 impl Mutation<DemoSnapshot> for FailClosedOp {
     type Diff = FailClosedDiff;
-    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = <DemoMutation as Mutation<DemoSnapshot>>::DESCRIPTORS;
+    const DESCRIPTORS: &'static [semio_framework_os_spr::MutationLeafDescriptor] = <DemoMutation as Mutation<DemoSnapshot>>::DESCRIPTORS;
 
-    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
+    fn descriptor(&self) -> &'static semio_framework_os_spr::MutationLeafDescriptor {
         self.operation.descriptor()
     }
 
-    fn diff(&self, base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::Diff> {
         if self.fault == Fault::Message {
-            return crate::os_spr::MutationOutcome::error("mutation.target-missing", "the fixture reports an error for this operation", ["n"]);
+            return semio_framework_os_spr::MutationOutcome::error("mutation.target-missing", "the fixture reports an error for this operation", ["n"]);
         }
-        crate::os_spr::MutationOutcome::new(FailClosedDiff { inner: self.operation.diff(base).into_parts().0, refuse: self.fault == Fault::Apply })
+        semio_framework_os_spr::MutationOutcome::new(FailClosedDiff { inner: self.operation.diff(base).into_parts().0, refuse: self.fault == Fault::Apply })
     }
 
     fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -220,14 +220,14 @@ impl Mutation<DemoSnapshot> for FailClosedOp {
     }
 }
 
-impl MemberStoreProducer<DemoSnapshot,FailClosedOp> for crate::os_store::tests::DemoMemberStoreProducer<FailClosedOp> {
+impl MemberStoreProducer<DemoSnapshot,FailClosedOp> for semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<FailClosedOp> {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<FailClosedOp>()
     }
 
-    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, FailClosedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, FailClosedOp>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, FailClosedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, FailClosedOp>> {
         super::fixture_authoring_member_owners::<FailClosedOp>(grant)
     }
 }
@@ -260,8 +260,8 @@ impl ArtifactCanonicalJson for FailClosedOp {
 #[semio_framework_async_macros::async_test]
 async fn a_refused_apply_retires_everything_its_replay_built() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️replay-retirement/🔣️.json")).expect("the corpus parses");
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, FailClosedOp>("demo/v1", "replay-retirement", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
-    store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, FailClosedOp>("demo/v1", "replay-retirement", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    store.set_merge_policy(semio_framework_os_spr::MergePolicy::Normal);
     fixture_author(&mut store, ArtifactCommand::Apply { mutations: vec![FailClosedOp::of(DemoMutation::SetN(SetN { n: 1 }), Fault::None)], transaction: None }).await.expect("a clean edit applies");
     for case in corpus["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("a case name");

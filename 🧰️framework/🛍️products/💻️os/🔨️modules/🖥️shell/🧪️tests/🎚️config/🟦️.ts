@@ -8,7 +8,7 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(root, "../../../../../../..");
 
-/** 🧪️ Vitest for `@semio-tech/framework-os-shell` (inline `import.meta.vitest`). */
+/** 🧪️ Vitest for `@semio-tech/framework-os-shell`: the reducer and schema suites import their modules and register themselves. */
 export default defineConfig({
   root: testRoot,
   cacheDir: repoCacheDirectory(repoRoot, "vite", "os-shell"),
@@ -21,9 +21,8 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/framework-os-shell",
     environment: "node",
-    include: [],
+    include: ["../../🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts", "../../🧬️schema/🧪️tests/🧪️os-shell-schema-module/🟦️.ts"],
     coverage: { include: ["../../🟦️.ts", "../../🧬️schema/🟦️.ts"] },
-    includeSource: ["../../🟦️.ts", "../../🧬️schema/🟦️.ts"],
     passWithNoTests: false,
   },
 });

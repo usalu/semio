@@ -1,7 +1,9 @@
 use super::*;
 use semio_framework_job::{drive_step, root_cancel_token, Generation, InteractiveJob, InteractiveStage, OperationId, StepBudget, StepOutcome};
-use ui_wgpu::wgpu::{DrawList, PreparedRenderInput, PreparedRenderJob};
-use ui_wgpu::wgpu::{draw_types::UiInstance, theme::Rgba};
+use semio_framework_ui_draw_contract::DrawList;
+use semio_framework_ui_draw_contract::UiInstance;
+use semio_framework_ui_prepared::{PreparedRenderInput, PreparedRenderJob};
+use semio_framework_ui_theme::Rgba;
 
 pub fn contract() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/📤️gpu-export/🔣️.json")).unwrap()

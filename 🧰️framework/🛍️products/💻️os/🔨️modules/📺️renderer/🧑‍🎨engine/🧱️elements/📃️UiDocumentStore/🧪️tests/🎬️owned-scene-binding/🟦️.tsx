@@ -1,5 +1,6 @@
 /** 🎬 Owned scene preparation, typed scene, scene binding and owned surface scene laws. */
 import { exactSchemaDefinitionV1, grant, createTypedWireSupport, type TypedWireVitest, type TypedWireDependencies } from "../🪛️typedwire-helpers/🟦️.tsx";
+import { loadRetainedOwnedSceneFixtureText, loadRetainedOwnedSceneFixture, loadRetainedTypedSceneFixture, loadSceneTypedCatalogDocument, loadRetainedSceneTypedSchema, loadSceneTextBytesFixture, loadRetainedSceneJsonFixture, loadSceneJsonDocumentFixture, loadSceneJsonStringFixture, loadScenePackFieldFixture, loadSceneGenericPackFixture, loadRetainedSceneBindingFixture, loadRetainedWireFieldsFixture, loadRetainedSceneNumericFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependencies: TypedWireDependencies): Promise<void> {
   const { describe, expect, it, vi } = vitest;
@@ -12,8 +13,8 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
     it("OwnedScene prepares native tag vectors and long Unicode slices with strict neutral and Node oracles", async () => {
       const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🎬️owned-scene/🔣️.json");
-      const { default: rawFixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🎬️owned-scene/🔣️.json?raw");
+      const fixture = await loadRetainedOwnedSceneFixture();
+      const rawFixture = await loadRetainedOwnedSceneFixtureText();
       const { encodePackValue, decodeScenePackValue } = await import("@semio-tech/framework-os");
       const { Buffer } = await import("node:buffer");
       const exactFixture: typeof fixture = JSON.parse(rawFixture);
@@ -70,7 +71,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
     it("OwnedScene rejects malformed native packets and forged or rebound scene ownership without retiring the source", async () => {
       const { OwnedUiSceneCursor, OwnedUiSceneDocument, OwnedUiSceneReader, OwnedUiSceneRetirement } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🎬️owned-scene/🔣️.json");
+      const fixture = await loadRetainedOwnedSceneFixture();
       const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
       const source = (bytes: Uint8Array) => { const typed = new RetainedUiTypedCursor(encodePackValue({ type: "surface", kind: "canvas-2d", docSchema: "canvas2d@1", doc: { bytes: Array.from(bytes) }, bindings: [] }), "component"); expect(finish(typed)).toBe("ready"); const input = typed.takeResult()!; close(typed); return input; };
       for (const vector of fixture.hostile) {
@@ -88,7 +89,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
     it("OwnedScene cancellation owns every frame and reader across exact source lifetimes and maximum page envelope", async () => {
       const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🎬️owned-scene/🔣️.json");
+      const fixture = await loadRetainedOwnedSceneFixture();
       const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
       const source = (bytes: Uint8Array) => { const typed = new RetainedUiTypedCursor(encodePackValue({ type: "surface", kind: "canvas-2d", docSchema: "canvas2d@1", doc: { bytes: Array.from(bytes) }, bindings: [] }), "component"); expect(finish(typed)).toBe("ready"); const input = typed.takeResult()!; close(typed); return input; };
       const raw = Buffer.from(fixture.cases.find(vector => vector.name === "nested-map")!.hex, "hex"); const referenceInput = source(raw); const reference = new OwnedUiSceneCursor(referenceInput); const phases = new Map<string, number>(); let count = 0;
@@ -126,7 +127,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
     it("OwnedScene cancels every small-packet prefix and rejects long duplicate keys after real incremental comparison", async () => {
       const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🎬️owned-scene/🔣️.json");
+      const fixture = await loadRetainedOwnedSceneFixture();
       const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
       const source = (bytes: Uint8Array) => { const typed = new RetainedUiTypedCursor(encodePackValue({ type: "surface", kind: "canvas-2d", docSchema: "canvas2d@1", doc: { bytes: Array.from(bytes) }, bindings: [] }), "component"); expect(finish(typed)).toBe("ready"); const input = typed.takeResult()!; close(typed); return input; };
       const original = source(Buffer.from([9, 2])); const reference = new OwnedUiSceneCursor(original); let count = 0;
@@ -149,9 +150,9 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
       const { OwnedUiSceneProjectionCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts");
       const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🧾️typed-scene/🔣️.json");
-      const { default: catalog } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/📇️catalog.json");
-      const { default: typedSceneSchemaModule } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🧬️schema/🔣️.json"); const catalogSchema = exactSchemaDefinitionV1(typedSceneSchemaModule, "TypedScene");
+      const fixture = await loadRetainedTypedSceneFixture();
+      const catalog = await loadSceneTypedCatalogDocument();
+      const typedSceneSchemaModule = await loadRetainedSceneTypedSchema(); const catalogSchema = exactSchemaDefinitionV1(typedSceneSchemaModule, "TypedScene");
       const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
       expect(new Ajv({ strict: true, allErrors: true }).compile(catalogSchema)(catalog)).toBe(true);
       const size = (value: number): number[] => { const result: number[] = []; do { const byte = value & 127; value = Math.floor(value / 128); result.push(byte | (value ? 128 : 0)); } while (value); return result; };
@@ -183,7 +184,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
       const typedScene = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts");
       const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🧾️typed-scene/🔣️.json");
+      const fixture = await loadRetainedTypedSceneFixture();
       const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
       const packet = Buffer.concat([Buffer.from([13, 1, 6, 6]), Buffer.from("buffer"), Buffer.from([6, 0])]);
       const wire = new RetainedUiTypedCursor(encodePackValue({ type: "surface", kind: "text-editor", docSchema: "text-editor@1", doc: { bytes: Array.from(packet) }, bindings: [] }), "component"); expect(finish(wire)).toBe("ready"); const input = wire.takeResult()!; close(wire);
@@ -204,7 +205,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
       const { OwnedUiSceneProjectionCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts");
       const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🧾️typed-scene/🔣️.json");
+      const fixture = await loadRetainedTypedSceneFixture();
       const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
       const text = fixture.lifecycle.text.repeat(fixture.lifecycle.repeat); const bytes = Buffer.from(text); const prefix: number[] = [13, 1, 6, 6, ...Buffer.from("buffer"), 6]; let remaining = bytes.length;
       do { const byte = remaining & 127; remaining = Math.floor(remaining / 128); prefix.push(byte | (remaining ? 128 : 0)); } while (remaining);
@@ -223,7 +224,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
 
     it("SceneTextBytes reads exact owned UTF-8 ranges without whole-text conversion and retires cancelled readers", async () => {
       const { OwnedUiSceneProjectionCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts"); const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts"); const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"); const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🔤️scene-text-bytes/🔣️.json"); expect(Buffer.from(fixture.text).toString("hex")).toBe(fixture.utf8Hex);
+      const fixture = await loadSceneTextBytesFixture(); expect(Buffer.from(fixture.text).toString("hex")).toBe(fixture.utf8Hex);
       function create(text: string) {
         const bytes = Buffer.from(text); const prefix = [13, 1, 6, 6, ...Buffer.from("buffer"), 6]; let remaining = bytes.length; do { const digit = remaining % 128; remaining = Math.floor(remaining / 128); prefix.push(digit | (remaining ? 128 : 0)); } while (remaining);
         const wire = new RetainedUiTypedCursor(encodePackValue({ type: "surface", kind: "text-editor", docSchema: "text-editor@1", doc: { bytes: Array.from(Buffer.concat([Buffer.from(prefix), bytes])) }, bindings: [] }), "component"); expect(finish(wire)).toBe("ready"); const input = wire.takeResult()!; close(wire); if (input.value.type !== "surface") throw new Error("Missing fixture Surface"); const pages = input.value.doc.bytes;
@@ -237,7 +238,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
 
     it("OwnedSceneJson streams exact syntax from captured prepared UTF-8 with JSON.parse and Node Buffer oracles", async () => {
       const { OwnedUiSceneJsonCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🧩️json/🟦️.ts"); const { OwnedUiSceneProjectionCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts"); const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts"); const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"); const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🔣️scene-json/🔣️.json"); let forgedCaptureCalls = 0; expect(() => Reflect.construct(OwnedUiSceneJsonCursor, [{ capture: () => { forgedCaptureCalls++; return null; } }, 0])).toThrow(); expect(forgedCaptureCalls).toBe(fixture.forgedSourceCaptureCalls);
+      const fixture = await loadRetainedSceneJsonFixture(); let forgedCaptureCalls = 0; expect(() => Reflect.construct(OwnedUiSceneJsonCursor, [{ capture: () => { forgedCaptureCalls++; return null; } }, 0])).toThrow(); expect(forgedCaptureCalls).toBe(fixture.forgedSourceCaptureCalls);
       function create(text: string, shared = false) {
         const bytes = Buffer.from(text); const prefix = [13, 1, 6, 6, ...Buffer.from("buffer"), 6]; let remaining = bytes.length; do { const digit = remaining % 128; remaining = Math.floor(remaining / 128); prefix.push(digit | (remaining ? 128 : 0)); } while (remaining);
         const typed = new RetainedUiTypedCursor(encodePackValue({ type: "surface", kind: "text-editor", docSchema: "text-editor@1", doc: { bytes: Array.from(Buffer.concat([Buffer.from(prefix), bytes])) }, bindings: [] }), "component"); expect(finish(typed)).toBe("ready"); const input = typed.takeResult()!; close(typed); if (input.value.type !== "surface") throw new Error("Expected scene"); const pages = input.value.doc.bytes; const raw = new OwnedUiSceneCursor(input); retire(input.beginClose()); expect(finish(raw)).toBe("ready"); const document = raw.takeResult()!; close(raw); const projection = new OwnedUiSceneProjectionCursor(document, { usizeBits: 64 }); retire(document.beginClose()); expect(finish(projection)).toBe("ready"); const prepared = projection.takeResult()!; close(projection);
@@ -263,7 +264,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
 
     it("OwnedSceneJsonDocument publishes flat validated tokens with independent exact span and reader ownership", async () => {
       const { OwnedUiSceneJsonDocumentCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🧩️json/🧾️value/🟦️.ts"); const { OwnedUiSceneProjectionCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts"); const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts"); const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"); const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/📃️scene-json-document/🔣️.json"); function create(text: string) {
+      const fixture = await loadSceneJsonDocumentFixture(); function create(text: string) {
         const bytes = Buffer.from(text); const prefix = [13, 1, 6, 6, ...Buffer.from("buffer"), 6]; let remaining = bytes.length; do { const digit = remaining % 128; remaining = Math.floor(remaining / 128); prefix.push(digit | (remaining ? 128 : 0)); } while (remaining);
         const typed = new RetainedUiTypedCursor(encodePackValue({ type: "surface", kind: "text-editor", docSchema: "text-editor@1", doc: { bytes: Array.from(Buffer.concat([Buffer.from(prefix), bytes])) }, bindings: [] }), "component"); expect(finish(typed)).toBe("ready"); const input = typed.takeResult()!; close(typed); if (input.value.type !== "surface") throw new Error("Expected exact scene"); const pages = input.value.doc.bytes; const raw = new OwnedUiSceneCursor(input); retire(input.beginClose()); expect(finish(raw)).toBe("ready"); const document = raw.takeResult()!; close(raw); const projection = new OwnedUiSceneProjectionCursor(document, { usizeBits: 64 }); retire(document.beginClose()); expect(finish(projection)).toBe("ready"); const prepared = projection.takeResult()!; close(projection);
         const reader = prepared.beginRecord(); let field: number | null = null; for (;;) { const current = reader.advance(grant); if (current.kind === "value") field = current.value.fields.find(value => value.name === "buffer")?.source ?? null; if (current.kind === "complete") break; } retire(reader.beginClose()); if (field === null) throw new Error("Missing JSON source"); const cursor = new OwnedUiSceneJsonDocumentCursor(prepared, field); retire(prepared.beginClose()); return { cursor, bytes, pages };
@@ -298,7 +299,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
 
     it("OwnedSceneJsonString projects selected exact string tokens into bounded UTF-16 pages", async () => {
       const { OwnedUiSceneJsonStringCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🧩️json/🔤️string/🟦️.ts"); const { OwnedUiSceneJsonDocumentCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🧩️json/🧾️value/🟦️.ts"); const { OwnedUiSceneProjectionCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts"); const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts"); const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"); const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🧵️scene-json-string/🔣️.json"); function create(text: string, ordinal: number, sibling = false) {
+      const fixture = await loadSceneJsonStringFixture(); function create(text: string, ordinal: number, sibling = false) {
         const bytes = Buffer.from(text); const prefix = [13, 1, 6, 6, ...Buffer.from("buffer"), 6]; let remaining = bytes.length; do { const digit = remaining % 128; remaining = Math.floor(remaining / 128); prefix.push(digit | (remaining ? 128 : 0)); } while (remaining);
         const typed = new RetainedUiTypedCursor(encodePackValue({ type: "surface", kind: "text-editor", docSchema: "text-editor@1", doc: { bytes: Array.from(Buffer.concat([Buffer.from(prefix), bytes])) }, bindings: [] }), "component"); expect(finish(typed)).toBe("ready"); const input = typed.takeResult()!; close(typed); if (input.value.type !== "surface") throw new Error("Expected exact scene"); const pages = input.value.doc.bytes; const raw = new OwnedUiSceneCursor(input); retire(input.beginClose()); expect(finish(raw)).toBe("ready"); const document = raw.takeResult()!; close(raw); const projection = new OwnedUiSceneProjectionCursor(document, { usizeBits: 64 }); retire(document.beginClose()); expect(finish(projection)).toBe("ready"); const prepared = projection.takeResult()!; close(projection);
         const reader = prepared.beginRecord(); let field: number | null = null; for (;;) { const current = reader.advance(grant); if (current.kind === "value") field = current.value.fields.find(value => value.name === "buffer")?.source ?? null; if (current.kind === "complete") break; } retire(reader.beginClose()); if (field === null) throw new Error("Missing JSON source"); const parser = new OwnedUiSceneJsonDocumentCursor(prepared, field); retire(prepared.beginClose()); expect(finish(parser)).toBe("ready"); const json = parser.takeResult()!; close(parser); const cursor = new OwnedUiSceneJsonStringCursor(json, ordinal); const other = sibling ? new OwnedUiSceneJsonStringCursor(json, ordinal) : null; retire(json.beginClose()); return { cursor, other, bytes, pages };
@@ -321,7 +322,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
 
     it("OwnedScenePackedField decodes captured base64 into independently retired pages with atob and Node Buffer oracles", async () => {
       const { OwnedUiSceneBase64Cursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/📦️pack/🔤️base64/🟦️.ts"); const { OwnedUiSceneProjectionCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts"); const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts"); const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"); const { encodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🧳️scene-pack-field/🔣️.json"); let forgedCaptureCalls = 0; expect(() => Reflect.construct(OwnedUiSceneBase64Cursor, [{ capture: () => { forgedCaptureCalls++; return null; } }, 0])).toThrow(); expect(forgedCaptureCalls).toBe(0);
+      const fixture = await loadScenePackFieldFixture(); let forgedCaptureCalls = 0; expect(() => Reflect.construct(OwnedUiSceneBase64Cursor, [{ capture: () => { forgedCaptureCalls++; return null; } }, 0])).toThrow(); expect(forgedCaptureCalls).toBe(0);
       function create(text: string) {
         const bytes = Buffer.from(text); const prefix = [13, 1, 6, 6, ...Buffer.from("buffer"), 6]; let remaining = bytes.length; do { const digit = remaining % 128; remaining = Math.floor(remaining / 128); prefix.push(digit | (remaining ? 128 : 0)); } while (remaining);
         const wire = new RetainedUiTypedCursor(encodePackValue({ type: "surface", kind: "text-editor", docSchema: "text-editor@1", doc: { bytes: Array.from(Buffer.concat([Buffer.from(prefix), bytes])) }, bindings: [] }), "component"); expect(finish(wire)).toBe("ready"); const input = wire.takeResult()!; close(wire); if (input.value.type !== "surface") throw new Error("Expected scene"); const pages = input.value.doc.bytes; const raw = new OwnedUiSceneCursor(input); retire(input.beginClose()); expect(finish(raw)).toBe("ready"); const document = raw.takeResult()!; close(raw); const projection = new OwnedUiSceneProjectionCursor(document, { usizeBits: 64 }); retire(document.beginClose()); expect(finish(projection)).toBe("ready"); const prepared = projection.takeResult()!; close(projection);
@@ -338,7 +339,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
 
     it("OwnedSceneGenericPack retains original symbols, map pairs and exact scalar spans with native-wire and Node oracles", async () => {
       const { OwnedUiGenericPackCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/📦️pack/🧾️value/🟦️.ts"); const { OwnedUiSceneBase64Cursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/📦️pack/🔤️base64/🟦️.ts"); const { OwnedUiSceneProjectionCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts"); const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts"); const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"); const { encodePackValue, decodePackValue } = await import("@semio-tech/framework-os"); const { Buffer } = await import("node:buffer");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/📦️scene-generic-pack/🔣️.json"); function create(binary: Uint8Array) {
+      const fixture = await loadSceneGenericPackFixture(); function create(binary: Uint8Array) {
         const bytes = Buffer.from(`pk:${Buffer.from(binary).toString("base64")}`); const prefix = [13, 1, 6, 6, ...Buffer.from("buffer"), 6]; let remaining = bytes.length; do { const digit = remaining % 128; remaining = Math.floor(remaining / 128); prefix.push(digit | (remaining ? 128 : 0)); } while (remaining);
         const wire = new RetainedUiTypedCursor(encodePackValue({ type: "surface", kind: "text-editor", docSchema: "text-editor@1", doc: { bytes: Array.from(Buffer.concat([Buffer.from(prefix), bytes])) }, bindings: [] }), "component"); expect(finish(wire)).toBe("ready"); const input = wire.takeResult()!; close(wire); const raw = new OwnedUiSceneCursor(input); retire(input.beginClose()); expect(finish(raw)).toBe("ready"); const document = raw.takeResult()!; close(raw); const projection = new OwnedUiSceneProjectionCursor(document, { usizeBits: 64 }); retire(document.beginClose()); expect(finish(projection)).toBe("ready"); const prepared = projection.takeResult()!; close(projection);
         const reader = prepared.beginRecord(); let field: number | null = null; for (;;) { const current = reader.advance(grant); if (current.kind === "value") field = current.value.fields.find(value => value.name === "buffer")?.source ?? null; if (current.kind === "complete") break; } retire(reader.beginClose()); if (field === null) throw new Error("Missing packed source"); const base64 = new OwnedUiSceneBase64Cursor(prepared, field); retire(prepared.beginClose()); expect(finish(base64)).toBe("ready"); const source = base64.takeResult()!; close(base64); const cursor = new OwnedUiGenericPackCursor(source); retire(source.beginClose()); return cursor;
@@ -372,8 +373,8 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
     it("SceneBinding atomically owns the exact node and prepared scene or a surfaced diagnostic", async () => {
       const { OwnedUiSceneBindingCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts");
       const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🔗️scene-binding/🔣️.json");
-      const { default: fields } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🏷️fields/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
+      const fixture = await loadRetainedSceneBindingFixture();
+      const fields = await loadRetainedWireFieldsFixture(); const { encodePackValue } = await import("@semio-tech/framework-os");
       for (const vector of fixture.cases) {
         const record = { ...produce(fields.node, draft => { draft.id = 2 ** 40; }), children: [] };
         const source = { ...record, component: { type: "surface", kind: vector.kind, docSchema: vector.schema, doc: { bytes: vector.packet }, bindings: [] } };
@@ -387,8 +388,8 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
     it("SceneBinding reuses only identical component roots and closes cancellation independently of old issued readers", async () => {
       const { OwnedUiSceneBindingCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts");
       const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🔗️scene-binding/🔣️.json");
-      const { default: fields } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🏷️fields/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
+      const fixture = await loadRetainedSceneBindingFixture();
+      const fields = await loadRetainedWireFieldsFixture(); const { encodePackValue } = await import("@semio-tech/framework-os");
       const vector = fixture.cases[0]!; const wire = new RetainedUiTypedCursor(encodePackValue({ ...fields.node, children: [], component: { type: "surface", kind: vector.kind, docSchema: vector.schema, doc: { bytes: vector.packet }, bindings: [] } }), "node"); expect(finish(wire)).toBe("ready"); const payload = wire.takeResult()!; close(wire); const node = OwnedUiNode.captureFrom(payload); retire(payload.beginClose());
       const first = new OwnedUiSceneBindingCursor(node, { usizeBits: 64 }); const phases = new Map<string, number>(); let count = 0;
       for (;;) { const current = first.advance(grant); if (!phases.has(current.phase)) phases.set(current.phase, count); count++; if (current.kind === "ready") break; expect(current.kind).toBe("pending"); }
@@ -406,7 +407,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
       const { OwnedUiSceneProjectionCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🧾️typed/🟦️.ts");
       const { OwnedUiSceneCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🔢️scene-numeric/🔣️.json");
+      const fixture = await loadRetainedSceneNumericFixture();
       const { Buffer } = await import("node:buffer"); const { encodePackValue } = await import("@semio-tech/framework-os"); const text = (value: string) => { const bytes = Buffer.from(value); return Buffer.concat([Buffer.from([6, bytes.length]), bytes]); };
       const map = (values: readonly (readonly [string, Uint8Array])[]) => Buffer.concat([Buffer.from([13, values.length]), ...values.flatMap(([key, value]) => [text(key), value])]);
       const scalar = (value: number) => { const bytes = Buffer.alloc(9); bytes[0] = 5; bytes.writeDoubleLE(value, 1); return bytes; };
@@ -445,8 +446,8 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
       const { OwnedUiSceneBindingCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts");
       const { OwnedUiSceneBindingIndex } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts");
       const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🔗️scene-binding/🔣️.json");
-      const { default: fields } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🏷️fields/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
+      const fixture = await loadRetainedSceneBindingFixture();
+      const fields = await loadRetainedWireFieldsFixture(); const { encodePackValue } = await import("@semio-tech/framework-os");
       const create = (id: number) => { const vector = fixture.cases[0]!; const typed = new RetainedUiTypedCursor(encodePackValue({ ...fields.node, id, children: [], component: { type: "surface", kind: vector.kind, docSchema: vector.schema, doc: { bytes: vector.packet }, bindings: [] } }), "node"); expect(finish(typed)).toBe("ready"); const payload = typed.takeResult()!; close(typed); const node = OwnedUiNode.captureFrom(payload); retire(payload.beginClose()); const cursor = new OwnedUiSceneBindingCursor(node, { usizeBits: 64 }); retire(node.beginClose()); expect(finish(cursor)).toBe("ready"); const result = cursor.takeResult()!; close(cursor); return result; };
       let index = OwnedUiSceneBindingIndex.empty(); const map = new Map<number, true>();
       for (const id of fixture.indexIds) { const binding = create(id); const edit = index.beginSet(binding); retire(binding.beginClose()); expect(finish(edit)).toBe("ready"); const next = edit.takeResult()!; retire(edit.beginClose()); retire(index.beginClose()); index = next; map.set(id, true); }
@@ -472,7 +473,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
       const { OwnedUiSurface } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts");
       const { OwnedUiOperation } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🔗️scene-binding/🔣️.json"); const { default: fields } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🏷️fields/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
+      const fixture = await loadRetainedSceneBindingFixture(); const fields = await loadRetainedWireFieldsFixture(); const { encodePackValue } = await import("@semio-tech/framework-os");
       const surface = new OwnedUiSurface({ actor: "scene", instance: 7, surface: "window" }, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); const id = fields.node.id; let notifiedPrepared = false;
       const subscription = surface.subscribeNode(id, () => { if (surface.view.revision) notifiedPrepared = subscription.snapshot!.hasPreparedScene; }); while (surface.maintenancePending) surface.advanceMaintenance(grant); const previous = subscription.snapshot;
       const vector = fixture.cases[0]!; const typed = new RetainedUiTypedCursor(encodePackValue({ ...fields.node, children: [], component: { type: "surface", kind: vector.kind, docSchema: vector.schema, doc: { bytes: vector.packet }, bindings: [] } }), "node"); expect(finish(typed)).toBe("ready"); const payload = typed.takeResult()!; close(typed);
@@ -493,7 +494,7 @@ export async function registerOwnedSceneTests(vitest: TypedWireVitest, dependenc
       const { OwnedUiOperation } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts");
       const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
       const { useOwnedUiScene } = await import("../../📖️owned/🟦️.tsx");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🔗️scene-binding/🔣️.json"); const { default: fields } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🏷️fields/🔣️.json"); const { encodePackValue } = await import("@semio-tech/framework-os");
+      const fixture = await loadRetainedSceneBindingFixture(); const fields = await loadRetainedWireFieldsFixture(); const { encodePackValue } = await import("@semio-tech/framework-os");
       const { render, act, cleanup } = await import("@testing-library/react"); const { createElement } = await import("react"); const vector = fixture.cases[0]!;
       const create = () => {
         const surface = new OwnedUiSurface({ actor: "effect", instance: 7, surface: "window" }, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 });

@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import {createIssuedResourceControlV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {runRepositoryCargoCommandV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -44,7 +46,7 @@ class NativeDrawingReaderTestScript extends BundleScript {
     const family = contract.families.find(({ module }) => module === "drawing");
     if (!family) throw new Error("The original lower Drawing cohort is not registered.");
     const root = resolve(this.root, "../../../..");
-    await runRepositoryTestCommand("cargo", ["test", "--manifest-path", resolve(root, family.package.path, "Cargo.toml")], { cwd: root, budgetMs: 900_000 });
+    await runRepositoryCargoCommandV1(this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:native-drawing",0),this.repoRoot,["test","--manifest-path",resolve(root,family.package.path,"Cargo.toml")],root,process.env,900_000);
   }
 }
 
@@ -58,7 +60,7 @@ class NativeOracleTestScript extends BundleScript {
     const packages = [contract.neutralLaw.source.replace(/\/🦀️\.rs$/u, "/📦️packages/🦀️rust"), ...contract.providers.map(({ package: pkg }) => pkg.path), ...contract.families.map(({ package: pkg }) => pkg.path), contract.grammar.package.path, contract.package.path];
     for (const path of packages) {
       console.info(`🦀️ Oracle unit cohort: ${path}`);
-      await runRepositoryTestCommand("cargo", ["test", "--manifest-path", resolve(root, path, "Cargo.toml")], { cwd: root, budgetMs: 900_000 });
+      await runRepositoryCargoCommandV1(this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:native-oracle",0),this.repoRoot,["test","--manifest-path",resolve(root,path,"Cargo.toml")],root,process.env,900_000);
     }
   }
 }

@@ -1,6 +1,7 @@
 /** 🔺️ EpwDiff schema facet — mirrors 🦀️.rs field-for-field. `location`/`dataPeriods`
  * are whole-substruct replace slots; `records` is an index-keyed removed/modified/added triple
  * with a genuinely sparse per-column patch on `modified`. */
+import { parseEpwRecord } from "../📸️snapshot/🟦️.ts";
 import type { EpwLocation, EpwDataPeriods, EpwRecord } from '../📸️snapshot/🟦️.ts';
 
 /** Sparse per-column patch over EpwRecord's 35 fields; every column independently optional. */
@@ -135,5 +136,13 @@ export function parseEpwRecordsDiff(value: unknown, at = "$"): EpwRecordsDiff {
     removed: row["removed"] === undefined ? undefined : stdioEpwEnergyplusAnyDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioEpwEnergyplusAnyDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
     modified: row["modified"] === undefined ? undefined : stdioEpwEnergyplusAnyDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseEpwRecordModified(item, `${at}.modified[${index}]`)),
     added: row["added"] === undefined ? undefined : stdioEpwEnergyplusAnyDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseEpwRecordAdded(item, `${at}.added[${index}]`)),
+  };
+}
+
+export function parseEpwRecordAdded(value: unknown, at = "$"): EpwRecordAdded {
+  const row = stdioEpwEnergyplusAnyDiffGuardObject(value, at);
+  return {
+    index: stdioEpwEnergyplusAnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    record: parseEpwRecord(row["record"], `${at}.record`),
   };
 }

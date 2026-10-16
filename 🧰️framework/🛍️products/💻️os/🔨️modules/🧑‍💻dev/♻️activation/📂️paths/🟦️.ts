@@ -1,5 +1,5 @@
 import {repositoryCachePartitionRootDataV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 export type BrowserProductModeV1="prototype"|"release";

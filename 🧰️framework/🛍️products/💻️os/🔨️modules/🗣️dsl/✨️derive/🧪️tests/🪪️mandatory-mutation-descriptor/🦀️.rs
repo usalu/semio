@@ -54,7 +54,7 @@ fn mutation_trait_matches_adjacent_required_declaration_facts() {
     let expected = neutral.cases.into_iter().find(|case| case.id == "required-items-accepted").expect("neutral vector must contain required-items-accepted");
     assert_eq!(expected.subject, "mutation-trait-facts");
     assert_eq!(expected.category, "required-associated-items");
-    let actual = mutation_trait_facts(include_str!("../../../../../../../🔨️modules/📡️replication/🎮️mutation/🦀️.rs"));
+    let actual = mutation_trait_facts(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/📡️replication/🎮️mutation/🦀️.rs")).expect("fixture").as_str());
     println!("actual={} expected={}", serde_json::to_string(&actual).expect("actual facts serialize"), serde_json::to_string(&expected.facts).expect("expected facts serialize"));
     assert_eq!(actual, expected.facts);
 }

@@ -11,7 +11,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
 import fc from "fast-check";
-import { ActorDocumentBindingV1, DOCUMENT_BACKBONE_RECEIPT_SCHEMA_V1, DOCUMENT_BACKBONE_STALE_GENERATION_CODE, bindActorDocumentV1, decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1, releaseActorDocumentBindingV1, soleDocumentBackboneReceiptV1, splitDocumentBackboneControlTurnV1, type DocumentBackboneControlV1 } from "../../🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
+import { ActorDocumentBindingV1, DOCUMENT_BACKBONE_RECEIPT_SCHEMA_V1, DOCUMENT_BACKBONE_STALE_GENERATION_CODE, bindActorDocumentV1, decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1, releaseActorDocumentBindingV1, soleDocumentBackboneReceiptV1, splitDocumentBackboneControlTurnV1, type DocumentBackboneControlV1 } from "@semio-tech/framework/backbone/binding";
 
 type Answer = "receipt" | "stale" | "refused" | "absent" | "twice" | "damaged" | "transport";
 type Step = "bind" | "retire";

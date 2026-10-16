@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-framework-os-renderer-wgpu-contracts/testkit"]
+
 [dependencies]
 semio-framework-os-renderer-wgpu-asset-authority = { path = "../../../🗂️asset-authority/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }

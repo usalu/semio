@@ -10,7 +10,7 @@ import { formatLocale, type FormatLocaleDefinition } from "d3-format";
 import { scaleBand, scaleLog, scaleLinear } from "d3-scale";
 import { utcFormat } from "d3-time-format";
 import { rgb } from "d3-color";
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 

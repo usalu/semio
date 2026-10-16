@@ -55,10 +55,4 @@ export function renderImagePreview(preview: ImagePreview, locale: ImagePreviewLo
   };
 }
 
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️renderimage/🟦️.ts");
-  await registerTests1(import.meta.vitest, { renderImage, renderImagePreview }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️Tests
 // #endregion 🖼️ImageWindowKit

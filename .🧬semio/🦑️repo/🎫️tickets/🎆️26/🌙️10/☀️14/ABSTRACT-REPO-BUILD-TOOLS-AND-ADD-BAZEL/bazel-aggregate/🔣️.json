@@ -1,1 +1,64 @@
-{"cases":[{"mode":"--prepare","admitted":true},{"mode":"--execute","admitted":true},{"mode":"--receive-proof","admitted":true},{"mode":"--bazel-owner","admitted":false},{"mode":"--phase=cache","admitted":false}],"childMaximumMilliseconds":120000,"rootMaximumMilliseconds":0,"deadlineEpochMilliseconds":null,"tool":"nx"}
+{
+  "cases": [
+    {
+      "mode": "--prepare",
+      "admitted": true
+    },
+    {
+      "mode": "--execute",
+      "admitted": true
+    },
+    {
+      "mode": "--receive-proof",
+      "admitted": true
+    },
+    {
+      "mode": "--bazel-owner",
+      "admitted": false
+    },
+    {
+      "mode": "--phase=cache",
+      "admitted": false
+    },
+    {
+      "mode": "--source-pair-model",
+      "admitted": true
+    }
+  ],
+  "childMaximumMilliseconds": 120000,
+  "rootMaximumMilliseconds": 0,
+  "deadlineEpochMilliseconds": null,
+  "tool": "nx",
+  "pairCases": [
+    {
+      "primary": "none",
+      "writeFailure": false,
+      "outcome": "success",
+      "writes": 1
+    },
+    {
+      "primary": "none",
+      "writeFailure": true,
+      "outcome": "write",
+      "writes": 1
+    },
+    {
+      "primary": "undefined",
+      "writeFailure": false,
+      "outcome": "primary",
+      "writes": 1
+    },
+    {
+      "primary": "undefined",
+      "writeFailure": true,
+      "outcome": "primary",
+      "writes": 1
+    },
+    {
+      "primary": "frozen",
+      "writeFailure": true,
+      "outcome": "primary",
+      "writes": 1
+    }
+  ]
+}

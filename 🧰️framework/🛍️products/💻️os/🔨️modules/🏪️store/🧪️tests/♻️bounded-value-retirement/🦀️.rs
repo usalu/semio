@@ -1,6 +1,6 @@
 //! ♻️ Original typed catalog owners conserve actual independent constructor and physical release receipts.
 use super::*;
-use super::tests::physical_test_close_grant;
+use semio_framework_os_store_testing_fixtures::physical_test_close_grant;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 
 #[test]
@@ -72,7 +72,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
     let forwards: Vec<u64> = law["forwards"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().parse::<u64>().unwrap()).collect();
     let inverse: Vec<u64> = law["inverse"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().parse::<u64>().unwrap()).collect();
     for with_edit in [false, true] {
-        let (vcs, born, released) = crate::test_allocation::observe_backing(|| {
+        let (vcs, born, released) = semio_framework_trace_memory_testing::observe_backing(|| {
             let mut pack = Vec::<u8>::with_capacity(law["packCapacity"].as_u64().unwrap() as usize);
             pack.extend(law["pack"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8));
             let genesis = AdmittedArtifactGenesis::from_decoded_pack(law["snapshot"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize), pack);
@@ -81,7 +81,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
                 let mut reverse = semio_framework_value::list::PagedList::new();
                 for value in &inverse { reverse.try_push(*value).unwrap(); }
                 let edit = Edit { id: law["edit"].as_str().unwrap().to_owned(), actor: Some(law["actor"].as_str().unwrap().into()), line: None, forwards: forwards.clone(), inverse: reverse, mutation_meta: Vec::with_capacity(3), verb: None, sequence_number: 1, started_at: "started".into(), finished_at: Some("finished".into()) };
-                let mut publisher = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+                let mut publisher = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
                 let view = publisher.view();
                 let reservation = edits.reserve_group_one(&view).unwrap();
                 edits.stage_group_reserved(reservation, edit, &view).unwrap_or_else(|_| panic!("original edit suffix"));
@@ -95,7 +95,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
         let initial: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(BoundedArtifactRetirementFactory::<String>::new());
         let mutation: Arc<dyn ArtifactOwnedValueRetirementFactory<u64>> = Arc::new(BoundedArtifactRetirementFactory::<u64>::new());
         let factory_bytes = semio_framework_value::factory_arc_birth_bytes::<BoundedArtifactRetirementFactory<String>>() + semio_framework_value::factory_arc_birth_bytes::<BoundedArtifactRetirementFactory<u64>>();
-        let (mut owner, allocated, released) = crate::test_allocation::observe_backing(|| ArtifactStoreVcsRetirement::new(vcs, initial, mutation));
+        let (mut owner, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| ArtifactStoreVcsRetirement::new(vcs, initial, mutation));
         assert_eq!((allocated, released), (0, law["constructorDropBytes"].as_u64().unwrap() as usize));
         assert_eq!(owner.vcs.as_ref().unwrap().genesis.facts().snapshot().as_ptr(), snapshot_pointer);
         if with_edit { assert_eq!(owner.vcs.as_ref().unwrap().edits.last().unwrap().forwards, forwards); }
@@ -107,11 +107,11 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
             let demand = owner.demands(copy).unwrap();
             let grant = physical_test_close_grant();
             for denial in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
-                let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denial));
+                let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denial));
                 assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
                 assert_eq!((allocated, released), (0, 0));
             }
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(grant));
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant));
             let progress = step.unwrap().progress();
             assert!(progress.fits(grant));
             assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -121,7 +121,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
             assert!(turns <= 32768);
         }
         assert_eq!(physical, born + during + factory_bytes);
-        let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(owner));
+        let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
         assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
         eprintln!("[DEBUG] original VCS edit={with_edit} same snapshot pointer/full-u64 mutation rows; exact native history, visibility, Pack and factory physical={physical} System births={} turns={turns} terminalDrop0heap", born + during + factory_bytes);
     }
@@ -131,7 +131,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
 fn original_displaced_queue_preserves_each_child_receipt_and_retains_maintenance_backing() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["displacedQueue"];
-    let (mut queue, born, released) = crate::test_allocation::observe_backing(|| {
+    let (mut queue, born, released) = semio_framework_trace_memory_testing::observe_backing(|| {
         let mut queue = ArtifactStoreDisplacedRetirements::new();
         let value = law["body"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize);
         queue.push_reserved(Box::new(ArtifactStoreStringRetirement::new(value)));
@@ -147,11 +147,11 @@ fn original_displaced_queue_preserves_each_child_receipt_and_retains_maintenance
         let demand = queue.demands(copy).unwrap();
         let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes > 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant })].into_iter().flatten() {
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| queue.close_step(denied));
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| queue.close_step(denied));
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
         }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| queue.close_step(grant));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| queue.close_step(grant));
         let progress = step.unwrap().progress();
         assert!(progress.fits(grant));
         assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -170,15 +170,15 @@ fn original_displaced_queue_preserves_each_child_receipt_and_retains_maintenance
     queue.release_owner_slots(reservation).unwrap();
     let bytes = queue.backing_release_byte_demand().unwrap();
     let grant = physical_test_close_grant();
-    let (step, allocated, released) = crate::test_allocation::observe_backing(|| queue.release_empty_backing_step(RetainedCloneGrant { maximum_release_bytes: bytes - 1, ..grant }));
+    let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| queue.release_empty_backing_step(RetainedCloneGrant { maximum_release_bytes: bytes - 1, ..grant }));
     assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
     assert_eq!((allocated, released), (0, 0));
-    let (step, allocated, released) = crate::test_allocation::observe_backing(|| queue.release_empty_backing_step(grant));
+    let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| queue.release_empty_backing_step(grant));
     assert_eq!(step.unwrap(), RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
     assert_eq!((allocated, released), (0, bytes));
     physical += released;
     assert_eq!(physical, born + during);
-    let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(queue));
+    let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(queue));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
     eprintln!("[DEBUG] original displaced queue turns={turns} physical={physical} same fixed maintenance backing and full terminal child receipts");
 }
@@ -189,7 +189,7 @@ fn original_sparse_lane_authority_matches_sorted_oracle_and_retains_original_phy
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["sparseLaneAuthority"];
     let oracle: BTreeMap<&str, &str> = law["entries"].as_array().unwrap().iter().map(|row| (row[0].as_str().unwrap(), row[1].as_str().unwrap())).collect();
-    let (mut lanes, allocated, released) = crate::test_allocation::observe_backing(|| {
+    let (mut lanes, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| {
         let mut lanes = protocol::HistoryFoldIndex::new();
         for row in law["entries"].as_array().unwrap() {
             let lane = match row[1].as_str().unwrap() { "document" => HistoryLane::Document, "interaction" => HistoryLane::Interaction, _ => panic!("declared lane fixture") };
@@ -206,7 +206,7 @@ fn original_sparse_lane_authority_matches_sorted_oracle_and_retains_original_phy
     let mut rows: [Option<ControlledRetirement<(String, HistoryLane)>>; 3] = std::array::from_fn(|_| None);
     for (index, expected) in law["tailOrder"].as_array().unwrap().iter().enumerate() {
         let pointer = lanes.iter().next_back().unwrap().0.as_ptr();
-        let (entry, allocated, released) = crate::test_allocation::observe_backing(|| lanes.pop_last().unwrap());
+        let (entry, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| lanes.pop_last().unwrap());
         assert_eq!((allocated, released), (law["popBirthBytes"].as_u64().unwrap() as usize, law["popReleaseBytes"].as_u64().unwrap() as usize));
         assert_eq!(entry.0.as_ptr(), pointer);
         assert_eq!(entry.0, expected.as_str().unwrap());
@@ -223,11 +223,11 @@ fn original_sparse_lane_authority_matches_sorted_oracle_and_retains_original_phy
             let copy = law["maximumCopyBytes"].as_u64().unwrap() as usize;
             let grant = physical_test_close_grant();
             for denial in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (cursor.next_release_byte_demand().unwrap() != 0).then(|| RetainedCloneGrant { maximum_release_bytes: cursor.next_release_byte_demand().unwrap() - 1, ..grant })].into_iter().flatten() {
-                let (step, allocated, released) = crate::test_allocation::observe_backing(|| cursor.close_step(denial));
+                let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| cursor.close_step(denial));
                 assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
                 assert_eq!((allocated, released), (0, 0));
             }
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| cursor.close_step(grant));
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| cursor.close_step(grant));
             let progress = step.unwrap().progress();
             assert!(progress.fits(grant));
             assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -238,7 +238,7 @@ fn original_sparse_lane_authority_matches_sorted_oracle_and_retains_original_phy
         }
     }
     assert_eq!(physical, original + born);
-    let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop((index, rows)));
+    let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop((index, rows)));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
     eprintln!("[DEBUG] original sparse lane index same sorted facts/tail owners, source={original} birth={born} full physical={physical} finalDrop0");
 }
@@ -251,7 +251,7 @@ fn original_repository_history_entry_close_conserves_raw_box_value_and_factory_c
     let expected: u64 = serde_json::from_str(body).unwrap();
     let actual: u64 = semio_framework_pack_json::from_json_str(body, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(actual, expected);
-    let (mut owner, allocated, released) = crate::test_allocation::observe_backing(|| {
+    let (mut owner, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| {
         let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<u64>> = Arc::new(BoundedArtifactRetirementFactory::<u64>::new());
         let mut owner = ArtifactRepositoryHistoryEntryAuthority::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), OwnedSchemaPath::ROOT, factory);
         *owner.value = Some(actual);
@@ -268,14 +268,14 @@ fn original_repository_history_entry_close_conserves_raw_box_value_and_factory_c
         let demand = owner.close_demands(copy).unwrap();
         let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denied));
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied));
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             if let Some(held) = owner.raw.as_ref() { assert_eq!(held.as_ptr(), raw); }
             if let Some(held) = owner.retirement_factory.as_ref() { assert!(std::ptr::addr_eq(Arc::as_ptr(held), factory)); }
             assert_eq!(owner.close_demands(copy).unwrap(), demand);
         }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(grant));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant));
         let step = step.unwrap();
         let progress = step.progress();
         assert!(progress.fits(grant));
@@ -287,7 +287,7 @@ fn original_repository_history_entry_close_conserves_raw_box_value_and_factory_c
         assert!(turns < 16384);
     }
     assert_eq!(physical, original + born);
-    let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(owner));
+    let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
     eprintln!("[DEBUG] original repository history entry full-u64={actual} raw+factory source={original} births={born} exact physical={physical} turns={turns} terminalDrop0");
 }
@@ -296,7 +296,7 @@ fn original_repository_history_entry_close_conserves_raw_box_value_and_factory_c
 fn original_schema_history_array_close_releases_same_decoder_ledger_and_factory_roots() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["repositoryHistoryEntry"];
-    let (mut owner, allocated, released) = crate::test_allocation::observe_backing(|| {
+    let (mut owner, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| {
         let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<u64>> = Arc::new(BoundedArtifactRetirementFactory::<u64>::new());
         let decoder: Arc<dyn ArtifactOwnedHistoryEntryDecoder<u64>> = Arc::new(ArtifactRepositoryHistoryEntryDecoder::<u64>::new());
         let mut owner = OwnedSchemaBoundedArrayAuthority::new(OwnedSchemaPath::ROOT, factory, decoder);
@@ -313,13 +313,13 @@ fn original_schema_history_array_close_releases_same_decoder_ledger_and_factory_
         let demand = owner.close_demands(copy).unwrap();
         let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denied));
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied));
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             if let Some(held) = owner.active_decoder.as_ref() { assert!(std::ptr::addr_eq(held.as_ref() as *const dyn ArtifactOwnedHistoryEntryAuthority<u64>, decoder)); }
             assert_eq!(owner.close_demands(copy).unwrap(), demand);
         }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(grant));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant));
         let step = step.unwrap();
         let progress = step.progress();
         assert!(progress.fits(grant));
@@ -331,20 +331,20 @@ fn original_schema_history_array_close_releases_same_decoder_ledger_and_factory_
         assert!(turns < 32768);
     }
     assert_eq!(physical, original + born);
-    let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(owner));
+    let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
     eprintln!("[DEBUG] original schema array same decoder+ledger+factory original={original} born={born} physical={physical} turns={turns} terminalDrop0");
 }
 
 #[test]
 fn original_retained_member_open_close_conserves_supplied_birth_and_physical_release() {
-    use super::tests::DemoSnapshot;
-    use super::fixture_mutations::demo::DemoMutation;
+    use semio_framework_os_store_testing_fixtures::DemoSnapshot;
+    use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["retainedMemberClose"];
     let demand = bounded_artifact_store_owners_birth_demand::<DemoSnapshot, DemoMutation>().unwrap();
     let grant = physical_test_close_grant();
-    let (mut owner, allocated, released) = crate::test_allocation::observe_backing(|| {
+    let (mut owner, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| {
         let (owners, receipt) = bounded_artifact_store_owners::<DemoSnapshot, DemoMutation>(grant).unwrap_or_else(|_| panic!("exact original catalog source ingress"));
         assert!(receipt.fits(grant));
         assert_eq!(receipt.retained_capacity_bytes, demand.capacity_bytes);
@@ -353,7 +353,7 @@ fn original_retained_member_open_close_conserves_supplied_birth_and_physical_rel
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(input).unwrap()).unwrap_or_else(|_| panic!("original input page"));
         pages.seal().unwrap();
         let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: law["artifactId"].as_str().unwrap().to_owned(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "demo".to_owned(), standard: "1".to_owned(), subset: "any".to_owned() } };
-        let request = member_open::MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), u64::MAX, target, None, pages, crate::os_spr::ActorId(law["actor"].as_str().unwrap().into()));
+        let request = member_open::MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), u64::MAX, target, None, pages, semio_framework_os_spr::ActorId(law["actor"].as_str().unwrap().into()));
         let mut owner = member_open::MemberStoreOpenRetained::new(request, owners);
         owner.stage_initial(DemoSnapshot::default()).unwrap_or_else(|_| panic!("original pending snapshot"));
         owner
@@ -368,13 +368,13 @@ fn original_retained_member_open_close_conserves_supplied_birth_and_physical_rel
         let original_release_demand=owner.next_release_byte_demand().unwrap();
         let original_capacity_demand=owner.next_capacity_byte_demand(copy).unwrap();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (owner.next_release_byte_demand().unwrap() != 0).then(|| RetainedCloneGrant { maximum_release_bytes: owner.next_release_byte_demand().unwrap() - 1, ..grant }), (owner.next_capacity_byte_demand(copy).unwrap() != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap() - 1, ..grant })].into_iter().flatten() {
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denied));
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied));
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             assert_eq!(owner.next_release_byte_demand().unwrap(),original_release_demand);
             assert_eq!(owner.next_capacity_byte_demand(copy).unwrap(),original_capacity_demand);
         }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(grant));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant));
         let step = step.unwrap();
         let progress = step.progress();
         assert!(progress.fits(grant));
@@ -386,7 +386,7 @@ fn original_retained_member_open_close_conserves_supplied_birth_and_physical_rel
         assert!(turns < 32768);
     }
     assert_eq!(physical, original + born);
-    let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(owner));
+    let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
     eprintln!("[DEBUG] original retained member-open source={original} funded cursor births={born} full physical={physical} turns={turns} terminalDrop0");
 }
@@ -398,7 +398,7 @@ fn original_operation_rows_close_conserves_last_factory_and_retired_string_owner
     let body = law["integer"].as_str().unwrap();
     let actual: u64 = semio_framework_pack_json::from_json_str(body, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(actual, serde_json::from_str::<u64>(body).unwrap());
-    let (mut owner, allocated, released) = crate::test_allocation::observe_backing(|| {
+    let (mut owner, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| {
         let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<u64>> = Arc::new(BoundedArtifactRetirementFactory::<u64>::new());
         ArtifactStoreOperationRowsRetirement::new(vec![actual], factory).with_identity(body.to_owned()).with_strings(vec![body.to_owned()])
     });
@@ -411,12 +411,12 @@ fn original_operation_rows_close_conserves_last_factory_and_retired_string_owner
         let demand = owner.demands(copy).unwrap();
         let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denied));
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied));
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             assert_eq!(owner.demands(copy).unwrap(), demand);
         }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(grant));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant));
         let step = step.unwrap();
         let progress = step.progress();
         assert!(progress.fits(grant));
@@ -428,7 +428,7 @@ fn original_operation_rows_close_conserves_last_factory_and_retired_string_owner
         assert!(turns < 32768);
     }
     assert_eq!(physical, original + born);
-    let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(owner));
+    let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
     assert_eq!((allocated, released), (0, law["terminalDropBytes"].as_u64().unwrap() as usize));
     eprintln!("[DEBUG] original operation rows same last factory+identity+retired String Vec source={original} births={born} full physical={physical} turns={turns} terminalDrop0");
 }

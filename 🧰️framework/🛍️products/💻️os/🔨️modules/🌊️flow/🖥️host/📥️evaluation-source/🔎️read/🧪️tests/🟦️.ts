@@ -6,8 +6,9 @@ import requestSchema from "../📨️request/🧬️schema/🔣️.json";
 import intakeSchema from "../🏠️intake/🧬️schema/🔣️.json";
 import completeSchema from "../../../../🧩️extensions/🕸️wasm/🧬️schema/📐️tessellation/📤️complete/🔣️.json";
 import completeFixture from "../📨️response/🧫️fixtures/🔣️.json";
-import meshSchema from "../../../../../../../../🔨️modules/🏗️mesh-engine/🌲️canonical/🧬️schema/🔣️.json";
-import decoderFixture from "../../../../../../../../🔨️modules/🏗️mesh-engine/🌲️canonical/📥️decode/🧫️fixtures/🔣️.json";
+import { meshEngineCanonicalSchema as meshSchema, engineCanonicalDecodeFixture as decoderFixture } from "../../../../../../../../🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadNeuralEngineProjectionSchema, loadNeuralEngineProjectionFixture } from "../../../../../🧠️neural/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadSceneMathResourceSchema, loadSceneMathResourceFixture, loadPresentResourcesTransportSchema, loadPresentResourcesTransportFixture } from "../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 test("original completed tessellation preserves every canonical mesh field and exact original business source",()=>{
  const validate=new Ajv({strict:true}).addSchema(meshSchema).compile(completeSchema);expect(validate(completeFixture)).toBe(true);expect(Object.keys(completeFixture.mesh)).toEqual(Object.keys(meshSchema.properties));for(const field of ["retained","budget","wallMicros","operation","generation","meshPack","chunk","chunks"]){expect(validate({...completeFixture,[field]:1})).toBe(false);}expect(validate({...completeFixture,done:false})).toBe(false);expect(validate({...completeFixture,cancellable:true})).toBe(false);expect(validate({...completeFixture,tolerance:0})).toBe(false);for(const field of completeSchema.required){const missing={...completeFixture};delete missing[field as keyof typeof missing];expect(validate(missing)).toBe(false);}const bytes=Buffer.from(JSON.stringify(completeFixture));for(const body of [1,3,64]){const pages=[];for(let offset=0;offset<bytes.length;offset+=body)pages.push(bytes.subarray(offset,offset+body));const independent=JSON.parse(Buffer.concat(pages).toString("utf8"));expect(independent.mesh).toEqual(completeFixture.mesh);expect(independent.mesh.componentReferences.face).toEqual(["face:7"]);expect(independent.mesh.attributes.customSource.values[0]).toBe("源");}const raw=bytes.toString("utf8").replace('"nodeHash":4294967297','"nodeHash":18446744073709551615');const token=raw.match(/"nodeHash":([0-9]+)/)![1]!;expect(BigInt(token)).toBe(18446744073709551615n);console.log("[DEBUG] Strict canonical Mesh16/complete-envelope schemas and independent Buffer/JSON/BigInt preserve all business fields and full raw UInt64; original paid receiver and GPU runtime remain unqualified");
@@ -55,7 +56,7 @@ test("original evaluation reply owns a typed complete Dictionary without text ou
 
 
 test("original ordered Dictionary projection preserves typed logical source and one finite Pack reply caller",async()=>{
- const schema=(await import("../../../../../🧠️neural/⚙️engine/📤️projection/🧬️schema/🔣️.json")).default,law=(await import("../../../../../🧠️neural/⚙️engine/📤️projection/🧫️fixtures/🔣️.json")).default;
+ const schema=(await loadNeuralEngineProjectionSchema()),law=(await loadNeuralEngineProjectionFixture());
  const responseSchema=(await import("../../../../🧩️extensions/🕸️wasm/🧬️schema/📤️response/🔣️.json")).default,response=(await import("../../../../🧩️extensions/🕸️wasm/🧪️tests/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json")).default.originalEnvelopeSource;
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,replyWire:"JSON"})).toBe(false);expect(validate({...law,projectionHeapBytes:1})).toBe(false);expect(new Ajv({strict:true}).compile(responseSchema)(response)).toBe(true);expect(response.replyWire).toBe("Pack");expect(response.caller.stock.maximumItems).toBeGreaterThan(0);expect(response.caller.clock).toBeLessThan(response.caller.deadline);
  const source=law.source;expect(Object.keys(source).sort()).toEqual(law.rootKeys);expect(source.nested.text).toBe(law.source.nested.text);expect(law.textPath.reduce((value:unknown,index:number)=>Object.values(value as Record<string,unknown>)[index],source)).toBe(source.nested.text);const moved=applyPatch({original:source,receiver:null},[{op:"move",from:"/original",path:"/receiver"}],true,true).newDocument;expect(moved.receiver).toBe(source);const logical=JSON.parse(JSON.stringify(moved.receiver));expect(logical).toEqual(source);expect(logical.negative).toBe(-2);expect(logical.null).toBeNull();console.log("[DEBUG] Ajv/JSONPatch/JSON preserve original ordered Dictionary logical tree, moved source pointer and schema-issued finite Pack caller; native SDK Pack source/receiver remains unqualified");
@@ -63,7 +64,7 @@ test("original ordered Dictionary projection preserves typed logical source and 
 
 
 test("native mesh resource schema preserves original arena owner and paid shared loans",async()=>{
- const schema=(await import("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/📦️resource/🧬️schema/🔣️.json")).default,law=(await import("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/📦️resource/🧫️fixtures/🔣️.json")).default;
+ const schema=(await loadSceneMathResourceSchema()),law=(await loadSceneMathResourceFixture());
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,wire:"JSON"})).toBe(false);expect(validate({...law,loans:{...law.loans,tokenOnlyClose:true}})).toBe(false);
  const original={pages:[{positions:[0,0,0],indices:[0]}],identity:{operation:941,generation:17,revision:23,cacheEpoch:1,sourceSlot:0,nativeSlot:0,nativeEpoch:1}};
  const state=applyPatch({componentTree:original,preparedFrame:null},[{op:"move",from:"/componentTree",path:"/preparedFrame"}],true,true).newDocument;expect(state.preparedFrame).toBe(original);expect(state.preparedFrame.pages).toBe(original.pages);
@@ -72,7 +73,7 @@ test("native mesh resource schema preserves original arena owner and paid shared
 });
 
 test("native geometry transport preserves independent Three geometry bytes and closed pinned source contract",async()=>{
- const schema=(await import("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/🎭️present/📦️resources/📤️transport/🧬️schema/🔣️.json")).default,law=(await import("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/🎭️present/📦️resources/📤️transport/🧫️fixtures/🔣️.json")).default;
+ const schema=(await loadPresentResourcesTransportSchema()),law=(await loadPresentResourcesTransportFixture());
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,tokenOnWire:true})).toBe(false);expect(validate({...law,maximumChunkBytes:65})).toBe(false);
  const {BufferGeometry,Float32BufferAttribute,Uint32BufferAttribute}=await import("three");
  const geometry=new BufferGeometry();geometry.setAttribute("position",new Float32BufferAttribute([0,0,0,1,0,0,0,1,0],3));geometry.setAttribute("normal",new Float32BufferAttribute([0,0,1,0,0,1,0,0,1],3));geometry.setIndex(new Uint32BufferAttribute([0,1,2],1));

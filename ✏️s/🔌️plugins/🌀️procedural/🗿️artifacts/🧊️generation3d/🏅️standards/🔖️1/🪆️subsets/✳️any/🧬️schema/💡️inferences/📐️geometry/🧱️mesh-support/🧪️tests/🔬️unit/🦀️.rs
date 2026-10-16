@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
 use super::harness::{self as h, oracle};
 use super::*;
 use semio_framework_3d::mesh::MeshKernelError;
@@ -8,7 +9,7 @@ fn sphere(subdivisions: i64) -> std::sync::Arc<HalfedgeMesh> {
 }
 
 fn inputs(kind_id: &str, entries: Vec<(&str, GeometryValue)>) -> (&'static Kind, WidgetInputs) {
-    let kind = oracle::kind_of(kind_id);
+    let kind = oracle::kind_of(catalogue(), kind_id);
     (kind, WidgetInputs::new_cold("w", kind, entries.into_iter().map(|(port, value)| (port.to_string(), value)).collect::<BTreeMap<_, _>>()))
 }
 

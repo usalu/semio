@@ -30,6 +30,7 @@ import {
 import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 import { browserClipboardPasteCandidate } from "../../🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts";
 import type { OrderedScrollEvent, OrderedScrollFixture } from "../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🔬️ordered-scroll/🟦️.ts";
+import { inputOrderedScrollFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
@@ -46,7 +47,7 @@ const TEST_HOST_STORAGE: WgpuHostStorageSnapshot = {};
 type FixtureRow = { readonly id: string; readonly why: string; readonly dom: Record<string, unknown>; readonly wire: Record<string, unknown>; readonly dispatch: Record<string, unknown> | null };
 
 const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json"), "utf8")) as { readonly rows: readonly FixtureRow[] };
-const orderedScroll = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as OrderedScrollFixture;
+const orderedScroll = JSON.parse(readFileSync(inputOrderedScrollFixtureUrl, "utf8")) as OrderedScrollFixture;
 
 /** 🖱️ The fixture's `dom` column minus the `devicePixelRatio` the surface, not the event, owns. */
 function domEvent(row: FixtureRow): { event: BrowserFrameDomEvent; dpr: number } {

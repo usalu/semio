@@ -1,0 +1,15 @@
+{
+ "label": "bb3",
+ "children": [
+  {
+   "folder": "📇️directory-read-model",
+   "doc": "/** 📇️ Directory read model: folding the shared directory event fixtures, descriptor digests and the empty read model.\n *\n * @see ../../🟦️.ts — the package entry the suite reads fixtures relative to\n */",
+   "stmts": [
+    "9-99"
+   ]
+  }
+ ],
+ "file": "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/📍️stage3.ts",
+ "childRoot": "🧰️framework/🛍️products/💻️os/🧪️tests",
+ "deleteParent": true
+}

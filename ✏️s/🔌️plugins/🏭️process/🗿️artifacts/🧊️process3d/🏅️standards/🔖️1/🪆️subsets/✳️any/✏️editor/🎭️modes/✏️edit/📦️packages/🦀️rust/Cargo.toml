@@ -15,10 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[test]]
-name = "process3d_workpiece_window"
-path = "../../🪟️windows/🪚️workpiece/🧪️tests/🔬️unit/🦀️.rs"
-
 [dependencies]
 semio-framework = { workspace = true }
 semio-framework-pack-json = { workspace = true }

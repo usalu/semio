@@ -388,7 +388,8 @@ function CelebratingConicMaterial({ opacity = 1 }: { readonly opacity?: number }
   );
   useEffect(() => () => material.dispose(), [material]);
   useFrame(() => {
-    material.uniforms.uAngle.value = celebrateConicAngleRadians();
+    const angleUniform=material.uniforms.uAngle;if(!angleUniform)throw Error("Owned rotating texture uniform required");
+    angleUniform.value = celebrateConicAngleRadians();
     invalidate();
   });
   return <primitive object={material} attach="material" />;

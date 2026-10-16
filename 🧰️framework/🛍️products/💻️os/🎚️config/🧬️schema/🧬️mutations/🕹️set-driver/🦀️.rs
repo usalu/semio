@@ -33,13 +33,3 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetD
         vec!["driver-id".to_string()]
     }
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️sets-driver/🦀️.rs"]
-mod tests_sets_driver;
-
-#[cfg(test)]
-#[path = "🧪️tests/🟰️keeps-driver/🦀️.rs"]
-mod tests_keeps_driver;
-//#endregion 🧪️Tests

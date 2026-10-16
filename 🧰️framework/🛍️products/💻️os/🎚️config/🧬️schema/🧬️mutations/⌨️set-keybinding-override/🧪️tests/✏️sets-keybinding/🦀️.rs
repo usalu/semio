@@ -8,20 +8,20 @@
 use crate::opening_config::mutations::UiPreferencesConfigMutation;
 use crate::opening_config::{UiPreferences, UiPreferencesDiff};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/⌨️set-keybinding-override/✏️sets-keybinding/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn before() -> UiPreferences {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before preferences decode")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before preferences decode")
 }
 fn expected_after() -> UiPreferences {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after preferences decode")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after preferences decode")
 }
 fn mutation() -> UiPreferencesConfigMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-keybinding-override mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-keybinding-override mutation decodes")
 }
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
@@ -39,7 +39,7 @@ fn applies_to_committed_after() {
 /// 🎯️ The declared outcome is `applied` with no diagnostics: the undo keybinding was not set before.
 #[test]
 fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "set-keybinding-override/sets-keybinding: this fixture declares a applied outcome");
     let produced = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "set-keybinding-override/sets-keybinding: a changed preference emits no diagnostics");
@@ -49,9 +49,9 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_committed_diff() {
     let outcome = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &before());
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(json_value(outcome.diff()), committed, "set-keybinding-override/sets-keybinding: produced diff differs from the committed 🔺️diff");
-    let decoded: UiPreferencesDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes as UiPreferencesDiff");
+    let decoded: UiPreferencesDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes as UiPreferencesDiff");
     assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after(), "set-keybinding-override/sets-keybinding: the committed diff does not carry before to after");
 }
 
@@ -71,12 +71,12 @@ fn inverse_restores_before() {
 /// 🔣️ The committed preference records and payload are canonical: decode → encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: UiPreferences = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preferences decode");
         let original: serde_json::Value = serde_json::from_str(text).expect("preferences reparse");
         assert_eq!(json_value(&decoded), original, "set-keybinding-override/sets-keybinding: committed {label} JSON is not canonical");
     }
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("payload reparses");
+    let original: serde_json::Value = serde_json::from_str(MUTATION.as_str()).expect("payload reparses");
     assert_eq!(json_value(&mutation()), original, "set-keybinding-override/sets-keybinding: committed payload JSON is not canonical");
 }
 

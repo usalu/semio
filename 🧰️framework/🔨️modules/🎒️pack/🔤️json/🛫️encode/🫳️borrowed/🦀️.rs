@@ -3,7 +3,7 @@ use super::{JsonWriteSource,JsonWriteNode,ScalarText,write_float_to,MAX_DEPTH,Va
 use semio_framework_value::NativeEncodeControl;
 use std::fmt::Write;
 
-struct Sink<'output,F>{output:&'output mut F,maximum:u64,completed:u64,maximum_items:u64}
+struct Sink<'output,F>{pub output:&'output mut F,pub maximum:u64,pub completed:u64,pub maximum_items:u64}
 impl<F> Sink<'_,F>{
     fn raw<E:From<ValueError>>(&mut self,text:&str,control:&mut NativeEncodeControl<'_>)->Result<(),E>
     where F:FnMut(&[u8],&mut NativeEncodeControl<'_>)->Result<(),E>{

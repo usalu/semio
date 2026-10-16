@@ -1,0 +1,148 @@
+{
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "pass": "component-release",
+  "kind": "component",
+  "receiptSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "indexSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "originalArtifact": null,
+  "invalid": [
+    {
+      "field": "receiptSha256",
+      "value": "broken"
+    },
+    {
+      "field": "kind",
+      "value": "foreign"
+    },
+    {
+      "field": "originalArtifact",
+      "value": {
+        "path": "/compiler/output",
+        "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "byteLength": 0
+      }
+    }
+  ],
+  "actorCargoWorkspace": {
+    "member": "actor",
+    "package": "neutral-actor",
+    "manifest": "hub/actor/Cargo.toml"
+  },
+  "actorCargoChanges": [
+    {
+      "name": "exact",
+      "accepted": true
+    },
+    {
+      "name": "wrong-args",
+      "accepted": false
+    },
+    {
+      "name": "test-unit",
+      "accepted": false
+    },
+    {
+      "name": "wrong-package",
+      "accepted": false
+    },
+    {
+      "name": "wrong-stage",
+      "accepted": false
+    },
+    {
+      "name": "wrong-digest",
+      "accepted": false
+    },
+    {
+      "name": "failed",
+      "accepted": false
+    },
+    {
+      "name": "testing-feature",
+      "accepted": false
+    },
+    {
+      "name": "implicit-root",
+      "accepted": false
+    },
+    {
+      "name": "foreign-unit-manifest",
+      "accepted": false
+    }
+  ],
+  "cleanupCases": [
+    {
+      "name": "success",
+      "primary": "none",
+      "secondary": false,
+      "failures": 0
+    },
+    {
+      "name": "error",
+      "primary": "error",
+      "secondary": false,
+      "failures": 1
+    },
+    {
+      "name": "undefined",
+      "primary": "undefined",
+      "secondary": false,
+      "failures": 1
+    },
+    {
+      "name": "cleanup",
+      "primary": "none",
+      "secondary": true,
+      "failures": 1
+    },
+    {
+      "name": "error-cleanup",
+      "primary": "error",
+      "secondary": true,
+      "failures": 2
+    },
+    {
+      "name": "undefined-cleanup",
+      "primary": "undefined",
+      "secondary": true,
+      "failures": 2
+    }
+  ],
+  "observedConfiguration": {
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "bytes": 17,
+    "shard": 42,
+    "maximumConfigurations": 64
+  },
+  "checkInSeed": {
+    "envelopes": "[{\"mutationId\":\"edit-1\",\"dependencies\":[],\"diffSchema\":\"gis.map\",\"diff\":\"00\",\"inverseSchema\":\"gis.map\",\"inverse\":\"01\"}]",
+    "fixture": {
+      "schema": "semio.hub.check-in-process-fixture/v1",
+      "profileId": "gis-map-integration-fixtures",
+      "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "documentId": "mcp-cold-gis-map",
+      "package": {
+        "pluginId": "gis",
+        "packageId": "semio:gis",
+        "version": "0.1.0",
+        "componentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "artifact": {
+        "kind": "s.gis.gismap",
+        "schema": "gis.map",
+        "packSchemaHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "surfaceId": "s.gis.gismap@1/*#editor",
+      "payload": {
+        "envelopes": {
+          "path": "payload/envelopes.json",
+          "count": 1,
+          "sha256": "28b5d3f992a6b095a6c135febf33af029420375ca4c99b59114814fca340a68d"
+        }
+      }
+    }
+  }
+}

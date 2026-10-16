@@ -21,7 +21,7 @@ use semio_hub_artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOpe
 use directory::os_directory::access_policy::DirectoryAccessActionV1;
 use semio_hub_directory_contract::model::{CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, NewCheckpointPublicationClaimV1};
 use directory::os_directory::DocumentScope;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::DocumentDirectory;
 use semio_hub_directory_service::HubVerifiedCheckpointPublisher;
 use semio_hub_directory_contract::{IdentityVerificationControl, LocalBootstrapTransport};
 use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;

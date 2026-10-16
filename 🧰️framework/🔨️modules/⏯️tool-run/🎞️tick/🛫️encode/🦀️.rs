@@ -91,6 +91,3 @@ impl ToolRunTickWireCursor{
 }
 impl Drop for ToolRunTickWireCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original tick wire cursor abandoned before explicit close");}}
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

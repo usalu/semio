@@ -1,12 +1,12 @@
-import{crc32ChunkV1}from"../../../../🔨️modules/🏃️process/📦️artifacts/🔢️checksum/🔁️crc32/🟦️.ts";
+import{crc32ChunkV1}from"@semio-tech/process/artifacts/checksum/crc32";
 import{types}from"node:util";
 import{createHash}from"node:crypto";
 import{Worker}from"node:worker_threads";
-import{validateJsonSchemaSubset}from"../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{withPrintStorageTaskV1,type PrintExecutionV1}from"../🎛️operation/🟦️.ts";
 import{withArtifactDestinationTaskV1,type ArtifactDestinationV1}from"../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
 import{requireIssuedResourceControlRefinementV1}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import{awaitPrintPageWorkerV1,type PrintPageWorkerPortV1}from"../🧵️worker/🟦️.ts";
 import schemaData from"./🧬️schema/🔣️.json"with{type:"json"};
 const operatorFacts=new WeakSet<object>();

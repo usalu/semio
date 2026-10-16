@@ -1,6 +1,5 @@
 //! 🏢️ Original BIM public IO owns every authored SQLite role.
-#[path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 
 #[test]
 fn sqlite_snapshot_bim_original_public_sql_edits_are_authoritative(){

@@ -1,0 +1,15 @@
+# Current Publication Witness Bounds
+
+Coordination decision, 2026-10-16 15:22 UTC. This is Source design, not a filesystem or physical publication receipt.
+
+The existing Native command1MiB/32768 limits bound captured command output. They do not bound a complete payload census. Applying them as total filesystem limits would conflate separate resource roles and could reject ordinary installed SDKs without evidence.
+
+Read-only repository inspection found explicit installed SDK material/capacity/snapshot/derivative limits of200000 entries; Rustup limits32768 manifest entries and131072 archive entries; retention physical metadata is bounded at8388608 bytes. The4096-entry SDK Source archive policy applies to that archive rather than the whole installed partition. None of these observations establishes the current physical partition entry count, and no physical census was performed.
+
+The witness lane will use schema-owned bounded streaming: deterministic pages of64 names,64KiB file chunks, full path length at most256 UTF-16 units and a bounded ancestor chain. Close each enumeration descriptor before descending. Every directory iteration, skipped cursor name, metadata operation and hash chunk consumes explicit safe-integer work admission derived from the actual admitted image logical-byte envelope; zero-byte files cannot evade that admission. Genuine phase progress/cancellation remains mandatory. No existing volume quota or command bound changes.
+
+Two complete canonical digests/counts/bytes compare relative path, entry type, mode, regular-file bytes and symlink target text, with nofollow descriptor/ancestry/same-device checks and the private exact-owner observer around awaits. Raw Native journal bytes are included. The actual image EX fences participating users; the result is not an atomic snapshot against unknown external writers. Repeated page scans can take quadratic work in a large single directory; admission or phase exhaustion must refuse honestly without truncating the census or excluding payload. Source cases must include many zero-byte files, deep trees, work exhaustion, mutation and arbitrary body/close faults.
+
+Platform system metadata treatment remains a schema-owned implementation and physical qualification question. Native journal, State, SDK, allocation metadata and user payload cannot be excluded to obtain equality. Both implementation agents and the independent Low auditor received this decision; no provider operation or current-asset publication is released by it.
+
+At15:36UTC the execution lane reported actual Source4laws/153assertions in18.21seconds and two-root strict completion0. These include an independent Python/SQLite32769-empty-file oracle with at most one active descriptor, real Generated files/raw journals/OS-named payload, arbitrary-primary and close-fault cases. A genuine semantic RED and the independent review's post-open descriptor leak RED were retained before GREEN. A stronger midscan-exhaustion rerun and final independent Source review remain pending. No Native provider, SDK or global filesystem census ran in these Source gates.

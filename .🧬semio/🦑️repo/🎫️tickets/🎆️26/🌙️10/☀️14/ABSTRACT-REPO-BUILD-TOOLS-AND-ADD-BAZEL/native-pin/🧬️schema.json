@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "version": 1,
+    "cases": [
+      {
+        "source": "relative-bin",
+        "pinCalls": 0,
+        "phaseRequired": false,
+        "canonicalLeaseRequired": false,
+        "productsRequired": false
+      },
+      {
+        "source": "/producer/bin",
+        "pinCalls": 1,
+        "phaseRequired": true,
+        "canonicalLeaseRequired": true,
+        "productsRequired": true
+      }
+    ]
+  }
+}

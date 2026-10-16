@@ -1,6 +1,7 @@
 /** 🗄️ Persisted browser installation records over the shared plugin module wire contract. */
-import storeSchemaModule from "./🔣️.json";
-import { validateTrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA, TrustedPluginModuleRefusalV1, type TrustedPluginModuleIndexEntryV1 } from "../../📦️deployment/🧬️schema/🟦️.ts";
+import storeSchemaModule from "../../../../../../../🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🔣️.json";
+import { validateTrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA } from "../../📦️deployment/🧬️schema/🟦️.ts";
+import { TrustedPluginModuleRefusalV1, type TrustedPluginModuleIndexEntryV1 } from "../../../../../../../🔨️modules/🔌️plugin-module/🟦️.ts";
 
 const refuse = (reason: string): never => { throw new TrustedPluginModuleRefusalV1(`plugin store ${reason}`); };
 function exactRecord(value: unknown, keys: readonly string[]): Record<string, unknown> {
@@ -10,15 +11,6 @@ function exactRecord(value: unknown, keys: readonly string[]): Record<string, un
   return row;
 }
 const validDigest = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{64}$/u.test(value);
-
-/** 🗄️ The store's constants, read from the sibling schema module (`PluginModuleStoreV1`). */
-export const PLUGIN_MODULE_STORE_V1: Readonly<{ name: string; storeRoot: string; serveRoute: string; lockPrefix: string; storeLock: string; programSeparator: string }> = Object.freeze({ ...storeSchemaModule["x-semio-constants"] });
-/** 🔁️ The transfer retry policy of one plugin module file, read from the sibling schema module (`PluginModuleTransferRetryV1`). */
-export const PLUGIN_MODULE_TRANSFER_RETRY_V1: Readonly<{ transientStatuses: readonly number[]; maxAttempts: number; backoffInitialMs: number; backoffMaxMs: number }> = Object.freeze({ ...storeSchemaModule["x-semio-transfer-retry"] });
-/** 🪪️ `HubProgramIdV1`'s pattern and `PluginModuleSourceV1`'s values, read from the sibling schema module. */
-export const HUB_PROGRAM_ID_PATTERN = new RegExp(storeSchemaModule.$defs.HubProgramIdV1.pattern, "u");
-export const HUB_PROGRAM_ID_MAX_CHARS: number = storeSchemaModule.$defs.HubProgramIdV1.maxLength;
-export const PLUGIN_MODULE_SOURCES_V1: readonly string[] = Object.freeze([...storeSchemaModule.$defs.PluginModuleSourceV1.enum]);
 const STORE_RECORD_SCHEMA: string = storeSchemaModule.$defs.PluginModuleStoreRecordV1.properties.schema.const;
 const STORE_RECORD_KEYS: readonly string[] = storeSchemaModule.$defs.PluginModuleStoreRecordV1.required;
 const STORE_RECORD_TIME_MAX: number = storeSchemaModule.$defs.PluginModuleStoreRecordV1.properties.installedAtMs.maximum;

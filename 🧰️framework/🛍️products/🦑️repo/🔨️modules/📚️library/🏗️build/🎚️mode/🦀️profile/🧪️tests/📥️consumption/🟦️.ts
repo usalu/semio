@@ -1,3 +1,4 @@
+import{readHubScriptSource}from"../../../../../../../../../../🌎️hub/🧪️testing/📜️script-sources/🟦️.ts";
 import{runtimeActorCargoArgumentsV1}from"../../../../../🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts";
 import"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧪️tests/📐️arguments/🟦️.ts";
 import{registerBuildTestLawV1}from"../../../../🧪️tests/📥️invocation/🟦️.ts";
@@ -128,7 +129,7 @@ test("neutral consumed Cargo production plans require explicit carried mode",()=
 
 /** 🎭️ Every Hub fresh fixture carries its genuine Script invocation into the canonical factory. */
 test("neutral consumed Cargo Hub actor fixtures carry their original invocation",()=>{
- const path="🌎️hub/📦️packages/🦀️rust/📜️script.ts",tree=ts.createSourceFile(path,readFileSync(join(process.cwd(),path),"utf8"),ts.ScriptTarget.Latest,true),database=new Database(":memory:");let calls=0;try{const walk=(node:ts.Node)=>{if(ts.isCallExpression(node)&&node.expression.getText(tree)==="createFreshComponentTests"){calls++;expect(database.query("select ?1=1 carried").get(node.arguments.length)).toEqual({carried:1});const argument=node.arguments[0];if(!argument)throw Error("Actual fixture invocation required");expect(["invocation","this.invocation"]).toContain(argument.getText(tree));}if(ts.isCallExpression(node)&&node.expression.getText(tree)==="produceFreshComponentV1"){const control=node.arguments[3];if(control&&ts.isObjectLiteralExpression(control))expect(control.properties.some(part=>ts.isPropertyAssignment(part)&&part.name.getText(tree)==="process")).toBe(false);}ts.forEachChild(node,walk);};walk(tree);expect(calls).toBe(2);}finally{database.close();}
+ const tree=ts.createSourceFile("🌎️hub/📦️packages/🦀️rust/📜️script.ts",readHubScriptSource(process.cwd()),ts.ScriptTarget.Latest,true),database=new Database(":memory:");let calls=0;try{const walk=(node:ts.Node)=>{if(ts.isCallExpression(node)&&node.expression.getText(tree)==="createFreshComponentTests"){calls++;expect(database.query("select ?1=1 carried").get(node.arguments.length)).toEqual({carried:1});const argument=node.arguments[0];if(!argument)throw Error("Actual fixture invocation required");expect(["invocation","this.invocation"]).toContain(argument.getText(tree));}if(ts.isCallExpression(node)&&node.expression.getText(tree)==="produceFreshComponentV1"){const control=node.arguments[3];if(control&&ts.isObjectLiteralExpression(control))expect(control.properties.some(part=>ts.isPropertyAssignment(part)&&part.name.getText(tree)==="process")).toBe(false);}ts.forEachChild(node,walk);};walk(tree);expect(calls).toBe(2);}finally{database.close();}
 });
 
 /** 🧫️ Current native and cache corpora describe the same two actual compiler intents. */

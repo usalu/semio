@@ -2,7 +2,8 @@ import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import fixture from "../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json" with { type: "json" };
+import { jobCloseDemandFixture as fixture } from "../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/🟦️.ts";
+import { groupHistoryCasesFixtureUrl } from "../../../🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
 
 test("prepared child identity release uses the neutral physical admission corpus", () => {
   
@@ -21,7 +22,7 @@ test("prepared child identity release uses the neutral physical admission corpus
 });
 
 test("editor and viewer adapters retain the selected original mutation batch admission", () => {
-  const group = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🧫️fixtures/📚️history-cases/🔣️.json"), "utf8"));
+  const group = JSON.parse(readFileSync(groupHistoryCasesFixtureUrl, "utf8"));
   const lengths = [];
   for (const row of group.cases) {
     const original = Array.from({ length: row.historyEntries }, (_, value) => ({ value }));

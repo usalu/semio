@@ -1,47 +1,6 @@
-/// 🧪️ Independent schema fixture authority is explicit at every original camera test boundary.
-pub fn camera_fixture_grant() -> semio_framework_job::RetainedCloneGrant {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../⏱️camera/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    serde_json::from_value(fixture["rootGrant"].clone()).unwrap()
-}
-
-pub(crate) struct CameraFixtureLease { grant: semio_framework_job::RetainedCloneGrant }
-
-pub fn camera_fixture_lease(grant: semio_framework_job::RetainedCloneGrant) -> CameraFixtureLease {
-    install_scene_camera_authority(grant).unwrap();
-    CameraFixtureLease { grant }
-}
-
-pub fn clear_camera_fixture(grant: semio_framework_job::RetainedCloneGrant) {
-    install_scene_camera_authority(grant).unwrap();
-    for _ in 0..2048 {
-        let step = close_scene_camera_storage(grant).unwrap();
-        assert!(step.progress().fits(grant));
-        if scene_camera_storage_is_empty() { return; }
-    }
-    panic!("original camera fixture storage did not settle");
-}
-
-impl Drop for CameraFixtureLease { fn drop(&mut self) { clear_camera_fixture(self.grant); } }
-
 #[cfg(test)]
-pub fn sweep_expired_scene_camera_dispatches(now_ms: f64) -> Vec<ActionDescriptor> {
-    let grant = camera_fixture_grant();
-    let (mut cursor, admission) = SceneCameraDispatchCursor::begin(now_ms, grant).unwrap();
-    assert!(admission.fits(grant));
-    let mut actions = Vec::new();
-    loop {
-        match cursor.step(grant).unwrap().0 {
-            SceneCameraDispatchStep::Pending => {}
-            SceneCameraDispatchStep::Action(action) => actions.push(action),
-            SceneCameraDispatchStep::Complete => return actions,
-            SceneCameraDispatchStep::Fault(_) => { while !matches!(cursor.close_step(grant).unwrap(), semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {} return actions; },
-        }
-    }
-}
-
-#[cfg(test)]
-fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, action: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id])?;
+fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, action: &str) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id])?;
     let mut reservation = input.reserve_action(&scene.controller_id, action, bytes)?;
     let builder = reservation.builder();
     builder.begin_object(None)?;
@@ -58,46 +17,61 @@ fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 #[test]
 fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_only() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
-    const SCENES_SOURCE: &str = crate::scenes::SCENES_SOURCE;
-    const INTERPRETER_SOURCE: &str = crate::interpreter::INTERPRETER_SOURCE;
-    const ENGINE_CANVAS_SOURCE: &str = crate::engine_canvas::ENGINE_CANVAS_SOURCE;
-    const ENGINE_CANVAS_STANDALONE: &str = include_str!("../../../⚙️EngineCanvas/🧪️tests/🧊️wgpu-standalone/🦀️.rs");
-    const STANDALONE_SOURCE: &str = include_str!("🦀️.rs");
-    assert!(!SCENES_SOURCE.contains(concat!("queue_", "event(")));
-    assert!(!INTERPRETER_SOURCE.contains(concat!("queue_", "event(")));
-    assert!(!SCENES_SOURCE.contains(concat!("drain_", "keys(")));
-    assert!(INTERPRETER_SOURCE.contains("struct SceneInteractionIntent"));
-    assert!(INTERPRETER_SOURCE.contains("drive_scene_interaction_step"));
-    assert!(INTERPRETER_SOURCE.contains("tree_revision"));
-    assert!(!INTERPRETER_SOURCE.contains("Some(scene.clone())"));
-    assert!(!INTERPRETER_SOURCE.contains("reserve_actions(ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY"));
+    #[allow(non_snake_case)]
+    fn SCENES_SOURCE() -> &'static str {
+        semio_framework_os_renderer_wgpu_test_support::scenes_source()
+    }
+    #[allow(non_snake_case)]
+    fn INTERPRETER_SOURCE() -> &'static str {
+        semio_framework_os_renderer_wgpu_test_support::interpreter_source()
+    }
+    #[allow(non_snake_case)]
+    fn ENGINE_CANVAS_SOURCE() -> &'static str {
+        semio_framework_os_renderer_wgpu_test_support::engine_canvas_source()
+    }
+    #[allow(non_snake_case)]
+    fn ENGINE_CANVAS_STANDALONE() -> &'static str {
+        semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧊️wgpu-standalone/🦀️.rs")
+    }
+    #[allow(non_snake_case)]
+    fn STANDALONE_SOURCE() -> &'static str {
+        semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🧪️tests/🧊️wgpu-standalone/🦀️.rs")
+    }
+    assert!(!SCENES_SOURCE().contains(concat!("queue_", "event(")));
+    assert!(!INTERPRETER_SOURCE().contains(concat!("queue_", "event(")));
+    assert!(!SCENES_SOURCE().contains(concat!("drain_", "keys(")));
+    assert!(INTERPRETER_SOURCE().contains("struct SceneInteractionIntent"));
+    assert!(INTERPRETER_SOURCE().contains("drive_scene_interaction_step"));
+    assert!(INTERPRETER_SOURCE().contains("tree_revision"));
+    assert!(!INTERPRETER_SOURCE().contains("Some(scene.clone())"));
+    assert!(!INTERPRETER_SOURCE().contains("reserve_actions(ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY"));
     for function in ["handle_scene_wheel", "handle_scene_pointer_move", "handle_scene_pointer_button"] {
-        assert!(STANDALONE_SOURCE.contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must be test-only");
+        assert!(STANDALONE_SOURCE().contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must be test-only");
     }
     for function in ["ink_apply_events_action", "ink_set_selection_action", "ink_set_hover_action", "ink_set_camera_action", "ink_pointer_down", "ink_pointer_up", "ink_hover_move", "ink_wheel"] {
-        assert!(STANDALONE_SOURCE.contains(&format!("#[cfg(test)]\nfn {function}")), "{function} must be test-only");
+        assert!(STANDALONE_SOURCE().contains(&format!("#[cfg(test)]\nfn {function}")), "{function} must be test-only");
     }
-    assert!(SCENES_SOURCE.contains("struct InkEventJsonPages"));
-    assert!(SCENES_SOURCE.contains("struct InkInteractionJob"));
-    assert!(SCENES_SOURCE.contains("struct InkInteractionDocument"));
-    assert!(SCENES_SOURCE.contains("Box<[Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY]>"));
-    assert!(!SCENES_SOURCE.contains("VecDeque<Value>"));
-    assert!(!SCENES_SOURCE.contains("stroke_update: Option<(String, Value)>"));
-    assert!(!SCENES_SOURCE.contains("pending_fragments: VecDeque"));
+    assert!(SCENES_SOURCE().contains("struct InkEventJsonPages"));
+    assert!(SCENES_SOURCE().contains("struct InkInteractionJob"));
+    assert!(SCENES_SOURCE().contains("struct InkInteractionDocument"));
+    assert!(SCENES_SOURCE().contains("Box<[Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY]>"));
+    assert!(!SCENES_SOURCE().contains("VecDeque<Value>"));
+    assert!(!SCENES_SOURCE().contains("stroke_update: Option<(String, Value)>"));
+    assert!(!SCENES_SOURCE().contains("pending_fragments: VecDeque"));
     for variant in ["InkMove", "InkResize", "InkStroke", "InkEraser", "InkMarqueeDrag", "InkPan"] {
-        assert!(SCENES_SOURCE.contains(&format!("SceneDragMode::{variant}")), "{variant} must have a retained route");
+        assert!(SCENES_SOURCE().contains(&format!("SceneDragMode::{variant}")), "{variant} must have a retained route");
     }
-    assert!(!SCENES_SOURCE.contains(concat!("mem::", "forget")));
+    assert!(!SCENES_SOURCE().contains(concat!("mem::", "forget")));
     for function in ["text_editor_apply_key", "text_editor_pointer_down", "text_editor_pointer_move", "text_editor_pointer_up", "text_editor_select_span_at_screen", "text_editor_set_selection", "text_editor_apply_completion"] {
-        assert!(!ENGINE_CANVAS_SOURCE.contains(&format!("pub fn {function}(")) && !ENGINE_CANVAS_STANDALONE.contains(&format!("pub fn {function}(")), "{function} must not remain production-capable");
-        assert!(!ENGINE_CANVAS_SOURCE.contains(&format!("pub fn {function}(")), "{function} must not be reachable from the production ⚙️EngineCanvas target");
+        assert!(!ENGINE_CANVAS_SOURCE().contains(&format!("pub fn {function}(")) && !ENGINE_CANVAS_STANDALONE().contains(&format!("pub fn {function}(")), "{function} must not remain production-capable");
+        assert!(!ENGINE_CANVAS_SOURCE().contains(&format!("pub fn {function}(")), "{function} must not be reachable from the production ⚙️EngineCanvas target");
     }
     for function in ["node_graph_wheel", "node_graph_pointer_down", "node_graph_pointer_move", "node_graph_pointer_up", "tiled_map_wheel", "board2d_pointer_move", "board2d_pointer_up", "board2d_pointer_leave", "board2d_wheel"] {
-        assert!(ENGINE_CANVAS_STANDALONE.contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must remain test-only");
-        assert!(!ENGINE_CANVAS_SOURCE.contains(&format!("pub fn {function}(")), "{function} must not be reachable from the production ⚙️EngineCanvas target");
+        assert!(ENGINE_CANVAS_STANDALONE().contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must remain test-only");
+        assert!(!ENGINE_CANVAS_SOURCE().contains(&format!("pub fn {function}(")), "{function} must not be reachable from the production ⚙️EngineCanvas target");
     }
     for function in ["tiled_map_pointer_down", "tiled_map_pointer_move", "tiled_map_pointer_up", "board2d_pointer_move", "board2d_pointer_up", "board2d_pointer_leave", "board2d_wheel"] {
-        assert!(STANDALONE_SOURCE.contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must remain test-only");
+        assert!(STANDALONE_SOURCE().contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must remain test-only");
     }
 }
 
@@ -115,7 +89,7 @@ fn ink_event_pages_preserve_order_and_fail_before_exceeding_fixed_storage() {
 
     let mut saturated = InkEventJsonPages::default();
     let oversized = json!({ "value": "x".repeat(INK_EVENT_JSON_BYTE_CAPACITY) });
-    assert_eq!(saturated.push(&oversized), Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits));
+    assert_eq!(saturated.push(&oversized), Err(semio_framework_ui_action::BoundedActionFault::ByteCredits));
     assert_eq!(saturated.items, 0);
 }
 
@@ -133,7 +107,7 @@ fn ink_raw_fragment_pages_are_single_slab_fifo_and_reject_max_plus_one() {
     assert!(!pages.pop_front());
 
     let mut saturated = InkRawPages::default();
-    assert_eq!(saturated.push(&"x".repeat(INK_INTERACTION_DOCUMENT_BYTE_CAPACITY + 1)), Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits));
+    assert_eq!(saturated.push(&"x".repeat(INK_INTERACTION_DOCUMENT_BYTE_CAPACITY + 1)), Err(semio_framework_ui_action::BoundedActionFault::ByteCredits));
     assert_eq!(saturated.len, 0);
     assert_eq!(saturated.byte_len, 0);
 }
@@ -194,11 +168,11 @@ fn ink_block_cursor_visits_nested_groups_in_stable_depth_first_order() {
 fn ink_nested_value_admission_rejects_hostile_depth() {
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let mut value = Value::Null;
-    for _ in 0..=ui_wgpu::wgpu::action::ACTION_DEPTH_CAPACITY {
+    for _ in 0..=semio_framework_ui_action::ACTION_DEPTH_CAPACITY {
         value = Value::Array(vec![value]);
     }
     let mut nodes = 0usize;
-    assert_eq!(validate_ink_value(&value, 0, &mut nodes), Err(ui_wgpu::wgpu::BoundedActionFault::DepthCredits));
+    assert_eq!(validate_ink_value(&value, 0, &mut nodes), Err(semio_framework_ui_action::BoundedActionFault::DepthCredits));
 }
 
 #[cfg(test)]
@@ -990,7 +964,7 @@ pub fn tiled_map_pointer_move(surface_id: &str, controller_id: &str, inner: Rect
     mutate_scene_state(surface_id, |state| {
         state.map_last_hover_json = Some(hover_json.clone());
     });
-    vec![engine_canvas::map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_HOVER, json!({ "surfaceId": surface_id, "hover": hover }))]
+    vec![engine_canvas::map_action(controller_id, semio_framework_ui_declaration::ui::tiled_map_actions::SET_HOVER, json!({ "surfaceId": surface_id, "hover": hover }))]
 }
 
 #[cfg(test)]
@@ -1019,7 +993,7 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
                 let ids = engine_canvas::with_map_host(surface_id, |host| query_map_feature_hits(host, &method, &points, crossing)).unwrap_or_default();
                 actions.push(engine_canvas::map_action(
                     controller_id,
-                    ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
+                    semio_framework_ui_declaration::ui::tiled_map_actions::SET_FEATURE_SELECTION,
                     json!({
                         "surfaceId": surface_id,
                         "ids": ids,
@@ -1032,7 +1006,7 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
                 if let Some(id) = hit.get("id").and_then(|value| value.as_str()) {
                     actions.push(engine_canvas::map_action(
                         controller_id,
-                        ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
+                        semio_framework_ui_declaration::ui::tiled_map_actions::SET_FEATURE_SELECTION,
                         json!({
                             "surfaceId": surface_id,
                             "ids": [id],

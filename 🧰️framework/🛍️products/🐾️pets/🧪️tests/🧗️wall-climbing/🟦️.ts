@@ -4,7 +4,7 @@
  * @see ../../🔨️modules/🏞️terrain/🟦️.ts
  * @see ../../🔨️modules/🧗️climbing/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { WALL_LIP, nearestWall, segmentClear, segmentHits, wallAt, wallsOf } from "../../🔨️modules/🏞️terrain/🟦️.ts";
 import { CLIMB_DESCENT, CLIMB_RAMP, CLIMB_RISE, CROSS_REACH, type Effort, GRIP_BITE, GRIP_BUDGET, GRIP_CLIMB, GRIP_HANG, GRIP_REST, GRIP_SPACING, HAND_HEIGHT, HOIST_HUMP, HOIST_RISE, LUNGE_TICKS, MANTLE_INSET, MANTLE_TICKS, SLIDE_GAIN, SLIDE_SPEED, SLIDE_START, SLIP_LIFT, SLIP_PUSH, WALL_FOLLOW, WALL_GRAB_TICKS, WALL_HANG_TICKS, chainOf, climbPhase, climbStep, climbTicks, clingOf, crossable, footOf, gripFor, gripStep, hoistPath, ledgeOf, mantlePath, rimFor, rimOf, routeOf, slideStep, slipOf, wallCost, wallHolds, wallPath } from "../../🔨️modules/🧗️climbing/🟦️.ts";
 import type { Perch, Pitch, Point, Rect, Size } from "../../🧬️schema/🟦️.ts";

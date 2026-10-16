@@ -10,7 +10,8 @@
 // #region 🔌️Adapters
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { SpaceBrowser } from "@semio-tech/framework-renderer-react";
-import { spaceMemberPresenceV1, spaceRowsV1, type DirectorySpaceListEntryV1 } from "@semio-tech/framework-os";
+import { spaceMemberPresenceV1, spaceRowsV1 } from "@semio-tech/framework/directory/spaces";
+import { type DirectorySpaceListEntryV1 } from "@semio-tech/framework/directory/schema";
 // #endregion 🔌️Adapters
 
 // #region 🏘️SpaceBrowser

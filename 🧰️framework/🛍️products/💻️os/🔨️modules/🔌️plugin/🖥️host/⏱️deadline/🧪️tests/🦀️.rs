@@ -1,7 +1,5 @@
 //! 🕰️ The original absolute deadline never renews when another caller enters.
-#[path="../🦀️.rs"]
-mod original_deadline;
-use original_deadline::{OriginalDeadlineError,remaining_original_deadline_us};
+use semio_framework_plugin_host_engine::original_deadline::{OriginalDeadlineError,remaining_original_deadline_us};
 #[test]
 fn original_host_deadline_preserves_clock_units_and_expired_boundary(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();

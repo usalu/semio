@@ -1,5 +1,4 @@
-#[path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;

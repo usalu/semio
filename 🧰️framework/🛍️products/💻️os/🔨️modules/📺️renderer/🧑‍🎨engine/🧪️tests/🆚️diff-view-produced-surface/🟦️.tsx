@@ -11,6 +11,7 @@ import { chromium } from "playwright";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { DiffViewHost } from "../../🧱️elements/🔺️DiffViewHost/🟦️.tsx";
+import { viewProducedSurfaceFixtureUrl, diffViewPresentationFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 type ExpectedLine = { readonly kind: "equal" | "remove" | "add"; readonly text: string };
 type Fixture = {
@@ -31,8 +32,8 @@ type PresentationFixture = {
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json"), "utf8")) as Fixture;
-const presentation = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-presentation/🔣️.json"), "utf8")) as PresentationFixture;
+const fixture = JSON.parse(readFileSync(viewProducedSurfaceFixtureUrl, "utf8")) as Fixture;
+const presentation = JSON.parse(readFileSync(diffViewPresentationFixtureUrl, "utf8")) as PresentationFixture;
 const presentationSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🆚️diff-view-presentation/🔣️.json"), "utf8"));
 
 function thirdPartyLines(): ExpectedLine[] {

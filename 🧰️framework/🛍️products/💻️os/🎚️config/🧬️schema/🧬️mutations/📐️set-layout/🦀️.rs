@@ -33,13 +33,3 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetL
         vec!["layout".to_string()]
     }
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️sets-layout/🦀️.rs"]
-mod tests_sets_layout;
-
-#[cfg(test)]
-#[path = "🧪️tests/🟰️keeps-layout/🦀️.rs"]
-mod tests_keeps_layout;
-//#endregion 🧪️Tests

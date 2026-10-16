@@ -1,3 +1,8 @@
+import * as ModuleUnderTest from "../../🟦️.ts";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { loadKernelPollCompositionFixture, loadKernelPollCompositionDocument, loadKernelPollCompositionSchema } from "../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
+
 type TestSource = { readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "pluginPollCompositionFromWit" | "pluginPollCompositionToWit">, source: TestSource): Promise<void> {
@@ -6,8 +11,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { it, expect } = vitest;
 
   it("PluginPollCompositionWit preserves the canonical six scalars and exact nested field names", async () => {
-    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const { default: contract } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/📜️contract/🔣️.json");
-    const { default: schema } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧬️schema/🔣️.json"); const { default: capacitySchema } = await import("../../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json");
+    const api = await import("../../🟦️.ts"); const fixture = await loadKernelPollCompositionFixture(); const contract = await loadKernelPollCompositionDocument();
+    const schema = await loadKernelPollCompositionSchema(); const { residentSchema: capacitySchema } = await import("@semio-tech/value-ts/resident/schema");
     const { default: Ajv } = await import("ajv"); const library = "lodash"; const { default: _ } = await import(library); const { Buffer } = await import("node:buffer");
     const oracle = new Ajv({ strict: true }).addSchema(capacitySchema).addSchema(schema); 
     for (const row of fixture.valid) {
@@ -24,7 +29,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("PluginPollCompositionWit checks every WIT u64 before conversion and keeps number and bigint dialects distinct", async () => {
-    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const { default: contract } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/📜️contract/🔣️.json"); const library = "lodash"; const { default: _ } = await import(library);
+    const api = await import("../../🟦️.ts"); const fixture = await loadKernelPollCompositionFixture(); const contract = await loadKernelPollCompositionDocument(); const library = "lodash"; const { default: _ } = await import(library);
     const original = fixture.valid[1]!.input.composition; const wire = api.pluginPollCompositionToWit(original);
     for (const path of contract.wireOrder) {
       for (const invalid of [-1n, BigInt(contract.scalar.maximum) + 1n, 0x10000000000000000n, 1, "1", null, undefined]) { const value = _.cloneDeep(wire); _.set(value, path, invalid); expect(() => api.pluginPollCompositionFromWit(value)).toThrow(/composition/); }
@@ -33,7 +38,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("PluginPollCompositionWit reads only own data fields without claiming unknown-root retirement or private owner authority", async () => {
-    const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const original = fixture.valid[1]!.input.composition; let reads = 0;
+    const api = await import("../../🟦️.ts"); const fixture = await loadKernelPollCompositionFixture(); const original = fixture.valid[1]!.input.composition; let reads = 0;
     const wrapper = { ...original, payload: new Uint8Array(8193), get extra() { reads++; throw new Error("unread"); } };
     expect(api.pluginPollCompositionToWit(wrapper)).toEqual(api.pluginPollCompositionToWit(original)); expect(wrapper.payload.byteLength).toBe(8193); expect(reads).toBe(0);
     for (const key of ["bytes", "slots", "owners", "control"]) { const accessor = { ...original }; Object.defineProperty(accessor, key, { get() { reads++; throw new Error("accessor"); } }); expect(() => api.pluginPollCompositionToWit(accessor)).toThrow(/field/); }
@@ -48,3 +53,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../🟦️.ts")).href;
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { pluginPollCompositionFromWit: ModuleUnderTest.pluginPollCompositionFromWit, pluginPollCompositionToWit: ModuleUnderTest.pluginPollCompositionToWit }, { url: moduleUnderTestUrl });

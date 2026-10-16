@@ -14,7 +14,7 @@ equal(flowWasmContract("FlowRetainedSessionCloseV1")(sessionClose), true, "sessi
 equal(flowWasmContract("FlowBrowserStartupV1")(startup), true, "startup-schema");
 for (const law of startup.cases) equal(law.source === "exports" || law.initializer === "custom" || law.imports === "empty", law.accepted, "startup-independent-admission-oracle");
 const memory = new WebAssembly.Memory({ initial: 400 });
-const runtimeLifetime = JSON.parse(await readFile(new URL("../../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json", import.meta.url), "utf8"));
+const runtimeLifetime = JSON.parse(await readFile(new URL("../../🧫️fixtures/🧑‍🤝‍🧑browser-runtime/🔣️.json", import.meta.url), "utf8"));
 equal(flowWasmContract("FlowBrowserRuntimeLifetimeV1")(runtimeLifetime), true, "runtime-lifetime-schema");
 equal(typeof flowBrowser.createFlowBrowserRuntime, "function", "explicit-browser-runtime-owner");
 const sharedBridge = new MockFlowBridge(memory);

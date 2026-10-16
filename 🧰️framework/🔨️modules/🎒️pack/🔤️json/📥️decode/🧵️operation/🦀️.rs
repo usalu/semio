@@ -9,10 +9,10 @@ pub struct JsonReadPolicy{pub limits:JsonReadLimits,pub normal:RetainedCloneGran
 
 /// 🪪️ One retained operation conserves its original source, control, receipts and partial candidate.
 pub struct JsonReadOperation<'operation,'callback,S:JsonReadSource+Copy,V:JsonParsedValue>{
-    source:S,cursor:ManuallyDrop<Option<JsonSourceCursor<S,V>>>,closing:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    value:ManuallyDrop<Option<V>>,fault:ManuallyDrop<Option<JsonError>>,
-    control:&'operation mut NativeDecodeControl<'callback>,policy:JsonReadPolicy,normal:RetainedCloneProgress,retirement:RetainedCloneProgress,
-    normal_step:RetainedCloneProgress,retirement_step:RetainedCloneProgress,position:usize,close_started:bool,
+    #[doc(hidden)] pub source:S,cursor:ManuallyDrop<Option<JsonSourceCursor<S,V>>>,#[doc(hidden)] pub closing:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    #[doc(hidden)] pub value:ManuallyDrop<Option<V>>,fault:ManuallyDrop<Option<JsonError>>,
+    #[doc(hidden)] pub control:&'operation mut NativeDecodeControl<'callback>,#[doc(hidden)] pub policy:JsonReadPolicy,#[doc(hidden)] pub normal:RetainedCloneProgress,#[doc(hidden)] pub retirement:RetainedCloneProgress,
+    normal_step:RetainedCloneProgress,retirement_step:RetainedCloneProgress,#[doc(hidden)] pub position:usize,close_started:bool,
 }
 static CLOSED_REFUSAL:JsonError=JsonError::Native(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON operation cannot parse after cleanup admission"));
 fn intersect(total:RetainedCloneGrant,turn:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:total.maximum_items.min(turn.maximum_items),maximum_copy_bytes:total.maximum_copy_bytes.min(turn.maximum_copy_bytes),maximum_capacity_bytes:total.maximum_capacity_bytes.min(turn.maximum_capacity_bytes),maximum_release_bytes:total.maximum_release_bytes.min(turn.maximum_release_bytes),maximum_depth:total.maximum_depth.min(turn.maximum_depth)}}
@@ -78,8 +78,3 @@ impl<'operation,'callback,S:JsonReadSource+Copy,V:JsonParsedValue> JsonReadOpera
 impl<S:JsonReadSource+Copy,V:JsonParsedValue> Drop for JsonReadOperation<'_,'_,S,V>{
     fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"JSON operation abandoned its original grammar, outcome or physical cleanup owner");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.cursor);ManuallyDrop::drop(&mut self.closing);ManuallyDrop::drop(&mut self.value);ManuallyDrop::drop(&mut self.fault);}}}
 }
-#[cfg(test)]
-use super::test_allocation;
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

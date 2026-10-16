@@ -16,8 +16,8 @@ import { HubSignInPane } from "../../🔐️HubSignIn/🟦️.tsx";
 import { SpaceBrowser } from "../../🏘️SpaceBrowser/🟦️.tsx";
 import { HubFirstRun } from "../../🎓️HubFirstRun/🟦️.tsx";
 import { AgentDelegations } from "../../🤖️AgentDelegations/🟦️.tsx";
-import { hubFirstRunSeenV1, hubFirstRunStateFromV1, markHubFirstRunSeenV1 } from "../../../../../📇️directory/🎓️first-run/🟦️.ts";
-import { spaceRowInvitableV1 } from "../../../../../📇️directory/🏘️spaces/🟦️.ts";
+import { hubFirstRunSeenV1, hubFirstRunStateFromV1, markHubFirstRunSeenV1 } from "@semio-tech/framework/directory/first-run";
+import { spaceRowInvitableV1 } from "@semio-tech/framework/directory/spaces";
 // #endregion 🔌️Adapters
 
 // #region 🏛️HubWorkspace

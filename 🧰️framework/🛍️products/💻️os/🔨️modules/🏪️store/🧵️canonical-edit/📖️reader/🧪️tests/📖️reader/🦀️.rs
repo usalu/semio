@@ -12,7 +12,7 @@ use semio_framework_os_store_ledger::CursorRevisionAccumulator;
 use semio_framework_os_spr::Edit;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value_snapshot_read::artifact_retirement_box_close_step;
-use super::{canonical_edit_borrowed_tests as borrowed_tests, test_support, reader_tests as tests};
+use super::canonical_edit_borrowed_tests as borrowed_tests; use semio_framework_os_store_test_support; use super::reader_tests as tests;
 use semio_framework_os_store_ledger as ledger;
 use std::sync::atomic::Ordering;
 

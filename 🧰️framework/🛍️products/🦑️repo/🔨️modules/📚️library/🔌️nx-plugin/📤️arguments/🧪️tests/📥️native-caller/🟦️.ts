@@ -217,3 +217,5 @@ test("actual native owner process receives original build mode policy and deadli
  }finally{if(saved===undefined)delete process.env.SEMIO_SCRIPT_PROCESS_INVOCATION;else process.env.SEMIO_SCRIPT_PROCESS_INVOCATION=saved;rmSync(directory,{recursive:true,force:true});}
  console.log("[DEBUG] Actual native owner-command preserves original mode and closed capability/policy in independent Node child; deadline remains bounded; foreign inherited envelope cannot replace original authority");
 });
+
+import "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧪️tests/🟦️.ts";

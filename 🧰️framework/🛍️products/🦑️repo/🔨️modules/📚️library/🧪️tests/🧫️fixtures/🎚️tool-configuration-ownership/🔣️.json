@@ -157,9 +157,14 @@
       ]
     },
     {
-      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🌎️hub/🧪️tests/📄️browser-document-open/🟦️.ts",
       "tokens": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🛡️admin-relay-checks/🟦️.ts",
+      "tokens": [
         "🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts"
       ]
     },

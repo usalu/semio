@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { readModuleTreeSource } from "../../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 const owner = fileURLToPath(new URL("../..", import.meta.url));
@@ -33,7 +34,7 @@ export function sessionLaws() {
     const source = read(group.source);
     assert.deepEqual([...source.matchAll(/#\[test\]\s*fn (\w+)/g)].map(match => match[1]), group.laws);
   }
-  assert(!/static (KERNEL|MESH_CACHE|TESSELLATION_JOBS)|OnceLock/.test(read("🦀️.rs")));
+  assert(!/static (KERNEL|MESH_CACHE|TESSELLATION_JOBS)|OnceLock/.test(readModuleTreeSource(join(owner,"🦀️.rs"))));
   console.log(`[DEBUG] Semio geometry session: ${fixture.groups.reduce((sum: number, group: any) => sum + group.laws.length, 0)} exact native laws; actual verb descriptor and close receipt contracts`);
   return fixture.groups.map((group: any) => ({ package: fixture.package, target: group.target, laws:group.laws }));
 }

@@ -16,6 +16,12 @@ pub mod prepared_engine_canvas;
 #[path = "../../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🎓️tutorial-surface-geometry/🦀️.rs"]
 pub mod tutorial_surface_geometry;
 
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧰️fixtures/🦀️.rs"]
+pub mod fixtures;
+#[cfg(any(test, feature = "testkit"))]
+pub use fixtures::{engine_surface_law_guard, with_engine_close_context, ENGINE_SURFACE_LAW_LOCK};
+
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;

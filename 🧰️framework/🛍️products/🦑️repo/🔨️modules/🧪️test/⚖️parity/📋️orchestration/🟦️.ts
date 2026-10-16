@@ -4,7 +4,7 @@ import { ownerShipsImplementation } from "../../🖥️host/🏗️materializati
 import { executeOne } from "../../🏃️execution/🎬️scenario/🟦️.ts";
 import { readImplementationCoverage, reportsDir } from "../../📊️reporting/📋️orchestration/🟦️.ts";
 import { loadClassifiedBaseline } from "../../🕸️dependencies/📋️orchestration/🟦️.ts";
-import { type ComparisonProfile, type Implementation } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type ComparisonProfile, type Implementation } from "@semio-tech/framework/test/adapter";
 import { adapterRegistersSubject, type DiscoveredCase, type TestResult, buildCasePlan, computeCoverageMetrics, evaluateCrossSubjectParity, evaluateParity, executePipeline, formatMetrics, loadOracleRegistry, markRunComplete, oracleImplementation, pipelineRoleArtifacts, pipelineTable, probeTable, profileTable, renderDiff, renderJUnit, subjectRawInputsByScenario, summarizeRun, testCacheDir } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { type TestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 

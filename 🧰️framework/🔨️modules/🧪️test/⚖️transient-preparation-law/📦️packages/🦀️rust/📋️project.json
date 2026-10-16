@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/test-transient-preparation-law-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

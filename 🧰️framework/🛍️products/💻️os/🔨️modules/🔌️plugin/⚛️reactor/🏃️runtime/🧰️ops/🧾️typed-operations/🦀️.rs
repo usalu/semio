@@ -1,9 +1,25 @@
 //! 🧾️ Typed operation driving, task resume, response dispatch, intents and reserved presence.
 
-use super::*;
+use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use semio_framework_value::{DslValue, FromValue, ToValue};
+use semio_framework_plugin_job::{EmitWire, TypedOperationLeftover, TypedOperationResultToken};
+use semio_framework::{Fault, FaultFrom};
+use crate::ops_ingress::{OriginalPublicationFamily, OriginalPublicationReceiving, PluginExchangeOutput, push_invocation_side_frames};
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry::{PLUGIN_RUNTIME_INSTANCE_SLOTS, PluginRuntime};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_plugin_program::{PluginProgram, encode_wire_serialized};
+use semio_framework_plugin_peer::PresenceRosterAdmission;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use crate::ops_wire_limits::{find_instance, runtime_instance_cell};
+use semio_framework_plugin_runtime_instances::inst_wire_frames::{instance_actor, push_app_fault, with_instances_mut, with_instances_original_mut, with_instances_turn_mut};
+use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+use semio_framework_ui_contract as ui_contract;
 impl PluginExchangeOutput{
     /// 🧾️ Keeps original ownership receipts ahead of the next semantic producer.
-    pub(super) fn ownership_receipt_pending(&self)->bool{self.original_receiving.is_some()||self.constructor_receipt.is_some()||self.preparation_receipt.is_some()||self.retirement_receipt.is_some()||self.history_command_receipt.is_some()||self.tool_run_receipt.is_some()}
+    pub fn ownership_receipt_pending(&self)->bool{self.original_receiving.is_some()||self.constructor_receipt.is_some()||self.preparation_receipt.is_some()||self.retirement_receipt.is_some()||self.history_command_receipt.is_some()||self.tool_run_receipt.is_some()}
     fn collect_original_receipts<PA:PluginApp>(&mut self,app:&mut PA){self.constructor_receipt=app.take_constructor_receipt();self.preparation_receipt=app.take_typed_operation_preparation_receipt();self.retirement_receipt=app.take_typed_operation_retirement_receipt();self.history_command_receipt=app.take_history_command_receipt();self.tool_run_receipt=app.take_tool_run_receipt();}
     fn original_receipt_family(&self)->Option<OriginalPublicationFamily>{let mut families=[self.constructor_receipt.is_some().then_some(OriginalPublicationFamily::Constructor),self.preparation_receipt.is_some().then_some(OriginalPublicationFamily::Preparation),self.retirement_receipt.is_some().then_some(OriginalPublicationFamily::Retirement),self.history_command_receipt.is_some().then_some(OriginalPublicationFamily::History),self.tool_run_receipt.is_some().then_some(OriginalPublicationFamily::Tool)].into_iter().flatten();let first=families.next()?;families.next().is_none().then_some(first)}
 }
@@ -34,7 +50,8 @@ fn trace_typed_operation_slot_occupancy<PA: PluginApp>(app: &PA, instance: u32) 
     }
     eprintln!("[TRACE] typed-operation slots instance={instance} live={live}/{} peak={peak}", semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS);
 }
-pub(super) fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA, instance: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(PluginExchangeOutput, Option<TypedOperationLeftover>), crate::PluginLifecycleFailure> {
+#[doc(hidden)]
+pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA, instance: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(PluginExchangeOutput, Option<TypedOperationLeftover>), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut output=PluginExchangeOutput::default();output.collect_original_receipts(app);if output.ownership_receipt_pending(){return Ok((output,None))}
     let before=cx.retained_progress();let original=cx.retained_grant();let recipient=cx.original_recipient_identity();
     ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(identity,cx))?;
@@ -104,7 +121,8 @@ pub(super) fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &
     app.publish_local_interaction_query_reply(&mut output.frames, 4);
     Ok((output, leftover))
 }
-pub(super) fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instance: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput, crate::PluginLifecycleFailure> {
+#[doc(hidden)]
+pub fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instance: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     advance_typed_operation_output_with_leftover(app, instance, identity,cx).map(|(output, _)| output)
 }
 /// 🕹️ How many extra typed-operation units `plugin_exchange` drives for the operation a command
@@ -112,7 +130,8 @@ pub(super) fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instan
 /// `InteractionView`) lands inside the command's own reply. A pick with no durable lane folds
 /// within a handful of units (worker step, install, fold); one with a document lane presents a
 /// result page first and stops this drive on it.
-pub(super) const TYPED_OPERATION_REPLY_LEFTOVER_PUMPS: usize = 16;
+#[doc(hidden)]
+pub const TYPED_OPERATION_REPLY_LEFTOVER_PUMPS: usize = 16;
 /// 🕹️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — merges a typed operation's inline-folded
 /// leftover `InteractionView` into the `Invocation` reply of the command that STARTED that
 /// operation, when both are in the same exchange: the reply's `output` is the operation's
@@ -122,7 +141,8 @@ pub(super) const TYPED_OPERATION_REPLY_LEFTOVER_PUMPS: usize = 16;
 /// selection overlay, Inspection tab and `INTERACTION_STATE_OBSERVED` land for a folded verb the
 /// same way they landed when the verb took a host round trip. A reply that answers a different
 /// operation, or no typed operation at all, is left untouched.
-pub(super) fn merge_typed_operation_leftover_into_reply(frames: &mut [protocol::AppFrame], leftover: &TypedOperationLeftover) -> bool {
+#[doc(hidden)]
+pub fn merge_typed_operation_leftover_into_reply(frames: &mut [protocol::AppFrame], leftover: &TypedOperationLeftover) -> bool {
     let operation = leftover.operation.to_string();
     for frame in frames.iter_mut() {
         let protocol::AppFrame::Invocation { in_reply_to, output, .. } = frame else { continue };
@@ -198,7 +218,7 @@ pub struct TypedOperationGrant {
 }
 impl TypedOperationGrant {
     /// 🔁️ One unit and nothing more — for a law that steps the continuation deliberately.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub const UNIT: Self = Self { units: 1, max_frames: usize::MAX, max_effects: usize::MAX, deadline_us: None,clock:semio_framework_job::logical_now_us };
     /// 🔁️ The grant a turn's own [`semio_framework::kernel::Budget`] declares.
     pub fn turn(budget: semio_framework::kernel::Budget,cx:&semio_framework_job::StepContext<'_>) -> Self {
@@ -213,10 +233,10 @@ impl TypedOperationGrant {
     /// 🛑️ Whether the collected output has reached what one turn may carry. An EMPTY collection
     /// never counts as reached, so a budget declaring zero frames still drives units rather than
     /// silently restoring the one-unit-per-turn pacing this grant exists to remove.
-    pub(super) fn spent(&self, output: &PluginExchangeOutput) -> bool {
+    pub fn spent(&self, output: &PluginExchangeOutput) -> bool {
         output.original_receiving.is_some() || output.constructor_receipt.is_some() || output.preparation_receipt.is_some() || output.retirement_receipt.is_some() || output.history_command_receipt.is_some() || output.tool_run_receipt.is_some() || output.typed_operation_results.len() >= TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM || (!output.frames.is_empty() && output.frames.len() >= self.max_frames) || (!output.effects.is_empty() && output.effects.len() >= self.max_effects)
     }
-    fn expired(&self) -> bool {
+    pub fn expired(&self) -> bool {
         self.deadline_us.is_some_and(|deadline| (self.clock)().is_none_or(|now|now>=deadline))
     }
 }
@@ -249,7 +269,7 @@ fn pending_typed_operation_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
 /// acknowledgeable result page instead of one per unit. Units of a SECOND instance are left to the
 /// next turn: the round-robin cursor is the fairness authority and one turn's output carries one
 /// receiver.
-pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRuntime<PA>, grant: TypedOperationGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(Option<(u32, PluginExchangeOutput)>, TypedOperationScan), crate::PluginLifecycleFailure> {
+pub async fn plugin_continue_typed_operations<PA: PluginApp>(runtime: &PluginRuntime<PA>, grant: TypedOperationGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(Option<(u32, PluginExchangeOutput)>, TypedOperationScan), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut driven: Option<(u32, PluginExchangeOutput)> = None;
     let mut units = 0;
     loop {
@@ -453,7 +473,7 @@ pub async fn plugin_dispatch_response_action<PA: PluginApp>(runtime: &PluginRunt
 /// needs more units (composed children, revert walks) stays runnable and the reactor's
 /// continuation finishes it on this and later turns. A job the app never admitted is a no-op so
 /// fill and other isolated jobs keep their existing JobCompleted path.
-pub async fn plugin_complete_reserved_spawned_job<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, job: u64, output: Result<Vec<u8>, Fault>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput,crate::PluginLifecycleFailure> {
+pub async fn plugin_complete_reserved_spawned_job<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, job: u64, output: Result<Vec<u8>, Fault>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let admitted = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
         instance.app.admit_reserved_spawned_job(job, output)
@@ -657,7 +677,8 @@ pub fn drive_self_waking_ready<F: std::future::Future>(fut: F) -> F::Output {
     }
     panic!("drive_self_waking_ready: exceeded the self-wake bound");
 }
-pub(super) fn media_export_handle_from_wire(handle: protocol::MediaExportHandleWire) -> ArtifactMediaExportHandle {
+#[doc(hidden)]
+pub fn media_export_handle_from_wire(handle: protocol::MediaExportHandleWire) -> ArtifactMediaExportHandle {
     ArtifactMediaExportHandle {
         app_instance_id: handle.app_instance_id,
         parent_document_id: handle.parent_document_id,
@@ -666,4 +687,5 @@ pub(super) fn media_export_handle_from_wire(handle: protocol::MediaExportHandleW
         generation: semio_framework_job::Generation(handle.generation),
     }
 }
-pub(super) fn media_export_handle_into_wire(handle:ArtifactMediaExportHandle)->protocol::MediaExportHandleWire{protocol::MediaExportHandleWire{app_instance_id:handle.app_instance_id,parent_document_id:handle.parent_document_id,operation_id:handle.operation_id.0,base_revision:handle.base_revision.0,generation:handle.generation.0}}
+#[doc(hidden)]
+pub fn media_export_handle_into_wire(handle:ArtifactMediaExportHandle)->protocol::MediaExportHandleWire{protocol::MediaExportHandleWire{app_instance_id:handle.app_instance_id,parent_document_id:handle.parent_document_id,operation_id:handle.operation_id.0,base_revision:handle.base_revision.0,generation:handle.generation.0}}

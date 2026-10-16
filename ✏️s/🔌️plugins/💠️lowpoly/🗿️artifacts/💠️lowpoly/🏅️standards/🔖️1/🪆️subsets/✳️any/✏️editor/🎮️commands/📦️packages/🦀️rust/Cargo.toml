@@ -15,62 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[test]]
-name = "lowpoly_commands_patch_object"
-path = "../../✏️patch-object/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_add_primitive"
-path = "../../➕️add-primitive/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_sun"
-path = "../../🌞️sun/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_camera"
-path = "../../🎥️camera/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_chrome"
-path = "../../👁️chrome/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_engagement"
-path = "../../💬️engagement/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_document"
-path = "../../📄️document/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_media"
-path = "../../📤️media/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_mesh_edit"
-path = "../../🔷️mesh-edit/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_paint"
-path = "../../🖌️paint/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_selection"
-path = "../../🗂️selection/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_object"
-path = "../../🗑️object/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_transform"
-path = "../../🧲️transform/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_commands_uv"
-path = "../../🧵️uv/🧪️tests/🔬️unit/🦀️.rs"
-
 [dependencies]
 base64_codec = { workspace = true }
 semio-framework = { workspace = true }

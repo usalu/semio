@@ -1,0 +1,19 @@
+{
+  "name": "@semio-tech/schema-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./🟦️.ts",
+    "./artifact-reference": "./🗿️artifact-reference/🟦️.ts",
+    "./entity-kinds/source": "./🏷️entity-kinds/📥️source/🟦️.ts",
+    "./generated/entity-kinds": "./🤖️generated/🏷️entity-kinds/🟦️.ts",
+    "./oracles/document": "./🔮️oracles/🪪️document/🟦️.ts",
+    "./oracles/validator": "./🔮️oracles/✅️validator/🟦️.ts",
+    "./record": "./🧾️record/🟦️.ts",
+    "./record/testing/unit": "./🧾️record/🧪️testing/🔬️unit/🟦️.ts"
+  },
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/schema-validator-ts": "workspace:*"
+  }
+}

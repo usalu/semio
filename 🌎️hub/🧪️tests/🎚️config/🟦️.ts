@@ -1,3 +1,4 @@
+import {readVitestPolicyV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,7 +13,9 @@ const repoRoot = resolve(dir, "../../..");
 /** 🧪️ Vitest for `os-hub-ts` — the hub-owned `🤝️integration`, `🤝️two-client-document` and `📈️document-growth` cases, gated behind
  * `HUB_E2E=1` (see their own docs), and the ungated `📝️trace-record`, `📌️document-check-in`, `🛡️access-policy`, `🚧️hostile-input`, `📊️observability`, `🌱️creation-progress`, `🪞️pair-content` and `🔀️forwarding-proxy` oracles. Aliases `@semio-tech/framework-os` to its real source
  * file, matching every other vite/vitest config in this repo. */
+const policy=readVitestPolicyV1(process.env,testRoot);
 export default defineConfig({
+  cacheDir:policy.cacheRoot,
   root: testRoot,
   resolve: {
     alias: [{ find: "@semio-tech/framework-os", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") }],

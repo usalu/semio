@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-dock = { path = "../../../🛰️dock/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-fixtures = { path = "../../../🧰️fixtures/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-actions = { path = "../../../🔀️shell-actions/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-async = { path = "../../../⏳️shell-async/📦️packages/🦀️rust", features = ["testkit"] }
@@ -97,4 +98,9 @@ web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasEle
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
+semio-framework-ui-arena = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🏟️arena/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio-framework-ui-retained-tree = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }

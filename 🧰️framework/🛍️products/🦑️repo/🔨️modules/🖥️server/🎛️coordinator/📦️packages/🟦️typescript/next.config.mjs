@@ -1,9 +1,9 @@
-import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import { createRequire } from "node:module";
 import { dirname, relative, resolve } from "node:path";
 import { coordinatorBuildPolicy } from "../../🏗️builder/🎚️mode/🟦️.ts";
 import { compilerCapacityWorkerCountV1, scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation } from "@semio-tech/process/routing/invocation/process";
 import { createNextRebuildAdmissionV1, nextRebuildPluginV1 } from "../../🏗️builder/🎟️admission/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 // #region 🧲️Header

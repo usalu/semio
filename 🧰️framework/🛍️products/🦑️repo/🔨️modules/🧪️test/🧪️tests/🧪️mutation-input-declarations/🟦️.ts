@@ -10,9 +10,9 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type Ajv from "ajv";
-import { mutationInputAudit } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import { type MutationInputDeclaration, type MutationInputDeclarationCode, mutationInputControls, mutationInputDeclarationFindings, mutationInputDeclarations, mutationInputMultilineArmed, mutationInputWidgetVocabulary } from "../../🧬️schema/📋️orchestration/🟦️.ts";
+import { mutationInputAudit } from "@semio-tech/framework/manifest";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { type MutationInputDeclaration, type MutationInputDeclarationCode, mutationInputControls, mutationInputDeclarationFindings, mutationInputDeclarations, mutationInputMultilineArmed, mutationInputWidgetVocabulary } from "../../🧬️schema/📋️orchestration/🎛️mutation-input-ui/🟦️.ts";
 
 type Json = Record<string, unknown>;
 type Finding = readonly [MutationInputDeclarationCode, string];

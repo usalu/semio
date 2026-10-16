@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "budgets": [
+    {
+      "name": "products24",
+      "capacity": 25769803776,
+      "filesystem": 25768755200,
+      "artifact": 24692916224,
+      "persistent": 1075838976
+    }
+  ],
+  "events": [
+    {
+      "type": "reserved",
+      "allocation": {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "owner": "development:local-state:dc9d73b6d260500341182f1169040b5754f98aa0d26ecf6753b49cd81da40205",
+        "kind": "persistent-state",
+        "bytes": 1075838976,
+        "phase": "reserved"
+      }
+    },
+    {
+      "type": "committed",
+      "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "forbidden": [
+    "retiring",
+    "retired"
+  ],
+  "paths": [
+    {
+      "path": "products/browser/prototype/module",
+      "allowed": true
+    },
+    {
+      "path": "persistent/development",
+      "allowed": false
+    },
+    {
+      "path": "persistent/development/fixed.img",
+      "allowed": false
+    },
+    {
+      "path": "PERSISTENT/DEVELOPMENT/fixed.img",
+      "allowed": false
+    },
+    {
+      "path": "persistent-development.json",
+      "allowed": false
+    },
+    {
+      "path": "persistent-development.pending.json.new",
+      "allowed": false
+    }
+  ],
+  "lifetime": [
+    {
+      "name": "normal",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "detached",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "parent-error",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "parent-undefined",
+      "failed": true,
+      "undefined": true
+    },
+    {
+      "name": "child-error",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "child-undefined",
+      "failed": true,
+      "undefined": true
+    },
+    {
+      "name": "late",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "cancel",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "expired",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "maximum",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "issued-detached",
+      "failed": false,
+      "undefined": false
+    }
+  ],
+  "recovery": [
+    {
+      "name": "empty",
+      "charge": false,
+      "phase": "reserved",
+      "binding": false,
+      "intent": false,
+      "directory": false,
+      "owner": "actual",
+      "expected": "birth"
+    },
+    {
+      "name": "charge-before-intent",
+      "charge": true,
+      "phase": "reserved",
+      "binding": false,
+      "intent": false,
+      "directory": false,
+      "owner": "actual",
+      "expected": "recover-intent"
+    },
+    {
+      "name": "unknown-directory",
+      "charge": true,
+      "phase": "reserved",
+      "binding": false,
+      "intent": false,
+      "directory": true,
+      "owner": "actual",
+      "expected": "refuse"
+    },
+    {
+      "name": "committed-without-binding",
+      "charge": true,
+      "phase": "committed",
+      "binding": false,
+      "intent": false,
+      "directory": false,
+      "owner": "actual",
+      "expected": "refuse"
+    },
+    {
+      "name": "foreign-policy",
+      "charge": true,
+      "phase": "reserved",
+      "binding": false,
+      "intent": false,
+      "directory": false,
+      "owner": "foreign",
+      "expected": "refuse"
+    },
+    {
+      "name": "intent-before-backing",
+      "charge": true,
+      "phase": "reserved",
+      "binding": false,
+      "intent": true,
+      "directory": false,
+      "owner": "actual",
+      "expected": "resume"
+    },
+    {
+      "name": "bound-state",
+      "charge": true,
+      "phase": "committed",
+      "binding": true,
+      "intent": true,
+      "directory": true,
+      "owner": "actual",
+      "expected": "resume"
+    },
+    {
+      "name": "missing-bound-backing",
+      "charge": true,
+      "phase": "committed",
+      "binding": true,
+      "intent": true,
+      "directory": false,
+      "owner": "actual",
+      "expected": "refuse"
+    }
+  ],
+  "recordTransactions": [
+    {
+      "name": "before-create",
+      "prefix": "absent",
+      "allowed": true
+    },
+    {
+      "name": "after-create",
+      "prefix": "empty",
+      "allowed": true
+    },
+    {
+      "name": "partial-write",
+      "prefix": "partial",
+      "allowed": true
+    },
+    {
+      "name": "before-sync",
+      "prefix": "complete",
+      "allowed": true
+    },
+    {
+      "name": "after-sync",
+      "prefix": "synced",
+      "allowed": true
+    },
+    {
+      "name": "unknown-record",
+      "prefix": "unknown",
+      "allowed": false
+    },
+    {
+      "name": "after-link-before-unlink",
+      "prefix": "paired",
+      "allowed": true
+    },
+    {
+      "name": "published-with-residue",
+      "prefix": "final-and-prefix",
+      "allowed": true
+    },
+    {
+      "name": "unknown-final",
+      "prefix": "unknown-final",
+      "allowed": false
+    }
+  ]
+}

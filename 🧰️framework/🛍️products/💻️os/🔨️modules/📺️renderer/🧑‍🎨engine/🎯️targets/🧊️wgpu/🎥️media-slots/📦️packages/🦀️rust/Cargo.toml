@@ -40,4 +40,4 @@ semio-framework-trace = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
+semio-framework-ui-retained-tree = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust" }

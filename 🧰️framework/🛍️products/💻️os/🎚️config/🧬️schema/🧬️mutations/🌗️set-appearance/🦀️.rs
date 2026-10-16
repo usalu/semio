@@ -33,13 +33,3 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetA
         vec!["appearance".to_string()]
     }
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️sets-appearance/🦀️.rs"]
-mod tests_sets_appearance;
-
-#[cfg(test)]
-#[path = "🧪️tests/🟰️keeps-appearance/🦀️.rs"]
-mod tests_keeps_appearance;
-//#endregion 🧪️Tests

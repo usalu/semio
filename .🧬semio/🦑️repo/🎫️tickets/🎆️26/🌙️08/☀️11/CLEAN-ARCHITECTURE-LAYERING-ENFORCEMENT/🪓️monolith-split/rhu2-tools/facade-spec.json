@@ -1,0 +1,19 @@
+[
+ {"sub":"./assets","file":"🖼️assets/🟦️.ts","emoji":"🖼️","sources":["🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts"]},
+ {"sub":"./canvas/react-renderer","file":"🖼️canvas/🎨️react-renderer/🟦️.ts","emoji":"🎨️","sources":["🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx"]},
+ {"sub":"./replication","file":"📡️replication/🟦️.ts","emoji":"📡️","sources":["🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts"],"extend":true},
+ {"sub":"./trace","file":"⏱️trace/🟦️.ts","emoji":"⏱️","sources":["🧰️framework/🔨️modules/⏱️trace/🟦️.ts"]},
+ {"sub":"./tool-machine","file":"🛠️tool-machine/🟦️.ts","emoji":"🛠️","sources":["🧰️framework/🔨️modules/🛠️tool-machine/🟦️.ts"]},
+ {"sub":"./value/resident","file":"🌱️value/💾️resident/🟦️.ts","emoji":"💾️","sources":["🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts"]},
+ {"sub":"./async/continuation","file":"⏳️async/🪃️continuation/🟦️.ts","emoji":"🪃️","sources":["🧰️framework/🔨️modules/⏳️async/🪃️continuation/🟦️.ts"]},
+ {"sub":"./interaction","file":"🕹️interaction/🟦️.ts","emoji":"🕹️","sources":["🧰️framework/🔨️modules/🕹️interaction/🟦️.ts"],"extend":true},
+ {"sub":"./2d","file":"◻️2d/🟦️.ts","emoji":"◻️","sources":["🧰️framework/🔨️modules/◻️2d/🟦️.ts"],"extend":true},
+ {"sub":"./tool-run","file":"⏯️tool-run/🟦️.ts","emoji":"⏯️","sources":["🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts"]},
+ {"sub":"./io/base64","file":"🚪️io/🔤️base64/🟦️.ts","emoji":"🔤️","sources":["🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts"],"extend":true},
+ {"sub":"./assets/mesh","file":"🖼️assets/🥽️mesh/🟦️.ts","emoji":"🥽️","sources":["🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog/🟦️.ts","🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts"]},
+ {"sub":"./pixels/editing","file":"🔲️pixels/✍️editing/🟦️.ts","emoji":"✍️","sources":["🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"],"extend":true},
+ {"sub":"./pixels/selection","file":"🔲️pixels/🎯️selection/🟦️.ts","emoji":"🎯️","sources":["🧰️framework/🔨️modules/🔲️pixels/🎯️selection/🟦️.ts"],"extend":true},
+ {"sub":"./raster/video","file":"🖌️raster/🎥️video/🟦️.ts","emoji":"🎥️","sources":["🧰️framework/🔨️modules/🖌️raster/🎥️video/🟦️.ts"]},
+ {"sub":"./io/stream-mux","file":"🚪️io/🔀️stream-mux/🟦️.ts","emoji":"🔀️","sources":["🧰️framework/🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts"]},
+ {"sub":"./time-travel","file":"⏪️time-travel/🟦️.ts","emoji":"⏪️","sources":["🧰️framework/🔨️modules/⏪️time-travel/🟦️.ts"]}
+]

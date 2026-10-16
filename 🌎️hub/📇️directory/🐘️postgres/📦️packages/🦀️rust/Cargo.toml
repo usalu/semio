@@ -4,7 +4,7 @@ name = "semio-hub-directory-postgres"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "HubDirectory over PostgreSQL (sqlx)"
+description = "Hub directory capabilities over PostgreSQL (sqlx)"
 
 [package.metadata.semio]
 role = "hub"

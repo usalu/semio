@@ -6,7 +6,7 @@ import {readFileSync,existsSync} from "node:fs";
 import {createMachine,initialTransition,transition,assign} from "xstate";
 import * as timeTravel from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import replaySchema from "../../../📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json";
+import { conflictReplayReportSchema as replaySchema } from "../../../📡️replication/🧪️tests/🧫️fixtures/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import lifecycle from "../../🧪️tests/🧫️fixtures/🧫️lifecycle-law/🔣️.json";
 import custodySchema from "../🧬️schema/🔣️.json";

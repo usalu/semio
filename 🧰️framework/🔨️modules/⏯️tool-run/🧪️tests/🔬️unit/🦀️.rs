@@ -1,11 +1,22 @@
 //! 🔬️ Rust reducer, ring, store and codecs against the three shared fixtures.
 
 use super::*;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use std::collections::HashMap;
 use serde_json::{json, Value};
 
-const LIFECYCLE: &str = include_str!("../🧫️fixtures/⚖️lifecycle-law.json");
-const TRACE_PAGES: &str = include_str!("../🧫️fixtures/📼️trace-pages.json");
-const TICKS: &str = include_str!("../🧫️fixtures/🎞️ticks.json");
+fn lifecycle_text() -> &'static str {
+    crate::fixture_text("🧪️tests/🧫️fixtures/⚖️lifecycle-law.json")
+}
+fn trace_pages_text() -> &'static str {
+    crate::fixture_text("🧪️tests/🧫️fixtures/📼️trace-pages.json")
+}
+fn ticks_text() -> &'static str {
+    crate::fixture_text("🧪️tests/🧫️fixtures/🎞️ticks.json")
+}
 
 fn fixture(text: &str) -> Value {
     serde_json::from_str(text).expect("fixture parses")
@@ -183,7 +194,7 @@ fn store_for(case: &Value) -> (ToolRunTraceStore, Vec<ToolRunTraceApply>) {
 //#region 🔖️Lifecycle
 #[test]
 fn lifecycle_matrix_covers_every_state_and_event_pair_exactly_once() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     let states: Vec<&str> = law["states"].as_array().expect("states").iter().map(text).collect();
     assert_eq!(states, ToolRunState::ALL.map(ToolRunState::as_str));
     let keys: Vec<&str> = law["eventKeys"].as_array().expect("keys").iter().map(text).collect();
@@ -194,7 +205,7 @@ fn lifecycle_matrix_covers_every_state_and_event_pair_exactly_once() {
 
 #[test]
 fn reducer_matches_every_lifecycle_matrix_row() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     for row in law["matrix"].as_array().expect("matrix") {
         let from = text(&row["from"]);
         let current = ToolRunState::parse(from).map(|state| ToolRunSlot { run: 7, generation: 2, state });
@@ -224,7 +235,7 @@ fn reducer_matches_every_lifecycle_matrix_row() {
 
 #[test]
 fn reducer_matches_every_lifecycle_case() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     for case in law["cases"].as_array().expect("cases") {
         let outcome = ToolRunMachine::apply(slot(&case["slot"]), event(&case["event"]));
         let name = text(&case["name"]);
@@ -237,7 +248,7 @@ fn reducer_matches_every_lifecycle_case() {
 
 #[test]
 fn reducer_replays_every_lifecycle_scenario_with_its_commit_count() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     for scenario in law["scenarios"].as_array().expect("scenarios") {
         let name = text(&scenario["name"]);
         let mut current = None;
@@ -261,7 +272,7 @@ fn reducer_replays_every_lifecycle_scenario_with_its_commit_count() {
 
 #[test]
 fn lifecycle_invariants_hold_over_the_matrix_and_scenarios() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     let ids: Vec<&str> = law["invariants"].as_array().expect("invariants").iter().map(|invariant| text(&invariant["id"])).collect();
     assert_eq!(ids, ["finalizeOnlyWithAResult", "storeGenerationOnlyOnFinalized", "abortAndFaultLeaveZeroTrace", "pauseAndStepNeverCommit", "singleNonTerminalRun"]);
     for state in ToolRunState::ALL.map(Some).into_iter().chain([None]) {
@@ -305,7 +316,7 @@ fn lifecycle_invariants_hold_over_the_matrix_and_scenarios() {
 //#region 🔖️ActionsAndLabels
 #[test]
 fn actions_chords_arguments_and_legality_match_the_fixture_and_the_matrix() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     let rows = law["actions"].as_array().expect("actions");
     assert_eq!(rows.len(), ToolRunAction::ALL.len());
     for (row, action) in rows.iter().zip(ToolRunAction::ALL) {
@@ -337,7 +348,7 @@ fn actions_chords_arguments_and_legality_match_the_fixture_and_the_matrix() {
 
 #[test]
 fn labels_reserved_reasons_and_templates_match_the_fixture() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     let rows = law["labels"].as_array().expect("labels");
     assert_eq!(rows.len(), ToolRunLabel::ALL.len());
     for (row, label) in rows.iter().zip(ToolRunLabel::ALL) {
@@ -366,7 +377,7 @@ fn labels_reserved_reasons_and_templates_match_the_fixture() {
 
 #[test]
 fn limits_match_the_fixture() {
-    let limits = &fixture(LIFECYCLE)["limits"];
+    let limits = &fixture(lifecycle_text())["limits"];
     assert_eq!(limits["stepRingCapacity"], TOOL_RUN_STEP_RING_CAPACITY);
     assert_eq!(limits["stepArgsMax"], TOOL_RUN_STEP_ARGS_MAX);
     assert_eq!(limits["countersMax"], TOOL_RUN_COUNTERS_MAX);
@@ -385,7 +396,7 @@ fn limits_match_the_fixture() {
 //#region 🔖️Definition
 #[test]
 fn definition_round_trips_through_serde_and_value_and_validates() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     let definition: ToolRunDefinition = serde_json::from_value(law["definition"].clone()).expect("definition deserializes");
     assert_eq!(definition.validate(), Ok(()));
     assert_eq!(serde_json::to_value(&definition).expect("serializes"), law["definition"]);
@@ -433,7 +444,7 @@ fn definition_round_trips_through_serde_and_value_and_validates() {
 /// `serde_json` RFC 6901 implementation (`Value::pointer`, the oracle) resolves it; malformed pointers name nothing.
 #[test]
 fn settings_pointers_resolve_like_the_rfc_6901_oracle() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     let cases = &law["settingsPointers"];
     let document = semio_framework_value::DslValue::from(cases["artifact"].clone());
     for row in cases["rows"].as_array().expect("rows") {
@@ -452,7 +463,7 @@ fn settings_pointers_resolve_like_the_rfc_6901_oracle() {
 //#region 🔖️Trace
 #[test]
 fn trace_pages_encode_to_and_decode_from_the_fixture_bytes() {
-    let fixture = fixture(TRACE_PAGES);
+    let fixture = fixture(trace_pages_text());
     for row in fixture["pages"].as_array().expect("pages") {
         let name = text(&row["name"]);
         let expected = page(&row["page"]);
@@ -469,7 +480,7 @@ fn trace_pages_encode_to_and_decode_from_the_fixture_bytes() {
 
 #[test]
 fn malformed_wire_values_are_rejected() {
-    for row in fixture(TRACE_PAGES)["malformed"].as_array().expect("malformed") {
+    for row in fixture(trace_pages_text())["malformed"].as_array().expect("malformed") {
         let bytes = hex(&row["hex"]);
         let rejected = match text(&row["target"]) {
             "page" => ToolRunTracePage::decode(&bytes).is_err(),
@@ -495,7 +506,7 @@ fn trace_page_codec_keeps_full_u64_range_and_enforces_the_op_cap() {
 
 #[test]
 fn trace_store_residency_matches_the_fixture() {
-    for case in fixture(TRACE_PAGES)["residency"].as_array().expect("residency") {
+    for case in fixture(trace_pages_text())["residency"].as_array().expect("residency") {
         let name = text(&case["name"]);
         let (store, applied) = store_for(case);
         let expected_applied: Vec<Value> = case["applied"].as_array().expect("applied").clone();
@@ -513,7 +524,7 @@ fn trace_store_residency_matches_the_fixture() {
 
 #[test]
 fn trace_store_delivery_matches_the_fixture() {
-    let fixture = fixture(TRACE_PAGES);
+    let fixture = fixture(trace_pages_text());
     let residency = fixture["residency"].as_array().expect("residency");
     for case in fixture["delivery"].as_array().expect("delivery") {
         let name = text(&case["name"]);
@@ -605,7 +616,7 @@ fn trace_store_keeps_every_record_of_a_five_thousand_candidate_run() {
 //#region 🔖️Tick
 #[test]
 fn ticks_encode_to_and_decode_from_the_fixture_bytes() {
-    for row in fixture(TICKS)["ticks"].as_array().expect("ticks") {
+    for row in fixture(ticks_text())["ticks"].as_array().expect("ticks") {
         let name = text(&row["name"]);
         let expected = tick(&row["tick"]);
         assert_eq!(to_hex(&expected.encode().expect("encodes")), text(&row["hex"]), "{name}");
@@ -615,7 +626,7 @@ fn ticks_encode_to_and_decode_from_the_fixture_bytes() {
 
 #[test]
 fn step_ring_matches_the_fixture() {
-    for case in fixture(TICKS)["stepRing"].as_array().expect("stepRing") {
+    for case in fixture(ticks_text())["stepRing"].as_array().expect("stepRing") {
         let name = text(&case["name"]);
         let mut ring = ToolRunStepRing::new();
         for push in case["push"].as_array().expect("push") {
@@ -638,7 +649,7 @@ fn step_ring_matches_the_fixture() {
 #[test]
 fn tick_writer_matches_the_fixture() {
     let identity = ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32]);
-    for case in fixture(TICKS)["writer"].as_array().expect("writer") {
+    for case in fixture(ticks_text())["writer"].as_array().expect("writer") {
         let name = text(&case["name"]);
         let mut writer = ToolRunTickWriter::new(identity);
         for key in 0..u64_of(&case["upserts"]) {
@@ -665,7 +676,7 @@ fn tick_writer_matches_the_fixture() {
 #[test]
 fn tick_writer_resumes_from_a_provisional_base_and_retracts_its_entities() {
     let identity = ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 4 }, [0; 32]);
-    for case in fixture(TICKS)["writerResume"].as_array().expect("writerResume") {
+    for case in fixture(ticks_text())["writerResume"].as_array().expect("writerResume") {
         let name = text(&case["name"]);
         let mut writer = ToolRunTickWriter::with_provisional_base(identity, u64_of(&case["provisionalBase"]) as u32);
         let mut ticks = Vec::new();
@@ -742,7 +753,7 @@ fn tick_codec_enforces_the_tick_byte_cap() {
 /// and `finish` hands it over once.
 #[test]
 fn writer_payload_is_the_latest_and_makes_a_tick() {
-    let fixture = fixture(TICKS);
+    let fixture = fixture(ticks_text());
     let row = fixture["ticks"].as_array().expect("ticks").iter().find(|row| row["name"] == "payload tick").expect("payload tick");
     let mut writer = ToolRunTickWriter::new(identity(&row["tick"]["identity"]));
     writer.payload(b"stale".to_vec());
@@ -757,7 +768,7 @@ fn writer_payload_is_the_latest_and_makes_a_tick() {
 /// window, and a start replacing exactly the terminal runs on its lane.
 #[test]
 fn start_admission_follows_the_lane_law() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     let lane = |value: &Value| -> ToolRunLane { serde_json::from_value(value.clone()).expect("lane") };
     for row in law["admission"].as_array().expect("admission") {
         let live: Vec<(ToolRunLane, ToolRunState)> = row["live"].as_array().expect("live").iter().map(|entry| (lane(&entry["lane"]), ToolRunState::parse(text(&entry["state"])).expect("state"))).collect();
@@ -772,7 +783,7 @@ fn start_admission_follows_the_lane_law() {
 /// ⚖️ LAW: `panelGroups` — which keys name a run's panel group, and which runs a rendered panel adds for a host to reveal.
 #[test]
 fn panel_group_keys_and_reveals_follow_the_fixture() {
-    let law = fixture(LIFECYCLE);
+    let law = fixture(lifecycle_text());
     let cases = &law["panelGroups"];
     assert_eq!(text(&cases["rootId"]), TOOL_RUN_PANEL_ID);
     for row in cases["keys"].as_array().expect("keys") {
@@ -792,7 +803,7 @@ fn panel_group_keys_and_reveals_follow_the_fixture() {
 fn original_tool_run_progress_metadata_preserves_all_native_leaves_until_funded_retirement(){
  fn observe_retirement_allocations<R>(operation:impl FnOnce()->R)->(R,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(operation);(value,(heap.requested_bytes,heap.released_bytes))}
  use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
- let corpus=fixture(TICKS);
+ let corpus=fixture(ticks_text());
  for vector in corpus["ticks"].as_array().unwrap().iter().filter(|row|row["tick"].get("progress").is_some()){
   let expected=&vector["tick"]["progress"];let(original,heap)=observe_retirement_allocations(||progress(expected));let original_bytes=heap.0-heap.1;
   assert_eq!(original.identity,identity(&expected["identity"]));assert_eq!(original.state.as_str(),expected["state"].as_str().unwrap());assert_eq!(original.steps.len(),expected["steps"].as_array().unwrap().len());assert_eq!(original.counters.len(),expected["counters"].as_array().unwrap().len());
@@ -811,7 +822,7 @@ fn original_tool_run_progress_metadata_clone_preserves_original_fields_and_physi
  use super::progress_clone::ToolRunProgressClone;
  fn measured<R>(work:impl FnOnce()->R)->(R,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(value,(heap.requested_bytes,heap.released_bytes))}
  fn drain<T:RetireOwned>(value:T)->(usize,usize){let mut owner=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("progress clone retains its actual original owners"));let(mut born,mut released)=(0,0);for _ in 0..100000{if owner.terminal_is_empty(){break;}let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=measured(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;}assert!(owner.terminal_is_empty());assert_eq!(measured(||drop(owner)).1,(0,0));(born,released)}
- let corpus=fixture(TICKS);let law:Value=serde_json::from_str(include_str!("../../📊️progress/📸️clone/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus=fixture(ticks_text());let law:Value=serde_json::from_str(crate::fixture_text("📊️progress/📸️clone/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let mut vectors=corpus["ticks"].as_array().unwrap().clone();let mut maximum=vectors[0].clone();maximum["tick"]["progress"]["counters"]=Value::Array((0..law["maximumLeaves"]["counters"].as_u64().unwrap()).map(|counter|serde_json::json!({"counter":counter,"value":counter+1})).collect());let template=maximum["tick"]["steps"][0].clone();maximum["tick"]["progress"]["steps"]=Value::Array((0..law["maximumLeaves"]["steps"].as_u64().unwrap()).map(|index|{let mut step=template.clone();step["sequence"]=Value::from(index+1);step["args"]=Value::Array((0..law["maximumLeaves"]["arguments"].as_u64().unwrap()).map(|_|template["args"][0].clone()).collect());step}).collect());vectors.push(maximum);
  for vector in vectors.iter().filter(|row|row["tick"].get("progress").is_some()){for stop in std::iter::once(None).chain(law["interruptAfter"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){
   let expected=&vector["tick"]["progress"];let(original,heap)=measured(||progress(expected));let original_bytes=heap.0-heap.1;let counters=original.counters.as_ptr();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<ToolRunProgress>::constructor_copy_bytes(),maximum_capacity_bytes:RetainedCloneSource::<ToolRunProgress>::owned_constructor_capacity_bytes::<()>(),maximum_depth:1,..Default::default()};let(admitted,heap)=measured(||RetainedCloneSource::admit_owned(original,(),grant));let(source,receipt)=admitted.map_err(|(error,_,_)|error).unwrap();assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));let(mut born,mut released)=(heap.0,heap.1);let(mut job,heap)=measured(||ToolRunProgressClone::new(source));assert_eq!(heap,(0,0));let mut turns=0;
@@ -826,7 +837,7 @@ fn original_tool_run_progress_metadata_pending_tick_and_writer_keep_all_actual_f
  use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::{RetireOwned,controlled::ControlledRetirement}};
  fn measured<R>(work:impl FnOnce()->R)->(R,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(value,(heap.requested_bytes,heap.released_bytes))}
  fn close<T:RetireOwned>(value:T,original:usize,label:&str){let mut owner=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("pending ToolRun original requires typed retirement"));let(mut born,mut released)=(0,0);for _ in 0..100000{if owner.terminal_is_empty(){break;}let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),grant.maximum_copy_bytes.checked_sub(1).map(|x|RetainedCloneGrant{maximum_copy_bytes:x,..grant}),grant.maximum_capacity_bytes.checked_sub(1).map(|x|RetainedCloneGrant{maximum_capacity_bytes:x,..grant}),grant.maximum_release_bytes.checked_sub(1).map(|x|RetainedCloneGrant{maximum_release_bytes:x,..grant}),grant.maximum_depth.checked_sub(1).map(|x|RetainedCloneGrant{maximum_depth:x,..grant})].into_iter().flatten(){let(result,heap)=measured(||owner.step(denied));assert_eq!(heap,(0,0));match result{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert!(matches!(error.kind,semio_framework_value::ValueRefusalKind::DepthLimit|semio_framework_value::ValueRefusalKind::OwnershipLimit|semio_framework_value::ValueRefusalKind::WorkLimit))};}let(step,heap)=measured(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;}assert!(owner.terminal_is_empty());assert_eq!(original+born,released);assert_eq!(measured(||drop(owner)).1,(0,0));println!("[DEBUG] {label} original={original} born={born} physical={released}");}
- let law:Value=serde_json::from_str(include_str!("../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let corpus=fixture(TICKS);
+ let law:Value=serde_json::from_str(crate::fixture_text("♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let corpus=fixture(ticks_text());
  for row in corpus["ticks"].as_array().unwrap(){for kind in law["owners"].as_array().unwrap(){
   if kind=="pendingTick"{let(value,heap)=measured(||tick(&row["tick"]));assert_eq!(value.identity,identity(&row["tick"]["identity"]));assert_eq!(value.append_entities.len(),row["tick"]["appendEntities"].as_array().unwrap().len());assert_eq!(value.trace.len(),row["tick"]["trace"].as_array().unwrap().len());close(value,heap.0-heap.1,"pending tick");}
   else{let(value,heap)=measured(||{let tick=tick(&row["tick"]);let mut writer=ToolRunTickWriter::new(tick.identity);writer.progress=tick.progress;writer.steps=tick.steps;writer.pages=tick.trace;writer.append_ops=tick.append_ops;writer.append_entities=tick.append_entities;writer.entity_marks=writer.append_entities.iter().map(|_|writer.append_ops.len()as u32).collect();writer.retract_to=tick.retract_to;writer.payload=tick.payload;if let Some(page)=writer.pages.pop(){writer.page_ops=page.ops;}writer});assert_eq!(value.identity,identity(&row["tick"]["identity"]));assert_eq!(value.append_entities.len(),row["tick"]["appendEntities"].as_array().unwrap().len());close(value,heap.0-heap.1,"pending writer");}
@@ -839,7 +850,7 @@ fn original_tool_run_progress_metadata_step_ring_insertion_preserves_original_ow
  use super::step_ring_insert::{ToolRunStepRingInsert,ToolRunStepRingInsertGrant};
  fn measured<R>(work:impl FnOnce()->R)->(R,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(value,(heap.requested_bytes,heap.released_bytes))}
  fn drain<T:RetireOwned>(value:T)->(usize,usize){let mut owner=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("ring insertion retains original typed owners"));let(mut born,mut released)=(0,0);for _ in 0..100000{if owner.terminal_is_empty(){break;}let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=measured(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;}assert!(owner.terminal_is_empty());assert_eq!(measured(||drop(owner)).1,(0,0));(born,released)}
- let law:Value=serde_json::from_str(include_str!("../../📊️progress/💍️steps/➕️insert/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let law:Value=serde_json::from_str(crate::fixture_text("📊️progress/💍️steps/➕️insert/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){for stop in std::iter::once(None).chain(law["interruptAfter"].as_array().unwrap().iter().map(|x|Some(x.as_u64().unwrap()as usize))){
   let((ring,input),heap)=measured(||{let ring=ToolRunStepRing::from_steps((0..row["initialCount"].as_u64().unwrap()).map(|index|{let mut value=step(&row["template"]);value.sequence=index+1;value}).collect()).unwrap();(ring,step(&row["input"]))});let original=heap.0-heap.1;let newest=ring.newest().map(|s|s.args.as_ptr());let input_pointer=input.args.as_ptr();let(mut job,heap)=measured(||ToolRunStepRingInsert::new(ring,input));assert_eq!(heap,(0,0));let(mut born,mut released,mut turns)=(0,0,0);
   while !job.complete()&&turns<stop.unwrap_or(10000){let demand=job.next_demands().unwrap();let grant=ToolRunStepRingInsertGrant{retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.retirement.copy_bytes,maximum_capacity_bytes:demand.retirement.capacity_bytes,maximum_release_bytes:demand.retirement.release_bytes,maximum_depth:demand.retirement.depth},comparison:BoundedOrdGrant{maximum_items:demand.compared_items,maximum_bytes:demand.compared_bytes},maximum_moved_items:demand.moved_items,maximum_moved_bytes:demand.moved_bytes};
@@ -857,7 +868,7 @@ fn original_tool_run_progress_metadata_tick_source_keeps_actual_operation_and_tr
  use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,controlled::ControlledRetirement}};
  fn measured<R>(work:impl FnOnce()->R)->(R,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(value,(heap.requested_bytes,heap.released_bytes))}
  fn drain<T:RetireOwned>(value:T)->(usize,usize){let mut close=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("actual tick source and borrowed children have typed original custody"));let(mut born,mut released)=(0,0);for _ in 0..100000{if close.terminal_is_empty(){break;}let copy=close.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap()};let(step,heap)=measured(||close.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;}assert!(close.terminal_is_empty());assert_eq!(measured(||drop(close)).1,(0,0));(born,released)}
- let law:Value=serde_json::from_str(include_str!("../../📽️tick/🔐️source/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let corpus=fixture(TICKS);
+ let law:Value=serde_json::from_str(crate::fixture_text("📽️tick/🔐️source/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let corpus=fixture(ticks_text());
  for order in law["orders"].as_array().unwrap(){let(mut input,heap)=measured(||ToolRunTick{identity:identity(&corpus["ticks"][0]["tick"]["identity"]),sequence:1,retract_to:None,append_ops:Vec::new(),append_entities:Vec::new(),steps:Vec::new(),progress:None,trace:Vec::new(),payload:None});let mut original=heap.0-heap.1;let(operations,heap)=measured(||law["operations"].as_array().unwrap().iter().map(|v|hex(v)).collect::<Vec<_>>());original+=heap.0-heap.1;input.append_ops=operations;let operation_pointer=input.append_ops[1].as_ptr();let(mut input,heap)=measured(||{input.trace=vec![ToolRunTracePage{identity:input.identity,page:0,ops:vec![ToolRunTraceOp::Clear]}];input});original+=heap.0-heap.1;let trace_pointer=input.trace[0].ops.as_ptr();let quote=ToolRunTickSource::birth_demands();let funded=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_depth:quote.depth,..Default::default()};for axis in [0,1,2,4]{let denied=match axis{0=>RetainedCloneGrant{maximum_items:0,..funded},1=>RetainedCloneGrant{maximum_copy_bytes:0,..funded},2=>RetainedCloneGrant{maximum_capacity_bytes:0,..funded},_=>RetainedCloneGrant{maximum_depth:0,..funded}};let(result,heap)=measured(||ToolRunTickSource::admit(input,denied));assert_eq!(heap,(0,0));let(_,returned)=result.err().unwrap();assert_eq!(returned.append_ops[1].as_ptr(),operation_pointer);input=returned;}let((source,receipt),heap)=measured(||ToolRunTickSource::admit(input,funded).unwrap_or_else(|_|panic!("original source admission is funded")));assert!(receipt.fits(funded));assert_eq!(heap,(receipt.retained_capacity_bytes,0));let(mut born,mut released)=heap;
  let operation_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:ToolRunTickSource::operation_capture_copy_bytes(),maximum_depth:1,..Default::default()};let trace_grant=RetainedCloneGrant{maximum_copy_bytes:ToolRunTickSource::trace_capture_copy_bytes(),..operation_grant};let((operation,receipt),heap)=measured(||source.operation(1,operation_grant).unwrap());assert_eq!(heap,(0,0));assert!(receipt.fits(operation_grant));let((trace,receipt),heap)=measured(||source.trace(0,trace_grant).unwrap());assert_eq!(heap,(0,0));assert!(receipt.fits(trace_grant));assert_eq!(operation.bytes().as_ptr(),operation_pointer);assert_eq!(operation.bytes(),hex(&law["operations"][1]));assert_eq!(trace.page().ops.as_ptr(),trace_pointer);assert_eq!(trace.page().ops,[ToolRunTraceOp::Clear]);let take=ToolRunTickSource::take_demands();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:take.copy_bytes,maximum_release_bytes:take.release_bytes,maximum_depth:take.depth,..Default::default()};let(result,heap)=measured(||source.try_into_tick(grant));assert_eq!(heap,(0,0));let(_,mut source)=result.err().unwrap();assert_eq!(source.borrow().append_ops[1].as_ptr(),operation_pointer);
  for heap in if order.as_str().unwrap()=="operationFirst"{[drain(operation),drain(trace)]}else{let first=drain(trace);[first,drain(operation)]}{born+=heap.0;released+=heap.1;}for axis in [0,1,3,4]{let denied=match axis{0=>RetainedCloneGrant{maximum_items:0,..grant},1=>RetainedCloneGrant{maximum_copy_bytes:0,..grant},3=>RetainedCloneGrant{maximum_release_bytes:0,..grant},_=>RetainedCloneGrant{maximum_depth:0,..grant}};let(result,heap)=measured(||source.try_into_tick(denied));assert_eq!(heap,(0,0));let(_,returned)=result.err().unwrap();source=returned;}let((returned,receipt),heap)=measured(||source.try_into_tick(grant).unwrap_or_else(|_|panic!("same original tick returns after genuine child close")));assert!(receipt.fits(grant));assert_eq!(heap,(0,receipt.released_bytes));released+=heap.1;assert_eq!(returned.append_ops[1].as_ptr(),operation_pointer);assert_eq!(returned.trace[0].ops.as_ptr(),trace_pointer);let heap=drain(returned);born+=heap.0;released+=heap.1;assert_eq!(original+born,released);println!("[DEBUG] original Tick operation/trace source order={order} original={original} born={born} physical={released}");let _:RetainedCloneProgress=receipt;

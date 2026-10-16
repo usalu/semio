@@ -1,0 +1,23 @@
+[package]
+name = "semio-framework-os-native-runtime-reader"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+
+[package.metadata.semio]
+role = "test"
+id = "native-runtime-reader"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "semio-native-runtime-reader"
+path = "🦀️.rs"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+sha2 = "0.10.9"
+semio-framework-os-renderer-wgpu-native-runtime-modules = { path = "../../../../📦️packages/🦀️rust" }

@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | ShellHelpers}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { TIME_TRAVEL_CODE_LABELS } from "../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
+import { TIME_TRAVEL_CODE_LABELS } from "@semio-tech/framework/time-travel";
 // #region 🔌️Adapters
 import {
   type PluginModuleAcquisitionProgress,
@@ -36,7 +36,7 @@ import {
   type WindowMeasure,
   type WindowStackCorner
 } from "@semio-tech/framework";
-import { type CommandRejectionCodeV1, type CommandRejectionV1 } from "@semio-tech/framework-os";
+import { type CommandRejectionCodeV1, type CommandRejectionV1 } from "@semio-tech/framework/wire-contracts";
 import { decodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 import {
   type Anchor,
@@ -56,12 +56,12 @@ import {
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import React, { type ReactNode } from "react";
-import { faultNotice, historyNotice } from "../../../../../../../../🔨️modules/🎠️kernel/🏷️notice-labels/🟦️.ts";
+import { faultNotice, historyNotice } from "@semio-tech/framework";
 import { registerPendingWorldProjection } from "../../🌐️World3dHost/🟦️.tsx";
 import { type InputDraftDispositionV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { type ExtraWindowInstance, type LoadedProgramState } from "../../🐚️Shell/🟦️.tsx";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
-import type { BrowserActorUiPatchVerdictV1 } from "../../../../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
+import type { BrowserActorUiPatchVerdictV1 } from "@semio-tech/framework/browser-bundle/patch-handoff";
 import {
   loadPluginModule,
   pluginLoadProgressAt,
@@ -282,7 +282,8 @@ export function retitleWindowLayoutNode(
   if (node.kind === "window") {
     const extra = extraInstances.find((entry) => entry.id === node.id);
     const kind = windowKinds.find((entry) => entry.id === node.id);
-    const title = titleOverrides[node.id] !== undefined ? wireLabel(titleOverrides[node.id]) : extra ? wireLabel(extra.title) : kind ? wireLabel(resolveManifestLabel(kind.label, terminology, locale)) : (node.title ?? uiDataLabel(node.id));
+    const override=titleOverrides[node.id];
+    const title = override !== undefined ? wireLabel(override) : extra ? wireLabel(extra.title) : kind ? wireLabel(resolveManifestLabel(kind.label, terminology, locale)) : (node.title ?? uiDataLabel(node.id));
     return { ...node, title };
   }
   return {

@@ -8,6 +8,7 @@
 //! `🏛️ShellHost/🟦️.tsx`'s theme mutators/`exportTheme`/`importTheme`, and
 //! `🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx`'s `SHELL_KEYBINDINGS`.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::split_pane_shell;
 use super::*;
 
 fn accessibility_fixture() -> Value {
@@ -17,7 +18,7 @@ fn accessibility_fixture() -> Value {
 fn shell_with_nested_app_settings() -> ShellState {
     let fixture = accessibility_fixture();
     let selection = &fixture["nestedPanelSelection"];
-    let mut shell = super::window_pane_chrome_tests::split_pane_shell();
+    let mut shell = split_pane_shell();
     SessionCtx::of(&mut shell).sync_dock_tabs();
     shell.docs.session = None;
     let branch = shell.dock.dock_tabs.tabs_mut(PanelAnchor::BottomRight).iter_mut().find(|tab| tab.id == selection["rootId"].as_str().expect("root id")).expect("settings branch");
@@ -509,9 +510,9 @@ fn fullscreen_and_utility_painters_publish_reacts_pressed_buttons_on_their_actua
     let semantics = &fixture["chromePressedSemantics"];
     let action = ActionDescriptor { controller_id: "fixture".into(), action: "activate".into(), args: None };
     let utilities = vec![
-        ui_wgpu::wgpu::utility_button("save", "circle".into(), semantics["utility"]["button"]["label"].as_str().expect("button label"), action.clone()),
-        ui_wgpu::wgpu::utility_toggle("grid", "circle".into(), semantics["utility"]["toggle"]["label"].as_str().expect("toggle label"), semantics["utility"]["toggle"]["pressed"].as_bool().expect("toggle pressed"), action),
-        ui_wgpu::wgpu::utility_collection("views", "circle".into(), semantics["utility"]["collection"]["label"].as_str().expect("collection label"), vec![]),
+        semio_framework_ui_layout::utilities::utility_button("save", "circle".into(), semantics["utility"]["button"]["label"].as_str().expect("button label"), action.clone()),
+        semio_framework_ui_layout::utilities::utility_toggle("grid", "circle".into(), semantics["utility"]["toggle"]["label"].as_str().expect("toggle label"), semantics["utility"]["toggle"]["pressed"].as_bool().expect("toggle pressed"), action),
+        semio_framework_ui_layout::utilities::utility_collection("views", "circle".into(), semantics["utility"]["collection"]["label"].as_str().expect("collection label"), vec![]),
     ];
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut chrome = ShellChromeBuildState::default();
@@ -601,7 +602,7 @@ fn field_and_engagement_labels_reach_focusable_child_controls() {
     assert_eq!(projected.description.as_deref(), Some("Whole-number iterations"));
 
     let rows =
-        engagement_control_rows(&ui_wgpu::wgpu::WindowEngagementControl::Stepper { id: None, label: Some("Count".into()), value: 3.0, min: None, max: None, step: Some(1.0), unit: None, disabled: None, on_change: None, on_commit: None }, false);
+        engagement_control_rows(&semio_framework_ui_layout::layout::WindowEngagementControl::Stepper { id: None, label: Some("Count".into()), value: 3.0, min: None, max: None, step: Some(1.0), unit: None, disabled: None, on_change: None, on_commit: None }, false);
     assert_eq!(rows.len(), 1, "the semantic field owns the visible label and control");
     let records = panel_ui_records("engagement", &rows[0]).expect("engagement projection");
     let child = records.iter().find(|record| record.key.as_str() == "engagement/engagement-control.stepper").expect("engagement stepper");
@@ -621,7 +622,7 @@ fn accessibility_activation_updates_settings_pressed_button_projection() {
     assert_eq!(initial.pressed, Some(false));
     assert_eq!(initial.role, "button");
     assert!(initial.checked.is_none());
-    let target = ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: initial.node_id, node_key: initial.key };
+    let target = ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: initial.node_id, node_key: initial.key };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("settings activation"));
     assert_eq!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits())[0].pressed, Some(true), "the Settings branch button reflects its now-visible anchor");
     shell.dock.anchor_state_mut(PanelAnchor::BottomRight).visible = false;
@@ -634,7 +635,7 @@ fn accessibility_activation_updates_settings_pressed_button_projection() {
     let general = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().next().expect("general projection");
     assert_eq!(general.pressed, Some(false));
     assert!(general.selected.is_none());
-    let target = ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: general.node_id, node_key: general.key };
+    let target = ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: general.node_id, node_key: general.key };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("general activation"));
     assert_eq!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits())[0].pressed, Some(true), "the activated General leaf publishes aria-pressed=true");
     let expected: Vec<&str> = selection["expectedPath"].as_array().expect("expected path").iter().map(|id| id.as_str().expect("path id")).collect();
@@ -676,7 +677,7 @@ fn chrome_accessibility_dispatch_validates_current_identity_and_activates_once()
     PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     let node = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().next().expect("search projection");
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key.clone() };
+        ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key.clone() };
 
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).expect("focus dispatch"));
     assert_eq!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits())[0].focused, true);
@@ -706,7 +707,7 @@ fn generation_rule_hit(rect_key: &str) -> HitTarget<ActionDescriptor> {
 fn settings_toggle_address(shell: &ShellState, input: &InputState<ActionDescriptor>) -> ui_render::AccessibilityTarget {
     let control = accessibility_fixture()["presentedChrome"]["generationRule"]["controlId"].as_str().expect("generation rule control").to_string();
     let node = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == control).expect("Settings mirror node");
-    ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key }
+    ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key }
 }
 
 #[test]
@@ -798,7 +799,7 @@ fn a_constrained_settings_strip_retains_all_semantic_tabs_and_reveals_an_accessi
     let tail_id = contract["tailIds"][1].as_str().unwrap();
     let tail = semantic.iter().find(|node| node.key == tail_id).expect("semantic tail tab");
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: tail.node_id, node_key: tail.key.clone() };
+        ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: tail.node_id, node_key: tail.key.clone() };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("tail tab activation"));
     assert_eq!(shell.dock.anchor_state(anchor).active_tab(), Some(tail_id));
 
@@ -878,11 +879,11 @@ fn the_flagged_keybinding_rows_match_reacts_registry() {
 
 #[test]
 fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions() {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🪟️dock-accessible-names/🔣️.json")).expect("dock names fixture");
     for locale in fixture["locales"].as_array().expect("locales") {
         for layout in ["split", "maximized", "stacked"] {
-            let mut shell = super::window_pane_chrome_tests::split_pane_shell();
+            let mut shell = split_pane_shell();
             let maximized = layout == "maximized";
             let stacked = layout == "stacked";
             let stacked_active = fixture["stackedActiveId"].as_str().unwrap();
@@ -890,8 +891,8 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
             shell.chrome.screen_w = 1280.0;
             shell.chrome.screen_h = 720.0;
             if stacked {
-                shell.dock.dock.root = crate::dock::DockNode::Stack {
-                    windows: shell.dock.dock.window_instances().into_iter().map(|(id, kind)| crate::dock::DockStackTab::instance(id, kind, ui_wgpu::wgpu::WindowStackCorner::TopLeft)).collect(),
+                shell.dock.dock.root = semio_framework_os_renderer_wgpu_dock::DockNode::Stack {
+                    windows: shell.dock.dock.window_instances().into_iter().map(|(id, kind)| semio_framework_os_renderer_wgpu_dock::DockStackTab::instance(id, kind, semio_framework_ui_layout::layout::WindowStackCorner::TopLeft)).collect(),
                     active: stacked_active.into(),
                 };
             }
@@ -955,7 +956,7 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
 
 #[test]
 fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let theme = Theme::light();
     let mut input = InputState::<ActionDescriptor>::default();

@@ -14,7 +14,9 @@ import { useEffect, useId, useRef, useState, type FormEvent, type ReactElement }
 import { HANDLE_INPUT_MAX, HANDLE_MAX, normalizeHandle, type Identity, type IdentityClaim, type Rejection } from "@semio-tech/quiz";
 import { REJECTION_LABELS, type QuizLabelKey, type QuizText } from "../🌐️i18n/🟦️.ts";
 import { BodyButton, CardAction, CardIcon, ProblemNote, QuizCard, type Problem } from "../🪟️chrome/🟦️.tsx";
-import type { QuizNotice, QuizSession, SessionFailure } from "../🧭️session/🟦️.ts";
+import type { QuizNotice } from "../🧭️session/🧮️state/🟦️.ts";
+import type { QuizSession } from "../🧭️session/🟦️.ts";
+import type { SessionFailure } from "../🧭️session/📋️session-model/🟦️.ts";
 
 /** 🏷️ How a learner is named in public: their handle, or the localized "Anonymous" with their tag — never with any
  * part of their id, which acts as their credential. */

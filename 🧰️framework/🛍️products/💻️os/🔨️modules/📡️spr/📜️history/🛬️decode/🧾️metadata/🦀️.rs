@@ -17,13 +17,13 @@ impl From<JsonError> for RetainedHistoryOpMetaFault{fn from(error:JsonError)->Se
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum RetainedHistoryOpMetaStep{Blocked,Progress,Ready,Fault,Closed}
 pub struct RetainedHistoryOpMetaDecode{
- source:OriginalWireSourceIdentity,control_identity:(u64,Option<u64>),end:usize,position:usize,limits:HistoryReadLimits,phase:u8,next_phase:u8,id_target:u8,presence:u8,remaining:usize,hash_position:usize,origin_ready:bool,closing:bool,closed:bool,
+ source:OriginalWireSourceIdentity,control_identity:(u64,Option<u64>),end:usize,position:usize,limits:HistoryReadLimits,#[doc(hidden)] pub phase:u8,next_phase:u8,id_target:u8,presence:u8,remaining:usize,hash_position:usize,origin_ready:bool,closing:bool,closed:bool,
  partial:ManuallyDrop<Option<RetainedHistoryOpMetaPartial>>,id:ManuallyDrop<Option<RetainedHistoryIdDecode>>,dependencies:ManuallyDrop<Option<RetainedHistoryRecords<String>>>,messages:ManuallyDrop<Option<RetainedHistoryRecords<HistoryMessage>>>,message:ManuallyDrop<Option<RetainedHistoryMessageDecode>>,message_partial:ManuallyDrop<Option<RetainedHistoryMessagePartial>>,origin:ManuallyDrop<Option<RetainedHistoryOriginJsonDecode>>,grammar:ManuallyDrop<Option<JsonGrammarCursor<DslValue>>>,value:ManuallyDrop<Option<DslValue>>,json_error:ManuallyDrop<Option<JsonError>>,projection:ManuallyDrop<Option<RetainedHistoryOriginProjection>>,origin_partial:ManuallyDrop<Option<RetainedHistoryOriginPartial>>,retiring:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,fault:ManuallyDrop<Option<RetainedHistoryOpMetaFault>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,
 }
 fn fault(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn metadata()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 fn nested(mut d:RetirementDemand)->Result<RetirementDemand,RetainedHistoryOpMetaFault>{d.depth=d.depth.checked_add(1).ok_or_else(||fault("original metadata depth overflow"))?;Ok(d)}
-fn permits(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items>0&&g.maximum_depth>=d.depth&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes}
+#[doc(hidden)] pub fn permits(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items>0&&g.maximum_depth>=d.depth&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes}
 fn scalar<S:RetainedWireByteSource+?Sized>(source:&S,position:&mut usize,end:usize)->Result<u64,RetainedHistoryOpMetaFault>{let mut result=0;for index in 0..10{let byte=source.byte_at(*position).filter(|_|*position<end).ok_or_else(||fault("original metadata scalar is truncated"))?;if index==9&&byte>1{return Err(fault("original metadata scalar overflows").into())}*position+=1;result|=u64::from(byte&127)<<(index*7);if byte&128==0{return Ok(result)}}Err(fault("original metadata scalar is unbounded").into())}
 impl RetainedHistoryOpMetaDecode{
  pub fn admit<S:RetainedWireByteSource+?Sized>(source:&S,range:(usize,usize),limits:HistoryReadLimits,control:&NativeDecodeControl<'_>,g:RetainedCloneGrant)->Result<Option<Self>,RetainedHistoryOpMetaFault>{
@@ -126,7 +126,3 @@ impl RetainedHistoryOpMetaDecode{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.partial.is_none()&&self.fault.is_none()&&self.receipt.is_none()&&self.children_empty()}
 }
 impl Drop for RetainedHistoryOpMetaDecode{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original metadata abandoned native fields or exact receipt");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.partial);ManuallyDrop::drop(&mut self.id);ManuallyDrop::drop(&mut self.dependencies);ManuallyDrop::drop(&mut self.messages);ManuallyDrop::drop(&mut self.message);ManuallyDrop::drop(&mut self.message_partial);ManuallyDrop::drop(&mut self.origin);ManuallyDrop::drop(&mut self.grammar);ManuallyDrop::drop(&mut self.value);ManuallyDrop::drop(&mut self.json_error);ManuallyDrop::drop(&mut self.projection);ManuallyDrop::drop(&mut self.origin_partial);ManuallyDrop::drop(&mut self.retiring);ManuallyDrop::drop(&mut self.fault)}}}}
-
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

@@ -4,10 +4,10 @@
  */
 
 //#region 🔌️Adapters
-import { type SubsetTarget, type PlatformId } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type SubsetTarget, type PlatformId } from "@semio-tech/framework/test/adapter";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { leadingEmojiIdentity } from "../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
+import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
 import { isExcludedTestPath, testFilenameForKind, testTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { walkDirectories } from "../🧭️case-discovery/🟦️.ts";
 import { profileDirectoryIsCanonical } from "../🧮️mutation-catalog/🟦️.ts";

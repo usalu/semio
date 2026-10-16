@@ -27,12 +27,11 @@ export default {
     name: "@semio-tech/framework",
     mode: "test",
     environment: "node",
-    // 🩹️ `include` MUST stay empty: this is an in-source (`import.meta.vitest`) suite collected via
-    // `includeSource`. Listing the same file in BOTH keys made vitest collect it twice and report
-    // double the real test count. Add new in-source files to `includeSource`/`coverage.include` only.
-    include: [],
+    // 🩹️ `include` lists plain test files only; in-source (`import.meta.vitest`) files go to `includeSource`.
+    // Listing the same file in BOTH keys made vitest collect it twice and report double the real test count.
+    include: ["🔨️modules/🎠️kernel/🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts"],
     coverage: { include: ["📦️packages/🟦️typescript/🟦️.ts", "🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts", "🔨️modules/🎠️kernel/🧭️app-router/🟦️.ts", "🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts", "🔨️modules/🎠️kernel/🗂️plugin-registry/🟦️.ts", "🔨️modules/🎠️kernel/🚪️io-router/🟦️.ts", "🔨️modules/🎠️kernel/🔌️plugin-source/🟦️.ts", "🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts", "🔨️modules/🕹️interaction/👆️gesture/🟦️.ts", "🧪️tests/🧪️docklayoutstore/🟦️.ts", "🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts", "🔨️modules/🔏️hash/🟦️.ts"] },
-    includeSource: ["🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts", "🔨️modules/🎠️kernel/🧭️app-router/🟦️.ts", "🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts", "🔨️modules/🎠️kernel/🗂️plugin-registry/🟦️.ts", "🔨️modules/🎠️kernel/🚪️io-router/🟦️.ts", "🔨️modules/🎠️kernel/🔌️plugin-source/🟦️.ts", "🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts", "🔨️modules/🕹️interaction/👆️gesture/🟦️.ts", "🧪️tests/🧪️docklayoutstore/🟦️.ts", "🔨️modules/🚪️io/🔀️stream-mux/🧪️tests/🧫️contract/🟦️.ts", "🔨️modules/🔏️hash/🧪️tests/🧮️blake3/🟦️.ts"],
+    includeSource: ["🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts", "🔨️modules/🕹️interaction/👆️gesture/🟦️.ts", "🧪️tests/🧪️docklayoutstore/🟦️.ts", "🔨️modules/🚪️io/🔀️stream-mux/🧪️tests/🧫️contract/🟦️.ts", "🔨️modules/🔏️hash/🧪️tests/🧮️blake3/🟦️.ts"],
     passWithNoTests: false,
   },
 };

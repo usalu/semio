@@ -1,7 +1,7 @@
 //! 🧪️ Exact app_commands OpBinary witness, field ordinals, partitions, cancellation, and hostile input.
 
 use super::*;
-use store::os_pack::{ScalarRecordWireStep, ScalarRecordWireWitness};
+use store::os_pack::record::scalar_witness::{ScalarRecordWireStep, ScalarRecordWireWitness};
 
 //#region 🔣️Fixture
 fn text(field: &Value) -> String {

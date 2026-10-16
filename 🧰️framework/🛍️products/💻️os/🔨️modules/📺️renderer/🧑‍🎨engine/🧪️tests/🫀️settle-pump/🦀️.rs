@@ -23,8 +23,14 @@ use semio_framework::kernel::UiDirtyScope;
 use serde_json::Value;
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/🫀️settle-pump/🔣️.json");
-const SHELL_SOURCE: &str = crate::shell::SHELL_SOURCE;
-const RENDERER_SOURCE: &str = crate::RENDERER_SOURCE;
+#[allow(non_snake_case)]
+fn SHELL_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::shell_source()
+}
+#[allow(non_snake_case)]
+fn RENDERER_SOURCE() -> &'static str {
+    semio_framework_os_renderer_wgpu_test_support::renderer_source()
+}
 
 fn fixture() -> Value {
     serde_json::from_str(FIXTURE).expect("settle pump fixture parses")
@@ -134,12 +140,12 @@ fn a_frame_drains_its_input_actions_before_it_takes_a_settle_step() {
 
 #[test]
 fn the_boot_arms_the_settle_lane_instead_of_converging_and_the_frame_loop_drives_it() {
-    assert!(SHELL_SOURCE.contains("self.owe_settle();\n        Ok(())\n    }"), "settle_boot arms the settle lane and returns instead of driving flush_deferred_actions to a fixed point");
-    let settle_boot = SHELL_SOURCE.split("async fn settle_boot").nth(1).expect("the shell declares settle_boot");
+    assert!(SHELL_SOURCE().contains("self.owe_settle();\n        Ok(())\n    }"), "settle_boot arms the settle lane and returns instead of driving flush_deferred_actions to a fixed point");
+    let settle_boot = SHELL_SOURCE().split("async fn settle_boot").nth(1).expect("the shell declares settle_boot");
     let settle_boot = &settle_boot[..["\n    async fn ", "\n    pub(crate) async fn "].iter().filter_map(|marker| settle_boot.find(marker)).min().unwrap_or(settle_boot.len())];
     assert!(!settle_boot.contains("self.flush_deferred_actions("), "settle_boot no longer converges the chain before the first paint");
-    assert!(RENDERER_SOURCE.contains("cursor.settle = self.shell.settle_pump_pending();"), "the frame-finish boundary re-reads the settle predicate every frame");
-    assert!(RENDERER_SOURCE.contains("interaction.shell.settle_pump_step().await"), "the frame's deferred owner is the ONE caller of the settle step");
+    assert!(RENDERER_SOURCE().contains("cursor.settle = self.shell.settle_pump_pending();"), "the frame-finish boundary re-reads the settle predicate every frame");
+    assert!(RENDERER_SOURCE().contains("interaction.shell.settle_pump_step().await"), "the frame's deferred owner is the ONE caller of the settle step");
 }
 
 /// 🎥️ Scene paint precedes typed snapshot sealing in a frame transaction, so the snapshot
@@ -147,18 +153,18 @@ fn the_boot_arms_the_settle_lane_instead_of_converging_and_the_frame_loop_drives
 /// World3d pending predicate and funds later corners without a global frame-loop poll.
 #[test]
 fn a_sealed_world_snapshot_hands_camera_fit_to_the_retained_wake_lane() {
-    let snapshot = RENDERER_SOURCE.split("AppFrameTransactionPhase::World3dSnapshot =>").nth(1).expect("the frame transaction declares its World snapshot phase");
+    let snapshot = RENDERER_SOURCE().split("AppFrameTransactionPhase::World3dSnapshot =>").nth(1).expect("the frame transaction declares its World snapshot phase");
     let snapshot = &snapshot[..snapshot.find("AppFrameTransactionPhase::World3dAuthority =>").expect("the snapshot phase terminates")];
     assert!(
         snapshot.contains("World3dSnapshotApplyStep::Idle | World3dSnapshotApplyStep::Complete => {\n                        step_world3d_camera_fit_after_snapshot(state);"),
         "an idle or newly sealed snapshot advances one bounded camera-fit step before leaving its surface"
     );
-    assert!(RENDERER_SOURCE.contains("fn step_world3d_camera_fit_after_snapshot(state: &mut infinite_world::world::World3dState)"), "the transaction has one explicit post-snapshot camera handoff");
+    assert!(RENDERER_SOURCE().contains("fn step_world3d_camera_fit_after_snapshot(state: &mut infinite_world::world::World3dState)"), "the transaction has one explicit post-snapshot camera handoff");
 }
 
 #[test]
 fn the_refresh_honours_the_dirty_scope_now_that_the_pump_funds_the_guest() {
-    let refresh = SHELL_SOURCE.split("pub async fn refresh_ui").nth(1).expect("the shell declares refresh_ui");
+    let refresh = SHELL_SOURCE().split("pub async fn refresh_ui").nth(1).expect("the shell declares refresh_ui");
     assert!(refresh.contains("if !scope.wants_window_body(&kind.body_key) {"), "a window body is rendered only when the scope names it");
     assert!(refresh.contains("if !scope.wants_panel_body(&body_key) {"), "a panel body is rendered only when the scope names it");
     assert!(refresh.contains("if scope.wants_section(UiDirtySection::Measures) {"), "the measures section is fetched only when the scope names it");
@@ -179,8 +185,8 @@ fn an_input_gesture_declares_the_chain_and_never_converges_it_inside_its_own_dis
     for row in rows {
         let id = row["id"].as_str().expect("every row is named");
         let source = match row["source"].as_str().expect("source") {
-            "shell" => SHELL_SOURCE,
-            "renderer" => RENDERER_SOURCE,
+            "shell" => SHELL_SOURCE(),
+            "renderer" => RENDERER_SOURCE(),
             other => panic!("{id}: the fixture names source {other}, which this suite does not read"),
         };
         let signature = row["owns"].as_str().expect("owns");
@@ -192,7 +198,7 @@ fn an_input_gesture_declares_the_chain_and_never_converges_it_inside_its_own_dis
             assert!(body.contains(declares), "{id}: {signature} declares the chain with {declares}");
         }
     }
-    assert!(SHELL_SOURCE.contains("pub fn owe_settle(&mut self)"), "the shell publishes the one way a producer declares a live chain");
+    assert!(SHELL_SOURCE().contains("pub fn owe_settle(&mut self)"), "the shell publishes the one way a producer declares a live chain");
 }
 
 #[test]
@@ -203,8 +209,8 @@ fn a_gesture_runs_its_user_activation_bound_work_before_it_returns() {
     for row in rows {
         let id = row["id"].as_str().expect("every row is named");
         let source = match row["source"].as_str().expect("source") {
-            "shell" => SHELL_SOURCE,
-            "renderer" => RENDERER_SOURCE,
+            "shell" => SHELL_SOURCE(),
+            "renderer" => RENDERER_SOURCE(),
             other => panic!("{id}: the fixture names source {other}, which this suite does not read"),
         };
         let signature = row["owns"].as_str().expect("owns");
@@ -213,10 +219,10 @@ fn a_gesture_runs_its_user_activation_bound_work_before_it_returns() {
         let runs = row["runs"].as_str().expect("runs");
         assert!(body.contains(runs), "{id}: {signature} must run {runs} — a picker handed to the settle pump has lost the gesture that was allowed to open it");
     }
-    let wrapper = SHELL_SOURCE.split("pub async fn handle_pointer_button(").nth(1).expect("the default-pointer entry point is declared").split("\n    }\n").next().expect("the default-pointer entry point has a body");
+    let wrapper = SHELL_SOURCE().split("pub async fn handle_pointer_button(").nth(1).expect("the default-pointer entry point is declared").split("\n    }\n").next().expect("the default-pointer entry point has a body");
     assert!(wrapper.contains("self.handle_pointer_button_for(") && wrapper.contains(".await"), "the default-pointer entry point must await the identity-aware gesture in the same user-activation turn");
-    assert!(SHELL_SOURCE.contains("async fn drain_gesture_bound_work(&mut self) {"), "the shell owns one narrow drain for user-activation-bound work");
-    let drain = SHELL_SOURCE.split("async fn drain_gesture_bound_work(&mut self) {").nth(1).expect("the drain has a body");
+    assert!(SHELL_SOURCE().contains("async fn drain_gesture_bound_work(&mut self) {"), "the shell owns one narrow drain for user-activation-bound work");
+    let drain = SHELL_SOURCE().split("async fn drain_gesture_bound_work(&mut self) {").nth(1).expect("the drain has a body");
     let drain = drain.split("\n    }\n").next().expect("the drain has a body");
     assert!(drain.contains("pending_file_opens"), "the drain takes the parked file opens");
     assert!(!drain.contains("deferred_actions"), "and NOTHING else — every other kind of armed work belongs to the pump");

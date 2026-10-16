@@ -442,7 +442,7 @@ fn session_close_cancels_an_unacknowledged_page_and_retires_its_exact_bytes() {
 
 #[test]
 fn session_close_receipt_retries_a_colliding_event_slot_and_preserves_sibling() {
-    let text = include_str!("../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json");
+    let text = include_str!("../🧫️fixtures/🧑‍🤝‍🧑browser-runtime/🔣️.json");
     let fixture = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let independent: serde_json::Value = serde_json::from_str(text).unwrap();
     let code = fixture.get("receipt").unwrap().get("event").unwrap().as_u64().unwrap() as u16;

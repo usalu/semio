@@ -184,7 +184,7 @@ fn realm_close_retires_pending_rasters_before_terminal_and_allows_clean_reopen_f
     reset_pending_raster_authority();
 }
 
-fn count_solids(draw: &ui_wgpu::wgpu::DrawList) -> usize {
+fn count_solids(draw: &semio_framework_ui_draw_contract::DrawList) -> usize {
     draw.layers.iter().map(|layer| layer.ui_instances.len()).sum()
 }
 
@@ -224,7 +224,7 @@ fn queue_canvas_image_upload_redecodes_when_source_changes() {
 
 #[test]
 fn draw_checkerboard_clamps_to_visible_viewport() {
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
     let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
     let theme = Theme::default();
@@ -236,7 +236,7 @@ fn draw_checkerboard_clamps_to_visible_viewport() {
 
 #[test]
 fn draw_checkerboard_falls_back_to_full_extent_when_zoom_is_zero() {
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let viewport = Viewport { x: 0.0, y: 0.0, zoom: 0.0 };
     let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
     let theme = Theme::default();
@@ -296,7 +296,7 @@ fn canvas_apply_blend_mode_screen_matches_w3c_formula() {
 
 #[test]
 fn push_linear_gradient_fill_emits_banded_triangle_fan_geometry() {
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
     let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
     let clip = Rect::new(50.0, 50.0, 100.0, 40.0);
@@ -316,7 +316,7 @@ fn push_linear_gradient_fill_emits_banded_triangle_fan_geometry() {
 
 #[test]
 fn push_radial_gradient_fill_emits_concentric_ring_geometry() {
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
     let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
     let clip = Rect::new(0.0, 0.0, 80.0, 80.0);
@@ -335,7 +335,7 @@ fn push_radial_gradient_fill_emits_concentric_ring_geometry() {
 
 #[test]
 fn render_canvas_shape_fill_draws_solid_fill_and_stroke_for_plain_records() {
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
     let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
     let shape_rect = Rect::new(10.0, 10.0, 40.0, 20.0);

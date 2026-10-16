@@ -8,9 +8,88 @@
     "version",
     "mode",
     "entry",
-    "sources"
+    "sources",
+    "resolutions"
   ],
-  "$defs": {"Receipt":{"type":"object","additionalProperties":false,"required":["version","mode","sourceSha256","entry","outputs"],"properties":{"version":{"const":1},"mode":{"const":"release"},"sourceSha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"entry":{"const":"semio-authorizers.mjs"},"outputs":{"type":"array","minItems":1,"maxItems":1,"items":{"type":"object","additionalProperties":false,"required":["path","sha256"],"properties":{"path":{"const":"semio-authorizers.mjs"},"sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"}}}}}}},
+  "$defs": {
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "sourceSha256",
+        "entry",
+        "outputs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "release"
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "entry": {
+          "const": "semio-authorizers.mjs"
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "const": "semio-authorizers.mjs"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CompilerPublication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "bun",
+        "resolutions",
+        "sources"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "release"
+        },
+        "bun": {
+          "type": "string",
+          "pattern": "^bun@\\d+\\.\\d+\\.\\d+$"
+        },
+        "resolutions": {
+          "$ref": "#/properties/resolutions"
+        },
+        "sources": {
+          "$ref": "#/properties/sources"
+        }
+      }
+    }
+  },
   "properties": {
     "version": {
       "const": 1
@@ -43,6 +122,31 @@
             "pattern": "^[a-f0-9]{64}$"
           }
         }
+      },
+      "maxItems": 256
+    },
+    "resolutions": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "required": [
+          "specifier",
+          "path"
+        ],
+        "properties": {
+          "specifier": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "additionalProperties": false
       }
     }
   }

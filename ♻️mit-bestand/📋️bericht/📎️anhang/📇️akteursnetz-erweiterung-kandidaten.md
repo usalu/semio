@@ -8132,7 +8132,7 @@ Status-Spalte: Alle Vorschläge sind im FINAL-DATA-Block abschließend als `keep
       "legacyId": "U14",
       "x": 73.46,
       "y": 13.19,
-      "assetPath": "🖼️asset/👥️akteur/🇳🇱NL/🐦‍⬛️U14-kraaijvanger/☀️logo.png"
+      "assetPath": "🖼️asset/👥️akteur/🇳🇱NL/🐦‍⬛U14-kraaijvanger/☀️logo.png"
     },
     {
       "key": "base:NL:U15",
@@ -9854,7 +9854,7 @@ Status-Spalte: Alle Vorschläge sind im FINAL-DATA-Block abschließend als `keep
       "legacyId": "S01",
       "x": 106.84,
       "y": 31.78,
-      "assetPath": "🖼️asset/👥️akteur/🇨🇭CH/👨‍💻️S01-digvis/☀️logo.png"
+      "assetPath": "🖼️asset/👥️akteur/🇨🇭CH/👨‍💻S01-digvis/☀️logo.png"
     },
     {
       "key": "base:CH:P1",

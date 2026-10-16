@@ -4,8 +4,7 @@
 //! it fails here instead of at a screenshot diff.
 
 use semio_framework_ui_theme::theme::*;
-#[path = "../../🧪️testing/🎨️paint-policy/🦀️.rs"]
-mod paint_policy;
+use semio_framework_ui_testing_paint_policy as paint_policy;
 
 use std::fs;
 use std::path::PathBuf;

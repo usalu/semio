@@ -24,7 +24,7 @@ fn add(delta: i32) -> DemoMutation {
 }
 
 async fn store_named(id: &str, n: Option<i32>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await
 }
 
 async fn attached_store(n: Option<i32>) -> (ArtifactStore<DemoSnapshot, DemoMutation>, ChannelBackboneRemote) {
@@ -36,24 +36,24 @@ async fn attached_store(n: Option<i32>) -> (ArtifactStore<DemoSnapshot, DemoMuta
 }
 
 /// 📨️ The operation envelopes the store announced since the last drain (history transitions left out).
-fn announced_operations(remote: &ChannelBackboneRemote) -> Vec<crate::os_spr::MutationEnvelope> {
+fn announced_operations(remote: &ChannelBackboneRemote) -> Vec<semio_framework_os_spr::MutationEnvelope> {
     drain_channel_for_test(remote)
         .expect("drain")
         .into_iter()
         .flat_map(|message| match message {
-            BackboneMessage::Mutations { envelopes } => crate::os_spr::decode_envelopes(&envelopes).expect("announced envelopes decode"),
+            BackboneMessage::Mutations { envelopes } => semio_framework_os_spr::decode_envelopes(&envelopes).expect("announced envelopes decode"),
             _ => Vec::new(),
         })
-        .filter(|envelope| !crate::os_spr::is_history_transition(envelope))
+        .filter(|envelope| !semio_framework_os_spr::is_history_transition(envelope))
         .collect()
 }
 
 /// 💾️ The value both persisted forms (pack + spr, dsl + ops) reload to — they must agree.
 async fn persisted_n(store: &ArtifactStore<DemoSnapshot, DemoMutation>) -> Option<i32> {
     let files = print_document_pack(store.envelope()).await.expect("pack prints");
-    let pack = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pack parses");
+    let pack = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pack parses");
     let text_files = print_document_text(store.envelope()).await.expect("text prints");
-    let text = parse_document_text::<DemoSnapshot, DemoMutation>(&text_files.dsl, &text_files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("text parses");
+    let text = parse_document_text::<DemoSnapshot, DemoMutation>(&text_files.dsl, &text_files.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("text parses");
     let (from_pack, from_text) = (pack.snapshot.n, text.snapshot.n);
     test_support::retire_parsed_document(pack);
     test_support::retire_parsed_document(text);
@@ -71,7 +71,7 @@ fn tail_edit(store: &ArtifactStore<DemoSnapshot, DemoMutation>) -> &Edit<DemoMut
     store.envelope().vcs.edits.iter().find(|edit| edit.id == *tail).expect("the tail edit")
 }
 
-fn remote_edit(name: &str, index: usize, operation: DemoMutation, physical_ms: u64) -> crate::os_spr::MutationEnvelope {
+fn remote_edit(name: &str, index: usize, operation: DemoMutation, physical_ms: u64) -> semio_framework_os_spr::MutationEnvelope {
     mutation_envelope_at("peer", &format!("{name}-remote-{index}"), operation, HybridLogicalTimestamp { actor: 7, physical_ms, logical: 0 }, Vec::new())
 }
 
@@ -149,10 +149,10 @@ async fn tool_transaction_corpus_matches_the_store() {
             assert_eq!(observed, step["expect"], "{name} step {index}");
             if let Some(open) = store.open_transaction() {
                 assert_eq!(store.applied_edit_ids().last(), Some(&open.edit_id), "{name} step {index}: the open edit is the applied tail");
-                let held: HashSet<MutationId> = crate::os_spr::mutation_ids_for_edit::<DemoSnapshot, DemoMutation>(open_edit(&store).expect("the open edit")).into_iter().collect();
+                let held: HashSet<MutationId> = semio_framework_os_spr::mutation_ids_for_edit::<DemoSnapshot, DemoMutation>(open_edit(&store).expect("the open edit")).into_iter().collect();
                 assert!(store.event_log().expect("log").iter().all(|event| !held.contains(&event.mutation_id)), "{name} step {index}: the shared log leaves the open edit out");
                 let spr = print_document_spr(store.envelope()).await.expect("spr prints");
-                let log = crate::os_spr::decode_history(&spr, &crate::os_spr::DecodeOptions::default()).await.expect("spr decodes");
+                let log = semio_framework_os_spr::decode_history(&spr, &semio_framework_os_spr::DecodeOptions::default()).await.expect("spr decodes");
                 assert!(log.edits.iter().all(|edit| edit.id != open.edit_id), "{name} step {index}: the persisted log leaves the open edit out");
                 assert!(open_edit(&store).expect("the open edit").mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&open.transaction)), "{name} step {index}: every appended operation carries the ref");
             }
@@ -319,7 +319,7 @@ async fn an_open_transaction_refuses_every_other_command_and_retires_its_operati
         assert_eq!(WitnessOp::tally(), (start.0 + retired, start.1), "every carried operation retired, none dropped");
     }
     test_support::dispatch_test_command(&mut store, ArtifactCommand::AppendTransaction { mutations: vec![add(2)], transaction: reference.clone() }).await.expect("its own tick still appends");
-    test_support::dispatch_test_command(&mut store, ArtifactCommand::SetMergePolicy { policy: crate::os_spr::MergePolicy::default() }).await.expect("a merge-policy change still runs");
+    test_support::dispatch_test_command(&mut store, ArtifactCommand::SetMergePolicy { policy: semio_framework_os_spr::MergePolicy::default() }).await.expect("a merge-policy change still runs");
     assert!(matches!(test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitTransaction { transaction_id: "tx-other".into() }).await, Err(VcsError::UnknownTransaction(id)) if id == "tx-other"));
     assert_eq!(VcsError::UnknownTransaction("tx".into()).into_fault().code.0, "toolTransaction.unknown");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitTransaction { transaction_id: reference.id.clone() }).await.expect("its commit runs");
@@ -332,8 +332,8 @@ async fn an_open_transaction_refuses_every_other_command_and_retires_its_operati
 /// under it, onto one state and one applied order.
 #[semio_framework_async_macros::async_test]
 async fn a_committed_transaction_converges_with_the_replicas_that_edited_under_it() {
-    let mut author = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("author".into()), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
-    let mut peer = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("peer".into()), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut author = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("author".into()), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
+    let mut peer = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("peer".into()), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut author, ArtifactCommand::Apply { mutations: vec![set(1)], transaction: None }).await.expect("a shared edit");
     for event in author.event_log().expect("log") {
         peer.ingest_remote(event).await.expect("the peer takes the shared edit");
@@ -373,7 +373,7 @@ async fn a_committed_transaction_converges_with_the_replicas_that_edited_under_i
 /// edit once with the ref; a batch-opened transaction aborts with zero trace.
 #[semio_framework_async_macros::async_test]
 async fn batched_gestures_stream_into_one_open_edit_and_a_closing_gesture_commits_it() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners());
     store.closes_on_drop();
     let (channel, remote) = ChannelBackbone::pair("batched-transaction").await;
@@ -420,7 +420,7 @@ async fn a_history_past_one_page_keeps_admitting_edits() {
 #[semio_framework_async_macros::async_test]
 async fn an_abort_restores_the_redo_stack_and_the_cursor_on_both_routes() {
     for batched in [false, true] {
-        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "redo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "redo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.install_document_store_owners_exact(demo_closable_store_owners());
         store.closes_on_drop();
         for n in [1, 2] {

@@ -21,7 +21,7 @@ fn glb_round_trip() {
 /// 🏙️ Puzzle GLBs may start with non-triangle guide geometry before their renderable surfaces.
 #[test]
 fn glb_import_collects_triangle_primitives_after_guides() {
-    let decoded = mesh_from_glb(include_bytes!("../../../🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb")).expect("decode Puzzle GLB");
+    let decoded = mesh_from_glb(crate::test_inputs::bytes("../🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb")).expect("decode Puzzle GLB");
     assert_eq!(decoded.vertex_count(), 1472);
     assert_eq!(decoded.triangle_count(), 1750);
     assert!(decoded.indices.iter().all(|index| (*index as usize) < 1472));
@@ -174,7 +174,7 @@ fn mesh_from_glb_rejects_bytes_without_valid_glb_container() {
 /// output (`✅️expected-single-triangle.json`, comparable by any implementation) via
 /// `pack::json`, not hardcoded twice.
 fn expected_single_triangle() -> (Vec<f32>, Vec<f32>, Vec<u32>) {
-    let text = include_str!("../🧫️fixtures/🧊️gltf-codec/✅️expected-single-triangle.json");
+    let text = crate::test_inputs::text("🧪️tests/🧫️fixtures/🧊️gltf-codec/✅️expected-single-triangle.json");
     let value = json::parse(text,json::JsonMemberPolicy::Reject).expect("expected fixture json parses");
     let floats = |key: &str| -> Vec<f32> { value.get(key).and_then(json::Value::as_array).unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect() };
     let indices = value.get("indices").and_then(json::Value::as_array).unwrap().iter().map(|v| v.as_u64().unwrap() as u32).collect();
@@ -183,7 +183,7 @@ fn expected_single_triangle() -> (Vec<f32>, Vec<f32>, Vec<u32>) {
 
 #[test]
 fn mesh_from_gltf_decodes_embedded_base64_buffer() {
-    let text = include_str!("../🧫️fixtures/🧊️gltf-codec/🔺️single-triangle-embedded.gltf");
+    let text = crate::test_inputs::text("🧪️tests/🧫️fixtures/🧊️gltf-codec/🔺️single-triangle-embedded.gltf");
     let mesh = mesh_from_glb(text.as_bytes()).expect("decode embedded-buffer .gltf");
     let (positions, normals, indices) = expected_single_triangle();
     assert_eq!(mesh.positions, positions);
@@ -193,7 +193,7 @@ fn mesh_from_gltf_decodes_embedded_base64_buffer() {
 
 #[test]
 fn mesh_from_glb_decodes_embedded_bin_chunk() {
-    let bytes = include_bytes!("../🧫️fixtures/🧊️gltf-codec/🧊️single-triangle-embedded.glb");
+    let bytes = crate::test_inputs::bytes("🧪️tests/🧫️fixtures/🧊️gltf-codec/🧊️single-triangle-embedded.glb");
     let mesh = mesh_from_glb(bytes).expect("decode embedded-buffer .glb");
     let (positions, normals, indices) = expected_single_triangle();
     assert_eq!(mesh.positions, positions);
@@ -206,7 +206,7 @@ fn mesh_from_glb_decodes_embedded_bin_chunk() {
 /// contract — a clear typed error, never fabricated geometry.
 #[test]
 fn mesh_from_gltf_reports_a_clear_error_for_unresolved_external_buffer() {
-    let text = include_str!("../🧫️fixtures/🧊️gltf-codec/🔗️external-buffer.gltf");
+    let text = crate::test_inputs::text("🧪️tests/🧫️fixtures/🧊️gltf-codec/🔗️external-buffer.gltf");
     let error = mesh_from_glb(text.as_bytes()).unwrap_err();
     assert!(error.contains("buffer 0 bytes unavailable"), "unexpected error: {error}");
 }
@@ -229,7 +229,7 @@ fn mesh_from_kind_maps_known_kinds_and_falls_back_to_box() {
 /// contract suite.
 #[test]
 fn every_built_in_scene_mesh_kind_matches_the_language_neutral_bounding_box_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json")).expect("scene mesh kind fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(crate::test_inputs::text("🧪️tests/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json")).expect("scene mesh kind fixture parses");
     let tolerance = fixture["tolerance"].as_f64().expect("fixture tolerance") as f32;
     let kinds = fixture["kinds"].as_array().expect("fixture kinds");
     assert!(!kinds.is_empty());
@@ -331,7 +331,7 @@ fn polygon_obj_reader_keeps_polygons_and_resolves_every_index_form() {
 fn original_mesh_metadata_owns_controlled_birth_and_exact_physical_retirement() {
     use pack::value::{FromValue, ToValue, retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
     use crate::component_reference_custody_tests::observe_retirement_allocations;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️metadata/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(crate::test_inputs::text("🧪️tests/🧫️fixtures/🧹️metadata/🔣️.json")).unwrap();
     let (mesh, source_heap) = observe_retirement_allocations(|| {
         let text = fixture["mesh"].to_string();
         let parsed = semio_framework_pack_json::parse(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

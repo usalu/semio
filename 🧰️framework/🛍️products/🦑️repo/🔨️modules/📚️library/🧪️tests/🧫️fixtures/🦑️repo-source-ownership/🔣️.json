@@ -200,11 +200,11 @@
     },
     {
       "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
-      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗂️taxonomy/🟦️.ts",
       "kind": "typescript",
       "boundary": "package-reexport",
       "anchor": "export const TAXONOMY_REL_PATH",
-      "glue": "../../🟦️.ts"
+      "glue": "../../🗂️taxonomy/🟦️.ts"
     },
     {
       "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/📦️lib.rs",

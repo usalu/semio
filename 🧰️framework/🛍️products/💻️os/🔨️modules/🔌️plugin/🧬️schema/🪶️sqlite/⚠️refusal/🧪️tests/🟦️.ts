@@ -8,6 +8,7 @@ import fixture from "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/⚠�
 import schema from "../🧬️schema/🔣️.json";
 import request from "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json";
 import requestSchema from "../../🧬️schema/🔣️.json";
+import { identityControlInputFixtureUrl } from "../../../../../🌿️vcs/🧪️tests/🧫️fixtures/🟦️.ts";
 
 test("guest SQLite rejection carries all eight intrinsic causes independently of prose and VM cancellation", () => {
   const ajv = new Ajv({ strict: true });
@@ -83,7 +84,7 @@ test("guest snapshot pending custody requires the same instance and original clo
 
 
 test("same snapshot receiving phase accounts additional host input separately from guest and return owners", () => {
-  const inputFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../../🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧪️tests/🧫️fixtures/📥️input/🔣️.json"), "utf8"));
+  const inputFixture = JSON.parse(readFileSync(identityControlInputFixtureUrl, "utf8"));
   expect(inputFixture.firstCapacityBytes + inputFixture.resumedCapacityBytes).toBe(inputFixture.receivedInput);
   expect(inputFixture.receivedInput).toBe(inputFixture.sourceOwned);
   const receipt = { maximum: 57, owned: 3, finished: false, reserved_return: 11, phase_start_owned: 7, phase_start_reserved_return: 0, received_output: 5, received_input: 4, received_retirement: 0 };

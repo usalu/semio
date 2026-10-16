@@ -49,11 +49,11 @@ pub struct ArtifactPreparedOperationCursor {
     prefix_offset: usize,
     hex_pending: Option<u8>,
     hex_low: bool,
-    complete: bool,
+    pub complete: bool,
     json: ArtifactCanonicalJsonCursor,
-    text: ArtifactOperationTextCursor,
-    pack: BorrowedProjectedPackCursor,
-    closed: bool,
+    pub text: ArtifactOperationTextCursor,
+    pub pack: BorrowedProjectedPackCursor,
+    pub closed: bool,
 }
 
 impl ArtifactPreparedOperationCursor {

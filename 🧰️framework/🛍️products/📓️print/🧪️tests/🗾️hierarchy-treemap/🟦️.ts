@@ -9,7 +9,7 @@ import {
   stratify, treemap, treemapBinary, treemapDice, treemapResquarify, treemapSlice, treemapSliceDice,
   treemapSquarify, type HierarchyNode, type HierarchyRectangularNode,
 } from "d3-hierarchy";
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 

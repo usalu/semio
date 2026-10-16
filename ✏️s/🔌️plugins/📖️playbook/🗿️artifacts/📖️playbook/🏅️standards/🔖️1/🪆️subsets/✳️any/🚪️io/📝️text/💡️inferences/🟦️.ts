@@ -49,5 +49,5 @@ export const playbookPlaybookInferenceTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parsePlaybookInferenceText(value: unknown, at = "$"): PlaybookInferenceText {
-  return playbookPlaybookInferenceTextGuardObject(value, `${at}`);
+  return playbookPlaybookInferenceTextGuardString(value, `${at}`);
 }

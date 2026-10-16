@@ -17,7 +17,8 @@
 //! emptied stack still minted a window with an EMPTY id, and the Focus chip journaled a
 //! `shell.windowMaximize` command React declares nowhere.
 
-use super::command_registry_tests::test_app;
+use semio_framework_os_renderer_wgpu_fixtures::shell::test_app;
+use test_app;
 use super::*;
 use semio_framework::manifest::Keybinding;
 use semio_framework::{ActionDefinition, ActionKind, AppDefinition, WindowKinds};
@@ -30,9 +31,9 @@ const PERSPECTIVE: &str = "puzzle3d-main-perspective";
 const CANVAS: Rect = Rect::new(0.0, 0.0, 1600.0, 1000.0);
 
 fn journey_dock() -> DockState {
-    let stack = |window_id: &str| crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance(window_id, "main", WindowStackCorner::TopLeft)], active: window_id.to_string() };
+    let stack = |window_id: &str| semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::instance(window_id, "main", WindowStackCorner::TopLeft)], active: window_id.to_string() };
     let mut dock = DockState::default();
-    dock.root = crate::dock::DockNode::Row(vec![(stack(TOP), 0.5), (stack(PERSPECTIVE), 0.5)]);
+    dock.root = semio_framework_os_renderer_wgpu_dock::DockNode::Row(vec![(stack(TOP), 0.5), (stack(PERSPECTIVE), 0.5)]);
     dock.sync_active_window(TOP);
     dock
 }

@@ -1,5 +1,6 @@
 //#region 🧪️GuestLifecycleOwnership
-use super::*;
+use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest};
+use crate::instance_lifetime::{ClosePeers, GuestLifecycleCell, GuestLifecycleSerial, GuestLifetimeOwner, GuestTerminalRelease, NativeCloseKey, terminal_owner};
 
 struct NoPeers;
 impl ClosePeers for NoPeers {
@@ -15,8 +16,9 @@ impl ClosePeers for NoPeers {
     fn release_cold_pair(&self, _key: NativeCloseKey) -> Result<(), semio_framework::Fault> { Ok(()) }
 }
 
-struct Owner {
-    remaining: usize,
+#[doc(hidden)]
+pub struct Owner {
+    pub remaining: usize,
 }
 impl terminal_owner::Sealed for Owner {}
 impl GuestLifetimeOwner for Owner {
@@ -28,23 +30,26 @@ impl GuestLifetimeOwner for Owner {
             return Ok(GuestTerminalRelease::Pending);
         }
         if owner.as_ref().is_some_and(|owner| owner.remaining != 0) {
-            return Err(super::super::reactor_close_fault("live test owner"));
+            return Err(crate::life_reactor_close::reactor_close_fault("live test owner"));
         }
         drop(owner.take());
         Ok(GuestTerminalRelease::Released)
     }
 }
 
-fn fixture() -> serde_json::Value {
+#[doc(hidden)]
+pub fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
 
-fn open() -> ActorInstanceOpenRequest {
+#[doc(hidden)]
+pub fn open() -> ActorInstanceOpenRequest {
     let fixture = fixture();
     <ActorInstanceOpenRequest as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(&fixture["open"])).unwrap()
 }
 
-fn captured() -> GuestLifecycleCell<Owner> {
+#[doc(hidden)]
+pub fn captured() -> GuestLifecycleCell<Owner> {
     let fixture = fixture();
     let generation = fixture["capturedGuestLifetime"].as_str().unwrap().parse().unwrap();
     let mut cell = GuestLifecycleCell::admit(open(), generation).unwrap();
@@ -52,7 +57,8 @@ fn captured() -> GuestLifecycleCell<Owner> {
     cell
 }
 
-fn ack(cell: &mut GuestLifecycleCell<Owner>) {
+#[doc(hidden)]
+pub fn ack(cell: &mut GuestLifecycleCell<Owner>) {
     let receipt = cell.retained_receipt().unwrap();
     cell.stage_ack(ActorInstanceLifecycleAck { receipt }).unwrap();
     cell.release_owner_step(1, 4096, &NoPeers).unwrap();
@@ -115,7 +121,8 @@ fn guest_instance_lifecycle_terminal_release_work_is_measured_and_never_repeated
     assert_eq!(drops.get(), law["destructionsAfterRetry"].as_u64().unwrap() as usize);
 }
 
-fn close(cell: &mut GuestLifecycleCell<Owner>) {
+#[doc(hidden)]
+pub fn close(cell: &mut GuestLifecycleCell<Owner>) {
     ack(cell);
     let fixture = fixture();
     let request = ActorInstanceCloseRequest { lifetime: cell.lifetime(), request_sequence: fixture["closeRequestSequence"].as_u64().unwrap() };

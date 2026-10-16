@@ -14,7 +14,7 @@ import { PERK_LINGER, POINTER_TICKS, TURN_REST, gazeRests, leant, presenceOf, sq
 import { STAGE_CAP, capped, emitterEnds, emitterKey, particlesOf, type Particle } from "../✨️effects/🟦️.ts";
 import { hoverBusy, pressDue } from "../👆️gesture/🟦️.ts";
 import { atRest, faceOf, settled, settlesAt, spiritsOf, stateAt, stateEnds } from "../💗️feeling/🟦️.ts";
-import { PUFF_TICKS } from "../🚶️locomotion/🟦️.ts";
+import { PUFF_TICKS } from "../🚶️locomotion/📐️constants/🟦️.ts";
 import { atanTurns, clamp, cosTurns, sinTurns, smoothstep } from "../📐️trigonometry/🟦️.ts";
 import { breathOf, clipOf } from "../📝️draft/🟦️.ts";
 import { extentOf, wallLeanOf } from "../📏️spacing/🟦️.ts";

@@ -7,7 +7,7 @@ export const gltfBoundaryLoopsInference = {
 } as const;
 export type GltfBoundaryLoopsInference = typeof gltfBoundaryLoopsInference;
 
-import { exact, unavailable, type GltfTsGeometryContext, type GltfTsMeasure } from '../../🔨️geometry-core/🟦️.ts';
+import { exact, unavailable, type GltfTsGeometryContext, type GltfTsMeasure } from '../../🔨️geometry-kernel/🟦️.ts';
 
 export const inferGltfBoundaryLoops = (context: GltfTsGeometryContext): GltfTsMeasure<number> => {
   const value = context.topology?.boundaryLoops;

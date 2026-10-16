@@ -5,7 +5,7 @@ import { join, relative, resolve } from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 import TOML from "@iarna/toml";
 import graphlib from "graphlib";
-import { readRustSourceClosureV1 } from "../../../🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import { readRustSourceClosureV1 } from "@semio-tech/process/artifacts/native-build/source";
 
 type Row = { package: string; manifest: string; entry: string; level: number; dependencies: string[]; devDependencies: string[]; peerDependencies: string[] };
 type Corpus = { version: number; facade: { package: string; manifest: string; entry: string }; peers: string[]; budget: { maximumActiveLines: number; maximumFiles: number; maximumBytes: number }; excluded: string[]; unmounted: string[]; crates: Row[] };

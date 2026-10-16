@@ -5,18 +5,10 @@ use semio_hub_artifact_authority::chunk_cas::{ArtifactCasObjectKey, ArtifactCasR
 use semio_hub_artifact_creation::{ArtifactCreationActorV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1};
 use directory::os_directory::{ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DocumentScope, Hlc};
 use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
+use semio_hub_directory_contract::{actor_kind_from_str, backend, now_ms};
 use neo4rs::{Txn, query};
 use semio_hub_directory_contract::{decode_auth_digest_hex, directory_command_result_kind_from_str, validate_admin_operation_effect_receipt};
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
-
-pub fn now_ms() -> i64 {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
-}
-
-pub fn backend<E: std::fmt::Display>(err: E) -> DirectoryError {
-    DirectoryError::Backend(err.to_string())
-}
 
 /// 🔒️ How many times a contended Neo4j write is re-attempted after the server aborts it as
 /// transient. Forseti breaks a lock cycle by killing one participant, so a two-writer race needs one
@@ -143,28 +135,6 @@ pub async fn insert_artifact_creation_fact(txn: &mut Txn, request_key: &str, int
     Ok(())
 }
 
-enum AdminEffectPreflightFailure {
-    RejectedBeforeCommit,
-    Indeterminate,
-}
-
-impl<T> From<AdminEffectPreflightFailure> for AdminEffectCommitV1<T> {
-    fn from(value: AdminEffectPreflightFailure) -> Self {
-        match value {
-            AdminEffectPreflightFailure::RejectedBeforeCommit => Self::RejectedBeforeCommit,
-            AdminEffectPreflightFailure::Indeterminate => Self::Indeterminate,
-        }
-    }
-}
-
-pub fn admin_effect_preflight<T>(result: DirectoryResult<T>) -> Result<T, AdminEffectPreflightFailure> {
-    match result {
-        Ok(value) => Ok(value),
-        Err(DirectoryError::Backend(_)) => Err(AdminEffectPreflightFailure::Indeterminate),
-        Err(_) => Err(AdminEffectPreflightFailure::RejectedBeforeCommit),
-    }
-}
-
 pub async fn admin_effect_rollback<T>(txn: Txn) -> AdminEffectCommitV1<T> {
     match txn.rollback().await {
         Ok(()) => AdminEffectCommitV1::RejectedBeforeCommit,
@@ -228,22 +198,6 @@ pub async fn insert_admin_operation_effect_receipt(txn: &mut Txn, receipt: &Admi
     };
     drop(result);
     if &established == receipt { Ok(()) } else { Err(DirectoryError::Conflict("admin operation effect receipt identity changed".into())) }
-}
-
-pub fn actor_kind_to_str(kind: DirectoryActorKind) -> &'static str {
-    match kind {
-        DirectoryActorKind::User => "user",
-        DirectoryActorKind::Admin => "admin",
-        DirectoryActorKind::System => "system",
-    }
-}
-
-fn actor_kind_from_str(value: &str) -> DirectoryActorKind {
-    match value {
-        "admin" => DirectoryActorKind::Admin,
-        "system" => DirectoryActorKind::System,
-        _ => DirectoryActorKind::User,
-    }
 }
 
 pub fn document_scope_key_v1(scope: &DocumentScope) -> String {

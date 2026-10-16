@@ -27,34 +27,19 @@ import {
   type MeshTransfer,
   type Vec3
 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import {
-  isShapeModelDefinition,
-  defaultModelDefinitionId,
-  modelDefinitionSelectionEntityKinds,
-  modelDefinitionUsesGeometryPicking,
-  PRIMITIVE_MODEL_ENTITY_KINDS,
-  listModelObjectsForModelDefinition,
-  objectPrimaryPrimitiveRef,
-  listTypologiesForModelDefinition,
-  objectPrimitiveEntries,
-  resolvePrimitiveRefKind,
-  parseModelJson,
-  Model,
-  type InteractionEvent,
-  type SelectionTarget,
-  type SpatialObjectRecord,
-  type ModelEntityKind,
-  type ModelJson,
-  resolveTypologyStyle,
-  typologyStyleCacheKey,
-  type ResolvedTypologyStyle,
-  type SpatialEntityFlags
-} from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type SpatialObjectRecord, type ModelEntityKind, type ModelJson } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { resolveTypologyStyle, typologyStyleCacheKey } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎨️typology/🟦️.ts";
+import { isShapeModelDefinition, defaultModelDefinitionId, type ResolvedTypologyStyle } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
+import { type SpatialEntityFlags } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🗺️paths/🟦️.ts";
+import { objectPrimaryPrimitiveRef, objectPrimitiveEntries, resolvePrimitiveRefKind, parseModelJson, Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { modelDefinitionUsesGeometryPicking, PRIMITIVE_MODEL_ENTITY_KINDS, listModelObjectsForModelDefinition, listTypologiesForModelDefinition } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
+import { modelDefinitionSelectionEntityKinds } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧷️selection-operations/🟦️.ts";
+import { type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import { typologyObjectPascalFromLabel } from "../../🧬️typology/🟦️.ts";
 import { isEmptyModelDiff, type SpatialKernel, type SpatialPreviewKernel } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { type DisplayItem, type DisplayModel } from "../../🎬️actions/🟦️.ts";
 import { DocumentHistory, type InteractionSnapshot } from "../../🗿️artifact/🟦️.ts";
-import { faceNormal } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
+import { faceNormal } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🔺️face-geometry/🟦️.ts";
 import {
   type AnchorRecord,
   type EdgeRecord,

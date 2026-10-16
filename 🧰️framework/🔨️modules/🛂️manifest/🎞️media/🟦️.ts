@@ -1,6 +1,6 @@
 /** 🎞️ Actual workflow payload binding preserves its declared semantic media form. */
-import{parseSchemaRecord}from"../../🧬️schema/🧾️record/🟦️.ts";
-import{parseIntrinsicValue,type IntrinsicValue}from"../../🌱️value/🧬️schema/🟦️.ts";
+import{parseSchemaRecord}from"@semio-tech/schema-ts/record";
+import{parseIntrinsicValue,type IntrinsicValue}from"@semio-tech/value-ts/schema";
 export type MediaPayload={kind:"structured";schema:string;json:string}|{kind:"binary";formatKind:string;blobHash:string}|{kind:"intrinsic";schema:string;value:IntrinsicValue};
 /** 📥️ Bind the mounted literal payload owners. */
 export function parseMediaPayload(source:unknown):MediaPayload{

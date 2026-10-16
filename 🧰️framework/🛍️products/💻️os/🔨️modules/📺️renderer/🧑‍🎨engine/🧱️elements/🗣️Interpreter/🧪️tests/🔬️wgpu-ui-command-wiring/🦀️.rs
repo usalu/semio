@@ -34,7 +34,7 @@ fn retained_document_close_queue_is_bounded_and_same_window_replacement_costs_no
     let token = engine.surface_token("close-0").unwrap();
     assert!(!queue.try_upsert(UiDocumentCloseOwner { window_id: SurfaceId::try_from("close-overflow").unwrap(), token, generation: 1 }), "a sixty-fifth retained surface close is refused before its owner is lost");
     assert!(queue.try_upsert(UiDocumentCloseOwner { window_id: SurfaceId::try_from("close-0").unwrap(), token, generation: 2 }), "the same window replaces its stale close generation without another credit");
-    assert_eq!(queue.owners.len(), ui_wgpu::wgpu::engine::UI_LAYOUT_SURFACE_SLOTS);
+    assert_eq!(queue.owners.len(), semio_framework_ui_surface_identity::UI_LAYOUT_SURFACE_SLOTS);
     assert_eq!(queue.owners.front().map(|owner| owner.generation), Some(2));
 }
 
@@ -104,9 +104,9 @@ fn action(name: &str, args: Option<Value>) -> ActionDescriptor {
 /** 🎬️ A `UiIntentCommand` standing in for one the renderer fired: the case's descriptor with a
  * distinct per-surface `seq`, so `apply_ui_commands`' own admission gate accepts each case instead of
  * de-duplicating the second one as a replay of the first. */
-fn fixture_intent(descriptor: ActionDescriptor, seq: usize) -> ui_wgpu::wgpu::UiIntentCommand {
-    ui_wgpu::wgpu::UiIntentCommand {
-        address: ui_wgpu::wgpu::UiIntentAddress { surface: "fixture".into(), revision: 1, node: 1, node_key: "control".into() },
+fn fixture_intent(descriptor: ActionDescriptor, seq: usize) -> semio_framework_ui_action::UiIntentCommand {
+    semio_framework_ui_action::UiIntentCommand {
+        address: semio_framework_ui_action::UiIntentAddress { surface: "fixture".into(), revision: 1, node: 1, node_key: "control".into() },
         trigger: ui_contract::Trigger::Change,
         action: ui_contract::ActionId::try_v1(&descriptor.controller_id, &descriptor.action).expect("fixture action id"),
         args: descriptor.args,
@@ -131,7 +131,7 @@ fn window_action_context_retained_commands_preserve_the_clicked_window() {
 }
 
 fn stack_with(id: &str, drop_action: Option<ActionDescriptor>, children: Vec<UiNode>) -> UiNode {
-    UiNode::Stack(ui_wgpu::wgpu::UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action, drop_overlay: None, children, menu: None })
+    UiNode::Stack(semio_framework_ui_declaration::ui::UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action, drop_overlay: None, children, menu: None })
 }
 
 //#region 🔖️DropCommittedTests
@@ -296,7 +296,7 @@ fn drop_cancelled_overlay_closed_and_focus_changed_commands_are_explicit_no_ops(
     apply_ui_commands(
         &mut vec![
             ui_wgpu::wgpu::UiCommand::DropCancelled { window_id: window_id.into(), source: node },
-            ui_wgpu::wgpu::UiCommand::OverlayClosed { window_id: window_id.into(), root: node, kind: ui_wgpu::wgpu::OverlayKind::Tooltip },
+            ui_wgpu::wgpu::UiCommand::OverlayClosed { window_id: window_id.into(), root: node, kind: semio_framework_ui_contract_presentation::OverlayKind::Tooltip },
             ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: window_id.into(), node: Some(node) },
         ],
         None,
@@ -311,7 +311,7 @@ fn drop_cancelled_overlay_closed_and_focus_changed_commands_are_explicit_no_ops(
 /// 🎬️ A minimal `ComponentScene` leaf — every optional per-`SurfaceKind` payload left `None`,
 /// matching `ui_wgpu::wgpu::events::tests::component_scene_ui`'s own fixture shape (that one is private
 /// to the sibling `ui_wgpu` crate, so this is a separate copy for this crate's own tests).
-fn component_scene_ui(surface_id: &str, kind: ui_wgpu::wgpu::SurfaceKind) -> UiNode {
+fn component_scene_ui(surface_id: &str, kind: semio_framework_ui_declaration::ui::SurfaceKind) -> UiNode {
     UiNode::ComponentScene(UiComponentSceneNode {
         host_id: surface_id.into(),
         surface_id: surface_id.into(),
@@ -344,38 +344,38 @@ fn component_scene_ui(surface_id: &str, kind: ui_wgpu::wgpu::SurfaceKind) -> UiN
 /// `apply_scene_ui_command` re-fetches it by `(window_id, node)` from `UI_ENGINE`.
 fn scene_surface_props(scene: &UiComponentSceneNode) -> ui_contract::SurfaceProps {
     let kind = match scene.component_kind {
-        ui_wgpu::wgpu::SurfaceKind::Canvas2d => ui_contract::SurfaceKind::Canvas2d,
-        ui_wgpu::wgpu::SurfaceKind::World3d => ui_contract::SurfaceKind::World3d,
-        ui_wgpu::wgpu::SurfaceKind::NodeGraph => ui_contract::SurfaceKind::NodeGraph,
-        ui_wgpu::wgpu::SurfaceKind::TextEditor => ui_contract::SurfaceKind::TextEditor,
-        ui_wgpu::wgpu::SurfaceKind::Table => ui_contract::SurfaceKind::Table,
-        ui_wgpu::wgpu::SurfaceKind::Paint2d => ui_contract::SurfaceKind::Paint2d,
-        ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem => ui_contract::SurfaceKind::VirtualFileSystem,
-        ui_wgpu::wgpu::SurfaceKind::TiledMap => ui_contract::SurfaceKind::TiledMap,
-        ui_wgpu::wgpu::SurfaceKind::Board2d => ui_contract::SurfaceKind::Board2d,
-        ui_wgpu::wgpu::SurfaceKind::IconRender => ui_contract::SurfaceKind::IconRender,
-        ui_wgpu::wgpu::SurfaceKind::InkCanvas => ui_contract::SurfaceKind::InkCanvas,
-        ui_wgpu::wgpu::SurfaceKind::GraphTimeline => ui_contract::SurfaceKind::GraphTimeline,
-        ui_wgpu::wgpu::SurfaceKind::BlockList => ui_contract::SurfaceKind::BlockList,
-        ui_wgpu::wgpu::SurfaceKind::DiffView => ui_contract::SurfaceKind::DiffView,
-        ui_wgpu::wgpu::SurfaceKind::EventFeed => ui_contract::SurfaceKind::EventFeed,
+        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d => ui_contract::SurfaceKind::Canvas2d,
+        semio_framework_ui_declaration::ui::SurfaceKind::World3d => ui_contract::SurfaceKind::World3d,
+        semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph => ui_contract::SurfaceKind::NodeGraph,
+        semio_framework_ui_declaration::ui::SurfaceKind::TextEditor => ui_contract::SurfaceKind::TextEditor,
+        semio_framework_ui_declaration::ui::SurfaceKind::Table => ui_contract::SurfaceKind::Table,
+        semio_framework_ui_declaration::ui::SurfaceKind::Paint2d => ui_contract::SurfaceKind::Paint2d,
+        semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem => ui_contract::SurfaceKind::VirtualFileSystem,
+        semio_framework_ui_declaration::ui::SurfaceKind::TiledMap => ui_contract::SurfaceKind::TiledMap,
+        semio_framework_ui_declaration::ui::SurfaceKind::Board2d => ui_contract::SurfaceKind::Board2d,
+        semio_framework_ui_declaration::ui::SurfaceKind::IconRender => ui_contract::SurfaceKind::IconRender,
+        semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas => ui_contract::SurfaceKind::InkCanvas,
+        semio_framework_ui_declaration::ui::SurfaceKind::GraphTimeline => ui_contract::SurfaceKind::GraphTimeline,
+        semio_framework_ui_declaration::ui::SurfaceKind::BlockList => ui_contract::SurfaceKind::BlockList,
+        semio_framework_ui_declaration::ui::SurfaceKind::DiffView => ui_contract::SurfaceKind::DiffView,
+        semio_framework_ui_declaration::ui::SurfaceKind::EventFeed => ui_contract::SurfaceKind::EventFeed,
     };
     let encoded = match scene.component_kind {
-        ui_wgpu::wgpu::SurfaceKind::Canvas2d => scene.canvas_2d.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::World3d => scene.world_3d.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::NodeGraph => scene.node_graph.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::TextEditor => scene.text_editor.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::Table => scene.table.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::Paint2d => scene.paint_2d.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem => scene.virtual_file_system.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::TiledMap => scene.tiled_map.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::Board2d => scene.board2d.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::IconRender => scene.icon_render.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::InkCanvas => scene.ink_canvas.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::GraphTimeline => scene.graph_timeline.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::BlockList => scene.block_list.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::DiffView => scene.diff_view.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
-        ui_wgpu::wgpu::SurfaceKind::EventFeed => scene.event_feed.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d => scene.canvas_2d.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::World3d => scene.world_3d.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph => scene.node_graph.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::TextEditor => scene.text_editor.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::Table => scene.table.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::Paint2d => scene.paint_2d.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem => scene.virtual_file_system.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::TiledMap => scene.tiled_map.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::Board2d => scene.board2d.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::IconRender => scene.icon_render.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas => scene.ink_canvas.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::GraphTimeline => scene.graph_timeline.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::BlockList => scene.block_list.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::DiffView => scene.diff_view.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
+        semio_framework_ui_declaration::ui::SurfaceKind::EventFeed => scene.event_feed.as_ref().map(|value| semio_framework_ui_scene_surface::encode(kind, value)),
     };
     encoded.transpose().expect("the bounded scene fixture encodes").unwrap_or_else(|| ui_contract::SurfaceProps {
         kind,
@@ -385,9 +385,9 @@ fn scene_surface_props(scene: &UiComponentSceneNode) -> ui_contract::SurfaceProp
     })
 }
 
-fn scene_identity_document(window_id: &str, scene: &UiComponentSceneNode) -> ui_wgpu::wgpu::tree::UiDocumentTree {
+fn scene_identity_document(window_id: &str, scene: &UiComponentSceneNode) -> semio_framework_ui_retained_tree::tree::UiDocumentTree {
     let header = ui_contract::UiDocumentLeaseHeader { generation: 1, surface: ui_contract::SurfaceId::try_from(window_id).unwrap(), revision: ui_contract::UiRevision(1), root: ui_contract::UiNodeId(0), layout_epoch: 1, node_count: 2 };
-    let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(header).unwrap();
+    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(header).unwrap();
     let mut children = ui_contract::UiFixedList::default();
     children.try_push(ui_contract::UiNodeId(1)).unwrap();
     let root = ui_contract::UiNodeRecord {
@@ -423,7 +423,7 @@ fn scene_identity_document(window_id: &str, scene: &UiComponentSceneNode) -> ui_
     document
 }
 
-fn clipboard_input_document(window_id: &str) -> ui_wgpu::wgpu::tree::UiDocumentTree {
+fn clipboard_input_document(window_id: &str) -> semio_framework_ui_retained_tree::tree::UiDocumentTree {
     let records = serde_json::json!([
         {
             "id": 0,
@@ -443,14 +443,14 @@ fn clipboard_input_document(window_id: &str) -> ui_wgpu::wgpu::tree::UiDocumentT
     ]);
     let rows = records.as_array().unwrap();
     let header = ui_contract::UiDocumentLeaseHeader { generation: 1, surface: ui_contract::SurfaceId::try_from(window_id).unwrap(), revision: ui_contract::UiRevision(1), root: ui_contract::UiNodeId(0), layout_epoch: 1, node_count: rows.len() };
-    let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(header).unwrap();
+    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(header).unwrap();
     for row in rows {
         document.try_upsert_record(serde_json::from_value(row.clone()).unwrap()).unwrap();
     }
     document
 }
 
-fn publish_presented_document(window_id: &str, generation: u64, witness: u64, controller_id: &str, document: ui_wgpu::wgpu::tree::UiDocumentTree) {
+fn publish_presented_document(window_id: &str, generation: u64, witness: u64, controller_id: &str, document: semio_framework_ui_retained_tree::tree::UiDocumentTree) {
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, document)));
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
@@ -458,9 +458,9 @@ fn publish_presented_document(window_id: &str, generation: u64, witness: u64, co
     let complete = (0..4096).any(|_| {
         let mut step = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), || Some(0), &mut sequence);
         match UI_ENGINE.with(|cell| cell.borrow_mut().step_document_reconcile(window_id, controller_id, &mut step)) {
-            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Pending => false,
-            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Complete => true,
-            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("presented document reconcile fault: {fault:?}"),
+            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => false,
+            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => true,
+            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("presented document reconcile fault: {fault:?}"),
         }
     });
     assert!(complete, "presented fixture reconcile reaches terminal within its fixed opportunity ceiling");
@@ -477,9 +477,9 @@ fn drive_scene_seed_reconcile(window_id: &str, controller_id: &str) {
     for _ in 0..4096 {
         let mut step = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), || Some(0), &mut sequence);
         match UI_ENGINE.with(|cell| cell.borrow_mut().step_document_reconcile(window_id, controller_id, &mut step)) {
-            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Pending => {}
-            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Complete => return,
-            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("scene seed reconcile fault: {fault:?}"),
+            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => {}
+            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => return,
+            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("scene seed reconcile fault: {fault:?}"),
         }
     }
     panic!("scene seed reconcile exceeded its fixed opportunity ceiling");
@@ -539,7 +539,7 @@ fn accept_table_editable_text_cells(window_id: &str, node: NodeId, epoch: u64) {
     crate::scenes::acknowledge_table_editable_text_accessibility_candidates(epoch);
 }
 
-fn seed_scene_window(window_id: &str, surface_id: &str, kind: ui_wgpu::wgpu::SurfaceKind) -> NodeId {
+fn seed_scene_window(window_id: &str, surface_id: &str, kind: semio_framework_ui_declaration::ui::SurfaceKind) -> NodeId {
     seed_scene_window_with(window_id, component_scene_ui(surface_id, kind))
 }
 
@@ -561,7 +561,7 @@ fn retained_scene_surface_id(window_id: &str, node: NodeId) -> String {
     })
 }
 
-fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64], ink: Option<&ui_wgpu::wgpu::InkCanvasScene>) -> ui_wgpu::wgpu::tree::UiDocumentTree {
+fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64], ink: Option<&semio_framework_ui_scene_plane::InkCanvasScene>) -> semio_framework_ui_retained_tree::tree::UiDocumentTree {
     let mut root: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
         "id": 1,
         "key": "focus-rebase/root",
@@ -571,7 +571,7 @@ fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: ui_wgp
     }))
     .unwrap();
     root.layout = ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { axis: ui_contract::Axis::Horizontal, grow: true, ..Default::default() });
-    let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+    let mut document = semio_framework_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation,
         surface: ui_contract::SurfaceId::try_from(window_id).unwrap(),
         revision: ui_contract::UiRevision(generation),
@@ -593,19 +593,19 @@ fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: ui_wgp
         record.layout = ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { grow: true, ..Default::default() });
         if *id == 4 {
             let surface = match kind {
-                ui_wgpu::wgpu::SurfaceKind::Canvas2d => ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Canvas2d, &ui_wgpu::wgpu::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into())).unwrap(),
-                ui_wgpu::wgpu::SurfaceKind::TextEditor => ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TextEditor, &ui_wgpu::wgpu::TextEditorScene::base("focus".into(), None, None)).unwrap(),
-                ui_wgpu::wgpu::SurfaceKind::Table => ui_wgpu::wgpu::encode_surface_doc(
+                semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d => semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::Canvas2d, &semio_framework_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into())).unwrap(),
+                semio_framework_ui_declaration::ui::SurfaceKind::TextEditor => semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::TextEditor, &semio_framework_ui_scene_views::TextEditorScene::base("focus".into(), None, None)).unwrap(),
+                semio_framework_ui_declaration::ui::SurfaceKind::Table => semio_framework_ui_scene_surface::encode(
                     ui_contract::SurfaceKind::Table,
-                    &ui_wgpu::wgpu::TableScene::base(
+                    &semio_framework_ui_scene_views::TableScene::base(
                         serde_json::json!([{ "id": "count", "label": "Count" }]).to_string(),
                         serde_json::json!([{ "id": "r1", "count": { "kind": "stepper", "value": 2.0, "min": 0.0, "max": 5.0, "step": 0.5, "action": { "controllerId": "focus-rebase", "action": "setCount", "args": { "objectId": "r1" } } } }])
                             .to_string(),
                     ),
                 )
                 .unwrap(),
-                ui_wgpu::wgpu::SurfaceKind::InkCanvas => {
-                    ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::InkCanvas, &ink.cloned().unwrap_or_else(|| ui_wgpu::wgpu::InkCanvasScene::base("[]".into(), "pen".into(), "document".into(), true))).unwrap()
+                semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas => {
+                    semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::InkCanvas, &ink.cloned().unwrap_or_else(|| semio_framework_ui_scene_plane::InkCanvasScene::base("[]".into(), "pen".into(), "document".into(), true))).unwrap()
                 }
                 _ => panic!("focus rebase fixture supports Canvas, Table and editor surfaces"),
             };
@@ -616,7 +616,7 @@ fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: ui_wgp
     document
 }
 
-fn focus_rebase_document(window_id: &str, generation: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64]) -> ui_wgpu::wgpu::tree::UiDocumentTree {
+fn focus_rebase_document(window_id: &str, generation: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) -> semio_framework_ui_retained_tree::tree::UiDocumentTree {
     focus_rebase_document_with_ink(window_id, generation, kind, children, None)
 }
 
@@ -627,19 +627,19 @@ fn drive_focus_rebase_reconcile(window_id: &str, generation: u64) {
     for _ in 0..4096 {
         let mut step = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), || Some(0), &mut sequence);
         match UI_ENGINE.with(|cell| cell.borrow_mut().step_document_reconcile(window_id, "focus-rebase", &mut step)) {
-            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Pending => {}
-            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Complete => return,
-            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("focus rebase reconcile fault: {fault:?}"),
+            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => {}
+            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => return,
+            semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Fault(fault) => panic!("focus rebase reconcile fault: {fault:?}"),
         }
     }
     panic!("focus rebase reconcile exceeded its fixed opportunity ceiling");
 }
 
-fn focus_rebase_node(tree: &ui_wgpu::wgpu::UiTree) -> Option<NodeId> {
-    tree.children(tree.root?).find(|node| tree.node(*node).is_some_and(|node| node.key == ui_wgpu::wgpu::NodeKey::Explicit("focus-rebase/4".into())))
+fn focus_rebase_node(tree: &semio_framework_ui_retained_tree::tree::UiTree) -> Option<NodeId> {
+    tree.children(tree.root?).find(|node| tree.node(*node).is_some_and(|node| node.key == semio_framework_ui_retained_tree::tree::NodeKey::Explicit("focus-rebase/4".into())))
 }
 
-fn publish_new_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64]) -> Option<NodeId> {
+fn publish_new_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) -> Option<NodeId> {
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document(window_id, generation, kind, children))));
     drive_focus_rebase_reconcile(window_id, generation);
     begin_accessibility_visible_documents();
@@ -649,19 +649,19 @@ fn publish_new_focus_rebase_document(window_id: &str, generation: u64, witness: 
     UI_ENGINE.with(|cell| cell.borrow().tree(window_id).and_then(focus_rebase_node))
 }
 
-fn publish_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64]) -> Option<NodeId> {
+fn publish_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) -> Option<NodeId> {
     if generation > 1 {
         drive_focus_rebase_reconcile(window_id, generation - 1);
     }
     publish_new_focus_rebase_document(window_id, generation, witness, kind, children)
 }
 
-fn reconcile_focus_rebase_document(window_id: &str, generation: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64]) {
+fn reconcile_focus_rebase_document(window_id: &str, generation: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) {
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document(window_id, generation, kind, children))));
     drive_focus_rebase_reconcile(window_id, generation);
 }
 
-fn stage_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64]) -> NodeId {
+fn stage_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) -> NodeId {
     drive_focus_rebase_reconcile(window_id, generation - 1);
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document(window_id, generation, kind, children))));
     drive_focus_rebase_reconcile(window_id, generation);
@@ -677,7 +677,7 @@ fn stage_focus_rebase_document(window_id: &str, generation: u64, witness: u64, k
     })
 }
 
-fn stage_new_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64]) -> NodeId {
+fn stage_new_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: semio_framework_ui_declaration::ui::SurfaceKind, children: &[u64]) -> NodeId {
     drive_focus_rebase_reconcile(window_id, generation - 1);
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document(window_id, generation, kind, children))));
     drive_focus_rebase_reconcile(window_id, generation);
@@ -687,23 +687,23 @@ fn stage_new_focus_rebase_document(window_id: &str, generation: u64, witness: u6
     UI_ENGINE.with(|cell| cell.borrow().candidate_tree(window_id).and_then(focus_rebase_node).expect("candidate editor node"))
 }
 
-fn ink_intent_scene(law: &Value, utility: &str, document_id: &str) -> ui_wgpu::wgpu::InkCanvasScene {
+fn ink_intent_scene(law: &Value, utility: &str, document_id: &str) -> semio_framework_ui_scene_plane::InkCanvasScene {
     let mut document = law["document"].clone();
     document["id"] = Value::String(document_id.into());
     document["activeUtility"] = Value::String(utility.into());
-    let mut scene = ui_wgpu::wgpu::InkCanvasScene::base(serde_json::to_string(&document).unwrap(), utility.into(), "edit".into(), true);
+    let mut scene = semio_framework_ui_scene_plane::InkCanvasScene::base(serde_json::to_string(&document).unwrap(), utility.into(), "edit".into(), true);
     scene.selection_json = law["scene"]["inkCanvas"]["selectionJson"].as_str().unwrap().into();
     scene
 }
 
-fn publish_ink_intent_document(window_id: &str, generation: u64, witness: u64, children: &[u64], ink: &ui_wgpu::wgpu::InkCanvasScene) -> NodeId {
-    publish_presented_document(window_id, generation, witness, "focus-rebase", focus_rebase_document_with_ink(window_id, generation, ui_wgpu::wgpu::SurfaceKind::InkCanvas, children, Some(ink)));
+fn publish_ink_intent_document(window_id: &str, generation: u64, witness: u64, children: &[u64], ink: &semio_framework_ui_scene_plane::InkCanvasScene) -> NodeId {
+    publish_presented_document(window_id, generation, witness, "focus-rebase", focus_rebase_document_with_ink(window_id, generation, semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas, children, Some(ink)));
     UI_ENGINE.with(|cell| cell.borrow().tree(window_id).and_then(focus_rebase_node).expect("presented Ink intent receiver"))
 }
 
-fn stage_ink_intent_document(window_id: &str, generation: u64, witness: u64, children: &[u64], ink: &ui_wgpu::wgpu::InkCanvasScene) -> NodeId {
+fn stage_ink_intent_document(window_id: &str, generation: u64, witness: u64, children: &[u64], ink: &semio_framework_ui_scene_plane::InkCanvasScene) -> NodeId {
     drive_focus_rebase_reconcile(window_id, generation - 1);
-    assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document_with_ink(window_id, generation, ui_wgpu::wgpu::SurfaceKind::InkCanvas, children, Some(ink)))));
+    assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document_with_ink(window_id, generation, semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas, children, Some(ink)))));
     drive_focus_rebase_reconcile(window_id, generation);
     begin_accessibility_visible_documents();
     note_accessibility_visible_document(window_id);
@@ -715,7 +715,7 @@ fn begin_pending_ink_intent(window_id: &str, node: NodeId, pointer: ui_render::P
     apply_scene_ui_command(
         window_id,
         node,
-        ui_wgpu::wgpu::SurfaceKind::InkCanvas,
+        semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas,
         Rect::new(0.0, 0.0, 320.0, 240.0),
         &ui_wgpu::wgpu::UiEvent::PointerDown { x: 220.0, y: 190.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         Some(pointer),
@@ -728,7 +728,7 @@ fn begin_pending_ink_intent(window_id: &str, node: NodeId, pointer: ui_render::P
 #[test]
 fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
     let window_id = "apply-ui-commands-scene-canvas2d-pointer-down";
-    let node = seed_scene_window(window_id, "s1", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+    let node = seed_scene_window(window_id, "s1", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
@@ -737,7 +737,7 @@ fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
-            kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+            kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
             rect,
             event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         }],
@@ -760,7 +760,7 @@ fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
 #[test]
 fn canvas2d_pointer_payload_is_react_shaped_screen_logical_with_a_world_lane() {
     let window_id = "apply-ui-commands-scene-canvas2d-pointer-payload";
-    let node = seed_scene_window(window_id, "s1", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+    let node = seed_scene_window(window_id, "s1", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
     let rect = Rect::new(30.0, 40.0, 200.0, 120.0);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
@@ -769,7 +769,7 @@ fn canvas2d_pointer_payload_is_react_shaped_screen_logical_with_a_world_lane() {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
-            kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+            kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
             rect,
             event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 50.0, y: 70.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         }],
@@ -800,9 +800,9 @@ fn canvas2d_pointer_payload_is_react_shaped_screen_logical_with_a_world_lane() {
 #[test]
 fn scene_command_dispatches_an_ink_canvas_scroll_action() {
     let window_id = "apply-ui-commands-scene-ink-canvas-scroll";
-    let mut scene_node = component_scene_ui("s1", ui_wgpu::wgpu::SurfaceKind::InkCanvas);
+    let mut scene_node = component_scene_ui("s1", semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas);
     if let UiNode::ComponentScene(scene) = &mut scene_node {
-        scene.ink_canvas = Some(ui_wgpu::wgpu::InkCanvasScene { document_json: "{}".into(), selection_json: "[]".into(), hovered_id: None, active_utility: String::new(), view_mode: "canvas".into(), interactive: true, interaction_domain: None });
+        scene.ink_canvas = Some(semio_framework_ui_scene_plane::InkCanvasScene { document_json: "{}".into(), selection_json: "[]".into(), hovered_id: None, active_utility: String::new(), view_mode: "canvas".into(), interactive: true, interaction_domain: None });
     }
     let node = seed_scene_window_with(window_id, scene_node);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
@@ -813,7 +813,7 @@ fn scene_command_dispatches_an_ink_canvas_scroll_action() {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
-            kind: ui_wgpu::wgpu::SurfaceKind::InkCanvas,
+            kind: semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas,
             rect,
             event: ui_wgpu::wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: -1.0, modifiers: Default::default() },
         }],
@@ -830,10 +830,10 @@ fn ink_editing_law() -> Value {
 }
 
 fn ink_editing_scene(law: &Value) -> UiNode {
-    let mut scene_node = component_scene_ui(law["scene"]["surfaceId"].as_str().expect("surface id"), ui_wgpu::wgpu::SurfaceKind::InkCanvas);
+    let mut scene_node = component_scene_ui(law["scene"]["surfaceId"].as_str().expect("surface id"), semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas);
     if let UiNode::ComponentScene(scene) = &mut scene_node {
         scene.controller_id = law["scene"]["controllerId"].as_str().expect("controller id").into();
-        scene.ink_canvas = Some(ui_wgpu::wgpu::InkCanvasScene {
+        scene.ink_canvas = Some(semio_framework_ui_scene_plane::InkCanvasScene {
             document_json: serde_json::to_string(&law["document"]).expect("InkCanvas document serializes"),
             selection_json: law["scene"]["inkCanvas"]["selectionJson"].as_str().expect("selection").into(),
             hovered_id: None,
@@ -883,7 +883,7 @@ fn dispatch_ink_pointer(window_id: &str, node: NodeId, surface_id: &str, rect: R
     } else {
         ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }
     };
-    apply_ui_commands(&mut vec![ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.into(), kind: ui_wgpu::wgpu::SurfaceKind::InkCanvas, rect, event }], Some(ui_render::PointerId(1)), input);
+    apply_ui_commands(&mut vec![ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.into(), kind: semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas, rect, event }], Some(ui_render::PointerId(1)), input);
     drive_ink_scene_terminal(input);
 }
 
@@ -912,14 +912,14 @@ fn ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishin
     let UiNode::ComponentScene(zero_generation_scene) = ink_editing_scene(&law) else { unreachable!() };
     assert!(matches!(
         crate::scenes::InkInteractionJob::new(1, 0, Some(pointer), &zero_generation_scene, crate::scenes::InkInteractionEvent::PointerDown { x: 64.0, y: 64.0, button: 0, shift: false }),
-        Err(ui_wgpu::wgpu::BoundedActionFault::Structure)
+        Err(semio_framework_ui_action::BoundedActionFault::Structure)
     ));
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let down = ui_wgpu::wgpu::UiCommand::Scene {
         window_id: window_id.into(),
         node,
         surface_id: surface_id.clone(),
-        kind: ui_wgpu::wgpu::SurfaceKind::InkCanvas,
+        kind: semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas,
         rect,
         event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 64.0, y: 64.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
     };
@@ -935,7 +935,7 @@ fn ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishin
     let cancelled = cancel_scene_pointer(pointer, &mut input);
     assert_eq!(cancelled.len(), 1);
     assert_eq!(cancelled[0].surface_id, surface_id);
-    assert_eq!(cancelled[0].kind, ui_wgpu::wgpu::SurfaceKind::InkCanvas);
+    assert_eq!(cancelled[0].kind, semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas);
     drive_ink_scene_terminal(&mut input);
     assert!(crate::collect_fixture_actions(&mut input).is_empty(), "a press that never streamed cannot synthesize PointerUp, publish Ink events or abort");
 
@@ -968,7 +968,7 @@ fn a_streamed_note_ink_gesture_aborts_on_physical_cancel_while_stale_continuatio
     let down_point = point("down");
     let move_point = point("move");
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let command = |event| ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.clone(), kind: ui_wgpu::wgpu::SurfaceKind::InkCanvas, rect, event };
+    let command = |event| ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.clone(), kind: semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas, rect, event };
 
     apply_ui_commands(&mut vec![command(ui_wgpu::wgpu::UiEvent::PointerDown { x: down_point.0, y: down_point.1, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() })], Some(pointer), &mut input);
     drive_ink_scene_terminal(&mut input);
@@ -1075,7 +1075,7 @@ fn ink_canvas_text_and_table_editing_matches_the_react_host_lifecycle() {
     assert!(input.focused_id.is_none());
     assert!(crate::collect_fixture_actions(&mut input).is_empty());
     drain_presented_document_close(window_id);
-    assert!(publish_new_focus_rebase_document(window_id, 2, 453, ui_wgpu::wgpu::SurfaceKind::TextEditor, &[4]).is_some());
+    assert!(publish_new_focus_rebase_document(window_id, 2, 453, semio_framework_ui_declaration::ui::SurfaceKind::TextEditor, &[4]).is_some());
     assert!(UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).is_some_and(|next| next > generation));
     assert!(!apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Char("stale".into()), &Default::default(), &mut input), "a prior window generation cannot mutate the reopened document");
     assert!(input.focused_id.is_none());
@@ -1087,19 +1087,19 @@ fn ink_canvas_text_and_table_editing_matches_the_react_host_lifecycle() {
 fn stale_scene_revision_retires_without_mutation_or_action_publication() {
     while !close_scene_interaction_step() {}
     let window_id = "apply-ui-commands-stale-scene-revision";
-    let node = seed_scene_window(window_id, "original", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+    let node = seed_scene_window(window_id, "original", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
-        ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
         &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(1)),
         &mut input,
     );
-    UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![component_scene_ui("replacement", ui_wgpu::wgpu::SurfaceKind::Canvas2d)])));
+    UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![component_scene_ui("replacement", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d)])));
 
     assert!(drive_scene_interaction_step(&mut input));
     assert!(crate::collect_fixture_actions(&mut input).is_empty());
@@ -1109,13 +1109,13 @@ fn stale_scene_revision_retires_without_mutation_or_action_publication() {
 #[test]
 fn closing_window_fences_queued_scene_intent_before_tree_retirement() {
     let window_id = "closing-window-queued-canvas";
-    let node = seed_scene_window(window_id, "closing-canvas", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+    let node = seed_scene_window(window_id, "closing-canvas", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
-        ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
         &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(1)),
@@ -1213,7 +1213,7 @@ fn closing_one_window_retires_only_its_ink_clipboard_owner() {
 fn a_late_native_clipboard_callback_cannot_complete_a_reused_slot() {
     let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let source=caller.turn(|cx|ui_wgpu::wgpu::ClipboardIntentSource{operation:cx.operation(),generation:cx.generation(),epoch:cx.original_source_epoch().expect("fixture issued input epoch")});
-    let mut arena = ui_wgpu::wgpu::arena::Arena::<()>::new();
+    let mut arena = semio_framework_ui_arena::Arena::<()>::new();
     let node = arena.insert(());
     let address = |host_id: &str| InkClipboardAddress { window_id: "native-ink-clipboard-aba".into(), window_generation: 1, node, host_id: host_id.into(), rect: Rect::new(0.0, 0.0, 100.0, 100.0) };
     let stale = reserve_pending_native_ink_clipboard(address("old"),source).expect("old slot reserves");
@@ -1234,7 +1234,7 @@ fn a_late_native_clipboard_callback_cannot_complete_a_reused_slot() {
 #[test]
 fn stale_window_close_cannot_clear_a_successor_text_editor_focus() {
     let window = "text-focus-reopen";
-    let node = seed_scene_window(window, "editor", ui_wgpu::wgpu::SurfaceKind::TextEditor);
+    let node = seed_scene_window(window, "editor", semio_framework_ui_declaration::ui::SurfaceKind::TextEditor);
     let target = retained_scene_target(window, node).expect("mounted editor target");
     let focus = install_fixture_text_editor_focus(window, target.window_generation, node, &target.host_id);
 
@@ -1248,7 +1248,7 @@ fn stale_window_close_cannot_clear_a_successor_text_editor_focus() {
 #[test]
 fn text_editor_focus_transfers_only_on_primary_presses_outside_its_mounted_target() {
     let window = "text-editor-primary-focus";
-    let node = seed_scene_window(window, "editor", ui_wgpu::wgpu::SurfaceKind::TextEditor);
+    let node = seed_scene_window(window, "editor", semio_framework_ui_declaration::ui::SurfaceKind::TextEditor);
     let target = retained_scene_target(window, node).expect("mounted editor target");
     install_fixture_text_editor_focus(window, target.window_generation, node, &target.host_id);
     for (down, button) in [(false, 0), (true, 1), (true, 2)] {
@@ -1271,9 +1271,9 @@ fn text_editor_focus_transfers_only_on_primary_presses_outside_its_mounted_targe
 fn accepted_node_graph_note_caret_arms_resets_and_retires_with_its_exact_scene() {
     let _serialized = crate::engine_canvas::engine_surface_law_guard();
     let window = "node-graph-note-caret";
-    let mut scene = component_scene_ui(window, ui_wgpu::wgpu::SurfaceKind::NodeGraph);
+    let mut scene = component_scene_ui(window, semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph);
     let UiNode::ComponentScene(scene) = &mut scene else { unreachable!() };
-    scene.node_graph = Some(ui_wgpu::wgpu::NodeGraphScene {
+    scene.node_graph = Some(semio_framework_ui_scene_node_graph::NodeGraphScene {
         editable: Some(true),
         host_snapshot_json: Some(
             serde_json::json!({
@@ -1318,11 +1318,11 @@ fn text_editor_space_reaches_the_focused_editor_before_the_runtime_pan_modifier(
     let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     use std::future::Future;
     let _serialized = crate::engine_canvas::engine_surface_law_guard();
-    let law: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json"))).unwrap();
+    let law: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).unwrap();
     let law = law["rendererKeys"].as_array().unwrap().iter().find(|law| law["id"] == "space-is-a-printable-key").unwrap();
     let window = "text-editor-runtime-space";
-    let UiNode::ComponentScene(mut scene) = component_scene_ui(window, ui_wgpu::wgpu::SurfaceKind::TextEditor) else { unreachable!() };
-    scene.text_editor = Some(ui_wgpu::wgpu::TextEditorScene::base(law["text"].as_str().unwrap().into(), None, Some(serde_json::json!({ "start": law["selection"][0], "end": law["selection"][1] }).to_string())));
+    let UiNode::ComponentScene(mut scene) = component_scene_ui(window, semio_framework_ui_declaration::ui::SurfaceKind::TextEditor) else { unreachable!() };
+    scene.text_editor = Some(semio_framework_ui_scene_views::TextEditorScene::base(law["text"].as_str().unwrap().into(), None, Some(serde_json::json!({ "start": law["selection"][0], "end": law["selection"][1] }).to_string())));
     let node = seed_scene_window_with(window, UiNode::ComponentScene(scene));
     let target = retained_scene_target(window, node).unwrap();
     UI_ENGINE.with(|cell| {
@@ -1383,11 +1383,11 @@ fn text_editor_space_reaches_the_focused_editor_before_the_runtime_pan_modifier(
 #[test]
 fn focused_text_editor_clipboard_composition_and_accessibility_share_the_accepted_host() {
     let _serialized = crate::engine_canvas::engine_surface_law_guard();
-    let law: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json"))).unwrap();
+    let law: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/⌨️text-input/🔣️.json")).unwrap();
     let paste = law["sequences"].as_array().unwrap().iter().find(|law| law["id"] == "a-paste-replaces-the-selection").unwrap();
     let window = "text-editor-clipboard-ime-accessibility";
-    let UiNode::ComponentScene(mut scene) = component_scene_ui(window, ui_wgpu::wgpu::SurfaceKind::TextEditor) else { unreachable!() };
-    scene.text_editor = Some(ui_wgpu::wgpu::TextEditorScene::base(paste["text"].as_str().unwrap().into(), None, Some(serde_json::json!({ "start": paste["selection"][0], "end": paste["selection"][1] }).to_string())));
+    let UiNode::ComponentScene(mut scene) = component_scene_ui(window, semio_framework_ui_declaration::ui::SurfaceKind::TextEditor) else { unreachable!() };
+    scene.text_editor = Some(semio_framework_ui_scene_views::TextEditorScene::base(paste["text"].as_str().unwrap().into(), None, Some(serde_json::json!({ "start": paste["selection"][0], "end": paste["selection"][1] }).to_string())));
     let node = seed_scene_window_with(window, UiNode::ComponentScene(scene));
     let target = retained_scene_target(window, node).unwrap();
     UI_ENGINE.with(|cell| {
@@ -1453,10 +1453,10 @@ fn focused_text_editor_clipboard_composition_and_accessibility_share_the_accepte
 }
 
 fn table_stepper_scene_node(value: f64) -> UiNode {
-    let mut node = component_scene_ui("table-stepper-focus", ui_wgpu::wgpu::SurfaceKind::Table);
+    let mut node = component_scene_ui("table-stepper-focus", semio_framework_ui_declaration::ui::SurfaceKind::Table);
     let UiNode::ComponentScene(scene) = &mut node else { unreachable!() };
     scene.controller_id = "sourcing-curation".into();
-    scene.table = Some(ui_wgpu::wgpu::TableScene::base(
+    scene.table = Some(semio_framework_ui_scene_views::TableScene::base(
         serde_json::json!([{ "id": "curated", "label": "Curated" }]).to_string(),
         serde_json::json!([{ "id": "beam-glulam-gl24h", "curated": { "kind": "stepper", "value": value, "min": 0.0, "max": 5.0, "step": 0.5, "action": { "controllerId": "sourcing-curation", "action": "curationSetCount", "args": { "objectId": "beam-glulam-gl24h" } } } }]).to_string(),
     ));
@@ -1464,10 +1464,10 @@ fn table_stepper_scene_node(value: f64) -> UiNode {
 }
 
 fn table_editable_text_scene_node_with_value(value: &str) -> UiNode {
-    let mut node = component_scene_ui("table-editable-text-focus", ui_wgpu::wgpu::SurfaceKind::Table);
+    let mut node = component_scene_ui("table-editable-text-focus", semio_framework_ui_declaration::ui::SurfaceKind::Table);
     let UiNode::ComponentScene(scene) = &mut node else { unreachable!() };
     scene.controller_id = "csv-editor".into();
-    scene.table = Some(ui_wgpu::wgpu::TableScene::base(
+    scene.table = Some(semio_framework_ui_scene_views::TableScene::base(
         serde_json::json!([{ "id": "value", "label": "Value" }]).to_string(),
         serde_json::json!([{ "id": "row-2", "value": { "kind": "editableText", "value": value, "action": { "controllerId": "csv-editor", "action": "set-cell", "args": { "row": 2, "column": 1 } } } }]).to_string(),
     ));
@@ -1497,14 +1497,14 @@ fn accepted_table_editable_text_commits_enter_and_discards_escape() {
     let window_id = "accepted-table-editable-text-focus";
     let node = seed_scene_window_with(window_id, table_editable_text_scene_node());
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let y = theme.control_height * 1.33 + theme.control_height * 0.5;
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let focus = |input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>| {
         apply_scene_ui_command(
             window_id,
             node,
-            ui_wgpu::wgpu::SurfaceKind::Table,
+            semio_framework_ui_declaration::ui::SurfaceKind::Table,
             rect,
             &ui_wgpu::wgpu::UiEvent::PointerDown { x: 100.0, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
             Some(ui_render::PointerId(18)),
@@ -1550,7 +1550,7 @@ fn accepted_table_editable_text_commits_enter_and_discards_escape() {
 
 #[test]
 fn accepted_accessibility_table_value_echo_blurs_while_refusal_preserves_the_draft() {
-    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📊️Table/🧫️fixtures/✏️editable-text/🔣️.json"))).expect("editable table fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../📊️Table/🧪️tests/🧫️fixtures/✏️editable-text/🔣️.json")).expect("editable table fixture");
     let acceptance = &fixture["acceptance"];
     let base = acceptance["base"].as_str().unwrap();
     let draft = acceptance["draft"].as_str().unwrap();
@@ -1620,13 +1620,13 @@ fn accepted_table_stepper_centre_owns_navigation_keys_and_a_missing_row_retires_
     let window_id = "accepted-table-stepper-focus";
     let node = seed_scene_window_with(window_id, table_stepper_scene_node(2.0));
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let y = theme.control_height * 1.33 + theme.control_height * 0.5;
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
-        ui_wgpu::wgpu::SurfaceKind::Table,
+        semio_framework_ui_declaration::ui::SurfaceKind::Table,
         rect,
         &ui_wgpu::wgpu::UiEvent::PointerDown { x: 100.0, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(17)),
@@ -1672,10 +1672,10 @@ fn accepted_table_stepper_centre_owns_navigation_keys_and_a_missing_row_retires_
 fn accepted_vfs_controls_publish_localized_buttons_and_reject_a_retired_row_action() {
     let window_id = "accepted-vfs-controls";
     let authored_host_id = "accepted-vfs-host";
-    let mut scene_node = component_scene_ui(authored_host_id, ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem);
+    let mut scene_node = component_scene_ui(authored_host_id, semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem);
     let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
     scene.controller_id = "vfs-controller".into();
-    scene.virtual_file_system = Some(ui_wgpu::wgpu::VirtualFileSystemScene {
+    scene.virtual_file_system = Some(semio_framework_ui_scene_views::VirtualFileSystemScene {
         schema_json: "{}".into(),
         rows_json: serde_json::json!([
             { "id": "folder", "name": "Modelle", "hasChildren": true },
@@ -1746,10 +1746,10 @@ fn accepted_vfs_controls_publish_localized_buttons_and_reject_a_retired_row_acti
 fn accepted_block_list_buttons_publish_localized_actions_and_reject_a_retired_palette_entry() {
     let window_id = "accepted-block-list-controls";
     let authored_host_id = "accepted-block-list-host";
-    let mut scene_node = component_scene_ui(authored_host_id, ui_wgpu::wgpu::SurfaceKind::BlockList);
+    let mut scene_node = component_scene_ui(authored_host_id, semio_framework_ui_declaration::ui::SurfaceKind::BlockList);
     let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
     scene.controller_id = "block-list-controller".into();
-    scene.block_list = Some(ui_wgpu::wgpu::BlockListScene {
+    scene.block_list = Some(semio_framework_ui_scene_views::BlockListScene {
         steps: serde_json::from_value(serde_json::json!([{ "id": "basics", "title": "Basics", "blocks": [] }])).expect("typed section"),
         palette: serde_json::from_value(serde_json::json!([{ "blockKind": "filter", "label": "Filter", "iconId": "funnel" }])).expect("typed palette"),
         selected_id: None,
@@ -1801,16 +1801,16 @@ fn accepted_block_list_buttons_publish_localized_actions_and_reject_a_retired_pa
 
 #[test]
 fn accepted_event_feed_rows_publish_tabbable_buttons_read_only_text_and_exact_actions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📡️EventFeedHost/🧫️fixtures/♿️accessible-entry/🔣️.json"))).expect("EventFeed accessible entry fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📡️EventFeedHost/🧪️tests/🧫️fixtures/♿️accessible-entry/🔣️.json")).expect("EventFeed accessible entry fixture");
     let actionable = &fixture["cases"][0];
     let passive = &fixture["cases"][1];
     let window_id = "accepted-event-feed-controls";
     let host_id = fixture["hostId"].as_str().unwrap();
-    let mut scene_node = component_scene_ui(host_id, ui_wgpu::wgpu::SurfaceKind::EventFeed);
+    let mut scene_node = component_scene_ui(host_id, semio_framework_ui_declaration::ui::SurfaceKind::EventFeed);
     let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
     scene.surface_id = fixture["surfaceId"].as_str().unwrap().into();
     scene.controller_id = fixture["controllerId"].as_str().unwrap().into();
-    scene.event_feed = Some(ui_wgpu::wgpu::EventFeedScene {
+    scene.event_feed = Some(semio_framework_ui_scene_views::EventFeedScene {
         entries_json: serde_json::json!([actionable["entry"].clone()]).to_string(),
         follow: None,
         activate_action: actionable["activateAction"].as_str().map(str::to_owned),
@@ -1840,11 +1840,11 @@ fn accepted_event_feed_rows_publish_tabbable_buttons_read_only_text_and_exact_ac
 
     let passive_window_id = "accepted-passive-event-feed-controls";
     let passive_host_id = "feed-ax-passive-host";
-    let mut passive_scene_node = component_scene_ui(passive_host_id, ui_wgpu::wgpu::SurfaceKind::EventFeed);
+    let mut passive_scene_node = component_scene_ui(passive_host_id, semio_framework_ui_declaration::ui::SurfaceKind::EventFeed);
     let UiNode::ComponentScene(passive_scene) = &mut passive_scene_node else { unreachable!() };
     passive_scene.surface_id = fixture["surfaceId"].as_str().unwrap().into();
     passive_scene.controller_id = fixture["controllerId"].as_str().unwrap().into();
-    passive_scene.event_feed = Some(ui_wgpu::wgpu::EventFeedScene { entries_json: serde_json::json!([passive["entry"].clone()]).to_string(), follow: None, activate_action: None, domain_id: None });
+    passive_scene.event_feed = Some(semio_framework_ui_scene_views::EventFeedScene { entries_json: serde_json::json!([passive["entry"].clone()]).to_string(), follow: None, activate_action: None, domain_id: None });
     let passive_scene_node = seed_scene_window_with(passive_window_id, passive_scene_node);
     assert!(crate::scenes::mount_scene_identity(&retained_scene_target(passive_window_id, passive_scene_node).expect("retained passive EventFeed target")));
     let passive_retained_host = retained_scene_host_id(passive_window_id, passive_scene_node);
@@ -1890,7 +1890,7 @@ fn accepted_event_feed_rows_publish_tabbable_buttons_read_only_text_and_exact_ac
 #[test]
 fn accepted_world3d_overlay_controls_publish_read_only_nodes_and_a_polite_mismatch_status() {
     let window_id = "accepted-world3d-overlay-controls";
-    let scene_node = component_scene_ui("world-ax-host", ui_wgpu::wgpu::SurfaceKind::World3d);
+    let scene_node = component_scene_ui("world-ax-host", semio_framework_ui_declaration::ui::SurfaceKind::World3d);
     let node = seed_scene_window_with(window_id, scene_node);
     assert!(crate::scenes::mount_scene_identity(&retained_scene_target(window_id, node).expect("retained World3d target")));
     let host = retained_scene_host_id(window_id, node);
@@ -1928,14 +1928,14 @@ fn accepted_world3d_overlay_controls_publish_read_only_nodes_and_a_polite_mismat
 
 #[test]
 fn accepted_table_row_button_publishes_one_tabbable_exact_action_and_rejects_stale_addresses() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📊️Table/🧫️fixtures/🔘️button-accessibility/🔣️.json"))).expect("Table button accessibility fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📊️Table/🧪️tests/🧫️fixtures/🔘️button-accessibility/🔣️.json")).expect("Table button accessibility fixture");
     let window_id = "accepted-table-row-button";
     let host_id = fixture["hostId"].as_str().unwrap();
-    let mut scene_node = component_scene_ui(host_id, ui_wgpu::wgpu::SurfaceKind::Table);
+    let mut scene_node = component_scene_ui(host_id, semio_framework_ui_declaration::ui::SurfaceKind::Table);
     let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
     scene.surface_id = fixture["surfaceId"].as_str().unwrap().into();
     scene.controller_id = fixture["controllerId"].as_str().unwrap().into();
-    scene.table = Some(ui_wgpu::wgpu::TableScene::base(fixture["columns"].to_string(), serde_json::Value::Array(vec![fixture["row"].clone()]).to_string()));
+    scene.table = Some(semio_framework_ui_scene_views::TableScene::base(fixture["columns"].to_string(), serde_json::Value::Array(vec![fixture["row"].clone()]).to_string()));
     crate::scenes::remember_scene_theme(&Theme::default());
     let node = seed_scene_window_with(window_id, scene_node);
     let retained = retained_scene(window_id, node);
@@ -1975,20 +1975,20 @@ fn accepted_table_row_button_publishes_one_tabbable_exact_action_and_rejects_sta
 
 #[test]
 fn accepted_graph_checkpoint_publishes_one_tabbable_exact_action_and_rejects_stale_addresses() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/🌳️GraphTimelineHost/🧫️fixtures/🎯️checkpoint-hit/🔣️.json"))).expect("GraphTimeline checkpoint fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🌳️GraphTimelineHost/🧪️tests/🧫️fixtures/🎯️checkpoint-hit/🔣️.json")).expect("GraphTimeline checkpoint fixture");
     let expected = &fixture["accessibility"];
     let window_id = "accepted-graph-checkpoint";
     let host_id = fixture["hostId"].as_str().unwrap();
-    let mut scene_node = component_scene_ui(host_id, ui_wgpu::wgpu::SurfaceKind::GraphTimeline);
+    let mut scene_node = component_scene_ui(host_id, semio_framework_ui_declaration::ui::SurfaceKind::GraphTimeline);
     let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
     scene.surface_id = fixture["surfaceId"].as_str().unwrap().into();
     scene.controller_id = fixture["controllerId"].as_str().unwrap().into();
-    scene.graph_timeline = Some(ui_wgpu::wgpu::GraphTimelineScene { columns_json: fixture["columns"].to_string() });
+    scene.graph_timeline = Some(semio_framework_ui_scene_views::GraphTimelineScene { columns_json: fixture["columns"].to_string() });
     let values = fixture["bounds"].as_array().unwrap();
     let bounds = Rect::new(values[0].as_f64().unwrap() as f32, values[1].as_f64().unwrap() as f32, values[2].as_f64().unwrap() as f32, values[3].as_f64().unwrap() as f32);
     let node = seed_scene_window_with(window_id, scene_node);
     let retained = retained_scene(window_id, node);
-    let label_track = crate::scenes::graph_timeline_scene_label_track(&retained, &Theme::default(), &mut ui_wgpu::wgpu::FontAtlas::shaped_default());
+    let label_track = crate::scenes::graph_timeline_scene_label_track(&retained, &Theme::default(), &mut semio_framework_ui_text::FontAtlas::shaped_default());
     let controls = crate::scenes::graph_timeline_accessibility_controls(&retained, bounds, &Theme::default(), label_track);
     let control = controls.iter().find(|control| control.key == rebased_scene_key(expected["key"].as_str().unwrap(), host_id, &retained.host_id)).expect("expected checkpoint").clone();
     assert!(crate::scenes::mount_scene_identity(&retained_scene_target(window_id, node).expect("retained GraphTimeline target")));
@@ -2024,7 +2024,7 @@ fn accepted_graph_checkpoint_publishes_one_tabbable_exact_action_and_rejects_sta
 #[test]
 fn presented_editor_text_focus_rebases_only_after_same_host_pixels_are_accepted() {
     let window_id = "presented-text-focus-rebase";
-    let kind = ui_wgpu::wgpu::SurfaceKind::TextEditor;
+    let kind = semio_framework_ui_declaration::ui::SurfaceKind::TextEditor;
     assert!(publish_focus_rebase_document(window_id, 1, 501, kind, &[2]).is_none());
     drive_focus_rebase_reconcile(window_id, 1);
     reconcile_focus_rebase_document(window_id, 2, kind, &[2, 3]);
@@ -2046,7 +2046,7 @@ fn presented_editor_text_focus_rebases_only_after_same_host_pixels_are_accepted(
 #[test]
 fn presented_table_stepper_focus_rebases_only_after_same_host_pixels_are_accepted() {
     let window_id = "presented-table-stepper-focus-rebase";
-    let kind = ui_wgpu::wgpu::SurfaceKind::Table;
+    let kind = semio_framework_ui_declaration::ui::SurfaceKind::Table;
     assert!(publish_focus_rebase_document(window_id, 1, 521, kind, &[2]).is_none());
     drive_focus_rebase_reconcile(window_id, 1);
     reconcile_focus_rebase_document(window_id, 2, kind, &[2, 3]);
@@ -2075,7 +2075,7 @@ fn presented_table_stepper_focus_rebases_only_after_same_host_pixels_are_accepte
 #[test]
 fn presented_editor_ink_focus_rebases_only_after_same_host_pixels_are_accepted() {
     let window_id = "presented-ink-focus-rebase";
-    let kind = ui_wgpu::wgpu::SurfaceKind::InkCanvas;
+    let kind = semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas;
     assert!(publish_focus_rebase_document(window_id, 1, 511, kind, &[2]).is_none());
     drive_focus_rebase_reconcile(window_id, 1);
     reconcile_focus_rebase_document(window_id, 2, kind, &[2, 3]);
@@ -2098,7 +2098,7 @@ fn presented_editor_ink_clipboard_owners_rebase_only_after_same_host_pixels_are_
     let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let source=caller.turn(|cx|ui_wgpu::wgpu::ClipboardIntentSource{operation:cx.operation(),generation:cx.generation(),epoch:cx.original_source_epoch().expect("fixture issued input epoch")});
     let window_id = "presented-ink-clipboard-rebase";
-    let kind = ui_wgpu::wgpu::SurfaceKind::InkCanvas;
+    let kind = semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas;
     assert!(publish_focus_rebase_document(window_id, 1, 521, kind, &[2]).is_none());
     drive_focus_rebase_reconcile(window_id, 1);
     reconcile_focus_rebase_document(window_id, 2, kind, &[2, 3]);
@@ -2299,7 +2299,7 @@ fn presented_ink_intent_barrier_has_an_independent_bounded_progress_owner() {
 fn window_close_retires_queued_scene_and_capture_owners_before_slot_release() {
     let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let window_id = "closing-window-scene-owners";
-    let node = seed_scene_window(window_id, "closing-canvas", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+    let node = seed_scene_window(window_id, "closing-canvas", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
     let target = retained_scene_target(window_id, node).unwrap();
     let generation = target.window_generation;
     assert!(claim_scene_pointer_owner(target, ui_render::PointerId(1)));
@@ -2308,7 +2308,7 @@ fn window_close_retires_queued_scene_and_capture_owners_before_slot_release() {
     apply_scene_ui_command(
         window_id,
         node,
-        ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
         &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(1)),
@@ -2333,12 +2333,12 @@ fn window_close_retires_queued_scene_and_capture_owners_before_slot_release() {
 fn closing_window_silently_retires_an_active_canvas_gesture() {
     let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let window_id = "closing-window-active-canvas";
-    let node = seed_scene_window(window_id, "active-canvas", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+    let node = seed_scene_window(window_id, "active-canvas", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
-        ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         Rect::new(0.0, 0.0, 200.0, 200.0),
         &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(1)),
@@ -2368,7 +2368,7 @@ fn live_canvas_gesture_cancels_when_its_published_generation_is_replaced() {
     let mut discarded = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     crate::scenes::cancel_canvas_pointer_gesture(&mut discarded);
     let window_id = "canvas-generation-cancellation";
-    let node = publish_focus_rebase_document(window_id, 1, 454, ui_wgpu::wgpu::SurfaceKind::Canvas2d, &[4]).expect("presented Canvas receiver");
+    let node = publish_focus_rebase_document(window_id, 1, 454, semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d, &[4]).expect("presented Canvas receiver");
     assert_eq!(retained_scene_surface_id(window_id, node), window_id);
     let canvas_host = retained_scene_host_id(window_id, node);
     let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
@@ -2376,7 +2376,7 @@ fn live_canvas_gesture_cancels_when_its_published_generation_is_replaced() {
     apply_scene_ui_command(
         window_id,
         node,
-        ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
         &ui_wgpu::wgpu::UiEvent::PointerDown { x: 20.0, y: 20.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: ui_wgpu::wgpu::EventModifiers::default() },
         Some(ui_render::PointerId(1)),
@@ -2385,7 +2385,7 @@ fn live_canvas_gesture_cancels_when_its_published_generation_is_replaced() {
     assert!(drive_scene_interaction_step(&mut input));
     assert_eq!(crate::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown"]);
 
-    let successor = publish_focus_rebase_document(window_id, 2, 455, ui_wgpu::wgpu::SurfaceKind::TextEditor, &[4]).expect("presented non-Canvas successor");
+    let successor = publish_focus_rebase_document(window_id, 2, 455, semio_framework_ui_declaration::ui::SurfaceKind::TextEditor, &[4]).expect("presented non-Canvas successor");
     assert_ne!(retained_scene_host_id(window_id, successor), canvas_host, "component-kind replacement receives a fresh private host identity");
     assert!(drive_scene_interaction_step(&mut input), "the terminal lane observes the replaced generation even when the old surface no longer paints");
     let actions = crate::collect_fixture_actions(&mut input);
@@ -2397,7 +2397,7 @@ fn live_canvas_gesture_cancels_when_its_published_generation_is_replaced() {
 #[test]
 fn scene_command_skips_bespoke_surface_kinds_to_avoid_double_dispatch() {
     let window_id = "apply-ui-commands-scene-bespoke-skip";
-    let node = seed_scene_window(window_id, "s1", ui_wgpu::wgpu::SurfaceKind::NodeGraph);
+    let node = seed_scene_window(window_id, "s1", semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
@@ -2406,7 +2406,7 @@ fn scene_command_skips_bespoke_surface_kinds_to_avoid_double_dispatch() {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
-            kind: ui_wgpu::wgpu::SurfaceKind::NodeGraph,
+            kind: semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph,
             rect,
             event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         }],
@@ -2432,17 +2432,17 @@ fn pointer_button_code_round_trips_through_pointer_button_from_code_for_every_do
 #[test]
 fn scene_command_reaches_every_generic_fallback_surface_kind_without_panicking() {
     let kinds = [
-        ui_wgpu::wgpu::SurfaceKind::Canvas2d,
-        ui_wgpu::wgpu::SurfaceKind::Paint2d,
-        ui_wgpu::wgpu::SurfaceKind::TextEditor,
-        ui_wgpu::wgpu::SurfaceKind::InkCanvas,
-        ui_wgpu::wgpu::SurfaceKind::GraphTimeline,
-        ui_wgpu::wgpu::SurfaceKind::Table,
-        ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem,
-        ui_wgpu::wgpu::SurfaceKind::IconRender,
-        ui_wgpu::wgpu::SurfaceKind::BlockList,
-        ui_wgpu::wgpu::SurfaceKind::DiffView,
-        ui_wgpu::wgpu::SurfaceKind::EventFeed,
+        semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
+        semio_framework_ui_declaration::ui::SurfaceKind::Paint2d,
+        semio_framework_ui_declaration::ui::SurfaceKind::TextEditor,
+        semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas,
+        semio_framework_ui_declaration::ui::SurfaceKind::GraphTimeline,
+        semio_framework_ui_declaration::ui::SurfaceKind::Table,
+        semio_framework_ui_declaration::ui::SurfaceKind::VirtualFileSystem,
+        semio_framework_ui_declaration::ui::SurfaceKind::IconRender,
+        semio_framework_ui_declaration::ui::SurfaceKind::BlockList,
+        semio_framework_ui_declaration::ui::SurfaceKind::DiffView,
+        semio_framework_ui_declaration::ui::SurfaceKind::EventFeed,
     ];
     for kind in kinds {
         assert!(!crate::scenes::scene_has_bespoke_pointer_dispatch(kind), "{kind:?} must stay in the generic-fallback set for this smoke test to be meaningful");
@@ -2477,7 +2477,7 @@ fn scene_command_reaches_every_generic_fallback_surface_kind_without_panicking()
 #[test]
 fn scene_command_right_click_on_text_editor_does_not_panic_and_stays_a_graceful_no_op_without_a_rendered_host() {
     let window_id = "apply-ui-commands-scene-text-editor-right-click";
-    let node = seed_scene_window(window_id, "s1", ui_wgpu::wgpu::SurfaceKind::TextEditor);
+    let node = seed_scene_window(window_id, "s1", semio_framework_ui_declaration::ui::SurfaceKind::TextEditor);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
@@ -2486,7 +2486,7 @@ fn scene_command_right_click_on_text_editor_does_not_panic_and_stays_a_graceful_
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
-            kind: ui_wgpu::wgpu::SurfaceKind::TextEditor,
+            kind: semio_framework_ui_declaration::ui::SurfaceKind::TextEditor,
             rect,
             event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Secondary, modifiers: Default::default() },
         }],
@@ -2500,7 +2500,7 @@ fn scene_command_right_click_on_text_editor_does_not_panic_and_stays_a_graceful_
 
 
 /// 🧾️ Publishes an owned typed input record for the shared retained-draft corpus.
-fn retained_input_document(window: &str, kind: &str, value: serde_json::Value) -> ui_wgpu::wgpu::tree::UiDocumentTree {
+fn retained_input_document(window: &str, kind: &str, value: serde_json::Value) -> semio_framework_ui_retained_tree::tree::UiDocumentTree {
     let mut document = clipboard_input_document(window);
     document.try_upsert_record(serde_json::from_value(serde_json::json!({
         "id":1,"key":"clipboard/name","component":{"type":"input","kind":kind,"value":value,"commit":"blur"},
@@ -2524,15 +2524,15 @@ fn retained_input_commit_has_a_generation_bound_completion_receipt() {
     let queued = input.take_action_step().unwrap().expect("Enter submits one input commit").into_envelope().unwrap();
     assert!(queued.receipt.is_some(), "focused input retains a receipt until dispatch settles");
     let receipt = queued.receipt.unwrap();
-    settle_retained_input_receipt(ui_wgpu::wgpu::ActionQueueReceipt { source: ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor, ..receipt }, true);
+    settle_retained_input_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor, ..receipt }, true);
     assert!(RETAINED_INPUT_RECEIPTS.with(|cell| cell.borrow().slots.iter().any(Option::is_some)), "equal tokens of other receipt sources cannot consume an input completion");
     crate::settle_renderer_action_receipt(receipt, crate::engine_canvas::TextEditorActionOutcome::Cancelled);
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🚦️input-draft-disposition/🔣️.json")).unwrap();
     let capacity = corpus["receiptCapacity"].as_u64().unwrap() as usize;
-    assert_eq!(capacity, ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY);
+    assert_eq!(capacity, semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY);
     let intent = commands.iter().find_map(|command| match command { ui_wgpu::wgpu::UiCommand::App { intent, .. } => Some(intent), _ => None }).unwrap();
     let mut held: Vec<_> = (0..capacity).map(|_| reserve_retained_input_receipt(window, intent).unwrap()).collect();
-    assert!(matches!(reserve_retained_input_receipt(window, intent), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)));
+    assert!(matches!(reserve_retained_input_receipt(window, intent), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits)));
     let retired = held[0].0.take().unwrap();
     settle_retained_input_receipt(retired, false);
     let replacement = reserve_retained_input_receipt(window, intent).unwrap();
@@ -2575,7 +2575,7 @@ fn retained_input_refusal_settlement_obeys_the_shared_draft_disposition_law() {
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         apply_ui_commands(&mut commands, None, &mut input);
         let receipt = input.take_action_step().unwrap().expect("commit submits").into_envelope().unwrap().receipt.expect("addressed commit owns one completion");
-        assert_eq!(receipt.source, ui_wgpu::wgpu::ActionQueueReceiptSource::RetainedInput);
+        assert_eq!(receipt.source, semio_framework_ui_action::ActionQueueReceiptSource::RetainedInput);
         if law["draft"] != law["submitted"] {
             UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(&window, keys("a", true)));
             UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(&window, ui_wgpu::wgpu::UiEvent::TextInput { text: law["draft"].as_str().unwrap().into() }));

@@ -112,3 +112,25 @@ export function parseJsonDiff(value: unknown, at = "$"): JsonDiff {
 export function parseJsonValue(value: unknown, at = "$"): JsonValue {
   return parseJsonValue(value, `${at}`);
 }
+
+export function parseJsonArrayDiff(value: unknown, at = "$"): JsonArrayDiff {
+  const row = stdioJsonRfc8259BaseDiffGuardObject(value, at);
+  return {
+    removed: row["removed"] === undefined ? undefined : stdioJsonRfc8259BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioJsonRfc8259BaseDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
+    modified: row["modified"] === undefined ? undefined : stdioJsonRfc8259BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => ((row1) => ({ index: stdioJsonRfc8259BaseDiffGuardInteger(row1["index"], `${at}.modified[${index}].index`), diff: parseJsonValueDiff(row1["diff"], `${at}.modified[${index}].diff`) }))(stdioJsonRfc8259BaseDiffGuardObject(item, `${at}.modified[${index}]`))),
+    added: row["added"] === undefined ? undefined : stdioJsonRfc8259BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioJsonRfc8259BaseDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), item: parseJsonValue(row1["item"], `${at}.added[${index}].item`) }))(stdioJsonRfc8259BaseDiffGuardObject(item, `${at}.added[${index}]`))),
+  };
+}
+
+export function parseJsonObjectDiff(value: unknown, at = "$"): JsonObjectDiff {
+  const row = stdioJsonRfc8259BaseDiffGuardObject(value, at);
+  return {
+    removed: row["removed"] === undefined ? undefined : stdioJsonRfc8259BaseDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioJsonRfc8259BaseDiffGuardString(item, `${at}.removed[${index}]`)),
+    modified: row["modified"] === undefined ? undefined : stdioJsonRfc8259BaseDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => ((row1) => ({ key: stdioJsonRfc8259BaseDiffGuardString(row1["key"], `${at}.modified[${index}].key`), diff: parseJsonValueDiff(row1["diff"], `${at}.modified[${index}].diff`) }))(stdioJsonRfc8259BaseDiffGuardObject(item, `${at}.modified[${index}]`))),
+    added: row["added"] === undefined ? undefined : stdioJsonRfc8259BaseDiffGuardArray(row["added"], `${at}.added`).map((item, index) => ((row1) => ({ index: stdioJsonRfc8259BaseDiffGuardInteger(row1["index"], `${at}.added[${index}].index`), key: stdioJsonRfc8259BaseDiffGuardString(row1["key"], `${at}.added[${index}].key`), item: parseJsonValue(row1["item"], `${at}.added[${index}].item`) }))(stdioJsonRfc8259BaseDiffGuardObject(item, `${at}.added[${index}]`))),
+  };
+}
+
+export function parseJsonValueDiff(value: unknown, at = "$"): JsonValueDiff {
+  return ((row0) => { switch (stdioJsonRfc8259BaseDiffGuardMember(row0["kind"], `${at}.kind`, ["replace", "bool", "number", "string", "array", "object"] as const)) { case "replace": return { kind: "replace", value: parseJsonValue(row0["value"], `${at}.value`) }; case "bool": return { kind: "bool", value: stdioJsonRfc8259BaseDiffGuardBoolean(row0["value"], `${at}.value`) }; case "number": return { kind: "number", lexeme: stdioJsonRfc8259BaseDiffGuardString(row0["lexeme"], `${at}.lexeme`) }; case "string": return { kind: "string", value: stdioJsonRfc8259BaseDiffGuardString(row0["value"], `${at}.value`) }; case "array": return { kind: "array", diff: parseJsonArrayDiff(row0["diff"], `${at}.diff`) }; case "object": return { kind: "object", diff: parseJsonObjectDiff(row0["diff"], `${at}.diff`) }; } })(stdioJsonRfc8259BaseDiffGuardObject(value, `${at}`));
+}

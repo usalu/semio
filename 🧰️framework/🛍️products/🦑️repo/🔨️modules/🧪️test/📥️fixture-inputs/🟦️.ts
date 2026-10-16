@@ -4,8 +4,8 @@
  */
 
 //#region 🔌️Adapters
-import { type ParsedFeature } from "../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
-import { type ResolvedTestInput } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type ParsedFeature } from "@semio-tech/framework/test/gherkin";
+import { type ResolvedTestInput } from "@semio-tech/framework/test/adapter";
 import { existsSync, lstatSync, readdirSync, realpathSync } from "node:fs";
 import { join, posix, relative, resolve, sep } from "node:path";
 import { testTaxonomy } from "../🗂️taxonomy/🟦️.ts";

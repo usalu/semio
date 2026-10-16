@@ -127,7 +127,9 @@ export function relativeSourceInputs(value, workspace) {
   return { files: [...files].sort(), externalDependencies: [...contract.externalDependencies] };
 }
 
-/** ⏳️ Traverses bounded source batches through the caller's original progress and cancellation control. */
+/** ⏳️ Traverses bounded source batches through the caller's original progress and cancellation control.
+ * @param {(index: number) => void | Promise<void>} [advance]
+ */
 export async function relativeSourceInputsAsyncV1(value, workspace, advance = async () => {}) {
   const contract = sourceInputContract(value), generated = new Set(contract.generated.map(path => inside(workspace, resolve(workspace, path)))), files = new Set();
   let index = 0;

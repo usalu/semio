@@ -1,7 +1,6 @@
-/** 🧪️ Vitest config for `@semio-tech/framework-os-dev`. `includeSource` enables in-source
- * `import.meta.vitest` blocks inside `📜️script.ts` itself (the task-router entry, not a `js/index.ts`
- * — this bundle root has no separate library entry point) for pure helper logic (marker parsing,
- * built-module scanning) that doesn't need a live cargo/vite process. */
+/** 🧪️ Vitest config for `@semio-tech/framework-os-dev`. Every suite is an ordinary `include` entry that imports the
+ * module it tests (the task-router entry `📜️script.ts` has no separate library entry point); the WIT mapping
+ * suites of `🔌️plugin` join from the `long` level. */
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -18,12 +17,13 @@ const testLevelAtLeast = (level: "long" | "exhaustive"): boolean => (level === "
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 
-/** 🎚️In-source WIT mapping suites whose every case spawns a full strict-TypeScript program check (~60 s each,
+/** 🎚️WIT mapping suites whose every case spawns a full strict-TypeScript program check (~60 s each,
  * measured 2026-09-05) — far past the `quick` wall-clock budget, so they join the run from `long` upwards.
  * Their owning modules live under `🔌️plugin/`, not in this bundle, so the gate belongs here rather than in
  * a per-case `atTestLevel` inside runtime source. */
-const WIT_MAPPING_IN_SOURCE = ["../../../🔌️plugin/📤️return/🟦️.ts", "../../../🔌️plugin/📥️poll/🏘️composition/🟦️.ts"];
-const inSource = testLevelAtLeast("long") ? WIT_MAPPING_IN_SOURCE : [];
+const WIT_MAPPING_MODULES = ["../../../🔌️plugin/📤️return/🟦️.ts", "../../../🔌️plugin/📥️poll/🏘️composition/🟦️.ts"];
+const WIT_MAPPING_SUITES = ["../../../🔌️plugin/📤️return/🧪️tests/🧪️pluginreturnwit-maps-every-canonical-drive-to-the-exact-wit-nesting-and/🟦️.ts", "../../../🔌️plugin/📥️poll/🏘️composition/🧪️tests/🧪️pluginpollcompositionwit-preserves-the-canonical-six-scalars-and-exact-n/🟦️.ts"];
+const witMappingSuites = testLevelAtLeast("long") ? WIT_MAPPING_SUITES : [];
 
 export default defineConfig({
   root: testRoot,
@@ -49,10 +49,8 @@ export default defineConfig({
      * where a runtime builtin is refused outright ("Cannot bundle built-in module") and the runner's own
      * `Bun`/`URL` globals are replaced. That refusal failed the whole 88-law staging FILE and six of its laws. */
     environment: "node",
-    // 🩹️ In-source files belong only in `includeSource`; listing them in BOTH keys made Vitest
-    // collect them twice. Dedicated regression files remain ordinary `include` entries.
-    include: ["../../🧪️tests/🧪️time-travel/🚀️boot/🧪️tests/🟦️.ts", "../../🧪️tests/🧪️time-travel/🪞️inventory/🧪️tests/🟦️.ts", "../../🧪️tests/⚖️scale-registry/🟦️.ts", "../../🧪️tests/💼️inference-service-law/🟦️.ts", "../../🧪️tests/🧩️contribution/🟦️.ts", "../../🧪️tests/✅️parity-verdict/🟦️.ts", "../../🧪️tests/🔖️channel-version/🟦️.ts", "../../🧪️tests/🧹️config/🟦️.ts", "../../🧪️tests/🔌️staging-root/🟦️.ts", "../../🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts", "../../🧪️tests/🚀️local-hub/🟦️.ts", "../../🧪️tests/💤️idle-budget/🧮️reducers/🟦️.ts", "../../🧪️tests/🥾️boot-budget/🧮️reducers/🟦️.ts", "../../🧪️tests/🧮️program-matrix/🧮️reducers/🟦️.ts", "../../🧪️tests/⏱️interaction-latency/🧮️reducers/🟦️.ts", "../../🧪️tests/♨️hot-update/🟦️.ts", "../../🧪️tests/🚶️shell-interaction/🟦️.ts"],
-    includeSource: inSource,
-    coverage: { include: ["../../**/🟦️.ts", ...WIT_MAPPING_IN_SOURCE] },
+    // 🩹️ Never list one file in both `include` and `includeSource`: Vitest would collect it twice.
+    include: ["../../🧪️tests/🧪️time-travel/🚀️boot/🧪️tests/🟦️.ts", "../../🧪️tests/🧪️time-travel/🪞️inventory/🧪️tests/🟦️.ts", "../../🧪️tests/⚖️scale-registry/🟦️.ts", "../../🧪️tests/💼️inference-service-law/🟦️.ts", "../../🧪️tests/🧩️contribution/🟦️.ts", "../../🧪️tests/✅️parity-verdict/🟦️.ts", "../../🧪️tests/🔖️channel-version/🟦️.ts", "../../🧪️tests/🧹️config/🟦️.ts", "../../🧪️tests/🔌️staging-root/🟦️.ts", "../../🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts", "../../🧪️tests/🚀️local-hub/🟦️.ts", "../../🧪️tests/💤️idle-budget/🧮️reducers/🟦️.ts", "../../🧪️tests/🥾️boot-budget/🧮️reducers/🟦️.ts", "../../🧪️tests/🧮️program-matrix/🧮️reducers/🟦️.ts", "../../🧪️tests/⏱️interaction-latency/🧮️reducers/🟦️.ts", "../../🧪️tests/♨️hot-update/🟦️.ts", "../../🧪️tests/🚶️shell-interaction/🟦️.ts", ...witMappingSuites],
+    coverage: { include: ["../../**/🟦️.ts", ...WIT_MAPPING_MODULES] },
   },
 });

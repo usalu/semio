@@ -1,4 +1,3 @@
-/// <reference types="vitest/importMeta" />
 /** 🗂️ The plugin registry entries and their dependency pins, and `expandPluginRegistry`, which adds a primary plugin's dependencies and host-mode entries.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
@@ -76,10 +75,3 @@ export type PluginDependency = {
 };
 //#endregion 🔖️PluginDependency
 // #endregion 🎠️Kernel
-
-//#region 🧪️ExpandPluginRegistryTests
-if (import.meta.vitest) {
-  const { registerTests4 } = await import("../🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests4(import.meta.vitest, { expandPluginRegistry }, { directory: (await import("node:path")).dirname((await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url))), url: import.meta.url });
-}
-//#endregion 🧪️ExpandPluginRegistryTests

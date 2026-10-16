@@ -35,6 +35,3 @@ fn earned<Q: Borrow<Quiz>, R: Borrow<RunResult>>(rule: &BadgeRule, quizzes: &[Q]
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

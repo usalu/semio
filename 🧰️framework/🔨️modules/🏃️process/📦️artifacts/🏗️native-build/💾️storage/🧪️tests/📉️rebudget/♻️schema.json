@@ -1,0 +1,29 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "maxItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "body",
+      "releaseFails",
+      "failed"
+    ],
+    "properties": {
+      "body": {
+        "enum": [
+          "success",
+          "undefined",
+          "frozen"
+        ]
+      },
+      "releaseFails": {
+        "type": "boolean"
+      },
+      "failed": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import {readHubDrillRequestV1} from "./🎛️request/🟦️.ts";
 /** 💾️ The hub backup/restore drill, zero-touch: a fresh data root carrying a copy of a published trusted catalog, one
  * credential user, the real `os-hub` binary, and per round:
  *
@@ -14,28 +15,18 @@
  * measured there SIGTERM 277 ms → tar 164 MB / 25 s → ready 13.5 s, byte-identical, 5/5).
  */
 import { createHash, randomBytes } from "node:crypto";
-import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
-import { hubSeedTrustedCatalog } from "../../🤝️integration-harness/🟦️.ts";
-import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenDocument, hubProbeSignIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
-import { sealSpaceArtifactCreateV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
-import { finishLocalHub, startLocalHub, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
-
-/** 🎛️ One drill. */
-export type BackupRestoreDrillOptions = Readonly<{
-  repoRoot: string;
-  binaryPath: string;
-  catalogRoot: string;
-  kind: string;
-  edits: number;
-  rounds: number;
-  keepRoots: boolean;
-  signal: AbortSignal;
-  onProgress: (line: string) => void;
-}>;
-
+import {lstat,opendir} from "node:fs/promises";
+import {join,relative,dirname} from "node:path";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
+import {observePhysicalFileV1} from "@semio-tech/framework/filesystem/observation";
+import schema from "./🧬️schema/🔣️.json";
+import {hubProbeCall,hubProbeCreateArtifact,hubProbeCreateSpace,hubProbeCreationCatalog,hubProbeOpenDocument,hubProbeSignIn} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
+import {sealSpaceArtifactCreateV1} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
+import {requireLocalHubHostHandleV1,withLocalHubHostCandidateV1,withLocalHubHostTaskV1,finishLocalHub,startLocalHub,stopLocalHubV1,TRUSTED_CATALOG_READINESS_STALL_BOUND_MS,waitForReadiness,LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES,type LocalHubHostV1,type LocalHubHostContextV1} from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import {withMaterializedTrustedCatalogBundleV1,validateAndPublishTrustedStdioGisCandidate} from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
+import {trustedBootstrapSelectPackages} from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
+const policy=Object.freeze({...schema.definitions.Policy.const});
 /** 📊️ One round's measurements. */
 export type BackupRestoreRound = {
   round: number;
@@ -60,24 +51,13 @@ export type BackupRestoreRound = {
 const DRILL_PROFILE = Object.freeze({ profileId: "developer", subject: "local-backup-drill-01", displayName: "Backup Drill", allowedClientClasses: Object.freeze(["native", "mcp", "react-relay"] as const) });
 const EMAIL = "backup-drill@semio.dev";
 
-function fileDigests(root: string): Map<string, string> {
-  const digests = new Map<string, string>();
-  const walk = (dir: string): void => {
-    for (const name of readdirSync(dir)) {
-      const path = join(dir, name);
-      const stat = statSync(path);
-      if (stat.isDirectory()) walk(path);
-      else if (stat.isFile()) digests.set(relative(root, path), createHash("sha256").update(readFileSync(path)).digest("hex"));
-    }
-  };
-  walk(root);
-  return digests;
+async function fileDigests(root:string,control:ResourceLeaseControl):Promise<Map<string,string>>{
+ const digests=new Map<string,string>(),directories=new Map<string,Awaited<ReturnType<typeof lstat>>>();let entries=0,total=0;
+ const parents=async(path:string)=>{for(let parent=dirname(path);;parent=dirname(parent)){const before=directories.get(parent),after=await lstat(parent);if(!before||!after.isDirectory()||after.isSymbolicLink()||before.dev!==after.dev||before.ino!==after.ino)throw Error("Drill directory ancestry changed");if(parent===root)break;}};
+ const walk=async(path:string,depth:number):Promise<void>=>{checkResourceLeaseControl(control);if(++entries>policy.maximumEntries||depth>policy.maximumDepth||path.length>policy.maximumPathUnits)throw Error("Drill snapshot inventory capacity exceeded");const facts=await lstat(path);if(facts.isSymbolicLink())throw Error("Drill snapshot symbolic link refused");if(facts.isDirectory()){directories.set(path,facts);const directory=await opendir(path);for await(const row of directory)await walk(join(path,row.name),depth+1);const after=await lstat(path);if(after.dev!==facts.dev||after.ino!==facts.ino)throw Error("Drill snapshot directory changed");return;}if(!facts.isFile()||facts.nlink!==1||facts.size>policy.maximumSnapshotBytes-total)throw Error("Finite regular drill snapshot required");total+=facts.size;await parents(path);const claim=await observePhysicalFileV1(path,{maxBytes:facts.size,maxWork:Math.ceil(facts.size/65536)+16,chunkBytes:65536,cancelled:()=>control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(control)??Number.MAX_SAFE_INTEGER,onProgress:()=>{checkResourceLeaseControl(control);}});if(claim.byteLength!==facts.size)throw Error("Drill snapshot extent changed");await parents(path);digests.set(relative(root,path),claim.sha256);};await walk(root,0);return digests;
 }
-
-function tar(args: readonly string[]): void {
-  const answer = spawnSync("tar", [...args], { encoding: "utf8" });
-  if (answer.status !== 0) throw new Error(`tar ${args.join(" ")} exited ${answer.status}: ${answer.stderr}`);
-}
+async function command(context:LocalHubHostContextV1,program:"tar"|"credential",args:readonly string[],input?:string):Promise<string>{const result=await captureOwnedCommandResultV1(program==="credential"?context.binaryPath:"tar",args,context.diagnosticsRoot,{control:context.control,env:{...context.environment,OS_HUB_DATA:context.dataRoot},...(input===undefined?{}:{input:{version:1 as const,text:input}}),output:{maximumBytes:65536,maximumLines:512}});if(result.status!==0||result.signal!==null)throw Error("Owned drill child failed: "+result.stderr);return result.stdout;}
+async function withDrillHostV1<T>(parent:LocalHubHostV1,phase:ResourceLeaseControl,body:(host:LocalHubHostV1,context:LocalHubHostContextV1)=>Promise<T>):Promise<T>{return withLocalHubHostCandidateV1(parent,phase,(host,context)=>withMaterializedTrustedCatalogBundleV1(host,context.control,trustedBootstrapSelectPackages(LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES),async(receipt,actual)=>{await validateAndPublishTrustedStdioGisCandidate(host,actual,receipt);return withLocalHubHostTaskV1(host,actual,context=>body(host,context));}));}
 
 async function snapshot(origin: string, token: string, spaceId: string, documentId: string) {
   const scope = `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}`;
@@ -103,55 +83,28 @@ type DrillHub = Readonly<{ baseUrl: string; stop: () => Promise<number>; exit: (
  * (`startLocalHub`), credential sign-in on — and answers once its own `/readyz` admits it, bounded by the hub's own
  * catalog no-progress bound. `stop` sends SIGTERM (the backup procedure's stop), waits for the exit, then releases the
  * launcher's run root. */
-async function bootHub(options: Pick<BackupRestoreDrillOptions, "repoRoot" | "binaryPath" | "signal">, dataDir: string): Promise<{ hub: DrillHub; readyMs: number }> {
-  const started = Date.now();
-  process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
-  const run = await startLocalHub(options.repoRoot, join(options.repoRoot, "🌎️hub", "📦️packages", "🦀️rust"), [DRILL_PROFILE], { dataDir, binaryPath: options.binaryPath, capture: true });
-  const stop = async (): Promise<number> => {
-    const stopping = Date.now();
-    if (run.child.exitCode === null) {
-      run.child.kill("SIGTERM");
-      await waitForChildExit(run.child, 60_000).catch(() => undefined);
-    }
-    const exitMs = Date.now() - stopping;
-    await finishLocalHub(run);
-    return exitMs;
-  };
-  const abort = (): void => void run.child.kill("SIGTERM");
-  options.signal.addEventListener("abort", abort, { once: true });
-  try {
-    await waitForReadiness(run, false, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS);
-  } catch (error) {
-    const tail = run.output().slice(-1_200);
-    await stop();
-    throw new Error(`hub on ${dataDir} never became ready: ${String(error instanceof Error ? error.message : error)}\n${tail}`);
-  } finally {
-    options.signal.removeEventListener("abort", abort);
-  }
-  const exit = () => (run.child.exitCode === null && run.child.signalCode === null ? null : { code: run.child.exitCode, signal: run.child.signalCode });
-  return { hub: { baseUrl: `http://127.0.0.1:${run.port}`, stop, exit, output: run.output }, readyMs: Date.now() - started };
+async function bootHub(host:LocalHubHostV1):Promise<{hub:DrillHub;readyMs:number}>{
+ const started=Date.now(),run=await startLocalHub(host,[DRILL_PROFILE],{capture:true,credentialSignIn:true,adminSubjects:[`credential.password.v1:${SHUTDOWN_EMAIL}`]});
+ await waitForReadiness(run,false,TRUSTED_CATALOG_READINESS_STALL_BOUND_MS);
+ const stop=async()=>{const at=Date.now();await stopLocalHubV1(run,"graceful");await finishLocalHub(run);return Date.now()-at;},exit=()=>(run.child.exitCode===null&&run.child.signalCode===null?null:{code:run.child.exitCode,signal:run.child.signalCode});return{hub:{baseUrl:`http://127.0.0.1:${run.port}`,stop,exit,output:run.output},readyMs:Date.now()-started};
 }
 
-/** 💾️ Runs every round; each round owns two fresh roots (removed afterwards unless `keepRoots` or the round failed). */
-export async function runBackupRestoreDrill(options: BackupRestoreDrillOptions): Promise<BackupRestoreRound[]> {
+/** 💾️ Runs every round; each round retains both genuine candidate roots through exact archive/restore and all child settlement. */
+export async function runBackupRestoreDrill(parent:LocalHubHostV1,phase:ResourceLeaseControl,value:unknown,onProgress:(line:string)=>void):Promise<BackupRestoreRound[]>{
+  requireLocalHubHostHandleV1(parent);const options=readHubDrillRequestV1(value);
   const rounds: BackupRestoreRound[] = [];
   const password = randomBytes(18).toString("hex");
-  for (let round = 1; round <= options.rounds && !options.signal.aborted; round += 1) {
+  for (let round = 1; round <= options.rounds; round += 1) {
     const result: BackupRestoreRound = { round, pass: false };
-    const scratch = mkdtempSync(join(tmpdir(), "semio-backup-drill-"));
-    const original = join(scratch, "original");
-    const restored = join(scratch, "restored");
-    const archive = join(scratch, "backup.tar");
-    let hub: DrillHub | undefined;
+    await withDrillHostV1(parent,phase,(originalHost,context)=>withLocalHubHostCandidateV1(parent,context.control,async(restoredHost,restoredContext)=>{
+    const original=context.dataRoot,restored=restoredContext.dataRoot,archive=join(context.diagnosticsRoot,"backup.tar");
+    let hub: DrillHub | undefined;let primary:{error:unknown}|undefined;
     try {
-      mkdirSync(original, { recursive: true, mode: 0o700 });
-      const generation = hubSeedTrustedCatalog(options.catalogRoot, original);
-      const provisioned = spawnSync(options.binaryPath, ["credential", "set", "--email", EMAIL, "--display-name", "Backup Drill"], { env: { ...process.env, OS_HUB_DATA: original }, input: password, encoding: "utf8" });
-      if (provisioned.status !== 0) throw new Error(`credential set failed: ${provisioned.stderr}`);
-      options.onProgress(`round ${round}: booting on ${original} (catalog ${generation.slice(0, 12)})`);
-      const booted = await bootHub(options, original);
+      await command(context,"credential",["credential","set","--email",EMAIL,"--display-name","Backup Drill"],password);
+      onProgress(`round ${round}: booting on ${original}`);
+      const booted = await bootHub(originalHost);
       hub = booted.hub;
-      options.onProgress(`round ${round}: ready in ${booted.readyMs} ms; seeding ${options.edits} edits`);
+      onProgress(`round ${round}: ready in ${booted.readyMs} ms; seeding ${options.edits} edits`);
       const seedStarted = Date.now();
       const token = await hubProbeSignIn(hub.baseUrl, EMAIL, password, "backupdrill");
       const spaceId = await hubProbeCreateSpace(hub.baseUrl, token, `Backup drill ${round} ${new Date().toISOString()}`);
@@ -173,21 +126,20 @@ export async function runBackupRestoreDrill(options: BackupRestoreDrillOptions):
       result.seedMs = Date.now() - seedStarted;
       result.sigtermToExitMs = await hub.stop();
       hub = undefined;
-      options.onProgress(`round ${round}: SIGTERM → exit ${result.sigtermToExitMs} ms; archiving`);
+      onProgress(`round ${round}: SIGTERM → exit ${result.sigtermToExitMs} ms; archiving`);
       const archiveStarted = Date.now();
-      tar(["-cf", archive, "-C", original, "."]);
+      const originalDigests = await fileDigests(original,context.control);
+      await command(context,"tar",["-cf",archive,"-C",original,"."]);
       result.archiveMs = Date.now() - archiveStarted;
-      result.archiveBytes = statSync(archive).size;
+      result.archiveBytes = (await lstat(archive)).size;
       const restoreStarted = Date.now();
-      mkdirSync(restored, { recursive: true, mode: 0o700 });
-      tar(["-xf", archive, "-C", restored]);
+      await command(restoredContext,"tar",["-xf",archive,"-C",restored]);
       result.restoreMs = Date.now() - restoreStarted;
-      const originalDigests = fileDigests(original);
-      const restoredDigests = fileDigests(restored);
+      const restoredDigests = await fileDigests(restored,restoredContext.control);
       result.files = originalDigests.size;
       result.byteIdentical = originalDigests.size === restoredDigests.size && [...originalDigests].every(([path, digest]) => restoredDigests.get(path) === digest);
-      options.onProgress(`round ${round}: archive ${result.archiveBytes} B in ${result.archiveMs} ms, restored ${result.files} files byte-identical=${result.byteIdentical}; booting the restored root`);
-      const rebooted = await bootHub(options, restored);
+      onProgress(`round ${round}: archive ${result.archiveBytes} B in ${result.archiveMs} ms, restored ${result.files} files byte-identical=${result.byteIdentical}; booting the restored root`);
+      const rebooted = await bootHub(restoredHost);
       hub = rebooted.hub;
       result.restoredReadyMs = rebooted.readyMs;
       const tokenAfter = await hubProbeSignIn(hub.baseUrl, EMAIL, password, "backupdrill");
@@ -208,32 +160,19 @@ export async function runBackupRestoreDrill(options: BackupRestoreDrillOptions):
       result.pass = Object.values(checks).every(Boolean);
     } catch (error) {
       result.error = String(error instanceof Error ? error.message : error).slice(0, 600);
+      primary={error};throw error;
     } finally {
-      if (hub) await hub.stop().catch(() => undefined);
-      if (result.pass && !options.keepRoots) rmSync(scratch, { recursive: true, force: true });
-      else result.roots = scratch;
+      if(hub)try{await hub.stop();}catch(error){if(primary&&!Object.is(primary.error,error))throw new AggregateError([primary.error,error],"Drill body and owned child close failed");throw error;}
     }
+    }));
     rounds.push(result);
-    options.onProgress(`round ${round}: ${result.pass ? "PASS" : "FAIL"} ${JSON.stringify(result.checks ?? {})}${result.error ? ` ${result.error}` : ""}`);
+    onProgress(`round ${round}: ${result.pass ? "PASS" : "FAIL"} ${JSON.stringify(result.checks ?? {})}${result.error ? ` ${result.error}` : ""}`);
   }
   return rounds;
 }
 
 /** 🛑️ One graceful-shutdown drill: the drill hub's binary and catalog as the backup drill's, the kind whose document takes
  * the acknowledged edits, the heavy kinds one of which is created while the hub is stopped (the first the catalog offers). */
-export type ShutdownDrillOptions = Readonly<{
-  repoRoot: string;
-  binaryPath: string;
-  catalogRoot: string;
-  kind: string;
-  heavyKinds: readonly string[];
-  edits: number;
-  rounds: number;
-  keepRoots: boolean;
-  signal: AbortSignal;
-  onProgress: (line: string) => void;
-}>;
-
 /** 📊️ One shutdown round's measurements. */
 export type ShutdownDrillRound = {
   round: number;
@@ -269,24 +208,19 @@ const SHUTDOWN_EMAIL = "shutdown-drill@semio.dev";
  * SIGTERM → the process exits 0 within [`SHUTDOWN_EXIT_BOUND_MS`] and records its `server.shutdown` with the database
  * closed, the open socket is ended with a close frame → the hub boots on the same root, every acknowledged edit is there,
  * the next edit is accepted and the interrupted creation answers a typed status. */
-export async function runShutdownDrill(options: ShutdownDrillOptions): Promise<ShutdownDrillRound[]> {
+export async function runShutdownDrill(parent:LocalHubHostV1,phase:ResourceLeaseControl,value:unknown,onProgress:(line:string)=>void):Promise<ShutdownDrillRound[]>{
+  requireLocalHubHostHandleV1(parent);const options=readHubDrillRequestV1(value);
   const rounds: ShutdownDrillRound[] = [];
   const password = randomBytes(18).toString("hex");
-  const admins = process.env.OS_HUB_ADMIN_SUBJECTS;
-  process.env.OS_HUB_ADMIN_SUBJECTS = `credential.password.v1:${SHUTDOWN_EMAIL}`;
-  try {
-    for (let round = 1; round <= options.rounds && !options.signal.aborted; round += 1) {
+    for (let round = 1; round <= options.rounds; round += 1) {
       const result: ShutdownDrillRound = { round, pass: false };
-      const scratch = mkdtempSync(join(tmpdir(), "semio-shutdown-drill-"));
-      const root = join(scratch, "root");
-      let hub: DrillHub | undefined;
+      await withDrillHostV1(parent,phase,async(host,context)=>{
+      const root=context.dataRoot;
+      let hub: DrillHub | undefined;let primary:{error:unknown}|undefined;
       try {
-        mkdirSync(root, { recursive: true, mode: 0o700 });
-        const generation = hubSeedTrustedCatalog(options.catalogRoot, root);
-        const provisioned = spawnSync(options.binaryPath, ["credential", "set", "--email", SHUTDOWN_EMAIL, "--display-name", "Shutdown Drill"], { env: { ...process.env, OS_HUB_DATA: root }, input: password, encoding: "utf8" });
-        if (provisioned.status !== 0) throw new Error(`credential set failed: ${provisioned.stderr}`);
-        options.onProgress(`round ${round}: cold boot on ${root} (catalog ${generation.slice(0, 12)})`);
-        const booted = await bootHub(options, root);
+        await command(context,"credential",["credential","set","--email",SHUTDOWN_EMAIL,"--display-name","Shutdown Drill"],password);
+        onProgress(`round ${round}: cold boot on ${root}`);
+        const booted = await bootHub(host);
         hub = booted.hub;
         result.bootReadyMs = booted.readyMs;
         const token = await hubProbeSignIn(hub.baseUrl, SHUTDOWN_EMAIL, password, "shutdowndrill");
@@ -310,7 +244,7 @@ export async function runShutdownDrill(options: ShutdownDrillOptions): Promise<S
         const observability = await hubProbeCall(hub.baseUrl, "GET", "/admin/api/observability", token);
         result.observabilityStatus = observability.status;
         if (observability.status === 200) result.packagesVerifyingAtSigterm = (observability.json?.catalog?.packages ?? []).filter((entry: { phase: string }) => entry.phase === "verifying").length;
-        options.onProgress(`round ${round}: ${options.edits} edits acknowledged, one in flight, ${heavy.kindId} creation in flight, ${result.packagesVerifyingAtSigterm ?? `? (observability ${result.observabilityStatus})`} package(s) verifying; SIGTERM`);
+        onProgress(`round ${round}: ${options.edits} edits acknowledged, one in flight, ${heavy.kindId} creation in flight, ${result.packagesVerifyingAtSigterm ?? `? (observability ${result.observabilityStatus})`} package(s) verifying; SIGTERM`);
         const stopping = hub;
         result.sigtermToExitMs = await stopping.stop();
         hub = undefined;
@@ -320,8 +254,8 @@ export async function runShutdownDrill(options: ShutdownDrillOptions): Promise<S
         result.socketClose = await session.ended(5_000);
         await inFlightEdit;
         const shutdownLine = stopping.output().split("\n").find((line) => line.includes("server.shutdown") && line.includes("database=closed"));
-        options.onProgress(`round ${round}: SIGTERM → exit ${result.sigtermToExitMs} ms code ${result.exitCode} signal ${result.exitSignal}; socket ${JSON.stringify(result.socketClose)}; restarting on the same root`);
-        const rebooted = await bootHub(options, root);
+        onProgress(`round ${round}: SIGTERM → exit ${result.sigtermToExitMs} ms code ${result.exitCode} signal ${result.exitSignal}; socket ${JSON.stringify(result.socketClose)}; restarting on the same root`);
+        const rebooted = await bootHub(host);
         hub = rebooted.hub;
         result.restartReadyMs = rebooted.readyMs;
         const tokenAfter = await hubProbeSignIn(hub.baseUrl, SHUTDOWN_EMAIL, password, "shutdowndrill");
@@ -347,17 +281,13 @@ export async function runShutdownDrill(options: ShutdownDrillOptions): Promise<S
         result.pass = Object.values(checks).every(Boolean);
       } catch (error) {
         result.error = String(error instanceof Error ? error.message : error).slice(0, 600);
+        primary={error};throw error;
       } finally {
-        if (hub) await hub.stop().catch(() => undefined);
-        if (result.pass && !options.keepRoots) rmSync(scratch, { recursive: true, force: true });
-        else result.roots = scratch;
+        if(hub)try{await hub.stop();}catch(error){if(primary&&!Object.is(primary.error,error))throw new AggregateError([primary.error,error],"Drill body and owned child close failed");throw error;}
       }
+      });
       rounds.push(result);
-      options.onProgress(`round ${round}: ${result.pass ? "PASS" : "FAIL"} ${JSON.stringify(result.checks ?? {})}${result.error ? ` ${result.error}` : ""}`);
+      onProgress(`round ${round}: ${result.pass ? "PASS" : "FAIL"} ${JSON.stringify(result.checks ?? {})}${result.error ? ` ${result.error}` : ""}`);
     }
-  } finally {
-    if (admins === undefined) delete process.env.OS_HUB_ADMIN_SUBJECTS;
-    else process.env.OS_HUB_ADMIN_SUBJECTS = admins;
-  }
   return rounds;
 }

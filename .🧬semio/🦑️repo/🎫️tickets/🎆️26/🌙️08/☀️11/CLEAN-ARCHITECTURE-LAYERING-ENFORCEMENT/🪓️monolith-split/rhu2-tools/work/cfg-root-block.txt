@@ -1,0 +1,4 @@
+/** 🗂️ The data class of every key, read from the schema itself (`🎨️ui-preferences/🔣️.json` `$defs.DataClasses`) — the one
+ * declaration the TypeScript and Rust twins both read. Rows: `🎨️ui-preferences/🧫️fixtures/🗂️data-classes/🔣️.json`. */
+export const UI_PREFERENCE_DATA_CLASSES: Readonly<Record<UiPreferenceKey, UiPreferenceDataClass>> = uiPreferencesSchema.$defs.DataClasses.const as Readonly<Record<UiPreferenceKey, UiPreferenceDataClass>>;
+

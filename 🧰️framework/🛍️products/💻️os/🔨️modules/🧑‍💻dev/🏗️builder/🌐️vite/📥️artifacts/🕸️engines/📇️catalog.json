@@ -5,25 +5,29 @@
       "id": "surface",
       "packageName": "@semio-tech/framework-surface-rs",
       "sourceOwner": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
-      "wasmBaseName": "framework_surface"
+      "wasmBaseName": "framework_surface",
+      "entrypoint": "generated"
     },
     {
       "id": "editor",
       "packageName": "@semio-tech/framework-editor-rs",
       "sourceOwner": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
-      "wasmBaseName": "framework_editor"
+      "wasmBaseName": "framework_editor",
+      "entrypoint": "generated"
     },
     {
       "id": "graph",
       "packageName": "@semio-tech/framework-os-node-graph-rs",
       "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
-      "wasmBaseName": "framework_os_node_graph"
+      "wasmBaseName": "framework_os_node_graph",
+      "entrypoint": "source"
     },
     {
       "id": "puzzle",
       "packageName": "@semio-tech/puzzle-wasm",
       "sourceOwner": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
-      "wasmBaseName": "semio_puzzle"
+      "wasmBaseName": "semio_puzzle",
+      "entrypoint": "generated"
     }
   ],
   "sourcePackages": [

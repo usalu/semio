@@ -49,5 +49,5 @@ export const playbookPlaybookMutationsTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parsePlaybookMutationsText(value: unknown, at = "$"): PlaybookMutationsText {
-  return playbookPlaybookMutationsTextGuardObject(value, `${at}`);
+  return playbookPlaybookMutationsTextGuardString(value, `${at}`);
 }

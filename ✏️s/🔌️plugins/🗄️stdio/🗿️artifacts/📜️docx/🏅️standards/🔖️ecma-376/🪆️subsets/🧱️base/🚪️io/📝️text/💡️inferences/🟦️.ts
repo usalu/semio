@@ -49,5 +49,5 @@ export const stdioDocxEcma376BaseInferenceTextGuardConstant = <T extends string 
 //#endregion 🚪️Parsers
 
 export function parseDocxInferenceText(value: unknown, at = "$"): DocxInferenceText {
-  return stdioDocxEcma376BaseInferenceTextGuardObject(value, `${at}`);
+  return stdioDocxEcma376BaseInferenceTextGuardString(value, `${at}`);
 }

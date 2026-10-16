@@ -12,7 +12,6 @@ import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../�
 
 const repoRoot = getWorkspaceRoot();
 
-import { readPackageName } from "../../../🔌️plugin/🏗️build/📦️materialization/🟦️.ts";
 
 import { runHomeE2eCli, runStudioE2eVerify } from "../🎬️studio/🟦️.ts";
 
@@ -100,7 +99,7 @@ class VerifyScript extends BundleScript {
       return;
     }
     for (const target of generatePluginRegistry(repoRoot)) {
-      const packageName = await readPackageName(target.cratePath);
+      const packageName=target.packageName;
       if (runCmdStatus("cargo", ["test", "--lib", "-p", packageName], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${packageName} tests failed`);
     }
     if (runBunxStatus(["vitest", "run"], join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript")) !== 0) throw new Error("framework-renderer-react tests failed");

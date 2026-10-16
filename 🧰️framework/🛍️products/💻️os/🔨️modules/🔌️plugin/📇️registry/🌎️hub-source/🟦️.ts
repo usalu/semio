@@ -19,9 +19,11 @@
  * @see ../../../../../../../🌎️hub/🏗️bootstrap/🦀️.rs
  */
 import { PluginModuleUnavailableError, type PluginModuleAcquired, type PluginModuleAcquisition, type PluginRegistryEntry, type PluginSource } from "@semio-tech/framework";
-import { PLUGIN_MODULE_STORE_V1, PLUGIN_MODULE_TRANSFER_RETRY_V1, pluginModuleStoreRecordV1, type PluginModuleStoreRecordV1 } from "./🧬️schema/🟦️.ts";
-import { decodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, trustedPluginModuleBundleSha256V1, trustedPluginModuleSourceOfEntryV1, TrustedPluginModuleRefusalV1, validateTrustedPluginModuleIndexV1, verifyTrustedPluginModuleFileV1, type TrustedPluginModuleBundleV1, type TrustedPluginModuleFileV1, type TrustedPluginModuleIndexEntryV1, type TrustedPluginModuleIndexV1 } from "../📦️deployment/🧬️schema/🟦️.ts";
-import { hubProgramIdV1, localPluginModuleRootV1, resolvePluginModuleSourceV1, type PluginModuleSourceV1 } from "./🔍️resolution/🟦️.ts";
+import { PLUGIN_MODULE_STORE_V1, PLUGIN_MODULE_TRANSFER_RETRY_V1 } from "../../../../../../🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🟦️.ts";
+import { pluginModuleStoreRecordV1, type PluginModuleStoreRecordV1 } from "./🧬️schema/🟦️.ts";
+import { decodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, validateTrustedPluginModuleIndexV1 } from "../📦️deployment/🧬️schema/🟦️.ts";
+import { trustedPluginModuleBundleSha256V1, trustedPluginModuleSourceOfEntryV1, TrustedPluginModuleRefusalV1, verifyTrustedPluginModuleFileV1, type TrustedPluginModuleBundleV1, type TrustedPluginModuleFileV1, type TrustedPluginModuleIndexEntryV1, type TrustedPluginModuleIndexV1 } from "../../../../../../🔨️modules/🔌️plugin-module/🟦️.ts";
+import { hubProgramIdV1, localPluginModuleRootV1, resolvePluginModuleSourceV1, type PluginModuleSourceV1 } from "../../../../../../🔨️modules/🔌️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts";
 import {
   collectPluginModuleStoreGarbageV1,
   commitPluginModuleBundleV1,

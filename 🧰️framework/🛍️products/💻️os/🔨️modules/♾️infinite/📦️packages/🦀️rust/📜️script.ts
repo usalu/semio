@@ -12,10 +12,10 @@ import { withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️mo
 import { withArtifactScratchV1, withArtifactDestinationTaskV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
 import { withRepositoryPublishedCargoExecutableV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
 import { readNativeCallerAuthorityV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import { withScriptInvocationSignalV1, scriptInvocationEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import { scriptCompilerAdmissionControlV1, acquireCompilerCapacityLeaseV1 } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import { captureOwnedCommandResultV1 } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { scriptInvocationEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, acquireCompilerCapacityLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { captureOwnedCommandResultV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import { fontAssetPublicationRootV1 } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🟦️.ts";
 
 import fontStorageSchema from "../../🔤️fonts/👓️reading/🧬️schema/🔣️.json" with { type: "json" };
@@ -30,13 +30,13 @@ class FontsScript extends BundleScript {
     if (mode !== authority.original.buildMode) throw Error("Original font asset build mode required");
     await withRepositoryCacheStoreV1(workspace, "products", this.invocation, phaseControl,products => withRepositoryCacheStoreV1(workspace, "diagnostics", this.invocation, products.control,diagnostics => withArtifactScratchV1({ workspace, invocation: this.invocation, storage: diagnostics.storage, control: diagnostics.control, phaseControl, request: { version: 1, mode, owner } }, destination => withArtifactDestinationTaskV1(destination, this.invocation, async sink => {
       const asset = join(sink.directory, FONT_ASSET);
-      await withScriptInvocationSignalV1(this.invocation, sink.control.signal, narrowed => withRepositoryPublishedCargoExecutableV1(manifest, FONT_TOOL + (process.platform === "win32" ? ".exe" : ""), workspace, mode, narrowed, async artifact => {
-        const environment = scriptInvocationEnvironment(this.invocation, { ...artifact.environment, ...sink.environment }), lease = await acquireCompilerCapacityLeaseV1({ directory: join(workspace, ".cache/b/l/m/data"), control: sink.control, environment, requestedParallelism: 1 });
+      await withRepositoryPublishedCargoExecutableV1(manifest, FONT_TOOL + (process.platform === "win32" ? ".exe" : ""), workspace, mode, this.invocation, sink.control, async (artifact, control) => {
+        const environment = scriptInvocationEnvironment(this.invocation, { ...artifact.environment, ...sink.environment }), lease = await acquireCompilerCapacityLeaseV1({ directory: join(workspace, ".cache/b/l/m/data"), control, environment, requestedParallelism: 1 });
         try {
-          const result = await captureOwnedCommandResultV1(artifact.path, [asset], ROOT, { control: sink.control, env: environment, output: { maximumBytes: Math.min(1048576, authority.transport.maximumBytes), maximumLines: Math.min(65536, authority.transport.maximumLines) } });
+          const result = await captureOwnedCommandResultV1(artifact.path, [asset], ROOT, { control, env: environment, output: { maximumBytes: Math.min(1048576, authority.transport.maximumBytes), maximumLines: Math.min(65536, authority.transport.maximumLines) } });
           if (result.status !== 0 || result.signal !== null) throw Error("Font asset tool failed: " + result.stderr.slice(-65536));
         } finally { lease.release(); }
-      }));
+      });
       const facts = await lstat(asset);
       if (!facts.isFile() || facts.isSymbolicLink() || facts.nlink !== 1 || facts.size > fontProtocol.maximumAssetBytes) throw Error("Finite physical font output required");
       const bytes = await readFile(asset, { signal: sink.control.signal }), count = validateFontAsset(bytes);

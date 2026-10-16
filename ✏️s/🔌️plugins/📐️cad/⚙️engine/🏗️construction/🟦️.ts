@@ -1,6 +1,6 @@
 /** 🏗️ Geometric construction capabilities selected by CAD extension owners. */
 import type { Vec3 } from "@semio-tech/framework/3d";
-import { Model } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { Model } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
 import { applyModelDiff, type SpatialKernel } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 
 function constructionPoint(value: unknown): Vec3 {

@@ -1,6 +1,6 @@
 import type {PluginCatalogRowsV1,PluginCatalogRowV1} from "../🟦️.ts";
 import contract from "../🛂️descriptor-verification/🧬️schema/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { jsonDocumentDuplicateKeys } from "../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️json-document/🟦️.ts";
 
 export const REGISTRY_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;

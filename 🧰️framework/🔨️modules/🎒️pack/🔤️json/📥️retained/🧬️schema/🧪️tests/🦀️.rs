@@ -76,12 +76,12 @@ fn owned_schema_record_rejects_stale_operation_and_generation_before_consuming_i
     assert_eq!(diagnostic.code, "schema-json.stale-authority");
     assert_eq!(diagnostic.offset, 0);
     let grant=schema_test_close_grant();
-    let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(grant).unwrap());
+    let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(grant).unwrap());
     assert_eq!((allocated,released),(0,0));assert_eq!(step.progress().copied_items,1);assert_eq!(step.progress().released_bytes,0);assert!(step.progress().fits(grant));assert!(!cursor.terminal_is_empty());
     let backing=cursor.next_close_release_byte_demand().unwrap();let pointer=cursor.tokens.pages.slots.as_ptr();
-    let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(RetainedCloneGrant { maximum_release_bytes:backing-1,..grant }).unwrap());
+    let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(RetainedCloneGrant { maximum_release_bytes:backing-1,..grant }).unwrap());
     assert_eq!((allocated,released),(0,0));assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(cursor.tokens.pages.slots.as_ptr(),pointer);
-    let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(grant).unwrap());
+    let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(grant).unwrap());
     assert_eq!((allocated,released),(0,backing));assert_eq!(step.progress().released_bytes,backing);assert!(step.progress().fits(grant));assert!(matches!(step,RetainedCloneStep::Complete(_)));assert!(cursor.terminal_is_empty());
 }
 
@@ -165,18 +165,18 @@ fn cancelled_owned_schema_cursor_retires_one_real_page_per_close_grant() {
         semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, schema_test_close_grant()), cancel, semio_framework_job::default_now_us, &mut preview_sequence, &mut original_retained_progress_4);
     assert_eq!(cursor.step(&mut context), OwnedSchemaRecordStep::Cancelled);
     let grant=schema_test_close_grant();let pointer=cursor.tokens.pages.slots.as_ptr();
-    let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(RetainedCloneGrant { maximum_copy_bytes:0,..grant }).unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(cursor.tokens.pages.slots.as_ptr(),pointer);
+    let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(RetainedCloneGrant { maximum_copy_bytes:0,..grant }).unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(cursor.tokens.pages.slots.as_ptr(),pointer);
     for _ in 0..2 {
-        let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(grant).unwrap());
+        let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(grant).unwrap());
         assert_eq!((allocated,released),(0,0));assert_eq!(step.progress().copied_items,1);assert_eq!(step.progress().released_bytes,0);assert!(step.progress().fits(grant));assert_eq!(cursor.tokens.pages.slots.as_ptr(),pointer);
     }
     assert!(!cursor.terminal_is_empty());let backing=cursor.next_close_release_byte_demand().unwrap();assert_eq!(backing,2*std::mem::size_of::<OwnedSchemaDecodePage>());assert_eq!(std::mem::size_of::<OwnedSchemaDecodePage>(),OWNED_SCHEMA_DECODE_PAGE_BYTES+std::mem::size_of::<u16>());
     for denied in [RetainedCloneGrant { maximum_items:0,..grant },RetainedCloneGrant { maximum_release_bytes:backing-1,..grant },RetainedCloneGrant { maximum_depth:0,..grant }] {
-        let(result,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(denied));assert_eq!((allocated,released),(0,0));
+        let(result,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(denied));assert_eq!((allocated,released),(0,0));
         if denied.maximum_depth==0 { assert_eq!(result.unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit); } else { assert_eq!(result.unwrap().progress(),RetainedCloneProgress::default()); }
         assert!(!cursor.terminal_is_empty());assert_eq!(cursor.tokens.pages.slots.as_ptr(),pointer);
     }
-    let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(grant).unwrap());assert_eq!((allocated,released),(0,backing));assert_eq!(step.progress().released_bytes,backing);assert!(step.progress().fits(grant));assert!(matches!(step,RetainedCloneStep::Complete(_)));assert!(cursor.terminal_is_empty());
+    let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(grant).unwrap());assert_eq!((allocated,released),(0,backing));assert_eq!(step.progress().released_bytes,backing);assert!(step.progress().fits(grant));assert!(matches!(step,RetainedCloneStep::Complete(_)));assert!(cursor.terminal_is_empty());
     eprintln!("[DEBUG] schema cancel preserves original directory pointer under denied work/release/depth; inline page work releases0 and final directory releases exact{backing} bytes");
 }
 

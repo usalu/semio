@@ -18,12 +18,12 @@ pub use set_fatal_n::SetFatalN;
 mod assign_n;
 pub use assign_n::AssignN;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, semio_framework_value_derive::RetireOwned, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, semio_framework_value_derive::RetireOwned, FromValue, semio_framework_os_dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = DemoSnapshot, diff = DemoDiff, schema = "severity.doc")]
-pub(crate) enum SeverityMutation {
+pub enum SeverityMutation {
     SetN(SetN),
     SetWarningN(SetWarningN),
     SetErrorN(SetErrorN),

@@ -6,6 +6,7 @@
     "test-command-ingress-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-command-ingress-native"
   },
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "crc-32": "^1.2.2"
   }
 }

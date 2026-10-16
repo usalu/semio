@@ -9,8 +9,9 @@
 //! prompt operated by keyboard alone, every staged editor kind in the Actions form and in a chrome dialog, and the
 //! history body the guest's REAL producer builds (paged transaction rows, Edit refused with its reason).
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::{host_test_shell, test_app, tree_pointer_record};
 use super::*;
-use crate::program_bridge::OperationPublication;
+use semio_framework_os_renderer_wgpu_program_bridge::OperationPublication;
 use semio_framework::kernel::{HistoryEntry, HistoryPatch, HistoryReprojection, HistoryTimeTravel, HistoryTimeTravelStage, InvocationResult};
 use semio_framework::{ActionArgDef, ActionArgOption, ArgPresentation, ArgSchema, DialogDefinition, DomainSelection};
 use semio_framework_plugin::app::time_travel::{history_row_window_path, TimeTravelInputRow, TimeTravelList, TimeTravelListItem};
@@ -77,7 +78,7 @@ fn session_shell() -> ShellState {
         children: vec![],
     });
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.dock.dock.root = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
+    shell.dock.dock.root = semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
     shell.dock.dock.active_window_id = Some("main".into());
     shell.windows.active_window_id = Some("main".into());
     shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
@@ -128,17 +129,17 @@ fn dispatched() -> Vec<String> {
 /// 🎨️ Paints `document` in `surface` to completion with the stepped paint every retained body uses, then registers and
 /// publishes its hits, so the surface's accessibility projection is the one the mirror reads; answers the staged input.
 fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
     let mut input = InputState::<ActionDescriptor>::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
     let mut world3d_states = std::mem::take(&mut shell.surfaces.world3d_states);
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    crate::interpreter::begin_accessibility_visible_documents();
+    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let mut cursor = UiDocumentFrameCursor::default();
     let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
-        let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
+        let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
         caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx))
     });
     assert!(painted, "{surface} painted within its opportunity ceiling");
@@ -155,10 +156,10 @@ fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocum
 
 /// 🧹️ Closes a law's retained surface and retires every document it published there.
 fn close_retained_body(surface: &str, documents: Vec<UiDocumentLease>) {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    if crate::interpreter::request_ui_document_close(surface) {
-        while crate::interpreter::ui_document_close_pending_for(surface) {
-            assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted close opportunity advances");
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    if semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(surface) {
+        while semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface) {
+            assert!(caller.turn(|cx|semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted close opportunity advances");
         }
     }
     for mut document in documents {
@@ -630,7 +631,7 @@ fn a_replay_and_a_review_focus_the_band_the_prompt_takes_focus_and_typing_elsewh
 /// that window the keyboard; nothing is left waiting.
 #[test]
 fn beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection() {
-    use super::shell_input_tests::tree_pointer_record;
+    use tree_pointer_record;
     const SURFACE: &str = "framework.history.focus-law";
     let component = |wire: Value| serde_json::from_value::<ui_contract::Component>(wire).expect("history body component wire");
     let records = vec![
@@ -647,7 +648,7 @@ fn beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection(
     SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("editing a mutation")));
     let _ = paint_retained_body(&mut shell, SURFACE, &document, Rect::new(0.0, 0.0, 420.0, 640.0));
     assert_eq!(shell.history.time_travel_focus, None, "the editor reached the screen and took the focus");
-    let nodes = crate::interpreter::published_accessibility_nodes_for_test(SURFACE);
+    let nodes = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(SURFACE);
     let focused: Vec<_> = nodes.iter().filter(|node| node.focused).map(|node| (node.key.clone(), node.role.clone())).collect();
     assert_eq!(focused.len(), 1, "one focused node: {focused:?}");
     assert!(projected_key_is(&focused[0].0, "framework.history.editor.input.dx") && focused[0].1 == "spinbutton", "the stepper itself, not its row: {focused:?}");
@@ -783,7 +784,7 @@ fn a_typed_operation_that_ends_after_its_host_call_refreshes_and_publishes_its_r
     assert_eq!(rows.len(), before + 1, "the completion's row is in the projection");
     assert!(rows.iter().any(|entry| entry.key() == "seq:41"));
     assert!(shell.settle.owed_refresh_scope.wants_window_body("board"), "the progress scope is owed: {:?}", shell.settle.owed_refresh_scope);
-    assert!(shell.settle.owed_refresh_scope.wants_panel_body(ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY), "the History body owes the minted row: {:?}", shell.settle.owed_refresh_scope);
+    assert!(shell.settle.owed_refresh_scope.wants_panel_body(semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY), "the History body owes the minted row: {:?}", shell.settle.owed_refresh_scope);
     assert!(!shell.settle.owed_refresh_scope.wants_window_body("another"), "one merged pass, never a full one");
     assert!(PointerCtx::of(&mut shell).settle_pump_pending(), "the settle lane refreshes without a dispatch");
     assert!(shell.chrome.transient_notice().is_none(), "a completion is told by its rows, not by a notice");
@@ -800,10 +801,10 @@ fn a_refused_completion_is_told_as_a_notice() {
     let notice = shell.chrome.transient_notice().expect("the refused completion is told");
     assert!(notice.message.contains("noncanonical bytes"), "the notice names what was refused: {}", notice.message);
     assert!(shell.settle.owed_refresh_scope.asks_for_nothing(), "a fault alone re-renders nothing");
-    let unreadable = crate::program_bridge::operation_publications_from_json("{\"completed\":true}");
+    let unreadable = semio_framework_os_renderer_wgpu_program_bridge::operation_publications_from_json("{\"completed\":true}");
     assert_eq!(unreadable.len(), 1);
     assert!(unreadable[0].fault.as_deref().is_some_and(|fault| fault.starts_with("wgpu-bridge.operation-publication.unreadable")) && unreadable[0].resync, "an unreadable answer is a fault and a re-read: {unreadable:?}");
-    let mangled = crate::program_bridge::operation_publications_from_json("[{\"completed\":true,\"historyPatch\":{\"cursor\":\"seven\"}}]");
+    let mangled = semio_framework_os_renderer_wgpu_program_bridge::operation_publications_from_json("[{\"completed\":true,\"historyPatch\":{\"cursor\":\"seven\"}}]");
     assert!(mangled[0].fault.as_deref().is_some_and(|fault| fault.contains("historyPatch")) && mangled[0].resync, "an unreadable entry names its member: {mangled:?}");
     assert_eq!(operation_publication_refresh(&mangled[0]), UiDirtyScope::Full);
 }
@@ -814,12 +815,12 @@ fn a_refused_completion_is_told_as_a_notice() {
 #[test]
 fn every_operation_publication_owes_what_the_shared_corpus_says() {
     let corpus: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️operation-publication/🔣️.json")).expect("the shared operation-publication corpus parses");
-    assert_eq!(corpus["historyBodyKey"].as_str(), Some(ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY));
+    assert_eq!(corpus["historyBodyKey"].as_str(), Some(semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY));
     let rows = corpus["rows"].as_array().expect("the corpus rows");
     assert!(rows.len() >= 7, "the corpus covers completion, progress, fault and resync");
     for row in rows {
         let name = row["name"].as_str().expect("name");
-        let read = crate::program_bridge::operation_publications_from_json(&Value::Array(vec![row["publication"].clone()]).to_string());
+        let read = semio_framework_os_renderer_wgpu_program_bridge::operation_publications_from_json(&Value::Array(vec![row["publication"].clone()]).to_string());
         assert_eq!(read.len(), 1, "{name}");
         let publication = &read[0];
         assert_eq!(publication.completed, row["publication"]["completed"].as_bool().expect("completed"), "{name}");
@@ -1219,14 +1220,14 @@ fn the_actions_form_renders_every_editor_kind() {
     let buttons: Vec<(String, String, Value, bool)> = references
         .iter()
         .filter_map(|item| match &item.control {
-            Some(UiControlNode::Button(button)) => Some((button.id.clone().unwrap_or_default(), button.label.as_str().to_string(), args_of(&button.action)["value"].clone(), button.presence.state == ui_wgpu::wgpu::component::ui::UiState::Disabled)),
+            Some(UiControlNode::Button(button)) => Some((button.id.clone().unwrap_or_default(), button.label.as_str().to_string(), args_of(&button.action)["value"].clone(), button.presence.state == semio_framework_ui_layout::layout::UiState::Disabled)),
             _ => None,
         })
         .collect();
     assert_eq!(buttons, [("targets.remove.a".to_string(), "Remove a".to_string(), serde_json::json!([]), false), ("targets.useSelection".to_string(), "Use current selection".to_string(), serde_json::json!(["n1", "n2"]), false)]);
     let empty = staged_action_arg_row("main", "move", &defs[4], None, &HashMap::new(), Terminology::Native, Locale::De).items.expect("rows");
     assert_eq!(empty.iter().map(|item| item.label.as_str().to_string()).collect::<Vec<_>>(), ["Nichts ausgewählt", "Aktuelle Auswahl verwenden"]);
-    assert!(matches!(&empty[1].control, Some(UiControlNode::Button(button)) if button.presence.state == ui_wgpu::wgpu::component::ui::UiState::Disabled), "nothing selected, nothing to use");
+    assert!(matches!(&empty[1].control, Some(UiControlNode::Button(button)) if button.presence.state == semio_framework_ui_layout::layout::UiState::Disabled), "nothing selected, nothing to use");
 }
 
 /// ⚖️ LAW: a stage dispatch stages a segmented option, splices a vector axis into the staged tuple (else the painted
@@ -1586,7 +1587,7 @@ fn history_body(current: &mut Option<semio_framework_ui_runtime::SurfaceReconcil
         let start = offset.min(HISTORY_BODY_OPERATIONS.saturating_sub(rows));
         let paged = start.max(HISTORY_BODY_PROJECTED);
         pages.insert(1, HistoryMutationPage { from: (paged - HISTORY_BODY_PROJECTED) as usize, rows: (paged..(start + rows).min(HISTORY_BODY_OPERATIONS)).map(drag_mutation).collect() });
-        view.tree_windows = vec![semio_framework::TreeWindowRequest { body_key: ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY.into(), node_key: history_row_window_path(1), open: Some(true), offset, rows }];
+        view.tree_windows = vec![semio_framework::TreeWindowRequest { body_key: semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY.into(), node_key: history_row_window_path(1), open: Some(true), offset, rows }];
     }
     let built = semio_framework_async::block_on(ui_history_panel(&history, panel.as_ref(), reprojection.as_ref(), &pages, "s.test.history", locale, false, false, &view)).expect("the guest's history body assembles");
     let viewport: Value = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🧪️tests/🧫️fixtures/history-panel-command-window/🔣️.json")).expect("the neutral history viewport fixture");
@@ -1602,12 +1603,12 @@ fn history_document_node_id(document: &UiDocumentLease, key: &str) -> ui_contrac
 
 /// ♿️ The History surface's mirror node whose key names `key`.
 fn history_mirror_node(key: &str) -> Option<ui_contract::AccessibilityProjectionNode> {
-    crate::interpreter::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID).into_iter().find(|node| projected_key_is(&node.key, key))
+    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID).into_iter().find(|node| projected_key_is(&node.key, key))
 }
 
 /// 📜️ The mutation rows the History surface's mirror shows, in reading order.
 fn history_mirror_mutations() -> Vec<String> {
-    crate::interpreter::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID)
+    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID)
         .into_iter()
         .filter_map(|node| node.key.rsplit('/').next().and_then(|key| key.strip_prefix("framework.history.mutation.")).filter(|id| !id.contains("::")).map(str::to_owned))
         .collect()
@@ -1625,16 +1626,16 @@ fn wheel_history_window_into_view(shell: &mut ShellState, surface: &str, documen
         assert!(shell.input.handle_pointer_wheel(x, y, 0.0, row_h * 3.0, &mut input), "the History body owns the wheel");
         input = paint_retained_body(shell, surface, document, body);
     }
-    panic!("`{wanted}` never scrolled into the History body: windows={:?} shown={:?}", crate::interpreter::tree_window_measures(surface), history_mirror_mutations());
+    panic!("`{wanted}` never scrolled into the History body: windows={:?} shown={:?}", semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::tree_window_measures(surface), history_mirror_mutations());
 }
 
 /// 🖱️ Activates one History mirror node the way the ARIA mirror's click does; answers what it dispatched.
 fn activate_history_mirror_node(shell: &mut ShellState, key: &str) -> Vec<ActionDescriptor> {
     let node = history_mirror_node(key).unwrap_or_else(|| panic!("`{key}` is in the mirror"));
-    let target = crate::interpreter::published_accessibility_target_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID, &node.key).expect("a mirror node is an accessibility target");
+    let target = semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID, &node.key).expect("a mirror node is an accessibility target");
     let mut input = InputState::<ActionDescriptor>::default();
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("the activation is handled");
-    crate::collect_fixture_actions(&mut input)
+    semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
 
 /// ⚖️ LAW (gaps N1 + N15 on wgpu, through the guest's REAL producer and the ARIA mirror): a closed transaction row of 120
@@ -1664,7 +1665,7 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
     shell.dock.observe_tree_windows(surface, &shell.docs);
     let (requests, _) = shell.dock.tree_windows.view_state_fields();
     let path = history_row_window_path(1);
-    let asked = requests.iter().find(|request| request.body_key == ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY && request.node_key == path).cloned().unwrap_or_else(|| panic!("the opened row is asked for by the guest's window path {path:?}: {requests:?}"));
+    let asked = requests.iter().find(|request| request.body_key == semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY && request.node_key == path).cloned().unwrap_or_else(|| panic!("the opened row is asked for by the guest's window path {path:?}: {requests:?}"));
     assert!(asked.open == Some(true) && asked.rows > HISTORY_BODY_PROJECTED, "the request opens the row over more than its projection: {asked:?}");
 
     documents.push(history_body(&mut producer, Some((asked.offset, asked.rows)), None, None, Locale::En, 2));
@@ -1966,7 +1967,7 @@ fn a_decoded_video_is_a_cancellable_task_that_frees_a_started_stream() {
     let (mut shell, _) = importing_shell();
     shell.opening.import_transfers.clear();
     assert!(!shell.opening.begin_media_frames_transfer("test.controller".into(), Vec::new(), &shell.docs), "no pick, no task");
-    let frame = |action: &str, index: usize| ActionDescriptor { controller_id: "test.controller".into(), action: action.into(), args: crate::action_args_json!({ "name": "clip.mp4", "index": index }) };
+    let frame = |action: &str, index: usize| ActionDescriptor { controller_id: "test.controller".into(), action: action.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "name": "clip.mp4", "index": index }) };
     assert!(shell.opening.begin_media_frames_transfer("test.controller".into(), vec![frame("importVideoFramePayload", 0), frame("importVideoFramePayload", 1), frame("importVideoDone", 2)], &shell.docs));
     let transfer = shell.opening.import_transfers.front().expect("the stream").clone();
     assert_eq!((transfer.lane, transfer.file.as_str(), transfer.total, transfer.chunks.back().map(|last| last.action.as_str())), (TransferLane::VideoFrames, "clip.mp4", 3, Some("importVideoDone")), "every frame, then done, waits in order: {transfer:?}");
@@ -1994,7 +1995,7 @@ fn a_decoded_video_is_a_cancellable_task_that_frees_a_started_stream() {
 /// the menu open, while an enabled row stays actionable.
 #[test]
 fn a_disabled_context_menu_row_is_reachable_and_tells_its_reason() {
-    let paste = shell_context_menu_item_from_spec(ui_wgpu::wgpu::ContextMenuItemSpec { id: "menu.paste".into(), label: Some("Paste".into()), action: Some("paste".into()), ..Default::default() }.disabled_because("The clipboard is empty".into()), "ctrl", false);
+    let paste = shell_context_menu_item_from_spec(semio_framework_ui_layout::layout::ContextMenuItemSpec { id: "menu.paste".into(), label: Some("Paste".into()), action: Some("paste".into()), ..Default::default() }.disabled_because("The clipboard is empty".into()), "ctrl", false);
     assert_eq!((paste.disabled, paste.reason.as_deref(), paste.painted_label()), (true, Some("The clipboard is empty"), "Paste \u{b7} The clipboard is empty".to_string()));
     let action = |verb: &str| Some(ActionDescriptor { controller_id: "ctrl".into(), action: verb.into(), args: None });
     let items = vec![

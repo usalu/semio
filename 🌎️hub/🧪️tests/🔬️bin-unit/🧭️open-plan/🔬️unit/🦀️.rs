@@ -1,3 +1,4 @@
+use semio_hub_directory::{AuthSessionDirectory, DocumentDirectory, EventLog, ShareTokenDirectory, SpaceDirectory};
 
 #[cfg(test)]
 use protocol::{AckStage, ActorId, ApplyOutcome, ClientFrame, Lane, MutationEnvelope, ServerFrame};

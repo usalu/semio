@@ -49,7 +49,7 @@ export const rasterRasterMutationsTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseRasterMutationsText(value: unknown, at = "$"): RasterMutationsText {
-  return rasterRasterMutationsTextGuardObject(value, `${at}`);
+  return rasterRasterMutationsTextGuardString(value, `${at}`);
 }
 
 import { parseChangeLayerTransform, type ChangeLayerTransform } from "./../../../🧬️schema/🧬️mutations/📐️change-layer-transform/🟦️.ts";

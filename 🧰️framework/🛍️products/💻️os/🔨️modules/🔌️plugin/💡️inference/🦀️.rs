@@ -1,18 +1,32 @@
 //! 💡️ Artifact inference services: metadata, registry, cancellation and the cold wire entry points.
-#[cfg(test)] use crate::inference_gateway::wire_artifact_infer_from_cold;
-#[cfg(test)] use crate::inference_gateway::wire_artifact_infer_cold;
-#[cfg(test)] use crate::inference_gateway::cancel_artifact_inference;
+use semio_framework_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION;
+use semio_framework_plugin_decl_registry::ArtifactInferenceExecution;
+use semio_framework_plugin_decl_registry::ArtifactInferenceExecutionError;
+use semio_framework_plugin_decl_registry::ArtifactInferenceExecutionRequest;
+use semio_framework_plugin_decl_registry::ArtifactInferenceRegistrationConflict;
+use semio_framework_plugin_decl_registry::ArtifactInferenceRegistrationError;
+use semio_framework_plugin_decl_registry::ArtifactInferenceStepContext;
+use semio_framework_plugin_decl_registry::WireArtifactInferenceBudget;
+use semio_framework_plugin_decl_registry::WireArtifactInferenceCacheMode;
+use semio_framework_plugin_plugin_program::WireArtifactInferenceRequest;
+use semio_framework_plugin_plugin_program::WireArtifactInferenceResult;
+use semio_framework_plugin_plugin_program::artifact_inference_service_registry;
+use semio_framework_plugin_plugin_program::inference_child_dependency_parts;
+use semio_framework_plugin_plugin_program::validate_wire_request_resources;
+#[cfg(test)]
+use semio_framework_plugin_plugin_program::inference_gateway::wire_artifact_infer_from_cold;
+#[cfg(test)]
+use semio_framework_plugin_plugin_program::wire_artifact_infer_cold;
+#[cfg(test)]
+use crate::inference_gateway::cancel_artifact_inference;
 use protocol::{OpBinary, OpText};
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::{BTreeMap, BTreeSet};
 use pack::snapshot::ArtifactPack;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
-use crate::artifact_identity::ArtifactExecutableIdentity;
-use crate::artifact_identity::ArtifactIdentity;
-use crate::child_view::CHILD_CONTENT_ID_BYTES;
-use crate::surface_contract::artifact_pair_snapshot;
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_plugin_decl_surface::artifact_pair_snapshot;
 #[cfg(test)]
-use crate::app_views::NoConfig;
+use semio_framework_plugin_decl_views::NoConfig;
 
 /// 🪆️ The `dependencies` key under which a composed document's owned child at `slot`/`child_id` travels with an inference
 /// request (design §20.15): its head snapshot pack.
@@ -149,7 +163,7 @@ impl From<ValueError> for ArtifactInferenceGatewayRefusal{fn from(primary:ValueE
 impl From<ValueError> for ArtifactInferenceGatewayFailure{fn from(value:ValueError)->Self{Self::Native(value)}}
 
 impl ArtifactInferenceGatewayFailure {
- pub(crate) fn fault_wire_fields(&self)->(&str,&str,RetainedCloneProgress){
+ pub fn fault_wire_fields(&self)->(&str,&str,RetainedCloneProgress){
   match self{
    Self::Native(error)=>(error.kind.as_str(),&error.message,error.retained_progress()),
    Self::Execution(error)=>(error.code,error.cause.as_ref().map_or(error.message.as_str(),|cause|cause.primary.message()),error.retained_progress),
@@ -162,14 +176,14 @@ impl ArtifactInferenceGatewayFailure {
   }
  }
  /// 🧭️ Borrows scalar JSON positions from the same retained grammar refusal.
- pub(crate) fn fault_source(&self)->Option<semio_framework_diagnostic::FaultSource>{
+ pub fn fault_source(&self)->Option<semio_framework_diagnostic::FaultSource>{
   use semio_framework_pack_json::JsonError;use semio_framework_diagnostic::FaultSource;let Self::Json(error)=self else{return None};Some(match error{
    JsonError::UnexpectedByte{found,offset}|JsonError::ControlCharacterInString{byte:found,offset}=>FaultSource{offset:Some(*offset as u64),byte:Some(*found),depth:None},
    JsonError::InvalidNumber(offset)|JsonError::InvalidEscape(offset)|JsonError::InvalidUnicodeEscape(offset)|JsonError::UnpairedSurrogate(offset)|JsonError::TrailingData(offset)|JsonError::DuplicateMember{offset,..}=>FaultSource{offset:Some(*offset as u64),..Default::default()},
    JsonError::MaxDepthExceeded(depth)=>FaultSource{depth:Some(u64::from(*depth)),..Default::default()},_=>return None,
   })
  }
- pub(crate) fn source_identity(&self)->usize{self.fault_wire_fields().1.as_ptr()as usize}
+ pub fn source_identity(&self)->usize{self.fault_wire_fields().1.as_ptr()as usize}
 }
 
 pub use semio_framework_plugin_decl_registry::artifact_inference::*;

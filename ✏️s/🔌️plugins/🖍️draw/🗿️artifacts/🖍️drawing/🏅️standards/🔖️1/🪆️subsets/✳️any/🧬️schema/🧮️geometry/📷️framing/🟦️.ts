@@ -1,4 +1,5 @@
 import { drawingTextFallbackExtent } from "@semio-tech/framework/2d/text";
+import { binary64Value } from "@semio-tech/framework/value/ieee754";
 /** 📷️ Visible world bounds shared by Drawing surfaces. */
 import { segmentBounds,type Matrix,type Point } from "../🟦️.ts";
 import type { DrawingArtboard,PathGeometrySegment } from "../../🟦️.ts";
@@ -12,7 +13,8 @@ export interface FramingNode {
   text?: { content: string;size: number };
 }
 export function drawingSceneBounds(artboard: DrawingArtboard | undefined,nodes: readonly FramingNode[]): [number,number,number,number] {
-  let bounds: [number,number,number,number] | undefined = artboard && artboard.width>0 && artboard.height>0 ? [0,0,artboard.width,artboard.height] : undefined;
+  const width = artboard ? binary64Value(artboard.width) : 0,height = artboard ? binary64Value(artboard.height) : 0;
+  let bounds: [number,number,number,number] | undefined = width>0 && height>0 ? [0,0,width,height] : undefined;
   for (const node of nodes) {
     if (!node.visible || node.opacity<=0) continue;
     const rectangle = node.image ? [0,0,node.image.width,node.image.height] : node.text ? [0,0,...drawingTextFallbackExtent(node.text.content,node.text.size)] : null;

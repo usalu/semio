@@ -1,12 +1,13 @@
+import {type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {type ResourceLeaseControl} from "@semio-tech/process/leases";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { requestLocalBrokerSession } from "../../🟦️.ts";
-import { LOCAL_SESSION_BROKER_FILE, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "../../🧬️schema/🟦️.ts";
+import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "../../🧬️schema/🟦️.ts";
 
 /** 🧪️ Shared contract cases and live loopback exchanges prove issuer/client ownership. */
-export async function proveLocalSessionBrokerContract(artifactDirectory: string): Promise<number> {
+export async function proveLocalSessionBrokerContract(invocation:ScriptInvocation,control:ResourceLeaseControl): Promise<number> {
   const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const defs = { record: "LocalSessionBrokerRecordV1", request: "LocalSessionRequestV1", session: "LocalSessionV1" } as const;
@@ -20,8 +21,6 @@ export async function proveLocalSessionBrokerContract(artifactDirectory: string)
       assert.equal(validate(row.value), row.accepted, `${row.name}: Ajv`);
     }
   }
-  mkdirSync(artifactDirectory, { recursive: true });
-  const dataDir = mkdtempSync(join(artifactDirectory, "session-broker-"));
   const record = fixture.cases.find((row: { name: string }) => row.name === "record").value;
   const session = fixture.cases.find((row: { name: string }) => row.name === "session").value;
   let observedRequests = 0;
@@ -34,17 +33,13 @@ export async function proveLocalSessionBrokerContract(artifactDirectory: string)
   } });
   try {
     const hubOrigin = `http://127.0.0.1:${origin.port}`;
-    writeFileSync(join(dataDir, LOCAL_SESSION_BROKER_FILE), JSON.stringify({ ...record, hubOrigin, port: broker.port }));
-    assert.deepEqual(await requestLocalBrokerSession(dataDir, hubOrigin, "developer"), session);
-    assert.equal(await requestLocalBrokerSession(dataDir, hubOrigin, "foreign"), null);
-    writeFileSync(join(dataDir, LOCAL_SESSION_BROKER_FILE), JSON.stringify({ ...record, hubOrigin, port: broker.port, runId: "3".repeat(32) }));
-    assert.equal(await requestLocalBrokerSession(dataDir, hubOrigin, "developer"), null);
+    assert.deepEqual(await requestLocalBrokerSession({...record,hubOrigin,port:broker.port},hubOrigin,"developer",invocation,control), session);
+    assert.equal(await requestLocalBrokerSession({...record,hubOrigin,port:broker.port},hubOrigin,"foreign",invocation,control), null);
+    assert.equal(await requestLocalBrokerSession({...record,hubOrigin,port:broker.port,runId:"3".repeat(32)},hubOrigin,"developer",invocation,control), null);
     assert.equal(observedRequests, 1);
     console.log(`local-session-broker-contract: vectors=${fixture.cases.length} ajv+typescript=1 live-exchange=1 stale-run=refused foreign-profile=refused`);
   } finally {
-    origin.stop(true);
-    broker.stop(true);
-    rmSync(dataDir, { recursive: true, force: true });
+    await Promise.all([origin.stop(true),broker.stop(true)]);
   }
   return fixture.cases.length;
 }

@@ -8,7 +8,7 @@ use semio_hub_directory_contract::{DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTIO
 use serde::Deserialize;
 use semio_hub_directory_contract::error::DirectoryError;
 use semio_hub_directory_dispatch::HubDirectories;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::EventLog;
 use axum::extract::ws::{Message, WebSocket};
 use semio_framework_hash::Sha256;
 use semio_hub_ledgers::socket_grants::{SocketAudienceV1, SocketBindingKeyV1, SocketGrantRecordV1, SocketSubjectV1};
@@ -310,11 +310,11 @@ pub async fn send_directory_message(sender: &mut SplitSink<WebSocket, Message>, 
 //#region 🔖️Directory
 impl DirectoryEventPageSource for HubDirectories {
     async fn directory_event_head(&self) -> Result<u64, DirectoryError> {
-        HubDirectory::head_seq(self).await
+        EventLog::head_seq(self).await
     }
 
     async fn directory_event_page(&self, since: u64, limit: usize) -> Result<Vec<DirectoryEvent>, DirectoryError> {
-        HubDirectory::events_since(self, since, limit).await
+        EventLog::events_since(self, since, limit).await
     }
 }
 //#endregion 🔖️Directory

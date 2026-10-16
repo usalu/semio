@@ -5,9 +5,9 @@
 
 #![allow(dead_code)]
 
-#[path = "../../../🧪️tests/🧰️oracle-support/🦀️.rs"]
-pub mod oracle;
+pub use semio_s_artifact_procedural_3d_geometry_oracle_support as oracle;
 
+use semio_s_artifact_procedural_3d_model::catalogue::Catalogue;
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_model::catalogue::PortType;
 use semio_s_artifact_procedural_3d_model::catalogue::SelectionComponent;
@@ -124,7 +124,7 @@ fn json_of_default(port: &semio_s_artifact_procedural_3d_model::catalogue::Port)
 
 /// 🕸️ The mesh a fixture lists as `positions` and `faces`, with the half-edge handles of `seams` pre-marked.
 pub fn mesh_of(recipe: &Value) -> HalfedgeMesh {
-    let mut mesh = semio_s_artifact_procedural_3d_mesh_primitive::tests::h::oracle::build_mesh(recipe);
+    let mut mesh = oracle::build_mesh(recipe);
     if let Some(seams) = recipe.get("seams").and_then(Value::as_array) {
         let edges: Vec<EdgeId> = seams.iter().map(|id| EdgeId(id.as_u64().expect("seam handle") as u32)).collect();
         mesh.mark_uv_seam(&edges, true);
@@ -139,7 +139,7 @@ pub fn inputs_of(kind: &Kind, case: &Value) -> WidgetInputs {
     for port in kind.inputs.iter().filter(|port| port.port_type != PortType::Selection) {
         let value = stated.get(&port.name).cloned().or_else(|| json_of_default(port));
         if let Some(value) = value {
-            let decoded = if port.port_type == PortType::Mesh { GeometryValue::mesh(mesh_of(&value)) } else { semio_s_artifact_procedural_3d_mesh_primitive::tests::h::oracle::decode(port, &value) };
+            let decoded = if port.port_type == PortType::Mesh { GeometryValue::mesh(mesh_of(&value)) } else { oracle::decode(port, &value) };
             values.insert(port.name.clone(), decoded);
         }
     }
@@ -165,7 +165,7 @@ pub fn inputs_of(kind: &Kind, case: &Value) -> WidgetInputs {
 //#region 🔖️Compare
 fn within(actual: f64, expected: &Value, tolerance: f64) -> bool {
     match (expected.as_f64(), expected.get("min").and_then(Value::as_f64), expected.get("max").and_then(Value::as_f64)) {
-        (Some(wanted), _, _) => semio_s_artifact_procedural_3d_mesh_primitive::tests::h::oracle::close(actual, wanted, tolerance),
+        (Some(wanted), _, _) => oracle::close(actual, wanted, tolerance),
         (None, Some(min), Some(max)) => actual >= min && actual <= max,
         _ => false,
     }
@@ -303,7 +303,7 @@ fn text_matches(text: &str, expected: &Value) -> Result<(), String> {
 
 fn json_close(actual: &Value, expected: &Value) -> bool {
     match (actual, expected) {
-        (Value::Number(a), Value::Number(b)) => semio_s_artifact_procedural_3d_mesh_primitive::tests::h::oracle::close(a.as_f64().unwrap_or(f64::NAN), b.as_f64().unwrap_or(f64::NAN), 1e-6),
+        (Value::Number(a), Value::Number(b)) => oracle::close(a.as_f64().unwrap_or(f64::NAN), b.as_f64().unwrap_or(f64::NAN), 1e-6),
         (Value::Array(a), Value::Array(b)) => a.len() == b.len() && a.iter().zip(b).all(|(a, b)| json_close(a, b)),
         (Value::Object(a), Value::Object(b)) => b.iter().all(|(key, wanted)| a.get(key).is_some_and(|found| json_close(found, wanted))),
         (a, b) => a == b,
@@ -383,7 +383,7 @@ pub fn matches(actual: &GeometryValue, port: &semio_s_artifact_procedural_3d_mod
     match actual {
         GeometryValue::Mesh(mesh) => mesh_matches(mesh, expected, tolerance),
         GeometryValue::Text(text) if expected.is_object() => text_matches(text, expected),
-        other => semio_s_artifact_procedural_3d_mesh_primitive::tests::h::oracle::matches(other, port, expected, tolerance),
+        other => oracle::matches(other, port, expected, tolerance),
     }
 }
 
@@ -419,15 +419,15 @@ fn fingerprint(evaluation: &WidgetEvaluation) -> BTreeMap<String, (Vec<[u32; 3]>
 }
 
 /// 🧪️ Runs every case at fuel 1 and at unbounded fuel, asserts both against the fixture, and requires the two runs and a repeated run to agree bit for bit on every mesh output.
-pub fn run_fixture(text: &str, entries: &[ComputeEntry]) -> usize {
-    let (fixture, cases) = semio_s_artifact_procedural_3d_mesh_primitive::tests::h::oracle::cases(text);
+pub fn run_fixture(catalogue: &'static Catalogue, text: &str, entries: &[ComputeEntry]) -> usize {
+    let (fixture, cases) = oracle::cases(text);
     let tolerance = fixture["tolerance"].as_f64().expect("fixture tolerance");
     for case in &cases {
-        let kind = semio_s_artifact_procedural_3d_mesh_primitive::tests::h::oracle::kind_of(case["kind"].as_str().expect("case kind"));
+        let kind = oracle::kind_of(catalogue, case["kind"].as_str().expect("case kind"));
         let case_tolerance = case["tolerance"].as_f64().unwrap_or(tolerance);
-        let stepped = semio_s_artifact_procedural_3d_mesh_primitive::tests::h::oracle::evaluate(kind, inputs_of(kind, case), entries, 1);
-        let whole = semio_s_artifact_procedural_3d_mesh_primitive::tests::h::oracle::evaluate(kind, inputs_of(kind, case), entries, usize::MAX);
-        let again = semio_s_artifact_procedural_3d_mesh_primitive::tests::h::oracle::evaluate(kind, inputs_of(kind, case), entries, 7);
+        let stepped = oracle::evaluate(kind, inputs_of(kind, case), entries, 1);
+        let whole = oracle::evaluate(kind, inputs_of(kind, case), entries, usize::MAX);
+        let again = oracle::evaluate(kind, inputs_of(kind, case), entries, 7);
         assert_case(case, kind, &whole, case_tolerance);
         assert_case(case, kind, &stepped, case_tolerance);
         let name = case["name"].as_str().unwrap_or("case");

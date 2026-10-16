@@ -1,10 +1,9 @@
-/// <reference types="vitest/importMeta" />
 /** 🚪️ The IO entry graph: fidelity and confidence ranking, the entry graph of hops between dialects, `ioRun` and `ioIdentify`.
  *
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { type ArtifactDialect } from "../../🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
 import { dialectCoordinate, type IoFidelity, type IoEntryDescriptor, type IoRoute } from "../../🚪️io/🧬️schema/🟦️.ts";
 import { dialectEquals } from "../🔀️dialect-equality/🟦️.ts";
 
@@ -225,10 +224,3 @@ export async function ioIdentify(graph: IoEntryGraph, callingPluginId: string, c
 }
 //#endregion 🔖️IoRouter
 // #endregion 🎠️Kernel
-
-//#region 🧪️IoRouterTests
-if (import.meta.vitest) {
-  const { registerTests5 } = await import("../🧪️tests/🧪️createturnoutcomebroadcast/🟦️.ts");
-  await registerTests5(import.meta.vitest, { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun }, { directory: (await import("node:path")).dirname((await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url))), url: import.meta.url });
-}
-//#endregion 🧪️IoRouterTests

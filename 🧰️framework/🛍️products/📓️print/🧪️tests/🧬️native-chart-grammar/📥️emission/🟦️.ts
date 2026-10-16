@@ -1,4 +1,4 @@
-import{validateJsonSchemaSubset}from"../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 const policy=schema.definitions.Policy.const;
 /** 📄️ Carries bounded Rust-rendered TeX DATA without an output path or child authority. */
@@ -10,7 +10,7 @@ import{withPrintStorageTaskV1,type PrintExecutionV1}from"../../../📦️artifac
 import{withArtifactDestinationTaskV1,type ArtifactDestinationV1}from"../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
 import{scriptInvocationEnvironment,requireIssuedResourceControlRefinementV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{captureOwnedCommandV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import{checkResourceLeaseControl}from"../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import{readNativeCallerAuthorityV1}from"../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{join}from"node:path";
 /** 🦀️ Captures only the fixed authored Rust emitter beneath actual Print scratch and Original custody. */

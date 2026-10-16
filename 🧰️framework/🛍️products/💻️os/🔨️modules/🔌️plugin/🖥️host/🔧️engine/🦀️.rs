@@ -210,9 +210,9 @@ pub struct EpochDeadlines {
     pub inner: Arc<EpochDeadlinesInner>,
 }
 
-struct EpochDeadlinesInner {
-    engine: Engine,
-    pool: WorkerPool,
+pub struct EpochDeadlinesInner {
+    pub engine: Engine,
+    pub pool: WorkerPool,
     demands: Mutex<EpochDemands>,
 }
 

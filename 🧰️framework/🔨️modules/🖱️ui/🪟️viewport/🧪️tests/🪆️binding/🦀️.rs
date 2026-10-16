@@ -2,8 +2,7 @@
 use crate::{Viewport2d,Viewport3dOrbit};
 use semio_framework_dsl_record::{DslField,FieldValue,Shape};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl};
-#[path="../../../../🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/🦀️.rs"]
-mod oracle;
+use semio_framework_dsl_record_ownership_oracle as oracle;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🪆️binding/🔣️.json")).unwrap()}
 fn float_json(value:&serde_json::Value)->serde_json::Value{match value{serde_json::Value::Number(_)=>serde_json::to_value(serde_json::from_value::<f64>(value.clone()).unwrap()).unwrap(),serde_json::Value::Array(values)=>values.iter().map(float_json).collect(),serde_json::Value::Object(values)=>values.iter().map(|(key,value)|(key.clone(),float_json(value))).collect(),_=>value.clone()}}
 fn expected_fields(value:&serde_json::Value)->serde_json::Value{value.as_array().unwrap().iter().map(|row|serde_json::json!([row[0],float_json(&row[1])])).collect()}

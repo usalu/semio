@@ -24,12 +24,12 @@ fn browser_schema_and_canonical_trace_decode_without_dependencies() {
         let code: u16 = columns[2].parse().unwrap();
         let payload = decode_fixture_hex(columns[3]);
         let event = AbiEvent {
-            request_id: crate::abi::AbiRequestId(decoded + 1),
+            request_id: semio_framework_abi::AbiRequestId(decoded + 1),
             generation: 1,
             sequence: decoded as u32,
-            event: crate::abi::AbiEventCode::try_new(code).unwrap(),
-            status: crate::abi::AbiStatus::OK,
-            bytes: crate::abi::AbiBytes::try_new(payload).unwrap(),
+            event: semio_framework_abi::AbiEventCode::try_new(code).unwrap(),
+            status: semio_framework_abi::AbiStatus::OK,
+            bytes: semio_framework_abi::AbiBytes::try_new(payload).unwrap(),
         };
         decode_browser_host_event(&event, canvas, listener).unwrap();
         decoded += 1;

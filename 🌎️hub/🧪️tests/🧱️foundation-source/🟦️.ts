@@ -1,3 +1,4 @@
+import {advanceLocalHubReadinessProgressV1,type LocalHubReadinessProgressV1} from "../../🚀️local-bootstrap/🎛️host/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHmac, webcrypto } from "node:crypto";
 import { EventEmitter } from "node:events";
@@ -8,14 +9,16 @@ import type { ChildProcess } from "node:child_process";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { readMcpGatewaySource } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { readModuleTreeSource } from "../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { orderedDirectoryPublicationOracle } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
 import { directChildEnvironment, directChildLaunch, deliverCredentialEnvelopeToChild, sealedDirectChildEnvironment, type CredentialChildOperations } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
 import { mcpCredentialSourceOrderConforms, nativeCredentialSourceOrderConforms, proveMcpCredentialSourceOrder, proveNativeCredentialSourceOrder, sourceDefinitionBodies } from "../../🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
 import { assertObservationExpectation } from "../../🧪️testing/🛂️expectation/🟦️.ts";
+import { HUB_SCRIPT_MODULES, hubScriptSourceFiles, readHubScriptModule } from "../../🧪️testing/📜️script-sources/🟦️.ts";
 import { authenticatedFrame, hmacProof, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
-import { allocateLocalHubRunRoot, finishLocalHub, localHubReadinessAdmitted, type LocalHubRun, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { finishLocalHub, localHubReadinessAdmitted, type LocalHubRun, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 import consumerContracts from "../🧫️fixtures/🧱️foundation-source/🏗️consumer-contracts.json";
 
@@ -70,14 +73,16 @@ function internalOwnerImports(path: string, owners: ReadonlySet<string>): string
     .sort();
 }
 
-function rootImportsForOwner(routerPath: string, ownerPath: string): readonly string[] {
-  const source = ts.createSourceFile(routerPath, readFileSync(routerPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+function rootImportsForOwner(ownerPath: string): readonly string[] {
   const owner = join(repoRoot, ownerPath);
-  return source.statements.flatMap((node) => {
-    if (!ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier) || !node.moduleSpecifier.text.startsWith(".")) return [];
-    if (resolve(dirname(routerPath), node.moduleSpecifier.text) !== owner) return [];
-    const bindings = node.importClause?.namedBindings;
-    return bindings && ts.isNamedImports(bindings) ? bindings.elements.map((element) => element.name.text) : [];
+  return hubScriptSourceFiles(repoRoot).flatMap((file) => {
+    const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    return source.statements.flatMap((node) => {
+      if (!ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier) || !node.moduleSpecifier.text.startsWith(".")) return [];
+      if (resolve(dirname(file), node.moduleSpecifier.text) !== owner) return [];
+      const bindings = node.importClause?.namedBindings;
+      return bindings && ts.isNamedImports(bindings) ? bindings.elements.map((element) => element.name.text) : [];
+    });
   });
 }
 
@@ -125,6 +130,7 @@ test("Hub foundation owner graph typechecks without a command-module back edge",
     noUncheckedIndexedAccess: true,
     allowImportingTsExtensions: true,
     allowJs: true,
+    resolveJsonModule: true,
     skipLibCheck: true,
     noEmit: true,
     types: ["bun", "node"],
@@ -212,107 +218,26 @@ test("frame transport handles splits and rejects hostile bounds, JSON, deadlines
   expect(() => writeLocalFrame(new PassThrough(), { value: "x".repeat(LOCAL_BOOTSTRAP_FRAME_MAX) })).toThrow(/fixed bound/u);
 });
 
-test("allocation, readiness and finish stay injectable and idempotent", async () => {
-  const calls: string[] = [];
-  const allocation = allocateLocalHubRunRoot("/private/ticket", {
-    makeTemporaryDirectory: (prefix) => {
-      calls.push(`make:${prefix}`);
-      return "/private/ticket/semio-hub-run-fixed";
-    },
-    protectDirectory: (path) => calls.push(`protect:${path}`),
-    removeDirectory: (path) => calls.push(`remove:${path}`),
-  });
-  expect(allocation.path).toBe("/private/ticket/semio-hub-run-fixed");
-  allocation.remove();
-  expect(calls).toEqual(["make:/private/ticket/semio-hub-run-", "protect:/private/ticket/semio-hub-run-fixed", "remove:/private/ticket/semio-hub-run-fixed"]);
-  const pipeFixture = JSON.parse(readFileSync(join(hubRoot, "🚀️local-bootstrap/🧪️tests/🧫️fixtures/🚇️pipe-v1/🔣️.json"), "utf8"));
-  expect(localHubReadinessAdmitted(pipeFixture.ready, 200, pipeFixture.ready.runId)).toBe(true);
-  expect(localHubReadinessAdmitted(pipeFixture.bootstrapReadyButArtifactUnavailable, 503, pipeFixture.ready.runId, true)).toBe(true);
-  expect(localHubReadinessAdmitted(pipeFixture.bootstrapReadyButArtifactUnavailable, 503, pipeFixture.ready.runId)).toBe(false);
-  expect(() => localHubReadinessAdmitted({ ...pipeFixture.ready, runId: "wrong" }, 200, pipeFixture.ready.runId)).toThrow(/binding/u);
-
-  const child = Object.assign(new EventEmitter(), { exitCode: 0, kill: () => true }) as unknown as ChildProcess;
-  const pipe = new PassThrough();
-  let removals = 0;
-  const run = {
-    child,
-    pipe,
-    reader: new LocalFrameReader(pipe),
-    channelKey: Buffer.alloc(32, 7),
-    runId: "0".repeat(32),
-    port: 1,
-    runRoot: "/private/ticket/semio-hub-run-fixed",
-    publicSessionIssuance: false,
-    output: () => "",
-    removeRunRoot: () => (removals += 1),
-  } as LocalHubRun;
-  await finishLocalHub(run);
-  await finishLocalHub(run);
-  expect(removals).toBe(1);
-  expect(run.channelKey.equals(Buffer.alloc(32))).toBe(true);
+test("actual Host allocation refuses forged lifetime while readiness DATA keeps its binding",()=>{
+ const pipeFixture=JSON.parse(readFileSync(join(hubRoot,"🚀️local-bootstrap/🧪️tests/🧫️fixtures/🚇️pipe-v1/🔣️.json"),"utf8"));
+ expect(localHubReadinessAdmitted(pipeFixture.ready,200,pipeFixture.ready.runId)).toBe(true);
+ expect(localHubReadinessAdmitted(pipeFixture.bootstrapReadyButArtifactUnavailable,503,pipeFixture.ready.runId,true)).toBe(true);
+ expect(localHubReadinessAdmitted(pipeFixture.bootstrapReadyButArtifactUnavailable,503,pipeFixture.ready.runId)).toBe(false);
+ expect(()=>localHubReadinessAdmitted({...pipeFixture.ready,runId:"wrong"},200,pipeFixture.ready.runId)).toThrow(/binding/u);
+ expect(()=>finishLocalHub({}as LocalHubRun)).toThrow("Actual local Hub child required");
+ expect(()=>waitForReadiness({}as LocalHubRun)).toThrow("Actual live local Hub child required");
 });
 
-test("readiness waits on the hub's own progress, never on a total wall-clock budget", async () => {
-  // 🧗 `waitForReadiness` used to hold a 30 s TOTAL deadline, so a launcher on a busy machine
-  // abandoned a hub that was still coming up (CE2 measured two of three 7621 starts on 2026-09-21).
-  // The bound is now the span the hub goes without showing ANY sign of advancing. Three facts, each
-  // of which the total budget got wrong: a hub that keeps changing what it reports survives far past
-  // the span; a hub that reports the identical thing forever is refused AS A STALL, naming what it
-  // last said; and a hub that exits is still refused immediately rather than waited out.
-  const runId = "0".repeat(32);
-  const readiness = (status: string, gate: string) => ({
-    schema: "semio.hub.readiness/v1",
-    runId,
-    status,
-    mode: "development",
-    bindScope: "loopback",
-    authentication: { kind: "local-bootstrap-pipe-v1", bootstrapReady: true, publicSessionIssuance: false },
-    directory: { ready: true },
-    storage: { ready: true },
-    adminAssets: { ready: true },
-    artifactAuthority: { ready: status === "ready" },
-    blockedBy: status === "ready" ? [] : [{ gate: "artifactAuthority", reason: gate }],
-  });
-  const fakeRun = (port: number, output: () => string): LocalHubRun =>
-    ({
-      child: Object.assign(new EventEmitter(), { exitCode: null, kill: () => true }) as unknown as ChildProcess,
-      pipe: new PassThrough(),
-      reader: new LocalFrameReader(new PassThrough()),
-      channelKey: Buffer.alloc(32, 7),
-      runId,
-      port,
-      runRoot: "/private/ticket/semio-hub-run-fixed",
-      publicSessionIssuance: false,
-      output,
-      removeRunRoot: () => undefined,
-    }) as unknown as LocalHubRun;
-
-  let polls = 0;
-  const advancing = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: () => {
-    polls += 1;
-    const body = polls >= 24 ? readiness("ready", "") : readiness("not-ready", `loading-package-${polls}`);
-    return new Response(JSON.stringify(body), { status: polls >= 24 ? 200 : 503, headers: { "content-type": "application/json" } });
-  } });
-  try {
-    const startedAt = Date.now();
-    const body = await waitForReadiness(fakeRun(Number(advancing.url.port), () => ""), false, 200);
-    expect(body.status).toBe("ready");
-    expect(Date.now() - startedAt).toBeGreaterThan(200);
-  } finally {
-    advancing.stop(true);
-  }
-
-  const frozen = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: () => new Response(JSON.stringify(readiness("not-ready", "trusted-catalog-load-stalled-before-it-finished")), { status: 503, headers: { "content-type": "application/json" } }) });
-  try {
-    await expect(waitForReadiness(fakeRun(Number(frozen.url.port), () => ""), false, 200)).rejects.toThrow(/stalled.*trusted-catalog-load-stalled-before-it-finished/su);
-  } finally {
-    frozen.stop(true);
-  }
-
-  const exited = fakeRun(Number(frozen.url.port), () => "");
-  (exited.child as unknown as { exitCode: number | null }).exitCode = 3;
-  await expect(waitForReadiness(exited, false, 200)).rejects.toThrow(/exited before readiness/u);
-}, 600_000);
+test("readiness progress DATA survives continuing progress and refuses unchanged stalls",()=>{
+ let progress:LocalHubReadinessProgressV1|null=null;
+ for(let index=0;index<24;index++)progress=advanceLocalHubReadinessProgressV1(progress,`loading-package-${index}`,index*50,200);
+ expect(progress?.observedAt).toBeGreaterThan(200);
+ if(!progress)throw Error("Actual progress DATA required");
+ const unchanged=advanceLocalHubReadinessProgressV1(progress,progress.observation,progress.observedAt+199,200);
+ expect(unchanged).toBe(progress);
+ expect(()=>advanceLocalHubReadinessProgressV1(progress,"loading-package-23",1350,200)).toThrow(/stalled.*loading-package-23/u);
+ expect(advanceLocalHubReadinessProgressV1(progress,"ready",1350,200).observation).toBe("ready");
+});
 
 test("credential delivery seals authority and uses one injected fd3 endpoint", async () => {
   const source = {
@@ -397,7 +322,7 @@ test("source definition boundaries match TypeScript AST and reject stale credent
   const mcp = {
     entrypoint: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/🦀️.rs"), "utf8"),
     workspace: readMcpGatewaySource(repoRoot),
-    remote: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs"), "utf8"),
+    remote: readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs"), { crates: false }),
     directory: native.credential,
     runner: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts"), "utf8"),
     project: native.project,
@@ -439,27 +364,27 @@ test("package, target and input registrations bind only the moved owners", () =>
   const routerPath = join(hubRoot, "📦️packages/🦀️rust/📜️script.ts");
   const router = readFileSync(routerPath, "utf8");
   const moved = fixture.owners.flatMap((owner) => owner.declarations);
-  const routerAst = ts.createSourceFile(routerPath, router, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const declared = new Set<string>();
-  routerAst.forEachChild((node) => {
+  for (const file of hubScriptSourceFiles(repoRoot)) ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS).forEachChild((node) => {
     if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name) declared.add(node.name.text);
     if (ts.isVariableStatement(node)) for (const declaration of node.declarationList.declarations) if (ts.isIdentifier(declaration.name)) declared.add(declaration.name.text);
   });
   for (const name of moved) expect(declared.has(name), name).toBe(false);
-  for (const owner of fixture.owners) expect(rootImportsForOwner(routerPath, owner.path), owner.path).toEqual(owner.rootImports);
-  expect(router).toContain("class HubFoundationSourceScript extends BundleScript {");
-  expect(router).toContain(`.register("${fixture.route.command}", HubFoundationSourceScript)`);
+  for (const owner of fixture.owners) expect([...new Set(rootImportsForOwner(owner.path))].sort(), owner.path).toEqual([...owner.rootImports].sort());
+  expect(readHubScriptModule(repoRoot, "🎛️commands/🚦️gate-commands")).toContain("class HubFoundationSourceScript extends BundleScript {");
+  expect(router).toContain(`.registerLazy("${fixture.route.command}", async () => (await import("../../🎛️commands/🚦️gate-commands/🟦️.ts")).HubFoundationSourceScript)`);
+  for (const module of HUB_SCRIPT_MODULES) expect(readFileSync(join(hubRoot, module, "🟦️.ts"), "utf8").startsWith("/** "), module).toBe(true);
   const project = JSON.parse(readFileSync(join(hubRoot, "📦️packages/🦀️rust/📋️project.json"), "utf8"));
   expect(project.namedInputs.hubFoundationSources).toEqual(fixture.route.inputs);
   expect(project.targets[fixture.route.target]?.inputs).toEqual(["hubFoundationSources"]);
   expect(project.targets[fixture.route.target]?.options?.command).toBe("bun ./📜️script.ts foundation-source-check");
 }, 600_000);
 
-test("ordinary selected Dev actor acquisition refuses an absent production ledger",async()=>{
- const {withBuildTestInvocationV1}=await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts"),{createIssuedResourceControlV1}=await import("../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");await withBuildTestInvocationV1(async invocation=>{const phaseControl=createIssuedResourceControlV1(invocation,"test:actor-refusal",60000);
- const {runtimeSelectedActorsV1}=await import("../../🏗️bootstrap/🎭️actors/🟦️.ts"),root=process.cwd(),config=JSON.parse(readFileSync(join(repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json"),"utf8")),directory=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,`missing-actor-ledger-${crypto.randomUUID()}`),previous=process.env.OS_HUB_DATA;mkdirSync(join(directory,"trusted-catalog"),{recursive:true});process.env.OS_HUB_DATA=directory;
- try{const started=Date.now(),observation={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>false,remainingMs:()=>60_000-(Date.now()-started),onProgress:()=>{}};await expect(runtimeSelectedActorsV1(root,config,{invocation,phaseControl,read:path=>{try{return readFileSync(resolve(root,path),"utf8")}catch{return undefined}},current:async()=>false,fixtureCollections:["🧪️tests/🧫️fixtures"],checkCancellation:()=>{if(observation.cancelled()||observation.remainingMs()<=0)throw Error("Actor law observation expired");},observation,selectArguments:async(_cargoPackage:string,args:readonly string[])=>{const {CargoCliOperationOwner,parseCargoCliPolicy,runCargoCliCommand}=await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🟦️.ts"),{selectedCargoArguments}=await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🟦️.ts"),policy=(await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json")).default,owner=new CargoCliOperationOwner(parseCargoCliPolicy(policy),{remainingMilliseconds:()=>observation.remainingMs(),publish:event=>console.log("[DEBUG] missing-ledger Cargo "+event.stage+" "+event.completed),yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))});return runCargoCliCommand(owner,()=>selectedCargoArguments(root,args,{schemaVersion:1,manifest:"Cargo.toml"},owner.operation));}})).rejects.toThrow("current.json");const {LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES}=await import("../../🚀️local-bootstrap/🏃️execution/🟦️.ts");expect(LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES.split(",")).toHaveLength(6);}finally{if(previous===undefined)delete process.env.OS_HUB_DATA;else process.env.OS_HUB_DATA=previous;}
- });
+test("neutral Hub absent production ledger refuses bytes and actor Source selects genuine state custody",async()=>{
+ const {readTrustedCatalogPublicationProvenanceV1}=await import("../../🏗️bootstrap/🧾️provenance/🟦️.ts"),{mkdtempSync,rmSync,lstatSync}=await import("node:fs"),artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactRoot)throw Error("Declared ordinary ledger fixture output required");const directory=mkdtempSync(join(artifactRoot,"missing-ledger-")),identity=lstatSync(directory),started=performance.now();mkdirSync(join(directory,"trusted-catalog"));try{
+  await expect(readTrustedCatalogPublicationProvenanceV1(directory,{maxBytes:131072,maxWork:128,chunkBytes:65536,cancelled:()=>false,remainingMs:()=>30000-(performance.now()-started),onProgress:()=>{}})).rejects.toThrow("current.json");
+  const source=readFileSync(join(repoRoot,"🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts"),"utf8"),syntax=ts.createSourceFile("actors.ts",source,ts.ScriptTarget.Latest,true),owner=syntax.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="runtimeSelectedActorsV1");expect(owner?.getText(syntax)).toContain("withRepositoryDevelopmentStateV1");expect(owner?.getText(syntax)).toContain("withRepositoryDevelopmentStateTaskV1");expect(source).not.toContain("trustedCatalogDataRootV1");expect(source).not.toContain("OS_HUB_DATA:");
+ }finally{const current=lstatSync(directory);if(current.dev!==identity.dev||current.ino!==identity.ino||!current.isDirectory()||current.isSymbolicLink())throw Error("Exact ordinary ledger fixture identity required");rmSync(directory,{recursive:true});}
 });
 
 

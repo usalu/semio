@@ -20,7 +20,9 @@
     "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-en1993:check",
     "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-en1993:test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/norm-js": "workspace:*"
+  },
   "license": "LGPL-3.0-or-later",
   "bundleKind": "library"
 }

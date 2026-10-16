@@ -4,7 +4,7 @@ extern crate semio_framework_os_kernel as store;
 
 #[cfg(test)]
 #[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_os_mcp_foundation::test_allocation::RequestedAllocator = semio_framework_os_mcp_foundation::test_allocation::RequestedAllocator;
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "../🏠️workspace/🧩️artifact-app-frames/🦀️.rs"]

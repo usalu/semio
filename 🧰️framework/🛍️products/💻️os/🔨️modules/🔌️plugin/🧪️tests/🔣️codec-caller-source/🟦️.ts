@@ -30,12 +30,14 @@ type Inspection = { missing: string[]; problems: string[] };
 //#endregion 🧬️Contract
 
 //#region 🔎️BoundedSourceSelection
+function requiredToken(items:readonly Token[],index:number):Token{const item=items[index];assert(item,"Required Source token at "+index);return item;}
+
 function tokens(source: string): Token[] {
   const result: Token[] = [];
   let position = 0;
   while (position < source.length) {
     const start = position, rest = source.slice(position);
-    if (/\s/.test(source[position])) { position++; continue; }
+    if (/\s/.test(source.charAt(position))) { position++; continue; }
     if (rest.startsWith("//")) {
       const end = source.indexOf("\n", position + 2);
       position = end < 0 ? source.length : end + 1;
@@ -53,9 +55,10 @@ function tokens(source: string): Token[] {
     }
     const raw = /^(?:b|c)?r(#{0,255})"/.exec(rest);
     if (raw) {
-      const end = source.indexOf('"' + raw[1], position + raw[0].length);
+      const hashes=raw[1];assert(hashes!==undefined,"Actual raw string delimiter required");
+      const end = source.indexOf('"' + hashes, position + raw[0].length);
       assert(end >= 0, "unterminated raw string");
-      position = end + raw[1].length + 1;
+      position = end + hashes.length + 1;
     } else {
       const quoted = /^(?:b|c)?"/.exec(rest);
       const character = /^'(?:[^'\\\r\n]|\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F_]+\}|.))'/u.exec(rest);
@@ -81,7 +84,7 @@ function sequence(items: Token[], expected: string, start = 0, end = items.lengt
   const wanted = tokens(expected).map(token => token.value), found: number[] = [];
   assert(wanted.length > 0, "empty selector");
   for (let index = start; index + wanted.length <= end; index++) {
-    if (wanted.every((value, offset) => items[index + offset].value === value)) found.push(index);
+    if (wanted.every((value, offset) => requiredToken(items,index + offset).value === value)) found.push(index);
   }
   return found;
 }
@@ -90,9 +93,9 @@ function closing(items: Token[], open: number): number {
   assert.equal(items[open]?.value, "{", "body opening");
   let depth = 1;
   for (let index = open + 1; index < items.length; index++) {
-    if (items[index].value === "{") depth++;
-    if (items[index].value === "}" && --depth === 0) return index;
-    if (items[index].value !== "}") continue;
+    if (requiredToken(items,index).value === "{") depth++;
+    if (requiredToken(items,index).value === "}" && --depth === 0) return index;
+    if (requiredToken(items,index).value !== "}") continue;
   }
   throw new Error("unterminated body");
 }
@@ -100,22 +103,23 @@ function closing(items: Token[], open: number): number {
 function block(items: Token[], header: string): Body {
   const starts = sequence(items, header);
   assert.equal(starts.length, 1, "unique container: " + header);
-  const open = starts[0] + tokens(header).length;
+  const start=starts[0];assert(start!==undefined,"Actual container start required");
+  const open = start + tokens(header).length;
   assert.equal(items[open]?.value, "{", "exact container header: " + header);
-  return { start: starts[0], open, close: closing(items, open) };
+  return { start, open, close: closing(items, open) };
 }
 
 function functionBody(items: Token[], name: string, scope?: Body): Located {
   const matches: number[] = [];
   let depth = 0;
   for (let index = scope ? scope.open + 1 : 0; index < (scope?.close ?? items.length); index++) {
-    const value = items[index].value;
+    const value = requiredToken(items,index).value;
     if (value === "{" && scope) depth++;
     else if (value === "}" && scope) depth--;
     if ((!scope || depth === 0) && value === "fn" && items[index + 1]?.value === name) matches.push(index);
   }
   assert.equal(matches.length, 1, "unique function: " + name);
-  const start = matches[0];
+  const start = matches[0];assert(start!==undefined,"Actual function start required");
   const asynchronous = items[start - 1]?.value === "async";
   let preceding = start - (asynchronous ? 2 : 1), visibility = "";
   if (items[preceding]?.value === "pub") visibility = "pub";
@@ -123,22 +127,23 @@ function functionBody(items: Token[], name: string, scope?: Body): Located {
     const end = preceding + 1;
     let parentheses = 1;
     while (--preceding >= 0 && parentheses > 0) {
-      if (items[preceding].value === ")") parentheses++;
-      else if (items[preceding].value === "(") parentheses--;
+      if (requiredToken(items,preceding).value === ")") parentheses++;
+      else if (requiredToken(items,preceding).value === "(") parentheses--;
     }
     if (items[preceding]?.value === "pub") visibility = items.slice(preceding, end).map(token => token.value).join("");
   }
   let open = start + 2;
-  while (open < items.length && items[open].value !== "{") {
-    assert.notEqual(items[open].value, ";", "function must have a body");
+  while (open < items.length && requiredToken(items,open).value !== "{") {
+    assert.notEqual(requiredToken(items,open).value, ";", "function must have a body");
     open++;
   }
-  return { start, open, close: closing(items, open), headerStart: items[start].start, headerEnd: items[open].start, async: asynchronous, visibility };
+  return { start, open, close: closing(items, open), headerStart: requiredToken(items,start).start, headerEnd: requiredToken(items,open).start, async: asynchronous, visibility };
 }
 
 function locate(view: SourceView, fixture: Fixture, site: Site): Located {
   const items = view.items;
-  let scope = site.container === "global" ? undefined : block(items, fixture.native.containers[site.container]);
+  const header=fixture.native.containers[site.container];if(site.container!=="global")assert(header!==undefined,"Actual named Source container required");
+  let scope = site.container === "global"||header===undefined ? undefined : block(items,header);
   for (const parent of site.parents) scope = functionBody(items, parent, scope);
   return functionBody(items, site.name, scope);
 }
@@ -261,7 +266,7 @@ function hostileSources(fixture: Fixture, sources: Sources): void {
   for (const field of fixture.native.codecFields.slice(0, 2)) {
     const sourceTokens = tokens(candidate.store), positions = sequence(sourceTokens, field);
     assert.equal(positions.length, 1);
-    const from = sourceTokens[positions[0]].start, to = sourceTokens[positions[0] + tokens(field).length - 1].end;
+    const position=positions[0];assert(position!==undefined,"Actual codec field position required");const from = requiredToken(sourceTokens,position).start, to = requiredToken(sourceTokens,position + tokens(field).length - 1).end;
     const hostile = { ...candidate, store: candidate.store.slice(0, from) + field.replace(" + Send", "") + candidate.store.slice(to) };
     assert.notEqual(hostile.store, candidate.store);
     assert(inspect(fixture, hostile).problems.length > 0, "erased Send removal");

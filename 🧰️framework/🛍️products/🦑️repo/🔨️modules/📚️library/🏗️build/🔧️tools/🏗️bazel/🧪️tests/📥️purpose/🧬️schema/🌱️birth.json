@@ -1,0 +1,204 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "reads",
+    "negatives",
+    "windows"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "variant",
+          "maximum",
+          "deadline",
+          "now",
+          "offline",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "variant": {
+            "enum": [
+              "build",
+              "serve",
+              "release",
+              "offline",
+              "parity-nx",
+              "parity-bazel"
+            ]
+          },
+          "maximum": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120000
+          },
+          "deadline": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "now": {
+            "type": "integer"
+          },
+          "offline": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "reads": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "fault",
+          "accepted",
+          "primary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "short",
+              "growth",
+              "expired",
+              "undefined-close",
+              "frozen-close",
+              "close"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "primary": {
+            "enum": [
+              "none",
+              "read",
+              "undefined",
+              "frozen",
+              "close"
+            ]
+          }
+        }
+      }
+    },
+    "negatives": {
+      "type": "array",
+      "minItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "change",
+          "accepted"
+        ],
+        "properties": {
+          "change": {
+            "enum": [
+              "none",
+              "expired",
+              "zero",
+              "null",
+              "maximum",
+              "deadline",
+              "tool",
+              "mode",
+              "network",
+              "owner",
+              "version",
+              "digest",
+              "malformed"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "windows": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "route",
+          "facts",
+          "accepted",
+          "captures"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "route": {
+            "enum": [
+              "fresh",
+              "neutral",
+              "receipt",
+              "negative"
+            ]
+          },
+          "facts": {
+            "enum": [
+              "exact",
+              "foreign",
+              "missing",
+              "changed"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "captures": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "variants": [
+          "build",
+          "serve",
+          "release",
+          "offline",
+          "parity-nx",
+          "parity-bazel"
+        ],
+        "maximumChildMilliseconds": 120000
+      }
+    }
+  }
+}

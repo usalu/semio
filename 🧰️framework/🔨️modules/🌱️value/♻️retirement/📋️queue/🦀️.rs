@@ -131,7 +131,6 @@ fn refusal(kind:ValueRefusalKind,message:&'static str)->ValueError {ValueError::
 #[path="🧪️tests/🎮️ownership/🦀️.rs"]
 mod original_ownership_tests;
 #[cfg(test)]
-#[path="../../🧪️testing/💾️allocator/🦀️.rs"]
-mod allocation_testing;
+use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;

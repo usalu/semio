@@ -37,14 +37,11 @@ import {
   type WorldCanvasProps
 } from "@semio-tech/infinite-world-r3f";
 import { solidRef, type FaceInfo, type MeshTransfer, type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
-import {
-  defaultModelDefinitionId,
-  Model,
-  type InteractionEvent,
-  type InteractionSpec,
-  type SelectionTarget,
-  type ModelEntityKind
-} from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type ModelEntityKind } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { type InteractionSpec } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎰️interaction-spec/🟦️.ts";
+import { defaultModelDefinitionId } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
+import { Model } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import { type SpatialPreviewKernel, type ModelDiff } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { type DisplayModel, cadGumballConfigVisible, type CadGumballConfig } from "../../🎬️actions/🟦️.ts";
 import { createInteractionRuntime, type InteractionRuntime, type InteractionRuntimeOptions, type InteractionSnapshot } from "../../🗿️artifact/🟦️.ts";

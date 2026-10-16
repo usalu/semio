@@ -1,5 +1,5 @@
 /** 📬️ A window-local address and its issued payload retain original custody on rejection. */
-import {FactoryBoxedValue,type FactoryBoxedIssuer,type FactoryBoxedPublication} from "../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🟦️.ts";
+import {FactoryBoxedValue,type FactoryBoxedIssuer,type FactoryBoxedPublication} from "@semio-tech/value-ts/retirement/factory/boxed";
 export type WindowMutationLane="config"|"transient";
 export class WindowIssuedMutation<T>{
  constructor(readonly lane:WindowMutationLane,private address:string,readonly windowKindId:string,private owner:FactoryBoxedValue<T>){if(!address||!windowKindId)throw new Error("Window mutation requires its exact address");}

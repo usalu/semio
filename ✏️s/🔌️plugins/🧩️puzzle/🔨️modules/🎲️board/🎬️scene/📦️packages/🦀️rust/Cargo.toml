@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-plugin-puzzle-board-scene"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The puzzle-owned projection into the framework's neutral board scene contract, shared by Puzzle 2d and 5d"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }
+
+[dev-dependencies]
+semio-framework-pack-json = { workspace = true }
+serde_json = "1.0.149"

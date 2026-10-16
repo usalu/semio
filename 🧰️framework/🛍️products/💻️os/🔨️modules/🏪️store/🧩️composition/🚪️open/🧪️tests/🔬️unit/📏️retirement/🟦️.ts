@@ -4,9 +4,12 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { applyPatch } from "fast-json-patch";
 import Ajv from "ajv";
-import retirementContract from "../../../../../../../../../🔨️modules/🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json" with { type: "json" };
-import orderedRetirement from "../../../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json" with { type: "json" };
+import { readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { retirementContractSchema as retirementContract } from "@semio-tech/value-ts/retirement/contract/schema";
+import { orderedRetirementSchema as orderedRetirement } from "@semio-tech/value-ts/ordered/retirement/schema";
 import fixture from "../../../📏️retirement/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
+import { controlSnapshotReceivingFixtureUrl } from "@semio-tech/framework/io/testing/fixtures";
+import { cloneWireProgressSchemaUrl } from "../../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 
 test("erased retirement uses separate fallible demands and a paid terminal box turn", async () => {
   const oracle = new Ajv({ strict: false });
@@ -30,7 +33,7 @@ test("erased retirement uses separate fallible demands and a paid terminal box t
   const source = await Bun.file(new URL("../../../../../🦀️.rs", import.meta.url)).text();
   const helpers = source.slice(source.indexOf("pub fn artifact_retirement_box_"), source.indexOf("struct ArtifactStoreVcsRetirement"));
   expect(helpers).toContain("pub fn artifact_retirement_box_demands");
-  const native=await Bun.file(new URL("../../../../../🧪️tests/🔬️unit/🦀️.rs",import.meta.url)).text();
+  const native=await Bun.file(new URL("../../../../../🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs",import.meta.url)).text();
   const law=native.slice(native.indexOf("fn current_box_retirement_preserves_denied_owner"),native.indexOf("fn artifact_store_group_visibility",native.indexOf("fn current_box_retirement_preserves_denied_owner")));
   expect(law.indexOf("let policy = physical_test_close_grant();")).toBeGreaterThanOrEqual(0);
   expect(law.indexOf("let policy = physical_test_close_grant();")).toBeLessThan(law.indexOf("observe_backing"));
@@ -1035,7 +1038,7 @@ test("envelope birth retains original phased catalogs before hydration advanceme
     expect(state.metadata).toEqual(row.metadata);
     expect(state.catalogBirths).toBeLessThanOrEqual(row.totalBirthTurns);
   }
-  const vcs = await Bun.file(new URL("../../../../../../🌿️vcs/🦀️.rs", import.meta.url)).text();
+  const vcs = readModuleTreeSource(new URL("../../../../../../🌿️vcs/🦀️.rs", import.meta.url));
   expect(vcs.includes("pub fn initial_page_birth_demand(")).toBe(true);
   expect(vcs.includes("pub fn admit_initial_page(")).toBe(true);
   const root = await Bun.file(new URL("../../../../../🦀️.rs", import.meta.url)).text();
@@ -1306,7 +1309,7 @@ test("native snapshot decoder retains constructor output before cancellation",as
 test("named native ownership laws use independent positive grants",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");const root=process.cwd(),base="🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store";
  const plain=JSON.parse(fs.readFileSync(path.join(root,base,"🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);expect(ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"})(plain.physicalCloseGrant)).toBe(true);
- const source=fs.readFileSync(path.join(root,base,"🧪️tests/🔬️unit/🦀️.rs"),"utf8");
+ const source=fs.readFileSync(path.join(root,base,"🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs"),"utf8");
  for(const name of ["current_box_retirement_preserves_denied_owner_and_exact_physical_shell","current_typed_option_birth_retains_exact_original_and_paid_shell"]){
   const start=source.indexOf("fn "+name);expect(start).toBeGreaterThanOrEqual(0);const end=source.indexOf("\n#[test]",start);const body=source.slice(start,end<0?undefined:end);
   expect(body.includes("let grant = physical_test_close_grant();")).toBe(true);expect(body.includes("maximum_copy_bytes: demand.copy_bytes")).toBe(false);expect(body.includes("maximum_release_bytes: demand.release_bytes")).toBe(false);
@@ -1327,7 +1330,7 @@ test("member history hydration and durable native closes preserve independent au
 
 test("catalog source native laws use independent positive grants",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");
- const source=fs.readFileSync(path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs"),"utf8");
+ const source=fs.readFileSync(path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs"),"utf8");
  for(const [name,end] of [["current_catalog_sources_admit_original_allocations_then_fund_each_ticket","current_member_source_constructor_is_not_invoked_under_denied_axes"],["current_member_source_constructor_is_not_invoked_under_denied_axes","ephemeral_member_original_preparation_frame_requires_exact_granted_release"]] as const){
   const start=source.indexOf("fn "+name+"("),finish=source.indexOf("fn "+end+"(",start+1);expect(start).toBeGreaterThanOrEqual(0);expect(finish).toBeGreaterThan(start);
   const body=source.slice(start,finish);expect(body.includes("let paid = physical_test_close_grant();")).toBe(true);expect(body.includes("maximum_capacity_bytes: capacity,")).toBe(false);expect(body.includes("maximum_capacity_bytes: demand.capacity_bytes")).toBe(false);expect(body.includes("let grant = physical_test_close_grant();")).toBe(true);
@@ -1354,7 +1357,7 @@ test("current shared actor native callers retain genuine lease and original buff
 
 test("native body octet spans debit independent policy and retain original cancelled backing",async()=>{
  const fs=await import("node:fs"),path=await import("node:path"),root=process.cwd();
- const neutral=JSON.parse(fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/🪆️receiving/🔣️.json"),"utf8")).bodyCopy;
+ const neutral=JSON.parse(fs.readFileSync(controlSnapshotReceivingFixtureUrl,"utf8")).bodyCopy;
  const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);const validate=ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"});
  expect(validate(neutral.grant)).toBe(true);expect(validate(neutral.closeGrant)).toBe(true);
  const payload=new TextEncoder().encode(neutral.text.repeat(neutral.repeat)),oracle=Buffer.from(neutral.text.repeat(neutral.repeat),"utf8");expect(payload).toEqual(new Uint8Array(oracle));expect(payload.byteLength).toBeGreaterThan(neutral.cancelAt);
@@ -1368,9 +1371,9 @@ test("native body octet spans debit independent policy and retain original cance
 
 test("failed native field admission uses genuine bounds and preserves real performed receipts",async()=>{
  const fs=await import("node:fs"),path=await import("node:path"),root=process.cwd(),base=path.join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");
- const neutral=JSON.parse(fs.readFileSync(path.join(base,"🚪️io/🚫️refusal/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);const validate=ajv.compile(JSON.parse(fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json"),"utf8")));
+ const neutral=JSON.parse(fs.readFileSync(path.join(base,"🚪️io/🚫️refusal/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);const validate=ajv.compile(JSON.parse(fs.readFileSync(cloneWireProgressSchemaUrl,"utf8")));
  for(const row of neutral.cases){expect(validate(row.receipt)).toBe(true);const total=applyPatch({capacity:0,released:0},[{op:"replace",path:"/capacity",value:row.receipt.retainedCapacityBytes},{op:"replace",path:"/released",value:row.receipt.releasedBytes}],true,false).newDocument;expect(total.capacity).toBe(row.expectedTotalCapacity);expect(total.released).toBe(row.expectedTotalRelease);}
- const original=fs.readFileSync(path.join(base,"🧪️tests/🔬️unit/🦀️.rs"),"utf8");const start=original.indexOf("fn field_close_failure_preserves_real_receipts_through_the_original_decode_job()");const actual=original.slice(start,original.indexOf("\n#[test]",start));expect(actual.includes("fn maximum_retained_close_bytes(&self)->usize { ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES }")).toBe(true);expect(actual.includes("assert_eq!(progress.retained_capacity_bytes,allocated)")).toBe(true);expect(actual.includes("assert_eq!(progress.released_bytes,released)")).toBe(true);
+ const original=fs.readFileSync(path.join(base,"🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs"),"utf8");const start=original.indexOf("fn field_close_failure_preserves_real_receipts_through_the_original_decode_job()");const actual=original.slice(start,original.indexOf("\n#[test]",start));expect(actual.includes("fn maximum_retained_close_bytes(&self)->usize { ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES }")).toBe(true);expect(actual.includes("assert_eq!(progress.retained_capacity_bytes,allocated)")).toBe(true);expect(actual.includes("assert_eq!(progress.released_bytes,released)")).toBe(true);
  const allocated=Buffer.allocUnsafeSlow(1024);expect(allocated.byteLength).toBe(1024);expect(allocated.byteLength).toBeLessThan(262144*6);
  console.log("[DEBUG] Native field legal defining admission bounds preserve original performed receipts; canonical per-progress Ajv/JSONPatch/Buffer oracle, actual System renewal required");
 });

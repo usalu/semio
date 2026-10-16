@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: DSL, pack, command envelope, diff, grammar file, protocol file and protocol migration completeness.
+/** 🧮️ Wave 4 plugin consistency policy: DSL, pack, command envelope, diff, grammar file, protocol file and protocol migration completeness.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";

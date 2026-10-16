@@ -6,7 +6,7 @@
 import { createContext, useContext } from "react";
 import type { UiLabel } from "@semio-tech/ui-react";
 import type { AppCatalogue, PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
-import { decodeScenePackField } from "@semio-tech/framework-os";
+import { decodeScenePackField } from "@semio-tech/framework/packs";
 
 /** 🕳️ Sanctioned wire-boundary mint point (see ui-react's `UiLabel` docstring): brands an
  * already plugin/manifest-resolved string as {@link UiLabel}. */

@@ -15,18 +15,19 @@ import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/�
 import { Field, Section, formatNumber, uiDataLabel } from "@semio-tech/ui-react";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
+import { puzzle3dSettingsDocumentFixtureUrl, stepperPointerCommitFixtureUrl, numericPressInputFixtureUrl, sectionFieldPresentationFixtureUrl, uiStepperPresentationFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const law = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json"), "utf8")) as {
+const law = JSON.parse(readFileSync(puzzle3dSettingsDocumentFixtureUrl, "utf8")) as {
   readonly document: { readonly surface: string; readonly revision: number; readonly root: number; readonly nodes: readonly Record<string, unknown>[] };
   readonly windowId: string;
   readonly controls: readonly { readonly key: string; readonly value: number; readonly step: number; readonly action: string; readonly label: string; readonly formatted: string }[];
 };
-const stepperFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🪜️stepper-pointer-commit/🔣️.json"), "utf8")) as { readonly cases: readonly { id: string; segment: "minus" | "value" | "plus"; terminal: "release-inside" | "release-outside" | "cancel"; pressActions: number; terminalActions: number; deltaSteps: number }[] };
-const pressInputFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎚️numeric-press-input/🔣️.json"), "utf8")) as { readonly lifecycle: { readonly offeredCommit: false; readonly releasedCommit: true; readonly releasedActions: number; readonly sequenceStep: number }; readonly cases: readonly { readonly name: string; readonly input: unknown; readonly accepted: boolean }[] };
-const sectionFieldFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📐️section-field-presentation/🔣️.json"), "utf8")) as {
+const stepperFixture = JSON.parse(readFileSync(stepperPointerCommitFixtureUrl, "utf8")) as { readonly cases: readonly { id: string; segment: "minus" | "value" | "plus"; terminal: "release-inside" | "release-outside" | "cancel"; pressActions: number; terminalActions: number; deltaSteps: number }[] };
+const pressInputFixture = JSON.parse(readFileSync(numericPressInputFixtureUrl, "utf8")) as { readonly lifecycle: { readonly offeredCommit: false; readonly releasedCommit: true; readonly releasedActions: number; readonly sequenceStep: number }; readonly cases: readonly { readonly name: string; readonly input: unknown; readonly accepted: boolean }[] };
+const sectionFieldFixture = JSON.parse(readFileSync(sectionFieldPresentationFixtureUrl, "utf8")) as {
   readonly density: { readonly gap: number; readonly fieldLabelLineHeight: number; readonly fieldDetailLineHeight: number; readonly sectionTitleLineHeight: number; readonly sectionTitleBodyGap: number; readonly sectionTrailingMargin: number };
   readonly section: { readonly width: number; readonly title: string; readonly titleLines: number; readonly titleHeight: number; readonly contentTop: number; readonly trailingMargin: number };
   readonly field: { readonly width: number; readonly label: string; readonly description: string; readonly error: string; readonly detailLines: number; readonly controlHeight: number; readonly controlTop: number; readonly errorTop: number; readonly totalHeight: number };
@@ -43,7 +44,7 @@ describe("Puzzle3D Settings Component document", () => {
   });
 
   it("matches the shared display precision and square-button presentation contract", () => {
-    const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🪜️stepper-presentation/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(uiStepperPresentationFixtureUrl, "utf8"));
     for (const row of fixture.numbers) expect(formatNumber(row.value)).toBe(row.text);
     const store = new UiDocumentStore(law.document.surface);
     store.loadSnapshot({ surface: law.document.surface, revision: law.document.revision, root: law.document.root, nodes: [...law.document.nodes] } as any);

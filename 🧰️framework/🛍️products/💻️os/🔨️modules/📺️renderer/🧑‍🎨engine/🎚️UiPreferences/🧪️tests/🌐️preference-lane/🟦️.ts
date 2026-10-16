@@ -1,15 +1,16 @@
-import { validUserPreferenceRecordV1 } from "../../../../../📇️directory/🚪️io/📝️text/🟦️.ts";
+import { validUserPreferenceRecordV1 } from "../../../../../../../../🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
 import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { createMemoryStoragePort, createScopedStoragePort, type StoragePort } from "@semio-tech/framework";
-import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1, type UiPreferencesConfigMutation } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
-import { parseUserNamedLayout, UI_PREFERENCE_DATA_CLASSES, type UiPreferences, type UserNamedLayout } from "../../../../../../🎚️config/🧬️schema/🟦️.ts";
+import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1 } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { type UiPreferencesConfigMutation } from "../../../../../../../../🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { parseUserNamedLayout, type UiPreferences, type UserNamedLayout } from "../../../../../../../../🔨️modules/🎚️config/🧬️schema/🟦️.ts";
+import { UI_PREFERENCE_DATA_CLASSES } from "../../../../../../🎚️config/🧬️schema/🟦️.ts";
 import uiPreferencesSchema from "../../../../../../🎚️config/🧬️schema/🎨️ui-preferences/🔣️.json" with { type: "json" };
 import mutationSchema from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🧬️schema/🔣️.json" with { type: "json" };
 import dataClassFixture from "../../../../../../🎚️config/🧪️tests/🧫️fixtures/🎨️ui-preferences/🗂️data-classes/🔣️.json" with { type: "json" };
-import directorySchema from "../../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
+import { directorySchema, userPreferenceRecordFixture as recordFixture } from "../../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
 
 import fixture from "../🧫️fixtures/🌐️preference-lane/🔣️.json" with { type: "json" };
-import recordFixture from "../../../../../📇️directory/🧪️tests/🧫️fixtures/🎚️user-preference-record/🔣️.json" with { type: "json" };
 
 type LaneStep = { readonly commit?: { readonly device: "A" | "B"; readonly mutation: UiPreferencesConfigMutation }; readonly deliver?: "A" | "B"; readonly fold?: "A" | "B" };
 type LaneScenario = { readonly id: string; readonly steps: readonly LaneStep[]; readonly expected: Readonly<Record<"A" | "B", Partial<UiPreferences>>> & { readonly hubEvents: number } };

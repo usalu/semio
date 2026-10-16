@@ -4,10 +4,9 @@ import { isShellLocale } from "@semio-tech/framework";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
-import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json";
+import { directorySchema, administrationCommandAdmissionFixture as admissionFixture } from "../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
 import propertiesFixture from "../../🧱️elements/🛂️SpaceAdministration/🧪️tests/🧫️fixtures/⚙️properties/🔣️.json";
 import deleteFixture from "../../🧱️elements/🛂️SpaceAdministration/🧪️tests/🧫️fixtures/🗑️delete-space/🔣️.json";
-import admissionFixture from "../../../../📇️directory/🧪️tests/🧫️fixtures/🏛️administration/🛂️command-admission/🔣️.json";
 
 
 

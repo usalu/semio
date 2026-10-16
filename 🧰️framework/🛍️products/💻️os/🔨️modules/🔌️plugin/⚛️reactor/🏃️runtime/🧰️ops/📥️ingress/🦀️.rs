@@ -1,6 +1,24 @@
 //! 📥️ Opening relays, command ingress, the exchange output and the custody manifest receiving.
 
-use super::*;
+use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_framework_plugin_decl_app::{ArtifactApp, MediaArtifactError};
+use semio_framework_plugin_decl_views::media_contract::{ArtifactMediaExportHandle, ArtifactMediaExportPoll};
+use semio_framework_value::{DslValue, FromValue, ToValue};
+use semio_framework::kernel::{Effect, InvocationResult};
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
+use semio_framework::manifest::{CommandAddress as ManifestCommandAddress, CommandOwnerAddress as ManifestCommandOwnerAddress};
+use semio_framework_plugin_plugin_program::{Plugin, PluginProgram, decode_wire_serialized, encode_wire_serialized};
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_plugin_job::{TransactionProposalDraft, TypedOperationResultPage};
+use serde_json::Value;
+use crate::ops_typed_operations::drive_self_waking_ready;
+use crate::ops_wire_limits::find_instance;
+use semio_framework_plugin_runtime_instances::inst_wire_frames::{instance_actor, with_instances_turn_mut};
+use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
+#[cfg(test)]
+use std::mem::size_of;
 /// 🎯️ `AppCommand::ArtifactCommand`'s Wave 1 mapping — the same magic action-name strings
 /// `VcsArtifactApp::dispatch_action` already intercepts for `store::os_store::store_schema::ArtifactCommand` verbs (duplicated
 /// here rather than imported since `app`'s `HISTORY_ACTION_IDS` const is private — see
@@ -11,7 +29,8 @@ const DOCUMENT_COMMAND_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoin
 /// `TurnResult` (design-abi.md §2/§4) instead of being wrapped as a frame; `PluginExchangeOutput`
 /// carries them alongside `frames`. Shared by `AppCommand::Command`'s and
 /// `AppCommand::ArtifactCommand`'s handling below.
-pub(super) async fn push_invocation_side_frames(effects: &mut Vec<Vec<u8>>, events: &mut Vec<Vec<u8>>, result: &InvocationResult) {
+#[doc(hidden)]
+pub async fn push_invocation_side_frames(effects: &mut Vec<Vec<u8>>, events: &mut Vec<Vec<u8>>, result: &InvocationResult) {
     for effect in result.requested_effects.iter() {
         effects.push(encode_wire_serialized(effect));
     }
@@ -40,7 +59,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 async fn relay_opening_command(action_id: &'static str, arguments: Value) -> Result<Effect, Fault> {
     Ok(Effect::ReplayShellCommand { action_id: action_id.into(), args: Some(DslValue::from(&arguments)) })
 }
-pub(super) async fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
+#[doc(hidden)]
+pub async fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
     let role = opening_role(role_wire).await?;
     let (dialect, artifact_role) = semio_framework::parse_surface_app_id(&artifact_ref).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-artifact-ref"), error))?;
@@ -59,7 +79,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
     relay_opening_command("os.open-artifact", serde_json::json!({ "artifactRef": artifact_ref, "role": role_wire, "pluginId": plugin_id, "appId": app_id })).await
 }
-pub(super) async fn relay_set_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
+#[doc(hidden)]
+pub async fn relay_set_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
     let dialect = opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone()).await?;
     let role = opening_role(role_wire).await?;
@@ -72,7 +93,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
     relay_opening_command("os.set-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire, "pluginId": plugin_id, "appId": app_id })).await
 }
-pub(super) async fn relay_clear_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8) -> Result<Effect, Fault> {
+#[doc(hidden)]
+pub async fn relay_clear_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8) -> Result<Effect, Fault> {
     opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone()).await?;
     opening_role(role_wire).await?;
     relay_opening_command("os.clear-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire })).await
@@ -84,14 +106,16 @@ include!("../../../../🧪️tests/🔬️plugin-runtime-opening-command-relay/�
 /// `ForeignStep` encoding note) and minting a proposal id scoped to this dispatch
 /// (`"<instance_id>:<seq>"`, unique enough for one instance's own in-flight proposals — all a
 /// single-command dispatch ever needs).
-pub(super) async fn transaction_proposal_frame(instance_id: u32, seq: u64, proposal: TransactionProposalDraft) -> protocol::AppFrame {
+#[doc(hidden)]
+pub async fn transaction_proposal_frame(instance_id: u32, seq: u64, proposal: TransactionProposalDraft) -> protocol::AppFrame {
     let mut foreign = Vec::with_capacity(proposal.foreign.len());
     for step in proposal.foreign.iter() {
         foreign.push(encode_wire_serialized(step));
     }
     protocol::AppFrame::TransactionProposal { in_reply_to: seq, proposal_id: format!("{instance_id}:{seq}"), local_ops: proposal.local_ops, foreign }
 }
-pub(super) async fn encode_exchange_frames(frames: &[protocol::AppFrame]) -> Vec<Vec<u8>> {
+#[doc(hidden)]
+pub async fn encode_exchange_frames(frames: &[protocol::AppFrame]) -> Vec<Vec<u8>> {
     let mut encoded = Vec::with_capacity(frames.len());
     for frame in frames {
         encoded.push(protocol::encode_app_frame(frame).await);
@@ -105,10 +129,11 @@ pub(super) async fn encode_exchange_frames(frames: &[protocol::AppFrame]) -> Vec
 /// since design-abi.md §2/§4 has effects/events travel straight into `TurnResult`, never wrapped
 /// as a frame.
 
+#[doc(hidden)]
 #[path="../../🎞️command/📥️custody/🛂️manifest/🦀️.rs"]
-mod original_manifest_receiving;
-pub use original_manifest_receiving::OriginalDecodedPluginCommand;
-use original_manifest_receiving::OriginalManifestCommandReceiving;
+pub mod original_manifest_receiving;
+pub use crate::ops_ingress::original_manifest_receiving::OriginalDecodedPluginCommand;
+use crate::ops_ingress::original_manifest_receiving::OriginalManifestCommandReceiving;
 #[cfg(feature="original-actor-context-testing")]
 /// 🧪️ Qualifies the canonical receiving body without mounting unrelated app fixture suites.
 pub fn original_manifest_receiving_law(){original_manifest_receiving::tests::original_manifest_fields_keep_paid_source_and_denied_transfer()}
@@ -121,8 +146,10 @@ pub enum PluginCommandIngress {
     ClosingDecoded { owner: OriginalDecodedPluginCommand, fault: Fault },
     FailedDecoded{owner:OriginalDecodedPluginCommand,failure:Option<semio_framework_job::OriginalTurnFailure>,identity:(semio_framework_job::OperationId,semio_framework_job::Generation),close_failure:Option<semio_framework_job::OriginalTurnFailure>,compound:Option<semio_framework_job::OriginalClosureFailure>,raw_media:Option<MediaArtifactError>},
 }
-pub(crate) enum OriginalCommandIngressRetirement{Pending(PluginCommandIngress),Failed(semio_framework_job::OriginalTurnFailure)}
-pub(super) enum PluginCommandIngressStep {
+#[doc(hidden)]
+pub enum OriginalCommandIngressRetirement{Pending(PluginCommandIngress),Failed(semio_framework_job::OriginalTurnFailure)}
+#[doc(hidden)]
+pub enum PluginCommandIngressStep {
     Pending(PluginCommandIngress),
     Ready(OriginalDecodedPluginCommand),
     TerminalFault(Fault),
@@ -139,14 +166,15 @@ pub(super) enum PluginCommandIngressStep {
 /// releases plus the three decoded field stages plus the header — so a command assembles, decodes
 /// and dispatches inside the turn that carried its LAST page, and a cancelled one retires inside a
 /// single turn too. Ticket 26/09/02 wave B24.
-pub(super) const COMMAND_INGRESS_MOVES_PER_TURN: usize = semio_framework::kernel::COMMAND_MAXIMUM_PAGES + 8;
+#[doc(hidden)]
+pub const COMMAND_INGRESS_MOVES_PER_TURN: usize = semio_framework::kernel::COMMAND_MAXIMUM_PAGES + 8;
 impl PluginCommandIngress {
-    pub(crate) fn retire_failed_step_on_original(self,cx:&mut semio_framework_job::StepContext<'_>)->OriginalCommandIngressRetirement{
+    pub fn retire_failed_step_on_original(self,cx:&mut semio_framework_job::StepContext<'_>)->OriginalCommandIngressRetirement{
         if !matches!(self,Self::FailedDecoded{..}){return OriginalCommandIngressRetirement::Pending(self)}
         match self.advance_original(1,cx){PluginCommandIngressStep::Pending(owner)=>OriginalCommandIngressRetirement::Pending(owner),PluginCommandIngressStep::TerminalOriginalFailure(failure)=>OriginalCommandIngressRetirement::Failed(failure),_=>unreachable!("failed original source only closes and returns its full original cause")}
     }
 
-    pub(super) fn advance_original(self,moves:usize,cx:&mut semio_framework_job::StepContext<'_>)->PluginCommandIngressStep{
+    pub fn advance_original(self,moves:usize,cx:&mut semio_framework_job::StepContext<'_>)->PluginCommandIngressStep{
         if let Self::FailedDecoded{mut owner,mut failure,identity,mut close_failure,mut compound,mut raw_media}=self{
             if identity!=(cx.operation(),cx.generation())||cx.should_yield(){return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})}
             if raw_media.is_some(){
@@ -171,7 +199,7 @@ impl PluginCommandIngress {
         }else{self.advance(moves)}
     }
     /// 📥️ Drives the owner until it is dispatchable, terminal, or the turn's move grant is spent.
-    pub(super) fn advance(self, moves: usize) -> PluginCommandIngressStep {
+    pub fn advance(self, moves: usize) -> PluginCommandIngressStep {
         let mut owner = self;
         for _ in 0..moves {
             match owner.step() {
@@ -181,7 +209,7 @@ impl PluginCommandIngress {
         }
         PluginCommandIngressStep::Pending(owner)
     }
-    pub(crate) fn retire_step(self) -> Option<Self> {
+    pub fn retire_step(self) -> Option<Self> {
         if matches!(self,Self::FailedDecoded{..}){return Some(self)}
         match self.cancel(plugin_internal_fault("command lifetime is closing")).step() {
             PluginCommandIngressStep::Pending(owner) => Some(owner),
@@ -198,7 +226,7 @@ impl PluginCommandIngress {
             original @ Self::FailedDecoded{..}=>original,
         }
     }
-    pub(super) fn step(self) -> PluginCommandIngressStep {
+    pub fn step(self) -> PluginCommandIngressStep {
         match self {
             Self::Encoded(encoded) => {
                 let cursor = protocol::PagedAppCommandDecodeCursor::new(encoded);
@@ -239,7 +267,7 @@ include!("../../../../🧪️tests/🔬️plugin-runtime-paged-command-ingress/�
 #[derive(Default)]
 pub struct PluginExchangeOutput {
     pub original_receiving:Option<OriginalPublicationReceiving>,
-    pub constructor_receipt: Option<(crate::document_ingress::ArtifactStoreConstructorKind, crate::document_ingress::ArtifactStoreConstructorPhase, RetainedCloneGrant, RetainedCloneProgress)>,
+    pub constructor_receipt: Option<(semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind, semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase, RetainedCloneGrant, RetainedCloneProgress)>,
     pub preparation_receipt: Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)>,
     pub retirement_receipt: Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)>,
     pub history_command_receipt: Option<(RetainedCloneGrant, RetainedCloneProgress)>,

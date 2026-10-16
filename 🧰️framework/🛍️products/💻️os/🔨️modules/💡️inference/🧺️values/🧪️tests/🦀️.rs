@@ -10,7 +10,7 @@ fn caller(law:&serde_json::Value)->OriginalJobFixtureCaller{
     OriginalJobFixtureCaller::admit(OperationId(input["operation"].as_u64().unwrap()),Generation(input["generation"].as_u64().unwrap()),RetainedCloneGrant{maximum_items:stock[0].as_u64().unwrap()as usize,maximum_copy_bytes:stock[1].as_u64().unwrap()as usize,maximum_capacity_bytes:stock[2].as_u64().unwrap()as usize,maximum_release_bytes:stock[3].as_u64().unwrap()as usize,maximum_depth:stock[4].as_u64().unwrap()as usize},clock,input["deadlineUs"].as_u64().unwrap(),input["fuel"].as_u64().unwrap())
 }
 fn turn(caller:&mut OriginalJobFixtureCaller,grant:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>)->(bool,usize,usize){
-    let(result,born,freed)=crate::test_allocation::observe_backing(||caller.turn(grant,|cx|Ok(run(cx))).unwrap().unwrap());
+    let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(run(cx))).unwrap().unwrap());
     let receipt=caller.receipt();assert!(receipt.fits(grant));assert_eq!((born,freed),(receipt.retained_capacity_bytes,receipt.released_bytes));(result,born,freed)
 }
 
@@ -44,7 +44,7 @@ async fn original_inferred_values_same_source_donor_denials_partial_cancel_and_f
             if result{break}
         }
         assert!(values.terminal_is_empty());assert!(caller.turn(grant,|cx|Ok(cx.original_source_parent()?.original_loans_are_returned())).unwrap());assert_eq!(births,releases);caller.retire(grant);
-        let(_,born,freed)=crate::test_allocation::observe_backing(||drop(values));assert_eq!((born,freed),(0,0));
+        let(_,born,freed)=semio_framework_trace_memory_testing::observe_backing(||drop(values));assert_eq!((born,freed),(0,0));
         eprintln!("[DEBUG] original inference values op969/gen17 stop{stop} turns{turns} capacity{births}=release{releases}; refused exact output donor preserved; typed payload before source return; terminal Drop0");
     }
 }

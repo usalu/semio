@@ -26,7 +26,7 @@ fn fixture(text:&str,depth:usize)->NativeValue {
     value
 }
 fn admitted(demand:RetirementDemand)->RetainedCloneGrant {
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(crate::text("🛫️encode/🧭️tree/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy=&rows["retainedPolicy"];
     let grant=RetainedCloneGrant{maximum_items:policy["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap()as usize};
     assert!(demand.copy_bytes<=grant.maximum_copy_bytes&&demand.capacity_bytes<=grant.maximum_capacity_bytes&&demand.release_bytes<=grant.maximum_release_bytes&&demand.depth<=grant.maximum_depth);
@@ -47,7 +47,7 @@ fn observe_step(cursor:&mut ArtifactCanonicalJsonTreeCursor,output:&mut[u8])->Ar
 
 #[test]
 fn canonical_native_paged_tree_arbitrary_depth_and_cancellation_conserve_actual_heap() {
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(crate::text("🛫️encode/🧭️tree/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let text=rows["text"].as_str().unwrap();
     let leaf=serde_json::to_string(&serde_json::json!({"a":text,"z":[true,42]})).unwrap();
     for depth in rows["depths"].as_array().unwrap() {
@@ -125,7 +125,7 @@ enum DerivedMutation {MoveNode(DerivedMove),Empty}
 
 #[test]
 fn canonical_native_derived_mutation_fields_match_serde_and_original_projection_ownership(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for visible in [None,Some(false),Some(true)]{
   for repeat in [1,1024]{
    let mut pauses:Vec<Option<usize>>=[0,1,3,17,129].into_iter().map(Some).collect();pauses.push(None);
@@ -161,7 +161,7 @@ fn canonical_native_derived_mutation_fields_match_serde_and_original_projection_
 
 #[test]
 fn canonical_native_scalar_initializes_only_real_prefix_and_preserves_immutable_authority() {
- let rows:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let rows:serde_json::Value=serde_json::from_str(crate::text("🛫️encode/🧭️tree/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in rows["scalarCases"].as_array().unwrap(){
   let root=match row["value"].as_bool(){Some(flag)=>NativeValue::Flag(flag),None=>NativeValue::Number(row["value"].as_u64().unwrap())};
   let oracle=serde_json::to_vec(&row["value"]).unwrap();assert_eq!(oracle,row["expected"].as_str().unwrap().as_bytes());
@@ -357,7 +357,7 @@ enum DerivedMarker {
 
 #[test]
 fn canonical_native_field_roles_match_serde_json_and_to_value_wire() {
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(crate::text("../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let octets=|value:&serde_json::Value|->Vec<u8>{value.as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect()};
     let optional=|value:&serde_json::Value|(!value.is_null()).then(||octets(value));
     for row in rows["roles"].as_array().unwrap() {
@@ -439,7 +439,7 @@ struct DerivedWords {
 
 #[test]
 fn canonical_native_hex_words_match_the_managed_mesh_word_wire_and_serde_json() {
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(crate::text("../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let floats=|value:&serde_json::Value|->Vec<f32>{value.as_array().unwrap().iter().map(|value|value.as_f64().unwrap()as f32).collect()};
     for row in rows["hexWords"].as_array().unwrap() {
         for scale in [None,Some(f32::from_bits(0x7fc0_0001)),Some(f32::NEG_INFINITY),Some(-0.0)] {
@@ -572,7 +572,7 @@ struct FlatRoot {
 #[test]
 fn canonical_native_flatten_splices_at_field_position_like_serde_json_and_to_value() {
     use semio_framework_value::ToValue;
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(crate::text("../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in rows["flatten"].as_array().unwrap() {
         let root=FlatRoot{
             name:row["name"].as_str().unwrap().into(),
@@ -653,7 +653,7 @@ enum ExternalGeneric<T> {Wrap{inner:T,again:Option<T>},Empty}
 #[test]
 fn canonical_native_externally_tagged_named_variants_match_serde_json_and_to_value() {
     use semio_framework_value::ToValue;
-    let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let rows:serde_json::Value=serde_json::from_str(crate::text("../../🌱️value/✨️derive/🧵️canonical/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in rows["externalVariants"].as_array().unwrap() {
         let number=|key:&str|row[key].as_f64().unwrap();
         let shape=match row["variant"].as_str().unwrap() {
@@ -810,7 +810,7 @@ fn an_uninhabited_vocabulary_derives_a_canonical_tree_that_is_never_walked() {
 
 #[test]
 fn original_canonical_tree_constructor_moves_header_without_payload_copy(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎟️header.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🛫️encode/🧭️tree/🧪️tests/🧫️fixtures/🎟️header.json")).unwrap();
     for body in law["cancelBodies"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;
         let ((mut source,mut projection),factory)=observe_heap_allocations_on_this_thread(||{
             let birth=RetainedCloneSource::<NativeValue>::owned_constructor_demand::<()>();let(mut source,_)=RetainedCloneSource::admit_owned(NativeValue::Flag(true),(),admitted(RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()})).unwrap_or_else(|(error,_,_)|panic!("original header source: {error}"));
@@ -831,7 +831,7 @@ fn original_canonical_tree_constructor_moves_header_without_payload_copy(){
 
 #[test]
 fn original_canonical_tree_nested_headers_preserve_body_minima_and_complete_custody(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎟️header.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(crate::text("🛫️encode/🧭️tree/🧪️tests/🧫️fixtures/🎟️header.json")).unwrap();
     let text="Ä\0\n🧩\"\\";
     let leaf=serde_json::to_string(&serde_json::json!({"a":text,"z":[true,42]})).unwrap();
     for depth in law["traversalDepths"].as_array().unwrap(){let depth=depth.as_u64().unwrap()as usize;

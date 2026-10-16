@@ -23,8 +23,8 @@ use server::gateway::{ErrorBody, ServerError};
 /// 🧫️ The shared contract document, read from the product root rather than copied into this target.
 const FIXTURE: &str = include_str!("../🧫️fixtures/🔌️wire/🔣️.json");
 
-/// 🛣️ The gateway source, so the declared route table is checked against the router that exists.
-const GATEWAY: &str = include_str!("../../🔨️modules/📡️gateway/🦀️.rs");
+/// 🛣️ The gateway server source that holds `base_router`, so the declared route table is checked against the router that exists.
+const GATEWAY_SERVER: &str = include_str!("../../🔨️modules/📡️gateway/🖥️server/🦀️.rs");
 
 /// 🔁️ Deserialize one vector into `T` and serialize it back, asserting nothing moved.
 fn round_trip<T>(name: &str, json: &Value)
@@ -135,7 +135,7 @@ fn the_declared_route_table_is_the_router_the_gateway_mounts() {
         .map(|route| (route["method"].as_str().expect("method").to_string(), route["path"].as_str().expect("path").to_string(), route["group"].as_str().expect("group").to_string()))
         .collect();
 
-    let body = GATEWAY.split_once("fn base_router<I: ServerInstance>").expect("the gateway declares base_router").1;
+    let body = GATEWAY_SERVER.split_once("fn base_router<I: ServerInstance>").expect("the gateway declares base_router").1;
     let block = body.split_once("\n}").expect("base_router has a body").0;
     let mut mounted: Vec<(String, String, String)> = Vec::new();
     let mut group = "core".to_string();

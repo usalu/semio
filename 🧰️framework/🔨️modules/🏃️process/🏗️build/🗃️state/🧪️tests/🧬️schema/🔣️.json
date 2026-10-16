@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/compiler-state/admission-tests/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "receivers",
+    "repositoryCases",
+    "cases",
+    "effectGuards"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "receivers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "state",
+          "typescript"
+        ]
+      }
+    },
+    "repositoryCases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "copied-control",
+          "copied-invocation"
+        ]
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "accepted",
+          "dataReads",
+          "effects"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "missing-storage",
+              "forged-storage",
+              "copied-owner",
+              "foreign-owner"
+            ]
+          },
+          "accepted": {
+            "const": false
+          },
+          "dataReads": {
+            "const": 0
+          },
+          "effects": {
+            "const": 0
+          }
+        }
+      }
+    },
+    "effectGuards": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "guard",
+          "argument"
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "storage.recheck",
+              "mkdir"
+            ]
+          },
+          "guard": {
+            "const": "checkResourceLeaseControl"
+          },
+          "argument": {
+            "const": "control"
+          }
+        }
+      }
+    }
+  }
+}

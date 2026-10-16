@@ -44,7 +44,3 @@ pub fn encode_edited_artifact_frontier_v1(frontier: &ArtifactFrontier) -> Option
     };
     wire.validate().then_some(wire)
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

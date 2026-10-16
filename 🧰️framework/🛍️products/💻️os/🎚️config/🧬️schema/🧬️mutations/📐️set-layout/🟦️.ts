@@ -1,2 +1,2 @@
-export { setLayout } from "../🟦️.ts";
-export type { SetLayout } from "../🟦️.ts";
+export { setLayout } from "@semio-tech/framework/config/mutations";
+export type { SetLayout } from "@semio-tech/framework/config/mutations";

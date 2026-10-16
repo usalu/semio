@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import SunCalc from "suncalc";
-import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/test/adapter";
 import { compileVizProbeDocument, probeProjection, roundProbeNumbers, roundProjectionNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import { DIAGRAM_PACKAGES, DIAGRAM_PREAMBLE, FRAME, rows } from "../🚦️diagram-routing/🟦️.ts";
 // #endregion 🔌️Adapters

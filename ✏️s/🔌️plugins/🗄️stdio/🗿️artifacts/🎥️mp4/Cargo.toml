@@ -3,30 +3,28 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-  "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
-  "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
-  "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📦️boxes/📦️packages/🦀️rust",
-  "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
-  "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
-  "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🔬️unit/📦️packages/🦀️rust",
-  "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
-  "📦️packages/🦀️rust",
+    "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
+    "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+    "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📦️boxes/📦️packages/🦀️rust",
+    "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "📦️packages/🦀️rust",
 ]
 exclude = [
-  "**/🏅️standards/**",
-  "**/👽️guest/**",
-  "**/🔮️oracles/**",
-  "**/🏭️bridge/**",
-  "🔮️oracles/📦️packages/🦀️rust"
+    "**/🏭️bridge/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+    "🔮️oracles/📦️packages/🦀️rust",
 ]
 
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
-  "**/🏅️standards/**",
   "**/👽️guest/**",
   "**/🔮️oracles/**",
-  "**/🏭️bridge/**"
+  "**/🏭️bridge/**",
 ]
 member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 

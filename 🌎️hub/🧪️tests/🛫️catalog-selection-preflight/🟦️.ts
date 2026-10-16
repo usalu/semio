@@ -9,11 +9,11 @@ type Findings = (profileId: string, packages: readonly Package[]) => readonly st
 const fixture = JSON.parse(readFileSync(new URL("../../🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🛫️catalog-selection-preflight/🔣️.json", import.meta.url), "utf8")) as { schema: string; cases: Case[] };
 
 /** 🧬️ The exact `trustedBootstrapSelectionFindingsV1` (and the `trustedBootstrapDescriptorKindsV1` it reads kinds through) of the
- * hub's `📜️script.ts`, lifted out of its source and transpiled here: importing the script would load Bun-only modules the Vitest
+ * hub's trusted bootstrap selection module, lifted out of its source and transpiled here: importing the script would load Bun-only modules the Vitest
  * node environment cannot run. */
 async function publisherFindings(): Promise<Findings> {
   const ts = await import("typescript");
-  const path = new URL("../../📦️packages/🦀️rust/📜️script.ts", import.meta.url);
+  const path = new URL("../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts", import.meta.url);
   const syntax = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const lift = (name: string): string => {
     const declaration = syntax.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === name);

@@ -59,7 +59,7 @@
     "content": "#[path = \"../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs\"]\nmod cad_interaction_spec;\n"
   },
   "cadConsumerMount": {
-    "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
+    "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts",
     "meaning": "unchanged-live-cad-bytes-in-authored-canonical-fixture-context"
   },
   "owner": {

@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "policy": {
+    "version": 1,
+    "maximumParallelFiles": 2,
+    "maximumFileOutputBytes": 262144,
+    "maximumFileOutputLines": 4096,
+    "maximumTotalOutputBytes": 1048576
+  },
+  "files": [
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🎟️phase/🟦️.ts",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🎛️control/🟦️.ts"
+  ],
+  "expectedFiles": 2,
+  "policyCases": [
+    {
+      "id": "default",
+      "patch": {},
+      "remove": [],
+      "accepted": true
+    },
+    {
+      "id": "one-worker",
+      "patch": {
+        "maximumParallelFiles": 1
+      },
+      "remove": [],
+      "accepted": true
+    },
+    {
+      "id": "all-workers",
+      "patch": {
+        "maximumParallelFiles": 64,
+        "maximumFileOutputBytes": 1048576
+      },
+      "remove": [],
+      "accepted": true
+    },
+    {
+      "id": "parallel-overflow",
+      "patch": {
+        "maximumParallelFiles": 65
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "parallel-fraction",
+      "patch": {
+        "maximumParallelFiles": 1.5
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "file-empty",
+      "patch": {
+        "maximumFileOutputBytes": 0
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "file-overflow",
+      "patch": {
+        "maximumFileOutputBytes": 16777217
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "total-under-file",
+      "patch": {
+        "maximumTotalOutputBytes": 262143
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "buffer-exact",
+      "patch": {
+        "maximumParallelFiles": 4,
+        "maximumFileOutputBytes": 16777216,
+        "maximumTotalOutputBytes": 16777216
+      },
+      "remove": [],
+      "accepted": true
+    },
+    {
+      "id": "buffer-overflow",
+      "patch": {
+        "maximumParallelFiles": 5,
+        "maximumFileOutputBytes": 16777216,
+        "maximumTotalOutputBytes": 16777216
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "total-overflow",
+      "patch": {
+        "maximumTotalOutputBytes": 16777217
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "line-empty",
+      "patch": {
+        "maximumFileOutputLines": 0
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "line-overflow",
+      "patch": {
+        "maximumFileOutputLines": 65537
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "extra-field",
+      "patch": {
+        "unowned": true
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "wrong-version",
+      "patch": {
+        "version": 2
+      },
+      "remove": [],
+      "accepted": false
+    },
+    {
+      "id": "missing-field",
+      "patch": {},
+      "remove": [
+        "maximumTotalOutputBytes"
+      ],
+      "accepted": false
+    }
+  ],
+  "lifetimeCases": [
+    "copied-control",
+    "closed-control",
+    "expired-control",
+    "pre-cancel-error",
+    "source-missing",
+    "output-limit",
+    "terminal-failure",
+    "cohort-limit",
+    "sibling-drain",
+    "path-code-units"
+  ]
+}

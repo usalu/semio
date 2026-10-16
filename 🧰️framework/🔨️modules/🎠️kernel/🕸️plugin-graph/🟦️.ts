@@ -3,7 +3,7 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import type { ShellLocale } from "../../🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts";
+import type { ShellLocale } from "@semio-tech/framework/manifest/generated/ui-axes";
 import { type PluginDependency, type PluginRegistryEntry, type VersionPin } from "../🗂️plugin-registry/🟦️.ts";
 
 // #region 🎠️Kernel

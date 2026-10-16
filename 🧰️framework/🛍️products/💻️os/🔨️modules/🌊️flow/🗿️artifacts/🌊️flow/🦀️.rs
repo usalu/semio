@@ -26,7 +26,6 @@ pub mod graph_parameter {
 
 pub mod retained {
     pub use semio_framework_artifact_flow_flow_model::retained::{FlowOwner, FlowRetirement};
-    pub use semio_framework_artifact_flow_flow_copy as copy;
     pub use semio_framework_artifact_flow_flow_copy::{FlowCopyAllocations, FlowHostSnapshotCopy, FlowSnapshotCopyIntakeSource, FlowSnapshotIntakeProducer, FlowSynapseCopy, FlowWidgetCopy};
 }
 

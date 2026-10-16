@@ -49,5 +49,5 @@ export const spaceHomeInferenceTextGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseSHomeInferenceText(value: unknown, at = "$"): SHomeInferenceText {
-  return spaceHomeInferenceTextGuardObject(value, `${at}`);
+  return spaceHomeInferenceTextGuardString(value, `${at}`);
 }

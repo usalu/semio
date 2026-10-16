@@ -1,4 +1,4 @@
-/** 🧭️ Taxonomy filename and option helpers shared by the generate, test and policy lanes.
+/** 🏷️ Taxonomy filename and option helpers shared by the generate, test and policy lanes.
  * @see 📜️script.ts
  */
 import { canonicalPrimaryFilenameForKind, fixedContractFilename, loadTaxonomy } from "../../../📦️packages/🟦️typescript/🟦️.ts";

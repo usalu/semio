@@ -49,5 +49,5 @@ export const remodelRemodelingDiffTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseRemodelingDiffText(value: unknown, at = "$"): RemodelingDiffText {
-  return remodelRemodelingDiffTextGuardObject(value, `${at}`);
+  return remodelRemodelingDiffTextGuardString(value, `${at}`);
 }

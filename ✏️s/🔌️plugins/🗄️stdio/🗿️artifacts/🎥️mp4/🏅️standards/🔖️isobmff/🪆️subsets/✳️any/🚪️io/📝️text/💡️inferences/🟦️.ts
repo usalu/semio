@@ -49,5 +49,5 @@ export const stdioMp4IsobmffAnyInferenceTextGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseMp4InferenceText(value: unknown, at = "$"): Mp4InferenceText {
-  return stdioMp4IsobmffAnyInferenceTextGuardObject(value, `${at}`);
+  return stdioMp4IsobmffAnyInferenceTextGuardString(value, `${at}`);
 }

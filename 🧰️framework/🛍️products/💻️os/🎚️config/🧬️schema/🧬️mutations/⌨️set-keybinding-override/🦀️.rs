@@ -34,13 +34,3 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetK
         vec!["keybinding-overrides".to_string(), self.control_id.clone()]
     }
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️sets-keybinding/🦀️.rs"]
-mod tests_sets_keybinding;
-
-#[cfg(test)]
-#[path = "🧪️tests/🟰️keeps-keybinding/🦀️.rs"]
-mod tests_keeps_keybinding;
-//#endregion 🧪️Tests

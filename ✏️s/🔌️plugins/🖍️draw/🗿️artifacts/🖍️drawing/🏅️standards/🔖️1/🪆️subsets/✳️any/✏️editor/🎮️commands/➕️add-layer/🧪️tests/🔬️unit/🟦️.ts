@@ -5,8 +5,8 @@ import {initialAppearance} from "../../🟦️.ts";
 import cases from "../🧫️fixtures/🎨️appearance/🔣️.json";
 test("new layers use the shared visible appearance policy",()=>{
   for(const entry of cases) {
-    const before={id:"new",name:"Untitled",attributes:{fill:null,stroke:null} as unknown};
+    const before:{id:string;name:string;attributes:unknown}={id:"new",name:"Untitled",attributes:{fill:null,stroke:null}};
     const expected=produce(before,draft=>{draft.attributes=entry.attributes;});
-    expect({...before,attributes:initialAppearance(entry.kind)}).toEqual(expected);
+    expect<typeof before>({...before,attributes:initialAppearance(entry.kind)}).toEqual(expected);
   }
 });

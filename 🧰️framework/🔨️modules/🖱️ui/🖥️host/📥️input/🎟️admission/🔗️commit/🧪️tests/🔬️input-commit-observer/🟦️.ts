@@ -76,7 +76,7 @@ export function testInputCommitObserverFixture(): void {
   
   const tuple = (value: Record<string, string>): Buffer => {
     const bytes = Buffer.alloc(fixture.fields.length * 8);
-    for (const [index, field] of fixture.fields.entries()) bytes.writeBigUInt64LE(BigInt(value[field]), index * 8);
+    for (const [index, field] of fixture.fields.entries()) {const observed=value[field];if(observed===undefined)throw Error("Declared input tuple field required");bytes.writeBigUInt64LE(BigInt(observed), index * 8);}
     return bytes;
   };
   for (const name of ["old", "half", "committed"] as const) assert.equal(tuple(fixture[name]).toString("hex"), fixture[name].leHex);

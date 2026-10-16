@@ -1,0 +1,27 @@
+[
+  {
+    "fault": "none",
+    "checkpoint": false,
+    "success": true
+  },
+  {
+    "fault": "write-undefined",
+    "checkpoint": false,
+    "success": false
+  },
+  {
+    "fault": "file-sync",
+    "checkpoint": false,
+    "success": false
+  },
+  {
+    "fault": "rename",
+    "checkpoint": true,
+    "success": false
+  },
+  {
+    "fault": "metadata",
+    "checkpoint": false,
+    "success": false
+  }
+]

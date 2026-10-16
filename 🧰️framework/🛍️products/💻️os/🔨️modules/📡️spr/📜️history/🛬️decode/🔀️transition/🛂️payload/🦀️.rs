@@ -31,6 +31,3 @@ impl RetainedHistoryTransitionPayloadValidation{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.receipt.is_none()&&self.text.is_none()&&self.unique_phase==0}
 }
 impl Drop for RetainedHistoryTransitionPayloadValidation{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original transition grammar abandoned receiving metadata")}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

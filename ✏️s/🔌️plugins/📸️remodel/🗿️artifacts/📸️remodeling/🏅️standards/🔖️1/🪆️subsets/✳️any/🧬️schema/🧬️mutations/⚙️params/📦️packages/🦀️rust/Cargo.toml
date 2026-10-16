@@ -32,6 +32,7 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-vectors = { workspace = true }
 
 [[test]]
 name = "vectors"

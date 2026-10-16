@@ -868,3 +868,13 @@ impl<T> RetirementOwner for Option<T> {
 //#endregion 🏠️OsHost
 
 //#endregion 🔖️OsHost
+
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧰️fixtures/🦀️.rs"]
+mod fixtures;
+#[cfg(any(test, feature = "testkit"))]
+pub use fixtures::{finish_cpu_only_fixture_component_close, finish_retired_cpu_only_map_fixture_close, finish_world_fixture_component_close, runtime_with_shell};
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧊️wgpu-os-host-standalone/🦀️.rs"]
+mod standalone_tests;

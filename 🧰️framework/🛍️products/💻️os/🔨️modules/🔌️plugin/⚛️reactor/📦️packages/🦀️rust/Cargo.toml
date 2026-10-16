@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 artifact-app-testing = []
@@ -40,5 +40,8 @@ semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒�
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-plugin-abi = { path = "../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-plugin-plugin-program = { path = "../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
+semio_framework_ui_runtime = { path = "../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
 
 [dev-dependencies]

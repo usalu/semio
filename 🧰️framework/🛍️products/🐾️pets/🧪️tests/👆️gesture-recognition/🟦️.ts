@@ -9,7 +9,7 @@
  * @see ../../🔨️modules/👆️gesture/🟦️.ts
  */
 import { AssertionError } from "node:assert";
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import {
   CIRCLE_AGAINST,
   CIRCLE_CLOSE,

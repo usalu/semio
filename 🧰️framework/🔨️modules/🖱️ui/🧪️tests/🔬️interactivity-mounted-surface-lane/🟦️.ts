@@ -1,6 +1,6 @@
 import { INTERACTIVITY_AUDIT_SURFACE_LANE_FILE, INTERACTIVITY_AUDIT_UI_ENGINE_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts";
 import { policyReadRustPolicySource } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
-import { interactivityMountedSurfaceLaneFailures } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🟦️.ts";
+import { interactivityMountedSurfaceLaneFailures } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🖼️mounted-surface/🟦️.ts";
 
 /** 📚️ One policy source per audited file, arity-preserving so the failure checkers keep their positional parameters. */
 type SurfaceLanePolicySources = [string, string, string, string, string];

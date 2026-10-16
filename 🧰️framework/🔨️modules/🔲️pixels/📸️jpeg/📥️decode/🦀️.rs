@@ -12,7 +12,7 @@ pub struct JpegDecodeProgress {pub phase:&'static str,pub bytes:usize,pub total_
 const ZIGZAG:[usize;64]=[0,1,8,16,9,2,3,10,17,24,32,25,18,11,4,5,12,19,26,33,40,48,41,34,27,20,13,6,7,14,21,28,35,42,49,56,57,50,43,36,29,22,15,23,30,37,44,51,58,59,52,45,38,31,39,46,53,60,61,54,47,55,62,63];
 fn invalid(message:&'static str)->JpegDecodeError{JpegDecodeError::Invalid(message)}
 #[derive(semio_framework_value::RetireOwned)]
-struct Component {id:u8,h:usize,v:usize,quant:usize,cols:usize,rows:usize,actual_cols:usize,actual_rows:usize,coefficients:Vec<[i32;64]>,samples:Vec<u8>,predictor:i32,bands:[i8;64]}
+struct Component {pub id:u8,pub h:usize,v:usize,quant:usize,cols:usize,rows:usize,actual_cols:usize,actual_rows:usize,coefficients:Vec<[i32;64]>,samples:Vec<u8>,predictor:i32,bands:[i8;64]}
 impl Default for Component {fn default()->Self{Self{id:0,h:0,v:0,quant:0,cols:0,rows:0,actual_cols:0,actual_rows:0,coefficients:Vec::new(),samples:Vec::new(),predictor:0,bands:[-1;64]}}}
 #[derive(semio_framework_value::RetireOwned)]
 struct Huffman {symbols:[u8;256],minimum:[i32;17],maximum:[i32;17],offset:[usize;17],valid:bool}
@@ -20,8 +20,8 @@ impl Default for Huffman {fn default()->Self{Self{symbols:[0;256],minimum:[0;17]
 /// 🧾️ Every work transition quotes independent copy/capacity/depth before changing original custody.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct JpegDecodeJob {
- input:JpegDecodeInput,phase:&'static str,at:usize,consumed:usize,work:u64,blocks:usize,pixels:usize,segments:usize,width:usize,height:usize,progressive:bool,framed:bool,scanned:bool,cancelled:bool,failure:Option<JpegDecodeError>,
- marker:u8,end:usize,table:Option<usize>,table_at:usize,table_count:usize,table_symbols:usize,table_code:i32,precision:u8,quant:[[u16;64];4],quant_valid:[bool;4],huffman:[Huffman;8],components:[Component;4],component_count:usize,hmax:usize,vmax:usize,mcus_x:usize,mcus_y:usize,allocate_at:usize,initialize_at:usize,working_bytes:usize,image:RasterImage,
+ #[doc(hidden)] pub input:JpegDecodeInput,#[doc(hidden)] pub phase:&'static str,#[doc(hidden)] pub at:usize,consumed:usize,#[doc(hidden)] pub work:u64,blocks:usize,#[doc(hidden)] pub pixels:usize,segments:usize,#[doc(hidden)] pub width:usize,#[doc(hidden)] pub height:usize,progressive:bool,framed:bool,scanned:bool,cancelled:bool,failure:Option<JpegDecodeError>,
+ marker:u8,end:usize,table:Option<usize>,table_at:usize,table_count:usize,table_symbols:usize,table_code:i32,precision:u8,quant:[[u16;64];4],quant_valid:[bool;4],huffman:[Huffman;8],components:[Component;4],component_count:usize,hmax:usize,vmax:usize,mcus_x:usize,mcus_y:usize,allocate_at:usize,initialize_at:usize,working_bytes:usize,#[doc(hidden)] pub image:RasterImage,
  scan:[usize;4],scan_count:usize,dc:[usize;4],ac:[usize;4],spectral_start:usize,spectral_end:usize,successive_high:u8,successive_low:u8,unit:usize,scan_component:usize,sub_block:usize,units:usize,bits:u8,bit_count:u8,eob_run:usize,restart_interval:usize,restart_index:u8,restart_units:usize,transform_component:usize,transform_block:usize,adobe:i8,jfif:bool,natural:[f64;64],temporary:[f64;64]
 }
 impl JpegDecodeJob {
@@ -111,6 +111,12 @@ impl JpegDecodeJob {
   if self.pixels==self.width*self.height{self.phase="complete";return;}let x=self.pixels%self.width;let y=self.pixels/self.width;let mut values=[0.;3];for (index,c)in self.components[..self.component_count].iter().enumerate(){values[index]=f64::from(c.samples[y*c.v/self.vmax*c.cols*8+x*c.h/self.hmax]);}let [mut r,mut g,mut b]=values;if self.component_count==1{g=r;b=r;}else if self.adobe==1||self.adobe!=0&&(self.jfif||self.components[0].id!=b'R'||self.components[1].id!=b'G'||self.components[2].id!=b'B'){let cb=g-128.;let cr=b-128.;g=r-0.344136*cb-0.714136*cr;b=r+1.772*cb;r+=1.402*cr;}let at=self.pixels*4;self.image.pixels[at..at+4].copy_from_slice(&[r.round().clamp(0.,255.)as u8,g.round().clamp(0.,255.)as u8,b.round().clamp(0.,255.)as u8,255]);self.pixels+=1;
  }
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    use super::*;
+    pub fn invalid(message:&'static str) ->JpegDecodeError {
+        super::invalid(message)
+    }
+}

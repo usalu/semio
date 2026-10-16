@@ -26,3 +26,4 @@ semio-framework-schema-registry = { path = "../../../🧬️schema/📇️regist
 [dev-dependencies]
 serde_json = { workspace = true }
 semio-framework-async-macros = { workspace = true }
+semio-framework-dsl-record-ownership-oracle = { path = "../../../🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/📦️packages/🦀️rust" }

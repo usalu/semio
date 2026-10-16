@@ -5,9 +5,10 @@ pub mod owned_result;
 
 #[cfg(all(target_arch="wasm32",target_env="p2"))]
 mod return_types{pub use crate::component::wasip2::semio::framework::{effects,ui,types,pure};pub use crate::component::wasip2::exports::semio::framework::{reactor,codec};}
-#[cfg(all(target_arch="wasm32",target_env="p2"))]
 #[path="📤️return/🦀️.rs"]
-pub mod return_walk;
+mod return_walk_template;
+#[cfg(all(target_arch="wasm32",target_env="p2"))]
+pub mod return_walk{crate::return_walk_template!();}
 
 /// 🔢️ Carries typed native refusal kinds through the neutral fixed-width host protocol.
 pub fn refusal_code(kind: ValueRefusalKind) -> u32 {

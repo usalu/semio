@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { createRequire } from "node:module";
 import { createAdmittedWorkerCell, createWorkerCell } from "../🟦️.ts";
 import { isGeneratedPath, repoCacheDirectory } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 const require = createRequire(import.meta.url);
 const memoize: (factory: (owner: string) => State) => ((owner: string) => State) = require("lodash/memoize");
 type State = { locale: string; retained: string[]; constructions: number };

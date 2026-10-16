@@ -28,14 +28,50 @@
     "./native-cache": "./📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
     "./go-build": "./📦️artifacts/🐹️go-build/🟦️.ts",
     "./compiler-state": "./🏗️build/🗃️state/🟦️.ts",
-    "./typescript-check": "./🏗️build/🟦️typescript/🟦️.ts"
+    "./typescript-check": "./🏗️build/🟦️typescript/🟦️.ts",
+    "./native-plan": "./📦️artifacts/🏗️native-build/🧩️component-pass/📋️contract/🟦️.ts",
+    "./context-contract": "./📋️context/📋️contract/🟦️.ts",
+    "./vitest-contract": "./🧪️testing/🧪️vitest/📋️contract/🟦️.ts",
+    "./artifacts/archive": "./📦️artifacts/🗃️archive/🟦️.ts",
+    "./artifacts/checksum/crc32": "./📦️artifacts/🔢️checksum/🔁️crc32/🟦️.ts",
+    "./artifacts/native-build/capture/contract": "./📦️artifacts/🏗️native-build/📥️capture/📋️contract/🟦️.ts",
+    "./artifacts/native-build/lease": "./📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts",
+    "./artifacts/native-build/published": "./📦️artifacts/🏗️native-build/📤️published/🟦️.ts",
+    "./artifacts/native-build/receipt/retention/inventory": "./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️inventory/🟦️.ts",
+    "./artifacts/native-build/receipt/retention/reading": "./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📥️reading/🟦️.ts",
+    "./artifacts/native-build/receipt/retention/reference": "./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🟦️.ts",
+    "./artifacts/native-build/receipt/retention/reference/schema": "./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🧬️schema/🟦️.ts",
+    "./artifacts/native-build/receipt/retention/schema": "./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/🧬️schema/🟦️.ts",
+    "./artifacts/native-build/source": "./📦️artifacts/🏗️native-build/📥️source/🟦️.ts",
+    "./artifacts/native-build/source/admission": "./📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts",
+    "./artifacts/native-build/source/admission/read": "./📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+    "./artifacts/native-build/storage": "./📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
+    "./artifacts/native-build/storage/image": "./📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+    "./artifacts/native-build/storage/platform/contract": "./📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+    "./artifacts/native-build/storage/schema": "./📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🟦️.ts",
+    "./artifacts/native-build/units/capture": "./📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts",
+    "./artifacts/publication/sources/schema": "./📦️artifacts/📤️publication/📥️sources/🧬️schema/🟦️.ts",
+    "./owned-execution": "./🎛️owned-execution/🟦️.ts",
+    "./owned-execution/capture": "./🎛️owned-execution/📥️capture/🟦️.ts",
+    "./owned-execution/capture/schema": "./🎛️owned-execution/📥️capture/🧬️schema/🟦️.ts",
+    "./owned-execution/outcome": "./🎛️owned-execution/📪️outcome/🟦️.ts",
+    "./owned-execution/schema": "./🎛️owned-execution/🧬️schema/🟦️.ts",
+    "./routing/invocation": "./🧭️routing/📥️invocation/🟦️.ts",
+    "./routing/invocation/process": "./🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "./routing/invocation/process/json": "./🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts",
+    "./testing/cargo/exact": "./🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "devDependencies": {
+    "@semio-tech/schema-ts": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*"
   },
   "scripts": {
     "test-cargo-build-lease": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-process:test-cargo-build-lease",
     "test-native-artifact-publication": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-process:test-native-artifact-publication"
+  },
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*"
   }
 }

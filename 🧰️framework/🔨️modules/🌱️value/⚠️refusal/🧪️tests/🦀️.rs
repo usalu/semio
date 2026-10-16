@@ -3,7 +3,7 @@ use super::*;
 use crate::{DslValue, FromValue, ToValue, NativeDecodeControl, NativeEncodeControl};
 use std::{io::Write, process::{Command, Stdio}};
 use crate::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneSource, RetainedCloneProgress, RetainedCloneGrant};
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(crate::text("⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn kind(value: &str) -> ValueRefusalKind {
     match value { "invalidValue" => ValueRefusalKind::InvalidValue, "canceled" => ValueRefusalKind::Canceled, "ownershipLimit" => ValueRefusalKind::OwnershipLimit, "allocationFailed" => ValueRefusalKind::AllocationFailed, "workLimit" => ValueRefusalKind::WorkLimit, "depthLimit" => ValueRefusalKind::DepthLimit, "unsupportedOwner" => ValueRefusalKind::UnsupportedOwner, "invariantViolated" => ValueRefusalKind::InvariantViolated, _ => panic!("closed refusal kind") }
 }
@@ -52,7 +52,7 @@ fn controlled_value_refusal_actual_kind_and_path_corpus() {
 }
 #[test]
 fn controlled_value_refusal_independent_ajv_sqlite_path_oracle() {
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();
+    let schema: serde_json::Value = serde_json::from_str(crate::text("⚠️refusal/🧬️schema/🔣️.json")).unwrap();
     let script = "import Ajv from 'ajv/dist/2020.js';import{Database}from'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());const valid=new Ajv({strict:true}).compile(x.schema);const db=new Database(':memory:');db.run('CREATE TABLE path(position INTEGER PRIMARY KEY,segment TEXT NOT NULL)');const output=x.fixture.cases.map(row=>{db.run('DELETE FROM path');row.path.forEach((segment,index)=>db.run('INSERT INTO path VALUES(?,?)',[index,String(segment)]));const prefix=db.query(\"SELECT GROUP_CONCAT(segment,'.') AS prefix FROM(SELECT segment FROM path ORDER BY position)\").get().prefix;const display=db.query(\"SELECT COALESCE(? || '.', '') || ? AS display\").get(prefix,row.message).display;const result={kind:row.kind,display};if(!valid(result))throw Error(row.id);return result;});db.close();await Bun.write(Bun.stdout,JSON.stringify(output));";
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
     child.stdin.take().unwrap().write_all(serde_json::json!({"schema":schema,"fixture":fixture()}).to_string().as_bytes()).unwrap();

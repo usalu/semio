@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "case": "exchange",
+      "expected": "completed"
+    },
+    {
+      "case": "close",
+      "expected": "completed"
+    },
+    {
+      "case": "copied",
+      "expected": "refused"
+    },
+    {
+      "case": "retired",
+      "expected": "refused"
+    },
+    {
+      "case": "cancel",
+      "expected": "preserved"
+    },
+    {
+      "case": "deadline",
+      "expected": "preserved"
+    },
+    {
+      "case": "overflow",
+      "expected": "preserved"
+    },
+    {
+      "case": "detached",
+      "expected": "completed"
+    },
+    {
+      "case": "error",
+      "expected": "preserved"
+    },
+    {
+      "case": "undefined",
+      "expected": "preserved"
+    },
+    {
+      "case": "pending",
+      "expected": "refused"
+    },
+    {
+      "case": "frames",
+      "expected": "refused"
+    },
+    {
+      "case": "input",
+      "expected": "refused"
+    },
+    {
+      "case": "blocked-close",
+      "expected": "preserved"
+    }
+  ]
+}

@@ -13,7 +13,7 @@ use semio_framework_os_spr::Edit;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value_snapshot_read::artifact_retirement_box_close_step;
 use semio_framework_os_store_ledger as ledger;
-use super::{test_support, canonical_edit_tests as tests};
+use semio_framework_os_store_test_support; use super::canonical_edit_tests as tests;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 //#region 🪪️LifetimeOracle

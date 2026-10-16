@@ -1,7 +1,5 @@
 //! 🎟️ The actual Host root keeps one paid source and exact suspended turn through guest receipt acknowledgement.
-#[path="../🦀️.rs"]
-mod original;
-use original::*;
+use semio_framework_plugin_host_wake::{GuestRelayOriginalRoot,GuestRelayRootPolicy};
 use semio_framework_actor::{RetainedTurnInput,OriginalJobTurnLoan};
 use semio_framework_job::OriginalTurnFailure;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};

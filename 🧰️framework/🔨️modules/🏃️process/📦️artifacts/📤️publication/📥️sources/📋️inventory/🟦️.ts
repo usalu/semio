@@ -1,4 +1,4 @@
-import{validateJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import schema from"../🧬️schema/🔣️.json";
 export type ArtifactSourceInventoryV1=Readonly<{files:number;directories:number;entries:number;maximumDepth:number;parents:readonly string[]}>;
 /** 📏️ Validates finite inventory arithmetic as data without supplying filesystem authority. */

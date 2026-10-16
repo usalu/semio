@@ -1,27 +1,8 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { LOCAL_SESSION_BROKER_FILE, LOCAL_SESSION_REQUEST_SCHEMA, parseLocalSessionBrokerRecordV1, parseLocalSessionV1, type LocalSessionBrokerRecordV1, type LocalSessionV1 } from "./🧬️schema/🟦️.ts";
-
-/** 🎫️ Asks the live hub's broker (the record in `dataDir` whose `runId` the hub at `hubOrigin` answers `/readyz` with)
- * for a fresh session of `profileId`. `null` when that hub has no live broker — a hub someone else operates. */
-export async function requestLocalBrokerSession(dataDir: string, hubOrigin: string, profileId: string, signal: AbortSignal = AbortSignal.timeout(20_000)): Promise<LocalSessionV1 | null> {
-  const path = join(dataDir, LOCAL_SESSION_BROKER_FILE);
-  if (!existsSync(path)) return null;
-  let record: LocalSessionBrokerRecordV1;
-  try {
-    record = parseLocalSessionBrokerRecordV1(JSON.parse(readFileSync(path, "utf8")));
-  } catch {
-    return null;
-  }
-  if (record.hubOrigin !== hubOrigin.replace(/\/+$/u, "") || !record.profiles.includes(profileId)) return null;
-  const readiness = (await fetch(`${record.hubOrigin}/readyz`, { signal }).then((response) => response.json()).catch(() => null)) as { readonly runId?: unknown } | null;
-  if (readiness?.runId !== record.runId) return null;
-  const response = await fetch(`http://127.0.0.1:${record.port}/session`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${record.secret}`, "content-type": "application/json" },
-    body: JSON.stringify({ schema: LOCAL_SESSION_REQUEST_SCHEMA, profileId }),
-    signal,
-  }).catch(() => null);
-  if (response === null || !response.ok) return null;
-  return parseLocalSessionV1(await response.json());
-}
+import {withDevLocalHubIoV1} from "../../../🧑‍💻dev/🚀️local-hub/🎫️session/📥️io/🟦️.ts";
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
+import {readDevLocalHubResponseV1} from "../../../🧑‍💻dev/🚀️local-hub/🎫️session/📋️data/🟦️.ts";
+import {LOCAL_SESSION_REQUEST_SCHEMA,parseLocalSessionBrokerRecordV1,parseLocalSessionV1,type LocalSessionV1} from "./🧬️schema/🟦️.ts";
+/** 🎫️ Requests bounded business session DATA under a genuine caller; no filesystem path issues custody. */
+export function requestLocalBrokerSession(recordValue:unknown,hubOrigin:string,profileId:string,invocation:ScriptInvocation,control:ResourceLeaseControl):Promise<LocalSessionV1|null>{requireIssuedResourceControlInvocationV1(control,invocation);const record=parseLocalSessionBrokerRecordV1(readScriptProcessJsonV1(recordValue));if(record.hubOrigin!==hubOrigin.replace(/\/+$/u,"")||!record.profiles.includes(profileId))return Promise.resolve(null);return withDevLocalHubIoV1(invocation,control,async actual=>{const signal=actual.signal;checkResourceLeaseControl(actual);let readinessResponse:Response;try{readinessResponse=await fetch(record.hubOrigin+"/readyz",{signal,redirect:"error"});}catch(error){checkResourceLeaseControl(actual);const cause=error&&typeof error==="object"&&"cause"in error?error.cause:error,code=cause&&typeof cause==="object"&&"code"in cause?cause.code:undefined;if(code==="ECONNREFUSED")return null;throw error;}if(!readinessResponse.ok){await readinessResponse.body?.cancel();return null;}const readiness=await readDevLocalHubResponseV1(readinessResponse,signal);checkResourceLeaseControl(actual);if(!readiness||typeof readiness!=="object"||!("runId"in readiness)||readiness.runId!==record.runId)return null;const response=await fetch("http://127.0.0.1:"+record.port+"/session",{method:"POST",headers:{authorization:"Bearer "+record.secret,"content-type":"application/json"},body:JSON.stringify({schema:LOCAL_SESSION_REQUEST_SCHEMA,profileId}),signal,redirect:"error"});if(!response.ok){await response.body?.cancel();return null;}const value=parseLocalSessionV1(await readDevLocalHubResponseV1(response,signal));checkResourceLeaseControl(actual);return value;});}

@@ -1,5 +1,5 @@
 use super::*;
-fn observe<T>(action:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(action)}
+fn observe<T>(action:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(action)}
 fn extent(v:&DslValue)->usize{match v{DslValue::String(s)=>s.capacity(),DslValue::Bytes(v)=>v.capacity(),DslValue::Array(v)=>v.capacity()*size_of::<DslValue>()+v.iter().map(extent).sum::<usize>(),DslValue::Object(v)=>v.capacity()*size_of::<(String,DslValue)>()+v.iter().map(|(k,v)|k.capacity()+extent(v)).sum::<usize>(),_=>0}}
 fn pointers(p:&RetainedHistoryOriginPartial)->[usize;12]{let mut result=[0;12];for(index,value)in p.cells.iter().enumerate(){result[index]=match value{Some(DslValue::String(v))=>v.as_ptr()as usize,Some(DslValue::Array(v))=>v.as_ptr()as usize,Some(DslValue::Object(v))=>v.as_ptr()as usize,_=>0}}result[10]=p.key.as_ref().map_or(0,|v|v.as_ptr()as usize);result[11]=p.retiring.as_ref().map_or(0,|v|v.as_ref()as*const dyn ErasedSnapshotRetirement as*const()as usize);result}
 fn receipt(owner:&mut RetainedHistoryOriginProjection,g:RetainedCloneGrant,born:usize,released:usize)->usize{let(received,p)=owner.take_receipt().unwrap();assert_eq!(received,g);assert!(p.fits(g));assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));p.copied_bytes}

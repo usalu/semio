@@ -1,0 +1,15 @@
+import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+const live = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏯️tool-run/🦀️.rs";
+const oldText = readFileSync(process.argv[2]!, "utf8");
+const newTree = readModuleTreeSource(live);
+const newRootOnly = readFileSync(live, "utf8");
+const names = ["ToolRunTickWriter", "ToolRunProgress", "ToolRunStep", "ToolRunStepRing", "ToolRunTracePage"];
+const derive = (s: string) => names.map((name) => new RegExp("#\\[derive\\([^\\n]*semio_framework_value::RetireOwned[^\\n]*\\)\\]\\n(?:pub )?(?:struct|enum) " + name).test(s));
+const markers = ["admit_original_op", "admit_original_entity", "admit_original_trace", "admit_original_progress", "admit_original_payload"];
+const mk = (s: string) => markers.map((m) => s.includes(m));
+const fn = (s: string) => s.includes("pub fn admit_original_successor(");
+const show = (label: string, o: unknown, n: unknown, r: unknown) => console.log(label, "old", JSON.stringify(o), "tree", JSON.stringify(n), "rootOnly", JSON.stringify(r));
+show("retirement derive", derive(oldText), derive(newTree), derive(newRootOnly));
+show("admission markers", mk(oldText), mk(newTree), mk(newRootOnly));
+show("successor fn", fn(oldText), fn(newTree), fn(newRootOnly));

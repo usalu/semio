@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/kernel/history-patch/schema.json",
   "title": "HistoryPatch",
-  "description": "Source of record for the history wire every host renders (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §10): `HistoryPatch` with its rows (`HistoryEntry`, one per committed tool transaction, else per edit, keyed by `editId`, else by the `Supersede` history transition `transitionId`, falling back to `seq`), their per-mutation rows (`HistoryMutationEntry`) and the live history-edit session (`timeTravel`, absent while none is open). Rust owner `🎠️kernel/🦀️.rs` region `🔖️HistoryWire`, TypeScript twin `🎠️kernel/🟦️.ts`.",
+  "description": "Source of record for the history wire every host renders (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §10): `HistoryPatch` with its rows (`HistoryEntry`, one per committed tool transaction, else per edit, keyed by `editId`, else by the `Supersede` history transition `transitionId`, falling back to `seq`), their per-mutation rows (`HistoryMutationEntry`) and the live history-edit session (`timeTravel`, absent while none is open). Rust owner `🎠️kernel/🦀️.rs` region `🔖️HistoryWire`, TypeScript twin `🎠️kernel/🕰️history/🟦️.ts`.",
   "definitions": {
     "Severity": {
       "type": "string",

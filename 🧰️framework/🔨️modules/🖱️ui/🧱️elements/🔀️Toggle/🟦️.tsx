@@ -278,6 +278,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     const isControlled = controlledValue !== undefined;
     const value = isControlled ? controlledValue : internalValue;
     const selectedItem = items.find((item) => item.value === value) || items[0];
+    if(!selectedItem)return null;
     const isOpenControlled = controlledOpen !== undefined;
     const open = isOpenControlled ? controlledOpen : internalOpen;
     const setOpen = (nextOpen: boolean) => {

@@ -78,11 +78,11 @@ fn opened_dag_test_actor() -> ActorId {
 
 #[cfg(test)]
 fn close_dag_test_store(mut store: DagStore) {
-    for turn in 0..65_536 {
+    for _ in 0..65_536 {
         let demand=store.close_owned_demands(4096).expect("original store close demands");
         let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
         let step=store.close_owned_store_step(grant).expect("original store admitted close");assert!(step.progress().fits(grant));
-        if store.close_owned_store_terminal_is_empty(){println!("[DEBUG] Exact original DAG store close turns={turn}");return;}
+        if store.close_owned_store_terminal_is_empty(){return;}
     }
     panic!("DAG store did not reach original terminal emptiness");
 }

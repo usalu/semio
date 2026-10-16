@@ -1056,7 +1056,7 @@ pub fn validate_descriptor(record: &TrustedBundlePackageV1, descriptor: &Package
             directory::os_spr::CHANNEL_VERSION
         )));
     }
-    record.receipt.binds(&record.plugin_id, &record.package_id, &record.component.sha256, &record.descriptor.sha256).map_err(|refusal| catalog(&format!("package {} {refusal}", record.package_id)))?;
+    record.receipt.binds(directory::os_component_receipt::ComponentProfileV1::Release, &record.plugin_id, &record.package_id, &record.component.sha256, &record.descriptor.sha256).map_err(|refusal| catalog(&format!("package {} {refusal}", record.package_id)))?;
     if descriptor.manifest.dependencies.len() != record.dependencies.len() {
         return Err(catalog("decoded manifest dependency count does not match the trust record"));
     }

@@ -7,10 +7,11 @@ import { chromium } from "playwright";
 import { AmbientLight, BufferGeometry, DirectionalLight, Float32BufferAttribute, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 import { describe, expect, it } from "vitest";
+import { iconSvgLightingFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎨️icon-svg-lighting/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(iconSvgLightingFixtureUrl, "utf8"));
 
 function renderFill(record: any): string {
   const geometry = new BufferGeometry();

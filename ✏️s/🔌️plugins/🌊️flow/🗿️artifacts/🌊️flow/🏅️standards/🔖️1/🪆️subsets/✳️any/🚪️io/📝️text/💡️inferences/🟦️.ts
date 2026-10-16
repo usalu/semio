@@ -49,5 +49,5 @@ export const flowFlowInferenceTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseFlowInferenceText(value: unknown, at = "$"): FlowInferenceText {
-  return flowFlowInferenceTextGuardObject(value, `${at}`);
+  return flowFlowInferenceTextGuardString(value, `${at}`);
 }

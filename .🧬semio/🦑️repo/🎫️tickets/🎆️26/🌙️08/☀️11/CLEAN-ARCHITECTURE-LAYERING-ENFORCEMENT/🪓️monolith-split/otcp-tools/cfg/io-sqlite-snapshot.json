@@ -1,0 +1,60 @@
+{
+ "id": "io-sqlite-snapshot",
+ "pkg": "semio_framework_io_sqlite_snapshot",
+ "trees": [
+  "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/",
+  "🧰️framework/🔨️modules/⏱️trace",
+  "🧰️framework/🔨️modules/🌱️value/🧪️tests"
+ ],
+ "inputs_units": [
+  "io-sqlite-snapshot-lib-test-semio-framework-io-sqlite-snapshot"
+ ],
+ "p_lib": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/🦀️.rs",
+ "p_dirs": [
+  "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/"
+ ],
+ "comps": [
+  {
+   "lib": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🌅️companion/🦀️.rs"
+  }
+ ],
+ "ext": [
+  "semio_framework_io_sqlite_model",
+  "semio_framework_io_control",
+  "semio_framework_value",
+  "semio_framework_trace",
+  "semio_framework_trace_memory_testing",
+  "serde_json",
+  "semio_framework_io_schema",
+  "semio_framework_diagnostic"
+ ],
+ "base_features": [],
+ "features": [
+  "testkit"
+ ],
+ "glob_names": {
+  "semio_framework_io_sqlite_model": [
+   "SnapshotEncoding",
+   "SqliteDatabase",
+   "SqliteDatabaseLimits",
+   "SqliteRow",
+   "SqliteSnapshotControl",
+   "SqliteSnapshotPhase",
+   "SqliteSnapshotProgress",
+   "SqliteSnapshotReceivingControl",
+   "SqliteTable",
+   "SqliteValue",
+   "ValueError",
+   "ValueRefusalKind",
+   "SQLITE_SNAPSHOT_APPLICATION_ID",
+   "SQLITE_SNAPSHOT_USER_VERSION",
+   "validate_sqlite_database_schema",
+   "validate_sqlite_table_schema"
+  ]
+ },
+ "glob_extra": {
+  "semio_framework_io_sqlite_model": [
+   "pub type Result<T> = std::result::Result<T, ValueError>;"
+  ]
+ }
+}

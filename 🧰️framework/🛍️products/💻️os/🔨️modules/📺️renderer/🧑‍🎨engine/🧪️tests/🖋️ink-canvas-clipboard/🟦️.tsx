@@ -15,10 +15,11 @@ import {
   inkItemsFromClipboardPayload,
   type InkItem,
 } from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
+import { uiInkClipboardFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖋️ink-clipboard/🔣️.json"), "utf8")) as any;
+const fixture = JSON.parse(readFileSync(uiInkClipboardFixtureUrl, "utf8")) as any;
 const surfaceBehavior = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🎬️surface-behavior/🔣️.json"), "utf8")) as any;
 
 type ClipboardDataStub = {

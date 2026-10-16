@@ -1,0 +1,242 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "bounded-build",
+      "variant": "build",
+      "maximum": 120000,
+      "deadline": 121000,
+      "now": 1000,
+      "offline": false,
+      "accepted": true
+    },
+    {
+      "name": "delayed-release",
+      "variant": "release",
+      "maximum": 120000,
+      "deadline": 121000,
+      "now": 31000,
+      "offline": false,
+      "accepted": true
+    },
+    {
+      "name": "offline-restriction",
+      "variant": "offline",
+      "maximum": 120000,
+      "deadline": 121000,
+      "now": 1000,
+      "offline": false,
+      "accepted": true
+    },
+    {
+      "name": "never-offline-widen",
+      "variant": "build",
+      "maximum": 120000,
+      "deadline": 121000,
+      "now": 1000,
+      "offline": true,
+      "accepted": true
+    },
+    {
+      "name": "nx-parity",
+      "variant": "parity-nx",
+      "maximum": 120000,
+      "deadline": 121000,
+      "now": 1000,
+      "offline": false,
+      "accepted": true
+    },
+    {
+      "name": "bazel-parity",
+      "variant": "parity-bazel",
+      "maximum": 120000,
+      "deadline": 121000,
+      "now": 1000,
+      "offline": false,
+      "accepted": true
+    },
+    {
+      "name": "expired",
+      "variant": "serve",
+      "maximum": 120000,
+      "deadline": 1000,
+      "now": 1000,
+      "offline": false,
+      "accepted": false
+    },
+    {
+      "name": "unfunded-zero",
+      "variant": "build",
+      "maximum": 0,
+      "deadline": null,
+      "now": 1000,
+      "offline": false,
+      "accepted": false
+    },
+    {
+      "name": "missing-deadline",
+      "variant": "build",
+      "maximum": 120000,
+      "deadline": null,
+      "now": 1000,
+      "offline": false,
+      "accepted": false
+    }
+  ],
+  "reads": [
+    {
+      "name": "complete",
+      "fault": "none",
+      "accepted": true,
+      "primary": "none"
+    },
+    {
+      "name": "short",
+      "fault": "short",
+      "accepted": false,
+      "primary": "read"
+    },
+    {
+      "name": "growth",
+      "fault": "growth",
+      "accepted": false,
+      "primary": "read"
+    },
+    {
+      "name": "expired",
+      "fault": "expired",
+      "accepted": false,
+      "primary": "read"
+    },
+    {
+      "name": "undefined-primary",
+      "fault": "undefined-close",
+      "accepted": false,
+      "primary": "undefined"
+    },
+    {
+      "name": "frozen-primary",
+      "fault": "frozen-close",
+      "accepted": false,
+      "primary": "frozen"
+    },
+    {
+      "name": "success-close",
+      "fault": "close",
+      "accepted": false,
+      "primary": "close"
+    }
+  ],
+  "negatives": [
+    {
+      "change": "none",
+      "accepted": true
+    },
+    {
+      "change": "expired",
+      "accepted": true
+    },
+    {
+      "change": "zero",
+      "accepted": false
+    },
+    {
+      "change": "null",
+      "accepted": false
+    },
+    {
+      "change": "maximum",
+      "accepted": false
+    },
+    {
+      "change": "deadline",
+      "accepted": false
+    },
+    {
+      "change": "tool",
+      "accepted": false
+    },
+    {
+      "change": "mode",
+      "accepted": false
+    },
+    {
+      "change": "network",
+      "accepted": false
+    },
+    {
+      "change": "owner",
+      "accepted": false
+    },
+    {
+      "change": "version",
+      "accepted": false
+    },
+    {
+      "change": "digest",
+      "accepted": false
+    },
+    {
+      "change": "malformed",
+      "accepted": false
+    }
+  ],
+  "windows": [
+    {
+      "name": "independent positive authenticates actual OS",
+      "route": "fresh",
+      "facts": "exact",
+      "accepted": true,
+      "captures": 1
+    },
+    {
+      "name": "independent positive refuses other OS facts",
+      "route": "fresh",
+      "facts": "foreign",
+      "accepted": false,
+      "captures": 1
+    },
+    {
+      "name": "independent positive refuses absent Windows facts",
+      "route": "fresh",
+      "facts": "missing",
+      "accepted": false,
+      "captures": 1
+    },
+    {
+      "name": "Node receipt observation preserves original facts",
+      "route": "receipt",
+      "facts": "exact",
+      "accepted": true,
+      "captures": 0
+    },
+    {
+      "name": "Node receipt refuses changed original facts",
+      "route": "receipt",
+      "facts": "changed",
+      "accepted": false,
+      "captures": 0
+    },
+    {
+      "name": "negative received wire preserves facts without OS query",
+      "route": "negative",
+      "facts": "exact",
+      "accepted": true,
+      "captures": 0
+    },
+    {
+      "name": "negative received wire refuses changed facts",
+      "route": "negative",
+      "facts": "changed",
+      "accepted": false,
+      "captures": 0
+    },
+    {
+      "name": "neutral data preserves inherited facts without OS query",
+      "route": "neutral",
+      "facts": "exact",
+      "accepted": true,
+      "captures": 0
+    }
+  ]
+}

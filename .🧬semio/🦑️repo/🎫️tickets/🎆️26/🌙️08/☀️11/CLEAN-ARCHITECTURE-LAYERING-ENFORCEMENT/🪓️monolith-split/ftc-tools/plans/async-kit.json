@@ -1,0 +1,68 @@
+{
+ "🧰️framework/🔨️modules/⏳️async/♻️cancel-return/📬️claim/🦀️.rs": {
+  "alias": [
+   "ClaimRetirement"
+  ],
+  "name": "internals"
+ },
+ "🧰️framework/🔨️modules/⏳️async/🔔️wake/🧵️thread/🦀️.rs": {
+  "alias": [
+   "ThreadWakeRetirement"
+  ],
+  "name": "internals"
+ },
+ "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🦀️.rs": {
+  "alias": [
+   "WorkerDeferredWakeRegistry"
+  ],
+  "name": "internals"
+ },
+ "🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🦀️.rs": {
+  "alias": [
+   "PoolWork",
+   "WorkerMaintenanceRegistry"
+  ],
+  "name": "internals"
+ },
+ "🧰️framework/🔨️modules/⏳️async/🔔️worker-parking/🦀️.rs": {
+  "alias": [
+   "ParkWake",
+   "WorkerParking"
+  ],
+  "name": "internals"
+ },
+ "🧰️framework/🔨️modules/⏳️async/🦀️.rs": [
+  {
+   "name": "internals",
+   "raw": [
+    "pub use super::publication_claim::internals as publication_claim;",
+    "pub use super::deferred_wake::internals as deferred_wake;",
+    "pub use super::maintenance::internals as maintenance;",
+    "pub use super::worker_parking::internals as worker_parking;",
+    "pub const LANE_COUNT: usize = super::LANE_COUNT;",
+    "pub type CancelNode = super::CancelNode;",
+    "pub use super::native_pool::internals as native_pool;"
+   ]
+  },
+  {
+   "name": "wasm_internals",
+   "feature": "wasm-pool-host",
+   "raw": [
+    "pub use super::wasm_pool::internals::*;"
+   ]
+  }
+ ],
+ "🧰️framework/🔨️modules/⏳️async/🖥️native-pool/🦀️.rs": {
+  "name": "internals",
+  "forward": [
+   "select_and_pop"
+  ]
+ },
+ "🧰️framework/🔨️modules/⏳️async/🕸️wasm-pool/🦀️.rs": {
+  "name": "internals",
+  "feature": "wasm-pool-host",
+  "raw": [
+   "pub use super::{CooperativePoolSnapshot, WorkerPool, WorkerPoolUse};"
+  ]
+ }
+}

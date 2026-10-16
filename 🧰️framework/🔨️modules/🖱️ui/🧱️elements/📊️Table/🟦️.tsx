@@ -352,8 +352,9 @@ const Table = <T,>({
         }
       });
 
-      if (focusedIndex >= 0 && rowElements[focusedIndex]) {
-        rowElements[focusedIndex].scrollIntoView({ behavior: "smooth", block: "center" });
+      const focusedRow=focusedIndex>=0?rowElements[focusedIndex]:undefined;
+      if (focusedRow) {
+        focusedRow.scrollIntoView({ behavior: "smooth", block: "center" });
         if (onFocusComplete) {
           setTimeout(() => onFocusComplete(), 600);
         }

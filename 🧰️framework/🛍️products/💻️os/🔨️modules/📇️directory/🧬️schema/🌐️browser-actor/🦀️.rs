@@ -189,7 +189,3 @@ impl DocumentExecutionTargetBrowserActorV1 {
         validate(row, source, renderer)
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

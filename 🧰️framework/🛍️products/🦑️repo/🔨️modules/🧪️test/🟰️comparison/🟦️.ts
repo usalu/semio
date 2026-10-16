@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type ComparisonProfile } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type ComparisonProfile } from "@semio-tech/framework/test/adapter";
 import { type ComparisonProfileSpec, CORE_COMPARISON_PROFILES } from "../🗂️taxonomy/🟦️.ts";
 import { digest } from "../🔢️digests/🟦️.ts";
 //#endregion 🔌️Adapters

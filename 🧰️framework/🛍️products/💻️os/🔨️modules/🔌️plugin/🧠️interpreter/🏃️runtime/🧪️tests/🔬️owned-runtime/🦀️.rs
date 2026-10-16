@@ -84,9 +84,7 @@ async fn configured_component_executes_owned_describe_reactor_jobs_cancel_and_ch
 /// 🧩️ A real owned-ABI guest of channel `channel`, built byte by byte in the interpreter's own component framing: its
 /// `semio_owned_channel_version_v1` answers `channel` as JSON, allocate/deallocate are inert, and every other export traps
 /// (`unreachable`), so any frame a host served before admitting the guest would surface as a trap, not a refusal.
-#[path="../🧫️fixtures/🌱️channel/🦀️.rs"]
-mod channel_fixture;
-pub(super) use channel_fixture::owned_channel_guest;
+pub(super) use crate::channel_fixture::owned_channel_guest;
 
 /// 🤝️ LAW (audit F2/F7): both owned host paths admit a guest's app channel before serving it anything. An actor
 /// instantiation and a codec call (the origin a hub Check In fold, the SQLite export/import and the wgpu document codec run

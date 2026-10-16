@@ -9,6 +9,12 @@ extern crate infinite_canvas as infinite_world;
 #[path = "../../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🧩️engine-surface-attach/🦀️.rs"]
 pub mod engine_surface_attach;
 
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧰️fixtures/🦀️.rs"]
+mod fixtures;
+#[cfg(any(test, feature = "testkit"))]
+pub use fixtures::{drop_engine_surface, retire_engine_surface_fixture};
+
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;

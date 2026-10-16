@@ -1,5 +1,5 @@
 //! 🏘️ wgpu twin of the `🏘️SpaceBrowser` surface and of the pure contract underneath it
-//! (`🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts`).
+//! (`🧰️framework/🔨️modules/📇️directory/🏘️spaces/🟦️.ts`).
 //!
 //! 🧩️ The end-user half of the directory — browse my spaces, switch, create, see who is here,
 //! invite, redeem — which `🛂️SpaceAdministration` (an ADMIN pane for exactly one space) never
@@ -138,7 +138,7 @@ fn member_access(role: DirectorySpaceRole) -> SpaceAccess {
 /// WG8). Only what an event states exactly is applied: a membership change of another user on a listed
 /// space keeps its member count until the next list, which replaces the rows wholesale. Mirrors the
 /// directory read-model fold (`semio_framework_os_kernel::os_directory::fold`) projected onto the caller;
-/// the React twin is `spaceRowsAfterEventsV1` (`📇️directory/🏘️spaces/🟦️.ts`), both held to the shared
+/// the React twin is `spaceRowsAfterEventsV1` (`🧰️framework/🔨️modules/📇️directory/🏘️spaces/🟦️.ts`), both held to the shared
 /// fixture's `receiptFolds`.
 pub fn space_rows_after_events(rows: &[SpaceRow], events: &[DirectoryEvent], user_id: &str) -> Vec<SpaceRow> {
     let mut next = rows.to_vec();

@@ -4,13 +4,13 @@
  */
 
 //#region 🔌️Adapters
-import { parseFeature, type ParsedFeature } from "../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
-import { type Implementation } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { parseFeature, type ParsedFeature } from "@semio-tech/framework/test/gherkin";
+import { type Implementation } from "@semio-tech/framework/test/adapter";
 import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { type BreachRecord } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { mutationCatalogSourceOwner, mutationOwnerRelativePath } from "../../📚️library/🔍️discovery/🟦️.ts";
-import { leadingEmojiIdentity } from "../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
+import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
 import { testAdapterFilenames, testFeatureFilename, testTaxonomy, type TestTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { type DiscoveredCase } from "../🧭️case-discovery/🟦️.ts";
 import { ADAPTER_ENTRY_POINTS, oracleImplementation } from "../🗃️oracle-registry/🟦️.ts";
@@ -29,6 +29,12 @@ const MUTATION_FIXTURE_FILES = ["🦠️mutation/🔣️.json", "📸️snapshot
 function childDirectories(abs: string): string[] {
   if (!existsSync(abs)) return [];
   return readdirSync(abs, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !entry.isSymbolicLink()).map((entry) => entry.name).sort();
+}
+
+/** 🧩️ Whether a case child directory is a split piece of the case's own adapters: a tree that holds only taxonomy-declared adapter files and such directories. */
+function adapterModuleTree(abs: string, adapterNames: ReadonlySet<string>): boolean {
+  const entries = readdirSync(abs, { withFileTypes: true });
+  return entries.length > 0 && entries.every((entry) => !entry.isSymbolicLink() && (entry.isDirectory() ? adapterModuleTree(join(abs, entry.name), adapterNames) : adapterNames.has(entry.name)));
 }
 
 function vectorBundleNodes(abs: string): string[] {
@@ -271,6 +277,7 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
   for (const entry of readdirSync(join(repoRoot, discovered.caseDir), { withFileTypes: true })) {
     if (entry.isDirectory()) {
       if (entry.name === taxonomy.testFixturesDirName) continue;
+      if (adapterModuleTree(join(repoRoot, discovered.caseDir, entry.name), new Set(Object.values(testAdapterFilenames(taxonomy))))) continue;
       breaches.push(breach("testing/taxonomy", "unknown-case-child", `${discovered.caseDir}/${entry.name}`, `Unexpected directory ${entry.name} inside a test case`, `A case holds one ${testFeatureFilename(taxonomy)}, its adapters, and optional ${taxonomy.testFixturesDirName} example data.`, "Move the directory to its owner, or delete it."));
       continue;
     }

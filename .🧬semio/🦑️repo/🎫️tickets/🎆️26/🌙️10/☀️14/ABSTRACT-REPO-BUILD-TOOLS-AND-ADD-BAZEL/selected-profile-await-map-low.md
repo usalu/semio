@@ -1,0 +1,23 @@
+# Selected Profile Await Map
+
+Read-only current Source review, 2026-10-16. No runtime, store, process sample, or Source modification. Root reports workspace49768 active with SEMIO_BUILD_PROFILE_INPUTS=1; reported log observations are not independently remeasured here.
+
+The graph owner `library/🏗️build/🕸️graph/🟦️.ts` lines269–305 emits completed-span timings. `workspace-catalog-lookup` starts before the entire selected observed computation and owner-admission closure, then logs only after completion. Its reported 142424.43ms/files10211 therefore measures that composite span, not a single directory scan. Membership hashing is separately awaited/timed. Parser bootstrap measures its awaited bootstrap plus synchronous preparation.
+
+The same inventory function is called initially at281, after successful inference at305, and in error validation at302. Each call creates fresh native maps and performs selected discovery again. Consequently repeated compile-imports progress after the initial inventory may be inference or a later validation inventory; it does not identify a retry by itself. Inner settleObservedComputation has no onRound hook at this call, so its internal bounded rounds cannot be counted from build:refresh or timing records.
+
+`graph-original-inference` closes the awaited captured inference span. A following catalog timing can delimit final validation. Cached-receipt paths separately time authority checks/facts, graph read/hash, JSON parse, input expansion, and schema validation. `source-authority-read-parse` resets its clock after the actual authority read/JSON parse, so that record does not measure the earlier read/parse cost.
+
+The PROCESS invocation owner emits Original compiler admission progress before awaiting publish; those records contain progress data, not elapsed await durations or custody acquisition evidence. Selected Rust preparation emits compiler-store and cargo-inputs records inside admitted callbacks, workspace-preparation after its command, unit-producer after production, and source-observations after capture. These delimit completed stages only. The inference owner uses separate SEMIO_BUILD_TRACE_AUTHORITY stage markers; profile1 alone does not enable that trace.
+
+Useful bounded observations are ordered completed phase records and their explicit duration fields, plus terminal/error evidence supplied by the owning execution. Generic running/compile-imports event counts are not owner counts, settlement rounds, queue waits, CPU attribution, or an ETA. Absence of a completion timing while its composite await runs does not establish deadlock. No instrumentation or flags were added to the active process.
+
+## Current Composite Boundaries Revalidated
+
+Current graph owner remains lines269–305. inventory280 wraps captureObservedSourceInputs→settleObservedComputation→closeBuildOwnerAdmission→per-owner discovery. Initial281, inference-error revalidation302 and final305 all invoke the same unlabeled function. Its workspace-catalog-lookup record appears only after that full composite resolves; workspace-membership-hash separately measures the following digest. graph-original-inference304 closes inference before final inventory. Cache reuse paths have independent file/hash/expand/schema/facts timings and may return without inference/final inventory.
+
+Admission owner43–55 performs base inspect(owner,[],[]) then active/input-revision inspect; these awaits have no elapsed records. Inference1631 has selected-owner-stage markers only with SEMIO_BUILD_TRACE_AUTHORITY, not profile1, and those markers contain no elapsed duration. Inference1802–1824 has project authority/elapsed completion records under that same separate trace flag. Existing selected Rust preparation44/48 has finer store/preparation/inputs/producer/facts durations, only reached when that later path runs. None isolates the initial owner inspect subspan under profile1.
+
+Smallest missing timing owner for interpretation is graph.ts inventory invocation role: initial/final/error-revalidation should be distinguishable in existing completion records. Next finer optional Source instrumentation owner would be admission inspect spans with owner+base/active/input revision and completed elapsed; silent settlement onRound remains another distinct count. Correct authority read/parse timer must begin before awaited read/parse. These are plans only; no instrumentation, flags, cap, progress cadence or active process changed.
+
+No previous43MB log was reread or treated as a directory-scan/CPU/retry proof. Composite duration and event counts cannot establish its internal cause.

@@ -9,57 +9,23 @@
  * `--hold` keeps the hub running and prints its origin instead of running the transcript, so the
  * browser phase can drive the same live hub. Every step prints one line; a failed expectation exits
  * non-zero with the observed value, so this file is a gate, not a log. */
-import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type {ResourceLeaseControl} from "@semio-tech/process/leases";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
+import {withBuiltLocalHubHostV1,startLocalHub,waitForReadiness,waitForLocalHubExitV1} from "../../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import {directoryCommandRequestJson,sealDirectoryCommandRequestV1} from "@semio-tech/framework/directory/io/text";
 
-function findWorkspaceRoot(start: string): string {
-  let current = start;
-  for (let depth = 0; depth < 32; depth += 1) {
-    if (existsSync(join(current, "🌎️hub", "📦️packages", "🦀️rust", "Cargo.toml"))) return current;
-    const parent = dirname(current);
-    if (parent === current) break;
-    current = parent;
-  }
-  throw new Error("probe could not locate the repository root above " + start);
-}
-
-const repoRoot = findWorkspaceRoot(import.meta.dir);
-const hubRustRoot = join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust");
-const { finishLocalHub, startLocalHub, waitForReadiness } = await import(join(repoRoot, "🌎️hub", "🚀️local-bootstrap", "🏃️execution", "🟦️.ts"));
-/** 🧾️ The production sealer every os client uses, so this probe posts byte-for-byte what the shell
- * posts rather than a hand-rolled envelope the hub would be right to refuse. */
-const { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } = await import(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📇️directory", "🧬️schema", "🟦️.ts"));
-
-const hold = process.argv.includes("--hold");
-/** 📦️ The Nx-staged development binary when the `build-dev` dependency has run, and otherwise the
- * shared cargo cache's own debug build — so this gate runs both through its target and from a bare
- * `bun` invocation during development. */
-const stagedBinary = join(hubRustRoot, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-const cachedBinary = join(repoRoot, ".🧬semio", "🦑️repo", "⚡️cache", "cargo", "target", "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-const binaryPath = existsSync(stagedBinary) ? stagedBinary : cachedBinary;
-if (!existsSync(binaryPath)) throw new Error(`stage the hub first (\`bun repo run os-hub:build-dev\`) or build it (\`cargo build -p semio-hub --bin os-hub\`); neither ${stagedBinary} nor ${cachedBinary} exists`);
-const port = Number(process.env.HUB_LIVE_SIGN_IN_PORT ?? 8831);
-const origin = `http://127.0.0.1:${port}`;
-/** 🌱️ A canonical (non-symlinked) parent: a data root under macOS's `/var/folders` `TMPDIR` is
- * refused by the hub's own server-owned-root walk (see `📓️h1-hub-build-and-boot.md` §6.1). */
-const dataRoot = mkdtempSync(join("/private/tmp", "au3-hub-data-"));
-
+/** 🚪️ Runs the live transcript only inside the existing actual command Original and carried phase. */
+export function runLiveSignInV1(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,hold:boolean):Promise<void>{
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);const port=Number(process.env.HUB_LIVE_SIGN_IN_PORT??8831);if(typeof hold!=="boolean"||!Number.isSafeInteger(port)||port<1||port>65535)throw Error("Closed live sign-in request required");
+ return withBuiltLocalHubHostV1(invocation,phaseControl,async(host,context)=>{
+const origin=`http://127.0.0.1:${port}`,dataRoot=context.dataRoot;
 const ADA = { email: "ada@example.org", password: "correct horse battery staple", display: "Ada Lovelace" };
 const BO = { email: "bo@example.org", password: "another perfectly fine phrase", display: "Bo Peep" };
 const NEW_ADA_PASSWORD = "a rotated phrase for ada now";
 
 /** 🔑️ The operator bootstrap verb — the only way a principal gets its first credential. */
-function provision(account: { email: string; password: string; display: string }): string {
-  const result = spawnSync(binaryPath, ["credential", "set", "--email", account.email, "--display-name", account.display], {
-    env: { ...process.env, OS_HUB_DATA: dataRoot },
-    input: account.password,
-    encoding: "utf8",
-  });
-  if (result.status !== 0) throw new Error(`credential set failed for ${account.email}: ${result.stderr}`);
-  return result.stdout.trim();
-}
+async function provision(account:{email:string;password:string;display:string}):Promise<string>{const result=await captureOwnedCommandResultV1(context.binaryPath,["credential","set","--email",account.email,"--display-name",account.display],context.workspace,{control:context.control,env:{...context.environment,OS_HUB_DATA:dataRoot},input:{version:1,text:account.password},output:{maximumBytes:65536,maximumLines:512}});if(result.status!==0||result.signal!==null)throw Error(`credential operator failed: ${result.stderr}`);return result.stdout.trim();}
 
 let failures = 0;
 function check(label: string, actual: unknown, expected: unknown): void {
@@ -73,6 +39,7 @@ type Answer = { readonly status: number; readonly body: string; readonly retryAf
 async function call(method: string, path: string, options: { token?: string; body?: unknown } = {}): Promise<Answer> {
   const response = await fetch(`${origin}${path}`, {
     method,
+    signal:AbortSignal.any([context.control.signal,AbortSignal.timeout(10000)]),
     headers: {
       ...(options.body === undefined ? {} : { "content-type": "application/json" }),
       ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }),
@@ -119,17 +86,12 @@ async function spaceIdByName(token: string, name: string): Promise<string> {
   return entry?.space?.id ?? "";
 }
 
-const run = await startLocalHub(repoRoot, hubRustRoot, [{ profileId: "developer", subject: "local-developer-01", displayName: "Local Developer", allowedClientClasses: ["native", "mcp"] }], {
-  port,
-  dataDir: dataRoot,
-  binaryPath,
-  capture: true,
-});
+const run=await startLocalHub(host,[{profileId:"developer",subject:"local-developer-01",displayName:"Local Developer",allowedClientClasses:["native","mcp"]}],{port,capture:true,credentialSignIn:true});
 
 try {
   console.log(`fresh OS_HUB_DATA=${dataRoot} port=${port} credentialSignIn=${process.env.OS_HUB_CREDENTIAL_SIGN_IN ?? "<unset>"}`);
-  const adaId = provision(ADA);
-  const boId = provision(BO);
+  const adaId = await provision(ADA);
+  const boId = await provision(BO);
   console.log(`operator bootstrap: ada=${adaId} bo=${boId}`);
 
   const readiness = await waitForReadiness(run, true);
@@ -137,7 +99,7 @@ try {
 
   if (hold) {
     console.log(`HOLD origin=${origin} dataRoot=${dataRoot} ada=${ADA.email} bo=${BO.email}`);
-    await new Promise(() => undefined);
+    await waitForLocalHubExitV1(run);return;
   }
 
   // 1️⃣ sign in
@@ -219,13 +181,12 @@ try {
   check("10 retry-after is a positive integer of seconds", Number.isInteger(Number(lockout?.retryAfter)) && Number(lockout?.retryAfter) >= 1, true);
   check("10 a correct password is refused while the bucket is empty", (await call("POST", "/auth/sessions", { body: signInBody(BO.email, BO.password, "device-bo") })).status, 429);
 } catch (error) {
-  failures += 1;
   console.log(`probe failure: ${error instanceof Error ? error.stack : String(error)}`);
   console.log(`child output tail:\n${run.output().slice(-3000)}`);
-} finally {
-  await finishLocalHub(run);
-  rmSync(dataRoot, { recursive: true, force: true });
+  throw error;
 }
 
 console.log(failures === 0 ? "au3-live-sign-in: all checks passed" : `au3-live-sign-in: ${failures} check(s) failed`);
-process.exit(failures === 0 ? 0 : 1);
+if(failures)throw Error(`Live sign-in assertions failed: ${failures}`);
+});
+}

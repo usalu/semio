@@ -19,13 +19,13 @@ import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
 import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
-import { COMMAND_INGRESS_KINDS } from "../🧵️child/🧬️schema/🟦️.ts";
+import { COMMAND_INGRESS_KINDS } from "../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
 import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
 import { resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 import { classifyGuestLogLine } from "../🌐️wasi/🟦️.ts";
 import { actorCodecRuntimeSourceV1 } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
-import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../🧾️app-channel/🟦️.ts";
+import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../../../../🔨️modules/🧾️app-channel/🟦️.ts";
 export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";

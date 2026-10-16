@@ -4,7 +4,7 @@ use semio_framework_schema_composition::ArtifactCompositionFields;
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_composition_projection_real_child_alias_has_fixed_admission_bounds() {
-    use crate::os_store::artifact_child::ArtifactChild;
+    use semio_framework_os_store_child::ArtifactChild;
     use semio_framework_composition_admission::{ChildRestoreProjection,ChildRestoreProjectionError};
     type ChildAlias = ArtifactChild<()>;
     #[derive(semio_framework_schema::ArtifactSchema)]

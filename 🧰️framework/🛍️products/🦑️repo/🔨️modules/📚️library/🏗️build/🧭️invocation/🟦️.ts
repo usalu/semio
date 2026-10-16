@@ -13,7 +13,7 @@ import {buildModeEnvironment,readBuildMode} from "../../../../../../🔨️modul
 import {createRequire} from "node:module";
 const {fixedTargetBuildMode}=createRequire(import.meta.url)("../../🏗️build/🎚️mode/🟨️.mjs") as {fixedTargetBuildMode(name:string):"prototype"|"release"|undefined};
 import policy from "../🔣️policy.json";
-/** 🧭️ Resolves public selections before Nx creates the single task graph. */
+/** 🧭️ Resolves public selections before shared task graph admission. */
 export function resolveBuildSelectionV1(root:string,segments: string[]): { args: string[]; env: NodeJS.ProcessEnv; watch?: string } {
   if (segments[0] !== "run") return { args: segments, env: {} };
   const delimiter = segments.indexOf("--");
@@ -111,7 +111,7 @@ export function resolveBuildModeV1(selection: Selection, environment: NodeJS.Pro
   const explicit = configurations.map(value => readBuildMode(value));
   const values = [...explicit, ...fixed, ...(authored === undefined ? [] : [readBuildMode(authored)]), ...(inherited === undefined ? [] : [readBuildMode(inherited)])];
   const mode = values[0] ?? "prototype";
-  if (values.some(value => value !== mode)) throw new Error(`Conflicting build build modes: ${values.join(", ")}`);
+  if (values.some(value => value !== mode)) throw new Error(`Conflicting build modes: ${values.join(", ")}`);
   const compilerArguments = tail.slice(1);
   if (targets.some(target => /^(?:build|wasm|native|component|cpp|package|extension-package|bundle)(?:-|$)/.test(target)) && compilerArguments.some(argument => ["--release", "--dist", "--dev", "--prototype", "--mode", "--build-mode"].includes(argument) || /^(?:--mode|--build-mode|--profile)=/.test(argument))) throw new Error("Select the build prototype or release configuration before --");
   return { ...selection, args: selection.args, env: { ...selection.env, ...buildModeEnvironment(mode, {}) } };

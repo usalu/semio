@@ -1,4 +1,4 @@
-import {NativeDecodeControl} from "../../../../🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
 
 /** 📨 Identity coordinates of an OS semio container. */
 export interface SemioEnvelope {

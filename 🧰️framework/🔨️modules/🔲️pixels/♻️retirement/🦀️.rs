@@ -23,6 +23,3 @@ impl RetireOwned for MaskLease {
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SharedControlledRetirement<MaskBytes>>())}
  fn controlled_retirement_supported()->bool{true}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-pub(crate) mod tests;

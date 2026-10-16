@@ -20,6 +20,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-ui-theme = { path = "../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-framework-font-anta-latin-regular = { path = "../../../../🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/📦️packages/🦀️rust" }

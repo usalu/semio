@@ -1,0 +1,27 @@
+# Independent Frozen Preclaim Successor Audit
+
+Read-only Source/evidence review completed at 2026-10-16T15:34:55.658239+00:00. No Native, provider, image, mount, compiler, runtime test, physical cache, or effect operation ran. No implementation files changed. The existing ticket and checkpoint were supplied by Root; this is an audit continuation, not a new ticket.
+
+## Actionable Finding
+
+**[P1] Sync the directory containing the new root before acknowledging a durable root claim.**
+
+`🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🧾️claim/🟦️.ts:35` creates `scope.root` (`request.directory/m`), observes its inode, and appends the `root` record. The append implementation at line 33 syncs the claim file, then calls only `syncNativeCleanupDirectoryV1(parent,parent,scope.check)`. `parent` is `dirname(request.directory)`, established at line 32. The durability helper at `storage/🧹️cleanup/♻️retirement/💾️durability/🟦️.ts:7` opens and syncs only its `directory` argument. Its ancestry traversal verifies identity; it does not sync descendants.
+
+Consequently no path in this helper fsyncs `request.directory`, which owns the newly created `m` directory entry. A successful return and a synced `root` record can precede persistence of that entry. A crash may retain the completed claim but lose `m`; replay refuses on the missing recorded inode. Refusal conservatively retains charge, but the checkpoint's successful durable creator-root acknowledgement is not established. Sync the actual directory owning each newly created entry, with its captured identity/authority checks, before appending the corresponding complete claim stage. Include an independently observable metadata-sync ordering check; existing live inode/Ajv/SQLite checks cannot prove crash persistence. This is a Source ordering defect, not an experimentally reproduced crash.
+
+## Reviewed Safeguards And Limits
+
+- Claim owner lines 30–32 authenticate genuine cleanup ancestry/refinement before reading request DATA. Closed own primitive descriptors are copied and frozen; proxies, getters, extra fields and foreign prototypes refuse. The forged-control fixture at retirement tests line 59 checks that its request getter remains unobserved.
+- Claim lines 32–35 declare before mkdir; validate finite complete stage prefixes, exact request and parent identity, original directory/root dev/ino/mode; inventory iterates only permitted entries, stops at the finite bound, and checks root identity before/after. Unknown/partial bytes and unknown entries refuse. Successful operation drains accepted promises and rejects escaped claim capabilities. Error and `undefined` are tracked with an explicit boolean, preserving the first body failure over descendant errors.
+- Canonical storage line 26 copies only four declaration fields. Line 156 authenticates Original/body/refinement before declaration access, captures parent cleanup before funding, creates private reservation source and exact immutable allocation/parent/path/bounds/policy request, captures journal cleanup EX in the reservation transaction before reserved append, and marks `entered` before invoking the child body. The durable projection at lines 61–62 validates child association for state, reserved, checkpoint and rebudgeted inputs. A declaration alone grants no backend authority.
+- Storage line 158 privately retires only the exact unborn allocation using captured physical custody and retained journal writer, bounded complete journal replay, descriptor identity checks, final exact byte replay and metadata sync. Line 156 preserves the original thrown value, including `undefined`, if cleanup also fails. A body failure retains custody/charge. Unknown or partial journal state refuses and retains ownership. These are Source conclusions; no new provider execution was authorized or performed.
+- Cleanup descendant helper at invocation process line 165 uses private control ancestry and body birth identity. Copied token/control objects cannot manufacture the private ancestry. It does not issue ordinary control or extend a deadline.
+
+## Evidence And Freeze Verification
+
+The initial read and final read independently computed SHA-256 for the checkpoint's 10 frozen changed Source entries and all 49 observed closure entries (59 rows, with intentional repeats). Every hash matched the supplied checkpoint at both reads. No observed broader-roster drift occurred during this audit. No repository-wide lock or stability outside this roster is inferred.
+
+The retained `🗑️generated/native-funding-test-prototype8.log` and `native-funding-test-release4.log` contain six isolated passing file results and corresponding debug terminal status records; their totals agree with 32 tests / 837 assertions. The retained strict logs `native-funding-types-prototype10.log` and `native-funding-types-release4.log` are empty, consistent with the checkpoint's claim, but an empty file alone does not independently prove the process exit status. Handle exit status is attributed to the checkpoint's recorded terminal results, not this review. No tests were rerun.
+
+Actual Native provider constructor and compiler Volume funding remain unwired. This review does not establish funded-constructor success, physical teardown, failed-birth integration, Windows durability, crash recovery, or whole-cache retirement. The finding applies to the currently consumed POSIX filesystem preclaim helper independently of that pending integration.

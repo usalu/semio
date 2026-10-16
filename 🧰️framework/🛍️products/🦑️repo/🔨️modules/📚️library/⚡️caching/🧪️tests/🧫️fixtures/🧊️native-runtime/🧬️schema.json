@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "variant": "fixture",
+    "profiles": [
+      "prototype",
+      "release"
+    ],
+    "pluginId": "neutral-host-fixture",
+    "componentHex": "0061736d0d000100",
+    "asset": "native asset service remains responsive",
+    "manifestLimitBytes": 1048576,
+    "paths": [
+      {
+        "value": "neutral-host-fixture/📦️component.wasm",
+        "valid": true
+      },
+      {
+        "value": "../compiled/🧩️plugin/component.wasm",
+        "valid": false
+      },
+      {
+        "value": "component.wasm",
+        "valid": false
+      },
+      {
+        "value": "/absolute/component.wasm",
+        "valid": false
+      },
+      {
+        "value": "C:/component.wasm",
+        "valid": false
+      },
+      {
+        "value": "other:component.wasm",
+        "valid": false
+      },
+      {
+        "value": "compiled//component.wasm",
+        "valid": false
+      },
+      {
+        "value": "./component.wasm",
+        "valid": false
+      },
+      {
+        "value": "compiled/./component.wasm",
+        "valid": false
+      },
+      {
+        "value": "compiled/",
+        "valid": false
+      }
+    ],
+    "cycles": [
+      {
+        "name": "cold",
+        "remove": false,
+        "publications": 1
+      },
+      {
+        "name": "warm",
+        "remove": false,
+        "publications": 1
+      },
+      {
+        "name": "restored",
+        "remove": true,
+        "publications": 1
+      }
+    ],
+    "cratePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust",
+    "manifestCases": [
+      {
+        "name": "prototype",
+        "profile": "prototype",
+        "modules": 1,
+        "accepted": true
+      },
+      {
+        "name": "release",
+        "profile": "release",
+        "modules": 1,
+        "accepted": true
+      },
+      {
+        "name": "old-profile",
+        "profile": "dev",
+        "modules": 1,
+        "accepted": false
+      },
+      {
+        "name": "empty",
+        "profile": "prototype",
+        "modules": 0,
+        "accepted": false
+      },
+      {
+        "name": "maximum",
+        "profile": "prototype",
+        "modules": 128,
+        "accepted": true
+      },
+      {
+        "name": "over-maximum",
+        "profile": "prototype",
+        "modules": 129,
+        "accepted": false
+      },
+      {
+        "name": "duplicate",
+        "profile": "prototype",
+        "modules": 2,
+        "duplicate": true,
+        "accepted": false
+      },
+      {
+        "name": "escaped-wasm",
+        "profile": "prototype",
+        "modules": 1,
+        "wasmPath": "../component.wasm",
+        "accepted": false
+      },
+      {
+        "name": "foreign-descriptor",
+        "profile": "prototype",
+        "modules": 1,
+        "descriptorPath": "other/🔣️.json",
+        "accepted": false
+      },
+      {
+        "name": "long-id",
+        "profile": "prototype",
+        "modules": 1,
+        "pluginId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "accepted": false
+      },
+      {
+        "name": "foreign-variant",
+        "profile": "prototype",
+        "modules": 1,
+        "variant": "other",
+        "accepted": false
+      },
+      {
+        "name": "unknown-field",
+        "profile": "prototype",
+        "modules": 1,
+        "extra": true,
+        "accepted": false
+      }
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 /** 🖨️ Raster decoded images agree with the Semio image schema they are stored as, so the law lives where plugins may meet. */
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { semioSchemaAjvV1 } from "../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import schema from "../../../🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🔣️.json";
 import fixture from "../../../🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🖼️decoded-image/🔣️.json";
 import { parseSemioImageSnapshot } from "../../../🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";

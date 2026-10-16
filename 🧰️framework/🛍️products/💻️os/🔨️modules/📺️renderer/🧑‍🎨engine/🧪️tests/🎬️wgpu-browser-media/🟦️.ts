@@ -15,6 +15,7 @@ import { resolveWgpuBootDescriptor } from "../../🎯️targets/🧊️wgpu/🧭
 import { createAccessibilityMirror } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
 import { AppChannelClient, AppChannelRequestSequence, decodeAppCommand, decodeAppFrame, encodeAppCommand, encodeAppFrame, type AppFrameValue } from "../../../../../🟦️.ts";
 import { createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
+import { channelDocumentIdentitySchemaUrl } from "../../../../📡️spr/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const testDirectory = dirname(fileURLToPath(import.meta.url));
 const fixture = JSON.parse(readFileSync(resolve(testDirectory, "../../🎬️media/🌐️browser/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
@@ -274,7 +275,7 @@ describe("imperative media DOM host", () => {
 describe("trusted app document identity", () => {
   it("matches shared Rust vectors and independent Ajv/LEB128 without lossy u64 conversion", async () => {
     const vectors = JSON.parse(readFileSync(resolve(identityFixtureDirectory, "🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(resolve(testDirectory, "../../../../📡️spr/🧵️channel/🧬️schema/🪪️document-identity/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(channelDocumentIdentitySchemaUrl, "utf8"));
     const validate = new Ajv2020().compile(schema);
     const oracleModule = "@webassemblyjs/leb128/lib/leb.js";
     const { default: leb } = await import(oracleModule);

@@ -49,5 +49,5 @@ export const energyModelSnapshotTextGuardConstant = <T extends string | number |
 //#endregion 🚪️Parsers
 
 export function parseEnergyModelSnapshotText(value: unknown, at = "$"): EnergyModelSnapshotText {
-  return energyModelSnapshotTextGuardObject(value, `${at}`);
+  return energyModelSnapshotTextGuardString(value, `${at}`);
 }

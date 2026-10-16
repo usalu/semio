@@ -6,8 +6,8 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { decodeDagSelectionJson } from "../../../../♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts";
-import type { DagSelectionDomains } from "../../../../♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🟦️.ts";
+import { decodeDagSelectionJson } from "@semio-tech/framework/infinite/board/io/text/dag-input";
+import type { DagSelectionDomains } from "@semio-tech/framework/infinite/board/schema/dag-input";
 import React, {
   useCallback,
   useEffect,

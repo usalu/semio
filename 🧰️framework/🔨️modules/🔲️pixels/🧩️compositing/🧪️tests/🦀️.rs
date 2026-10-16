@@ -2,7 +2,7 @@
 use super::*;
 use serde_json::Value;
 
-fn fixture() -> Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> Value { serde_json::from_str(crate::text("🧩️compositing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn bytes(value: &Value) -> Vec<u8> { value.as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as u8).collect() }
 fn affine(value: &Value) -> CompositeAffine { std::array::from_fn(|i| value[i].as_f64().unwrap()) }
 fn layer(value: &Value) -> CompositeLayer {
@@ -74,7 +74,7 @@ fn compositor_validates_geometry_assets_and_depth() {
 
 #[test]
 fn compositor_actual_owner_retirement_neutral_interruptions(){
-    let rows:Value=serde_json::from_str(include_str!("🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
+    let rows:Value=serde_json::from_str(crate::text("🧩️compositing/🧪️tests/🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
     let fixture=fixture();
     for row in rows.as_array().unwrap(){for grant in [1,7,4096]{
         let source=fixture["cases"].as_array().unwrap().iter().chain(fixture["spatialCases"].as_array().unwrap()).find(|v|v["name"]==row["source"]).unwrap();

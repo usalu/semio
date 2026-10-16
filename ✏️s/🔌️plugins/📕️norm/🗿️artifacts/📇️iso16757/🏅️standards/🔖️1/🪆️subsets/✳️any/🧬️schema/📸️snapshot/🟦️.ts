@@ -1,7 +1,7 @@
 /** 📸️ `Iso16757Snapshot` wire twin: the persisted snapshot and every record it holds, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { type NormJson, normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireJson, normWireLiteral, normWireMap, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString, normWireTagged } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { type NormJson, normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireJson, normWireLiteral, normWireMap, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString, normWireTagged } from "@semio-tech/norm-js/registry/contract";
 
 export interface Iso16757Snapshot {
   catalogue: Catalogue;

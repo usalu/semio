@@ -4,11 +4,11 @@
  */
 
 //#region 🔌️Adapters
-import { type AdapterContext, type TestCasePlan, type FeatureScenario, type TestRole, type AdapterOutcome, type TestAdapter } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, type TestCasePlan, type FeatureScenario, type TestRole, type AdapterOutcome, type TestAdapter } from "@semio-tech/framework/test/adapter";
 import { constants, cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join } from "node:path";
 import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type { ResourceLeaseControl } from "../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 import { digest } from "../🔢️digests/🟦️.ts";
 import { TEST_INPUT_URI_RE } from "../📥️fixture-inputs/🟦️.ts";
 //#endregion 🔌️Adapters

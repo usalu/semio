@@ -1,13 +1,13 @@
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import{readFile}from"node:fs/promises";
-import{readRustSourceClosureV1}from"../../../🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import{readRustSourceClosureV1}from"@semio-tech/process/artifacts/native-build/source";
 import{join,resolve,dirname}from"node:path";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import TOML from"@iarna/toml";
 import ts from"typescript";
-import{validateJsonSchemaSubset}from"../../../🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import fixture from"./🔣️.json"with{type:"json"};
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 const owner=join(import.meta.dir,".."),replication=dirname(owner);

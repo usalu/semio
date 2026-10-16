@@ -1,5 +1,6 @@
 import type { StatelyMachineSpec, StatelyTestDependencies } from "../../🟦️.ts";
-import type { EdgeRef, FaceRef, Model, VertexRef, WireRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { EdgeRef, FaceRef, VertexRef, WireRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { Model } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
 import type { Command } from "@semio-tech/framework/machine";
 import type { InteractionRuntime } from "../../../🗿️artifact/🟦️.ts";
 import type { ModelDiff } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";

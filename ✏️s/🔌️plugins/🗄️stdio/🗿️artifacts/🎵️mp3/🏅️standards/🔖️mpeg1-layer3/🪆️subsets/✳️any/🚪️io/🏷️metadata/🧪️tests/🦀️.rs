@@ -1,11 +1,6 @@
 //! 🧪️ Actual production metadata model and IO leaf with independent ID3 witnesses.
-extern crate semio_framework_value_derive as value_derive;
-#[path="../../../🧬️schema/📸️snapshot/🏷️metadata/🦀️.rs"]
-pub mod admitted;
-pub mod standards{pub mod mpeg1_layer3{pub mod subsets{pub mod any{pub mod schema{pub mod snapshot{pub use crate::admitted::*;}}}}}}
-#[path="../🦀️.rs"]
-pub mod native;
-#[cfg(test)]
+use semio_s_artifact_stdio_mp3_metadata::standards::mpeg1_layer3::subsets::any::schema::snapshot::metadata as admitted;
+use crate as native;
 mod tests{
  use super::*;use id3::TagLike;use std::io::Cursor;
  #[test]

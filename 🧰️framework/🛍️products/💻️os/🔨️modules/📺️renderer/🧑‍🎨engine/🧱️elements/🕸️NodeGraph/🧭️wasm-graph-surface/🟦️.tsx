@@ -11,7 +11,7 @@ import React, {
   useRef,
   useState
 } from "react";
-import { type WasmCanvasSession, WasmCanvas } from "@semio-tech/canvas-react-renderer";
+import { type WasmCanvasSession, WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
 import {
   CanvasPickMenu,
   cn,

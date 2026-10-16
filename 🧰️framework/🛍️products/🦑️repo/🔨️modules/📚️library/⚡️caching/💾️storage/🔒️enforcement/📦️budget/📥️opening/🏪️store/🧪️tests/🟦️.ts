@@ -1,3 +1,4 @@
+import"./📦️child/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{test,expect}from"bun:test";
 import Ajv from"ajv";

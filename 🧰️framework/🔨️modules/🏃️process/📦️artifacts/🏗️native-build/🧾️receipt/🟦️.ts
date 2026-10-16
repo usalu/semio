@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { relative, resolve, sep } from "node:path";
-import type { FileObservationControlV1, FileObservationProgressV1 } from "../../../../📁️filesystem/🧾️observation/🟦️.ts";
+import type { FileObservationControlV1, FileObservationProgressV1 } from "@semio-tech/framework/filesystem/observation";
 
 /** 🧾️ Schema id of a completed Cargo invocation provenance receipt document.
  * @see ./🧬️schema/🔣️.json

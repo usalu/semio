@@ -16,7 +16,7 @@ pub mod combine_boolean;
 pub mod commit_document;
 #[path = "🗑️delete-layer/🦀️.rs"]
 pub mod delete_layer;
-#[path = "⌫️delete-selection/🦀️.rs"]
+#[path = "✂️delete-selection/🦀️.rs"]
 pub mod delete_selection;
 #[path = "📥️drop-layer-kind/🦀️.rs"]
 pub mod drop_layer_kind;

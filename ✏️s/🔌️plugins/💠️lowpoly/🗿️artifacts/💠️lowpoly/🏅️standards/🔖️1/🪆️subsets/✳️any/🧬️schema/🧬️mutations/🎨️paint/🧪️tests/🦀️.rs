@@ -1,8 +1,7 @@
 //! 🧺️ The `🎨️paint` mutation group's leaf fixture tests, run as one target of its group crate.
 
 extern crate semio_framework_os_kernel as protocol;
-#[path = "../../🧪️tests/⚖️laws/🦀️.rs"]
-pub mod laws;
+use semio_s_artifact_lowpoly_lowpoly_mut_laws as laws;
 #[path = "../../➕️insert-paint-layer/🧪️tests/🪜️stacks/🦀️.rs"]
 mod tests_stacks_a_detail_layer_above_the_base_layer;
 #[path = "../../➖️remove-paint-layer/🧪️tests/➖️drops/🦀️.rs"]

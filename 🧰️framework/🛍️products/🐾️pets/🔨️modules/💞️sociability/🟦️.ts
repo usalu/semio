@@ -19,7 +19,7 @@ import { COMFORT_GAP, clearway } from "../📏️spacing/🟦️.ts";
 import { clamp } from "../📐️trigonometry/🟦️.ts";
 import { actorKey, astir, clipAt, facingTo, feel, indexOf, perform, present, purr, shift, stageKey, standing, type Draft } from "../📝️draft/🟦️.ts";
 import { pairingTick, sociable } from "../🗓️schedule/🟦️.ts";
-import { attend, paced, stroll } from "../🚶️locomotion/🟦️.ts";
+import { attend, paced, stroll } from "../🚶️locomotion/🛫️departure/🟦️.ts";
 import { AFFINITY_FLOOR, ENCOUNTERS, MODE_LIMITS, RAPPORT_SPAN, affinityOf, dwellOf, encounterShares, needsAfter, rapportAfter, rapportFaded, type Encounter } from "../🧠️behavior/🟦️.ts";
 
 //#region 🔖️Constants

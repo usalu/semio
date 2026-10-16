@@ -7,8 +7,7 @@ pub use semio_framework_value_native_encoding::{native_encoding,NativeEncodeCont
 pub mod native_decoding;
 pub use native_decoding::*;
 #[cfg(test)]
-#[path="../../../🧪️testing/💾️allocator/🦀️.rs"]
-mod allocation_testing;
+use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
 #[cfg(test)]

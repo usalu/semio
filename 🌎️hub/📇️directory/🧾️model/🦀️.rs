@@ -152,7 +152,7 @@ pub struct AuthSessionRecord {
 }
 
 impl AuthSessionRecord {
-    /// 🎚️ Who this session asks a space-role question as ([`super::HubDirectory::principal_role`]).
+    /// 🎚️ Who this session asks a space-role question as ([`super::PrincipalAuthority::principal_role`]).
     pub fn principal(&self) -> DirectoryPrincipalV1<'_> {
         DirectoryPrincipalV1 { user_id: &self.user_id, session_kind: self.session_kind, device_instance_id: &self.device_instance_id }
     }
@@ -167,7 +167,7 @@ pub struct DirectoryPrincipalV1<'a> {
     pub device_instance_id: &'a str,
 }
 
-/// 🧢️ What one session caps its account's membership roles at ([`super::HubDirectory::principal_ceiling`]).
+/// 🧢️ What one session caps its account's membership roles at ([`super::PrincipalAuthority::principal_ceiling`]).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DirectoryPrincipalCeilingV1 {
     /// 🙋️ A human session: its account's membership roles, uncapped.

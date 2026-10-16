@@ -18,8 +18,7 @@
 
 use semio_repo_test_host::Json;
 
-#[path = "../../../../../../../🔮️oracles/🖊️drawing/🧰️support/🦀️.rs"]
-mod reference_support;
+use semio_s_plugin_stdio_drawing_test_oracle::reference_support;
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.

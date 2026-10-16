@@ -10,7 +10,7 @@ import { policyExtractJsonSchemaFields } from "../../../../../../🦑️repo/�
 import { policyExtractProtobufSchemaFields } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts";
 import { policyExtractRustSchemaFields } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
 import type { PolicySchemaLeafExtract } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts";
-import { GRAPHQL_STATE_PREAMBLE } from "../../../../../../../🔨️modules/🧬️schema/🟦️.ts";
+import { GRAPHQL_STATE_PREAMBLE } from "@semio-tech/schema-ts";
 import { SURFACE_SCHEMA_BANNER, projectSurfaceSchemaLane, resetSurfaceSchemaIndexes, resolveSurfaceSchemaDefinitions, surfaceSchemaBinding, surfaceSchemaLaneOwnership, surfaceSchemaProjectionBlocker, surfaceSchemaTypeTail, type SurfaceSchemaLane, type SurfaceSchemaOwner } from "../../🧬️surface-schema/🟦️.ts";
 
 type FixtureCase = {

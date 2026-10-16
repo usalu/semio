@@ -1,0 +1,25 @@
+{
+ "🧰️framework/🔨️modules/🔲️pixels/🦀️.rs": {
+  "modfwd": {
+   "deflate": [
+    "zlib_compress",
+    "zlib_decompress"
+   ]
+  }
+ },
+ "🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🦀️.rs": {
+  "forward": [
+   "invalid"
+  ]
+ },
+ "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🦀️.rs": {
+  "alias": [
+   "Stage"
+  ]
+ },
+ "🧰️framework/🔨️modules/🔲️pixels/📸️jpeg/📥️decode/🦀️.rs": {
+  "forward": [
+   "invalid"
+  ]
+ }
+}

@@ -5,7 +5,7 @@
 //! [--auto-approve never|readonly|all] [--audit-dir <dir>] [--allow-origin <origin>]…` (P1b + P1c +
 //! P7-headless-workspace) — this binary owns argv parsing only; all real logic lives in
 //! `crate::{run_stdio, run_http}`. `semio-os-mcp schemas` additionally prints the
-//! `os.mcp` draft-07 schema mirror on stdout (the `schema-mirror` nx target's generator) (P1a's brief §2.5, "keep main thin, all logic in
+//! `os.mcp` draft-07 schema mirror on stdout (the `schema-mirror` repository task's generator) (P1a's brief §2.5, "keep main thin, all logic in
 //! the lib" — mirrors `🏃️run/🏗️bootstrap/🦀️.rs`'s own split). Unknown modes exit with a clear message rather
 //! than silently doing nothing. `--folder`/`--hub` are mutually exclusive (`📋️master.md` §2.1:
 //! "`--folder <space dir>`…`--hub <url> --space <id>`"). Hub authority is claimed from protected fd 3

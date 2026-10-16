@@ -49,5 +49,5 @@ export const stdioDxfR12HeaderInferenceTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseDxfInferenceText(value: unknown, at = "$"): DxfInferenceText {
-  return stdioDxfR12HeaderInferenceTextGuardObject(value, `${at}`);
+  return stdioDxfR12HeaderInferenceTextGuardString(value, `${at}`);
 }

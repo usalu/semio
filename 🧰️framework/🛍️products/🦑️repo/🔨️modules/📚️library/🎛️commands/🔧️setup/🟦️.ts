@@ -1,4 +1,4 @@
-/** 🧭️ `setup` command family: native bootstrap, repo-local git settings, devcontainer lifecycle and postinstall.
+/** 🔧️ `setup` command family: native bootstrap, repo-local git settings, devcontainer lifecycle and postinstall.
  * @see 📜️script.ts
  */
 import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";

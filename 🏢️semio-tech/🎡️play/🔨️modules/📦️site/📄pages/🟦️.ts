@@ -7,7 +7,8 @@ import { COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "../../../../../�
 import { validateJsonSchemaSubset } from "../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { playRuntimeAssetSources } from "../../🧩️runtime/📦️assets/🟦️.ts";
 import runtimeSchema from "../../🧩️runtime/🧬️schema/🔣️.json";
-import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, publishedPageUrl } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { publishedPageUrl } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🌐️published-page/🟦️.ts";
 import { SEMIO_ASSET_DIRECTORY } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 
 /** 📦 One CDN deployment of play. Each page stays under {@link PLAY_PAGE_BUDGET_BYTES}. */

@@ -1,9 +1,8 @@
+import type{ProcessOwnerContextV1}from"./📋️contract/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { isAbsolute, resolve, join } from "node:path";
 import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
-/** 📋️ Gives an owner its explicitly selected execution and compiler state stores. */
-export type ProcessOwnerContextV1=Readonly<{version:1;cwd:string;cacheRoot:string;leaseDirectory:string}>;
 const schema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url),"utf8"));
 
 /** 🔐️ Refuses absent, malformed or other-owner context before changing build state. */

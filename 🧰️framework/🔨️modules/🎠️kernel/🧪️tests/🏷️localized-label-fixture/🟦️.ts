@@ -9,18 +9,19 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
-import { SHELL_LOCALES, SHELL_TERMINOLOGIES, type LocalizedLabel } from "../../../🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts";
+import { SHELL_LOCALES, SHELL_TERMINOLOGIES, type LocalizedLabel } from "@semio-tech/framework/manifest/generated/ui-axes";
 import { historyEntryLabelText } from "../../🕰️history/🟦️.ts";
+import { localeLocalizedLabelFixtureUrl, localeLocalizedLabelSchemaUrl } from "../../../🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 📄️ `fileURLToPath`, never `new URL(...).pathname`: the latter percent-encodes every emoji segment. */
-const read = (relative: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8")) as unknown;
+const read = (url: URL): unknown => JSON.parse(readFileSync(fileURLToPath(url), "utf8")) as unknown;
 
-const fixture = read("../../../🖱️ui/🌐️locale/🧪️tests/🧫️fixtures/🏷️localized-label/🔣️.json") as {
+const fixture = read(localeLocalizedLabelFixtureUrl) as {
   readonly axes: { readonly terminologies: readonly string[]; readonly locales: readonly string[] };
   readonly rows: readonly { readonly id: string; readonly wire: unknown; readonly resolve: Readonly<Record<string, string>> }[];
   readonly refusals: readonly { readonly id: string; readonly wire: unknown; readonly schemaError: string; readonly resolve: Readonly<Record<string, string>> }[];
 };
-const schema = read("../../../🖱️ui/🌐️locale/🧬️schema/🏷️localized-label/🔣️.json") as object;
+const schema = read(localeLocalizedLabelSchemaUrl) as object;
 
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 

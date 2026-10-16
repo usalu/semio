@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import {applyPatch} from "fast-json-patch";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../../🗿️artifacts/🌊️flow/🧵️retained/🧬️schema/🔣️.json";
-import grant from "../../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
+import { orderedRetirementSchema as grant } from "@semio-tech/value-ts/ordered/retirement/schema";
 
 test("original builtin seed custody agrees with independent JSON Patch and UTF8",()=>{
  const ajv=new Ajv({strict:true,allErrors:true}).addSchema(grant).addSchema(schema),validate=ajv.compile({$ref:schema.$id+"#/$defs/Tree"});

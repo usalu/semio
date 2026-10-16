@@ -5,7 +5,7 @@ use std::task::Poll;
 
 #[test]
 fn single_poll_matches_all_language_neutral_rows_and_preserves_poll_count() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(crate::text("🔂️poll/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let polls = Cell::new(0);
         let future = poll_fn(|_| {

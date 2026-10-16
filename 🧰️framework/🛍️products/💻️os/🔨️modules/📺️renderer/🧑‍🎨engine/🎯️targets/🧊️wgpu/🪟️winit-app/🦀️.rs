@@ -883,7 +883,7 @@ mod native {
                         if !self.frame_caller.ready()||self.frame_caller.finishing(){self.pending_reason=Some(reason);self.recompute_control_flow(event_loop);return;}
                         if let Some(host) = self.host.as_mut() {
                             let call=self.frame_caller.dispatch_step(|cx|host.redraw_on_original_caller(cx));
-                            match call{Ok(original)=>{semio_framework_os_renderer_wgpu_host_base::log_debug(&format!("[DEBUG] Native frame original epoch={} copiedItems={} copiedBytes={} bornBytes={} releasedBytes={} fuel={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.copied_bytes,original.receipt_spent.retained_capacity_bytes,original.receipt_spent.released_bytes,original.work_units_spent));if original.result.is_err(){self.close_pending=true;}},Err(_)=>{self.pending_reason=Some(reason);window.request_redraw();}}
+                            match call{Ok(original)=>{if original.result.is_err(){self.close_pending=true;}},Err(_)=>{self.pending_reason=Some(reason);window.request_redraw();}}
                         }
                     }
                     self.recompute_control_flow(event_loop);
@@ -910,14 +910,13 @@ mod native {
         fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
             if self.frame_caller.finishing(){let _=self.frame_caller.finish_event_step();self.recompute_control_flow(event_loop);return;}
             if !self.frame_caller.terminal_is_empty()&&!self.frame_caller.ready(){
-                match self.frame_caller.admit_step(){Ok(original)=>semio_framework_os_renderer_wgpu_host_base::log_debug(&format!("[DEBUG] Native root admission epoch={} copiedItems={} bornBytes={} ready={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.retained_capacity_bytes,original.result.as_ref().is_ok_and(|step|step.ready))),Err(_)=>{}}
+                let _=self.frame_caller.admit_step();
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                 return;
             }
             if self.close_pending&&self.host.is_some(){
                 let returned=self.frame_caller.dispatch_cleanup_step(|cx|OsHost::try_into_retirement(&mut self.host,cx));
                 if let Ok(original)=returned{
-                    semio_framework_os_renderer_wgpu_host_base::log_debug(&format!("[DEBUG] Native host retirement admission epoch={} copiedItems={} bornBytes={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.retained_capacity_bytes));
                     if let Ok(Some(retirement))=original.result{self.retirement=Some(retirement);}
                 }
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
@@ -990,4 +989,14 @@ mod native {
 #[cfg(not(target_arch = "wasm32"))]
 pub use native::{HostUserEvent, WinitApp};
 
+#[cfg(test)]
+#[path = "../../../🧪️tests/🔬️wgpu-winit-app-p3c/🦀️.rs"]
+mod p3c_tests;
 
+#[cfg(test)]
+#[path = "../../../🧪️tests/🔬️wgpu-winit-app-callback-latency/🦀️.rs"]
+mod callback_latency_tests;
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🔢️frame-generation-hold/🦀️.rs"]
+mod frame_generation_hold_tests;

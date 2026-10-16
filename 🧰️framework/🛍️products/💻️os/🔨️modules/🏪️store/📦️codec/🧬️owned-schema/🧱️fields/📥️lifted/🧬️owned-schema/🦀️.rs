@@ -72,7 +72,7 @@ pub enum ArtifactEnvelopeFieldDecodeStep {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactEnvelopeFieldReservation {
     field_id: u16,
-    generation: u64,
+    pub generation: u64,
 }
 
 impl ArtifactEnvelopeFieldReservation {
@@ -614,7 +614,7 @@ where
 }
 
 impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<P, Mutation> {
-    pub(crate) fn new(
+    pub fn new(
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         path: OwnedSchemaPath,
@@ -958,9 +958,9 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> Drop for ArtifactOwnedS
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct ArtifactOwnedSprEditDecoder<P, Mutation> {
     #[factory_child]
-    pub(crate) catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+    pub catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
     #[factory_child]
-    pub(crate) mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+    pub mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
 }
 
 impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactOwnedHistoryEntryDecoder<Edit<Mutation>> for ArtifactOwnedSprEditDecoder<P, Mutation> {
@@ -1010,7 +1010,7 @@ pub struct ArtifactRepositoryHistoryEntryAuthority<T> {
 }
 
 impl<T> ArtifactRepositoryHistoryEntryAuthority<T> {
-    pub(crate) fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: OwnedSchemaPath, retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<T>>) -> Self {
+    pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: OwnedSchemaPath, retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<T>>) -> Self {
         Self { operation, generation, path, raw: std::mem::ManuallyDrop::new(Some(Box::new([0; ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES]))), raw_len: 0, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None), retirement_factory: std::mem::ManuallyDrop::new(Some(retirement_factory)), factory_close: std::mem::ManuallyDrop::new(None), terminal: false }
     }
 
@@ -1162,8 +1162,8 @@ pub const ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY: usize = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactEnvelopeFieldDecoderTicket {
-    index: u16,
-    generation: u64,
+    pub index: u16,
+    pub generation: u64,
 }
 
 impl ArtifactEnvelopeFieldDecoderTicket {

@@ -2,8 +2,8 @@
 
 Run this once the wave-4 carves finish and registry edits are frozen.
 
-1. Refresh the locks: root, `🧰️framework`, `🌎️hub`, the layout and forms plugin workspaces, and `🎓️teaching` (`bun repo cargo … -- update --workspace --offline [--manifest-path]`). Then download the registry crates the lock needs, using the route documented in RESULT-INFRA-UNBLOCK.md.
-2. Run `verify dependencies write-baseline` for all new manifests (pets, server, quiz, graphql, dashboard, scene, runtime, render, surface, os host/neural/dag, and those still to come).
+1. Refresh the locks (MANDATORY first: DUPLICATE-MOUNTS-2 and others hand-edited about 180 Cargo.lock files, and the plugin-host crates are in no lock): root, `🧰️framework`, `🌎️hub`, the layout and forms plugin workspaces, and `🎓️teaching` (`bun repo cargo … -- update --workspace --offline [--manifest-path]`). Then download the registry crates the lock needs, using the route documented in RESULT-INFRA-UNBLOCK.md.
+2. [checked 16:3x: the ratchet is clean at 303 = baseline, so no write-baseline is needed] Run `verify dependencies write-baseline` for all new manifests (pets, server, quiz, graphql, dashboard, scene, runtime, render, surface, os host/neural/dag, and those still to come).
 3. Run check and test bottom-up in census tier order, fixing errors per crate. Each RESULT-W4-*.md lists its first-run law set. Known existing breaks:
    - `use ::graph::manifest` in the dag vcs root has no dependency;
    - the puzzle 2d snapshot functions are imported while private (E0603 ×9);
@@ -19,9 +19,9 @@ Run this once the wave-4 carves finish and registry edits are frozen.
 11. Run the first-compile law sets listed in each RESULT-W4-*.md, and the trace testkit (RESULT-W4-TRACE-TESTKIT.md).
 
 - [ ] `check -p semio-framework-ui-contract-conformance --tests`: the taxonomy sweep renamed 9 conformance folders and their `#[path]` lines (RESULT-TAXONOMY-SWEEP.md).
-- [ ] Re-run `verify taxonomy` inventory after all carves land (new folders keep appearing; slug-pattern rule in RESULT-TAXONOMY-SLUG-PATTERN.md).
+- [x] Taxonomy inventory re-run (RESULT-TAXONOMY-SWEEP-2.md): born-since-10-15 unresolved findings are 0.
 - [ ] React boot: the Interpreter element-host registry (`🪢️ElementHosts`) registers all 14 scene hosts at runtime (RESULT-INTERPRETER-KERNEL-TS.md); no `Cannot access … before initialization`.
-- [ ] Live time-travel e2e: `bun repo run @semio-tech/puzzle-js:time-travel` against a puzzle2d dev serve (RESULT-MISPLACED-E2E-TESTS.md).
+- [ ] Live time-travel e2e: `bun repo run @semio-tech/framework-os-dev:time-travel -- --scenario <puzzle scenario module>` against a puzzle2d dev serve (RESULT-MISPLACED-E2E-TESTS.md, RESULT-SDK-BOUNDARY-2.md).
 - [ ] `generate-wgpu` frame-worker bundles re-embed the split kernel (RESULT-INTERPRETER-KERNEL-TS.md hand-off).
 
 ## Wave-5 compile queue, in this order once headroom is admitted (each command is in the named RESULT file)

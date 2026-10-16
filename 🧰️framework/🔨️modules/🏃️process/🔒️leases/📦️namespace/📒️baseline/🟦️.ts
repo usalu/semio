@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {closeSync,constants,fstatSync,lstatSync,mkdirSync,openSync,readSync,readdirSync,statfsSync,writeSync,fsyncSync,type Stats} from "node:fs";
 import {join,relative,resolve} from "node:path";
 import receiptSchema from "./🧬️schema/📥️receipt.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import policy from "./🔣️policy.json" with {type:"json"};
 import custodySchema from "../../🧬️schema/🎟️custody.json" with {type:"json"};
 import {acquireResourceLease,resourceLeasePathV1,requireMaterializedPathV1,requireResourceLeaseCustodyV1,checkResourceLeaseControl,type ResourceLease,type ResourceLeaseControl} from "../../🟦️.ts";

@@ -11,7 +11,7 @@ export function meshSelectionInputs(ids: readonly string[], payload: MeshSelecti
   const analytic = ["filletEdges", "chamferEdges", "shell","draft","defeature"].includes(operation);
   if (!["extrude", "inset", "subdivide", "flip", "deleteFaces", "shell","draft","defeature", ...vertices, ...edges].includes(operation)) throw new Error("Unknown mesh operation");
   const granularity = vertices.includes(operation) ? "vertex" : edges.includes(operation) ? "edge" : "face";
-  const group = componentGroup(ids), target = parseComponentTarget(ids[0])!;
+  const group = componentGroup(ids),id=ids[0],target=id===undefined?undefined:parseComponentTarget(id);if(!target)throw Error("Select mesh components");
   if (group.granularity !== granularity || !analytic && target.index !== 0) throw new Error("Select matching components of a single mesh");
   if(!Array.isArray(payload.pullDirection)||payload.pullDirection.length!==3||!Array.isArray(payload.neutralPoint)||payload.neutralPoint.length!==3||[payload.angle,...payload.pullDirection,...payload.neutralPoint].some(value=>!Number.isFinite(value)))throw new Error("Draft point and angle values must be finite");
   if(operation==="draft"&&payload.pullDirection.every(value=>value===0))throw new Error("Draft pull direction must be nonzero");

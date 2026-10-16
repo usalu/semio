@@ -1,6 +1,6 @@
 import { test, expect, describe, it } from "bun:test";
 import Ajv2020 from "ajv/dist/2020.js";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 /** 🏛️ Verifies the shared representation boundary against an independent path oracle. */
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";

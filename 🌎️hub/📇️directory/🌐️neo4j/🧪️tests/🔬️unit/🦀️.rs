@@ -4,11 +4,11 @@ use semio_hub_directory_contract::model::{CredentialAuditFactV1, InviteRedemptio
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceRole, Hlc};
 use semio_hub_directory_contract::error::DirectoryError;
 use semio_hub_directory_neo4j::Neo4jDirectory;
-use semio_hub_directory_contract::NewDirectoryEvent;
-use semio_hub_directory_neo4j_rows::now_ms;
+use semio_hub_directory_contract::{NewDirectoryEvent, now_ms};
 use neo4rs::query;
 use semio_hub_directory_neo4j::testkit::test_directory;
 use directory::os_identity::time_ordered_id;
+use semio_hub_directory::{AuthSessionDirectory, CredentialDirectory, EventLog, InviteDirectory, ProjectionRebuild, SpaceDirectory, UserDirectory};
 
 fn claim_actor(id: &str) -> DirectoryActor {
     DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{id}#neo4j-invite") }

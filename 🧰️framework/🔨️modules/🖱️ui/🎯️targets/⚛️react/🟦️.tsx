@@ -48,7 +48,7 @@ import {
   type UiStatus,
   type UiTheme,
 } from "@semio-tech/ui-styling";
-import { ephemeralBox, ephemeralMap } from "../../../🫧️transient/🟦️.ts";
+import { ephemeralBox, ephemeralMap } from "@semio-tech/framework/transient";
 // 🚧️W3-interim: explicit re-export so 🧱️elements/<Element>/ leaf files (which only ever import from
 // this barrel, never straight from "@semio-tech/ui-styling") can resolve these — a bare `import {...}
 // from "@semio-tech/ui-styling"` above does not itself make a name part of this module's public surface.
@@ -159,7 +159,7 @@ import { I18nextProvider, useTranslation } from "react-i18next";
 // 🕹️wave-0: imported directly from the module's own source (not via `@semio-tech/framework`) — the
 // `🛂️manifest` module already re-exports a same-named, owned-schema-generated `MergeMode`/`SelectionMode`
 // family through that barrel, so a second barrel export of the hand-written mirror would collide.
-import { type MergeMode } from "../../../🕹️interaction/🟦️.ts";
+import { type MergeMode } from "@semio-tech/framework/interaction";
 // #endregion 🔌️Adapters
 
 // #region 🔌️Ports
@@ -470,11 +470,14 @@ export function clipIconSvgMarkupToEllipse(svgMarkup: string, width: number, hei
   const openMatch = svgMarkup.match(/^<svg\b([^>]*?)(\/?)>/i);
   const closeIdx = svgMarkup.lastIndexOf("</svg>");
   if (!openMatch || (closeIdx < 0 && openMatch[2] !== "/")) return svgMarkup;
-  const parsed = openMatch[1].match(/\bviewBox\s*=\s*["']([^"']+)["']/i)?.[1].trim().split(/[\s,]+/).map(Number);
-  const [x, y, boxWidth, boxHeight] = parsed?.length === 4 && parsed.every(Number.isFinite) && parsed[2] > 0 && parsed[3] > 0 ? parsed : [0, 0, width, height];
+  const openingAttributes=openMatch[1];if(openingAttributes===undefined)return svgMarkup;
+  const parsed=openingAttributes.match(/\bviewBox\s*=\s*["']([^"']+)["']/i)?.[1]?.trim().split(/[\s,]+/).map(Number);
+  let bounds:readonly[number,number,number,number]=[0,0,width,height];
+  if(parsed?.length===4){const[x,y,w,h]=parsed;if(x!==undefined&&y!==undefined&&w!==undefined&&h!==undefined&&[x,y,w,h].every(Number.isFinite)&&w>0&&h>0)bounds=[x,y,w,h];}
+  const[x,y,boxWidth,boxHeight]=bounds;
   const clipDef = `<clipPath id="${clipId}"><ellipse cx="${x + boxWidth / 2}" cy="${y + boxHeight / 2}" rx="${boxWidth / 2}" ry="${boxHeight / 2}"/></clipPath>`;
   let background = "";
-  const attributes = openMatch[1].replace(/\sstyle\s*=\s*(["'])(.*?)\1/i, (_attribute, quote: string, value: string) => {
+  const attributes=openingAttributes.replace(/\sstyle\s*=\s*(["'])(.*?)\1/i, (_attribute, quote: string, value: string) => {
     const style = value.replace(/(?:^|;)\s*background-color\s*:\s*([^;]+);?/i, (_declaration, color: string) => {
       background = color.trim().replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
       return ";";
@@ -1960,16 +1963,19 @@ export function useActionHotkey(
   useHotkeys(finalHotkey, callback, options ?? {}, dependencies ?? []);
 }
 
+/** ⌨️ Requires the actual declared chord for one authored panel anchor. */
+function requiredPanelToggleHotkey(anchor:Anchor):string{const chord=SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS[anchor]];if(chord===undefined)throw Error("Declared panel toggle chord required");return chord;}
+
 /** @emoji ⌨️ Chords for toggling each panel's fold/unfold state (derived from {@link SHELL_KEYBINDINGS}). */
 export const PANEL_TOGGLE_HOTKEYS: Record<Anchor, string> = {
-  "top-left": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["top-left"]],
-  "top-middle": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["top-middle"]],
-  "top-right": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["top-right"]],
-  "right-middle": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["right-middle"]],
-  "bottom-right": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["bottom-right"]],
-  "bottom-middle": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["bottom-middle"]],
-  "bottom-left": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["bottom-left"]],
-  "left-middle": SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS["left-middle"]],
+  "top-left": requiredPanelToggleHotkey("top-left"),
+  "top-middle": requiredPanelToggleHotkey("top-middle"),
+  "top-right": requiredPanelToggleHotkey("top-right"),
+  "right-middle": requiredPanelToggleHotkey("right-middle"),
+  "bottom-right": requiredPanelToggleHotkey("bottom-right"),
+  "bottom-middle": requiredPanelToggleHotkey("bottom-middle"),
+  "bottom-left": requiredPanelToggleHotkey("bottom-left"),
+  "left-middle": requiredPanelToggleHotkey("left-middle"),
 };
 
 /**
@@ -2411,29 +2417,31 @@ type IntroductionResolvedPoint = { readonly x: number; readonly y: number };
  * polyline) return the first point (or the origin) for every `t`, never throw. */
 export function polylinePointAt(points: readonly { readonly x: number; readonly y: number }[], t: number): { readonly x: number; readonly y: number } {
   if (points.length === 0) return { x: 0, y: 0 };
-  if (points.length === 1) return points[0];
+  const first=points[0];if(!first)throw Error("Complete polyline point sequence required");
+  if(points.length===1)return first;
   const segmentLengths: number[] = [];
   let totalLength = 0;
   for (let i = 1; i < points.length; i++) {
-    const length = Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+    const point=points[i],prior=points[i-1];if(!point||!prior)throw Error("Complete polyline segment required");
+    const length=Math.hypot(point.x-prior.x,point.y-prior.y);
     segmentLengths.push(length);
     totalLength += length;
   }
-  if (totalLength === 0) return points[0];
+  if(totalLength===0)return first;
   const targetDistance = Math.min(1, Math.max(0, t)) * totalLength;
   let accumulated = 0;
   for (let i = 0; i < segmentLengths.length; i++) {
-    const segmentLength = segmentLengths[i];
+    const segmentLength=segmentLengths[i],point=points[i],next=points[i+1];if(segmentLength===undefined||!point||!next)throw Error("Complete polyline length and points required");
     if (accumulated + segmentLength >= targetDistance || i === segmentLengths.length - 1) {
       const segmentT = segmentLength === 0 ? 0 : (targetDistance - accumulated) / segmentLength;
       return {
-        x: points[i].x + (points[i + 1].x - points[i].x) * segmentT,
-        y: points[i].y + (points[i + 1].y - points[i].y) * segmentT,
+        x:point.x+(next.x-point.x)*segmentT,
+        y:point.y+(next.y-point.y)*segmentT,
       };
     }
     accumulated += segmentLength;
   }
-  return points[points.length - 1];
+  const last=points.at(-1);if(!last)throw Error("Complete polyline terminal point required");return last;
 }
 
 /** @emoji 🪡️ Samples a canvas-layer path (`move`/`line`/`quad`/`cubic` segments, in whatever local
@@ -2877,7 +2885,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
 
     const tick = (now: number) => {
       if (cancelled) return;
-      const demonstration = demonstrations[demoIndex];
+      const demonstration=demonstrations[demoIndex];if(!demonstration)return;
       const gesture = demonstration.gesture;
       const visual = introductionDemoResolveVisual(gesture);
       const isDragLike = gesture.kind === "drag" || gesture.kind === "orbit";
@@ -3510,10 +3518,10 @@ export function tutorialCameraAt(def: TutorialDefinition, windowId: string, atMs
   if (atMs <= first.at) return first.camera;
   for (let index = 0; index < keyframes.length - 1; index++) {
     const prev = keyframes[index];
-    const next = keyframes[index + 1];
+    const next=keyframes[index+1];if(!prev||!next)throw Error("Complete tutorial camera keyframe sequence required");
     if (atMs <= next.at) return interpolateTutorialCamera(prev, next, atMs);
   }
-  return keyframes[keyframes.length - 1].camera;
+  return keyframes.at(-1)?.camera;
 }
 
 /** @emoji 🩹️ TS port of Rust `apply_tutorial_ui_change` — immutable (returns a new snapshot) rather than in-place, since TS callers never hold a live `&mut`. */
@@ -3774,7 +3782,7 @@ const TUTORIAL_RATES = [0.5, 1, 1.5, 2] as const;
 /** @emoji ⏭️ Cycles through the fixed rate ladder (0.5→1→1.5→2→0.5→…). */
 function nextTutorialRate(rate: number): number {
   const index = TUTORIAL_RATES.indexOf(rate as (typeof TUTORIAL_RATES)[number]);
-  return TUTORIAL_RATES[(index === -1 ? 0 : index + 1) % TUTORIAL_RATES.length];
+  const next=TUTORIAL_RATES[(index===-1?0:index+1)%TUTORIAL_RATES.length];if(next===undefined)throw Error("Complete tutorial rate ladder required");return next;
 }
 
 export type TutorialChapterMarker = { readonly id: string; readonly title: string; readonly atMs: number };
@@ -4674,7 +4682,7 @@ export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: 
 
 /** @emoji 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
 
-export { ResponsiveLabel, shellChromeTitleClassName } from "./🪟️chrome/responsive-label/🟦️.tsx";
+export { ResponsiveLabel, shellChromeTitleClassName } from "./🪟️chrome/🏷️responsive-label/🟦️.tsx";
 
 /** @emoji 🪧️ Uppercase shell section title — element gray at rest. */
 export const shellChromeSectionTitleClassName = "text-2xs font-semibold uppercase tracking-wide text-element";

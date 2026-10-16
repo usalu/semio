@@ -3,14 +3,16 @@ mod artifact_inference_wire_tests {
 
     #[derive(serde::Deserialize)]
     #[serde(rename_all="camelCase",deny_unknown_fields)]
-    struct OriginalCaller{operation:u64,generation:u64,fuel:u64,deadline_us:u64,clock_us:u64,grant:RetainedCloneGrant}
+    struct OriginalCaller{pub operation:u64,pub generation:u64,pub fuel:u64,pub deadline_us:u64,pub clock_us:u64,pub grant:RetainedCloneGrant}
     /// 🎟️ Each test issues its one independently authored finite parent context before inspecting a child request.
-    fn original_context<'a>(sequence:&'a mut u64,recipient:&'a mut RetainedCloneProgress)->crate::ArtifactInferenceStepContext<'a>{
+    #[doc(hidden)]
+pub fn original_context<'a>(sequence:&'a mut u64,recipient:&'a mut RetainedCloneProgress)->semio_framework_plugin_decl_registry::ArtifactInferenceStepContext<'a>{
         let policy:OriginalCaller=serde_json::from_str(include_str!("🧫️fixtures/🎟️caller.json")).unwrap();assert_eq!(policy.clock_us,1);
         semio_framework_job::StepContext::new(semio_framework_job::OperationId(policy.operation),semio_framework_job::Generation(policy.generation),semio_framework_job::StepBudget::new(policy.fuel,policy.deadline_us,policy.grant),semio_framework_job::root_cancel_token(),||Some(1),sequence,recipient)
     }
 
-    async fn metadata(inference_schema: &'static str) -> ArtifactInferenceServiceMetadata {
+    #[doc(hidden)]
+pub async fn metadata(inference_schema: &'static str) -> ArtifactInferenceServiceMetadata {
         ArtifactInferenceServiceMetadata {
             owner: "s.test",
             artifact_kind: "s.test",
@@ -24,17 +26,19 @@ mod artifact_inference_wire_tests {
         }
     }
 
-    fn echo(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut crate::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
+    fn echo(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin_decl_registry::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
         assert_eq!((cx.operation().0,cx.generation().0),(request.operation,request.generation));
         Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: Some(request.canonical_payload.to_vec()), diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
     }
 
-    fn cancel(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut crate::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
+    #[doc(hidden)]
+pub fn cancel(request: &ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin_decl_registry::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
         cancel_artifact_inference(request.cancellation_id)?;
         echo(request,cx)
     }
 
-    async fn request(inference_schema: &str) -> WireArtifactInferenceRequest {
+    #[doc(hidden)]
+pub async fn request(inference_schema: &str) -> WireArtifactInferenceRequest {
         WireArtifactInferenceRequest {
             wire_version: ARTIFACT_INFERENCE_WIRE_VERSION,
             owner: "s.test".into(),
@@ -118,7 +122,7 @@ mod artifact_inference_wire_tests {
         assert_eq!(result.actual_cache_mode, WireArtifactInferenceCacheMode::Cold);
     }
 
-    fn physical_receipt(request:&ArtifactInferenceExecutionRequest<'_>, cx:&mut crate::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
+    fn physical_receipt(request:&ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin_decl_registry::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
         let mut execution=echo(request,cx)?;
         execution.retained_progress=RetainedCloneProgress{copied_items:7,copied_bytes:23,retained_capacity_bytes:0,released_bytes:65536};
         execution.execution.as_mut().unwrap().retirement_progress=execution.retained_progress;
@@ -149,7 +153,7 @@ mod artifact_inference_wire_tests {
         let error = wire_artifact_infer_from_cold(&registry, semio_framework_pack_json::to_json_string(&request.await).as_bytes(),71,3,&mut cx).unwrap_err();
         assert_eq!(error.code, "artifact-inference.cancelled");
     }
-    fn wallet_echo(request:&ArtifactInferenceExecutionRequest<'_>, cx:&mut crate::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
+    fn wallet_echo(request:&ArtifactInferenceExecutionRequest<'_>, cx:&mut semio_framework_plugin_decl_registry::ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
         let expected:RetainedCloneGrant=semio_framework_pack_json::from_json_str(std::str::from_utf8(request.canonical_payload).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(request.retained,expected);echo(request,cx)
     }
@@ -169,4 +173,5 @@ mod artifact_inference_wire_tests {
 
 }
 
-fn completed_child_demands(_request:&ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
+#[doc(hidden)]
+pub fn completed_child_demands(_request:&ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}

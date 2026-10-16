@@ -12,12 +12,12 @@
  * @see ./🔣️.json
  * @see ./🦀️.rs
  */
-import { OsConfigSchemaError, parseUiLocale } from "../../../🎚️config/🧬️schema/🟦️.ts";
+import { OsConfigSchemaError, parseUiLocale } from "@semio-tech/framework/config/schema";
 import type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice } from "../🤖️generated/🟦️.js";
 import schemaDocument from "./🔣️.json" with { type: "json" };
 
-export { OsConfigSchemaError, parseUiAppearance, parseUiChromeLayout, parseUiDriver, parseUiLocale, parseUiPreferences, parseUiTheme } from "../../../🎚️config/🧬️schema/🟦️.ts";
-export type { UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme } from "../../../🎚️config/🧬️schema/🟦️.ts";
+export { OsConfigSchemaError, parseUiAppearance, parseUiChromeLayout, parseUiDriver, parseUiLocale, parseUiPreferences, parseUiTheme } from "@semio-tech/framework/config/schema";
+export type { UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme } from "@semio-tech/framework/config/schema";
 export * from "../🤖️generated/🟦️.js";
 
 //#region 🪪️Authority
@@ -218,10 +218,3 @@ export const parseSyncCardKind = defineParser<SyncCardKind>("SyncCardKind");
 export const parseTransientNotice = defineParser<TransientNotice>("TransientNotice");
 
 //#endregion 🧬️Parsers
-
-//#region 🧪️tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️os-shell-schema-module/🟦️.ts");
-  await registerTests1(import.meta.vitest, { OS_SHELL_SCHEMA_EXPORT_IDS, OS_SHELL_SCHEMA_ID, OsConfigSchemaError, ShellSchemaError, osShellSchemaDocument, parseAnchor, parseByAnchor, parseLayoutNode, parseLoadedPlugin, parseShellCommand, parseShellError, parseShellEvent, parseShellState, parseUiLocale }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️tests

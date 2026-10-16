@@ -1,4 +1,4 @@
-import type {RetainedCloneGrant,RetainedCloneProgress,RetirementDemand} from "../../../🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts";
+import type {RetainedCloneGrant,RetainedCloneProgress,RetirementDemand} from "@semio-tech/value-ts/retained-clone/contract";
 export type RetainedWorkGrant=RetainedCloneGrant;
 export type RetainedWorkDemand=RetirementDemand;
 export type RetainedWorkReceipt=RetainedCloneProgress;

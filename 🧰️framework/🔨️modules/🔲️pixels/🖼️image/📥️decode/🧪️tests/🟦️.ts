@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv/dist/2020";
-import fundingSchema from "../../../../🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json";
+import { retainedCloneContractSchema as fundingSchema } from "@semio-tech/value-ts/retained-clone/contract/schema";
 import {PNG} from "pngjs";
 import cases from "./🧫️fixtures/🔣️.json";
 import invalid from "./🧫️fixtures/⚠️invalid/🔣️.json";

@@ -1,0 +1,118 @@
+{
+  "records": [
+    {
+      "value": {
+        "value": 7
+      },
+      "accepted": true
+    },
+    {
+      "value": null,
+      "accepted": false
+    },
+    {
+      "value": [],
+      "accepted": false
+    },
+    {
+      "value": "text",
+      "accepted": false
+    }
+  ],
+  "strings": [
+    {
+      "value": [
+        "a",
+        "b"
+      ],
+      "accepted": true
+    },
+    {
+      "value": [
+        "a",
+        7
+      ],
+      "accepted": false
+    },
+    {
+      "value": {},
+      "accepted": false
+    }
+  ],
+  "inputs": [
+    {
+      "value": [
+        "source",
+        {
+          "env": "KEY"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "value": [
+        [],
+        7
+      ],
+      "accepted": false
+    },
+    {
+      "value": {},
+      "accepted": false
+    }
+  ],
+  "methods": [
+    {
+      "kind": "method",
+      "accepted": true
+    },
+    {
+      "kind": "accessor",
+      "accepted": false
+    },
+    {
+      "kind": "absent",
+      "accepted": false
+    },
+    {
+      "kind": "inherited",
+      "accepted": false
+    },
+    {
+      "kind": "scalar",
+      "accepted": false
+    }
+  ],
+  "modules": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔒️lock/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"
+  ],
+  "lock": {
+    "packages": [
+      {
+        "name": "a",
+        "version": "1.0.0",
+        "dependencies": [
+          "b 2.0.0"
+        ]
+      },
+      {
+        "name": "b",
+        "version": "2.0.0",
+        "dependencies": []
+      },
+      {
+        "name": "unrelated",
+        "version": "1.0.0",
+        "dependencies": []
+      }
+    ],
+    "roots": [
+      {
+        "name": "a",
+        "version": "1.0.0"
+      }
+    ]
+  }
+}

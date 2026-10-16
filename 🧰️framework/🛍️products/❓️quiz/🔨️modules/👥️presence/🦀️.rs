@@ -214,6 +214,3 @@ fn sorted(mut issues: Vec<ValidationIssue>) -> Vec<ValidationIssue> {
     issues
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

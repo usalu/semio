@@ -1,7 +1,6 @@
 use super::*;
 
-#[path = "../../../🧪️tests/🔬️catalog-json/🦀️.rs"]
-mod json_oracle;
+use semio_s_plugin_process_catalog_json_oracle as json_oracle;
 
 #[semio_framework_async_macros::async_test]
 async fn every_machine_and_capability_id_is_unique() {

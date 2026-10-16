@@ -1,6 +1,6 @@
 import Ajv from "ajv";
 import { createMemoryStoragePort, createScopedStoragePort } from "@semio-tech/framework";
-import type { UiPreferencesConfigMutation } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import type { UiPreferencesConfigMutation } from "../../../../../../../../🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import uiPreferencesSchema from "../../../../../../🎚️config/🧬️schema/🎨️ui-preferences/🔣️.json" with { type: "json" };
 import fixture from "../🧫️fixtures/🎚️canonical-os-ui-preferences/🔁️event-replay.json" with { type: "json" };
 

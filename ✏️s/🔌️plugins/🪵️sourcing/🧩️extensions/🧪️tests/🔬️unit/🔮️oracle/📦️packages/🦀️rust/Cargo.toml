@@ -1,0 +1,24 @@
+[workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
+
+[package]
+name = "semio-s-plugin-sourcing-catalog-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Independent serde_json oracle of the sourcing typology and kind catalogs, shared by the sourcing extension crates"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_plugin_sourcing_catalog_oracle"
+path = "../../🦀️.rs"
+
+[dependencies]
+serde_json = "1"

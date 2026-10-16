@@ -205,7 +205,7 @@ impl semio_framework_os_kernel::os_spr::OpBinary for DerivedMutation {
         let variants = <Self as DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
-        let body = semio_framework_os_kernel::os_pack::encode_record_body(&spec, &record, &semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(semio_framework_os_kernel::os_spr::ProtocolError::from)?;
+        let body = semio_framework_os_kernel::os_pack::record::encode_record_body(&spec, &record, &semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(semio_framework_os_kernel::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
         semio_framework_os_kernel::os_pack::write_varint_u64(&mut out, ordinal as u64);
@@ -225,7 +225,7 @@ impl semio_framework_os_kernel::os_spr::OpBinary for DerivedMutation {
         let spec = (spec_fn.ordinary)();
         let record_offset = reader.position() as u64;
         let body = &bytes[record_offset as usize..];
-        let (record, _report) = semio_framework_os_kernel::os_pack::decode_record_body(body, &spec, &semio_framework_os_kernel::os_store::PackDecodeOptions::default()).map_err(semio_framework_os_kernel::os_spr::ProtocolError::from)?;
+        let (record, _report) = semio_framework_os_kernel::os_pack::record::decode_record_body(body, &spec, &semio_framework_os_kernel::os_store::PackDecodeOptions::default()).map_err(semio_framework_os_kernel::os_spr::ProtocolError::from)?;
         <Self as DslVariants>::from_named_record(keyword, &record).map_err(|error| semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
@@ -692,7 +692,7 @@ impl semio_framework_os_kernel::os_spr::OpBinary for PaintOp {
         let variants = <Self as DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
-        let body = semio_framework_os_kernel::os_pack::encode_record_body(&spec, &record, &semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(semio_framework_os_kernel::os_spr::ProtocolError::from)?;
+        let body = semio_framework_os_kernel::os_pack::record::encode_record_body(&spec, &record, &semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(semio_framework_os_kernel::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
         semio_framework_os_kernel::os_pack::write_varint_u64(&mut out, ordinal as u64);
@@ -712,7 +712,7 @@ impl semio_framework_os_kernel::os_spr::OpBinary for PaintOp {
         let spec = (spec_fn.ordinary)();
         let record_offset = reader.position() as u64;
         let body = &bytes[record_offset as usize..];
-        let (record, _report) = semio_framework_os_kernel::os_pack::decode_record_body(body, &spec, &semio_framework_os_kernel::os_store::PackDecodeOptions::default()).map_err(semio_framework_os_kernel::os_spr::ProtocolError::from)?;
+        let (record, _report) = semio_framework_os_kernel::os_pack::record::decode_record_body(body, &spec, &semio_framework_os_kernel::os_store::PackDecodeOptions::default()).map_err(semio_framework_os_kernel::os_spr::ProtocolError::from)?;
         <Self as DslVariants>::from_named_record(keyword, &record).map_err(|error| semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
@@ -894,8 +894,8 @@ mod controlled_refusal;
 mod controlled_number_refusal;
 
 fn settle_paged_dsl_capsule<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(capsule:&mut semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation<T>){
- let backing=capsule.allocated_bytes();let(zero,requested,released)=semio_framework_os_kernel::test_allocation::observe_backing(||capsule.retire_one(0,4096).unwrap());assert_eq!((zero,requested,released),((false,0,0),0,0));assert_eq!(capsule.allocated_bytes(),backing);
- let mut disposed=0;for _ in 0..32768{let(step,requested,released)=semio_framework_os_kernel::test_allocation::observe_backing(||capsule.retire_one(1,4096).unwrap());assert_eq!(requested,0);assert_eq!(released,step.2);assert!(step.1<=1&&released<=4096);disposed+=released;if !step.0{break}}assert_eq!(disposed,backing);assert_eq!(capsule.allocated_bytes(),0);assert_eq!(capsule.variant_identity().unwrap_err().kind(),semio_framework_value::ValueRefusalKind::InvariantViolated);
+ let backing=capsule.allocated_bytes();let(zero,requested,released)=semio_framework_trace_memory_testing::observe_backing(||capsule.retire_one(0,4096).unwrap());assert_eq!((zero,requested,released),((false,0,0),0,0));assert_eq!(capsule.allocated_bytes(),backing);
+ let mut disposed=0;for _ in 0..32768{let(step,requested,released)=semio_framework_trace_memory_testing::observe_backing(||capsule.retire_one(1,4096).unwrap());assert_eq!(requested,0);assert_eq!(released,step.2);assert!(step.1<=1&&released<=4096);disposed+=released;if !step.0{break}}assert_eq!(disposed,backing);assert_eq!(capsule.allocated_bytes(),0);assert_eq!(capsule.variant_identity().unwrap_err().kind(),semio_framework_value::ValueRefusalKind::InvariantViolated);
 }
 fn take_paged_dsl_decoded<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(owner:&mut Option<variants_binary::RetainedDecodedOperation<T>>)->Option<T>{
  let mut capsule=owner.take()?;settle_paged_dsl_capsule(&mut capsule);match capsule.take_settled_source(){Ok(source)=>Some(source),Err(retained)=>{*owner=Some(retained);panic!("decoded source cannot leave unsettled canonical scratch")}}
@@ -993,7 +993,7 @@ async fn paged_dsl_operation_decodes_same_8194_source_and_checks_complete_canoni
         }
         assert_eq!(source.allocated_bytes(),retained);
         assert_eq!(take_paged_dsl_decoded(&mut canonical_owner).unwrap(),operation);
-        let mut options=semio_framework_os_kernel::os_pack::DecodeOptions::default();
+        let mut options=semio_framework_os_kernel::os_pack::record::DecodeOptions::default();
         options.limits.max_file_len=128;
         let refusal=variants_binary::decode_op_span::<DerivedMutation>(semio_framework_os_kernel::os_pack::ByteSpan::from_source(&source),&options,&Default::default(),&mut decoding,&mut encoding,&mut canonical_owner).unwrap_err();
         let semio_framework_os_kernel::os_spr::ProtocolError::Pack(semio_framework_os_kernel::os_pack::PackError::Refusal(refusal))=refusal else{panic!("caller source policy lost")};
@@ -1004,7 +1004,7 @@ async fn paged_dsl_operation_decodes_same_8194_source_and_checks_complete_canoni
     }
     let mut capsule=semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation::from_variant(&operation);
     let mut source=OwnedOperationBytes::try_new(16384,65536).unwrap();
-    let mut options=semio_framework_os_kernel::os_pack::EncodeOptions::default();
+    let mut options=semio_framework_os_kernel::os_pack::record::EncodeOptions::default();
     options.limits.max_file_len=128;
     let mut allow=|_|true;
     let mut encoding=semio_framework_value::NativeEncodeControl::new(131072,&mut allow);
@@ -1029,7 +1029,7 @@ async fn paged_dsl_operation_whole_frame_policy_includes_exact_header_and_admitt
     for maximum in [expected.len(),expected.len()-1]{
         let mut capsule=semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation::from_variant(&operation);
         let mut source=OwnedOperationBytes::try_new(16384,65536).unwrap();
-        let mut options=semio_framework_os_kernel::os_pack::EncodeOptions::default();
+        let mut options=semio_framework_os_kernel::os_pack::record::EncodeOptions::default();
         options.limits.max_file_len=maximum as u64;
         let mut allow=|_|true;
         let mut encoding=semio_framework_value::NativeEncodeControl::new(131072,&mut allow);
@@ -1037,7 +1037,7 @@ async fn paged_dsl_operation_whole_frame_policy_includes_exact_header_and_admitt
         let length=source.len();
         let exact=source.iter().eq(expected[..length.min(expected.len())].iter().copied());
         let decoded=if result.is_ok()&&maximum==expected.len(){
-            let mut decoding_options=semio_framework_os_kernel::os_pack::DecodeOptions::default();decoding_options.limits.max_file_len=maximum as u64;
+            let mut decoding_options=semio_framework_os_kernel::os_pack::record::DecodeOptions::default();decoding_options.limits.max_file_len=maximum as u64;
             let mut allow=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(131072,&mut allow);
             let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(131072,&mut allow);
             let mut canonical_owner=None;
@@ -1070,20 +1070,20 @@ async fn paged_dsl_operation_store_intrinsic_bridge_keeps_actual_field_and_sourc
     expected.extend_from_slice(&payload);
     let close=|source:&mut OwnedOperationBytes|{for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if source.close_one(1,4096).unwrap()==OperationByteCloseStep::Complete{break;}}assert!(source.terminal_is_empty());assert_eq!(source.allocated_bytes(),0);};
     let mut source=OwnedOperationBytes::try_new(16384,65536).unwrap();
-    let mut options=semio_framework_os_kernel::os_pack::EncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
+    let mut options=semio_framework_os_kernel::os_pack::record::EncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
     let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(131072,&mut allow);
     assert_eq!(semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value_into(&value,&options,&mut source,&mut encoding).unwrap(),expected.len());
     assert!(source.iter().eq(expected.iter().copied()));
     assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::to_value(&expected).unwrap());
     let retained=source.allocated_bytes();
-    let mut options=semio_framework_os_kernel::os_pack::DecodeOptions::default();options.limits.max_file_len=expected.len()as u64;
+    let mut options=semio_framework_os_kernel::os_pack::record::DecodeOptions::default();options.limits.max_file_len=expected.len()as u64;
     let mut allow=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(131072,&mut allow);
     assert_eq!(semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value_span(semio_framework_os_kernel::os_pack::ByteSpan::from_source(&source),&options,&mut decoding).unwrap(),value);
     options.limits.max_file_len-=1;
     assert_eq!(semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value_span(semio_framework_os_kernel::os_pack::ByteSpan::from_source(&source),&options,&mut decoding).unwrap_err().kind(),semio_framework_value::ValueRefusalKind::WorkLimit);
     assert_eq!(source.allocated_bytes(),retained);assert!(source.iter().eq(expected.iter().copied()));close(&mut source);
     let mut source=OwnedOperationBytes::try_new(16384,65536).unwrap();
-    let mut options=semio_framework_os_kernel::os_pack::EncodeOptions::default();options.limits.max_total_alloc=128;
+    let mut options=semio_framework_os_kernel::os_pack::record::EncodeOptions::default();options.limits.max_total_alloc=128;
     let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(131072,&mut allow);
     assert_eq!(semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value_into(&value,&options,&mut source,&mut encoding).unwrap_err().kind(),semio_framework_value::ValueRefusalKind::OwnershipLimit);
     assert_eq!(source.len(),0);close(&mut source);
@@ -1106,7 +1106,7 @@ async fn paged_dsl_operation_original_variant_borrows8194_payload_under512_metad
     let mut expected:Vec<u8>=fixture["prefix"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect();
     let DerivedMutation::SetCategory{category}=&operation else{unreachable!()};expected.extend_from_slice(category.as_bytes());
     assert_eq!(variants_binary::encode_op(&operation).unwrap(),expected);
-    let mut options=semio_framework_os_kernel::os_pack::EncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
+    let mut options=semio_framework_os_kernel::os_pack::record::EncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
     let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
     let mut capsule=semio_framework_os_kernel::os_pack::record::BorrowedProjectedPackOperation::from_variant(&operation);
     let mut measurement=OperationByteMeasurement::new(options.limits.max_file_len);

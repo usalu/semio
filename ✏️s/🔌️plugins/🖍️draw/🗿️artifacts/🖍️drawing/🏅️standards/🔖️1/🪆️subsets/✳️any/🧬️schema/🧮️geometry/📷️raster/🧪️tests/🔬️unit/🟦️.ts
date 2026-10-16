@@ -14,12 +14,14 @@ import {PreparedFill} from "../../../../🎨️fill/🎨️sampling/🟦️.ts";
 import {PathFlattenJob} from "@semio-tech/framework/2d/path/flatten";
 import {CoverageJob} from "@semio-tech/framework/pixels/coverage";
 import {PathRasterJob,rasterizePath,type PathRasterInput} from "../../🟦️.ts";
-const validate=new Ajv({strict:true}).compile(schema);
+import {admitted} from "../../../../../🧪️tests/🧫️fixtures/🟦️.ts";
+const validate=new Ajv({strict:true}).compile<PathRasterInput>(schema);
+const rasterInput=(value:unknown):PathRasterInput=>admitted(validate,value,"path raster input");
 const validateProgress=new Ajv({strict:true}).compile({definitions:schema.definitions,$ref:"#/definitions/progress"});
 const validateRetirement=new Ajv({strict:true}).compile(schema.definitions.retirementProgress);
 test("whole painted path retirement retains real children, private candidates and published pixels",async()=>{
  let comparisons=0;
- for(const row of retirementCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=structuredClone(source.input) as PathRasterInput;if(row.mode==="failure")input.segments=[{kind:"move",to:[0,0]},{kind:"line",to:[1e10,0]}];const before=structuredClone(input),job=new PathRasterJob(input),state=job as any,records:{source:object;job:any;work:number}[]=[];
+ for(const row of retirementCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=rasterInput(structuredClone(source.input));if(row.mode==="failure")input.segments=[{kind:"move",to:[0,0]},{kind:"line",to:[1e10,0]}];const before=structuredClone(input),job=new PathRasterJob(input),state=job as any,records:{source:object;job:any;work:number}[]=[];
   const spies=[PathFlattenJob,StrokeOutlineJob,CoverageJob,PreparedFill].map(kind=>{const prototype=kind.prototype as any,original=prototype.intoRetirement;return spyOn(prototype,"intoRetirement").mockImplementation(function(this:object){const result=original.call(this),owner="job"in result?result.job:result,record={source:this,job:owner,work:0};records.push(record);const advance=owner.advance.bind(owner);owner.advance=(unit:number)=>{expect(unit).toBe(1);const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return result;});});
   try{if(row.mode==="failure")expect(()=>job.advance(4096)).toThrow();else{let reached=false;for(let at=0;at<2000000;at++){if(state.phase===row.phase){reached=true;break;}job.advance(1);}expect(reached).toBe(true);if(row.steps)job.advance(row.steps);}
    const active=[state.flatten,state.outline,state.coverage,state.fill].filter(Boolean),closing=["flattenRetirement","outlineRetirement","coverageRetirement"].map(key=>[key,state[key]] as const),pixels=state.pixels,published=row.mode==="published"?job.result():null;
@@ -37,7 +39,7 @@ test("whole painted path retirement retains real children, private candidates an
 });
 test("async whole path drains real owners after final cancellation and callback failure",async()=>{
  const original=(PathRasterJob.prototype as any).intoRetirement;
- for(const mode of ["success","abort","callback"]){const input=structuredClone(cases[15]!.input) as PathRasterInput,before=structuredClone(input),controller=new AbortController();let adopted=0,closed:any=null,work=0;
+ for(const mode of ["success","abort","callback"]){const input=rasterInput(structuredClone(cases[15]!.input)),before=structuredClone(input),controller=new AbortController();let adopted=0,closed:any=null,work=0;
   const spy=spyOn(PathRasterJob.prototype as any,"intoRetirement").mockImplementation(function(this:PathRasterJob){adopted++;const result=original.call(this);closed=result;const advance=result.job.advance.bind(result.job);result.job.advance=(grant:number)=>{expect(grant).toBe(1);const p=advance(grant);expect(p.work-work).toBe(1);work=p.work;return p;};return result;});
   try{const pending=rasterizePath(input,{signal:controller.signal,workBudget:1,onProgress:p=>{if(p.done){if(mode==="abort")controller.abort();if(mode==="callback")throw Error("whole path completion callback failed");}}});if(mode==="success"){const image=await pending;expect(image.pixels).toBe(closed.output.pixels);expect([...image.pixels]).toEqual(cases[15]!.expected);}else{await expect(pending).rejects.toThrow(mode==="abort"?/cancelled/:/completion callback failed/);expect(closed.output).toBeNull();}expect(adopted).toBe(1);expect(closed.job.terminalIsEmpty()).toBe(true);expect(work).toBeGreaterThanOrEqual(16);expect(input).toEqual(before);process.stderr.write(`[DEBUG] Actual async whole-path ${mode}: one adoption and ${work} one-unit cleanup steps\n`);
   }finally{spy.mockRestore();}
@@ -45,7 +47,7 @@ test("async whole path drains real owners after final cancellation and callback 
 });
 test("painted paths retain real flattened ownership through publication",async()=>{
  let comparisons=0;
- for(const row of flattenCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any;
+ for(const row of flattenCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=rasterInput(source.input),before=structuredClone(input),job=new PathRasterJob(input),state=job as any;
   while(!job.advance(grant).done){}const owner=state.flattenRetirement;expect(owner).not.toBeNull();expect(owner.terminalIsEmpty()).toBe(false);const image=job.result();expect([...image.pixels]).toEqual(source.expected);const reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();expect(delta(image.pixels,reference)).toBeLessThanOrEqual(2);const retired=job.intoRetirement();expect(retired.output!.pixels).toBe(image.pixels);while(!retired.job.advance(grant).done){}expect(owner.terminalIsEmpty()).toBe(true);expect(input).toEqual(before);comparisons++;
  }
  process.stderr.write(`[DEBUG] Painted paths retained flatten backing through publication: ${comparisons} independent SVG comparisons and explicit final closes\n`);
@@ -83,7 +85,7 @@ function delta(a:Uint8Array,b:Uint8Array):number {
  return max;
 }
 for(const row of cases)test(row.name,async()=>{
- expect(validate(row.input)).toBe(true);const input=row.input as PathRasterInput,before=structuredClone(input);
+ expect(validate(row.input)).toBe(true);const input=rasterInput(row.input),before=structuredClone(input);
  for(const budget of [1,7,4096])expect([...complete(input,budget).pixels]).toEqual(row.expected);
  expect(input).toEqual(before);
  let reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();
@@ -92,21 +94,21 @@ for(const row of cases)test(row.name,async()=>{
 });
 test("painted path lifecycle is resumable, cancellable and refuses partial pixels",()=>{
  for(const steps of [0,1,10,30,80]) {
-  const job=new PathRasterJob(cases[15]!.input as PathRasterInput);expect(()=>job.result()).toThrow();
+  const job=new PathRasterJob(rasterInput(cases[15]!.input));expect(()=>job.result()).toThrow();
   for(let at=0;at<steps;at++)job.advance(1);job.cancel();expect(()=>job.advance(1)).toThrow(/cancelled/);expect(()=>job.result()).toThrow(/cancelled/);
  }
- const input=cases[0]!.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input);
+ const input=rasterInput(cases[0]!.input),before=structuredClone(input),job=new PathRasterJob(input);
  while(!job.advance(4096).done){}const pixels=job.result().pixels;job.cancel();expect([...pixels]).toEqual(cases[0]!.expected);expect(input).toEqual(before);
 });
 test("async painted paths yield, report phases and respond to abort",async()=>{
  const events:string[]=[];const timer=setTimeout(()=>events.push("timer"),0);
- const image=await rasterizePath(cases[15]!.input as PathRasterInput,{workBudget:7,onProgress:(p:any)=>events.push(p.phase)});
+ const image=await rasterizePath(rasterInput(cases[15]!.input),{workBudget:7,onProgress:(p:any)=>events.push(p.phase)});
  clearTimeout(timer);expect([...image.pixels]).toEqual(cases[15]!.expected);expect(events.indexOf("timer")).toBeGreaterThanOrEqual(0);expect(events.indexOf("timer")).toBeLessThan(events.indexOf("complete"));
- const controller=new AbortController();await expect(rasterizePath(cases[0]!.input as PathRasterInput,{workBudget:1,signal:controller.signal,onProgress:()=>controller.abort()})).rejects.toThrow(/cancelled/);
- let reported=false;await expect(rasterizePath(cases[0]!.input as PathRasterInput,{signal:controller.signal,onProgress:()=>{reported=true;}})).rejects.toThrow(/cancelled/);expect(reported).toBe(false);
+ const controller=new AbortController();await expect(rasterizePath(rasterInput(cases[0]!.input),{workBudget:1,signal:controller.signal,onProgress:()=>controller.abort()})).rejects.toThrow(/cancelled/);
+ let reported=false;await expect(rasterizePath(rasterInput(cases[0]!.input),{signal:controller.signal,onProgress:()=>{reported=true;}})).rejects.toThrow(/cancelled/);expect(reported).toBe(false);
 });
 test("invalid extent, paint, geometry and work grants fail without publication",()=>{
- const input=cases[0]!.input as PathRasterInput;
+ const input=rasterInput(cases[0]!.input);
  for(const patch of [{width:0},{width:16384,height:16384},{origin:[0,Infinity]},{fillRule:"inverse"},{fill:{kind:"solid",color:[2,0,0,1]}},{stroke:{color:[1,0,0,1],width:-1,cap:"butt",join:"miter"}},{transform:[1,0,0,1,Infinity,0]},{tolerance:0}])expect(()=>new PathRasterJob({...input,...patch} as PathRasterInput)).toThrow();
  for(const grant of [0,-1,1.5,NaN,Infinity])expect(()=>new PathRasterJob(input).advance(grant)).toThrow();
  const job=new PathRasterJob({...input,segments:[{kind:"move",to:[NaN,0]}]});expect(()=>job.advance(4096)).toThrow();expect(()=>job.result()).toThrow();expect(()=>job.advance(1)).toThrow();
@@ -120,7 +122,7 @@ test("authored curves retain transformed stroke caps, joins and dash boundaries"
  ];let comparisons=0;
  for(const segments of paths)for(const cap of ["butt","round","square"] as const)for(const join of ["miter","round","bevel"] as const)for(const dash of [null,[.6,.4],[0,.75]]) {
   const input:PathRasterInput={width:4,height:4,origin:[0,0],segments,transform:comparisons%2?[1,.2,-.15,.8,.3,.25]:[-.8,.2,.3,1,3,.1],tolerance:.0001,fillRule:"nonzero",fill:null,stroke:{color:[1,0,0,.7],width:.5,cap,join,dash}};
-  const actual=complete(input).pixels,scale=128;let raw:Uint8Array;
+  const actual=complete(input).pixels,scale=128;let raw:Uint8Array|Uint8ClampedArray;
   raw=await sharp(Buffer.from(svg(input,scale))).ensureAlpha().raw().toBuffer();
   if(segments[1]?.kind==="arc") {
    const canvas=createCanvas(4*scale,4*scale),ctx=canvas.getContext("2d");ctx.scale(scale,scale);ctx.transform(...input.transform as [number,number,number,number,number,number]);ctx.strokeStyle="red";ctx.globalAlpha=.7;ctx.lineWidth=.5;ctx.lineCap=cap;ctx.lineJoin=join;ctx.miterLimit=4;ctx.setLineDash(dash??[]);ctx.stroke(new Path2D(pathD(segments)));raw=ctx.getImageData(0,0,canvas.width,canvas.height).data;
@@ -132,12 +134,12 @@ test("authored curves retain transformed stroke caps, joins and dash boundaries"
  console.error(`[DEBUG] ${comparisons} authored curve/stroke Sharp and native-canvas comparisons completed`);
 },120000);
 test("local gradient paint follows both affine axes and canvas origin",async()=>{
- const input:PathRasterInput={...cases[5]!.input as PathRasterInput,width:24,height:24,origin:[-3,2],segments:[{kind:"move",to:[-100,-100]},{kind:"line",to:[100,-100]},{kind:"line",to:[100,100]},{kind:"line",to:[-100,100]},{kind:"close"}],transform:[1,.2,.4,.9,4,2],fill:{kind:"linearGradient",x1:-5,y1:3,x2:25,y2:17,stops:[{offset:0,color:[1,.2,.5,.6]},{offset:.4,color:[.2,.7,.4,.8]},{offset:1,color:[.8,.3,.1,1]}]}};
+ const input:PathRasterInput={...rasterInput(cases[5]!.input),width:24,height:24,origin:[-3,2],segments:[{kind:"move",to:[-100,-100]},{kind:"line",to:[100,-100]},{kind:"line",to:[100,100]},{kind:"line",to:[-100,100]},{kind:"close"}],transform:[1,.2,.4,.9,4,2],fill:{kind:"linearGradient",x1:-5,y1:3,x2:25,y2:17,stops:[{offset:0,color:[1,.2,.5,.6]},{offset:.4,color:[.2,.7,.4,.8]},{offset:1,color:[.8,.3,.1,1]}]}};
  const actual=complete(input).pixels,reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();expect(delta(actual,reference)).toBeLessThanOrEqual(2);
 });
 
 test("reversing quadratic retains the ideal segment area despite renderer cusp variation",async()=>{
- const input:PathRasterInput={...cases[0]!.input as PathRasterInput,width:4,height:4,fill:null,segments:[{kind:"move",to:[.5,1.5]},{kind:"quad",ctrl:[5,1.5],to:[.5,1.5]}],transform:[1,.2,-.15,.8,.3,.25],stroke:{color:[1,0,0,.7],width:.5,cap:"butt",join:"miter"}};
+ const input:PathRasterInput={...rasterInput(cases[0]!.input),width:4,height:4,fill:null,segments:[{kind:"move",to:[.5,1.5]},{kind:"quad",ctrl:[5,1.5],to:[.5,1.5]}],transform:[1,.2,-.15,.8,.3,.25],stroke:{color:[1,0,0,.7],width:.5,cap:"butt",join:"miter"}};
  const equivalent:PathRasterInput={...input,segments:[{kind:"move",to:[.5,1.5]},{kind:"line",to:[2.75,1.5]},{kind:"line",to:[.5,1.5]}]};
  expect([...complete(input).pixels]).toEqual([...complete(equivalent).pixels]);
  const scale=128,canvas=createCanvas(4*scale,4*scale),ctx=canvas.getContext("2d");ctx.scale(scale,scale);ctx.transform(...input.transform as [number,number,number,number,number,number]);ctx.strokeStyle="red";ctx.globalAlpha=.7;ctx.lineWidth=.5;ctx.lineCap="butt";ctx.lineJoin="miter";ctx.stroke(new Path2D(pathD(input.segments)));const reference=ctx.getImageData(0,0,canvas.width,canvas.height).data,actual=complete(input).pixels;let max=0;
@@ -147,7 +149,7 @@ test("reversing quadratic retains the ideal segment area despite renderer cusp v
 
 test("painted paths retain real stroke owners through sealed publication",async()=>{
  let comparisons=0;
- for(const row of strokeCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any;while(!job.advance(grant).done){}const owner=state.outlineRetirement;if(owner)expect(owner.terminalIsEmpty()).toBe(false);const image=job.result();expect([...image.pixels]).toEqual(source.expected);expect(input).toEqual(before);
+ for(const row of strokeCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=rasterInput(source.input),before=structuredClone(input),job=new PathRasterJob(input),state=job as any;while(!job.advance(grant).done){}const owner=state.outlineRetirement;if(owner)expect(owner.terminalIsEmpty()).toBe(false);const image=job.result();expect([...image.pixels]).toEqual(source.expected);expect(input).toEqual(before);
   let reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();if(source.name==="zero length round cap"){const raw=await sharp(Buffer.from(svg(input,128))).ensureAlpha().raw().toBuffer();let alpha=0;for(let at=3;at<raw.length;at+=4)alpha+=raw[at]!;reference=Buffer.from([255,0,0,Math.round(alpha/(128*128))]);}expect(delta(image.pixels,reference)).toBeLessThanOrEqual(2);const retired=job.intoRetirement();while(!retired.job.advance(grant).done){}if(owner)expect(owner.terminalIsEmpty()).toBe(true);comparisons++;
  }
  process.stderr.write(`[DEBUG] Painted stroke retained owners: ${comparisons} independent SVG outputs and final closes\n`);
@@ -155,7 +157,7 @@ test("painted paths retain real stroke owners through sealed publication",async(
 
 test("painted stroke cleanup refuses invalid grants and interrupted output",()=>{
  for(const row of strokeCases.filter(c=>c.work.typescript>0)) {
-  const input=cases.find(c=>c.name===row.source)!.input as PathRasterInput,job=new PathRasterJob(input),state=job as any;
+  const input=rasterInput(cases.find(c=>c.name===row.source)!.input),job=new PathRasterJob(input),state=job as any;
   for(let at=0;at<2000000&&state.phase!=="strokeCleanup";at++)job.advance(1);
   expect(state.phase).toBe("strokeCleanup");const owner=state.outlineRetirement,polygons=state.strokePolygons,work=state.work;
   for(const grant of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>job.advance(grant)).toThrow(/grant/);
@@ -165,7 +167,7 @@ test("painted stroke cleanup refuses invalid grants and interrupted output",()=>
 
 test("painted paths retain actual coverage owners and masks through publication",async()=>{
  const original=CoverageJob.prototype.intoRetirement;let comparisons=0;
- for(const row of coverageCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=source.input as PathRasterInput,before=structuredClone(input),job=new PathRasterJob(input),state=job as any,records:{kind:string;owner:ReturnType<CoverageJob["intoRetirement"]>}[]=[];
+ for(const row of coverageCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=rasterInput(source.input),before=structuredClone(input),job=new PathRasterJob(input),state=job as any,records:{kind:string;owner:ReturnType<CoverageJob["intoRetirement"]>}[]=[];
   const spy=spyOn(CoverageJob.prototype,"intoRetirement").mockImplementation(function(this:CoverageJob){const kind=state.phase==="fillCoverage"?"fill":"stroke",mask=this.result(),owner=original.call(this);expect(owner.output).toBe(mask);records.push({kind,owner});return owner;});
   try{while(!job.advance(grant).done){}}finally{spy.mockRestore();}expect(records.map(r=>r.kind)).toEqual(row.coverage);for(const record of records){expect(record.owner.job.terminalIsEmpty()).toBe(false);expect(record.owner.output!.coverage.length).toBe(input.width*input.height);}const image=job.result();expect([...image.pixels]).toEqual(source.expected);expect(input).toEqual(before);const reference=await sharp(Buffer.from(svg(input))).ensureAlpha().raw().toBuffer();expect(delta(image.pixels,reference)).toBeLessThanOrEqual(2);const retired=job.intoRetirement();while(!retired.job.advance(grant).done){}for(const record of records)expect(record.owner.job.terminalIsEmpty()).toBe(true);comparisons++;
  }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import {selectedGraphSdkPortsV1} from "../🕸️graph/🔏️seal/🎯️selection/🔌️sdk/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {createNxBootstrapCapabilitiesV1,nxBootstrapJavascriptEnvironmentV1} from "./📥️caller/🟦️.ts";
+import {createNxBootstrapCapabilitiesV1,readNxBootstrapAuthoringCapabilitiesV1,nxBootstrapJavascriptEnvironmentV1} from "./📥️caller/🟦️.ts";
 import{isToolingHeadroomRefusalV1,type ToolingHeadroomRefusalV1}from"./🛠️tools/🧹️retention/📏️headroom/🟦️.ts";
 import {writeSelectedGraphHandoffV1} from "../🕸️graph/🔏️seal/🎯️selection/📥️handoff/🟦️.ts";
 import {withNxCollectionAdmissionStoreV1,NX_COLLECTION_ADMISSION_MAXIMUM_BYTES_V1} from "./📥️admission/💾️storage/🟦️.ts";
@@ -604,7 +604,7 @@ if (import.meta.main) {
     const encoded = process.env.SEMIO_SCRIPT_POLICY, capabilityWire = process.env.SEMIO_SCRIPT_CAPABILITIES, inherited = process.env[SCRIPT_PROCESS_INVOCATION_ENV];
     const incoming = inherited === undefined ? undefined : readScriptProcessEnvelope(JSON.parse(inherited), Date.now());
     const policy = encoded === undefined ? incoming?.policy ?? readScriptPolicy({ version: 1, owner: "repository:nx", maximumElapsedMilliseconds: orchestratorBudgetMs() ?? 0 }) : readScriptPolicy(JSON.parse(encoded));
-    const capabilities = capabilityWire === undefined ? incoming?.capabilities ?? createNxBootstrapCapabilitiesV1(WORKSPACE_ROOT,args,process.env) : JSON.parse(capabilityWire);
+    const capabilities = incoming ? capabilityWire===undefined?incoming.capabilities:JSON.parse(capabilityWire) : capabilityWire===undefined?createNxBootstrapCapabilitiesV1(WORKSPACE_ROOT,args,process.env):readNxBootstrapAuthoringCapabilitiesV1(JSON.parse(capabilityWire));
     const envelope = incoming ?? createScriptProcessEnvelope(policy, capabilities, Date.now());
     if (envelope.policy.version !== policy.version || envelope.policy.owner !== policy.owner || envelope.policy.maximumElapsedMilliseconds !== policy.maximumElapsedMilliseconds) throw Error("Original Nx process policy changed across handoff");
     if (JSON.stringify(envelope.capabilities) !== JSON.stringify(capabilities)) throw Error("Original Nx process capabilities changed across handoff");

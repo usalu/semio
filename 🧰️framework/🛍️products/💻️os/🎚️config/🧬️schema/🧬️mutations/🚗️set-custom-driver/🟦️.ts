@@ -1,2 +1,2 @@
-export { setCustomDriver } from "../🟦️.ts";
-export type { SetCustomDriver } from "../🟦️.ts";
+export { setCustomDriver } from "@semio-tech/framework/config/mutations";
+export type { SetCustomDriver } from "@semio-tech/framework/config/mutations";

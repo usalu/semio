@@ -1327,8 +1327,8 @@ struct FlowHostEffectPayload {
 #[path = "🧵️retained/📤️effect/🦀️.rs"]
 mod original_host_effect;
 
-fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::ScalarRecordView<'_>, &'static str> {
-    use store::os_pack::{ScalarRecordField as Field, ScalarRecordView};
+fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::record::scalar_witness::ScalarRecordView<'_>, &'static str> {
+    use store::os_pack::record::scalar_witness::{ScalarRecordField as Field, ScalarRecordView};
     let ordinal = FlowCommand::TOOL_JOB_IDS.iter().position(|id| *id == command.command_id()).ok_or("Flow scalar command ordinal missing")? as u64;
     let fields = match command {
         FlowCommand::Evaluate(_) | FlowCommand::OpenSpotlight(_) => [None, None, None],
@@ -1344,7 +1344,7 @@ fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::Sca
     Ok(ScalarRecordView { ordinal, fields })
 }
 
-fn flow_host_wire_view(payload: &FlowHostEffectPayload) -> Result<store::os_pack::ScalarRecordView<'_>, &'static str> {
+fn flow_host_wire_view(payload: &FlowHostEffectPayload) -> Result<store::os_pack::record::scalar_witness::ScalarRecordView<'_>, &'static str> {
     flow_scalar_command_view(&payload.command)
 }
 
@@ -1358,7 +1358,7 @@ struct FlowHostEffectJob {
     decoder_close: Option<semio_framework_value::retirement::shared::SharedControlledRetirement<FlowHostEffectPayload>>,
     completion_refusal: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<FlowPlayApp>>>>,
     input: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    decoder: Option<store::os_pack::ScalarRecordWireWitness<FlowHostEffectPayload>>,
+    decoder: Option<store::os_pack::record::scalar_witness::ScalarRecordWireWitness<FlowHostEffectPayload>>,
     page: usize,
     byte: usize,
     validated: bool,
@@ -1399,9 +1399,9 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
             }
             let Some(decoder) = self.decoder.as_mut() else { return Err(Self::fault()) };
             let compared_bytes=match decoder.advance(page.and_then(|page| page.get(self.byte)).copied()) {
-                Ok(store::os_pack::ScalarRecordWireStep::Consumed { compared_bytes }) => {self.byte += 1;compared_bytes},
-                Ok(store::os_pack::ScalarRecordWireStep::Progress { compared_bytes }) => compared_bytes,
-                Ok(store::os_pack::ScalarRecordWireStep::Complete) => {self.validated = true;0},
+                Ok(store::os_pack::record::scalar_witness::ScalarRecordWireStep::Consumed { compared_bytes }) => {self.byte += 1;compared_bytes},
+                Ok(store::os_pack::record::scalar_witness::ScalarRecordWireStep::Progress { compared_bytes }) => compared_bytes,
+                Ok(store::os_pack::record::scalar_witness::ScalarRecordWireStep::Complete) => {self.validated = true;0},
                 Err(_) => return Err(Self::fault()),
             };
             context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:compared_bytes,..Default::default()})?;
@@ -1511,7 +1511,7 @@ impl semio_framework::ToolJobFactory for FlowHostEffectJobFactory {
             Err(error) => return Err((error, input, None)),
         };
         job.input = Some(input);
-        job.decoder = Some(store::os_pack::ScalarRecordWireWitness::new(job.payload.as_ref().unwrap().clone(), flow_host_wire_view));
+        job.decoder = Some(store::os_pack::record::scalar_witness::ScalarRecordWireWitness::new(job.payload.as_ref().unwrap().clone(), flow_host_wire_view));
         job.validated = false;
         Ok(job)
     }

@@ -1,7 +1,7 @@
 import contract from "./🔣️.json";
 import identity from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
 import { parseInstallationDirectoryV1, type InstallationDirectoryV1 } from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 
 export type PluginHostMetadata = { readonly landingAppId: string; readonly hostAppId: string };
 export type ComponentSourceOwnerV1 = {

@@ -1,7 +1,7 @@
 /** 🔺️ `En1993Diff` wire twin: the sparse delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireDefault, normWireInteger, normWireLiteral, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireDefault, normWireInteger, normWireLiteral, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 import { type BridgeFatigue, type ColdFormedMember, type CraneRunway, type DesignAction, type FatigueBand, type FatigueDetail, type FireExposure, type ForceAction, type JointForceAction, type LoadCase, type MemberAction, type PlatedPanel, type SiloShell, type SteelJoint, type SteelMaterial, type SteelMember, type SteelPile, type SteelSection, type TensionComponent, type TowerLeg, parseBridgeFatigue, parseColdFormedMember, parseCraneRunway, parseDesignAction, parseFatigueBand, parseFatigueDetail, parseFireExposure, parseForceAction, parseJointForceAction, parseLoadCase, parseMemberAction, parsePlatedPanel, parseSiloShell, parseSteelJoint, parseSteelMaterial, parseSteelMember, parseSteelPile, parseSteelSection, parseTensionComponent, parseTowerLeg } from "../📸️snapshot/🟦️.ts";
 
 export interface En1993MaterialPatch { grade: (string) | null; fy: (number) | null; fu: (number) | null; eModulus: (number) | null; gModulus: (number) | null; subgrade: (string) | null; kind: (string) | null; }

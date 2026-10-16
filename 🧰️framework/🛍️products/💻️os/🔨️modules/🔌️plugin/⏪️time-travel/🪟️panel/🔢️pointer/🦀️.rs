@@ -1,6 +1,26 @@
 //! 🔢️ The draft editor input rows of the history panel: RFC 6901 pointer reads and edits of the draft value, variant switching, snaps, options, coercion, selection values and entity names.
 
-use super::*;
+use semio_framework::{ActionArgDef, ActionArgOption, ArgPresentation, ArgSchema, FaultFrom, OptionSource, SnapSource, input_label_glossary, reference_id_text, registered_input_schema_document};
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use std::collections::{BTreeMap, BTreeSet};
+use semio_framework_value::DslValue;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_ui_locale::LocalizedLabel;
+use store::{Mutation, MutationDiff};
+use protocol::{OpBinary, OpText};
+use crate::panel_sections::{TIME_TRAVEL_ENTITY_NAME_VISITS, TIME_TRAVEL_SHORT_ID_CHARS};
+use semio_framework_plugin_command::lifted_command::{TimeTravelInputRow, TimeTravelList, TimeTravelListItem};
+#[cfg(test)]
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_ui_contract::*;
 
 //#region 🔖️Pointer
 /// 🔢️ The array index an RFC 6901 reference token names: `0` or a digit run without a leading zero (no sign, no padding),
@@ -10,7 +30,8 @@ fn time_travel_pointer_index(segment: &str) -> Option<usize> {
 }
 
 /// 🧭️ The value at RFC 6901 `pointer` inside `value`.
-pub(crate) fn time_travel_pointer_get<'a>(value: &'a DslValue, pointer: &str) -> Option<&'a DslValue> {
+#[doc(hidden)]
+pub fn time_travel_pointer_get<'a>(value: &'a DslValue, pointer: &str) -> Option<&'a DslValue> {
     let Some(rest) = pointer.strip_prefix('/') else { return (pointer.is_empty()).then_some(value) };
     let mut cursor = value;
     for segment in rest.split('/').map(|segment| segment.replace("~1", "/").replace("~0", "~")) {
@@ -25,7 +46,8 @@ pub(crate) fn time_travel_pointer_get<'a>(value: &'a DslValue, pointer: &str) ->
 
 /// 🧭️ Replaces the value at RFC 6901 `pointer` inside `value` (an absent last object member or the next array slot is
 /// created); `false` when the pointer does not address a slot.
-pub(crate) fn time_travel_pointer_set(value: &mut DslValue, pointer: &str, replacement: DslValue) -> bool {
+#[doc(hidden)]
+pub fn time_travel_pointer_set(value: &mut DslValue, pointer: &str, replacement: DslValue) -> bool {
     let Some(rest) = pointer.strip_prefix('/') else { return false };
     let segments: Vec<String> = rest.split('/').map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect();
     let mut cursor = value;
@@ -71,7 +93,8 @@ fn time_travel_pointer_get_mut<'a>(value: &'a mut DslValue, pointer: &str) -> Op
 
 /// ➕️ Inserts `item` into the array RFC 6901 `pointer` ends in: before the item its last segment indexes, or after the last
 /// one for `-` (or the array's length); `false` when the pointer names no array slot.
-pub(crate) fn time_travel_pointer_insert(value: &mut DslValue, pointer: &str, item: DslValue) -> bool {
+#[doc(hidden)]
+pub fn time_travel_pointer_insert(value: &mut DslValue, pointer: &str, item: DslValue) -> bool {
     let Some((array, slot)) = pointer.rsplit_once('/') else { return false };
     let Some(DslValue::Array(items)) = time_travel_pointer_get_mut(value, array) else { return false };
     let Some(position) = (if slot == "-" { Some(items.len()) } else { time_travel_pointer_index(slot).filter(|position| *position <= items.len()) }) else { return false };
@@ -80,7 +103,8 @@ pub(crate) fn time_travel_pointer_insert(value: &mut DslValue, pointer: &str, it
 }
 
 /// ➖️ Removes the array item RFC 6901 `pointer` addresses; `false` when it names no item.
-pub(crate) fn time_travel_pointer_remove(value: &mut DslValue, pointer: &str) -> bool {
+#[doc(hidden)]
+pub fn time_travel_pointer_remove(value: &mut DslValue, pointer: &str) -> bool {
     let Some((array, slot)) = pointer.rsplit_once('/') else { return false };
     let Some(DslValue::Array(items)) = time_travel_pointer_get_mut(value, array) else { return false };
     let Some(position) = time_travel_pointer_index(slot).filter(|position| *position < items.len()) else { return false };
@@ -92,7 +116,8 @@ pub(crate) fn time_travel_pointer_remove(value: &mut DslValue, pointer: &str) ->
 /// stepped over, else 0), a choice's first option, an empty text, `false`, a vector of such numbers, an empty reference
 /// list (an empty id for one reference), the fewest items a list admits, and an object of its required fields (their
 /// declared defaults first); the payload schema then judges it like any drafted value.
-pub(crate) fn time_travel_default_value(schema: &ArgSchema) -> DslValue {
+#[doc(hidden)]
+pub fn time_travel_default_value(schema: &ArgSchema) -> DslValue {
     let number = |min: Option<f64>, max: Option<f64>, exclusive: bool, step: Option<f64>, integer: bool| {
         let low = min.map_or_else(|| max.map_or(0.0, |max| max.min(0.0)), |min| if exclusive { min + step.filter(|step| *step > 0.0).unwrap_or(1.0) } else { min });
         DslValue::json_number(if integer { low.ceil() } else { low })
@@ -113,7 +138,8 @@ pub(crate) fn time_travel_default_value(schema: &ArgSchema) -> DslValue {
 /// 🔀️ The variant selector of a union payload's inputs: the ungrouped string input whose options name the group of
 /// every grouped input (the reader groups each variant's fields by the variant's value); `None` for a payload that is
 /// no union, whose `group`s only lay its inputs out.
-pub(crate) fn time_travel_variant_selector(inputs: &[ActionArgDef]) -> Option<&ActionArgDef> {
+#[doc(hidden)]
+pub fn time_travel_variant_selector(inputs: &[ActionArgDef]) -> Option<&ActionArgDef> {
     let groups: BTreeSet<&str> = inputs.iter().filter_map(|input| input.group.as_deref()).collect();
     if groups.is_empty() {
         return None;
@@ -132,7 +158,8 @@ fn time_travel_active_inputs<'a>(inputs: &'a [ActionArgDef], value: &DslValue) -
 /// 🎛️ The input descriptor RFC 6901 `pointer` addresses in `value`, resolved against the variant `value` is in: object
 /// members and array items recurse to any depth (an array item is described by the array's item schema), and a vector
 /// or reference list component is one element of its input (`true`).
-pub(crate) fn time_travel_input_at(inputs: &[ActionArgDef], value: &DslValue, pointer: &str) -> Option<(ActionArgDef, bool)> {
+#[doc(hidden)]
+pub fn time_travel_input_at(inputs: &[ActionArgDef], value: &DslValue, pointer: &str) -> Option<(ActionArgDef, bool)> {
     let rest = pointer.strip_prefix('/')?;
     let mut segments = rest.split('/').map(|segment| segment.replace("~1", "/").replace("~0", "~"));
     let first = segments.next()?;
@@ -158,7 +185,8 @@ pub(crate) fn time_travel_input_at(inputs: &[ActionArgDef], value: &DslValue, po
 /// flattened into their fields, and a list input (an array of any item kind) as its own row ([`TimeTravelList`], which
 /// adds an item) followed by every item `value` holds — an object item as one item row then its fields, any other item as
 /// its own row ([`TimeTravelListItem`], which removes the item); a hidden input is never a row.
-pub(crate) fn time_travel_input_rows(inputs: &[ActionArgDef], value: &DslValue) -> Vec<TimeTravelInputRow> {
+#[doc(hidden)]
+pub fn time_travel_input_rows(inputs: &[ActionArgDef], value: &DslValue) -> Vec<TimeTravelInputRow> {
     fn nested(parent: &LocalizedLabel, child: &LocalizedLabel) -> LocalizedLabel {
         LocalizedLabel::from_fn(|terminology, locale| format!("{} \u{b7} {}", parent.resolve(terminology, locale), child.resolve(terminology, locale)))
     }
@@ -201,7 +229,8 @@ pub(crate) fn time_travel_input_rows(inputs: &[ActionArgDef], value: &DslValue) 
 
 /// 🔀️ `value` switched to union variant `variant` (its selector `selector`): the selector set, every member only other
 /// variants declare removed, and every absent field of `variant` filled from its declared default.
-pub(crate) fn time_travel_switch_variant(inputs: &[ActionArgDef], selector: &ActionArgDef, value: &DslValue, variant: &str) -> DslValue {
+#[doc(hidden)]
+pub fn time_travel_switch_variant(inputs: &[ActionArgDef], selector: &ActionArgDef, value: &DslValue, variant: &str) -> DslValue {
     let DslValue::Object(entries) = value else { return value.clone() };
     let declared = |key: &str| inputs.iter().any(|input| input.key() == key);
     let kept = |key: &str| inputs.iter().any(|input| input.key() == key && (input.group.is_none() || input.group.as_deref() == Some(variant)));
@@ -218,7 +247,8 @@ pub(crate) fn time_travel_switch_variant(inputs: &[ActionArgDef], selector: &Act
 
 /// 🧲️ Makes every `snapSource` of `rows` concrete: `spacing` answers the grid a `Config` or `Snapshot` source names
 /// ([`time_travel_apply_snap_spacing`]).
-pub(crate) fn time_travel_resolve_snaps(rows: &mut [TimeTravelInputRow], mut spacing: impl FnMut(&SnapSource) -> Option<f64>) {
+#[doc(hidden)]
+pub fn time_travel_resolve_snaps(rows: &mut [TimeTravelInputRow], mut spacing: impl FnMut(&SnapSource) -> Option<f64>) {
     for row in rows {
         let source = match &row.input.schema {
             ArgSchema::Number { snap_source: Some(source), .. } | ArgSchema::Vector { snap_source: Some(source), .. } => source.clone(),
@@ -237,7 +267,8 @@ pub(crate) fn time_travel_resolve_snaps(rows: &mut [TimeTravelInputRow], mut spa
 /// of an object, or, where the walk stands on an array, the record whose own `field` member equals it
 /// (`/hostSnapshot/widgets/{id}/params`: the `params` of the widget whose `id` is the payload's `id`). `None` while a member
 /// is missing or nothing matches.
-pub(crate) fn time_travel_option_target<'a>(template: &str, payload: &DslValue, document: &'a DslValue) -> Option<&'a DslValue> {
+#[doc(hidden)]
+pub fn time_travel_option_target<'a>(template: &str, payload: &DslValue, document: &'a DslValue) -> Option<&'a DslValue> {
     let text = |value: &DslValue| match value {
         DslValue::String(text) => Some(text.clone()),
         other => other.as_i64().map(|number| number.to_string()).or_else(|| other.as_u64().map(|number| number.to_string())),
@@ -277,7 +308,8 @@ fn time_travel_document_options(document: &DslValue) -> Vec<ActionArgOption> {
 /// document the editor previews — holds where the source's template leads for the edited `payload`
 /// ([`time_travel_option_target`], [`time_travel_document_options`]). A row's own value stays an option when the document lacks it, and the
 /// row keeps its `optionSource`, so its JSON schema lists no enum: the fold, not the editor, refuses an unknown key.
-pub(crate) fn time_travel_resolve_options(rows: &mut [TimeTravelInputRow], payload: &DslValue, document: &DslValue) {
+#[doc(hidden)]
+pub fn time_travel_resolve_options(rows: &mut [TimeTravelInputRow], payload: &DslValue, document: &DslValue) {
     for row in rows {
         let ArgSchema::String { options, option_source: Some(OptionSource::Snapshot { pointer }), .. } = &mut row.input.schema else { continue };
         let pointer = pointer.clone();
@@ -297,7 +329,8 @@ fn time_travel_number(value: &DslValue, integer: bool) -> Option<DslValue> {
 
 /// 🎛️ Coerces one host-dispatched control value into the shape `input` declares (an element of it when `element`); `null`
 /// clears a nullable input.
-pub(crate) fn time_travel_coerce(input: &ActionArgDef, element: bool, value: &DslValue) -> Option<DslValue> {
+#[doc(hidden)]
+pub fn time_travel_coerce(input: &ActionArgDef, element: bool, value: &DslValue) -> Option<DslValue> {
     let text = |value: &DslValue| value.as_str().map(|text| DslValue::String(text.to_string()));
     if !element && input.nullable && value.is_null() {
         return Some(DslValue::Null);
@@ -326,7 +359,8 @@ pub(crate) fn time_travel_coerce(input: &ActionArgDef, element: bool, value: &Ds
 
 /// 🎨️ The sRGB components (`0..=1`) of a colour text by the UI contract's colour law ([`parse_ui_color_hex`]): three
 /// for a text without alpha (the draft keeps the stored alpha), four for one with it.
-pub(crate) fn time_travel_color_components(text: &str) -> Option<Vec<f64>> {
+#[doc(hidden)]
+pub fn time_travel_color_components(text: &str) -> Option<Vec<f64>> {
     let rgba = parse_ui_color_hex(text)?;
     let digits = text.trim().trim_start_matches('#').len();
     Some(if digits == 4 || digits == 8 { rgba.to_vec() } else { rgba[..3].to_vec() })
@@ -341,7 +375,8 @@ pub(crate) fn time_travel_color_rgba(value: &DslValue) -> Vec<f64> {
 /// range become detents when at most [`UI_FIXED_LIST_ITEMS`] of them fit, else the spacing becomes the step. A `Step`
 /// source is left to the control; a resolved or unresolvable `Config`/`Snapshot` source is cleared, so a host only ever
 /// sees numbers.
-pub(crate) fn time_travel_apply_snap_spacing(schema: &mut ArgSchema, spacing: Option<f64>) {
+#[doc(hidden)]
+pub fn time_travel_apply_snap_spacing(schema: &mut ArgSchema, spacing: Option<f64>) {
     let (snaps, snap_source, step, low, high) = match schema {
         ArgSchema::Number { snaps, snap_source, step, min, max, soft_min, soft_max, .. } => (snaps, snap_source, step, soft_min.or(*min), soft_max.or(*max)),
         ArgSchema::Vector { snaps, snap_source, step, min, max, .. } => (snaps, snap_source, step, *min, *max),
@@ -368,7 +403,8 @@ pub(crate) fn time_travel_apply_snap_spacing(schema: &mut ArgSchema, spacing: Op
 }
 
 /// 🔗️ The JSON texts of every document `schema_json` references by `$id` (transitively), for the payload validator.
-pub(crate) fn time_travel_schema_documents(schema_json: &str) -> Vec<String> {
+#[doc(hidden)]
+pub fn time_travel_schema_documents(schema_json: &str) -> Vec<String> {
     fn references(value: &DslValue, into: &mut Vec<String>) {
         match value {
             DslValue::Object(entries) => {
@@ -400,7 +436,8 @@ pub(crate) fn time_travel_schema_documents(schema_json: &str) -> Vec<String> {
 }
 
 /// 🧾️ The JSON text of `value`.
-pub(crate) fn time_travel_json(value: &DslValue) -> String {
+#[doc(hidden)]
+pub fn time_travel_json(value: &DslValue) -> String {
     semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(value))
 }
 

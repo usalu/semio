@@ -39,8 +39,9 @@ test("parameter values remain raw arguments and never enter shell command text",
  for(const value of fixture.values){expect(launchParameterArguments(tool,{[name]:value})).toEqual(["--param","value="+value]);}
  const commands=ticketLaunchCommands(fixture.ticket,{tools:[tool]});
  const result=projectDashboardLaunch({version:"0.2.0",configurations:[],inputs:[]},commands,fixture.ticket);
- expect(result.configurations[0].env[name]).toContain("${input:");
- expect(result.inputs![0].type).toBe("promptString");
+ const first=result.configurations[0],input=result.inputs?.[0];if(!first||!input)throw Error("Actual projected command and input required");
+ expect(first.env[name]).toContain("${input:");
+ expect(input.type).toBe("promptString");
  for(const id of fixture.unsafeIds)expect(()=>projectDashboardLaunch({version:"0.2.0",configurations:[],inputs:[]},[{...commands[0],id}],fixture.ticket)).toThrow();
  console.log(`[DEBUG] dashboard launch raw parameter vectors=${fixture.values.length} unsafeIds=${fixture.unsafeIds.length} shellInterpolation=false`);
 });
@@ -68,6 +69,6 @@ test("current ticket declarations and generated launch routes are admitted by th
 /** 🧾️ Unrelated serialized data is preserved without interpreting backend-looking words. */
 test("launch publication preserves unrelated serialized values without backend compatibility rewrites",async()=>{
  const api=await owner(),actual=api.projectDashboardLaunch(structuredClone(fixture.unrelatedSerialized),[],fixture.ticket),expected=applyPatch(structuredClone(fixture.unrelatedSerialized),[],true).newDocument;
- expect(actual).toEqual(expected);expect(output(actual),JSON.stringify(output.errors)).toBe(true);expect(actual.configurations[0].env.SEMIO_PREVIEW_JSON).toBe(fixture.unrelatedSerialized.configurations[0].env.SEMIO_PREVIEW_JSON);expect(actual.inputs![0].options).toEqual(["nx","bazel"]);
+ expect(actual).toEqual(expected);expect(output(actual),JSON.stringify(output.errors)).toBe(true);const first=actual.configurations[0],input=actual.inputs?.[0];if(!first||!input)throw Error("Actual preserved command and input required");expect(first.env.SEMIO_PREVIEW_JSON).toBe(fixture.unrelatedSerialized.configurations[0].env.SEMIO_PREVIEW_JSON);expect(input.options).toEqual(["nx","bazel"]);
  const ts=await import("typescript"),source=readFileSync(resolve(dashboard,"🌳️command-tree/🚀️launch/🟦️.ts"),"utf8"),file=ts.createSourceFile("launch.ts",source,ts.ScriptTarget.Latest,true),exports=file.statements.filter(ts.isFunctionDeclaration).filter(node=>node.modifiers?.some(token=>token.kind===ts.SyntaxKind.ExportKeyword)).map(node=>node.name?.text);expect(exports).not.toContain("normalizeDashboardLaunchBuildV1");console.log("[DEBUG] Actual dashboard projection agrees with independent RFC6902 identity and leaves literal serialized backend labels/choices unchanged; AST has no compatibility normalizer");
 });

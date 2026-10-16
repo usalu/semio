@@ -1695,6 +1695,4 @@ fn tool_run_panel_group<A: ArtifactApp>(entry: &mut ToolRunEntry<A>, controller_
 #[path="♻️retirement/🧪️tests/🦀️.rs"]
 mod granted_ledger_retirement_tests;
 
-#[path = "../👷️job/🛬️lifted/⏯️tool-run/🦀️.rs"]
-mod lifted_job;
-pub use lifted_job::*;
+pub use semio_framework_plugin_job::lifted_job::*;

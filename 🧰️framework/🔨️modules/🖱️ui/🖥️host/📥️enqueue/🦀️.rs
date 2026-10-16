@@ -30,10 +30,6 @@ use ui_render::DispatchEvent;
 #[cfg(test)]
 mod input_root;
 
-#[path = "../📥️input/🎟️admission/✍️writer/🦀️.rs"]
-#[cfg(test)]
-mod input_writer;
-
 //#region 🔖️Capabilities
 
 //#region 🎫️UiThreadToken
@@ -52,7 +48,7 @@ pub struct UiThreadToken(());
 
 impl UiThreadToken {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub(crate) fn mint() -> Self {
+    #[doc(hidden)] pub fn mint() -> Self {
         Self(())
     }
 
@@ -139,8 +135,8 @@ pub struct MetricsSample {
 /// allocation on any path — every field is a plain `Option<Copy struct>`.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct CoalesceSlot {
-    pointer_move: Option<PointerMoveSample>,
-    metrics: Option<MetricsSample>,
+    #[doc(hidden)] pub pointer_move: Option<PointerMoveSample>,
+    #[doc(hidden)] pub metrics: Option<MetricsSample>,
 }
 
 impl CoalesceSlot {
@@ -219,9 +215,9 @@ pub struct EventQueue {
     #[cfg(test)]
     root: Option<std::num::NonZeroU64>,
     coalesced: CoalesceSlot,
-    discrete: std::collections::VecDeque<DiscreteEvent>,
-    generation: InputGeneration,
-    overflow_count: u64,
+    #[doc(hidden)] pub discrete: std::collections::VecDeque<DiscreteEvent>,
+    #[doc(hidden)] pub generation: InputGeneration,
+    #[doc(hidden)] pub overflow_count: u64,
     discrete_bytes: usize,
 }
 
@@ -397,11 +393,3 @@ mod input_admission_tests;
 #[cfg(test)]
 #[path = "../📥️input/🎟️admission/🪪️root/🧪️tests/🪪️root/🦀️.rs"]
 mod input_root_tests;
-
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../📥️input/🎟️admission/✍️writer/🧪️tests/✍️writer/🦀️.rs"]
-mod input_writer_tests;
-
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️enqueue-unit/🦀️.rs"]
-mod tests;

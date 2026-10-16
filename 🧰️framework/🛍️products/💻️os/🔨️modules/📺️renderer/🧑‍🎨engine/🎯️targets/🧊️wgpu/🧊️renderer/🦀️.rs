@@ -9,7 +9,7 @@ include!("📥️mounts/🎛️wp5-shell-views/🦀️.rs");
 #[cfg(target_arch = "wasm32")]
 extern crate semio_framework_async as wasm_bindgen_futures;
 #[cfg(test)]
-use ui_wgpu::wgpu::Mesh3dItem;
+use semio_framework_ui_scene_mesh::Mesh3dItem;
 
 // 🧊️ Raw wgpu WASM renderer for declarative framework UiNode trees.
 //
@@ -199,3 +199,55 @@ pub fn semio_wgpu_set_boot_descriptor(descriptor_json: String) -> Result<(), JsV
 #[cfg(target_arch="wasm32")]
 #[wasm_bindgen(js_name=semioWgpuSetPluginCatalog)]
 pub fn semio_wgpu_set_plugin_catalog(serialized:String)->Result<(),JsValue>{install_plugin_catalog_json_v1(&serialized).map_err(|error|JsValue::from_str(&error))}
+
+//#region 🏠️ShellHostHooks
+/// 🏠️ wasm hub environment hook: the page hands the hub url, user and data directory to the Shell before the first frame.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuSetHubEnv)]
+pub fn semio_wgpu_set_hub_env(hub_url: String, user: String, data_dir: String) {
+    let data_dir = if data_dir.is_empty() { None } else { Some(data_dir) };
+    shell::BOOT_HUB_ENV.with(|cell| *cell.borrow_mut() = Some((hub_url, user, data_dir)));
+}
+
+/// 🪟️ wasm window blur hook: the page tells the Shell its host window lost focus.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuHostWindowBlur)]
+pub fn semio_wgpu_host_window_blur() {
+    shell::note_host_window_blur();
+}
+
+/// 🗄️ wasm host storage hook: the page seeds the Shell's persisted keys from its own storage.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuSetHostStorage)]
+pub fn semio_wgpu_set_host_storage(snapshot_json: String) {
+    let accepted = shell::seed_host_storage(&snapshot_json);
+    shell::debug_log(&format!("[TRACE] wgpu-shell host storage seeded entries={accepted}"));
+}
+
+/// 🔭️ wasm agent bridge diagnostics hook: reads the offer scope the Shell published.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = dumpAgentBridgeOfferScope)]
+pub fn dump_agent_bridge_offer_scope() -> String {
+    shell::PUBLISHED_AGENT_BRIDGE_OFFER_SCOPE.with(|slot| slot.borrow().clone())
+}
+
+/// 🌉️ wasm agent bridge hook: arms the bridge configuration the next frame admits.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuSetAgentBridgeConfig)]
+pub fn semio_wgpu_set_agent_bridge_config(url: String, admission_proof: String) {
+    let config = if url.trim().is_empty() {
+        None
+    } else {
+        match crate::agent_bridge::AgentBridgeConfig::admit(&url, &admission_proof) {
+            Ok(config) => Some(config),
+            Err(error) => {
+                shell::debug_log(&format!("[TRACE] wgpu-shell agent bridge config refused: {error}"));
+                return;
+            }
+        }
+    };
+    let armed = config.is_some();
+    shell::PENDING_AGENT_BRIDGE_CONFIG.with(|slot| *slot.borrow_mut() = Some(config));
+    shell::debug_log(&format!("[TRACE] wgpu-shell agent bridge config armed={armed}"));
+}
+//#endregion 🏠️ShellHostHooks

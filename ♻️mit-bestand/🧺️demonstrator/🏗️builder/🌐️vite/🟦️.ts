@@ -54,7 +54,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
   root: playDir,
   base: "./",
   cacheDir: viteCacheDirectory(repoRoot, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }),
-  publicDir: path.join(playDir, "public"),
+  publicDir: path.join(playDir, "🌐️public"),
   assetsInclude: ["**/*.wasm"],
   worker: { format: "es" },
   define: { "import.meta.vitest": "undefined" },

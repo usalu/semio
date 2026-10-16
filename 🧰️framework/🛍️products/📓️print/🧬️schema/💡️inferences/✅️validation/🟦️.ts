@@ -3,7 +3,7 @@ import resultDocument from "../🔣️.json";
 import document from "../../🔣️.json";
 import type { VizAuthoredChartSpecification } from "../../📸️snapshot/🟦️.ts";
 import type { VizChartSpecification } from "../../📸️snapshot/📊️chart/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 export type VizChartDiagnostic = { readonly code: string; readonly path: string; readonly message: string };
 export function validateVizChartSpecification(chart: unknown): readonly VizChartDiagnostic[] {
   try { return validateJsonSchemaSubset(document.$defs.ChartSpecification, chart, document).map((message) => ({ code: "print.chart.schema", path: "chart", message })); }

@@ -5,7 +5,6 @@ use super::super::{absorb_keyed_rows, KeyedEdit};
 use super::detach_local_folder::DetachLocalFolder;
 use super::LocalFoldersConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
-#[cfg(test)] use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema
@@ -164,13 +163,3 @@ pub fn inverse_local_folders_config_mutation_steps(mutation: &LocalFoldersConfig
     })
 }
 //#endregion 🌉️MutationCodecBridge
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/📎️remembers-the-folder-beside-another-document/🦀️.rs"]
-mod tests_remembers_the_folder_beside_another_document;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

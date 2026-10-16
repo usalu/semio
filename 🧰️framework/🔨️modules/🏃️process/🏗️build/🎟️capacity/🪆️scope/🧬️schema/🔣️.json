@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumDepth": 16,
+        "maximumAcceptedChildren": 32,
+        "maximumQueuedChildren": 32
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parent",
+        "requested"
+      ],
+      "properties": {
+        "parent": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "requested": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ChildCase": {
+      "enum": [
+        "error",
+        "undefined",
+        "cancel",
+        "root-drain",
+        "input-error",
+        "input-undefined",
+        "sampler-error",
+        "sampler-undefined",
+        "consumer-error",
+        "consumer-undefined",
+        "sampler-cancel"
+      ]
+    }
+  }
+}

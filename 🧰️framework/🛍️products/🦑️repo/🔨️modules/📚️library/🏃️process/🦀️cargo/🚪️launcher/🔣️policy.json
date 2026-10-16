@@ -44,7 +44,6 @@
       "update"
     ]
   },
-  "capacityLeaseDirectory": ".cache/framework/leases",
   "isolatedDirectory": "isolated",
   "isolatedNoncePattern": "^[a-f0-9]{12}$",
   "jobserverDirectoryPrefix": "jobserver-",

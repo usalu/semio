@@ -9,8 +9,8 @@ fn aggregate_roster_is_structural_and_exact() {
     );
 }
 
-fn walk(tree: &dyn semio_framework_os_store_canonical_json::ArtifactCanonicalJsonTree) -> serde_json::Value {
-    use semio_framework_os_store_canonical_json::{ArtifactCanonicalJsonNode as N, ArtifactCanonicalJsonText as T};
+fn walk(tree: &dyn semio_framework_pack_json::ArtifactCanonicalJsonTree) -> serde_json::Value {
+    use semio_framework_pack_json::{ArtifactCanonicalJsonNode as N, ArtifactCanonicalJsonText as T};
     match tree.canonical_tree_node().expect("canonical node") {
         N::Null => serde_json::Value::Null,
         N::U64(value) => value.into(),

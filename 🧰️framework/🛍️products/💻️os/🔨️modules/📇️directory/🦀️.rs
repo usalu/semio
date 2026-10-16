@@ -216,12 +216,6 @@ pub async fn fold_all(model: DirectoryReadModel, events: &[DirectoryEvent]) -> D
 }
 //#endregion 🔖️ReadModel
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
 

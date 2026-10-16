@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type Implementation } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type Implementation } from "@semio-tech/framework/test/adapter";
 import { existsSync, lstatSync, readdirSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";

@@ -1,3 +1,4 @@
+import { loadUiOverlayFlowFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 type TestSource = { readonly url: string };
 
 /** 📐️ Proves the renderer-neutral Overlay/Absolute positioning contract against the shared geometry
@@ -10,7 +11,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { cleanup, render } = await import("@semio-tech/ui-react/test");
   const { createElement } = await import("react");
-  const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📐️overlay-flow/🔣️.json");
+  const fixture = await loadUiOverlayFlowFixture();
 
   const SURFACE = "panel:overlay-flow";
   const TEST_STYLE = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };

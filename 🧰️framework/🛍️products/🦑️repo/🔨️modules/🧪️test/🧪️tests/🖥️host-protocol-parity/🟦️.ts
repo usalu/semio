@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { existsSync } from "node:fs";
 import { join, sep } from "node:path";
-import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { digest } from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 

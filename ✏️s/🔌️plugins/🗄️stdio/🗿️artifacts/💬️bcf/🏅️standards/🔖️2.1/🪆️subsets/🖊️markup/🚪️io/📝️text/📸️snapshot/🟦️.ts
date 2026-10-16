@@ -49,5 +49,5 @@ export const stdioBcf21MarkupSnapshotTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseBcfSnapshotText(value: unknown, at = "$"): BcfSnapshotText {
-  return stdioBcf21MarkupSnapshotTextGuardObject(value, `${at}`);
+  return stdioBcf21MarkupSnapshotTextGuardString(value, `${at}`);
 }

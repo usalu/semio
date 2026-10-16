@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 
 test("neutral accepted image cleanup contracts agree with independent Ajv admission",()=>{
  const oracle=new Ajv({strict:true}).compile(schema),values:unknown[]=[corpus,{...corpus,extra:true},{version:1,cases:[{...corpus.cases[0],budgetMilliseconds:10001}]},{version:1,cases:[{...corpus.cases[0],identity:"receipt-only"}]},{version:1,cases:[{...corpus.cases[0],expected:{...corpus.cases[0]!.expected,authority:{}}}]}];

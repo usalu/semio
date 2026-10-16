@@ -1,5 +1,6 @@
 //! 🛟️ Shared React layout and physical DOM ownership laws for shell panels.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::split_pane_shell;
 use super::*;
 
 fn fixture() -> Value {
@@ -25,7 +26,7 @@ fn fixture_shell(row: &Value) -> ShellState {
 }
 
 fn plan_through_chrome(shell: &mut ShellState, theme: &Theme) {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut cursor = ShellChromeChildCursor::default();
     let mut draw = DrawList::default();
     let mut overlay = None;

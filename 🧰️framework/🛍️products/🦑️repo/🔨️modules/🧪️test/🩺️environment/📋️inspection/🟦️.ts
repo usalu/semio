@@ -1,5 +1,5 @@
 import { oracleHostPython } from "../../🖥️host/🏗️materialization/🟦️.ts";
-import { type Implementation } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type Implementation } from "@semio-tech/framework/test/adapter";
 import { discoverTestCases, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { publishedPageUrl } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { publishedPageUrl } from "@semio-tech/framework/assets/published-page";
 // #region 🔌️Adapters
 import {
   type InvocationResponse,
@@ -16,24 +16,26 @@ import {
 } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
 import {
+  decodePackValue,
+  encodePackValue
+} from "@semio-tech/framework/packs";
+import {
   decodeAppFrame,
   decodeConflictsFromWire,
   decodeFaultFromWire,
   decodeMergeReportFromWire,
-  decodePackValue,
-  encodePackValue,
   faultDisplayMessage
-} from "@semio-tech/framework-os";
-import { DOCUMENT_BACKBONE_RETENTION_LIMITS } from "@semio-tech/framework-replication";
+} from "@semio-tech/framework/app-channel";
+import { DOCUMENT_BACKBONE_RETENTION_LIMITS } from "@semio-tech/framework/replication";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { activationReasonForAppId } from "../../../../../../../../🔨️modules/🎠️kernel/🚦️activation-reason/🟦️.ts";
-import { descriptorPackageAssets, fetchDescriptorManifest } from "../../../../../../../../🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts";
-import { type PluginWasmHandle as KernelPluginWasmHandle } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
+import { activationReasonForAppId } from "@semio-tech/framework";
+import { descriptorPackageAssets, fetchDescriptorManifest } from "@semio-tech/framework";
+import { type PluginWasmHandle as KernelPluginWasmHandle } from "@semio-tech/framework";
 import { settleFailedInstanceOpen, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedUiInstance } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
-import { hopTrace } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { hopTrace } from "@semio-tech/framework/trace";
 import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
-import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "@semio-tech/framework-os";
+import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "@semio-tech/framework/wire-contracts";
 import {
   ActorDocumentBindingV1,
   type ActorDocumentMessagePortV1,
@@ -41,7 +43,7 @@ import {
   encodeDocumentBackboneControlV1,
   releaseActorDocumentBindingV1,
   splitDocumentBackboneControlTurnV1
-} from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
+} from "@semio-tech/framework/backbone/binding";
 import { notePluginLoadProgress, notePluginLoadProgressForInFlightV1, sharedDescriptorManifestV1, withPluginLoadInFlightV1 } from "../🫀️load-progress/🟦️.ts";
 import { type PluginDocumentBindingV1, type PluginExtensionCompletion, type PluginExtensionInvokeContext, type PluginWasmHandle } from "../🧷️handle-contract/🟦️.ts";
 import { documentPortHotBytes, retainedSurfaceId, shellFrameBytes, type WireVariant } from "../🪝️wire-codec/🟦️.ts";
@@ -77,7 +79,7 @@ function resolvePluginDescriptorAndRegistry(pluginId: string, moduleUrl: string,
   moduleUrl = publishedPageUrl(moduleUrl);
   return withPluginLoadInFlightV1(pluginId, async () => {
     const resolved = await resolveDescriptorBeforeRuntime(
-      () => sharedDescriptorManifestV1(pluginId, moduleUrl, () => fetchDescriptorManifest(manifestPluginId, moduleUrl, signal, () => notePluginLoadProgressForInFlightV1())),
+      () => sharedDescriptorManifestV1(pluginId, moduleUrl, () => fetchDescriptorManifest(manifestPluginId, moduleUrl, signal, () => {notePluginLoadProgressForInFlightV1();})),
       getActivationRegistry,
     );
     notePluginLoadProgress(pluginId);

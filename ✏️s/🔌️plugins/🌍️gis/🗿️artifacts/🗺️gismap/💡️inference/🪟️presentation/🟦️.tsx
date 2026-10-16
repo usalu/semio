@@ -1,4 +1,5 @@
-import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, decodePackValue, type DocumentScope, type ArtifactFrontier } from "@semio-tech/framework-os";
+import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, type DocumentScope, type ArtifactFrontier } from "@semio-tech/framework/document/scope";
+import { decodePackValue } from "@semio-tech/framework/packs";
 import type { ServiceMountedViewV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx";
 import React from "react";
 import { GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1, GIS_MAP_INFERENCE_PORT_TEXT_V1, gisMapInferencePortAffordancesV1, gisMapInferencePortRoleV1, gisMapInferencePortTerminalV1, projectGisMapInferencePreviewOverlayV1, parseGisMapInferencePortStatusV1, type GisMapInferencePortStatusV1 } from "../🧬️schema/🟦️.ts";

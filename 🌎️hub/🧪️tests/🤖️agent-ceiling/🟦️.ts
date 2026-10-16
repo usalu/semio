@@ -1,7 +1,7 @@
-import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 /** 🤖️ The hub's agent-audience ceiling, live: an AI agent acting under a delegation holds at most its delegation's audience,
  * only in the delegation's one space, never a space's administration and never the admin console — whatever its delegating
- * human may do (`HubDirectory::principal_ceiling`, policy roles `agent-reader` / `agent-editor`).
+ * human may do (`PrincipalAuthority::principal_ceiling`, policy roles `agent-reader` / `agent-editor`).
  *
  * One human (an admin subject of the hub under test) creates two private spaces and one document, delegates a `read` and an
  * `edit` agent to the first space, exchanges each delegation for an agent session exactly as the semio MCP gateway does
@@ -17,7 +17,7 @@ import { randomBytes } from "node:crypto";
 import { hubProbeCall, hubProbeCreateArtifact, hubProbeCreateSpace, hubProbeCreationCatalog, hubProbeOpenPlan, hubProbeSignIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts";
 import { decodeServerFrame, encodeClientFrame } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
 import { parseDocumentSocketGrantReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { type DirectoryCommand } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { type DirectoryCommand } from "@semio-tech/framework/directory/schema";
 
 /** 🧾️ One observed boundary: what the hub answered and whether that is what the ceiling demands. */
 export type AgentCeilingRowV1 = { readonly check: string; readonly expected: string; readonly observed: string; readonly pass: boolean };

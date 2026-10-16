@@ -1,0 +1,9 @@
+{
+ "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts": "🧰️framework/🔨️modules/💡️inference/🔌️service/🟦️.ts",
+ "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts": "🧰️framework/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts",
+ "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🔣️.json": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧬️schema/🔣️.json",
+ "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧪️tests/🧱️io-boundary/🟦️.ts": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧪️tests/🧱️io-boundary/🟦️.ts",
+ "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧬️schema/🧺️value/🟦️.ts",
+ "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧪️tests/🟦️.ts": "🧰️framework/🔨️modules/💡️inference/🔌️service/🧪️tests/🟦️.ts",
+ "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧬️schema/🟦️.ts": "🧰️framework/🔨️modules/💡️inference/🔌️service/🌐️document-http/🧬️schema/🟦️.ts"
+}

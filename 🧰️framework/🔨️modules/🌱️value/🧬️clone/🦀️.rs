@@ -64,22 +64,22 @@ enum Phase {
 #[derive(Default)]
 struct TextCopy {
     bytes: [u8; 4],
-    length: usize,
+    pub length: usize,
 }
 
 struct Frame {
-    value: Option<DslValue>,
+    pub value: Option<DslValue>,
     key: Option<String>,
-    text: TextCopy,
+    pub text: TextCopy,
 }
 
 struct DslValueCloneState<R: DslValueSource> {
     source: Option<R>,
     frames: Vec<Frame>,
-    completed: Option<DslValue>,
+    pub completed: Option<DslValue>,
     output: Option<DslValue>,
     limits: DslValueCloneLimits,
-    checkpoint: DslValueCloneCheckpoint,
+    pub checkpoint: DslValueCloneCheckpoint,
     phase: Phase,
 }
 
@@ -384,6 +384,11 @@ impl<R: DslValueSource> Drop for DslValueCloneCursor<R> {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    use super::*;
+    pub fn reserve_vec_with<T>(length: usize, remaining: usize, reserve: impl FnOnce(&mut Vec<T>, usize) -> Result<(), std::collections::TryReserveError>) -> Result<Vec<T>, &'static str> {
+        super::reserve_vec_with(length, remaining, reserve)
+    }
+}

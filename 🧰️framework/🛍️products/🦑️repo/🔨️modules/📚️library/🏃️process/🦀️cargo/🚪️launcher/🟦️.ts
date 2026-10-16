@@ -1,6 +1,7 @@
 import{cargoProfileCompilerConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import{cargoTimingPolicyV1,cargoTimingEventV1,cargoResourceWaitEventV1}from"../⏱️timing/🟦️.ts";
 import{withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {checkScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
 import {scriptInvocationEnvironment} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {randomBytes} from "node:crypto";
@@ -10,16 +11,16 @@ import {dirname,join,resolve} from "node:path";
 import {checkResourceLeaseControl,acquireResourceLease,retireResourceLeaseV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {captureOwnedCommandResultV1,runOwnedCommand,OwnedCommandFailure,type OwnedCommandCaptureV1} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import type {BuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import {acquireCompilerCapacityLeaseV1,scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {withCompilerCapacityConsumptionV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts";
 import {cargoArtifactArgumentsV1,cargoConfigurationArgumentsV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import {acquireCargoBuildLeaseV1,cargoRequestedProfileV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import {ADMISSION_POLICY_V1,buildSchedulerV1,readUnitHistoryV1,startAdmissionBrokerV1,unitHistoryPathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts";
 import {createJobserverV1,defaultJobserverStyleV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts";
-import {memoryCountersV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts";
+import {memoryCountersV1,startTelemetrySamplerV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
 import {readPhysicalCargoSourceV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
-import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStorageReservationV1,readNativeStorageReservationPolicyV1,type NativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -96,13 +97,13 @@ type CaptureOptions<T>=Readonly<{maximumMilliseconds:number;output:"capture";lim
  * the host capacity gate, a jobserver of exactly the admitted cores and the memory-admitting rustc broker sized to the same share of physical memory.
  * @see ../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🟦️.ts
  * @see ../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts */
-export function launchRepositoryCargoV1(invocation:ScriptInvocation,workspace:string,request:RepositoryCargoLaunchV1,cwd:string,environment:Readonly<Record<string,string|undefined>>,options:StreamOptions):Promise<number>;
-export function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,workspace:string,request:RepositoryCargoLaunchV1,cwd:string,environment:Readonly<Record<string,string|undefined>>,options:CaptureOptions<T>):Promise<T>;
-export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,workspace:string,request:RepositoryCargoLaunchV1,cwd:string,environment:Readonly<Record<string,string|undefined>>,options:StreamOptions|CaptureOptions<T>):Promise<number|T>{
- request=admit<RepositoryCargoLaunchV1>("Request",request);checkScriptInvocation(invocation);
- if(options.output==="capture"){readRepositoryCargoCapturePolicyV1(options.limits);if(typeof options.consume!=="function")throw Error("Actual retained Cargo result consumer required");}
+export function launchRepositoryCargoV1(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,workspace:string,request:RepositoryCargoLaunchV1,cwd:string,environment:Readonly<Record<string,string|undefined>>,options:StreamOptions):Promise<number>;
+export function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,workspace:string,request:RepositoryCargoLaunchV1,cwd:string,environment:Readonly<Record<string,string|undefined>>,options:CaptureOptions<T>):Promise<T>;
+export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,workspace:string,request:RepositoryCargoLaunchV1,cwd:string,environment:Readonly<Record<string,string|undefined>>,options:StreamOptions|CaptureOptions<T>):Promise<number|T>{
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);return withIssuedResourceOperationV1(phaseControl,async()=>{request=Object.freeze({...admit<RepositoryCargoLaunchV1>("Request",request),cargo:Object.freeze([...request.cargo])});environment=Object.freeze({...environment});checkScriptInvocation(invocation);
+ if(options.output==="capture"){const limits=readRepositoryCargoCapturePolicyV1(options.limits),consume=options.consume;if(typeof consume!=="function")throw Error("Actual retained Cargo result consumer required");options=Object.freeze({output:"capture",maximumMilliseconds:options.maximumMilliseconds,limits,consume,...(options.generated?{generated:readRepositoryCargoGeneratedCapturePolicyV1(options.generated)}:{})});}else if(options.output==="stream")options=Object.freeze({output:"stream",maximumMilliseconds:options.maximumMilliseconds});else throw Error("Closed Cargo output intent required");
  const generatedPolicy=options.output==="capture"&&options.generated?readRepositoryCargoGeneratedCapturePolicyV1(options.generated):undefined;if(generatedPolicy&&(request.kind!=="compile"||environment.SEMIO_TYPEGEN_OUT!==undefined))throw Error("Generated capture requires compiler execution without an external publication path");
- const args=request.cargo,label="cargo:"+args[0],admission=scriptCompilerAdmissionControlV1(invocation,label,options.maximumMilliseconds);
+ const args=request.cargo,label="cargo:"+args[0],admission=createRequestedIssuedResourceControlV1(phaseControl,options.maximumMilliseconds);
  const control=admission,network=repositoryCargoNetworkV1(invocation,workspace),configuration=join(workspace,".cargo/config.toml");
  const timing=environment.SEMIO_CARGO_TIMING==="1",scope=timing?++cargoTimingSequence:0,started=timing?performance.now():0;let timingEvents=0,resourceEvents=0;
  const clock=()=>{const now=Math.floor(performance.now());let remaining:number|null;try{const value=control.remainingMilliseconds();remaining=value===null?null:Math.max(0,Math.floor(value));}catch{remaining=0;}return{at:now,elapsed:Math.max(0,Math.floor(now-started)),remaining};};
@@ -110,44 +111,42 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,wor
  const mark=(phase:string,point:string)=>{if(!timing||timingEvents>=cargoTimingPolicyV1.maximumPhaseEvents||cargoTimingBytes>=cargoTimingPolicyV1.maximumLogBytes)return;const value=clock();timingEvents++;emit("phase",cargoTimingEventV1(phase,point,value.at,value.elapsed,value.remaining));};
  const reportResource=(progress:Parameters<ResourceLeaseControl["publish"]>[0])=>{if(!timing||resourceEvents>=cargoTimingPolicyV1.maximumResourceEvents||cargoTimingBytes>=cargoTimingPolicyV1.maximumLogBytes)return;const value=clock();resourceEvents++;let event:object;try{event=cargoResourceWaitEventV1(progress.resource,progress.mode,Math.floor(progress.elapsedMs));}catch{event={version:1,status:"unavailable",reason:"unsupported progress data"};}emit("resource",{...event,atMonotonicMilliseconds:value.at,elapsedMilliseconds:value.elapsed,remainingMilliseconds:value.remaining});};mark("store","begin");
  return withRepositoryCompilerStoreV1(workspace,request.configuration,control,scriptInvocationEnvironment(invocation,{...environment,SEMIO_BUILD_MODE:request.configuration}),async (store,control)=>{
+  const leaseDirectory=readNativeStorageReservationPolicyV1(store.storage,store.control).leaseDirectory;
   mark("store","ready");
-  const execute=async(command:readonly string[],env:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>{
-   const remaining=control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo deadline exhausted");
-   mark("child","begin");
-   if(options.output==="capture"){
-    const result=await captureOwnedCommandResultV1("cargo",command,cwd,{control,env:scriptInvocationEnvironment(invocation,env),output:options.limits});
-    mark("child",result.status===0&&result.signal===null?"end":"error");if(result.status===0&&result.signal===null)beforeConsume?.();
-    await store.storage.recheck();await control.publish({resource:"cargo:consume",mode:"shared",elapsedMs:0});await control.yieldContinuation();
-    const generated=generatedPolicy&&result.status===0&&result.signal===null&&generatedFile?await readPhysicalCargoSourceV1(generatedFile,{expectedBytes:null,version:1,root:store.root,maximumBytes:generatedPolicy.maximumBytes,remainingFiles:1},control):undefined;if(generatedPolicy&&result.status===0&&result.signal===null&&!generated)throw Error("Actual generated Cargo output absent");
-    const value=await options.consume(result,Object.freeze({store,environment:Object.freeze({...env}),control,...(generated?{generated}:{})}));
-    checkResourceLeaseControl(control);await store.storage.recheck();checkScriptInvocation(invocation);return value;
-   }
-   let status:number;
-   try{await runOwnedCommand("cargo",[...command],cwd,label,remaining===null?0:Math.floor(remaining),{env:scriptInvocationEnvironment(invocation,env),signal:control.signal,onProgress:line=>{process.stderr.write(line+"\n");}});status=0;}
-   catch(error){mark("child","error");if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}
-   if(status===0){mark("child","end");beforeConsume?.();}return status;
+  type Execution=Readonly<{kind:"capture";result:OwnedCommandCaptureV1}>|Readonly<{kind:"stream";status:number}>;
+  const execute=async(command:readonly string[],env:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl):Promise<Execution>=>{
+   const remaining=checkResourceLeaseControl(control);mark("child","begin");
+   if(options.output==="capture"){const result=await captureOwnedCommandResultV1("cargo",command,cwd,{control,env:scriptInvocationEnvironment(invocation,env),output:options.limits});mark("child",result.status===0&&result.signal===null?"end":"error");return Object.freeze({kind:"capture",result});}
+   let status:number;try{await runOwnedCommand("cargo",[...command],cwd,label,remaining===null?0:Math.floor(remaining),{env:scriptInvocationEnvironment(invocation,env),signal:control.signal,onProgress:line=>{process.stderr.write(line+"\n");}});status=0;}catch(error){mark("child","error");if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}if(status===0)mark("child","end");return Object.freeze({kind:"stream",status});
   };
-  const admitted=async(compilerArgs:readonly string[],env:Readonly<Record<string,string|undefined>>,selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string}>,control:ResourceLeaseControl,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>{mark("writer","begin");return withCompilerWorkspaceWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),control,async()=>{
+  const consumeExecution=(execution:Execution,env:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,beforeConsume:(()=>void)|undefined,generatedFile:string|undefined):Promise<number|T>=>withRequestedIssuedResourceControlV1(control,0,async control=>{
+   checkResourceLeaseControl(control);await store.storage.recheck();const success=execution.kind==="capture"?execution.result.status===0&&execution.result.signal===null:execution.status===0;if(success)beforeConsume?.();
+   if(execution.kind==="stream")return execution.status;if(options.output!=="capture")throw Error("Actual captured Cargo consumer required");
+   await control.publish({resource:"cargo:consume",mode:"shared",elapsedMs:0});await control.yieldContinuation();const generated=generatedPolicy&&success&&generatedFile?await readPhysicalCargoSourceV1(generatedFile,{expectedBytes:null,version:1,root:store.root,maximumBytes:generatedPolicy.maximumBytes,remainingFiles:1},control):undefined;if(generatedPolicy&&success&&!generated)throw Error("Actual generated Cargo output absent");
+   const value=await options.consume(execution.result,Object.freeze({store,environment:Object.freeze({...env}),control,...(generated?{generated}:{})}));checkResourceLeaseControl(control);await store.storage.recheck();checkScriptInvocation(invocation);return value;
+  });
+  const admitted=async(compilerArgs:readonly string[],env:Readonly<Record<string,string|undefined>>,selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string}>,control:ResourceLeaseControl,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>{mark("writer","begin");return withCompilerWorkspaceWriteV1(store.storage,leaseDirectory,control,async()=>{
    mark("writer","ready");mark("profile","begin");
-   const lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/b/l/m/data"),buildDirectory:selected.build,targetDirectory:selected.target,args:compilerArgs,signal:control.signal,control});mark("profile","ready");
+   const lease=await acquireCargoBuildLeaseV1({directory:leaseDirectory,buildDirectory:selected.build,targetDirectory:selected.target,args:compilerArgs,signal:control.signal,control});mark("profile","ready");let profileFailed=false,profileFailure:unknown;
    try{
-    if(env.SEMIO_COMPILER_CAPACITY_HELD==="true")return await execute(compilerArgs,env,control,beforeConsume,generatedFile);
-    mark("capacity","begin");const capacity=await acquireCompilerCapacityLeaseV1({directory:join(workspace,policy.capacityLeaseDirectory),control,environment:env,requestedParallelism:request.parallelism});mark("capacity","ready");
-    try{mark("scheduler","begin");
-     const scheduler=(await buildSchedulerV1({cwd:workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,environment:store.environment,control,storage:store.storage,sourceBoundary:store.sourceBoundary})).get("semio-build-scheduler")!,tokens=capacity.parallelism;mark("scheduler","ready");
-     const history=await readUnitHistoryV1(unitHistoryPathV1(join(store.root,"components"))),jobserverDirectory=join(store.environment.TMPDIR!,policy.jobserverDirectoryPrefix+randomBytes(6).toString("hex")),jobserver=await createJobserverV1({version:1,tokens,style:defaultJobserverStyleV1()},jobserverDirectory);
+    mark("capacity","begin");return await withCompilerCapacityConsumptionV1({directory:leaseDirectory,control,environment:env,requestedParallelism:request.parallelism},async(capacity,cpuControl)=>{mark("capacity","ready");mark("scheduler","begin");
+     const scheduler=(await buildSchedulerV1({cwd:workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,environment:store.environment,control:cpuControl,storage:store.storage,sourceBoundary:store.sourceBoundary})).get("semio-build-scheduler")!,tokens=capacity.parallelism;mark("scheduler","ready");
+     const history=await readUnitHistoryV1(unitHistoryPathV1(join(store.root,"components"))),jobserverDirectory=join(store.environment.TMPDIR!,policy.jobserverDirectoryPrefix+randomBytes(6).toString("hex")),jobserver=await createJobserverV1({version:1,tokens,style:defaultJobserverStyleV1()},jobserverDirectory);let jobserverFailed=false,jobserverFailure:unknown;
      try{
-      const broker=await startAdmissionBrokerV1({physicalBytes:ADMISSION_POLICY_V1.reserveBytes+Math.floor((totalmem()-ADMISSION_POLICY_V1.reserveBytes)*tokens/availableParallelism()),history});let previous:Readonly<{atMs:number;bytes:number}>|undefined;
-      const sampler=setInterval(()=>{void memoryCountersV1().then(counters=>{const atMs=Date.now(),rate=previous&&counters.swappedOutBytes!==null?Math.max(0,(counters.swappedOutBytes-previous.bytes)*1000/Math.max(1,atMs-previous.atMs)):null;if(counters.swappedOutBytes!==null)previous={atMs,bytes:counters.swappedOutBytes};broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:rate});},error=>{clearInterval(sampler);process.stderr.write(`[repo cargo] memory sampling stopped: ${error instanceof Error?error.message:String(error)}\n`);});},policy.swapSampleMilliseconds);
-      try{broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});process.stderr.write(`[repo cargo] ${request.store} store, ${tokens} of ${availableParallelism()} cores admitted, rustc memory budget ${(broker.stats().budgetBytes/1024**3).toFixed(1)} GiB\n`);mark("scheduler","end");return await execute(compilerArgs,{...env,...jobserver.environment(),RUSTC_WRAPPER:scheduler,[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(tokens)},control,beforeConsume,generatedFile);}
-      finally{clearInterval(sampler);await broker.close();}
-     }finally{jobserver.close();rmSync(jobserverDirectory,{recursive:true,force:true});}
-    }finally{capacity.release();}
-   }finally{lease.release();}
+      const broker=await startAdmissionBrokerV1({physicalBytes:ADMISSION_POLICY_V1.reserveBytes+Math.floor((totalmem()-ADMISSION_POLICY_V1.reserveBytes)*tokens/availableParallelism()),history});let previous:Readonly<{atMs:number;bytes:number}>|undefined,sampler:ReturnType<typeof startTelemetrySamplerV1>|undefined;let executionFailed=false,executionFailure:unknown;
+      try{
+      sampler=startTelemetrySamplerV1(cpuControl,async sampleControl=>{const counters=await memoryCountersV1(sampleControl),atMs=Date.now(),rate=previous&&counters.swappedOutBytes!==null?Math.max(0,(counters.swappedOutBytes-previous.bytes)*1000/Math.max(1,atMs-previous.atMs)):null;if(counters.swappedOutBytes!==null)previous={atMs,bytes:counters.swappedOutBytes};broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:rate});},policy.swapSampleMilliseconds);
+
+      broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});process.stderr.write(`[repo cargo] ${request.store} store, ${tokens} of ${availableParallelism()} cores admitted, rustc memory budget ${(broker.stats().budgetBytes/1024**3).toFixed(1)} GiB\n`);mark("scheduler","end");const execution=await execute(compilerArgs,{...env,...jobserver.environment(),RUSTC_WRAPPER:scheduler,[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_PARALLELISM:String(tokens)},cpuControl);return()=>consumeExecution(execution,env,control,beforeConsume,generatedFile);}
+      catch(error){executionFailed=true;executionFailure=error;throw error;}
+      finally{const secondary:unknown[]=[];try{await sampler?.stop();}catch(error){if(!executionFailed||error!==executionFailure)secondary.push(error);}try{await broker.close();}catch(error){secondary.push(error);}if(secondary.length)throw executionFailed?new AggregateError([executionFailure,...secondary],"Compiler and telemetry retirement failed"):secondary.length===1?secondary[0]:new AggregateError(secondary,"Compiler telemetry retirement failed");}
+     }catch(error){jobserverFailed=true;jobserverFailure=error;throw error;}finally{const secondary:unknown[]=[];try{jobserver.close();}catch(error){secondary.push(error);}try{rmSync(jobserverDirectory,{recursive:true,force:true});}catch(error){secondary.push(error);}if(secondary.length)throw jobserverFailed?new AggregateError([jobserverFailure,...secondary],"Compiler and jobserver retirement failed"):secondary.length===1?secondary[0]:new AggregateError(secondary,"Jobserver retirement failed");}
+    });
+   }catch(error){profileFailed=true;profileFailure=error;throw error;}finally{try{lease.release();}catch(secondary){if(profileFailed)throw new AggregateError([profileFailure,secondary],"Compiler consumption and profile retirement failed");throw secondary;}}
   });};
   const run=async(selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string;temporary:string}>):Promise<number|T>=>{
    const inputs={invocation,consumption:request.kind==="compile"?cargoProfileCompilerConsumptionV1("artifact",args[0]??""):{kind:"resolution" as const},workspace,cwd,manifest:cargoManifestV1(args,cwd),args,network,control,storage:store.storage,environment:{...store.environment,CARGO_TARGET_DIR:selected.target,CARGO_BUILD_BUILD_DIR:selected.build,TMPDIR:selected.temporary,TMP:selected.temporary,TEMP:selected.temporary}};
-   const resolved=async(input:import("../📥️dependencies/🟦️.ts").RepositoryCargoInputsViewV1):Promise<number|T>=>{const control=input.control,env=input.environment,command=cargoConfigurationArgumentsV1(input.selections[0]!.arguments,configuration,selected.build),lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/b/l/m/data"),buildDirectory:selected.build,targetDirectory:selected.target,args:command,signal:control.signal,control});try{return await execute(command,env,control);}finally{lease.release();}};
+   const resolved=async(input:import("../📥️dependencies/🟦️.ts").RepositoryCargoInputsViewV1):Promise<number|T>=>{const control=input.control,env=input.environment,command=cargoConfigurationArgumentsV1(input.selections[0]!.arguments,configuration,selected.build),lease=await acquireCargoBuildLeaseV1({directory:leaseDirectory,buildDirectory:selected.build,targetDirectory:selected.target,args:command,signal:control.signal,control});try{return await consumeExecution(await execute(command,env,control),env,control,undefined,undefined);}finally{lease.release();}};
    if(request.kind==="lock")return withRepositoryCargoResolutionV1(inputs,resolved);
    mark("inputs","begin");return withRepositoryCargoInputsV1(inputs,async input=>{const control=input.control,env=input.environment;mark("inputs","ready");
     if(request.kind==="resolve")return resolved(input);
@@ -157,5 +156,6 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,wor
    });
   };
   return request.store==="shared"?run({target:store.environment.CARGO_TARGET_DIR!,build:store.buildDirectory,temporary:store.environment.TMPDIR!}):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run);
+ });
  });
 }

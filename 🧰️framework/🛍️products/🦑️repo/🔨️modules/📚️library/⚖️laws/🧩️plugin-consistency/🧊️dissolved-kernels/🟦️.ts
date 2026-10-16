@@ -1,4 +1,4 @@
-/** 🎯️ Wave 4 plugin consistency policy: dissolved kernels and composition rules.
+/** 🫧️ Wave 4 plugin consistency policy: dissolved kernels and composition rules.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";

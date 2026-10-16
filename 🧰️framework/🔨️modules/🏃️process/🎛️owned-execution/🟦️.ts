@@ -1,5 +1,5 @@
 import {captureOwnedCommandBodyV1} from "./📥️capture/🟦️.ts";
-export {writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1} from "./📥️capture/🟦️.ts";
+export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
 import { terminateOwnedChildTree } from "../🪓️termination/🟦️.ts";
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";

@@ -1,0 +1,4 @@
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📽️presentation-core/🟦️.ts
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🧭️slide-glob-assembly/🟦️.ts
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🟦️.tsx

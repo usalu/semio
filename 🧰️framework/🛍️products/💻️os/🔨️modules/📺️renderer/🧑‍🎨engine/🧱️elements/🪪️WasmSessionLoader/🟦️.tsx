@@ -7,10 +7,10 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
-import { type WasmCanvasSession } from "@semio-tech/canvas-react-renderer";
+import { parseHubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
+import { type WasmCanvasSession } from "@semio-tech/framework/canvas/react-renderer";
 import { createContext } from "react";
-import { installPageRuntimeAssets } from "../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
+import { installPageRuntimeAssets } from "@semio-tech/framework/canvas/runtime-assets";
 // #endregion 🔌️Adapters
 
 //#region 🔖️wasm-session-loader
@@ -46,9 +46,7 @@ async function createSurfaceSession<T>(construct: (module: SurfaceSessionModule)
 
 
 //#region GraphSession
-type GraphSessionModule=typeof import("@semio-tech/framework-os-node-graph-rs");
-const loadGraphSessionModule=createWasmModuleLoader<GraphSessionModule>(async()=>{const module=await import("@semio-tech/framework-os-node-graph-rs");await module.default();await installPageRuntimeAssets(module);return module;});
-export async function createGraphSession():Promise<WasmCanvasSession>{const module=await loadGraphSessionModule();return new module.GraphSession();}
+export {openNodeGraphSessionV1 as createGraphSession}from"../🕸️NodeGraph/📦️packages/🦀️rust/🟦️.ts";
 //#endregion GraphSession
 
 //#region FlowSession

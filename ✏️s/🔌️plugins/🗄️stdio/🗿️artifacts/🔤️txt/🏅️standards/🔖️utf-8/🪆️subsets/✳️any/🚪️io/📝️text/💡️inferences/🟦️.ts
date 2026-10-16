@@ -49,5 +49,5 @@ export const stdioTxtUtf8AnyInferenceTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseTxtInferenceText(value: unknown, at = "$"): TxtInferenceText {
-  return stdioTxtUtf8AnyInferenceTextGuardObject(value, `${at}`);
+  return stdioTxtUtf8AnyInferenceTextGuardString(value, `${at}`);
 }

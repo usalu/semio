@@ -43,8 +43,6 @@
       "imports": [],
       "rootImports": [
         "LOCAL_BOOTSTRAP_DEADLINE_MS",
-        "LOCAL_BOOTSTRAP_FRAME_MAX",
-        "LocalFrameReader",
         "writeLocalFrame"
       ],
       "contextChain": [
@@ -68,9 +66,7 @@
       "rootImports": [
         "authenticatedFrame",
         "LOCAL_BOOTSTRAP_SCHEMA",
-        "LocalClientClass",
-        "LocalProfile",
-        "verifyAuthenticatedFrame"
+        "LocalProfile"
       ],
       "contextChain": [
         "hub-local-bootstrap",
@@ -84,8 +80,6 @@
         "TRUSTED_CATALOG_READINESS_STALL_BOUND_MS",
         "LocalHubRun",
         "LocalHubStartOptions",
-        "LocalHubRunAllocationOperations",
-        "allocateLocalHubRunRoot",
         "freeLoopbackPort",
         "hubBinaryPath",
         "HUB_DEV_BINARY_TARGET",
@@ -94,7 +88,18 @@
         "localHubReadinessAdmitted",
         "waitForReadiness",
         "waitForChildExit",
-        "finishLocalHub"
+        "finishLocalHub",
+        "LocalHubHostV1",
+        "LocalHubHostContextV1",
+        "withLocalHubHostTaskV1",
+        "withLocalHubHostCandidateV1",
+        "withPublishedLocalHubHostV1",
+        "withBuiltLocalHubHostV1",
+        "withCapturedLocalHubHostV1",
+        "withPublishedDevelopmentLocalHubHostV1",
+        "withLocalHubRunTaskV1",
+        "waitForLocalHubExitV1",
+        "stopLocalHubV1"
       ],
       "imports": [
         "🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts",
@@ -118,6 +123,16 @@
         "LOCAL_READINESS_STALL_BOUND_MS",
         "TRUSTED_CATALOG_READINESS_STALL_BOUND_MS",
         "LocalHubRun",
+        "stopLocalHubV1",
+        "waitForLocalHubExitV1",
+        "LocalHubHostV1",
+        "withLocalHubHostTaskV1",
+        "withLocalHubHostCandidateV1",
+        "withLocalHubRunTaskV1",
+        "withPublishedLocalHubHostV1",
+        "withBuiltLocalHubHostV1",
+        "withCapturedLocalHubHostV1",
+        "withPublishedDevelopmentLocalHubHostV1",
         "startLocalHub",
         "waitForChildExit",
         "waitForReadiness"
@@ -139,9 +154,8 @@
       ],
       "rootImports": [
         "issueLocalCredential",
-        "LocalSessionBrokerV1",
         "parseLocalAdminCapabilityV1",
-        "startLocalSessionBroker"
+        "withLocalSessionBrokerV1"
       ],
       "contextChain": [
         "hub-local-bootstrap",
@@ -172,7 +186,6 @@
         "deliverCredentialEnvelopeToChild",
         "deliverMcpCredentialEnvelope",
         "deliverNativeCredentialEnvelope",
-        "directChildEnvironment",
         "sealedDirectChildEnvironment"
       ],
       "contextChain": [
@@ -188,7 +201,8 @@
       ],
       "imports": [],
       "rootImports": [
-        "orderedDirectoryPublicationOracle"
+        "orderedDirectoryPublicationOracle",
+        "readHubDirectorySource"
       ],
       "contextChain": [
         "hub-directory",
@@ -363,6 +377,7 @@
       "{workspaceRoot}/🌎️hub/🔐️auth/{🧬️schema/🔣️.json,🧫️fixtures/🔑️capability-v1/🔣️.json}",
       "{workspaceRoot}/🌎️hub/📇️directory/{🦀️.rs,🧫️fixtures/📣️ordered-append-broadcast-v1/🔣️.json}",
       "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/{📜️script.ts,📋️project.json,Cargo.toml,🦀️.rs}",
+      "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication}}/🟦️.ts",
       "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/{🧭️routing/🟦️.ts,🎛️owned-execution/🟦️.ts}",

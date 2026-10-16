@@ -1,7 +1,6 @@
 //! 🔬️ Independent typed SQLite fixture and Bun edit oracle for builtin persisted owners.
-use super::store;
-use store::sqlite_snapshot::*;
-pub(super) fn renumber(database: &SqliteDatabase, offset: i64) -> SqliteDatabase {
+use semio_framework_io_sqlite_snapshot::*;
+pub fn renumber(database: &SqliteDatabase, offset: i64) -> SqliteDatabase {
     use std::io::Write;
     use std::process::{Command, Stdio};
     let bytes = export_sqlite_database(database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
@@ -12,7 +11,7 @@ pub(super) fn renumber(database: &SqliteDatabase, offset: i64) -> SqliteDatabase
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     import_sqlite_database(&output.stdout, SqliteDatabaseLimits::default(), &mut |_| true).unwrap()
 }
-pub(super) fn database(f: &serde_json::Value, sql: &str) -> SqliteDatabase {
+pub fn database(f: &serde_json::Value, sql: &str) -> SqliteDatabase {
     let mut database = SqliteDatabase::from_schema(sql).unwrap();
     for table in &mut database.tables {
         table.rows = f["rows"][&table.name]
@@ -37,7 +36,7 @@ pub(super) fn database(f: &serde_json::Value, sql: &str) -> SqliteDatabase {
     }
     database
 }
-pub(super) fn edit(database: &SqliteDatabase, f: &serde_json::Value) -> SqliteDatabase {
+pub fn edit(database: &SqliteDatabase, f: &serde_json::Value) -> SqliteDatabase {
     use std::io::Write;
     use std::process::{Command, Stdio};
     let bytes = export_sqlite_database(database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();

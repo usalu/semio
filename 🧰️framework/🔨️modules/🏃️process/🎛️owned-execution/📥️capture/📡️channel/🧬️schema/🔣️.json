@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumPendingOperations": 32,
+        "maximumInputBytes": 16777216,
+        "maximumInputFrames": 256,
+        "maximumArguments": 256,
+        "maximumArgumentBytes": 65536
+      }
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pid"
+      ],
+      "properties": {
+        "pid": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "expected"
+        ],
+        "properties": {
+          "case": {
+            "enum": [
+              "exchange",
+              "close",
+              "copied",
+              "retired",
+              "cancel",
+              "deadline",
+              "overflow",
+              "detached",
+              "error",
+              "undefined",
+              "pending",
+              "frames",
+              "input",
+              "blocked-close"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "completed",
+              "refused",
+              "preserved"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

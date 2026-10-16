@@ -247,9 +247,10 @@ export function surfaceOwnershipSelfTests(): number {
   const slots = new Uint8Array(outputs.entrySlots);
   slots.fill(1);
   assert.equal(slots.findIndex((slot) => slot === 0), -1);
-  const retainedRoot = { payload: Buffer.from(outputs.surfaces[0]) };
+  const firstSurface=outputs.surfaces[0];assert(firstSurface!==undefined,"Actual first surface fixture required");
+  const retainedRoot = { payload: Buffer.from(firstSurface) };
   const retainedBuffer = retainedRoot.payload;
-  try { retainedRoot.payload[0] ^= 1; throw new Error("controlled ownership oracle unwind"); } catch {}
+  try { const firstByte=retainedRoot.payload[0];assert(firstByte!==undefined,"Actual retained byte required");retainedRoot.payload[0] = firstByte^1; throw new Error("controlled ownership oracle unwind"); } catch {}
   assert.equal(retainedRoot.payload === retainedBuffer, outputs.partialProducerUnwindRetainsOwner);
   const incompleteSource: { current?: Buffer; permit?: Buffer; payload?: Buffer } = { permit: Buffer.from([1]), payload: retainedBuffer };
   const originalPermit = incompleteSource.permit;
@@ -285,7 +286,7 @@ export function surfaceOwnershipSelfTests(): number {
   const originalLifetime = Buffer.alloc(12); originalLifetime.writeUInt32LE(outputs.capturedLifetime.instance); originalLifetime.writeBigUInt64LE(BigInt(outputs.capturedLifetime.original), 4);
   const reusedLifetime = Buffer.from(originalLifetime); reusedLifetime.writeBigUInt64LE(BigInt(outputs.capturedLifetime.reused), 4);
   assert.equal(originalLifetime.equals(reusedLifetime), outputs.capturedLifetime.foreignCloseAccepted);
-  const directSource: { value?: Buffer } = { value: Buffer.from(outputs.surfaces[0]) };
+  const directSource: { value?: Buffer } = { value: Buffer.from(firstSurface) };
   const directEntry: { value?: Buffer } = {};
   const directIdentity = directSource.value;
   const transferDirect = (grant: number) => {

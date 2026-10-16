@@ -49,5 +49,5 @@ export const bimModelSnapshotTextGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseModelSnapshotText(value: unknown, at = "$"): ModelSnapshotText {
-  return bimModelSnapshotTextGuardObject(value, `${at}`);
+  return bimModelSnapshotTextGuardString(value, `${at}`);
 }

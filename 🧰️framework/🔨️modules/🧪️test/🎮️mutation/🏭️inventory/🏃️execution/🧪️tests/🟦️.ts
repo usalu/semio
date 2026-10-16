@@ -1,4 +1,4 @@
-import { acquireCargoProfileMaintenanceLeaseV1 } from "../../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import { acquireCargoProfileMaintenanceLeaseV1 } from "@semio-tech/process/artifacts/native-build/lease";
 import { test,expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFile, mkdir } from "node:fs/promises";

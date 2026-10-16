@@ -4,10 +4,11 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use semio_hub_directory_contract::model::{CredentialAuditFactV1, InviteRedemptionCommit, NewAdminOperationAuditRecord, SpaceRole};
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, Hlc};
 use semio_hub_directory_contract::error::DirectoryError;
-use semio_hub_directory_contract::{HubClock, NewDirectoryEvent};
-use semio_hub_directory_postgres::{PostgresDirectory, now_ms};
+use semio_hub_directory_contract::{HubClock, NewDirectoryEvent, now_ms};
+use semio_hub_directory_postgres::PostgresDirectory;
 use semio_hub_directory_postgres::testkit::test_directory;
 use directory::os_identity::time_ordered_id;
+use semio_hub_directory::{AdminOperationDirectory, AuthSessionDirectory, CredentialDirectory, EventLog, InviteDirectory, ProjectionRebuild, SpaceDirectory, UserDirectory};
 
 fn actor(id: &str) -> DirectoryActor {
     DirectoryActor { kind: DirectoryActorKind::User, id: id.to_string() }

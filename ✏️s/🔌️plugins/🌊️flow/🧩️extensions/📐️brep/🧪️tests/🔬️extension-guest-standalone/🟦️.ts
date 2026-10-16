@@ -21,8 +21,10 @@ export function channelIdentityOracle(directory: string): number {
     assert(operator, row.operator);
     for (const [name, fields] of Object.entries(row.expected)) {
       const channel = operator[row.direction].find((entry: { name: string }) => entry.name === name);
+      if(channel===null||typeof channel!=="object"||Array.isArray(channel))throw Error("Actual channel object required");
+      const actualChannel=channel;
       assert(validate(channel), `${row.operator}.${name}: ${JSON.stringify(validate.errors)}`);
-      for (const [field, expected] of Object.entries(fields as Record<string, unknown>)) { assert.deepEqual(channel[field], expected, `${row.operator}.${name}.${field}`); checks++; }
+      for (const [field, expected] of Object.entries(fields as Record<string, unknown>)) { assert.deepEqual(Reflect.get(actualChannel,field), expected, `${row.operator}.${name}.${field}`); checks++; }
     }
   }
   return checks;

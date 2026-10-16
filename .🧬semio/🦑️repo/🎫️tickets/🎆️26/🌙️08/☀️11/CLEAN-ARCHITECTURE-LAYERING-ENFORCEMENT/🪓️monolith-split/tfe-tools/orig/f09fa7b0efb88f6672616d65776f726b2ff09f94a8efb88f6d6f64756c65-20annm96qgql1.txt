@@ -1,0 +1,61 @@
+import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import Ajv2020 from "ajv/dist/2020";
+import {readFileSync} from "node:fs";
+import {resolve} from "node:path";
+import grantSchema from "../../../../../🧵️job/🏃️work/🎟️grant/🧬️schema/🔣️.json";
+import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
+import failureFixture from "../🧪️tests/🧫️fixtures/⚠️frontier.json";
+
+test("failed original frontiers author work without inventing copy or backing effects",()=>{
+  const database=new Database(":memory:");
+  try{
+    const value=JSON.parse(failureFixture.sources[0]) as string;
+    expect((database.query("SELECT length(CAST(? AS BLOB)) AS bytes").get(value) as {bytes:number}).bytes).toBe(failureFixture.copyPrefixBytes);
+    expect(()=>JSON.parse(failureFixture.sources[3])).toThrow();
+    for(const row of failureFixture.refusals){expect(row.copiedItems).toBe(1);expect([row.copiedBytes,row.retainedCapacityBytes,row.releasedBytes]).toEqual([0,0,0]);}
+  }finally{database.close();}
+  const source=readFileSync(resolve(import.meta.dir,"../../../🦀️.rs"),"utf8"),start=source.indexOf("fn step_source<"),end=source.indexOf("fn advance<",start),body=source.slice(start,end);
+  expect(body).toContain("operation_result?");
+  expect(body).not.toContain("copied_bytes:demand.copy_bytes");
+  expect(body).not.toContain("checked_add(error.retained_progress())");
+});
+
+test("post-effect cancellation receipts retain independently authored work",()=>{
+  const validate=new Ajv2020({strict:true,allErrors:true}).compile(grantSchema);
+  expect(validate(fixture.preparationGrant)).toBe(true);
+  expect(validate(fixture.closeGrant)).toBe(true);
+  const database=new Database(":memory:");
+  try{
+    const value=JSON.parse(fixture.source) as string;
+    const independent=database.query("SELECT length(CAST(? AS BLOB)) AS bytes").get(value) as {bytes:number};
+    expect(independent.bytes).toBe(4);
+    for(const row of fixture.cases){
+      expect(validate(row.grant)).toBe(true);
+      expect(row.receipt.copiedItems).toBe(row.grant.maximumItems);
+      expect(row.receipt.copiedBytes).toBeLessThanOrEqual(row.grant.maximumCopyBytes);
+      expect(row.receipt.retainedCapacityBytes).toBeLessThanOrEqual(row.grant.maximumCapacityBytes);
+      expect(row.receipt.releasedBytes).toBeLessThanOrEqual(row.grant.maximumReleaseBytes);
+      if(row.frontier==="stringCopy")expect(row.receipt.copiedBytes).toBe(1);
+      if(row.frontier==="stringCapacity")expect(row.receipt.retainedCapacityBytes).toBe(independent.bytes);
+      for(const axis of Object.keys(row.grant)){
+        const missing=structuredClone(row.grant) as Record<string,unknown>;
+        delete missing[axis];
+        expect(validate(missing)).toBe(false);
+      }
+    }
+  }finally{database.close();}
+  console.log("[DEBUG] JSON post-effect receipt3 canonical Grant validation and independent SQLite UTF8 byte ownership passed");
+});
+
+test("actual grammar publishes physical progress before the post-effect cancellation checkpoint",()=>{
+  const source=readFileSync(resolve(import.meta.dir,"../../../🦀️.rs"),"utf8");
+  const start=source.indexOf("fn step_source<"),end=source.indexOf("fn advance<",start);
+  expect(start>=0&&end>start).toBe(true);
+  const body=source.slice(start,end),receipt=body.indexOf("self.normal_step_progress=self.normal_step_progress.checked_add("),checkpoint=body.indexOf("control.step()?");
+  expect(receipt>=0&&checkpoint>receipt).toBe(true);
+});
+
+test("original receipt order fold 0 keeps plain trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/🔣️.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original receipt/order/fold trial has no whole-corpus schema authority");});
+
+test("original receipt order fold 4 keeps frontier trials outside schema authority",async()=>{const {existsSync}=await import("node:fs");expect(existsSync(new URL("../🧬️schema/⚠️frontier.json",import.meta.url))).toBe(false);console.log("[DEBUG] Original failed-frontier trial has no whole-corpus schema authority");});

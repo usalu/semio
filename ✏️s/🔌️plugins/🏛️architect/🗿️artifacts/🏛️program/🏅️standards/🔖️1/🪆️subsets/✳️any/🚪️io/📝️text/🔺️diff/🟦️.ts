@@ -49,5 +49,5 @@ export const architectProgramDiffTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseProgramDiffText(value: unknown, at = "$"): ProgramDiffText {
-  return architectProgramDiffTextGuardObject(value, `${at}`);
+  return architectProgramDiffTextGuardString(value, `${at}`);
 }

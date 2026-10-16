@@ -5,7 +5,7 @@ import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import artifactCreationProgressFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🔣️.json";
 import artifactCreationCatalogAuthorityFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🪪️catalog-authority/🔣️.json";
-import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
+import { directorySchema } from "../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
 import artifactCreationReadyOpeningFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🌱️artifact-creation/🚪️ready-opening/🔣️.json";
 
 import { runArtifactCreationReadyOpeningV1 } from "../../🧱️elements/🏛️ShellHost/🌱️artifact-creation/🚪️ready-opening/🟦️.ts";

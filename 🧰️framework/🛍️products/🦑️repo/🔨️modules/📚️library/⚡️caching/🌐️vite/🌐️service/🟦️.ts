@@ -1,3 +1,4 @@
+import {readViteRuntimeChannelsV1,type ViteRuntimeChannelV1} from "../📥️environment/🏃️runtime/🟦️.ts";
 import type {CompilerAdmissionControl} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import {checkScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
@@ -12,6 +13,7 @@ export async function runViteBunxDev(
   bundleRoot: string,
   segments: string[],
   opts: {
+    runtimeChannels:readonly ViteRuntimeChannelV1[];
     config: string;
     artifactInputs?: readonly RepositoryArtifactRequestV1[];
     portEnv?: string;
@@ -25,7 +27,7 @@ export async function runViteBunxDev(
     expectedPlayEntry?: string;
   },
 ): Promise<void> {
-  requireIssuedResourceControlInvocationV1(control,invocation);checkScriptInvocation(invocation);
+  requireIssuedResourceControlInvocationV1(control,invocation);const runtimeChannels=readViteRuntimeChannelsV1(opts.runtimeChannels);checkScriptInvocation(invocation);
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const preferredPort = Number(process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173");
   const spawnEnv = playPollingEnv(opts.env);
@@ -65,6 +67,6 @@ export async function runViteBunxDev(
     if(flag==="--host")selectedHost=value;else selectedPort=Number(value);
   }
   const {serveViteCommandV1}=await import("../🟦️.ts");
-  await serveViteCommandV1({invocation,control,root:bundleRoot,config:resolve(bundleRoot,opts.config),mode:readBuildMode(spawnEnv.SEMIO_BUILD_MODE),host:selectedHost,port:selectedPort,strictPort,environment:spawnEnv,artifactInputs:opts.artifactInputs,signal:invocation.control.signal});
+  await serveViteCommandV1({runtimeChannels,invocation,control,root:bundleRoot,config:resolve(bundleRoot,opts.config),mode:readBuildMode(spawnEnv.SEMIO_BUILD_MODE),host:selectedHost,port:selectedPort,strictPort,environment:spawnEnv,artifactInputs:opts.artifactInputs,signal:invocation.control.signal});
 }
 

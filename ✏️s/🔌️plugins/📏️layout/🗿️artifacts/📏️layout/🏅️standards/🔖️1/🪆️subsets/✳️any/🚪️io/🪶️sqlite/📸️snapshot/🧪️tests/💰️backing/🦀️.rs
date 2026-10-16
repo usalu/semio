@@ -2,8 +2,7 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
-#[path="../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
-mod observed;
+use semio_framework_io_sqlite_snapshot_testing_backing as observed;
 fn literal_equal(actual:&LayoutSnapshot,expected:&LayoutSnapshot){assert_eq!(actual.data_fields,expected.data_fields,"complete typed dictionary tags, words, octets and member order");assert_eq!(pack::snapshot::ArtifactPack::encode_pack(actual),pack::snapshot::ArtifactPack::encode_pack(expected),"complete Layout native fields and raw words");}
 #[test]
 fn sqlite_snapshot_layout_full_concrete_requests_preserve_every_owned_field(){

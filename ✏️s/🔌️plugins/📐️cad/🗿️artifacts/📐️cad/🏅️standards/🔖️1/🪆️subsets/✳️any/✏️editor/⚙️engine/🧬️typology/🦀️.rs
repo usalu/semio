@@ -1,6 +1,6 @@
 //! 🧬️ CAD typology + model-definition registry — the Rust twin of `⚙️engine/🧬️typology/🟦️.ts` and of
 //! the typology/model-definition/attribute half of the spatial kernel's
-//! `✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts`.
+//! `✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎨️typology/🟦️.ts` and `✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts`.
 //!
 //! 🧭️ Schema-first: every row is parsed from the SAME shipped JSON asset the TS side globs
 //! (`📚️examples/🖼️assets/🏗️modelDefinitions/*/{🔣️modelDefinition,🗂️typologies/*/🔣️typology,🏷️attributeDefinitions/*}.json`),

@@ -1,0 +1,103 @@
+{
+  "nativeArguments": 6,
+  "wireReceivers": [
+    "workerEnvironment",
+    "env"
+  ],
+  "captureBytes": 65536,
+  "captureLines": 256,
+  "custodyTrace": [
+    "products",
+    "scratch",
+    "destination",
+    "namespace",
+    "toolkit",
+    "bind",
+    "body",
+    "toolkit:close",
+    "namespace:close",
+    "destination:close",
+    "scratch:close",
+    "products:close"
+  ],
+  "custodyCases": [
+    "live",
+    "copied",
+    "cancelled",
+    "undefined",
+    "frozen"
+  ],
+  "workspaceKinds": [
+    "external",
+    "products"
+  ],
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "readerBudget": 90000,
+  "readerTrace": [
+    "compiler",
+    "capture",
+    "pin",
+    "body",
+    "child",
+    "pin:close",
+    "capture:close",
+    "compiler:close"
+  ],
+  "readerCases": [
+    "live",
+    "copied",
+    "cancelled",
+    "undefined",
+    "frozen"
+  ],
+  "readerBinary": "semio-native-runtime-reader",
+  "readerPackage": "semio-framework-os-native-runtime-reader",
+  "drainCases": [
+    "live",
+    "undefined",
+    "frozen",
+    "child-undefined",
+    "child-frozen"
+  ],
+  "drainTrace": [
+    "body",
+    "stop",
+    "child:close",
+    "scope:close"
+  ],
+  "runtimePublishTrace": [
+    "receiver",
+    "publish",
+    "reader",
+    "copy",
+    "copy",
+    "copy",
+    "copy",
+    "copy",
+    "reader:close",
+    "count"
+  ],
+  "runtimeConsumeTrace": [
+    "receiver",
+    "reader",
+    "session",
+    "session:close",
+    "reader:close"
+  ],
+  "runtimeOperations": [
+    "publish",
+    "run",
+    "refuse",
+    "cancelled"
+  ],
+  "runtimeRefuseTrace": [
+    "receiver",
+    "publish"
+  ],
+  "runtimeCancelledTrace": [
+    "receiver"
+  ]
+}

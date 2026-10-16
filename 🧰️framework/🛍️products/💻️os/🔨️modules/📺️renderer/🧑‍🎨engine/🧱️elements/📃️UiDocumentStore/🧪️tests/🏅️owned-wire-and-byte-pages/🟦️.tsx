@@ -1,12 +1,13 @@
 /** 🏅 OwnedWire and SurfaceBytePages suites. */
 import { createTypedWireSupport, type TypedWireVitest, type TypedWireDependencies } from "../🪛️typedwire-helpers/🟦️.tsx";
+import { loadRetainedWireDecodeFixture, loadWireSurfaceBytesFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 export async function registerOwnedWireAndBytePagesTests(vitest: TypedWireVitest, dependencies: TypedWireDependencies): Promise<void> {
   const { describe, expect, it } = vitest;
   const { Buffer, produce } = await createTypedWireSupport(vitest, dependencies);
   const { RetainedUiWireValueCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🟦️.ts");
 
-  const { default: wireFixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️tests/🧫️fixtures/📤️decode/🔣️.json");
+  const wireFixture = await loadRetainedWireDecodeFixture();
 
 
   //#region 📦️OwnedWireTests
@@ -124,7 +125,7 @@ export async function registerOwnedWireAndBytePagesTests(vitest: TypedWireVitest
   describe("SurfaceBytePages", () => {
     it("matches Node Buffer at every native page boundary and preserves exact captured owners", async () => {
       const { UiSurfaceByteBuilder } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🔢️bytes/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🗺️surface-bytes/🔣️.json");
+      const fixture = await loadWireSurfaceBytesFixture();
       for (const length of fixture.lengths) {
         const expected = Buffer.from(Array.from({ length }, (_, i) => (i * fixture.pattern.multiply + fixture.pattern.add) % fixture.pattern.modulo));
         const builder = new UiSurfaceByteBuilder(length);
@@ -170,7 +171,7 @@ export async function registerOwnedWireAndBytePagesTests(vitest: TypedWireVitest
 
     it("decodes the full native SurfaceDoc numeric-list wire into pages without changing ordinary UiValue bounds", async () => {
       const { UiSurfaceBytes } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🔢️bytes/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🗺️surface-bytes/🔣️.json");
+      const fixture = await loadWireSurfaceBytesFixture();
       const { encodePackValue } = await import("@semio-tech/framework-os");
       const expected = Buffer.from(Array.from({ length: fixture.maximumBytes }, (_, i) => (i * fixture.pattern.multiply + fixture.pattern.add) % fixture.pattern.modulo));
       const component = { type: "surface", kind: "node-graph", docSchema: "node-graph@1", doc: { bytes: Array.from(expected) }, bindings: [] };

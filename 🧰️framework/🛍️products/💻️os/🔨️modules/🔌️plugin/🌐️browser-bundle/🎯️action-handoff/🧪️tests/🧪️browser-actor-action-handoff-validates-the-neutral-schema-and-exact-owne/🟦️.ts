@@ -1,3 +1,12 @@
+import * as ModuleUnderTest from "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
+import * as Dep0 from "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
+import * as Dep1 from "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts";
+import * as Dep2 from "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts";
+import * as Dep3 from "../../../../../../../../🔨️modules/🧾️app-channel/🟦️.ts";
+import * as Dep4 from "../../../../../../../../🔨️modules/🎁️packs/🟦️.ts";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
@@ -54,3 +63,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../🟦️.ts")).href;
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES: ModuleUnderTest.BROWSER_ACTOR_ACTION_PACK_MAXIMUM_BYTES, browserActorActionOwnerMatchesV1: ModuleUnderTest.browserActorActionOwnerMatchesV1, browserActorActionRefusalReasonV1: Dep0.browserActorActionRefusalReasonV1, browserActorAdmissionRefusalReasonV1: ModuleUnderTest.browserActorAdmissionRefusalReasonV1, browserActorGuestRefusalReasonV1: ModuleUnderTest.browserActorGuestRefusalReasonV1, createBrowserActorAppCommandRequestV1: Dep1.createBrowserActorAppCommandRequestV1, createBrowserActorUiIntentRequestV1: Dep2.createBrowserActorUiIntentRequestV1, decodeAppCommand: Dep3.decodeAppCommand, decodePackValue: Dep4.decodePackValue, parseBrowserActorActionRequestV1: ModuleUnderTest.parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1: ModuleUnderTest.parseBrowserActorActionResultV1 }, { directory: (await import("node:url")).fileURLToPath(new URL(".", moduleUnderTestUrl)), url: moduleUnderTestUrl });

@@ -17,9 +17,9 @@ import { buildTaskManagerTableScene, createTaskManagerDispatcher, installTasksV1
 import { type SpawnedJobRowV1 } from "../../../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
 import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟦️.tsx";
 import runningTasks from "../🧫️fixtures/🏃️running-tasks.json";
-import { ActivationRegistry } from "../../../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
+import { ActivationRegistry } from "@semio-tech/framework";
 import { ShardClient, type ShardBudget, type ShardWorkerLike } from "../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { OwnedResidentLedger } from "../../../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
+import { OwnedResidentLedger } from "@semio-tech/framework/value/resident";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Fixtures

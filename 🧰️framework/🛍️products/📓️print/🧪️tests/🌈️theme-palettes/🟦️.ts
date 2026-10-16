@@ -8,7 +8,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 import { rgb } from "d3-color";
 import { interpolateHcl, interpolateLab, piecewise } from "d3-interpolate";
 import { scaleOrdinal } from "d3-scale";
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type ProbeProjection, probeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
 //#region 🔖️Vectors

@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type TestEvidence, type PlatformId } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type TestEvidence, type PlatformId } from "@semio-tech/framework/test/adapter";
 import { type TestLevel } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { type ComparisonProfileSpec } from "../🗂️taxonomy/🟦️.ts";
 import { digest, setDigest } from "../🔢️digests/🟦️.ts";

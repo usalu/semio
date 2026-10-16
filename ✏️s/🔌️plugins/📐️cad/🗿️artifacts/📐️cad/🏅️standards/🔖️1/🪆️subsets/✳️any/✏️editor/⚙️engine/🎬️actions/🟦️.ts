@@ -6,10 +6,18 @@ import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/framewo
 // #endregion 🧲️Header
 
 
-import { AnchorAttachment, AnchorRecord, AnchorRef, EdgeRef, EffectSpec, Expr, ExprEnv, FaceRecord, FaceRef, InteractionEngagementControlKind, InteractionEngagementEntryControl, InteractionEvent, InteractionLengthEntrySpec, InteractionOutputBinding, InteractionScalarEntrySpec, InteractionSpec, Model, ModelEntityKind, PRIMITIVE_MODEL_ENTITY_KINDS, PathSegment, ResolvedInteractionEngagementControl, SelectionEvent, SelectionTarget, SolidRef, StateDefSpec, VertexRecord, VertexRef, WireRef, assertActionAvailableInModelDefinition, clearPathTarget, defaultModelDefinitionId, evalExpr, evalGuard, initialContextForSpec, listModelObjectsForModelDefinition, modelDefinitionSelectionEntityKinds, readPathTarget, writePathSegments, writePathTarget } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { AnchorAttachment, AnchorRecord, AnchorRef, EdgeRef, FaceRecord, FaceRef, ModelEntityKind, SolidRef, VertexRecord, VertexRef, WireRef } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { EffectSpec, InteractionEngagementControlKind, InteractionEngagementEntryControl, InteractionLengthEntrySpec, InteractionOutputBinding, InteractionScalarEntrySpec, InteractionSpec, ResolvedInteractionEngagementControl, StateDefSpec, initialContextForSpec } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🎰️interaction-spec/🟦️.ts";
+import { defaultModelDefinitionId } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
+import { PathSegment, writePathSegments } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🗺️paths/🟦️.ts";
+import { Model } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧊️model/🟦️.ts";
+import { PRIMITIVE_MODEL_ENTITY_KINDS, assertActionAvailableInModelDefinition, listModelObjectsForModelDefinition } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧭️definition-ownership/🟦️.ts";
+import { Expr, ExprEnv, clearPathTarget, evalExpr, evalGuard, readPathTarget, writePathTarget } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧮️expressions/🟦️.ts";
+import { modelDefinitionSelectionEntityKinds } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧷️selection-operations/🟦️.ts";
+import { InteractionEvent, SelectionEvent, SelectionTarget } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🪪️selection/🟦️.ts";
 import { capabilityActionSpecJson, ensureTypologyObjectFromCreateDiff } from "../🧬️typology/🟦️.ts";
 import { EMPTY_MODEL_DIFF, EdgeRecordDiff, KernelQueryContext, ModelDiff, SpatialKernel, SpatialPreviewKernel, VertexRecordDiff, isEmptyModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import { modelDefinitionActionCatalog } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import { modelDefinitionActionCatalog } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
 import type { InteractionRuntime } from "../🗿️artifact/🟦️.ts";
 
 

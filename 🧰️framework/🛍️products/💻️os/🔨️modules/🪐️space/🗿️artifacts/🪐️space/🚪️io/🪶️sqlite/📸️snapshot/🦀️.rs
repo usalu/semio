@@ -6,7 +6,7 @@ use crate::{SpaceSnapshot,SpaceKind,SpaceVisibility,SpaceRole,SpaceUser,Collecti
 use semio_framework_os_kernel as store;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{RowWriter,Cell}};
-#[path="../../../../../🪶️sqlite/🦀️.rs"]mod fields;
+use semio_framework_os_space_sqlite_cells as fields;
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
 pub const SQLITE_SNAPSHOT_DIALECT:semio_framework_artifact_reference::Dialect=semio_framework_artifact_reference::Dialect{artifact_kind:S_SPACE_SCHEMA,standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")};
 /// 📣️ Registers the real bare native factory and its owned SQLite capability atomically.

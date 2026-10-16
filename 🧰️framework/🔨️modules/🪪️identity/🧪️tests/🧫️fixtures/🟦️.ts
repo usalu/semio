@@ -1,0 +1,3 @@
+/** 🧫 The identity module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
+export { default as identityInstallationSchema } from "../../📁️installation/🧬️schema/🔣️.json" with { type: "json" };
+export const identityInstallationSchemaUrl = new URL("../../📁️installation/🧬️schema/🔣️.json", import.meta.url);

@@ -3,12 +3,12 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { rendererOriginalWorkStock } from "../../../🧵️work/🟦️.ts";
-import { ActivationRegistry } from "../../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
+import { rendererOriginalWorkStock } from "@semio-tech/framework/canvas/renderer-work";
+import { ActivationRegistry } from "@semio-tech/framework";
 import { assertShardJspiAvailable, ShardClient, type ShardBudget, type ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { shardWorkerUrl } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
-import { OwnedResidentLedger } from "../../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
-import { rendererResidentLedger } from "../../../💾️resident/🟦️.ts";
+import { shardWorkerUrl,DEFAULT_SHARD_BUDGET } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
+import { OwnedResidentLedger } from "@semio-tech/framework/value/resident";
+import { rendererResidentLedger } from "@semio-tech/framework/canvas/renderer-resident";
 import { notePluginLoadProgressForInFlightV1 } from "../🫀️load-progress/🟦️.ts";
 
 //#region 🔖️plugin-runtime
@@ -38,7 +38,7 @@ import { notePluginLoadProgressForInFlightV1 } from "../🫀️load-progress/�
 /** ⛽️ Provisional constant turn budget — same honestly-flagged gap `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s
  * native `TURN_BUDGET` documents ("until the DRR scheduler threads a real per-lane one through");
  * this is that same budget's web twin, field-for-field against `ShardBudget`. */
-export const DEFAULT_SHARD_BUDGET: ShardBudget = { fuel: 50_000_000, wallMs: 100, memoryBytes: 256 * 1024 * 1024, uiNodes: 20_000, mailboxLen: 64, maxEffects: 64, maxPatchBytes: 1 << 20 };
+export {DEFAULT_SHARD_BUDGET};
 
 /** 💼️ Isolated `step-job` slices that share one serialized actor admission.
  * One slice per admission lets a 120ms `fillBuildTick` poll starve a fill plan

@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve, relative } from "node:path";
 import Ajv from "ajv";
 import * as toml from "@iarna/toml";
-import { validateJsonSchemaSubset } from "../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { inspectRustCompileReferences, rustTokens, rustTokenPairs } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import contract from "../🧫️fixtures/🖊️drawing-reader/🔣️.json";
 import { extractedDxfMutationSource } from "./🧩️preservation/🟦️.ts";
@@ -86,7 +86,7 @@ test("additive complete lower native cohort preserves the original full oracle r
   const route = script.match(/class NativeOracleTestScript[\s\S]*?\n\}/u)![0];
   for (const binding of ["contract.neutralLaw.source", "contract.providers.map", "contract.families.map", "contract.grammar.package.path", "contract.package.path"]) expect(route).toContain(binding);
   expect(route).toContain('if (rest.length) throw new Error');
-  expect(route).toContain('runRepositoryTestCommand("cargo", ["test", "--manifest-path"');
+  expect(route).toContain('runRepositoryCargoCommandV1(this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:native-oracle",0)');
   expect(route).not.toContain('"--features"');
   const project = JSON.parse(read("🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📋️project.json"));
   expect(project.targets["test-native-drawing-reader"]?.options.command).toBe("bun 📜️script.ts test-native-drawing-reader");
@@ -94,7 +94,7 @@ test("additive complete lower native cohort preserves the original full oracle r
   expect(command).toContain("contract.families.find(({ module }) => module === \"drawing\")");
   expect(command).toContain("if (rest.length) throw new Error");
   expect(command).not.toContain("\"--features\"");
-  expect(command).toContain("budgetMs: 900_000");
+  expect(command).toContain("root,process.env,900_000");
 });
 
 

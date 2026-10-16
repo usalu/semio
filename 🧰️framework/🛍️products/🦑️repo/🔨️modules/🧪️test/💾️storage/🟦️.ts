@@ -4,10 +4,10 @@ import {createHash,randomBytes} from "node:crypto";
 import {mkdirSync,lstatSync,readdirSync,readFileSync,writeFileSync,rmSync} from "node:fs";
 import {join,resolve,basename,dirname} from "node:path";
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {acquireResourceLease,acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
+import {acquireResourceLease,acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import type {ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import retentionPolicy from "./🔣️policy.json" with {type:"json"};
 

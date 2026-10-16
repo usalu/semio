@@ -5,11 +5,11 @@ import{withRepositoryArtifactV1,withRepositoryArtifactTaskV1}from"../../../../..
 import{withJavascriptDependencyReadStorageV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
 import{withComponentModelV1}from"../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts";
 import{readArtifactBytesV1,fileDigest}from"../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
-import{captureOwnedCommandV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{captureOwnedCommandV1}from"@semio-tech/process/owned-execution";
 import{requireIssuedResourceControlInvocationV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{acquireCompilerCapacityLeaseV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import{acquireCompilerCapacityLeaseV1}from"@semio-tech/process/compiler-capacity";
 import{testBrowserHostPublicationPlanV1,testBrowserHostStageLimitsV1,readTestBrowserHostSelectedSourceV1}from"./📋️contract/🟦️.ts";
-import {buildModePolicy} from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import {buildModePolicy} from "@semio-tech/process/build-mode";
 import type {ScriptInvocation} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";

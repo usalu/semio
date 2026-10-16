@@ -17,7 +17,7 @@ use semio_framework_kernel_identity::RequestOutcome;
 /// 🧰️ The `Effect::SpawnJob` kind of every framework reserved tool verb (undo, redo, copy/paste,
 /// selection and interaction verbs): a live job each host starts on the spawning instance, steps to its
 /// end and answers with `Event::JobCompleted`, never a replayable product job. Twin of TypeScript
-/// `FRAMEWORK_RESERVED_JOB_KIND` in `🎠️kernel/🟦️.ts`; both are read from `🧫️fixtures/🧵️spawned-job-drive`.
+/// `FRAMEWORK_RESERVED_JOB_KIND` in `🎠️kernel/🛠️spawned-job/🟦️.ts`; both are read from `🧫️fixtures/🧵️spawned-job-drive`.
 pub const FRAMEWORK_RESERVED_JOB_KIND: &str = "framework.reserved.tool";
 
 /// 🧵 How many `step-job` observations ONE host admission of a spawned job may take before it gives
@@ -76,7 +76,7 @@ impl std::error::Error for SpawnedJobDriveError {}
 
 /// 🧵 The ONE rule that turns a transcript of `step-job` observations into the `Event::JobCompleted`
 /// the host owes the guest. Every host on every renderer answers through this, and its TypeScript
-/// twin `spawnedJobCompletion` in `🎠️kernel/🟦️.ts` answers identically; both drive
+/// twin `spawnedJobCompletion` in `🎠️kernel/🛠️spawned-job/🟦️.ts` answers identically; both drive
 /// `🧫️fixtures/🧵️spawned-job-drive/🔣️.json`.
 ///
 /// Observations AFTER the first terminal step are ignored rather than refused: a driver that stops
@@ -148,7 +148,7 @@ impl std::error::Error for MediaExportEncodingError {}
 /// ⬇️ The ONE rule that turns a [`Effect::DownloadMediaExport`] envelope into the bytes the user
 /// saves — no `encoding` (or [`MEDIA_EXPORT_UTF8_ENCODING`]) means `data` IS the file, and
 /// [`MEDIA_EXPORT_BASE64_ENCODING`] means `data` carries the bytes. Every shell on every renderer answers through this, and its
-/// TypeScript twin `mediaExportBytes` in `🎠️kernel/🟦️.ts` answers identically; both drive
+/// TypeScript twin `mediaExportBytes` in `🎠️kernel/🎬️media-export/🟦️.ts` answers identically; both drive
 /// `🧫️fixtures/⬇️media-export-encoding/🔣️.json`.
 pub fn media_export_bytes(data: &str, encoding: Option<&str>) -> Result<Vec<u8>, MediaExportEncodingError> {
     match encoding {
@@ -167,7 +167,7 @@ pub fn media_export_bytes(data: &str, encoding: Option<&str>) -> Result<Vec<u8>,
 pub const MEDIA_VIDEO_RENDER_CAPABILITY: &str = "media.video-render";
 
 /// 🎞️ The schema id every [`VideoRenderProgram`] states; `🧫️fixtures/🎞️video-render-program/🔣️.json` is its
-/// language-agnostic law, `videoRenderProgramProblem` in `🎠️kernel/🟦️.ts` its TypeScript twin.
+/// language-agnostic law, `videoRenderProgramProblem` in `🎠️kernel/🎥️video-render-program/🟦️.ts` its TypeScript twin.
 pub const VIDEO_RENDER_PROGRAM_SCHEMA: &str = "semio.video-render.program.v1";
 
 /// 📏️ The largest picture edge a program may ask for (the raster video tier's own ceiling).
@@ -608,7 +608,7 @@ pub struct ImportChunk {
 /// splits a code point, and an empty payload still yields exactly one chunk — a picked empty file is
 /// a real pick the guest must be told about.
 ///
-/// TypeScript twin: `importPayloadChunks` in `🎠️kernel/🟦️.ts`; both drive
+/// TypeScript twin: `importPayloadChunks` in `🎠️kernel/🗄️file-open-import/🟦️.ts`; both drive
 /// `🧫️fixtures/📤️file-open-import/🔣️.json`.
 pub fn import_payload_chunks(payload: &str) -> Vec<ImportChunk> {
     let mut pages: Vec<String> = Vec::new();

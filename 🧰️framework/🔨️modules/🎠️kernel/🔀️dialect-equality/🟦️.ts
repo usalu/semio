@@ -3,8 +3,8 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { type ArtifactDialect } from "../../🧬️schema/🗿️artifact-reference/🟦️.ts";
-import { type AppRef } from "../../🛂️manifest/🧬️schema/🟦️.ts";
+import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
+import { type AppRef } from "@semio-tech/framework/manifest/schema";
 
 // #region 🎠️Kernel
 //#region 🔖️AppRouter

@@ -1,10 +1,11 @@
+import{nativeFixedWindowsSystemV1,readNativeFixedWindowsSystemV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json";
 import {cargoExecutionSchemaV1,type CargoExecutionBackendV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import callerSchema from "../../../../🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
 import buildCallerSchema from "../../../../🏗️build/🧬️schema/📥️caller.json";
 import {resolve} from "node:path";
-import {checkScriptInvocation,advanceScriptInvocation,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkScriptInvocation,advanceScriptInvocation,scriptResourceProcessEnvironmentV1,requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {OwnedCommandOptions} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
@@ -18,7 +19,13 @@ export interface NativeOwnerCapabilities {
   readonly transport: Readonly<{ maximumBytes: number; maximumLines: number }>;
   readonly child: Readonly<{ maximumElapsedMilliseconds: number }>;
   readonly network: Readonly<{ offline: boolean }>;
+  readonly windowsSystem?:Readonly<{version:1;windows:string;system:string}>;
   readonly cargoExecutionBackend?:CargoExecutionBackendV1;
+}
+
+/** 🪟️ Captures actual fresh OS facts before birth and refuses caller-selected Windows paths. */
+export function createNativeWindowsSystemGrantV1(authored?:unknown):NativeOwnerCapabilities["windowsSystem"]{
+ if(process.platform!=="win32"){if(authored!==undefined)throw Error("Windows system facts require actual Windows");return undefined;}const actual=nativeFixedWindowsSystemV1(),facts=Object.freeze({version:1 as const,windows:actual.windows,system:actual.system});if(authored!==undefined){const selected=readNativeFixedWindowsSystemV1(authored);if(selected.windows!==facts.windows||selected.system!==facts.system)throw Error("Authored Windows system facts differ from actual OS");}return facts;
 }
 
 /** 🔐️ Refuses missing caller grants before native input or child acquisition. */
@@ -27,7 +34,7 @@ export function readNativeOwnerCapabilities(value: unknown): NativeOwnerCapabili
   return value as NativeOwnerCapabilities;
 }
 
-/** 🧭️ Receives the existing closed Nx orchestration caller without issuing replacement authority. */
+/** 🧭️ Receives the existing closed build orchestration caller without issuing replacement authority. */
 export interface NativeOrchestrationCallerV1 {
  readonly tool?:"nx"|"bazel";
  readonly workspaceRoot:string;
@@ -35,13 +42,13 @@ export interface NativeOrchestrationCallerV1 {
  readonly arguments:readonly string[];
  readonly selection:readonly string[];
  readonly launches?:readonly (readonly string[])[];
- readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"]}>;
+ readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];windowsSystem?:NativeOwnerCapabilities["windowsSystem"]}>;
 }
 /** 🔐️ Projects either current native role while retaining its exact declared capabilities. */
-export function readNativeCallerAuthorityV1(value:unknown):Readonly<{role:"native-owner-command"|"nx-orchestration";repositoryRoot:string;artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];original:NativeOwnerCapabilities|NativeOrchestrationCallerV1}>{
+export function readNativeCallerAuthorityV1(value:unknown):Readonly<{role:"native-owner-command"|"build-orchestration";repositoryRoot:string;artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];original:NativeOwnerCapabilities|NativeOrchestrationCallerV1}>{
  if(value&&typeof value==="object"&&"native" in value){
   if(validateJsonSchemaSubset(value&&typeof value==="object"&&"tool" in value?buildCallerSchema:callerSchema,value).length)throw Error("Original native caller capabilities required");
-  const caller=value as NativeOrchestrationCallerV1;return{role:"nx-orchestration",repositoryRoot:caller.workspaceRoot,...caller.native,original:caller};
+  const caller=value as NativeOrchestrationCallerV1;return{role:"build-orchestration",repositoryRoot:caller.workspaceRoot,...caller.native,original:caller};
  }
  const caller=readNativeOwnerCapabilities(value);return{role:"native-owner-command",repositoryRoot:caller.repositoryRoot,artifactDirectory:caller.artifactDirectory,transport:caller.transport,child:caller.child,network:caller.network,original:caller};
 }
@@ -54,11 +61,10 @@ export interface NativeCallerPhaseV1 {
  options(environment:Readonly<Record<string,string|undefined>>):OwnedCommandOptions;
 }
 /** ⏳️ Intersects the explicitly declared finite native child grant with the unchanged original caller. */
-export function nativeCallerPhaseV1(invocation:ScriptInvocation,root:string):NativeCallerPhaseV1{
- checkScriptInvocation(invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),started=performance.now();
+export function nativeCallerPhaseV1(invocation:ScriptInvocation,root:string,parent:ResourceLeaseControl):NativeCallerPhaseV1{
+ requireIssuedResourceControlInvocationV1(parent,invocation);checkScriptInvocation(invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities);
  if(resolve(authority.repositoryRoot)!==resolve(root))throw Error("Original native caller repository root refused");
- const budget=():number=>{checkScriptInvocation(invocation);const parent=invocation.control.remainingMilliseconds(),child=authority.child.maximumElapsedMilliseconds-(performance.now()-started),remaining=parent===null?child:Math.min(parent,child);if(!Number.isFinite(remaining)||remaining<=0)throw Error("Original native child deadline exhausted");return remaining;};
+ const leaseControl=createRequestedIssuedResourceControlV1(parent,authority.child.maximumElapsedMilliseconds),budget=():number=>{requireIssuedResourceControlInvocationV1(leaseControl,invocation);const remaining=leaseControl.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original finite native child deadline exhausted");return remaining;};
  const advance=async(command:string):Promise<void>=>{budget();await advanceScriptInvocation(invocation,command,"running");budget();};
- const leaseControl:ResourceLeaseControl={signal:invocation.control.signal,remainingMilliseconds:budget,async publish(progress){budget();await invocation.control.publish({owner:invocation.policy.owner,command:"native:lease:"+progress.resource,stage:"running"});budget();},async yieldContinuation(){budget();await invocation.control.yieldContinuation();budget();}};
- return{authority,leaseControl,budget,advance,options:environment=>({signal:invocation.control.signal,output:authority.transport,env:scriptInvocationEnvironment(invocation,{...environment,CARGO_NET_OFFLINE:String(authority.network.offline),CARGO_TARGET_DIR:authority.artifactDirectory}),onProgress:advance})};
+ return Object.freeze({authority,leaseControl,budget,advance,options:(environment:Readonly<Record<string,string|undefined>>)=>{budget();return{signal:leaseControl.signal,output:authority.transport,env:scriptResourceProcessEnvironmentV1(leaseControl,{...environment,CARGO_NET_OFFLINE:String(authority.network.offline),CARGO_TARGET_DIR:authority.artifactDirectory}),onProgress:advance};}});
 }

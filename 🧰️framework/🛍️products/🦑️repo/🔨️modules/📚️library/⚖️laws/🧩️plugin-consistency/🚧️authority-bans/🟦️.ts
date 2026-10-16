@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: server-only db, OS state authority, pack files, raw spawn, null budget and MCP config bans.
+/** 🚧️ Wave 4 plugin consistency policy: server-only db, OS state authority, pack files, raw spawn, null budget and MCP config bans.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { policyMaskLiterals, policyTestModSpans, policyLineInTestMod } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";
@@ -9,7 +9,7 @@ import { AGENT_CLIENT_DECLARATION_MANIFEST, checkAgentClients, mcpServersOf, rea
 import { existsSync, readdirSync, type Dirent } from "node:fs";
 import { join } from "node:path";
 import { policyDocumentAppUsages } from "../🧮️completeness/🟦️.ts";
-import { policyAllRustFiles, policyExtractFnBody, policyRootScriptModulePaths } from "../🏛️foundation/🟦️.ts";
+import { policyAllRustFiles, policyExtractFnBody, policyPackageScriptModulePaths, policyRootScriptModulePaths } from "../🏛️foundation/🟦️.ts";
 
 //#region 🔧️PolicyRuleDbServerOnly
 /** 🔎️Repo-wide `Cargo.toml` file paths (repo-relative), same walker + `POLICY_SKIP_DIRS` as the other policy file discoverers. */
@@ -419,7 +419,7 @@ function policyDiscoverScriptTsFiles(repoRoot: string): string[] {
     }
   };
   walk("");
-  return [...new Set([...found, ...policyRootScriptModulePaths(repoRoot).filter((path) => existsSync(join(repoRoot, path)))])].sort();
+  return [...new Set([...found, ...policyRootScriptModulePaths(repoRoot).filter((path) => existsSync(join(repoRoot, path))), ...policyPackageScriptModulePaths(repoRoot).filter((path) => existsSync(join(repoRoot, path)))])].sort();
 }
 
 /**

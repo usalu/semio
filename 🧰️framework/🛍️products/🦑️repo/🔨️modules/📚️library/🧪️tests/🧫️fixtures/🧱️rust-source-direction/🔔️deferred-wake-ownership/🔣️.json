@@ -3,7 +3,7 @@
   "neutralFixture": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧫️fixtures/🔣️.json",
   "neutralRouter": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
   "writerFixture": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧫️fixtures/🔔️deferred-wake/🔣️.json",
-  "writerRouter": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+  "writerRouter": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/✍️wal-checks/🟦️.ts",
   "caseIds": [
     "cross-key-refusal",
     "retry-supersedes-self",

@@ -1,0 +1,35 @@
+{
+  "type": "array",
+  "minItems": 10,
+  "maxItems": 10,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "fault",
+      "committed"
+    ],
+    "properties": {
+      "fault": {
+        "enum": [
+          "none",
+          "before-append",
+          "after-append",
+          "before-rename",
+          "after-rename",
+          "busy",
+          "orphan",
+          "extra-ledger",
+          "physical-usage",
+          "available-state"
+        ]
+      },
+      "committed": {
+        "type": "boolean"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -5,7 +5,8 @@ import type { DisplayModel } from "../../../🎬️actions/🟦️.ts";
 import type { InteractionSnapshot } from "../../../🗿️artifact/🟦️.ts";
 import type { MeshTransfer, Vec3 } from "../../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
 import type { ModelDiff } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import type { ObjectRef, ResolvedTypologyStyle, TypologyRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { ObjectRef, TypologyRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
+import type { ResolvedTypologyStyle } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/📥️definition-catalog/🟦️.ts";
 
 type TestSource = { readonly url: string };
 
@@ -458,7 +459,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("concrete forest fixture keeps committed face visibility toggles", async () => {
       const { readFileSync } = await import("node:fs");
-      const { ModelSpace } = await import("../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts");
+      const { ModelSpace } = await import("../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🌌️model-space/🟦️.ts");
       const json = JSON.parse(readFileSync(new URL("../../../📚️examples/🖼️assets/🎮️play/🔣️.json", source.url), "utf8"));
       const model = (ModelSpace.fromJSON(json).models[defaultModelDefinitionId()] ?? ModelSpace.fromJSON(json).models[""])!;
       const mdId = defaultModelDefinitionId();

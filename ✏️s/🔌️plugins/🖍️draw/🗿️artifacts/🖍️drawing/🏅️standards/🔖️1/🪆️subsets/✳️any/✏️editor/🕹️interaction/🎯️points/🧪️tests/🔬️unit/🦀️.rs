@@ -52,7 +52,7 @@ fn modified_point_picks_match_neutral_selection_contract() {
 
 #[test]
 fn point_marquee_matches_transformed_anchor_and_merge_fixtures() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/▧️marquee/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔲️marquee/🔣️.json")).unwrap();
     let segments:Vec<PathSegment>=serde_json::from_value(fixture["segments"].clone()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let matrix=serde_json::from_value(case["matrix"].clone()).unwrap();let start=serde_json::from_value(case["start"].clone()).unwrap();let end=serde_json::from_value(case["end"].clone()).unwrap();

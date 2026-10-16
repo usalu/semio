@@ -47,6 +47,7 @@ semio-s-artifact-stdio-pptx-base-mutations = { workspace = true }
 semio-s-artifact-stdio-pptx-base-model = { workspace = true }
 semio-s-artifact-stdio-pptx-base-inferences = { workspace = true }
 semio-s-artifact-stdio-pptx-base = { workspace = true }
+semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
 
 [package.metadata.semio.composition]
 manifest = "../../🧩️composition/🔣️.json"

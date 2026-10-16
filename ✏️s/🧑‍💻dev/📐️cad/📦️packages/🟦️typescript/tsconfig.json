@@ -6,7 +6,7 @@
   },
   "include": [
     "🟦️.ts",
-    "../../../../🔌️plugins/📐️cad/⚙️engine/🫀️core/🟦️.ts",
+    "../../../../🔌️plugins/📐️cad/⚙️engine/🫀️kernel/🟦️.ts",
     "../../../../🔌️plugins/📐️cad/⚙️engine/📔️registry/🟦️.ts"
   ]
 }

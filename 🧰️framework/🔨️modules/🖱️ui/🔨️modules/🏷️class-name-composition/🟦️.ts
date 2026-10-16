@@ -262,7 +262,8 @@ export function cn(...inputs: ClassNameInput[]): string {
   const conflicts = new Set<string>();
   const result: string[] = [];
   for (let index = tokens.length - 1; index >= 0; index -= 1) {
-    const token = tokens[index];
+    const token=tokens[index];
+    if(token===undefined)throw Error("Complete class token sequence required");
     const [modifier, base] = splitModifiers(token);
     const group = classGroup(base);
     if (!group) {

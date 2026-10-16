@@ -287,7 +287,7 @@ const twin = (module: Module, body: { readonly types: readonly string[]; readonl
     `/** ${module.emoji} ${DESCRIPTIONS[module.facet](module)}, exactly as \`./🦀️.rs\` writes it. Generated from \`./🔣️.json\``,
     " * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.",
     " * @see ./🔣️.json */",
-    `import { ${contract.join(", ")} } from "${specifier(module.twin, CONTRACT)}";`,
+    `import { ${contract.join(", ")} } from "${module.twin.includes("/🗿️artifacts/") ? "@semio-tech/norm-js/registry/contract" : specifier(module.twin, CONTRACT)}";`,
     ...imports.map((entry) => `import { ${entry.names.join(", ")} } from "${entry.from}";`),
     "",
     ...body.types.flatMap((type) => [type, ""]),

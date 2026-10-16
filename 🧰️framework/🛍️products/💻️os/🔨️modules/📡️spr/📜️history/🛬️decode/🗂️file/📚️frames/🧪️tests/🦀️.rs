@@ -3,7 +3,7 @@ use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::native_decoding::{NativeDecodeAllocation,NativeDecodeAllocationPort,NativeDecodeRetirementRecipient};
 #[derive(Clone,Copy)]struct OriginalPages<'a>{pages:&'a[&'a[u8]],page_bytes:usize,identity:OriginalWireSourceIdentity}
 impl RetainedWireByteSource for OriginalPages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{self.identity}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.identity.extent{return None}self.pages.get(index/self.page_bytes)?.get(index%self.page_bytes).copied()}}
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(operation)}
 fn hex(value:&str)->Vec<u8>{value.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 fn receipt(owner:&mut RetainedHistorySourceFrames,g:RetainedCloneGrant){let(issued,p)=owner.take_receipt().unwrap();assert_eq!(issued,g);assert!(p.fits(g));assert_eq!((p.retained_capacity_bytes,p.released_bytes),(0,0));}
 async fn original_bytes(law:&serde_json::Value)->Vec<u8>{let options=protocol::format::WriteOptions{required_flags:protocol::REQUIRED_HASH_CHAIN,optional_flags:protocol::OPTIONAL_CANONICAL};let mut writer=protocol::format::SprWriter::begin(Vec::new(),&options).await.unwrap();for row in law["records"].as_array().unwrap(){writer.write_record(row["kind"].as_u64().unwrap()as u8,row["flags"].as_u64().unwrap()&2!=0,&hex(row["payloadHex"].as_str().unwrap()),protocol::codec::ids::CodecId(0)).await.unwrap();}writer.commit().await.unwrap();writer.into_sink().await}

@@ -1,4 +1,5 @@
-use super::*;
+use semio_framework::kernel::{ActorInstanceLifetime, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus};
+use crate::{ColdDocumentPairCloseStep, ColdDocumentPairIngressRegistry};
 
 fn hex32(source: &str) -> [u8; 32] {
     assert_eq!(source.len(), 64);
@@ -13,11 +14,13 @@ fn patterned(length: usize, multiplier: usize, addend: usize) -> Vec<u8> {
     (0..length).map(|index| ((index * multiplier + addend) & 255) as u8).collect()
 }
 
-fn lifetime(guest_lifetime: u64) -> ActorInstanceLifetime {
+#[doc(hidden)]
+pub fn lifetime(guest_lifetime: u64) -> ActorInstanceLifetime {
     ActorInstanceLifetime { activation_generation: 41, instance_id: 7, guest_lifetime }
 }
 
-fn header(pack: &[u8], spr: &[u8], lifetime: ActorInstanceLifetime, transfer_generation: u64) -> ColdDocumentPairHeader {
+#[doc(hidden)]
+pub fn header(pack: &[u8], spr: &[u8], lifetime: ActorInstanceLifetime, transfer_generation: u64) -> ColdDocumentPairHeader {
     let mut aggregate = semio_framework_hash::Sha256::new();
     aggregate.update(pack);
     aggregate.update(spr);
@@ -36,7 +39,8 @@ fn header(pack: &[u8], spr: &[u8], lifetime: ActorInstanceLifetime, transfer_gen
     }
 }
 
-fn page(header: &ColdDocumentPairHeader, pack: &[u8], spr: &[u8], index: u32) -> ColdDocumentPairPage {
+#[doc(hidden)]
+pub fn page(header: &ColdDocumentPairHeader, pack: &[u8], spr: &[u8], index: u32) -> ColdDocumentPairPage {
     let offset = index as usize * COLD_PAIR_PAGE_MAXIMUM_BYTES;
     let length = header.page_length(index).unwrap();
     let mut bytes = Vec::with_capacity(length);
@@ -201,8 +205,8 @@ fn cold_pair_ingress_is_an_exact_retained_native_close_participant() {
     let spr = patterned(COLD_PAIR_PAGE_MAXIMUM_BYTES + 1, 13, 5);
     let close_lifetime = ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 };
     let exact_header = header(&pack, &spr, close_lifetime, 59);
-    let key = super::super::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime);
-    let foreign = super::super::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime + 1);
+    let key = semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime);
+    let foreign = semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime + 1);
     let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
     assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 0), Some(exact_header.lifetime)), ColdPairIngressStatus::PageAccepted(_)));
     ingress.preflight_close_instance(key).unwrap();

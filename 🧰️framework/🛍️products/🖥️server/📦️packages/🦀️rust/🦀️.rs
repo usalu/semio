@@ -27,27 +27,11 @@ pub use semio_framework_server_authority::{__semio_dispatch_Decider, __semio_dis
 #[path = "../../🔨️modules/📡️gateway/🦀️.rs"]
 pub mod gateway;
 
-#[cfg(test)]
-#[path = "../../🧪️tests/🧩️instance/🦀️.rs"]
-pub mod test_instance;
-
-#[cfg(test)]
-#[path = "../../🔨️modules/🎭️authority/🧪️tests/🔬️unit/🦀️.rs"]
-mod authority_unit;
-
-#[cfg(test)]
-#[path = "../../🔨️modules/🛡️policy/🧪️tests/🔬️unit/🦀️.rs"]
-mod policy_unit;
-
-#[cfg(test)]
-#[path = "../../🔨️modules/🗄️storage/🧪️tests/🔬️unit/🦀️.rs"]
-mod storage_unit;
-
-// 🔬️ The storage contract as executable assertions, generic over the backend. Compiled for this
-// crate's own tests and for any instance crate that enables the `conformance` feature on its
-// DEV-dependency — never in a default build, so a durable instance is held against the very same
-// bodies the reference backends are without the product shipping a test harness.
-#[cfg(any(test, feature = "conformance"))]
+// 🔬️ The storage contract as executable assertions, generic over the backend. Compiled for any
+// instance crate that enables the `conformance` feature on its DEV-dependency, among them the
+// companion crate that holds the reference backends — never in a default build, so a durable
+// instance is held against the very same bodies without the product shipping a test harness.
+#[cfg(feature = "conformance")]
 #[path = "../../🧪️tests/🔬️conformance/🦀️.rs"]
 pub mod conformance;
 

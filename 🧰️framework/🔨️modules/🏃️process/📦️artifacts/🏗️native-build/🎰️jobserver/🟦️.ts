@@ -6,6 +6,9 @@ import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️valida
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 const protocol = schema.definitions.Protocol.const;
+const issuedJobservers=new WeakSet<JobserverV1>();
+/** 🔐️ Requires an actual live first-party token pool before stage effects. */
+export function requireJobserverV1(value:JobserverV1):void{if(!issuedJobservers.has(value))throw Error("Actual live jobserver required");}
 
 /** 🎰️ How the pool publishes its tokens: a named fifo on Unix, a named semaphore on Windows. */
 export type JobserverStyleV1 = "fifo" | "semaphore";
@@ -109,7 +112,7 @@ async function semaphoreChannel(published: number): Promise<TokenChannelV1> {
  * Waiters are served first come, first served; a cancelled waiter leaves no token behind.
  * @see https://www.gnu.org/software/make/manual/html_node/POSIX-Jobserver.html */
 export async function createJobserverV1(value: unknown, directory: string): Promise<JobserverV1> {
-  const config = admitJobserverConfigV1(value);
+  const config = Object.freeze({...admitJobserverConfigV1(value)});
   const channel = config.style === "fifo" ? fifoChannel(directory, config.tokens - 1) : await semaphoreChannel(config.tokens - 1);
   const makeflags = jobserverMakeflagsV1(config.tokens, channel.endpoint, config.style);
   const queue: { count: number; slots: JobSlotV1[]; accept: (slots: readonly JobSlotV1[]) => void; reject: (reason: unknown) => void; signal?: AbortSignal; abort: () => void }[] = [];
@@ -162,22 +165,24 @@ export async function createJobserverV1(value: unknown, directory: string): Prom
       pump();
     });
   };
-  return {
+  const server:JobserverV1=Object.freeze({
     config,
     endpoint: channel.endpoint,
     makeflags,
     environment: () => Object.fromEntries(protocol.clientEnvironment.map((name) => [name, makeflags])),
-    acquire: async (signal) => (await acquire(1, signal))[0]!,
-    acquireAll: (signal) => acquire(config.tokens, signal),
+    acquire: async (signal?: AbortSignal) => (await acquire(1, signal))[0]!,
+    acquireAll: (signal?: AbortSignal) => acquire(config.tokens, signal),
     tryAcquire: () => closed || queue.length ? null : take(),
     held: () => held,
     waiting: () => queue.length,
     close: () => {
       if (closed) return;
       closed = true;
+      issuedJobservers.delete(server);
       if (timer) clearInterval(timer);
       for (const waiter of queue.splice(0)) { waiter.signal?.removeEventListener("abort", waiter.abort); for (const held of waiter.slots) held.release(); waiter.reject(Error("Jobserver closed")); }
       channel.close();
     },
-  };
+  });
+  issuedJobservers.add(server);return server;
 }

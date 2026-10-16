@@ -734,7 +734,7 @@ pub fn board2d_tool_run_trace_cursors() -> HashMap<String, semio_framework_tool_
 }
 
 /// 🔍️ Resident trace records and footprints of one board surface, for the attach law.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn board2d_tool_run_trace_state(surface_id: &str) -> Option<(usize, usize, usize)> {
     ENGINE_SURFACES.with(|cell| {
         let registry = cell.borrow_mut();

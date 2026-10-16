@@ -1,0 +1,400 @@
+#!/usr/bin/env python3
+import os, re, sys, json, hashlib, collections, shutil, subprocess
+
+T = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, T)
+from rsitems import lex, items as rs_items, name_kind
+import widen as W
+
+REPO = '/Users/ueli/Documents/semio'
+SCR = os.environ.get('PFA_SCR', '/private/tmp/claude-501/-Users-ueli--claude-spares-spare-PBncC5/6c384ddf-f4e2-43bf-8d3c-c66daff05e49/scratchpad/pfa')
+ORPH = re.compile(r'^\s*(//#(end)?region\b|#!\[|//!)')
+MARK = re.compile(r'^(\s*)//#(end)?region\b(.*)$')
+PINNED = ('use', 'crate')
+
+
+def ident_set(text):
+    s = set()
+    for k, x, sl, el, si in lex(text):
+        if k == 'id':
+            s.add(x)
+        elif k == 'str':
+            for m in re.finditer(r'\{([A-Za-z_][A-Za-z0-9_]*)', x):
+                s.add(m.group(1))
+    return s
+
+
+class Doc:
+    def __init__(self, text):
+        self.text = text
+        self.lines = text.split('\n')
+        self.items = []
+        self.regions = []
+        self._parse()
+
+    def _parse(self):
+        lines = self.lines
+        raw = rs_items(self.text)
+        prev_e = -1
+        its = []
+        for r in raw:
+            s = r['first_tok_line']
+            e = r['end_line']
+            j = s
+            last = None
+            while j <= e and (ORPH.match(lines[j]) or lines[j].strip() == '' or lines[j].lstrip().startswith('//')):
+                if ORPH.match(lines[j]):
+                    last = j
+                j += 1
+            if last is not None:
+                s = last + 1
+            while s <= e and lines[s].strip() == '':
+                s += 1
+            if s <= prev_e:
+                s = prev_e + 1
+            assert s <= e, ('empty item span', r['first_tok_line'] + 1, e + 1)
+            try:
+                vis, kind, name = name_kind(r['toks'])
+            except Exception as ex:
+                vis, kind, name = '', '?', ''
+            its.append(dict(s=s, e=e, vis=vis, kind=kind, name=name, attrs=r['attrs']))
+            prev_e = e
+        self.items = its
+        covered = [None] * len(lines)
+        for ii, it in enumerate(its):
+            for L in range(it['s'], it['e'] + 1):
+                assert covered[L] is None, ('overlap', L + 1)
+                covered[L] = ii
+        stack = []
+        region_at = [None] * (len(lines) + 1)
+        for L, line in enumerate(lines):
+            region_at[L] = tuple(stack)
+            m = MARK.match(line)
+            if m and covered[L] is None or (m and covered[L] is not None):
+                if m.group(2) is None:
+                    rid = len(self.regions)
+                    self.regions.append(dict(id=rid, open=line.strip(), close=None, name=m.group(3).strip()))
+                    stack.append(rid)
+                else:
+                    assert stack, ('endregion without region', L + 1)
+                    rid = stack.pop()
+                    self.regions[rid]['close'] = line.strip()
+            elif covered[L] is None and line.strip() != '' and not ORPH.match(line):
+                raise AssertionError(('uncovered non-blank line', L + 1, line[:80]))
+        region_at[len(lines)] = tuple(stack)
+        assert not stack, ('unbalanced regions at EOF', stack)
+        for it in its:
+            it['stack'] = region_at[it['s']]
+            it['balanced'] = region_at[it['e'] + 1] == it['stack']
+        self.covered = covered
+
+
+def listing(doc):
+    for ii, it in enumerate(doc.items):
+        print('%d\t%d-%d\t%d\t%s\t%s\t%s\t%s' % (ii, it['s'] + 1, it['e'] + 1, it['e'] - it['s'] + 1, it['vis'], it['kind'], it['name'][:60], ' '.join(it['attrs'])[:50]))
+
+
+def select(doc, ranges, who):
+    chosen = []
+    for a, b in ranges:
+        for ii, it in enumerate(doc.items):
+            s1, e1 = it['s'] + 1, it['e'] + 1
+            if e1 < a or s1 > b:
+                continue
+            assert a <= s1 and e1 <= b, (who, 'range cuts an item', (a, b), (s1, e1), it['name'])
+            chosen.append(ii)
+    return sorted(set(chosen))
+
+
+def vis_rank(it, rank_attr_cfg=None):
+    v = it['vis']
+    if v == 'pub':
+        return 3
+    if v.startswith('pub'):
+        return 2
+    return 1
+
+
+def build(doc, spec):
+    owner = {}
+    plans = []
+    for ci, c in enumerate(spec['children']):
+        idxs = select(doc, c['ranges'], c['folder'])
+        keep = []
+        for ii in idxs:
+            it = doc.items[ii]
+            if it['kind'] in PINNED or (it['kind'] == 'mod' and doc.lines[it['e']].rstrip().endswith(';')):
+                continue
+            assert ii not in owner, ('item in two children', ii, it['name'])
+            assert it['balanced'], ('moved item with unbalanced markers', it['s'] + 1, it['e'] + 1, it['name'])
+            owner[ii] = ci
+            keep.append(ii)
+        assert keep, ('empty child', c['folder'])
+        plans.append(keep)
+    lines = doc.lines
+    child_files = {}
+    for ci, c in enumerate(spec['children']):
+        out = [c['doc'], '']
+        if c.get('glob', True):
+            out.append('use super::*;')
+        for u in c.get('uses', []):
+            out.append(u)
+        out.append('')
+        cur = []
+        first = True
+        for ii in plans[ci]:
+            it = doc.items[ii]
+            target = list(it['stack'])
+            p = 0
+            while p < len(cur) and p < len(target) and cur[p] == target[p]:
+                p += 1
+            closers = [doc.regions[r]['close'] for r in reversed(cur[p:])]
+            openers = [doc.regions[r]['open'] for r in target[p:]]
+            if closers:
+                while out and out[-1] == '':
+                    out.pop()
+                out.extend(closers)
+            if not first or out[-1] != '':
+                if out[-1] != '':
+                    out.append('')
+            out.extend(openers)
+            out.extend(lines[it['s']:it['e'] + 1])
+            cur = target
+            first = False
+        closers = [doc.regions[r]['close'] for r in reversed(cur)]
+        out.extend(closers)
+        while out and out[-1] == '':
+            out.pop()
+        child_files[c['folder']] = '\n'.join(out) + '\n'
+    wiring = {}
+    if spec.get('wiring', 'block') == 'block':
+        wiring[min(doc.items[plans[ci][0]]['s'] for ci in range(len(plans)))] = list(range(len(plans)))
+    else:
+        for ci, c in enumerate(spec['children']):
+            first_it = doc.items[plans[ci][0]]
+            wiring[first_it['s']] = [ci]
+    skip = set()
+    for ii, ci in owner.items():
+        it = doc.items[ii]
+        for L in range(it['s'], it['e'] + 1):
+            skip.add(L)
+    out = []
+    reex = {}
+    for ci, c in enumerate(spec['children']):
+        best = 1
+        cfgs = set()
+        named = 0
+        for ii in plans[ci]:
+            it = doc.items[ii]
+            k = it['kind']
+            if k in ('impl', 'macro', 'include') or not it['name'] and k in ('impl',):
+                continue
+            if k == 'impl':
+                continue
+            if it['name'] == '' and k not in ('mod',):
+                r = 3
+            else:
+                r = vis_rank(it)
+            named += 1
+            best = max(best, r)
+            cfgs.add(tuple(a for a in it['attrs'] if a.startswith('#[cfg(')))
+        reex[ci] = (named, best, cfgs)
+    for L, line in enumerate(lines):
+        if L in wiring:
+            wl = ['']
+            for cj in wiring[L]:
+                c = spec['children'][cj]
+                wl.extend(['#[path = "%s/🦀️.rs"]' % c['folder'], '%smod %s;' % (c.get('modvis', '') + (' ' if c.get('modvis') else ''), c['mod'])])
+                named, best, cfgs = reex[cj]
+                if c.get('reexport', True) and named:
+                    v = {3: 'pub use', 2: 'pub(crate) use', 1: 'use'}[best]
+                    if len(cfgs) == 1 and list(cfgs)[0] and all(len(x) == 1 for x in cfgs):
+                        wl.append(list(cfgs)[0][0])
+                    wl.append('%s %s::*;' % (v, c['mod']))
+                wl.append('')
+            out.extend(wl)
+        if L in skip:
+            continue
+        out.append(line)
+    ptxt = collapse(out)
+    return ptxt, child_files, plans
+
+
+def collapse(lines):
+    out = []
+    blank = 0
+    for l in lines:
+        if l.strip() == '':
+            blank += 1
+            if blank > 1:
+                continue
+            out.append('')
+        else:
+            blank = 0
+            out.append(l)
+    return '\n'.join(out)
+
+
+def widen_children(ptxt, child_files, external_texts, report=None):
+    all_ids = {'__parent__': ident_set(ptxt)}
+    for f, t in child_files.items():
+        all_ids[f] = ident_set(t)
+    ext = set()
+    for t in external_texts:
+        ext |= ident_set(t)
+    res = {}
+    for f, t in child_files.items():
+        others = set(ext)
+        for g, s in all_ids.items():
+            if g != f:
+                others |= s
+        ed = W.plan(t, others)
+        res[f] = W.apply(t, ed)
+        if report is not None:
+            for e in ed:
+                report.append((f,) + tuple(e[2]))
+    return res
+
+
+def stage(tag, spec_module):
+    os.makedirs(os.path.join(SCR, 'stage'), exist_ok=True)
+    sp = spec_module.SPEC
+    orig = open(os.path.join(T, 'orig', sp['orig']), encoding='utf-8').read()
+    if sp.get('pre'):
+        orig = sp['pre'](orig)
+        open(os.path.join(SCR, 'stage', tag + '.pre.rs'), 'w', encoding='utf-8').write(orig) if os.path.isdir(os.path.join(SCR, 'stage')) else None
+    doc = Doc(orig)
+    ptxt, child_files, plans = build(doc, sp)
+    ext = []
+    for p in sp.get('external', []):
+        ext.append(open(os.path.join(REPO, p), encoding='utf-8').read())
+    rep = []
+    child_files = widen_children(ptxt, child_files, ext, rep)
+    d = os.path.join(SCR, 'stage', tag)
+    shutil.rmtree(d, ignore_errors=True)
+    os.makedirs(d)
+    open(os.path.join(d, '🦀️.rs'), 'w', encoding='utf-8').write(ptxt + ('\n' if not ptxt.endswith('\n') else ''))
+    for f, t in child_files.items():
+        os.makedirs(os.path.join(d, f))
+        open(os.path.join(d, f, '🦀️.rs'), 'w', encoding='utf-8').write(t)
+    with open(os.path.join(SCR, 'stage', tag + '.widen.tsv'), 'w', encoding='utf-8') as fh:
+        for r in rep:
+            fh.write('\t'.join(r) + '\n')
+    sizes = {f: t.count('\n') for f, t in child_files.items()}
+    print('staged', tag, 'parent', ptxt.count('\n') + 1, 'children', sizes, 'widened', len(rep))
+    return d
+
+
+def norm_line(l):
+    return l.strip().replace('pub(super) ', '')
+
+
+def lossless(tag, spec_module):
+    sp = spec_module.SPEC
+    orig = open(os.path.join(T, 'orig', sp['orig']), encoding='utf-8').read()
+    d = os.path.join(SCR, 'stage', tag) if len(sys.argv) < 4 else sys.argv[3]
+    files = [os.path.join(d, '🦀️.rs')] + [os.path.join(d, c['folder'], '🦀️.rs') for c in sp['children']]
+    O = collections.Counter(norm_line(l) for l in orig.split('\n') if l.strip())
+    N = collections.Counter()
+    per = {}
+    for f in files:
+        c = collections.Counter(norm_line(l) for l in open(f, encoding='utf-8').read().split('\n') if l.strip())
+        per[f] = c
+        N += c
+    miss = O - N
+    extra = N - O
+    print('files', len(files), 'orig non-blank', sum(O.values()), 'new non-blank', sum(N.values()))
+    print('missing', sum(miss.values()))
+    for l, c in sorted(miss.items()):
+        print('  -', c, l[:200])
+    print('extra', sum(extra.values()))
+    allowed = []
+    pre_extra = collections.Counter(sp.get('pre_extra', []))
+    for l, c in sorted(extra.items()):
+        tag2 = ''
+        if pre_extra.get(l, 0) >= c:
+            tag2 = 'pre-edit'
+        elif l.startswith('//!'):
+            tag2 = 'doc'
+        elif l == 'use super::*;':
+            tag2 = 'glob'
+        elif re.match(r'^#\[path = ".*/🦀️\.rs"\]$', l):
+            tag2 = 'path'
+        elif re.match(r'^(pub )?mod [a-z0-9_]+;$', l):
+            tag2 = 'mod'
+        elif re.match(r'^(pub(\(crate\))? )?use [a-z0-9_]+::\*;$', l):
+            tag2 = 'reexport'
+        elif re.match(r'^//#(end)?region', l):
+            tag2 = 'marker'
+        elif l.startswith('#[cfg('):
+            tag2 = 'cfg-on-reexport'
+        allowed.append((tag2, c, l))
+    for t2, c, l in allowed:
+        print('  +', t2 or 'UNEXPLAINED', c, l[:160])
+    bad = [a for a in allowed if not a[0]]
+    mo = orig.count('//#region')
+    mn = sum(open(f, encoding='utf-8').read().count('//#region') for f in files)
+    eo = orig.count('//#endregion')
+    en = sum(open(f, encoding='utf-8').read().count('//#endregion') for f in files)
+    print('regions orig/new', mo, mn, 'endregions orig/new', eo, en)
+    ok = not miss and not bad and mn == en
+    print('LOSSLESS', 'OK' if ok else 'FAIL')
+    return ok
+
+
+def paths_check(tag, spec_module):
+    sp = spec_module.SPEC
+    base = os.path.dirname(sp['file'])
+    ok = True
+    for c in sp['children']:
+        rel = os.path.join(base, c['folder'], '🦀️.rs')
+        n = len(rel.encode('utf-8'))
+        nabs = len((REPO + '/' + rel).encode('utf-8'))
+        print('path', n, nabs, rel[-70:])
+        if nabs > 240:
+            print('  TOO LONG (absolute > 240)')
+            ok = False
+    return ok
+
+
+def install(tag, spec_module):
+    sp = spec_module.SPEC
+    d = os.path.join(SCR, 'stage', tag)
+    target = os.path.join(REPO, sp['file'])
+    cur = open(target, 'rb').read()
+    orig = open(os.path.join(T, 'orig', sp['orig']), 'rb').read()
+    assert cur == orig, 'repo file differs from the recorded original; refusing to overwrite'
+    base = os.path.dirname(target)
+    for c in sp['children']:
+        cd = os.path.join(base, c['folder'])
+        assert not os.path.exists(cd), ('child folder exists', cd)
+    for c in sp['children']:
+        cd = os.path.join(base, c['folder'])
+        os.makedirs(cd)
+        shutil.copyfile(os.path.join(d, c['folder'], '🦀️.rs'), os.path.join(cd, '🦀️.rs'))
+    tmp = target + '.pfa-tmp'
+    shutil.copyfile(os.path.join(d, '🦀️.rs'), tmp)
+    os.replace(tmp, target)
+    print('installed', tag)
+
+
+if __name__ == '__main__':
+    import importlib.util
+    cmd = sys.argv[1]
+    tag = sys.argv[2]
+    if cmd == 'list':
+        sp = importlib.import_module('specs.' + tag).SPEC
+        txt = open(os.path.join(T, 'orig', sp['orig']), encoding='utf-8').read()
+        if sp.get('pre'):
+            txt = sp['pre'](txt)
+        listing(Doc(txt))
+        sys.exit(0)
+    mod = importlib.import_module('specs.' + tag)
+    if cmd == 'stage':
+        stage(tag, mod)
+    elif cmd == 'lossless':
+        sys.exit(0 if lossless(tag, mod) else 1)
+    elif cmd == 'paths':
+        sys.exit(0 if paths_check(tag, mod) else 1)
+    elif cmd == 'install':
+        install(tag, mod)

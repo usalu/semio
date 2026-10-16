@@ -39,11 +39,11 @@ impl FromValue for LawOp {
 }
 
 impl OpBinary for LawOp {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> {
         self.0.encode_op()
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> {
         DemoMutation::decode_op(bytes).map(Self)
     }
 }
@@ -60,13 +60,13 @@ impl OpText for LawOp {
 
 impl Mutation<DemoSnapshot> for LawOp {
     type Diff = <DemoMutation as Mutation<DemoSnapshot>>::Diff;
-    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = <DemoMutation as Mutation<DemoSnapshot>>::DESCRIPTORS;
+    const DESCRIPTORS: &'static [semio_framework_os_spr::MutationLeafDescriptor] = <DemoMutation as Mutation<DemoSnapshot>>::DESCRIPTORS;
 
-    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
+    fn descriptor(&self) -> &'static semio_framework_os_spr::MutationLeafDescriptor {
         self.0.descriptor()
     }
 
-    fn diff(&self, base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<Self::Diff> {
         self.0.diff(base)
     }
 
@@ -85,19 +85,19 @@ impl Mutation<DemoSnapshot> for LawOp {
         self.delta().is_some_and(|delta| delta >= 1000)
     }
 
-    fn foreign_step_source<'a>(&'a self, _base: &'a DemoSnapshot, index: usize) -> Result<Option<crate::os_spr::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
-        Ok((index == 0 && self.delta().is_some_and(|delta| delta >= 2000)).then_some(crate::os_spr::ForeignStepSource { artifact_id: "elsewhere", artifact_kind: "demo", dialect: None, mutation_id: "demo/v1#setN", payload: &[1], label: "notify" }))
+    fn foreign_step_source<'a>(&'a self, _base: &'a DemoSnapshot, index: usize) -> Result<Option<semio_framework_os_spr::ForeignStepSource<'a>>, semio_framework_value::ValueError> {
+        Ok((index == 0 && self.delta().is_some_and(|delta| delta >= 2000)).then_some(semio_framework_os_spr::ForeignStepSource { artifact_id: "elsewhere", artifact_kind: "demo", dialect: None, mutation_id: "demo/v1#setN", payload: &[1], label: "notify" }))
     }
 }
 
-impl MemberStoreProducer<DemoSnapshot,LawOp> for crate::os_store::tests::DemoMemberStoreProducer<LawOp> {
+impl MemberStoreProducer<DemoSnapshot,LawOp> for semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<LawOp> {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<LawOp>()
     }
 
-    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, LawOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, LawOp>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, LawOp>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_os_store_engine_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, LawOp>> {
         super::fixture_authoring_member_owners::<LawOp>(grant)
     }
 }
@@ -119,8 +119,8 @@ impl ArtifactCanonicalJson for LawOp {
 type LawStore = ArtifactStore<DemoSnapshot, LawOp>;
 
 /// 🌍️ The other document a law operation's foreign step targets.
-fn elsewhere() -> crate::os_spr::ForeignTarget {
-    crate::os_spr::ForeignTarget { artifact_id: "elsewhere".into(), artifact_kind: "demo".into(), dialect: None }
+fn elsewhere() -> semio_framework_os_spr::ForeignTarget {
+    semio_framework_os_spr::ForeignTarget { artifact_id: "elsewhere".into(), artifact_kind: "demo".into(), dialect: None }
 }
 
 fn corpus() -> serde_json::Value {
@@ -128,10 +128,10 @@ fn corpus() -> serde_json::Value {
 }
 
 async fn law_store(id: &str) -> LawStore {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, LawOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, LawOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await
 }
 
-async fn apply(store: &mut LawStore, operation: LawOp, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn apply(store: &mut LawStore, operation: LawOp, _identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     test_support::dispatch_test_command(store, ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("a clean edit applies");
 }
 
@@ -156,9 +156,9 @@ fn supersede(target: &MutationId, replacement: Option<LawOp>) -> ArtifactCommand
 }
 
 /// ✉️ Another replica's unscoped supersession of `target`, authored far after every edit.
-fn remote_supersession(document: &str, target: &MutationId, replacement: protocol::InputReplacement, logical: u64) -> crate::os_spr::MutationEnvelope {
-    let transition = crate::os_spr::HistoryTransition::Supersede(protocol::TransitionSupersede { scope: None, inputs: vec![protocol::SupersededInput { target: target.clone(), replacement }] });
-    crate::os_spr::history_transition_envelope(&transition, &ArtifactId(document.to_string()), &ActorId("editor".into()), vec![target.clone()], HybridLogicalTimestamp { actor: 9, physical_ms: u64::MAX / 2, logical })
+fn remote_supersession(document: &str, target: &MutationId, replacement: protocol::InputReplacement, logical: u64) -> semio_framework_os_spr::MutationEnvelope {
+    let transition = semio_framework_os_spr::HistoryTransition::Supersede(protocol::TransitionSupersede { scope: None, inputs: vec![protocol::SupersededInput { target: target.clone(), replacement }] });
+    semio_framework_os_spr::history_transition_envelope(&transition, &ArtifactId(document.to_string()), &ActorId("editor".into()), vec![target.clone()], HybridLogicalTimestamp { actor: 9, physical_ms: u64::MAX / 2, logical })
 }
 
 /// 🧱️ The recorded operation and the replacement an input row of the corpus names.
@@ -178,7 +178,7 @@ fn staged(row: &serde_json::Value) -> (LawOp, protocol::InputReplacement) {
 
 async fn reloaded(store: &LawStore) -> LawStore {
     let files = print_document_pack(store.envelope()).await.expect("the pair prints");
-    ArtifactStore::new(parse_document_pack::<DemoSnapshot, LawOp>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
+    ArtifactStore::new(parse_document_pack::<DemoSnapshot, LawOp>(&files.pack, &files.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await
 }
 //#endregion 🧰️Harness
 
@@ -190,7 +190,7 @@ async fn reloaded(store: &LawStore) -> LawStore {
 async fn every_input_row_is_admitted_and_folded_as_the_table_says() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     for row in corpus()["inputs"].as_array().expect("input rows") {
         let name = row["name"].as_str().expect("a row name");
         let (original, replacement) = staged(row);
@@ -225,7 +225,7 @@ async fn every_input_row_is_admitted_and_folded_as_the_table_says() {
 async fn a_withdrawn_planner_folds_as_a_no_op_at_every_site_and_its_recorded_input_restores_it() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut store = law_store("planner-withdraw").await;
     apply(&mut store, set(1), &mut identity).await;
     apply(&mut store, add(1000), &mut identity).await;
@@ -241,7 +241,7 @@ async fn a_withdrawn_planner_folds_as_a_no_op_at_every_site_and_its_recorded_inp
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(reloaded(&store).await.snapshot_ref().n, Some(4));
     let text = print_document_text(store.envelope()).await.expect("the text prints");
-    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, LawOp>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, LawOp>(&text.dsl, &text.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text parses").into_envelope(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(mirrored.snapshot_ref().n, Some(4));
     let log = store.event_log().expect("log");
     for rotation in 0..log.len() {
@@ -273,7 +273,7 @@ async fn a_withdrawn_planner_folds_as_a_no_op_at_every_site_and_its_recorded_inp
 async fn every_unit_row_names_its_unit_and_refuses_its_supersession_as_the_table_says() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     for row in corpus()["units"].as_array().expect("unit rows") {
         let name = row["name"].as_str().expect("a row name");
         let mut store = law_store(name).await;
@@ -289,7 +289,7 @@ async fn every_unit_row_names_its_unit_and_refuses_its_supersession_as_the_table
             SpaceMember::stamp_tail_group_id(&mut store, "gesture-1").await.expect("a group stamp");
         }
         if row["origin"].as_str() == Some("transaction") {
-            SpaceMember::stamp_tail_origin(&mut store, crate::os_spr::MutationOrigin::Transaction { initiator: elsewhere() }).await.expect("an origin stamp");
+            SpaceMember::stamp_tail_origin(&mut store, semio_framework_os_spr::MutationOrigin::Transaction { initiator: elsewhere() }).await.expect("an origin stamp");
         }
         let target = operation_ids(&store)[1].clone();
         let unit = match row["unit"].as_str().expect("a unit") {
@@ -333,7 +333,7 @@ async fn every_unit_row_names_its_unit_and_refuses_its_supersession_as_the_table
 async fn a_refused_inverse_is_one_fatal_mutation_and_the_session_stays_repairable() {
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
-    let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut store = law_store("inverse-refused").await;
     apply(&mut store, set(1), &mut identity).await;
     apply(&mut store, set(13), &mut identity).await;
@@ -354,7 +354,7 @@ async fn a_refused_inverse_is_one_fatal_mutation_and_the_session_stays_repairabl
     assert_eq!((blocked.state().expect("the reached state").n, report.blocks_finalize()), (Some(16), true));
     let generation = store.generation();
     let refused = store.commit_finished_replay(blocked, HistoryFinalization::Overwrite, &mut identity).await;
-    assert!(matches!(&refused, Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.inverse-refused")), "{refused:?}");
+    assert!(matches!(&refused, Err(VcsError::Rejected { policy: semio_framework_os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.inverse-refused")), "{refused:?}");
     assert_eq!(store.generation(), generation, "a blocked finalize changes nothing");
     drafts.insert(ids[1].clone(), protocol::InputReplacement::Withdrawn);
     let repaired = finished(&store, &drafts);

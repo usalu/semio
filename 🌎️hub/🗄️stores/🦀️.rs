@@ -45,7 +45,7 @@ use server::{__semio_dispatch_Decider, __semio_dispatch_PrincipalResolver};
 
 use semio_hub_directory_contract::HubCapability;
 use semio_hub_directory_dispatch::HubDirectories;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::AuthSessionDirectory;
 
 //#region 🔖️Instance
 /// 📚️ The hub deployment of the server product.

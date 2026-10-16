@@ -269,7 +269,7 @@ pub enum DirectoryEventPageErrorV1 {
     ReceiptMismatch,
 }
 
-pub(crate) fn directory_event_page_has_control(value: &crate::DslValue) -> bool {
+#[doc(hidden)] pub fn directory_event_page_has_control(value: &crate::DslValue) -> bool {
     match value {
         crate::DslValue::String(value) => value.chars().any(char::is_control),
         crate::DslValue::Bytes(_) => true,
@@ -1142,7 +1142,7 @@ impl DocumentOpenPackageV1 {
     /// 🔗️ Whether the package's receipt is a valid shipped receipt naming exactly this package, its component digest and
     /// its semantic descriptor digest — the one law every plan, lease and catalog binding holds its package to.
     pub fn receipt_binds(&self) -> bool {
-        self.component_receipt.binds(&self.plugin_id, &self.package_id, &self.component_sha256, &self.descriptor_byte_sha256).is_ok()
+        self.component_receipt.binds(semio_framework_plugin_component_receipt::ComponentProfileV1::Release, &self.plugin_id, &self.package_id, &self.component_sha256, &self.descriptor_byte_sha256).is_ok()
     }
 }
 
@@ -1857,9 +1857,3 @@ pub enum DirectoryStreamMessage {
     },
 }
 //#endregion 🔖️Stream
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

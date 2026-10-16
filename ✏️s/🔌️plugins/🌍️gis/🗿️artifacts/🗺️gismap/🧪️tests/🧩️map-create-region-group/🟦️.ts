@@ -1,3 +1,4 @@
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"@semio-tech/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -30,7 +31,7 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
     ...fixture.base.routes.flatMap((feature: any) => feature.data.points),
     ...fixture.base.regions.flatMap((feature: any) => feature.data.ring ?? feature.data.points ?? []),
   ];
-  const xs = points.map((point: number[]) => point[0]), ys = points.map((point: number[]) => point[1]);
+  const xs = points.map((point: number[]) => {const x=point[0];if(x===undefined)throw Error("Actual longitude required");return x;}), ys = points.map((point: number[]) => {const y=point[1];if(y===undefined)throw Error("Actual latitude required");return y;});
   const id = `inference-${fixture.jobId}`;
   const ring = [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)], [Math.min(...xs), Math.max(...ys)], [Math.min(...xs), Math.min(...ys)]];
   const region = { id, data: { id, kind: "inference-bounds", ring } };
@@ -88,7 +89,7 @@ export class MapCreateRegionGroupCheckScript extends BundleScript {
 export class MapCreateRegionGroupNativeCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveGisMapCreateRegionGroup(this.repoRoot);
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.root, groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features"], laws: ["standards::v1::subsets::any::schema::inferences::component::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : undefined, progress(event) { console.log(`gis-map-create-region-group ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.root, groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features"], laws: ["standards::v1::subsets::any::schema::inferences::component::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image"] }],  progress(event) { console.log(`gis-map-create-region-group ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
     for (const receipt of receipts) console.log(`gis-map-create-region-group-receipt: ${JSON.stringify(receipt)}`);
   }
 }

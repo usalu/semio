@@ -1,7 +1,7 @@
 /** 🗺️ GIS document open: the GIS wasm lease, the viewer's renderer-unavailable state and the cold pair transfer with inference approval Undo. */
 import { stubFetch } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🌐️fetch-stub/🟦️.ts";
 import { parseGisMapInferenceApprovalReceiptV1, idleGisMapInferencePortStatusV1 } from "../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts";
-import { documentServiceRequestV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🚪️io/🟦️.ts";
+import { documentServiceRequestV1 } from "@semio-tech/framework/inference/service/io";
 import { gisMapDocumentServiceDeclarationV1 } from "../../../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🟦️.ts";
 import { workerLawFakesV1, executionTargetBytes, WORKER_LAW_CAPABILITY_TWO, FakeHubWebSocket, sampleEnvelope } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧰️worker-law-fakes/🟦️.ts";
@@ -11,11 +11,11 @@ type ActorInstanceLifetime = import("../../../../../../../🧰️framework/🔨�
 type ArtifactEvent = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").ArtifactEvent;
 type ArtifactState = import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts").BackboneWorkerResponse;
-type BrowserActorChildValue = import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts").BrowserActorChildValue;
-type BrowserActorUiPatchOfferV1 = import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts").BrowserActorUiPatchOfferV1;
+type BrowserActorChildValue = import("@semio-tech/framework/browser-bundle/child/schema").BrowserActorChildValue;
+type BrowserActorUiPatchOfferV1 = import("@semio-tech/framework/browser-bundle/patch-handoff").BrowserActorUiPatchOfferV1;
 type DocumentBrowserActorChild = import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts").DocumentBrowserActorChild;
 type MutationEnvelope = import("../../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts").MutationEnvelope;
-type ResolvedPluginViewState = import("../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts").ResolvedPluginViewState;
+type ResolvedPluginViewState = import("@semio-tech/framework/manifest").ResolvedPluginViewState;
 type WireArtifactBootstrap = import("../../../../../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts").WireArtifactBootstrap;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
@@ -118,19 +118,19 @@ export async function registerGisDocumentOpenTests(vitest: Vitest, dependencies:
         { kind: { kind: "app", id: panelSurfaces[1]!.key }, label: "History", group: "details", bodyKey: panelSurfaces[1]!.bodyKey, children: [] },
       ];
       const panelVisible = (view: ResolvedPluginViewState) => panelSurfaces.map((panel) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: panel.key }, bodyKey: panel.bodyKey, viewState: encodePackValue(panelViewContext(view)) } }));
-      const { panelViewContext, sectionViewContext, windowViewContext } = await import("../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts");
+      const { panelViewContext, sectionViewContext, windowViewContext } = await import("@semio-tech/framework/manifest");
       const { BROWSER_ACTOR_VISIBLE_SURFACES_V1 } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🟦️.ts");
       const sectionVisible = (view: ResolvedPluginViewState, mount: boolean) => BROWSER_ACTOR_VISIBLE_SURFACES_V1.sections.filter((section) => mount || !section.static).map((section) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: section.bodyKey }, bodyKey: section.bodyKey, viewState: encodePackValue(sectionViewContext(view)) } }));
       const secondWindowVisible = (view: ResolvedPluginViewState) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: secondWindow.key }, bodyKey: secondWindow.bodyKey, viewState: encodePackValue(windowViewContext(view, secondWindow.key)!) } });
       const descriptor = encodePackValue(guest),
         descriptorByteSha256 = await executionTargetSha256Hex(descriptor);
       const { UiDocumentStore } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
-      const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
+      const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("@semio-tech/framework/backbone/binding");
       const { decodeAppCommand, encodeAppFrame } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts");
       const { readActorBytePage } = await import("../../../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
-      const { createBrowserActorAppCommandRequestV1 } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts");
-      const { createBrowserActorUiIntentRequestV1 } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts");
-      const { decodeBrowserActorHostEffectsV1 } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts");
+      const { createBrowserActorAppCommandRequestV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/command");
+      const { createBrowserActorUiIntentRequestV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/intent");
+      const { decodeBrowserActorHostEffectsV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/publication");
       const windowKindId = fixture.manifest.surface.windowKindId;
       const hostFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧪️tests/🧫️fixtures/🪟️host-opening-context/🔣️.json", source.url), "utf8"));
       const hostView = { ...hostFixture.valid.viewState, windowId: windowKindId, activeWindowKindId: windowKindId, activeUtilityId: "pan", activeUtilityByWindowId: { [windowKindId]: "pan" }, windowInstances: [{ id: windowKindId, windowKindId }, { id: secondWindow.key, windowKindId: secondWindow.key }] };

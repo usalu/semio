@@ -5,12 +5,12 @@ import fixture from "../🧫️fixtures/🏃️command-ownership/🔣️.json";
 import {stdioCargoMetadata} from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope,withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as nativePhases from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import {Database} from "bun:sqlite";
-import {scriptCompilerAdmissionControlV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import Ajv from "ajv";
-import captureSchema from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🧬️schema/🔣️.json";
-import outputSchema from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📬️output.json";
+import { ownedExecutionCaptureSchema as captureSchema } from "@semio-tech/process/owned-execution/capture/schema";
+import { ownedExecutionOutputSchema as outputSchema } from "@semio-tech/process/owned-execution/schema";
 
 describe("stdio command ownership", () => {
   test("binds semantic owners, direct routers, source data and registered inputs", async () => {

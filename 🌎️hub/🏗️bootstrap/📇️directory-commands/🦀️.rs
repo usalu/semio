@@ -19,7 +19,7 @@ use directory::os_directory::access_policy::{DirectoryAccessActionV1, DirectoryA
 use semio_hub_directory_contract::model::{DirectoryPrincipalCeilingV1, DirectoryPrincipalV1, NewDirectoryCommandReceipt, SyncSessionRecord};
 use directory::os_directory::DocumentScope;
 use semio_hub_directory_service::{directory_command_result_kind, DirectoryCommandExecutionV1};
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{AuthSessionDirectory, DocumentDirectory, InviteDirectory, PrincipalAuthority, SpaceDirectory, UserDirectory};
 use semio_hub_directory_contract::{SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX, InviteCapability, SessionCapability};
 use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use std::collections::BTreeSet;
@@ -113,7 +113,7 @@ pub async fn document_view(state: &HubState, descriptor: DocumentDescriptor) -> 
 /// 🛡️ A directory command is admitted exactly when the declared access policy permits its action to
 /// the actor's roles in the command's space: operator subject, space owner (a human session only — a
 /// delegation never carries administration authority) and the session's own roles
-/// ([`session_access_roles`] of its [`HubDirectory::principal_role`]). A space-scoped command naming a
+/// ([`session_access_roles`] of its [`PrincipalAuthority::principal_role`]). A space-scoped command naming a
 /// space that does not exist is `404`.
 pub async fn authorize_directory_command(state: &HubState, principal: DirectoryPrincipalV1<'_>, admin: bool, command: &DirectoryCommand) -> Result<(), StatusCode> {
     let mut roles = if admin { vec![DirectoryAccessRoleV1::Admin] } else { Vec::new() };
@@ -287,7 +287,7 @@ pub async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectI
 }
 
 /// 🏘️ The caller's space list: every public space and every space it belongs to, ordered by id, from ONE
-/// directory query ([`HubDirectory::list_visible_space_summaries`]) whatever the number of spaces, documents or
+/// directory query ([`SpaceDirectory::list_visible_space_summaries`]) whatever the number of spaces, documents or
 /// events. It used to fold the whole directory event log and then, per visible space, list its documents (mounting
 /// each one for its frontier just to count them) and its sessions — 25–58 s for a member of 82 spaces on hub 7800
 /// (ticket 26/09/23 WG8). Counts and `updatedAtMs` are the space administration route's own (the same summary row).

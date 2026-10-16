@@ -3,14 +3,19 @@ import { stubFetch } from "../🌐️fetch-stub/🟦️.ts";
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
 
 export type TestSource = { readonly directory: string; readonly url: string };
+
+/** 🔭️ Rebases the worker's own test source onto the OS root every fixture path is spelled against. */
+export function workerLawSourceV1(registrar: TestSource): TestSource {
+  return { directory: registrar.directory, url: new URL("../../../🟦️.ts", registrar.url).href };
+}
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
 type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
-type DirectoryStreamMessage = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DirectoryStreamMessage;
-type DocumentExecutionTargetLeaseFieldsV1 = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentExecutionTargetLeaseFieldsV1;
-type DocumentOpenIntentV1 = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentOpenIntentV1;
-type DocumentOpenPlanV1 = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentOpenPlanV1;
+type DirectoryStreamMessage = import("@semio-tech/framework/directory/schema").DirectoryStreamMessage;
+type DocumentExecutionTargetLeaseFieldsV1 = import("@semio-tech/framework/directory/schema").DocumentExecutionTargetLeaseFieldsV1;
+type DocumentOpenIntentV1 = import("@semio-tech/framework/directory/schema").DocumentOpenIntentV1;
+type DocumentOpenPlanV1 = import("@semio-tech/framework/directory/schema").DocumentOpenPlanV1;
 type MutationEnvelope = import("../../../../🔨️modules/📡️replication/🟦️.ts").MutationEnvelope;
 type PersistenceBinding = import("../../🟦️.ts").PersistenceBinding;
 type ServerFrame = import("../../../../🔨️modules/📡️replication/🟦️.ts").ServerFrame;

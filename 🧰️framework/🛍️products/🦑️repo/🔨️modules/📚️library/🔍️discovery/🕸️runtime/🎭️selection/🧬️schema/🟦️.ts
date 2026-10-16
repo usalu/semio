@@ -1,17 +1,20 @@
+import type {CompletedCargoPublicationReferenceV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🟦️.ts";
+import cargoReferenceSchema from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🧬️schema/🔣️.json";
 import {requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import type { FileObservationControlV1, PhysicalFileClaimV1 } from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import type { RuntimeCargoObservationV1 } from "../../🧬️schema/🟦️.ts";
 import type { RuntimeDynamicImportOwnerV1, RuntimeGraphEvidenceV1 } from "../../🟦️.ts";
-import schema from "./🔣️.json";
+import schemaDocument from "./🔣️.json";
+const schema=structuredClone(schemaDocument),referenceSchema=structuredClone(cargoReferenceSchema);
 
 /** 🎭️ Relative selected output custody, independent of publication storage or an application. */
 export interface SelectedRuntimeRelativeClaimV1 { readonly relativePath:string; readonly sha256:string; readonly byteLength:number }
 /** 🏭️ Complete original actor factory inputs and exact same-package outputs. */
 export interface SelectedRuntimeActorProducerV1 { readonly schema:"semio.os.closed-browser-actor-producer/v1"; readonly actor:SelectedRuntimeRelativeClaimV1; readonly component:SelectedRuntimeRelativeClaimV1; readonly descriptor:SelectedRuntimeRelativeClaimV1; readonly policyCanonical:string; readonly policySha256:string; readonly runtime:PhysicalFileClaimV1; readonly compiler:PhysicalFileClaimV1; readonly inputs:readonly (PhysicalFileClaimV1 & {readonly logicalPath:string})[] }
 /** 📦️ One selected production package and its original native invocation owners. */
-export interface SelectedRuntimePackageProducerV1 { readonly pluginId:string; readonly packageId:string; readonly cargoPackage:string; readonly component:SelectedRuntimeRelativeClaimV1; readonly descriptor:SelectedRuntimeRelativeClaimV1; readonly cargoInvocations:readonly PhysicalFileClaimV1[]; readonly browserActor:PhysicalFileClaimV1|null }
+export interface SelectedRuntimePackageProducerV1 { readonly pluginId:string; readonly packageId:string; readonly cargoPackage:string; readonly component:SelectedRuntimeRelativeClaimV1; readonly descriptor:SelectedRuntimeRelativeClaimV1; readonly cargoInvocations:readonly CompletedCargoPublicationReferenceV1[]; readonly browserActor:PhysicalFileClaimV1|null }
 /** 🧾️ Typed original publication generation with no storage-specific API. */
 export interface SelectedRuntimeGenerationV1 { readonly schema:string; readonly profileId:string; readonly generationId:string; readonly bundle:SelectedRuntimeRelativeClaimV1; readonly packages:readonly SelectedRuntimePackageProducerV1[] }
 /** 📍️ Exact live pointer, bundle and generation producer custody. */
@@ -50,7 +53,7 @@ export async function parseSelectedRuntimeActorEvidenceV1(input:unknown,control:
   }else refuse("non-JSON value");
   if(bytes>control.maxBytes)refuse("byte-capacity");if(work%128===0){progress();await new Promise<void>(done=>setTimeout(done,0));}
  }
- progress();const errors=validateJsonSchemaSubset(schema,input);check(control);if(errors.length)refuse(errors[0]!);control.onProgress({phase:"complete",bytes,totalBytes:bytes,work});check(control);return input as SelectedRuntimeActorEvidenceV1;
+ progress();const errors=validateJsonSchemaSubset(schema,input,schema,[referenceSchema]);check(control);if(errors.length)refuse(errors[0]!);control.onProgress({phase:"complete",bytes,totalBytes:bytes,work});check(control);return input as SelectedRuntimeActorEvidenceV1;
 }
 function admitPort(port:SelectedRuntimeActorPublicationPortV1,control:FileObservationControlV1):void{check(control);if(!port||typeof port.diagnosticOwner!=="string"||!port.diagnosticOwner||port.diagnosticOwner.length>4096||typeof port.observeCurrent!=="function"||typeof port.acquireCurrent!=="function")refuse("required publication port");}
 /** 🔍️ Validates the owning current observation without acquiring production evidence. */
@@ -66,5 +69,5 @@ export type SelectedRuntimeGraphPackageRootsV1=readonly string[];
 export function parseSelectedRuntimeGraphPackageRootsV1(input:unknown):SelectedRuntimeGraphPackageRootsV1{
  if(!Array.isArray(input)||Object.getPrototypeOf(input)!==Array.prototype||input.length<1||input.length>128)refuse("required explicit graph package roots");
  for(const key of Reflect.ownKeys(input)){if(key==="length")continue;const descriptor=Object.getOwnPropertyDescriptor(input,key)!;if(typeof key!=="string"||! /^(0|[1-9][0-9]*)$/u.test(key)||!("value" in descriptor)||typeof descriptor.value!=="string")refuse("graph package root member");}
- const errors=validateJsonSchemaSubset(schema.$defs.SelectedRuntimeGraphPackageRootsV1,input,schema);if(errors.length)refuse(errors[0]!);return input as SelectedRuntimeGraphPackageRootsV1;
+ const errors=validateJsonSchemaSubset(schema.$defs.SelectedRuntimeGraphPackageRootsV1,input,schema,[referenceSchema]);if(errors.length)refuse(errors[0]!);return input as SelectedRuntimeGraphPackageRootsV1;
 }

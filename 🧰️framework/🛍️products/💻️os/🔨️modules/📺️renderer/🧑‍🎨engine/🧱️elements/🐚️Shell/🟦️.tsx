@@ -12,7 +12,7 @@ import { resolveFrameworkOsCatalogConfigurationV1 } from "./🧩️catalog/🟦�
 import React, { Component, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import type { ShellDialogV1 } from "../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
-import type { PluginModuleSourceV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
+import type { PluginModuleSourceV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";
 import {
   ANCHORS,
   Button,
@@ -57,8 +57,9 @@ import {
   type WindowEngagement,
   type WindowMeasure,
 } from "@semio-tech/framework";
-import { type ArtifactSyncStatus, type InstalledServiceStatusV1 } from "@semio-tech/framework-os";
-import { EMPTY_INTERACTION_STATE, type InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
+import { type ArtifactSyncStatus } from "@semio-tech/framework/backbone";
+import { type InstalledServiceStatusV1 } from "@semio-tech/framework/inference/service";
+import { EMPTY_INTERACTION_STATE, type InteractionState } from "@semio-tech/framework/interaction";
 // 🧱️core: shellLabel imported directly from ShellHelpers (its real implementation, not via the barrel) —
 // this module calls shellLabel(...) at module top level (UI_INSPECTOR_MIXED_PLACEHOLDER), which requires
 // a non-circular import; routing through the barrel indirection (cleared) hit the same

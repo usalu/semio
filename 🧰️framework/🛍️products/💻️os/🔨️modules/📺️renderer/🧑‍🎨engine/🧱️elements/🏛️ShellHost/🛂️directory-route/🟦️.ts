@@ -3,8 +3,8 @@
  * 🧱️ Child hook module of {@link ../🟦️.tsx | ShellHost}: `useDirectoryAndRoute` runs the original statements in order and returns the bindings later hooks and the render read; the parent merges them into the shared core object.
  */
 
-import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1 } from "../../../../../📇️directory/🪪️session-refresh/🟦️.ts";
-import { HubSessionPortClientV1 } from "../../../../../📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts";
+import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1 } from "@semio-tech/framework/directory/session-refresh";
+import { HubSessionPortClientV1 } from "@semio-tech/framework/directory/session-refresh/session-port";
 import {
   useCallback,
   useEffect,
@@ -20,9 +20,11 @@ import {
   resolvePluginRegistryId,
   waitForEvent
 } from "@semio-tech/framework";
-import { encodeBackboneWorkerRequest, encodeDocumentArchiveBytes, encodePackValue } from "@semio-tech/framework-os";
+import { encodePackValue } from "@semio-tech/framework/packs";
+import { encodeDocumentArchiveBytes } from "@semio-tech/framework/wire-contracts";
+import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { SHELL_HUB_ROUTE, shellRouteAdmissionV1, shellRouteIsOverlayV1 } from "../🔀️surface-switch/🟦️.ts";
-import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, localCatalogActorConfig } from "../../../../../🏪️store/👷️worker/🟦️.ts";
+import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, localCatalogActorConfig } from "@semio-tech/framework/backbone/config-lane";
 import {
   LOCAL_CATALOG_READ_DEADLINE_MS_V1,
   LOCAL_CATALOG_WRITE_DEADLINE_MS_V1,
@@ -40,7 +42,7 @@ import {
   type LocalCatalog,
   type LocalCatalogConfigMutation,
   type LocalDocument
-} from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+} from "@semio-tech/framework/config/mutations";
 // #endregion 🔌️Adapters
 import { type SpaceAdministrationIntentV1 } from "../../🛂️SpaceAdministration/🟦️.tsx";
 import { parseShellRoute, useUIHistory } from "../../🛠️ShellHelpers/🟦️.tsx";

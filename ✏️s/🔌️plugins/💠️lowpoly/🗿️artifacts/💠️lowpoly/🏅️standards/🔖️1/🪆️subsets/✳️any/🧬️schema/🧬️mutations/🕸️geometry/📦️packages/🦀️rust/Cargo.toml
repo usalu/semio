@@ -36,3 +36,4 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-artifact-lowpoly-lowpoly-mutations = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mut-laws = { workspace = true }

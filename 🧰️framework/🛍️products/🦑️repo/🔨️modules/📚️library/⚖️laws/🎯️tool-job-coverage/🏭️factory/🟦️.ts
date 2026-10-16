@@ -1,4 +1,4 @@
-/** 🎯️ Tool-job coverage: concrete factory resolution, microsecond budget laws, proof catalog and reserved routes.
+/** 🔩️ Tool-job coverage: concrete factory resolution, microsecond budget laws, proof catalog and reserved routes.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadFileSafe, policyReadModuleTreeSource } from "../../../🔍️discovery/📖️source-access/🟦️.ts";

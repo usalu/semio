@@ -15,14 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[test]]
-name = "lowpoly_modes_model"
-path = "../../🪟️windows/🌐️model/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "lowpoly_modes_uv"
-path = "../../../🎨️paint/🪟️windows/🖼️uv/🧪️tests/🔬️unit/🦀️.rs"
-
 [dependencies]
 semio-framework-3d = { workspace = true }
 semio-framework-pack-json = { workspace = true }

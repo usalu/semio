@@ -49,5 +49,5 @@ export const stdioLas10HeaderInferenceTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseLasInferenceText(value: unknown, at = "$"): LasInferenceText {
-  return stdioLas10HeaderInferenceTextGuardObject(value, `${at}`);
+  return stdioLas10HeaderInferenceTextGuardString(value, `${at}`);
 }

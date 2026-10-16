@@ -217,7 +217,7 @@ mod tests;
 #[path = "🏷️literal-id-inverse/🦀️.rs"]
 pub mod literal_id_inverse;
 
-#[path = "⚑️flag/🎮️prepare/🦀️.rs"]
+#[path = "🚩️flag/🎮️prepare/🦀️.rs"]
 pub mod flag_preparation;
 
 #[path = "🔤️text/🎮️prepare/🦀️.rs"]

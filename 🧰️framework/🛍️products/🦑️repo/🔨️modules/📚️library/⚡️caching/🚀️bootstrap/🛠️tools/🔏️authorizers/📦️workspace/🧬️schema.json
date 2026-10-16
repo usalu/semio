@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:captured-workspace-exports:v1",
+  "definitions": {
+    "Resolution": {
+      "type": "object",
+      "required": [
+        "specifier",
+        "path"
+      ],
+      "properties": {
+        "specifier": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "additionalProperties": false
+    },
+    "Case": {
+      "type": "object",
+      "required": [
+        "id",
+        "workspaces",
+        "manifests",
+        "specifier",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "workspaces": {},
+        "manifests": {
+          "type": "object"
+        },
+        "specifier": {
+          "type": "string"
+        },
+        "expected": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Corpus": {
+      "type": "object",
+      "required": [
+        "version",
+        "cases",
+        "reads"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 10,
+          "items": {
+            "$ref": "#/definitions/Case"
+          }
+        },
+        "reads": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 11,
+          "items": {
+            "enum": [
+              "success",
+              "grow",
+              "short",
+              "named-swap",
+              "ancestor-swap",
+              "undefined",
+              "frozen",
+              "close",
+              "undefined-close",
+              "frozen-close",
+              "cancel-on-close"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

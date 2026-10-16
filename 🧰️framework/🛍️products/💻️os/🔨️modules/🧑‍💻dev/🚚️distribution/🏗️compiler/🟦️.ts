@@ -12,10 +12,10 @@ import {withViteArtifactInputsV1} from "../../../../../🦑️repo/🔨️module
 import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
 import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {withCompilerState} from "../../../../../../🔨️modules/🏃️process/🏗️build/🗃️state/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {withCompilerState} from "@semio-tech/process/compiler-state";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import {frameworkOsViteArtifactInputsV1} from "../../🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
 import {createHash} from "node:crypto";
 import {createRequire} from "node:module";
@@ -33,14 +33,14 @@ export async function compileDistributionProductV1(workspace:string,invocation:S
  if(resolve(workspace)!==authority.repositoryRoot||process.env.SEMIO_BUILD_MODE!==mode||process.env.SEMIO_COMPILER_CAPACITY_HELD!==undefined)throw Error("Exact unmarked distribution compiler Original required");
  return withRepositoryCacheStoreV1(workspace,"dependencies",invocation,phase,(dependencies,dependenciesPhase)=>withViteStorageV1(workspace,mode,owner,invocation,dependenciesPhase,(products,layout,_temporary,productsPhase)=>withViteArtifactInputsV1({workspace,invocation,store:products,control:productsPhase,requests:frameworkOsViteArtifactInputsV1(products.root,{version:1,mode,renderer:"react",command:"build",engines:"distribution"})},control=>withArtifactScratchV1({workspace,invocation,storage:products.storage,control:products.control,phaseControl:control,request:{version:1,mode,owner:schema.definitions.Protocol.const.scratchOwner}},token=>withArtifactDestinationTaskV1(token,invocation,async sink=>{
   const compiler=createRequire(join(workspace,"package.json"))("vite/package.json").version;
-  return withCompilerState({root:layout.state,owner,compiler:"vite:"+compiler+":bun:"+process.versions.bun,configuration:JSON.stringify(DISTRIBUTION_LAYOUT),mode,control:sink.control,leaseDirectory:join(workspace,".cache/b/l/m/data"),files:["deps/_metadata.json"],environment:{...process.env,...dependencies.environment,...products.environment,...sink.environment}},async(directory,environment)=>{
+  return withCompilerState({root:layout.state,owner,compiler:"vite:"+compiler+":bun:"+process.versions.bun,configuration:JSON.stringify(DISTRIBUTION_LAYOUT),mode,control:sink.control,storage:products.storage,storageControl:products.control,files:["deps/_metadata.json"],environment:{...process.env,...dependencies.environment,...products.environment,...sink.environment}},async(directory,environment,control)=>{
    requireNativeStoragePathV1(products.root,directory);const selected={...environment,SEMIO_VITE_CACHE_DIRECTORY:directory,SEMIO_BUILD_MODE:mode},previous=new Map(Object.keys(selected).map(name=>[name,process.env[name]]));
    try{
     for(const[name,value]of Object.entries(selected))if(value===undefined)delete process.env[name];else process.env[name]=value;
     const plan=await renderDistributionBundle(workspace,products.root,sink.directory,mode),files=new Map<string,string>();
-    for(const[path,bytes]of plan.files){const target=requireNativeStoragePathV1(products.root,join(sink.directory,path));await mkdir(dirname(target),{recursive:true});await writeFile(target,bytes,{flag:"wx",mode:0o644,signal:sink.control.signal});files.set(path,target);}
-    const manifest=JSON.stringify(plan.manifest,null,2)+"\n",manifestPath=join(sink.directory,DISTRIBUTION_LAYOUT.manifest);await writeFile(manifestPath,manifest,{flag:"wx",mode:0o644,signal:sink.control.signal});files.set(DISTRIBUTION_LAYOUT.manifest,manifestPath);
-    await withRepositoryArtifactDestinationV1({workspace,invocation,storage:products.storage,control:products.control,phaseControl:sink.control,directory:layout.output},destination=>stageRepositoryArtifacts(destination,owner,files));
+    for(const[path,bytes]of plan.files){const target=requireNativeStoragePathV1(products.root,join(sink.directory,path));await mkdir(dirname(target),{recursive:true});await writeFile(target,bytes,{flag:"wx",mode:0o644,signal:control.signal});files.set(path,target);}
+    const manifest=JSON.stringify(plan.manifest,null,2)+"\n",manifestPath=join(sink.directory,DISTRIBUTION_LAYOUT.manifest);await writeFile(manifestPath,manifest,{flag:"wx",mode:0o644,signal:control.signal});files.set(DISTRIBUTION_LAYOUT.manifest,manifestPath);
+    await withRepositoryArtifactDestinationV1({workspace,invocation,storage:products.storage,control:products.control,phaseControl:control,directory:layout.output},destination=>stageRepositoryArtifacts(destination,owner,files));
     return readDistributionCompileReceiptV1(JSON.stringify({version:1,mode,owner,manifestSha256:createHash("sha256").update(manifest).digest("hex")}),mode);
    }finally{for(const[name,value]of previous)if(value===undefined)delete process.env[name];else process.env[name]=value;}
   });

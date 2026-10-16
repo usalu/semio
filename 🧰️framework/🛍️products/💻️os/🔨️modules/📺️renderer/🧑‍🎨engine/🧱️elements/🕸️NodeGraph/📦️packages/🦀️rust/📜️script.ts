@@ -1,17 +1,18 @@
 #!/usr/bin/env bun
-import {verifyProducedWasmPackageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { createIssuedResourceControlV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { verifyProducedWasmPackageV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { buildBudgetMs } from '../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
-import { scriptCompilerAdmissionControlV1 } from '../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
-import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import {buildRepositoryWasmWebV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
-import { runOwnedCommand } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { cmdBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { cmdBudgetMs } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";
-import { readCargoTestPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 /** 🕸️ Builds and verifies the actual OS DAG session composition. */
 class WasmScript extends BundleScript{
@@ -21,7 +22,8 @@ class SourceScript extends BundleScript{
  async run():Promise<void>{await runOwnedCommand("bun",["test",join(this.root,"../../🧪️tests/🧩️suite/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});}
 }
 class TestScript extends BundleScript{
- async run(segments:string[]):Promise<void>{await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-node-graph"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);}
+ async run(segments:string[]):Promise<void>{
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-node-graph"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);}
 }
 const router=new ScriptRouter(import.meta.dir).register("wasm",WasmScript).register("test",TestScript).register("test-source",SourceScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"wasm"}) }));

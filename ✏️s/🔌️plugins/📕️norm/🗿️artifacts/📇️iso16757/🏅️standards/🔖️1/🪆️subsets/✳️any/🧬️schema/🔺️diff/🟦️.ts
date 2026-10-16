@@ -1,7 +1,7 @@
 /** 🔺️ `Iso16757Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireDefault, normWireInteger, normWireMap, normWireNullable, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireDefault, normWireInteger, normWireMap, normWireNullable, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 import { type CatalogueUnit, type CatalogueValue, type GeometryObject, type Iso16757Cardinality, type Iso16757ExchangeProcess, type Iso16757PropertyKind, type Iso16757SubjectKind, type LocalizedText, type Names, parseCatalogueUnit, parseCatalogueValue, parseGeometryObject, parseIso16757Cardinality, parseIso16757ExchangeProcess, parseIso16757PropertyKind, parseIso16757SubjectKind, parseLocalizedText, parseNames, parsePartNumberRule, parseProduct, parseProductClass, parseProductGroup, parseProductIndex, parseProductSeries, parsePropertyDefinition, parseSelectionConstraint, parseSubject, type PartNumberRule, type Product, type ProductClass, type ProductGroup, type ProductIndex, type ProductSeries, type PropertyDefinition, type SelectionConstraint, type Subject } from "../📸️snapshot/🟦️.ts";
 
 export interface Iso16757Diff {

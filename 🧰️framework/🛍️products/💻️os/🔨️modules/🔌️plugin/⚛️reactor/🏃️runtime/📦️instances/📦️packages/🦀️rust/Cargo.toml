@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+artifact-app-testing = []
+
 [dependencies]
 semio-framework-plugin-job = { path = "../../../../../👷️job/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-app = { path = "../../../../🔌️app/📦️packages/🦀️rust" }
@@ -38,5 +41,6 @@ semio-framework-plugin-ownership = { path = "../../../../../🏛️ownership/�
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-plugin-decl-app = { path = "../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 
 [dev-dependencies]

@@ -49,5 +49,5 @@ export const stdioBmpV3AnyInferenceTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseBmpInferenceText(value: unknown, at = "$"): BmpInferenceText {
-  return stdioBmpV3AnyInferenceTextGuardObject(value, `${at}`);
+  return stdioBmpV3AnyInferenceTextGuardString(value, `${at}`);
 }

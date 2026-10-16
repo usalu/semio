@@ -1,10 +1,10 @@
 use super::*;
 
 /// 🧫️ The corpus React's `coalesceBoard2dEvents` replays too (`🖥️Board2dHost/🧪️tests/🧪️board-event-coalescing`).
-const BOARD_EVENT_COALESCING_CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/🖥️Board2dHost/🧪️tests/🧫️fixtures/🧫️board-event-coalescing/🔣️.json"));
+const BOARD_EVENT_COALESCING_CORPUS: &str = include_str!("../../../🖥️Board2dHost/🧪️tests/🧫️fixtures/🧫️board-event-coalescing/🔣️.json");
 
 /// 🧫️ The corpus React's `board2dFloat32Decimal` replays too (`🖥️Board2dHost/🧪️tests/🧪️float32-decimal`).
-const BOARD_FLOAT32_DECIMAL_CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/🖥️Board2dHost/🧪️tests/🧫️fixtures/🧫️float32-decimal/🔣️.json"));
+const BOARD_FLOAT32_DECIMAL_CORPUS: &str = include_str!("../../../🖥️Board2dHost/🧪️tests/🧫️fixtures/🧫️float32-decimal/🔣️.json");
 
 fn typed_queue(rows: &[Value]) -> infinite_canvas::BoardEventQueue {
     let mut queue = infinite_canvas::BoardEventQueue::default();
@@ -104,7 +104,7 @@ fn board_granularity_classification_matches_the_react_table() {
 fn a_draft_reference_highlight_reaches_the_wgpu_board_engine() {
     let node = |id: &str, x: f64| json!({ "id": id, "x": x, "y": 0.0, "shape": "circle", "radius": 10.0, "handles": [] });
     let fixture = |x: f64| json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [node("left", -x), node("mid", x)], "edges": [] }).to_string();
-    let mut board = ui_wgpu::wgpu::Board2dScene::base(fixture(40.0), json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 }).to_string(), true);
+    let mut board = semio_framework_ui_scene_plane::Board2dScene::base(fixture(40.0), json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 }).to_string(), true);
     board.highlighted_ids_json = json!(["mid", "left"]).to_string();
     let (mut host, mut cache) = (infinite_canvas::BoardHost::default(), BoardSyncCache::default());
     assert!(sync_board_engine(&mut host, &mut cache, &board, 800, 600), "the first scene syncs");
@@ -124,7 +124,7 @@ fn a_draft_reference_highlight_reaches_the_wgpu_board_engine() {
 #[test]
 fn the_scene_placement_naming_reaches_the_wgpu_board_engine() {
     let naming = r#"{"brushNodePrefix":"domain.brush.","brushEdgePrefix":"domain.brush.edge."}"#;
-    let mut board = ui_wgpu::wgpu::Board2dScene::base(json!({ "schema": "board.ports.directed.v1", "nodes": [], "edges": [] }).to_string(), json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 }).to_string(), true);
+    let mut board = semio_framework_ui_scene_plane::Board2dScene::base(json!({ "schema": "board.ports.directed.v1", "nodes": [], "edges": [] }).to_string(), json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 }).to_string(), true);
     board.placement_naming = Some(naming.into());
     let (mut host, mut cache) = (infinite_canvas::BoardHost::default(), BoardSyncCache::default());
     sync_board_engine(&mut host, &mut cache, &board, 800, 600);

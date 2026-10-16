@@ -5,6 +5,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { actorColdPairFixtureUrl, actorColdPairSchemaUrl } from "../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { backboneBatchV1FixtureUrl } from "../../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 🪪️ One neutral admission row of the guest-lifecycle production corpus. */
 type GuestLifecycleCase = { readonly id: string; readonly exact: boolean; readonly live: boolean; readonly capacity: boolean; readonly accepted: boolean };
@@ -100,8 +102,8 @@ export async function coldDocumentPairIngressOracle(repoRoot: string): Promise<n
   }
   const kernel = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎠️kernel/📥️cold-pair/🦀️.rs"), "utf8");
   const ingress = readFileSync(new URL("../../⚛️reactor/📥️cold-pair/🦀️.rs", import.meta.url), "utf8");
-  const actorFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
-  const actorSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧬️schema/🔣️.json"), "utf8"));
+  const actorFixture = JSON.parse(readFileSync(actorColdPairFixtureUrl, "utf8"));
+  const actorSchema = JSON.parse(readFileSync(actorColdPairSchemaUrl, "utf8"));
   const validateActorStatus = new Ajv({ strict: true, allErrors: true }).compile(actorSchema);
   const actorRows = actorFixture as ActorColdPairFixture;
   for (const row of actorRows.statusRows) assert(validateActorStatus(row), JSON.stringify(validateActorStatus.errors));
@@ -144,7 +146,7 @@ export function documentBackboneBindingOracle(repoRoot: string): number {
   }
   for (const row of fixture.hostile) assert.equal(validate(row.value), false, row.id);
   const binding = readFileSync(new URL("../../📡️backbone/🔗️binding/🦀️.rs", import.meta.url), "utf8");
-  const batchFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"));
+  const batchFixture = JSON.parse(readFileSync(backboneBatchV1FixtureUrl, "utf8"));
   const store = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
   const causal = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs"), "utf8");
   const sync = ["🦀️.rs", "🖥️native/🦀️.rs", "🌐️wasm/🦀️.rs"].map((root) => readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync", root))).join("\n");

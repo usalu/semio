@@ -1,5 +1,5 @@
 //! 🕸️ Framework DAG persisted-owner capability, literal-state and control baselines.
-#[path="../../../../../../../🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/🦀️.rs"]mod native_caller;
+use semio_framework_os_space_testing_sqlite_native_caller as native_caller;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use native_caller::*;
 use crate::*;

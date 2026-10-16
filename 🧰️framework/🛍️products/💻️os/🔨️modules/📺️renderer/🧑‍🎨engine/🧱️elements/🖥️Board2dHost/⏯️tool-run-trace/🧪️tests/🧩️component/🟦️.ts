@@ -2,7 +2,7 @@
  * `board2d_tool_run_trace_shapes` pins the same rows), and of the layer paint over the contract's placement lane: every
  * placement record fills its kind's footprint path once. */
 import { describe, expect, it } from "vitest";
-import contract from "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json";
+import { board2dSceneLanesFixture as contract } from "../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { ToolRunTraceRecordStore } from "../../../../🌐️World3dHost/⏯️tool-run-trace/🟦️.tsx";
 import { paintToolRunTrace2d, type ToolRunTrace2dContext } from "../../../../📐️Canvas2dHost/⏯️tool-run-trace/🟦️.tsx";
 import { BOARD2D_TOOL_RUN_TRACE_KIND_SIZE, board2dToolRunTracePathForShape, board2dToolRunTraceShapes } from "../../🟦️.tsx";

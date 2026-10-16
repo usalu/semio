@@ -1,6 +1,11 @@
 #!/usr/bin/env bun
-import { resolve as compilerStatePath } from "node:path";
-import { typecheckProject } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {readHubDrillRequestV1} from "../../🧪️tests/💾️backup-restore/🎛️request/🟦️.ts";
+import {createRequestedIssuedResourceControlV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {repositoryLeaseDirectoryV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import {runHubVitestV1} from "../../🧪️tests/🎛️run/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { typecheckRepositoryProjectV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|document-growth-e2e <sqlite|postgres|neo4j>|backend <up|down|status> <postgres|neo4j|all>|backend run <postgres|neo4j> -- <command…>|backup-restore-drill|shutdown-drill|residency-watch|hub-freshness|agent-ceiling-check|docker-image-build|docker-image-check|typecheck>`.
@@ -11,30 +16,14 @@ import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃�
  * reports the whole e2e suite as skipped in well under a second. */
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
-import { type TestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { TEST_LEVEL_BUDGET_MS,type TestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runBunxStatus, runCargo, runVitest, runRepositoryTestCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { withBuiltLocalHubHostV1,HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 const HUB_RUST_DIR = "🌎️hub/📦️packages/🦀️rust";
-
-/** 🏗️ Builds the real `os-hub` debug binary the test spawns directly (never `cargo run` — no
- * wrapper-process tree to chase on teardown). Default cargo features only (sqlite): contract-freeze
- * Amendment 2 says `--all-features` is red repo-wide and pre-existing (`🛢️db`'s postgres/neo4j
- * features have no wired driver deps), so this never passes it. Only runs when `HUB_E2E=1`, so the
- * default `test` target never pays a cargo build. */
-function buildHubBinary(repoRoot: string): void {
-  if (process.env.HUB_E2E !== "1") return;
-  const preexisting = process.env.OS_HUB_BINARY;
-  if (preexisting) {
-    console.log(`[os-hub-ts] HUB_E2E=1 — using OS_HUB_BINARY=${preexisting} (skip cargo build)`);
-    return;
-  }
-  console.log("[os-hub-ts] HUB_E2E=1 — building os-hub (default features, no --all-features)…");
-  runCargo(["build", "--manifest-path", "Cargo.toml"], join(repoRoot, HUB_RUST_DIR));
-}
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -43,49 +32,17 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🏷️hub-freshness/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 30_000 });
       return;
     }
-    const { rest } = resolveTestLevel(segments);
-    buildHubBinary(this.repoRoot);
-    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    const { level,rest } = resolveTestLevel(segments);
+    await runHubVitestV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"hub:vitest",TEST_LEVEL_BUDGET_MS[level]),{version:1,level,scenario:"unit",backend:null,arguments:rest});
   }
 }
 
-/** 🗄️ Runs one real-binary hub e2e scenario (`🌎️hub/🧪️tests/<scenario>`) on one storage backend: `sqlite`, or
- * `postgres`/`neo4j` on the ONE shared development server (`claimHubBackend`: a run database of its own on postgres,
- * the exclusive lease over a reset graph on neo4j), released afterwards — also when a failing run leaves through
- * `process.exit`, which skips `finally`. The hub is `OS_HUB_BINARY` when set, else the Nx-staged `build-dev`
- * executable, which links all three drivers. */
+/** 🗄️ Launches a genuine finite Vitest child; each worker opens its own retained sqlite Host and catalog.
+ * External backend selections require a closed claim/probe owner and currently refuse before effects. */
 abstract class BackendE2eScript extends BundleScript {
-  protected abstract readonly scenario: string;
+  protected abstract readonly scenario: "two-client-document"|"document-growth";
   protected abstract readonly minimumLevel: TestLevel;
-
-  async run(segments: string[]): Promise<void> {
-    const [name, ...extra] = segments;
-    const { rest } = resolveTestLevel(extra, this.minimumLevel);
-    if (name !== "sqlite" && name !== "postgres" && name !== "neo4j") throw new Error(`${this.scenario} e2e needs one backend: sqlite | postgres | neo4j`);
-    const binary = process.env.OS_HUB_BINARY ?? hubDevBinaryPath(join(this.repoRoot, HUB_RUST_DIR));
-    const cancel = new AbortController();
-    const interrupt = (): void => cancel.abort();
-    process.once("SIGINT", interrupt);
-    process.once("SIGTERM", interrupt);
-    const claim = name === "sqlite" ? undefined : await claimHubBackend(this.repoRoot, name, `${this.scenario.replaceAll("-", "_")}_${process.pid}`, { signal: cancel.signal, onProgress: backendProgress });
-    let released = !claim;
-    const release = (): void => {
-      if (released || !claim) return;
-      released = true;
-      claim.release();
-    };
-    process.once("exit", release);
-    try {
-      Object.assign(process.env, claim ? claim.env : { OS_HUB_STORAGE_BACKEND: "sqlite" }, { HUB_E2E: "1", OS_HUB_BINARY: binary, HUB_TWO_CLIENT_PORT: process.env.HUB_TWO_CLIENT_PORT ?? String(await freeLoopbackPort()) });
-      if (claim) process.env.HUB_E2E_WRITER_PROBE = JSON.stringify(claim.client);
-      console.log(`[os-hub-ts] ${this.scenario} e2e backend=${name} binary=${binary} hub-port=${process.env.HUB_TWO_CLIENT_PORT}${claim ? ` ${name}=${claim.server.host}:${claim.server.port} (${claim.server.identity.container})` : ""}`);
-      await runVitest(this.root, [this.scenario, ...rest], "../../🧪️tests/🎚️config/🟦️.ts");
-    } finally {
-      process.removeListener("SIGINT", interrupt);
-      process.removeListener("SIGTERM", interrupt);
-      release();
-    }
-  }
+  async run(segments:string[]):Promise<void>{const[name,...extra]=segments,{level,rest}=resolveTestLevel(extra,this.minimumLevel);if(name!=="sqlite")throw Error("Hub external backend e2e requires a genuine owned claim, funded cleanup and writer observer; only sqlite is currently admitted");await runHubVitestV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"hub:e2e",TEST_LEVEL_BUDGET_MS[level]),{version:1,level,scenario:this.scenario,backend:name,arguments:rest});}
 }
 
 /** 📈️ Prints one backend start step on stderr: `[os-hub-ts] backend postgres start 12 s`. */
@@ -213,26 +170,17 @@ function missingHubPrecondition(error: unknown): boolean {
   return /no process listens|ECONNREFUSED|Unable to connect|ConnectionRefused|no published trusted catalog|does not exist|Missing Nx-staged/iu.test(String(error instanceof Error ? error.message : error));
 }
 
-/** 💾️ `backup-restore-drill [--catalog-root <data root>] [--kind <kindId|schema prefix>] [--edits <n>] [--rounds <n>]
- * [--keep]` — the backup/restore drill on a fresh root seeded with a copy of a published trusted catalog (default: the
- * development hub's `.🧬semio/🌐hub/hub-dev`), the hub being `OS_HUB_BINARY` or the Nx-staged `build-dev` executable. */
+/** 💾️ Runs bounded backup/restore rounds between actual candidate Host roots and owned tar children. */
 class BackupRestoreDrillScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments.includes("--catalog-root")||segments.includes("--keep")||process.env.OS_HUB_BINARY!==undefined)throw Error("Drill executable, catalog and data are owned by actual Host callbacks; free path and retained scratch options are unsupported");
     const startedAt = new Date();
     const interrupt = interruptSignal();
     const { runBackupRestoreDrill } = await import("../../🧪️tests/💾️backup-restore/🟦️.ts");
     await withAcceptanceRecord(this.repoRoot, "hub-backup-restore", async () => {
-      const rounds = await runBackupRestoreDrill({
-        repoRoot: this.repoRoot,
-        binaryPath: process.env.OS_HUB_BINARY ?? hubDevBinaryPath(join(this.repoRoot, HUB_RUST_DIR)),
-        catalogRoot: flagValue(segments, "--catalog-root") ?? join(this.repoRoot, ".🧬semio", "🌐hub", "hub-dev"),
-        kind: flagValue(segments, "--kind") ?? "note",
-        edits: Number(flagValue(segments, "--edits") ?? 20),
-        rounds: Number(flagValue(segments, "--rounds") ?? 1),
-        keepRoots: segments.includes("--keep"),
-        signal: interrupt.signal,
-        onProgress: (line) => console.log(`[backup-drill] ${line}`),
-      });
+      const request=readHubDrillRequestV1({version:1,kind:flagValue(segments,"--kind")??"note",edits:Number(flagValue(segments,"--edits")??20),rounds:Number(flagValue(segments,"--rounds")??1),heavyKinds:[]}),phase=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(this.invocation,"hub:backup-drill",0),0,interrupt.signal);
+      const rounds=await withBuiltLocalHubHostV1(this.invocation,phase,(host,context)=>runBackupRestoreDrill(host,context.control,request,line=>console.log(`[backup-drill] ${line}`)));
+
       const passed = rounds.filter((round) => round.pass).length;
       const first = rounds[0];
       publishAcceptanceCheckResult(
@@ -255,31 +203,17 @@ class BackupRestoreDrillScript extends BundleScript {
   }
 }
 
-/** 🛑️ `shutdown-drill [--catalog-root <data root>] [--kind <kindId|schema prefix>] [--heavy-kinds <kindId,…>] [--edits <n>]
- * [--rounds <n>] [--keep]` — the graceful-shutdown drill on a fresh root seeded with a copy of a published trusted catalog
- * (default: the development hub's `.🧬semio/🌐hub/hub-dev`), the hub being `OS_HUB_BINARY` or the Nx-staged `build-dev`
- * executable: SIGTERM while the catalog verifies, a document socket holds an edit in flight and a heavy kind is being
- * created; passes when the hub exits 0 within the database's shutdown deadline, records its shutdown, closes the socket
- * with a frame, and restarts on the same root with every acknowledged edit and a typed answer for the interrupted
- * creation. */
+/** 🛑️ Runs bounded actual Host shutdown and same-data restart rounds under the carried phase. */
 class ShutdownDrillScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments.includes("--catalog-root")||segments.includes("--keep")||process.env.OS_HUB_BINARY!==undefined)throw Error("Drill executable, catalog and data are owned by actual Host callbacks; free path and retained scratch options are unsupported");
     const startedAt = new Date();
     const interrupt = interruptSignal();
     const { runShutdownDrill, SHUTDOWN_EXIT_BOUND_MS } = await import("../../🧪️tests/💾️backup-restore/🟦️.ts");
     await withAcceptanceRecord(this.repoRoot, "hub-graceful-shutdown", async () => {
-      const rounds = await runShutdownDrill({
-        repoRoot: this.repoRoot,
-        binaryPath: process.env.OS_HUB_BINARY ?? hubDevBinaryPath(join(this.repoRoot, HUB_RUST_DIR)),
-        catalogRoot: flagValue(segments, "--catalog-root") ?? join(this.repoRoot, ".🧬semio", "🌐hub", "hub-dev"),
-        kind: flagValue(segments, "--kind") ?? "note",
-        heavyKinds: (flagValue(segments, "--heavy-kinds") ?? "2d.puzzle,3d.puzzle,5d.puzzle,s.gis.gismap").split(",").filter(Boolean),
-        edits: Number(flagValue(segments, "--edits") ?? 20),
-        rounds: Number(flagValue(segments, "--rounds") ?? 1),
-        keepRoots: segments.includes("--keep"),
-        signal: interrupt.signal,
-        onProgress: (line) => console.log(`[shutdown-drill] ${line}`),
-      });
+      const request=readHubDrillRequestV1({version:1,kind:flagValue(segments,"--kind")??"note",edits:Number(flagValue(segments,"--edits")??20),rounds:Number(flagValue(segments,"--rounds")??1),heavyKinds:(flagValue(segments,"--heavy-kinds")??"2d.puzzle,3d.puzzle,5d.puzzle,s.gis.gismap").split(",").filter(Boolean)}),phase=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(this.invocation,"hub:shutdown-drill",0),0,interrupt.signal);
+      const rounds=await withBuiltLocalHubHostV1(this.invocation,phase,(host,context)=>runShutdownDrill(host,context.control,request,line=>console.log(`[shutdown-drill] ${line}`)));
+
       for (const round of rounds) console.log(`[shutdown-drill] round ${round.round} ${JSON.stringify(round)}`);
       const passed = rounds.filter((round) => round.pass).length;
       const first = rounds[0];
@@ -588,7 +522,7 @@ class DockerImageCheckScript extends BundleScript {
 /** 🪁️ Type-checks every `🌎️hub/**` TypeScript source against the hub-scoped `tsconfig.json`. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, stateRoot: compilerStatePath(this.repoRoot, ".cache", "framework"), invocation: this.invocation, cwd: this.root, project: "tsconfig.json", owner: "hub:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "tsconfig.json", owner: "hub:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 

@@ -1,0 +1,44 @@
+{
+  "name": "@semio-tech/framework-os-native-runtime-reader-rs",
+  "$schema": "../../../../../../../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "projectType": "application",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🧪️tests/📥️reader/📦️packages/🦀️rust",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🦀️.rs"
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🧪️tests/📥️reader/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build"
+      },
+      "metadata": {
+        "semio": {
+          "rustBuildIntent": {
+            "version": 1,
+            "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🧪️tests/📥️reader/📦️packages/🦀️rust/Cargo.toml",
+            "package": "semio-framework-os-native-runtime-reader",
+            "scope": "binary",
+            "binary": "semio-native-runtime-reader",
+            "fallback": {
+              "kind": "bounded-cargo",
+              "adapters": [
+                "foreign-source",
+                "binary",
+                "proc-macro",
+                "build-script",
+                "build-script-run"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

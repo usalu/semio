@@ -385,8 +385,7 @@ impl<P> Drop for PresencePeersPublication<P> {
 }
 
 #[cfg(test)]
-#[path = "../👥️presence/🧪️testing/♻️retirement/🦀️.rs"]
-mod presence_test_retirement;
+use semio_framework_value_snapshot_read::presence_test_retirement;
 
 #[path = "../👥️presence/♻️retirement/🦀️.rs"]
 mod presence_retirement;
@@ -1223,7 +1222,5 @@ impl<S: Clone, Mutation: self::Mutation<S>> InteractionStore<S, Mutation> {
 
 
 #[cfg(test)]
-use semio_framework_trace_memory_testing as test_allocation;
-#[cfg(test)]
 #[global_allocator]
-static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;

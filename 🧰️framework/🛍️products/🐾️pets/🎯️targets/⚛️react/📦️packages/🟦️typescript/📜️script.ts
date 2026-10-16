@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {join,resolve as compilerStatePath} from "node:path";
+import {join} from "node:path";
 
-import {typecheckProject} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import {typecheckRepositoryProjectV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
 
 import {receiveScriptProcessInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -28,14 +29,14 @@ class TestScript extends BundleScript {
 /** 🪁️ `typecheck` — the target, its stories and its suites against the compiler. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, stateRoot: compilerStatePath(this.repoRoot, ".cache", "framework"), leaseDirectory: join(this.repoRoot,".cache/b/l/m/data"), invocation: this.invocation, cwd: this.root, project: "tsconfig.json", owner: "pets-react:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "tsconfig.json", owner: "pets-react:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 
 /** 📖️ `dev` — the stories gallery on `PETS_STORIES_PORT` (default 6069) for the menagerie named by `PETS_MENAGERIE`. */
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, { config: "../../🏗️builder/🌐️vite/🟦️.ts", portEnv: "PETS_STORIES_PORT", defaultPort: "6069", fixedPort: true });
+    await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, { runtimeChannels:[], config: "../../🏗️builder/🌐️vite/🟦️.ts", portEnv: "PETS_STORIES_PORT", defaultPort: "6069", fixedPort: true });
   }
 }
 

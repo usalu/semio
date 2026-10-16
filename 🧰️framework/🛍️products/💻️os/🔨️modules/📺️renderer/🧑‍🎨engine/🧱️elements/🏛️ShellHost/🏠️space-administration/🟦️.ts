@@ -3,17 +3,19 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | ShellHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { directoryAdministrationCommandAllowedV1 } from "../../../../../📇️directory/🚪️io/📝️text/🟦️.ts";
+import { directoryAdministrationCommandAllowedV1 } from "@semio-tech/framework/directory/io/text";
 // #region 🔌️Adapters
 import {
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
   type DirectoryAdministrationPhaseV1,
-  type DirectoryAdministrationInviteCapabilityStatusV1,
+  type DirectoryAdministrationInviteCapabilityStatusV1
+} from "@semio-tech/framework/backbone";
+import {
   type DirectoryCommand,
   type DirectoryCommandErrorCodeV1,
   type DirectorySpaceAdministrationPageV1
-} from "@semio-tech/framework-os";
+} from "@semio-tech/framework/directory/schema";
 // #endregion 🔌️Adapters
 import {
   spaceAdministrationCapabilities,

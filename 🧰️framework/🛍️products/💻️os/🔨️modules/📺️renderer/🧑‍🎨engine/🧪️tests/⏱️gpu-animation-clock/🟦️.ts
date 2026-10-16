@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 
 import { chromium } from "playwright";
-import fixture from "../../../../../../../🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧪️tests/🧫️fixtures/🎞️animation/🔣️.json";
+import { renderScheduleAnimationFixture as fixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 it("browser animation ownership survives discarded candidates and clears on accepted static output", async () => {
   const browser = await chromium.launch({ headless: true });
   try {

@@ -20,7 +20,7 @@ mount it through the renderer.
 ## Commands
 
 Everything runs through each package's `📜️script.ts`; `📋️project.json` registers the same entry
-points as nx targets, which the dashboard offers as commands (`<project>:<target>`, `bun run dashboard`).
+points as build targets, which the dashboard offers as commands (`<project>:<target>`, `bun run dashboard`).
 
 ```bash
 cd "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript"

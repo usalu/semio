@@ -1,9 +1,10 @@
-pub(super) mod linear_memory_test_import {
+#[doc(hidden)]
+pub mod linear_memory_test_import {
     use std::cell::RefCell;
     use std::collections::VecDeque;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub(crate) enum AfterProbe {
+    pub enum AfterProbe {
         None,
         Cancel,
         Close,
@@ -23,26 +24,26 @@ pub(super) mod linear_memory_test_import {
         static STATE: RefCell<State> = RefCell::new(State::default());
     }
 
-    pub(crate) fn reset() {
+    pub fn reset() {
         STATE.with(|state| *state.borrow_mut() = State::default());
     }
 
-    pub(crate) fn enqueue(bytes: Vec<u8>) {
+    pub fn enqueue(bytes: Vec<u8>) {
         STATE.with(|state| state.borrow_mut().incoming.push_back(bytes));
     }
 
-    pub(crate) fn after_probe(action: AfterProbe) {
+    pub fn after_probe(action: AfterProbe) {
         STATE.with(|state| state.borrow_mut().after_probe = Some(action));
     }
 
-    pub(crate) fn census() -> (Vec<usize>, usize, usize, bool) {
+    pub fn census() -> (Vec<usize>, usize, usize, bool) {
         STATE.with(|state| {
             let state = state.borrow();
             (state.capacities.clone(), state.copies, state.incoming.len(), state.closed)
         })
     }
 
-    pub(crate) fn sent_lengths() -> Vec<usize> {
+    pub fn sent_lengths() -> Vec<usize> {
         STATE.with(|state| state.borrow().sent.iter().map(Vec::len).collect())
     }
 

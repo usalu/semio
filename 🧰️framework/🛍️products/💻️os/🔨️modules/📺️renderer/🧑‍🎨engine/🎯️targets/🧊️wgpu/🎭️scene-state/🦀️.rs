@@ -353,6 +353,12 @@ pub use component_surface_close::*;
 mod world_camera_ledger;
 pub use world_camera_ledger::*;
 
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧰️fixtures/🦀️.rs"]
+mod fixtures;
+#[cfg(any(test, feature = "testkit"))]
+pub use fixtures::{camera_fixture_grant, camera_fixture_lease, clear_camera_fixture, sweep_expired_scene_camera_dispatches, CameraFixtureLease};
+
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;

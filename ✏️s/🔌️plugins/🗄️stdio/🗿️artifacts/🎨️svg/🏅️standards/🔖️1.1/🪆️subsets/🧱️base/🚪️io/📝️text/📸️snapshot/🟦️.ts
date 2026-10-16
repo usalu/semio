@@ -49,5 +49,5 @@ export const stdioSvg11BaseSnapshotTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseSvgSnapshotText(value: unknown, at = "$"): SvgSnapshotText {
-  return stdioSvg11BaseSnapshotTextGuardObject(value, `${at}`);
+  return stdioSvg11BaseSnapshotTextGuardString(value, `${at}`);
 }

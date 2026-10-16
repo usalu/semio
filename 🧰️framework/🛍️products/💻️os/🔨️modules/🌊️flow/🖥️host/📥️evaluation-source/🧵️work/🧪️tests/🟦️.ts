@@ -3,7 +3,7 @@ import Ajv from"ajv";
 import{applyPatch}from"fast-json-patch";
 import fixture from"./🧫️fixtures/🔣️.json";
 import domain from"../../../../🗿️artifacts/🌊️flow/🧵️retained/🧬️schema/🔣️.json";
-import grant from"../../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json";
+import { orderedRetirementSchema as grant } from "@semio-tech/value-ts/ordered/retirement/schema";
 import schema from"../🧬️schema/🔣️.json";
 test("original source snapshot and normal Work preserve custody and explicit recompute policy",()=>{
  const ajv=new Ajv({strict:true,allErrors:true}).addSchema(grant).addSchema(domain);for(const [definition,corpus]of [[schema,fixture]]){const validate=ajv.compile(definition);expect(validate(corpus),JSON.stringify(validate.errors)).toBe(true);expect(validate({...corpus,unknown:true})).toBe(false);}const widget=ajv.compile({$ref:domain.$id+"#/$defs/Widget"}),synapse=ajv.compile({$ref:domain.$id+"#/$defs/Synapse"});for(const value of fixture.source.widgets){expect(widget(value)).toBe(true);expect(widget({...value,id:null})).toBe(false);}for(const value of fixture.source.synapses){expect(synapse(value)).toBe(true);expect(synapse({...value,from:null})).toBe(false);}

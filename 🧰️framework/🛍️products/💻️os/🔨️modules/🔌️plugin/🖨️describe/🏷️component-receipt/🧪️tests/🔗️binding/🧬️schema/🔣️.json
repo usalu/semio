@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Explicit Component Receipt Binding Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "receipt",
+          "expected",
+          "changed",
+          "accept"
+        ],
+        "properties": {
+          "receipt": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "changed": {
+            "enum": [
+              "none",
+              "pluginId",
+              "packageId",
+              "wasmSha256",
+              "semanticDescriptorSha256"
+            ]
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

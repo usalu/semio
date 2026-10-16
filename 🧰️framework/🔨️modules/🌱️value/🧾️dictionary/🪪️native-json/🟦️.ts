@@ -1,7 +1,7 @@
 /** 🪪️ Lossless JSON fields expose numeric words and octets without an opaque dictionary source. */
 import{parseQuestionDictionary,type QuestionDictionary,type QuestionDictionaryEntry}from"../🟦️.ts";
 import type{IntrinsicValue}from"../../🧬️schema/🟦️.ts";
-import{parseSchemaRecord}from"../../../🧬️schema/🧾️record/🟦️.ts";
+import{parseSchemaRecord}from"@semio-tech/schema-ts/record";
 const limbs=(value:bigint)=>({high:Number(value>>32n),low:Number(value&0xffffffffn)});
 const word=(row:Record<string,unknown>):bigint=>{for(const key of["high","low"])if(typeof row[key]!=="number"||!Number.isInteger(row[key])||(row[key]as number)<0||(row[key]as number)>0xffffffff)throw Error("invalid dictionary numeric word");return(BigInt(row.high as number)<<32n)|BigInt(row.low as number);};
 function literal(value:IntrinsicValue):unknown{

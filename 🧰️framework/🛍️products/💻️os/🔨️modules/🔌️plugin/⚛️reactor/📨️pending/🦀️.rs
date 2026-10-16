@@ -1,5 +1,6 @@
 //! 📨️ Exact pending patch roots shared by native and component reactor dispatch.
 
+extern crate semio_framework_os_kernel as store;
 use semio_framework::kernel::ActorUiPatchReceipt;
 use semio_framework_ui_contract::{self as ui_contract, UiPatch};
 use semio_framework_ui_runtime::{SurfaceReconcilePublishedAck, SurfaceReconcilePublishedPatch, SurfaceReconcileReadyPatch};
@@ -14,27 +15,27 @@ enum PendingPatchOwner {
 }
 
 struct IssuedPatchAck {
-    receipt: ActorUiPatchReceipt,
-    surface: ui_contract::SurfaceId,
-    revision: u64,
-    pub(crate) committed: bool,
+    pub receipt: ActorUiPatchReceipt,
+    pub surface: ui_contract::SurfaceId,
+    pub revision: u64,
+    pub committed: bool,
 }
 
 impl IssuedPatchAck {
-    fn matches(&self, receipt: ActorUiPatchReceipt, surface: &str, revision: u64) -> bool {
+    pub fn matches(&self, receipt: ActorUiPatchReceipt, surface: &str, revision: u64) -> bool {
         self.committed && self.receipt == receipt && self.surface.0.as_str() == surface && self.revision == revision
     }
 }
 
 struct PendingPatchSlot {
-    sequence: u64,
-    instance: Option<u32>,
-    owner: PendingPatchOwner,
-    published: Option<SurfaceReconcilePublishedPatch>,
-    acknowledgement: Option<SurfaceReconcilePublishedAck>,
-    acknowledged: bool,
-    emitted: bool,
-    issued: Option<IssuedPatchAck>,
+    pub sequence: u64,
+    pub instance: Option<u32>,
+    pub owner: PendingPatchOwner,
+    pub published: Option<SurfaceReconcilePublishedPatch>,
+    pub acknowledgement: Option<SurfaceReconcilePublishedAck>,
+    pub acknowledged: bool,
+    pub emitted: bool,
+    pub issued: Option<IssuedPatchAck>,
     rejection_requested: bool,
 }
 
@@ -52,8 +53,9 @@ struct PendingPatchSlot {
 /// and arm the turn; [`Self::Issued`] is HOST-blocked and must not, because the answer arrives as its
 /// own event-carrying turn; [`Self::Delivered`] is this very turn's output and is over by the time the
 /// status is decided.
+#[doc(hidden)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(super) enum PendingPatchPhase {
+pub enum PendingPatchPhase {
     Queued,
     Delivered,
     Issued,
@@ -63,13 +65,13 @@ pub(super) enum PendingPatchPhase {
 
 impl PendingPatchPhase {
     #[cfg(test)]
-    pub(super) const fn guest_owes_turn(self) -> bool {
+    pub(crate) const fn guest_owes_turn(self) -> bool {
         matches!(self, Self::Queued | Self::Acknowledged | Self::Rejecting)
     }
 }
 
 impl PendingPatchSlot {
-    fn phase(&self) -> PendingPatchPhase {
+    pub fn phase(&self) -> PendingPatchPhase {
         if self.acknowledged {
             return PendingPatchPhase::Acknowledged;
         }
@@ -88,9 +90,9 @@ impl PendingPatchSlot {
 
 #[derive(Clone, Copy)]
 struct ClosingPending {
-    key: super::instance_lifetime::NativeCloseKey,
-    active: bool,
-    complete: bool,
+    pub key: crate::instance_lifetime::NativeCloseKey,
+    pub active: bool,
+    pub complete: bool,
 }
 
 /// 📤️ One slot of the OUTBOUND page a single turn may carry: the cell a publication is moved
@@ -102,8 +104,8 @@ struct ClosingPending {
 /// receipt may be staged against.
 #[derive(Default)]
 struct TurnPatchCell {
-    patch: ui_contract::UiPendingPatch,
-    sequence: Option<u64>,
+    pub patch: ui_contract::UiPendingPatch,
+    pub sequence: Option<u64>,
     /// 🧾️ The `(surface, revision)` of the patch that LEFT this cell for the turn's page — the cell's
     /// own identity on the wire, and the only thing that pairs a page entry back to its slot.
     ///
@@ -112,20 +114,21 @@ struct TurnPatchCell {
     /// short by its byte budget returns its last patch through [`PendingPatchAuthority::hand_back_turn`]
     /// into that cell, which then DOES survive — and from the next turn on, index order and
     /// publication order were two different orders.
-    published: Option<(ui_contract::SurfaceId, u64)>,
+    pub published: Option<(ui_contract::SurfaceId, u64)>,
 }
 
-pub(super) struct PendingPatchAuthority {
-    slots: [Option<PendingPatchSlot>; PENDING_PATCH_CAPACITY],
-    closing_instances: [Option<ClosingPending>; PENDING_PATCH_CAPACITY],
+#[doc(hidden)]
+pub struct PendingPatchAuthority {
+    pub slots: [Option<PendingPatchSlot>; PENDING_PATCH_CAPACITY],
+    pub closing_instances: [Option<ClosingPending>; PENDING_PATCH_CAPACITY],
     turn_handbacks: [TurnPatchCell; semio_framework::kernel::UI_TURN_PATCHES_MAXIMUM],
     turn_handback_instance: Option<u32>,
     next_sequence: u64,
-    exhausted: bool,
+    pub exhausted: bool,
 }
 
 impl PendingPatchAuthority {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { slots: std::array::from_fn(|_| None), closing_instances: [None; PENDING_PATCH_CAPACITY], turn_handbacks: std::array::from_fn(|_| TurnPatchCell::default()), turn_handback_instance: None, next_sequence: 0, exhausted: false }
     }
 
@@ -171,11 +174,11 @@ impl PendingPatchAuthority {
     /// stayed green while puzzle 3d's world-3d surface trapped on its first turns (reported by
     /// INTERACTIVE-TOOLS-VISIBLE-PROCESS on :6013, 2026-09-15). The retained cell keeps its sequence,
     /// so its patch travels on the NEXT turn through the same slot, in order, exactly once.
-    pub(super) fn borrowed_sequences(&self) -> impl Iterator<Item = u64> + '_ {
+    pub(crate) fn borrowed_sequences(&self) -> impl Iterator<Item = u64> + '_ {
         self.turn_handbacks.iter().filter(|cell| cell.published.is_some()).filter_map(|cell| cell.sequence)
     }
 
-    pub(super) fn reserve_sequence(&mut self) -> Option<u64> {
+    pub(crate) fn reserve_sequence(&mut self) -> Option<u64> {
         if self.exhausted || self.slots.iter().all(Option::is_some) {
             return None;
         }
@@ -185,17 +188,17 @@ impl PendingPatchAuthority {
         Some(sequence)
     }
 
-    #[cfg(test)]
-    pub(super) fn receipt_is_issued(&self, receipt: ActorUiPatchReceipt) -> bool {
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn receipt_is_issued(&self, receipt: ActorUiPatchReceipt) -> bool {
         self.slots.iter().flatten().any(|slot| slot.issued.as_ref().is_some_and(|issued| issued.committed && issued.receipt == receipt))
     }
 
-    pub(super) fn has_capacity(&self) -> bool {
+    pub fn has_capacity(&self) -> bool {
         !self.exhausted && self.slots.iter().any(Option::is_none)
     }
 
     #[expect(clippy::result_large_err, reason = "Refusal must hand back the exact retained patch owner without allocating or releasing its publication credit.")]
-    pub(super) fn push_reconcile(&mut self, owner: SurfaceReconcileReadyPatch) -> Result<(), SurfaceReconcileReadyPatch> {
+    pub fn push_reconcile(&mut self, owner: SurfaceReconcileReadyPatch) -> Result<(), SurfaceReconcileReadyPatch> {
         let instance = owner.surface().and_then(|surface| parse_surface_instance(&surface.0));
         if self.closing_instances.iter().flatten().any(|closing| Some(closing.key.instance()) == instance) {
             return Err(owner);
@@ -207,7 +210,7 @@ impl PendingPatchAuthority {
     }
 
     #[expect(clippy::result_large_err, reason = "Refusal must hand back the exact retained patch owner without allocating or releasing its publication credit.")]
-    pub(super) fn push_external(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
+    pub fn push_external(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
         let instance = parse_surface_instance(&patch.surface.0);
         if self.closing_instances.iter().flatten().any(|closing| Some(closing.key.instance()) == instance) {
             return Err(patch);
@@ -248,7 +251,7 @@ impl PendingPatchAuthority {
     /// not a paged one. It is refused BY NAME instead of leaving a borrowed cell nobody can stage a
     /// receipt against, which is how that shape used to present (`plugin.reactor-close-authority:
     /// pending patch emission left a borrowed publication unstaged`).
-    pub(super) fn take_one(&mut self, admitted_bytes: usize) -> Result<Option<UiPatch>, &'static str> {
+    pub fn take_one(&mut self, admitted_bytes: usize) -> Result<Option<UiPatch>, &'static str> {
         if self.instance_is_closing(self.turn_handback_instance) && self.turn_handbacks.iter().any(|cell| !cell.patch.terminal_is_empty()) {
             return Ok(None);
         }
@@ -321,7 +324,7 @@ impl PendingPatchAuthority {
     /// sequence (it travels on the next turn, through the same slot, exactly once) and stops being
     /// something a receipt may be staged against.
     #[expect(clippy::result_large_err, reason = "Refusal must hand back the exact retained patch owner without allocating or releasing its publication credit.")]
-    pub(super) fn hand_back_turn(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
+    pub fn hand_back_turn(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
         if self.turn_handback_instance != parse_surface_instance(&patch.surface.0) {
             return Err(patch);
         }
@@ -359,7 +362,7 @@ impl PendingPatchAuthority {
     /// publication unstaged`. Small surfaces never cut a page, which is why the generation3d door
     /// stayed green while puzzle 3d's world-3d surface trapped on its first turns (reported by
     /// INTERACTIVE-TOOLS-VISIBLE-PROCESS on :6013, 2026-09-15).
-    pub(super) fn stage_emission<'a>(&mut self, receipt: ActorUiPatchReceipt, patches: impl Iterator<Item = &'a UiPatch>) -> Result<(), &'static str> {
+    pub fn stage_emission<'a>(&mut self, receipt: ActorUiPatchReceipt, patches: impl Iterator<Item = &'a UiPatch>) -> Result<(), &'static str> {
         if !receipt.is_valid() || Some(receipt.lifetime.instance_id) != self.turn_handback_instance {
             return Err("patch receipt names another lifetime");
         }
@@ -389,7 +392,7 @@ impl PendingPatchAuthority {
 
     /// 🧾️ Only the cells this turn DELIVERED are released. A cell still holding a patch a cut page
     /// could not carry keeps its sequence and its slot, and travels on the next turn.
-    pub(super) fn commit_emission(&mut self) {
+    pub fn commit_emission(&mut self) {
         let sequences: Vec<u64> = self.borrowed_sequences().collect();
         assert!(!sequences.is_empty(), "prepared patch emission sequence");
         for sequence in sequences {
@@ -408,7 +411,7 @@ impl PendingPatchAuthority {
         self.turn_handback_instance = None;
     }
 
-    pub(super) fn apply_issued_ack(&mut self, receipt: ActorUiPatchReceipt, surface: &str, revision: u64, admitted_bytes: usize, advance: impl FnOnce(&SurfaceReconcilePublishedAck) -> Result<bool, &'static str>) -> Result<bool, &'static str> {
+    pub fn apply_issued_ack(&mut self, receipt: ActorUiPatchReceipt, surface: &str, revision: u64, admitted_bytes: usize, advance: impl FnOnce(&SurfaceReconcilePublishedAck) -> Result<bool, &'static str>) -> Result<bool, &'static str> {
         let Some(slot) = self.slots.iter_mut().flatten().find(|slot| !slot.acknowledged && !slot.rejection_requested && slot.issued.as_ref().is_some_and(|issued| issued.matches(receipt, surface, revision))) else {
             return Ok(false);
         };
@@ -426,7 +429,7 @@ impl PendingPatchAuthority {
         Ok(slot.acknowledged)
     }
 
-    pub(super) fn apply_issued_rejection(&mut self, receipt: ActorUiPatchReceipt, surface: &str, revision: u64, reject: impl FnOnce(u64) -> bool) -> bool {
+    pub fn apply_issued_rejection(&mut self, receipt: ActorUiPatchReceipt, surface: &str, revision: u64, reject: impl FnOnce(u64) -> bool) -> bool {
         let Some(slot) = self.slots.iter_mut().flatten().find(|slot| !slot.acknowledged && slot.issued.as_ref().is_some_and(|issued| issued.matches(receipt, surface, revision))) else {
             return false;
         };
@@ -450,7 +453,7 @@ impl PendingPatchAuthority {
         true
     }
 
-    pub(super) fn advance_rejection(&mut self, reject: impl FnOnce(&str, u64) -> bool) -> bool {
+    pub fn advance_rejection(&mut self, reject: impl FnOnce(&str, u64) -> bool) -> bool {
         let Some(slot) = self.slots.iter_mut().flatten().find(|slot| slot.rejection_requested && slot.issued.is_some()) else {
             return false;
         };
@@ -458,7 +461,7 @@ impl PendingPatchAuthority {
         Self::reject_slot(slot, |generation| reject(&surface.0, generation))
     }
 
-    pub(super) fn close_instance_step(&mut self, instance: u32, maximum_items: usize, maximum_bytes: usize) -> Result<ui_contract::UiValueRetirementStep, &'static str> {
+    pub fn close_instance_step(&mut self, instance: u32, maximum_items: usize, maximum_bytes: usize) -> Result<ui_contract::UiValueRetirementStep, &'static str> {
         if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(ui_contract::UiValueRetirementStep::default());
         }
@@ -517,7 +520,7 @@ impl PendingPatchAuthority {
         Ok(step)
     }
 
-    pub(super) fn preflight_close_instance(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn preflight_close_instance(&self, key: crate::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         if let Some(closing) = self.closing_instances.iter().flatten().find(|closing| closing.key.instance() == key.instance()) {
             return if closing.key == key { Ok(()) } else { Err("pending patch reservation belongs to another allocation") };
         }
@@ -527,7 +530,7 @@ impl PendingPatchAuthority {
         Ok(())
     }
 
-    pub(super) fn reserve_close_instance(&mut self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn reserve_close_instance(&mut self, key: crate::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         if let Some(closing) = self.closing_instances.iter().flatten().find(|closing| closing.key.instance() == key.instance()) {
             return if closing.key == key { Ok(()) } else { Err("pending patch reservation belongs to another allocation") };
         }
@@ -536,7 +539,7 @@ impl PendingPatchAuthority {
         Ok(())
     }
 
-    pub(super) fn activate_close_instance(&mut self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn activate_close_instance(&mut self, key: crate::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         let closing = self.closing_instances.iter_mut().flatten().find(|closing| closing.key == key).ok_or("exact pending patch close reservation missing")?;
         closing.active = true;
         for slot in self.slots.iter_mut().flatten().filter(|slot| slot.instance == Some(key.instance())) {
@@ -546,11 +549,11 @@ impl PendingPatchAuthority {
         Ok(())
     }
 
-    pub(super) fn close_instance_complete(&self, key: super::instance_lifetime::NativeCloseKey) -> Result<bool, &'static str> {
+    pub fn close_instance_complete(&self, key: crate::instance_lifetime::NativeCloseKey) -> Result<bool, &'static str> {
         self.closing_instances.iter().flatten().find(|closing| closing.key == key).map(|closing| closing.complete).ok_or("exact pending patch close receipt missing")
     }
 
-    pub(super) fn release_close_instance(&mut self, key: super::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
+    pub fn release_close_instance(&mut self, key: crate::instance_lifetime::NativeCloseKey) -> Result<(), &'static str> {
         let closing = self.closing_instances.iter_mut().find(|closing| closing.is_some_and(|closing| closing.key == key && closing.complete)).ok_or("exact pending patch close receipt is not terminal")?;
         *closing = None;
         Ok(())
@@ -563,7 +566,7 @@ impl PendingPatchAuthority {
     /// world-3d patch (≈ 460 `UiText` slices across 11 lane carriers) one host round trip at a time.
     /// Measured 2026-09-10 (W-S2): 24.3 s and 8 799 worker messages between the Nakagin example click
     /// and the repaint. Every other stage of the same turn is priced per PAGE; this one now is too.
-    pub(super) fn close_step(&mut self, items: usize, bytes: usize) -> Result<bool, &'static str> {
+    pub fn close_step(&mut self, items: usize, bytes: usize) -> Result<bool, &'static str> {
         if let Some(index) = self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.acknowledged)) {
             self.close_slot_step(index, items, bytes)?;
             return Ok(false);
@@ -577,7 +580,7 @@ impl PendingPatchAuthority {
     }
 
     /// 🐞️ Temporary trace summary of the publication slots, read by the reactor's more-work streak trace.
-    pub(super) fn debug_state(&self) -> String {
+    pub fn debug_state(&self) -> String {
         let slots: Vec<String> = self
             .slots
             .iter()
@@ -612,7 +615,7 @@ impl PendingPatchAuthority {
     /// 📬️ Whether a patch is queued for a FUTURE turn to hand out. A [`PendingPatchPhase::Issued`]
     /// slot is deliberately NOT one: it is waiting on the host, whose answer arrives as its own
     /// event-carrying turn, so counting it here only buys a round trip that carries nothing.
-    pub(super) fn has_undelivered(&self) -> bool {
+    pub fn has_undelivered(&self) -> bool {
         self.turn_handbacks.iter().any(|cell| !cell.patch.terminal_is_empty()) || self.slots.iter().flatten().any(|slot| slot.phase() == PendingPatchPhase::Queued)
     }
 
@@ -620,27 +623,27 @@ impl PendingPatchAuthority {
     /// (`PATCH_CLOSE_UNITS_PER_TURN` units, twice per turn since 2026-09-14 — once before the events
     /// and once after the acknowledgements they carry), so it is true here only when a retirement run
     /// was cut short by the turn's own wall deadline.
-    pub(super) fn has_retiring(&self) -> bool {
+    pub fn has_retiring(&self) -> bool {
         self.slots.iter().flatten().any(|slot| matches!(slot.phase(), PendingPatchPhase::Acknowledged | PendingPatchPhase::Rejecting)) || self.closing_instances.iter().any(Option::is_some)
     }
 
     /// 📨️ The union of the two, stated independently through [`PendingPatchPhase::guest_owes_turn`]
     /// so the partition itself is assertable: every publication state whose progress is the GUEST's
     /// own is exactly [`Self::has_undelivered`] ∪ [`Self::has_retiring`], and nothing else arms.
-    #[cfg(test)]
-    pub(super) fn has_unpublished(&self) -> bool {
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn has_unpublished(&self) -> bool {
         self.turn_handbacks.iter().any(|cell| !cell.patch.terminal_is_empty()) || self.slots.iter().flatten().any(|slot| slot.phase().guest_owes_turn()) || self.closing_instances.iter().any(Option::is_some)
     }
 
     /// 🔍️ The patch parked in ONE borrowed turn cell, for the laws that weigh a publication's own
     /// retirement without reaching into the authority's storage.
-    #[cfg(test)]
-    pub(super) fn borrowed_patch(&self, cell: usize) -> Option<&UiPatch> {
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn borrowed_patch(&self, cell: usize) -> Option<&UiPatch> {
         self.turn_handbacks.get(cell).and_then(|cell| cell.patch.get())
     }
 
-    #[cfg(test)]
-    pub(super) fn phases(&self) -> Vec<PendingPatchPhase> {
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn phases(&self) -> Vec<PendingPatchPhase> {
         self.slots.iter().flatten().map(PendingPatchSlot::phase).collect()
     }
 }
@@ -653,18 +656,43 @@ mod issued_receipt_tests;
 #[path = "🧪️tests/🔬️instance-lifetime-patch-close/🦀️.rs"]
 mod instance_lifetime_patch_close_tests;
 
-crate::component_persistent_local! {
+semio_framework_plugin_abi::component_persistent_local! {
     static PENDING_PATCHES: RefCell<PendingPatchAuthority> = RefCell::new(PendingPatchAuthority::new());
 }
 
 /// 🪪️ Surfaces are named `"<instance>:<body-key>"` in this wave (no dedicated `surface-ref`
 /// bookkeeping table yet — `ui.wit`'s `surface-ref` record exists at the WIT boundary, but the
 /// Rust-side `kernel::UiPatch.surface` is still a plain `String` per A3's landed shape).
-pub(super) fn parse_surface_instance(surface: &str) -> Option<u32> {
+#[doc(hidden)]
+pub fn parse_surface_instance(surface: &str) -> Option<u32> {
     surface.split(':').next()?.parse().ok()
 }
 
-pub(super) fn with_state<R>(use_state: impl FnOnce(&RefCell<PendingPatchAuthority>) -> R) -> R {
+#[doc(hidden)]
+pub fn with_state<R>(use_state: impl FnOnce(&RefCell<PendingPatchAuthority>) -> R) -> R {
     PENDING_PATCHES.with(use_state)
 }
 //#endregion 📨️PendingPatchAuthority
+
+#[path = "../🚪️lifetime/🦀️.rs"]
+pub mod instance_lifetime;
+#[path = "🔒️reactor-close/🦀️.rs"]
+pub mod life_reactor_close;
+#[path = "../🏃️runtime/📥️staging/♻️reactor-lifecycle/🛎️app-cell/🦀️.rs"]
+pub mod life_app_cell;
+#[path = "../🏃️runtime/📥️staging/♻️reactor-lifecycle/🧹️cleanup-vocabulary/🦀️.rs"]
+pub mod life_cleanup_vocabulary;
+#[path = "../🏃️runtime/📥️staging/♻️reactor-lifecycle/🗃️instance-registry/🦀️.rs"]
+pub mod life_instance_registry;
+#[path = "../🏃️runtime/📥️staging/♻️reactor-lifecycle/🧯️cleanup-pumps/🦀️.rs"]
+pub mod life_cleanup_pumps;
+use std::cell::Cell;
+use life_reactor_close::ReactorCloseRegistry;
+
+semio_framework_plugin_abi::component_persistent_local! {
+    /// 🎛️ Per-instance `QuotaSchema`, real values decoded off `Event::InstanceOpen.quotas`
+    /// (previously always defaulted — see `wit_event_to_kernel`'s `InstanceOpen` arm) and dropped
+    /// again on `Event::InstanceClose`. `spawn_task`'s quota gate is the first real reader.
+    pub static REACTOR_CLOSES: RefCell<ReactorCloseRegistry> = RefCell::new(ReactorCloseRegistry::new());
+    pub static REACTOR_CLOSE_CURSOR: Cell<usize> = Cell::new(0);
+}

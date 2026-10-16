@@ -21,13 +21,17 @@ import {
 // #endregion 🔌️Adapters
 import { packedTextLeaf } from "../🧳️packed-text/🟦️.ts";
 import {
+  decodePackValue,
+  encodePackValue
+} from "@semio-tech/framework/packs";
+import {
   decodeAppFrame,
   decodeFaultFromWire,
-  decodePackValue,
-  encodePackValue,
-  faultDisplayMessage,
+  faultDisplayMessage
+} from "@semio-tech/framework/app-channel";
+import {
   viewContextWireValue
-} from "@semio-tech/framework-os";
+} from "@semio-tech/framework/packs";
 import { type BuiltNode } from "@semio-tech/framework";
 import { publishGuestPresenceV1, type GuestPresenceMarkV1 } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";

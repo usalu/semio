@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "stages": [
+    {
+      "id": "complete",
+      "events": [
+        "accepted",
+        "observed",
+        "witnessed",
+        "detached",
+        "underlying",
+        "staged",
+        "published",
+        "attached",
+        "verified",
+        "settled"
+      ],
+      "accept": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "mount-before-underlying",
+      "events": [
+        "accepted",
+        "observed",
+        "witnessed",
+        "attached"
+      ],
+      "accept": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "publish-mounted",
+      "events": [
+        "accepted",
+        "observed",
+        "witnessed",
+        "staged",
+        "published"
+      ],
+      "accept": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "double-event",
+      "events": [
+        "accepted",
+        "observed",
+        "observed"
+      ],
+      "accept": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "terminal-missing-event",
+      "events": [
+        "accepted",
+        "observed",
+        "witnessed",
+        "detached",
+        "underlying",
+        "staged",
+        "published",
+        "attached",
+        "verified",
+        "settled",
+        null
+      ],
+      "accept": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "inactive-current",
+      "initialState": "inactive",
+      "events": [
+        "accepted",
+        "observed",
+        "underlying",
+        "staged",
+        "published",
+        "attached",
+        "verified",
+        "settled"
+      ],
+      "accept": true
+    },
+    {
+      "id": "inactive-false-prior-witness",
+      "initialState": "inactive",
+      "events": [
+        "accepted",
+        "observed",
+        "witnessed"
+      ],
+      "accept": false
+    }
+  ],
+  "failures": [
+    {
+      "body": "none",
+      "cleanup": [],
+      "ids": []
+    },
+    {
+      "body": "undefined",
+      "cleanup": [],
+      "ids": [
+        "undefined"
+      ]
+    },
+    {
+      "body": "frozen",
+      "cleanup": [
+        "first",
+        "second"
+      ],
+      "ids": [
+        "body",
+        "first",
+        "second"
+      ]
+    },
+    {
+      "body": "frozen",
+      "cleanup": [
+        "aggregate"
+      ],
+      "ids": [
+        "body",
+        "first",
+        "second"
+      ]
+    },
+    {
+      "body": "none",
+      "cleanup": [
+        "first"
+      ],
+      "ids": [
+        "first"
+      ]
+    }
+  ],
+  "request": {
+    "version": 1,
+    "purpose": "current-publication",
+    "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "directory": {
+      "dev": "1",
+      "ino": "2"
+    },
+    "backing": {
+      "dev": "1",
+      "ino": "3",
+      "size": 66060288,
+      "allocatedBytes": 66060288
+    },
+    "initialState": "mounted",
+    "root": {
+      "dev": "4",
+      "ino": "2"
+    }
+  },
+  "snapshots": [
+    {
+      "form": "plain",
+      "accept": true
+    },
+    {
+      "form": "mutated",
+      "accept": true
+    },
+    {
+      "form": "accessor",
+      "accept": false
+    },
+    {
+      "form": "symbol",
+      "accept": false
+    },
+    {
+      "form": "prototype",
+      "accept": false
+    }
+  ],
+  "pending": [
+    {
+      "kind": "absent",
+      "admit": true
+    },
+    {
+      "kind": "directory",
+      "admit": false
+    },
+    {
+      "kind": "file",
+      "admit": false
+    },
+    {
+      "kind": "dangling-link",
+      "admit": false
+    },
+    {
+      "kind": "unreadable",
+      "admit": false
+    }
+  ]
+}

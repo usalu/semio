@@ -1,0 +1,1909 @@
+//! 🗄️ Generic document version-graph algebra — Author/Change/Checkpoint/Alternative/ArtifactVcs,
+//! `VcsError`, and collection-diff/operation helpers. Pure
+//! data plus pure functions: nothing here touches a live document (that's `store::ArtifactStore`,
+//! which depends on this crate — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
+
+
+// This crate's own body spells the trait name bare (`self::Mutation<P>` in `apply_mutation`
+// below, disambiguating the trait from the same-named generic parameter) — a private (non-`pub`)
+// import keeps that ergonomics without re-exposing `protocol::Mutation` on `vcs`'s own public API
+// (dependents import `protocol::Mutation` directly). `MutationDiff` is imported for its `apply`
+// method, called on `Mutation::Diff` inside `apply_mutation`.
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
+use protocol::{Edit, Mutation, MutationApplyError, MutationDiff};
+
+#[path = "🌱️genesis/🦀️.rs"]
+mod genesis;
+pub use genesis::{ArtifactGenesis, ArtifactGenesisWitness};
+
+#[path = "♻️retirement/🦀️.rs"]
+mod retirement;
+
+
+
+//#region 🔖️Schemas
+// 🎞️ `Serialize`/`Deserialize` DROPPED OUTRIGHT (ticket
+// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s
+// `📓️history-decoder-serde.md`): `🏪️store/🦀️.rs`'s `ArtifactRepositoryHistoryEntryAuthority<T>`
+// — the compiler-found blocker `📓️os-kernel-serde-final.md` left open — turned out, on direct
+// read, to buffer each history entry's raw source bytes into a fixed-capacity slice as tokens
+// stream in and call `serde_json::from_slice` exactly ONCE, at the terminal token, over the
+// complete buffered slice. That is a bounded whole-value decode, not a token-driven
+// `serde::Deserializer` walk (the docstring this replaces claimed otherwise, incorrectly) — so its
+// bound converts cleanly to `T: FromValue`, decoding via
+// `crate::os_pack::json::from_json_str::<T>` over the same buffered bytes. `Checkpoint`'s own
+// former `#[derive(Serialize, Deserialize)]` (needed transitively for `authors: Vec<Author>`) goes
+// with it; no production or test consumer anywhere in the repo ever called `serde_json` on
+// `Author` directly, so its derive drops outright rather than going `cfg_attr(test, …)`.
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Author {
+    pub id: String,
+    pub name: String,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub avatar: Option<String>,
+}
+
+// 🎞️ `MutationMeta` lives in `protocol_command`; `Edit<Mutation>` (imported above) is this
+// crate's own field type for `ArtifactVcs.edits` below.
+
+// 🎞️ `Change`'s two historical reasons to stay dual-derived are BOTH resolved now: the
+// checkpoint-id-hash reason (`📓️float-format-parity.md` — `content_addressed_checkpoint_id_core`
+// hashes `crate::os_pack::json::to_json_string(change)`, proven byte-identical to `serde_json` for
+// every `f64`, and `Change` carries no float field regardless) and the
+// `ArtifactRepositoryHistoryEntryAuthority<T>: DeserializeOwned` reason (`📓️history-decoder-serde.md`
+// — that authority's bound is now `FromValue`, which `Change` already derives). `serde` stays
+// `cfg_attr(test, …)` rather than dropping outright, though: this file's own
+// `change_to_json_string_matches_serde_json_byte_for_byte` and
+// `content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible`
+// tests both compare `Change` against a real `serde_json` oracle, matching this ticket's own
+// established oracle-preservation pattern (`crate::os_store::store_schema::ArtifactCursorOwners`,
+// `📓️os-kernel-serde-final.md`). `ArtifactHistoryLedger`/`ArtifactHistoryIter`/`ArtifactVcs`/
+// `ArtifactVcsRead` stay fully serde-free (dropped outright, prior wave);
+// `Author`/`CompositionPin`/`Checkpoint`/`Alternative` now join them (see `Author`'s own docstring
+// above). `crate::os_store::store_schema::ArtifactEnvelopeRead`'s hand-off reason was already stale before any of this
+// (converted off `Serialize` onto `ToValue` outright, see `📓️store-serde-final.md`).
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct Change {
+    pub id: String,
+    pub edit_ids: Vec<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    pub description: Option<String>,
+    pub saved_at: String,
+}
+
+/// 🧩️ One owned child's checkpoint pin, captured on the parent's checkpoint so checking out
+/// the parent can restore the whole composition. `child_ref` is the pinned child artifact's real
+/// `semio_framework_artifact_reference::ArtifactRef` — **correction, `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/
+/// b2-store-composition-report.md`**: the prior wave (`b1-spr-vcs-report.md`) believed `ArtifactRef`
+/// (defined in `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs`) was unreachable from this crate and fell
+/// back to the wire URI `String`. That was wrong: `io/🦀️.rs` is dual-mounted — the
+/// `semio-framework` crate mounts it as `io`, and THIS crate (`semio-framework-os-kernel`) mounts the
+/// very same source file as `io` (see `💻️os/📦️packages/🦀️rust/🦀️.rs:237-238`,
+/// `pub mod io;`) — no cross-crate dependency-direction problem exists; `store` already reaches
+/// `semio_framework_artifact_reference::ArtifactDialect` directly (`🏪️store/🦀️.rs:88/105/662`). Sorting for
+/// [`content_addressed_checkpoint_id`] below is therefore by `child_ref.to_uri()` (the same
+/// deterministic string this field used to store literally), not by any `Ord` on `ArtifactRef`
+/// itself (which does not implement one).
+// 🎞️ `Serialize`/`Deserialize` dropped outright — same reason as `Author` above:
+// `Checkpoint.composition_pins: Vec<CompositionPin>` no longer needs it, and no test anywhere
+// serializes `CompositionPin` directly either.
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct CompositionPin {
+    pub child_ref: semio_framework_artifact_reference::ArtifactRef,
+    pub checkpoint_id: String,
+}
+
+// 🎞️ `Serialize`/`Deserialize` dropped outright (see `Author`'s docstring above for the full
+// reasoning): `🏪️store/🦀️.rs`'s `ArtifactRepositoryHistoryEntryAuthority<T>` — mounted at field
+// ids 4/5 of the fresh-VCS decoder, feeding this type directly — converted its bound from
+// `DeserializeOwned` to `FromValue`, which `Checkpoint` already derives. See
+// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
+// 🔍️research/📓️history-decoder-serde.md`.
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Checkpoint {
+    pub id: String,
+    pub change_ids: Vec<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<String>,
+    pub authors: Vec<Author>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+    pub timestamp: String,
+    /// 🧩️ Which checkpoint each owned child was at when this checkpoint was committed —
+    /// empty for a non-composite artifact (every checkpoint before this ticket, and every leaf
+    /// artifact after it). Additive; see [`CompositionPin`].
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub composition_pins: Vec<CompositionPin>,
+}
+
+// 🎞️ `Serialize`/`Deserialize` dropped outright — same `ArtifactRepositoryHistoryEntryAuthority<T>`
+// reason as `Checkpoint` above (see its docstring).
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Alternative {
+    pub id: String,
+    pub name: String,
+    pub checkpoint_ids: Vec<String>,
+}
+
+/// 📄 Slots in one history page. One page is the largest contiguous slot allocation.
+pub const ARTIFACT_HISTORY_PAGE_SLOTS: usize = 64;
+/// 📏️ The largest physical release one history catalog close step performs: a directory chunk or one value page.
+pub const ARTIFACT_HISTORY_RELEASE_PAGE_BYTES: usize = 4096;
+/// 📄 Directory pages addressed by one chunk. The chunk's pointer array, count and link fill exactly one release page,
+/// and the chunk is never reallocated.
+pub const ARTIFACT_HISTORY_DIRECTORY_PAGES: usize = (ARTIFACT_HISTORY_RELEASE_PAGE_BYTES - 2 * size_of::<usize>()) / size_of::<usize>();
+/// 📄 Page size of every artifact history ledger. The name is the page, not a session ceiling.
+pub const ARTIFACT_HISTORY_LEDGER_CAPACITY: usize = ARTIFACT_HISTORY_PAGE_SLOTS;
+const ARTIFACT_HISTORY_CONTIGUOUS_CEILING: usize = 64 * 1024;
+
+/// 📄 Dense append/pop catalog paged so a full page opens another fixed page instead of growing one buffer.
+pub struct HistoryPageStack<T> {
+    head: Option<Box<HistoryPageChunk<T>>>,
+    detached: Option<Box<HistoryValuePage<T>>>,
+    pages: u32,
+    len: usize,
+}
+
+struct HistoryPageChunk<T> {
+    pages: [Option<Box<HistoryValuePage<T>>>; ARTIFACT_HISTORY_DIRECTORY_PAGES],
+    count: u16,
+    next: Option<Box<HistoryPageChunk<T>>>,
+}
+
+const _: () = assert!(size_of::<HistoryPageChunk<()>>() <= ARTIFACT_HISTORY_RELEASE_PAGE_BYTES);
+
+struct HistoryValuePage<T> {
+    slots: Box<[Option<T>]>,
+}
+
+impl<T> HistoryPageChunk<T> {
+    fn blank() -> Self {
+        Self { pages: std::array::from_fn(|_| None), count: 0, next: None }
+    }
+}
+
+fn history_value_page<T>() -> Box<[Option<T>]> {
+    let bytes = size_of::<Option<T>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS);
+    assert!(bytes <= ARTIFACT_HISTORY_CONTIGUOUS_CEILING, "one history catalog page must stay under the 64 KiB contiguous ceiling");
+    let mut slots = Vec::new();
+    slots.try_reserve_exact(ARTIFACT_HISTORY_PAGE_SLOTS).expect("history catalog page allocation");
+    slots.resize_with(ARTIFACT_HISTORY_PAGE_SLOTS, || None);
+    slots.into_boxed_slice()
+}
+
+fn history_place_page<T>(head: &mut Option<Box<HistoryPageChunk<T>>>, page_index: usize, page: Box<HistoryValuePage<T>>) {
+    if head.is_none() {
+        *head = Some(Box::new(HistoryPageChunk::blank()));
+    }
+    let chunk = history_descend_chunk(head.as_mut().expect("history catalog chunk"), page_index / ARTIFACT_HISTORY_DIRECTORY_PAGES);
+    let offset = page_index % ARTIFACT_HISTORY_DIRECTORY_PAGES;
+    chunk.pages[offset] = Some(page);
+    chunk.count = chunk.count.saturating_add(1);
+}
+
+fn history_descend_chunk<T>(chunk: &mut HistoryPageChunk<T>, remaining: usize) -> &mut HistoryPageChunk<T> {
+    if remaining == 0 {
+        return chunk;
+    }
+    if chunk.next.is_none() {
+        chunk.next = Some(Box::new(HistoryPageChunk::blank()));
+    }
+    history_descend_chunk(chunk.next.as_mut().expect("history catalog chunk link"), remaining - 1)
+}
+
+fn history_page<'a, T>(head: &'a HistoryPageChunk<T>, page_index: usize) -> &'a HistoryValuePage<T> {
+    let chunk = history_chunk_ref(head, page_index / ARTIFACT_HISTORY_DIRECTORY_PAGES);
+    chunk.pages[page_index % ARTIFACT_HISTORY_DIRECTORY_PAGES].as_ref().expect("history catalog page")
+}
+
+fn history_page_mut<'a, T>(head: &'a mut HistoryPageChunk<T>, page_index: usize) -> &'a mut HistoryValuePage<T> {
+    let chunk = history_descend_chunk(head, page_index / ARTIFACT_HISTORY_DIRECTORY_PAGES);
+    chunk.pages[page_index % ARTIFACT_HISTORY_DIRECTORY_PAGES].as_mut().expect("history catalog page")
+}
+
+fn history_chunk_ref<T>(chunk: &HistoryPageChunk<T>, remaining: usize) -> &HistoryPageChunk<T> {
+    if remaining == 0 { chunk } else { history_chunk_ref(chunk.next.as_ref().expect("history catalog chunk link"), remaining - 1) }
+}
+
+impl<T> HistoryPageStack<T> {
+    /// 🪶️ Creates an empty retained catalog without allocating resident pages.
+    pub fn empty() -> Self { Self { head: None, detached: None, pages: 0, len: 0 } }
+    /// 🧮 Quotes the exact original first stack page and its directory.
+    pub fn initial_page_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.pages != 0 { return Ok(Default::default()); }
+        let capacity_bytes = size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .and_then(|bytes| bytes.checked_add(size_of::<HistoryValuePage<T>>()))
+            .and_then(|bytes| bytes.checked_add(size_of::<HistoryPageChunk<T>>()))
+            .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history stack original page extent overflowed"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: 1, ..Default::default() })
+    }
+    /// 🎟️ Admits the first original stack page before installing any physical backing.
+    pub fn admit_initial_page(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, ValueError> {
+        if self.pages != 0 { return Ok(Default::default()); }
+        let demand = self.initial_page_birth_demand()?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history stack birth requires original depth")); }
+        if grant.maximum_items == 0 || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(Default::default()); }
+        *self = Self::try_new().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history stack original page allocation refused"))?;
+        let progress = semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
+        semio_framework_value::retained_clone::admit_retained_clone_progress(grant, progress, "original history stack first page")?;
+        Ok(progress)
+    }
+
+
+    /// 🎟️ Reports all backing allocations required by exactly the next pushed entry.
+    pub fn next_push_allocation_bytes(&self) -> usize {
+        if self.len < self.capacity() { return 0; }
+        size_of::<Option<T>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .saturating_add(size_of::<HistoryValuePage<T>>())
+            .saturating_add(if self.pages as usize % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { size_of::<HistoryPageChunk<T>>() } else { 0 })
+    }
+
+    pub fn new() -> Self {
+        Self::try_new().expect("history catalog first page")
+    }
+
+    pub fn try_new() -> Result<Self, &'static str> {
+        let mut stack = Self::empty();
+        stack.open_page().map_err(|_| "history catalog page allocation failed")?;
+        Ok(stack)
+    }
+
+    fn open_page(&mut self) -> Result<(), ()> {
+        if self.pages == u32::MAX {
+            return Err(());
+        }
+        let page = Box::new(HistoryValuePage { slots: history_value_page() });
+        history_place_page(&mut self.head, self.pages as usize, page);
+        self.pages += 1;
+        Ok(())
+    }
+
+    fn value_page(&self, page: usize) -> &HistoryValuePage<T> {
+        history_page(self.head.as_ref().expect("history catalog owns its first page"), page)
+    }
+
+    fn value_page_mut(&mut self, page: usize) -> &mut HistoryValuePage<T> {
+        history_page_mut(self.head.as_mut().expect("history catalog owns its first page"), page)
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.pages as usize * ARTIFACT_HISTORY_PAGE_SLOTS
+    }
+
+    /// ➕ True while another entry can open a fresh page or fill an allocated slot.
+    pub fn admits_one(&self) -> bool {
+        self.len < self.capacity() || self.pages < u32::MAX
+    }
+
+    pub fn push(&mut self, value: T) {
+        if self.try_push(value).is_err() { panic!("history catalog admits the entry"); }
+    }
+
+    pub fn try_push(&mut self, value: T) -> Result<(), T> {
+        if let Some(page) = self.detached.take() {
+            history_place_page(&mut self.head, self.pages as usize - 1, page);
+        }
+        if self.len == self.capacity() && self.open_page().is_err() {
+            return Err(value);
+        }
+        let index = self.len;
+        self.value_page_mut(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS] = Some(value);
+        self.len += 1;
+        Ok(())
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        if self.len == 0 {
+            return None;
+        }
+        self.len -= 1;
+        let index = self.len;
+        self.value_page_mut(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].take()
+    }
+
+    pub fn remove(&mut self, index: usize) -> T {
+        assert!(index < self.len, "history catalog index outside the live order");
+        let removed = self.value_page_mut(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].take().expect("occupied history catalog slot");
+        for cursor in index + 1..self.len {
+            let next = self.value_page_mut(cursor / ARTIFACT_HISTORY_PAGE_SLOTS).slots[cursor % ARTIFACT_HISTORY_PAGE_SLOTS].take().expect("occupied history catalog slot");
+            let previous = cursor - 1;
+            self.value_page_mut(previous / ARTIFACT_HISTORY_PAGE_SLOTS).slots[previous % ARTIFACT_HISTORY_PAGE_SLOTS] = Some(next);
+        }
+        self.len -= 1;
+        removed
+    }
+
+    pub fn get(&self, index: usize) -> Option<&T> {
+        (index < self.len).then(|| self.value_page(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].as_ref().expect("occupied history catalog slot"))
+    }
+
+    pub fn last(&self) -> Option<&T> {
+        self.len.checked_sub(1).and_then(|index| self.get(index))
+    }
+
+    /// 📏️ Borrows the exact extent the next empty-catalog release step frees: the last value page, or the directory
+    /// chunk that page alone still occupies. Either fits one [`ARTIFACT_HISTORY_RELEASE_PAGE_BYTES`] release page.
+    pub fn next_empty_page_release_byte_demand(&self) -> Option<usize> {
+        if self.len != 0 { return None; }
+        if self.pages == 0 { return Some(0); }
+        if self.detached.is_none() && (self.pages as usize - 1) % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { return Some(size_of::<HistoryPageChunk<T>>()); }
+        size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)?.checked_add(size_of::<HistoryValuePage<T>>())
+    }
+
+    /// ♻️ Releases one physical extent of an empty catalog: a chunk whose only remaining page is first detached, so the
+    /// chunk and that page leave in separate steps; callers retire entries before releasing resident storage.
+    pub fn release_empty_page(&mut self) -> bool {
+        if self.len != 0 || self.pages == 0 { return false; }
+        if let Some(page) = self.detached.take() {
+            drop(page);
+            self.pages -= 1;
+            return true;
+        }
+        let page = self.pages as usize - 1;
+        let chunk_index = page / ARTIFACT_HISTORY_DIRECTORY_PAGES;
+        let chunk = history_descend_chunk(self.head.as_mut().expect("resident empty catalog"), chunk_index);
+        let taken = chunk.pages[page % ARTIFACT_HISTORY_DIRECTORY_PAGES].take();
+        if page % ARTIFACT_HISTORY_DIRECTORY_PAGES != 0 {
+            chunk.count -= 1;
+            drop(taken);
+            self.pages -= 1;
+            return true;
+        }
+        self.detached = taken;
+        if chunk_index == 0 { drop(self.head.take()); }
+        else { drop(history_descend_chunk(self.head.as_mut().expect("resident catalog prefix"), chunk_index - 1).next.take()); }
+        true
+    }
+
+    pub fn contains(&self, value: &T) -> bool
+    where
+        T: PartialEq,
+    {
+        self.iter().any(|item| item == value)
+    }
+
+    pub fn iter(&self) -> HistoryPageIter<'_, T> {
+        HistoryPageIter { stack: self, index: 0, end: self.len }
+    }
+
+    pub fn extend<I: IntoIterator<Item = T>>(&mut self, values: I) {
+        for value in values {
+            self.push(value);
+        }
+    }
+
+    pub fn starts_with(&self, prefix: &[T]) -> bool
+    where
+        T: PartialEq,
+    {
+        prefix.len() <= self.len && self.iter().zip(prefix.iter()).all(|(item, expected)| item == expected)
+    }
+
+    pub fn is_prefix_of_slice(&self, full: &[T]) -> bool
+    where
+        T: PartialEq,
+    {
+        self.len <= full.len() && self.iter().zip(full.iter()).all(|(item, expected)| item == expected)
+    }
+
+    pub fn eq_slice(&self, other: &[T]) -> bool
+    where
+        T: PartialEq,
+    {
+        self.len == other.len() && self.iter().zip(other.iter()).all(|(item, expected)| item == expected)
+    }
+
+    pub fn to_vec(&self) -> Vec<T>
+    where
+        T: Clone,
+    {
+        self.iter().cloned().collect()
+    }
+
+    pub fn cloned_from(&self, from: usize) -> Vec<T>
+    where
+        T: Clone,
+    {
+        self.iter_from(from).cloned().collect()
+    }
+
+    /// ⏩️ The entries from `from` on, seeking there in O(1).
+    pub fn iter_from(&self, from: usize) -> HistoryPageIter<'_, T> {
+        HistoryPageIter { stack: self, index: from.min(self.len), end: self.len }
+    }
+}
+
+impl<T> Default for HistoryPageStack<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T: Clone> Clone for HistoryPageStack<T> {
+    fn clone(&self) -> Self {
+        let mut cloned = Self::new();
+        while cloned.pages < self.pages {
+            cloned.open_page().expect("cloned history catalog page");
+        }
+        for item in self.iter() {
+            cloned.push(item.clone());
+        }
+        cloned
+    }
+}
+
+impl<T: PartialEq> PartialEq for HistoryPageStack<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.len == other.len && self.iter().zip(other.iter()).all(|(left, right)| left == right)
+    }
+}
+
+impl<T: Eq> Eq for HistoryPageStack<T> {}
+
+impl<T: PartialEq> PartialEq<[T]> for HistoryPageStack<T> {
+    fn eq(&self, other: &[T]) -> bool {
+        self.eq_slice(other)
+    }
+}
+
+impl<T: PartialEq, const N: usize> PartialEq<[T; N]> for HistoryPageStack<T> {
+    fn eq(&self, other: &[T; N]) -> bool {
+        self.eq_slice(other)
+    }
+}
+
+impl<T: PartialEq> PartialEq<Vec<T>> for HistoryPageStack<T> {
+    fn eq(&self, other: &Vec<T>) -> bool {
+        self.eq_slice(other)
+    }
+}
+
+impl<T: PartialEq> PartialEq<HistoryPageStack<T>> for Vec<T> {
+    fn eq(&self, other: &HistoryPageStack<T>) -> bool {
+        other.eq_slice(self)
+    }
+}
+
+impl<T: std::hash::Hash> std::hash::Hash for HistoryPageStack<T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.len.hash(state);
+        for item in self.iter() {
+            item.hash(state);
+        }
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for HistoryPageStack<T> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_list().entries(self.iter()).finish()
+    }
+}
+
+impl<T> FromIterator<T> for HistoryPageStack<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(values: I) -> Self {
+        let mut stack = Self::new();
+        stack.extend(values);
+        stack
+    }
+}
+
+impl<T> From<Vec<T>> for HistoryPageStack<T> {
+    fn from(values: Vec<T>) -> Self {
+        let mut stack = Self::new();
+        stack.extend(values);
+        stack
+    }
+}
+
+impl<T> std::ops::Index<usize> for HistoryPageStack<T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.get(index).expect("history catalog index outside the live order")
+    }
+}
+
+impl<'a, T> IntoIterator for &'a HistoryPageStack<T> {
+    type Item = &'a T;
+    type IntoIter = HistoryPageIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+pub struct HistoryPageIter<'a, T> {
+    stack: &'a HistoryPageStack<T>,
+    index: usize,
+    end: usize,
+}
+
+impl<'a, T> Iterator for HistoryPageIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.end {
+            return None;
+        }
+        let item = self.stack.get(self.index)?;
+        self.index += 1;
+        Some(item)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.end.saturating_sub(self.index);
+        (remaining, Some(remaining))
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.index = self.index.saturating_add(n).min(self.end);
+        self.next()
+    }
+}
+
+impl<T> DoubleEndedIterator for HistoryPageIter<'_, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index >= self.end {
+            return None;
+        }
+        self.end -= 1;
+        self.stack.get(self.end)
+    }
+}
+
+impl<T> std::iter::FusedIterator for HistoryPageIter<'_ , T> {}
+
+impl<T> ExactSizeIterator for HistoryPageIter<'_, T> {}
+
+impl<T: ToValue> ToValue for HistoryPageStack<T> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+    }
+}
+
+impl<T: FromValue> FromValue for HistoryPageStack<T> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let values = Vec::<T>::from_value(value)?;
+        let mut stack = Self::try_new().map_err(|reason|ValueError::new(protocol::value::ValueRefusalKind::AllocationFailed,reason))?;
+        for value in values {
+            stack.try_push(value).map_err(|_| ValueError::new(protocol::value::ValueRefusalKind::OwnershipLimit,"history catalog address space exhausted"))?;
+        }
+        Ok(stack)
+    }
+}
+
+/// 📭 Empty when the live order is empty. Resident pages are not part of the wire.
+pub fn history_id_stack_is_empty(stack: &HistoryPageStack<String>) -> bool {
+    stack.is_empty()
+}
+
+#[cfg(test)]
+impl<T: serde::Serialize> serde::Serialize for HistoryPageStack<T> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_seq(self.iter())
+    }
+}
+
+#[cfg(test)]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for HistoryPageStack<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let values = Vec::<T>::deserialize(deserializer)?;
+        Ok(values.into())
+    }
+}
+
+//#region 🧩️GroupHistoryVisibility
+/// 🪟 A shared decision bit used by prepared read roots; only its unique publisher can switch it.
+pub struct ArtifactGroupVisibility {
+    state: std::sync::atomic::AtomicU8,
+}
+
+pub struct ArtifactGroupReadDecision<'a> {
+    visibility: &'a ArtifactGroupVisibility,
+    committed: bool,
+}
+
+impl ArtifactGroupReadDecision<'_> {
+    pub fn committed_for(&self, visibility: &ArtifactGroupVisibility) -> Result<bool, ()> {
+        if std::ptr::eq(self.visibility, visibility) {
+            Ok(self.committed)
+        } else {
+            Err(())
+        }
+    }
+}
+
+/// 🗝️ Unique low-level publication owner; preparation and freshness remain the Store coordinator's responsibility.
+pub struct ArtifactGroupVisibilityOwner {
+    view: std::sync::Arc<ArtifactGroupVisibility>,
+}
+
+impl ArtifactGroupVisibilityOwner {
+    pub fn new() -> Self {
+        Self { view: std::sync::Arc::new(ArtifactGroupVisibility { state: std::sync::atomic::AtomicU8::new(0) }) }
+    }
+
+    pub fn view(&self) -> std::sync::Arc<ArtifactGroupVisibility> {
+        std::sync::Arc::clone(&self.view)
+    }
+
+    pub fn commit(&mut self) -> bool {
+        self.view.state.compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
+    }
+
+    pub fn abort(&mut self) -> bool {
+        self.view.state.compare_exchange(0, 2, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
+    }
+}
+
+impl Drop for ArtifactGroupVisibilityOwner {
+    fn drop(&mut self) {
+        let _ = self.abort();
+    }
+}
+
+impl ArtifactGroupVisibility {
+    pub fn capture(&self) -> ArtifactGroupReadDecision<'_> {
+        ArtifactGroupReadDecision { visibility: self, committed: self.committed() }
+    }
+
+    /// 🟢️ Reads whether the shared owner published its complete staged group.
+    pub fn committed(&self) -> bool {
+        self.state.load(std::sync::atomic::Ordering::Acquire) == 1
+    }
+
+    /// 🟡️ Reads whether the shared owner still permits private candidate construction.
+    pub fn pending(&self) -> bool {
+        self.state.load(std::sync::atomic::Ordering::Acquire) == 0
+    }
+}
+
+struct ArtifactHistoryGroupSuffix {
+    visibility: std::sync::Arc<ArtifactGroupVisibility>,
+    head: Option<u32>,
+    tail: Option<u32>,
+    len: usize,
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️group-history-visibility/🦀️.rs"]
+mod group_history_visibility_tests;
+//#endregion 🧩️GroupHistoryVisibility
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactHistoryKey {
+    pub index: u32,
+    pub generation: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ArtifactHistoryReservation {
+    authority: usize,
+    index: u32,
+    generation: u32,
+}
+
+struct ArtifactHistorySlot<T> {
+    generation: u32,
+    visibility: Option<std::sync::Arc<ArtifactGroupVisibility>>,
+    previous: Option<u32>,
+    next: Option<u32>,
+    free_next: Option<u32>,
+    value: Option<T>,
+}
+
+struct ArtifactHistorySlotPage<T> {
+    slots: Box<[std::mem::MaybeUninit<ArtifactHistorySlot<T>>]>,
+}
+
+struct ArtifactHistoryPageChunk<T> {
+    pages: [Option<Box<ArtifactHistorySlotPage<T>>>; ARTIFACT_HISTORY_DIRECTORY_PAGES],
+    count: u16,
+    next: Option<Box<ArtifactHistoryPageChunk<T>>>,
+}
+
+impl<T> ArtifactHistoryPageChunk<T> {
+    fn blank() -> Self {
+        Self { pages: std::array::from_fn(|_| None), count: 0, next: None }
+    }
+}
+
+fn artifact_history_slot_page<T>() -> Box<[std::mem::MaybeUninit<ArtifactHistorySlot<T>>]> {
+    let bytes = size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS);
+    assert!(bytes <= ARTIFACT_HISTORY_CONTIGUOUS_CEILING, "one history ledger page must stay under the 64 KiB contiguous ceiling");
+    let mut slots = Vec::new();
+    slots.try_reserve_exact(ARTIFACT_HISTORY_PAGE_SLOTS).expect("history ledger page allocation");
+    slots.resize_with(ARTIFACT_HISTORY_PAGE_SLOTS, std::mem::MaybeUninit::uninit);
+    slots.into_boxed_slice()
+}
+
+fn artifact_history_descend<'a, T>(chunk: &'a mut ArtifactHistoryPageChunk<T>, remaining: usize) -> &'a mut ArtifactHistoryPageChunk<T> {
+    if remaining == 0 {
+        return chunk;
+    }
+    if chunk.next.is_none() {
+        chunk.next = Some(Box::new(ArtifactHistoryPageChunk::blank()));
+    }
+    artifact_history_descend(chunk.next.as_mut().expect("history ledger chunk link"), remaining - 1)
+}
+
+fn artifact_history_chunk<'a, T>(chunk: &'a ArtifactHistoryPageChunk<T>, remaining: usize) -> &'a ArtifactHistoryPageChunk<T> {
+    if remaining == 0 { chunk } else { artifact_history_chunk(chunk.next.as_ref().expect("history ledger chunk link"), remaining - 1) }
+}
+
+/// 📚️ Paged generation-keyed history authority. Live entries form one stable linked order;
+/// removed slots are tombstoned and reused only after their generation advances. A full page
+/// opens another fixed page instead of refusing the entry. `seek` remembers the `(position, slot)` of the last entry a
+/// positional read or a search reached, so reads that walk the order forward (applied order, replay order, a retained
+/// initializer's cursor) cost O(1) amortized instead of O(position); every structural change forgets it.
+pub struct ArtifactHistoryLedger<T> {
+    pages: std::mem::ManuallyDrop<Option<Box<ArtifactHistoryPageChunk<T>>>>,
+    page_count: u32,
+    initialized: u32,
+    head: Option<u32>,
+    tail: Option<u32>,
+    free_head: Option<u32>,
+    reservation: Option<ArtifactHistoryReservation>,
+    group: Option<ArtifactHistoryGroupSuffix>,
+    len: usize,
+    seek: std::sync::atomic::AtomicU64,
+}
+
+/// 🧭️ No remembered seek position.
+const ARTIFACT_HISTORY_NO_SEEK: u64 = u64::MAX;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ArtifactHistoryReservationFault {
+    Busy,
+    Capacity,
+    GenerationExhausted,
+    GroupUnavailable,
+}
+
+impl<T> Default for ArtifactHistoryLedger<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T> ArtifactHistoryLedger<T> {
+    /// 🪹️ Creates an inline ledger frame without native slot or directory backing.
+    pub fn empty() -> Self { Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) } }
+
+    /// 🧮 Quotes the exact slot backing, original page and directory before birth.
+    pub fn initial_page_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if self.page_count != 0 { return Ok(Default::default()); }
+        let capacity_bytes = size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .and_then(|bytes| bytes.checked_add(size_of::<ArtifactHistorySlotPage<T>>()))
+            .and_then(|bytes| bytes.checked_add(size_of::<ArtifactHistoryPageChunk<T>>()))
+            .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history ledger original page extent overflowed"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: 1, ..Default::default() })
+    }
+    /// 🧱 True after the original first page remains installed.
+    pub fn initial_page_is_admitted(&self) -> bool { self.page_count != 0 }
+    /// 🎟️ Installs one genuine history page under the supplied independent currencies.
+    pub fn admit_initial_page(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, ValueError> {
+        if self.page_count != 0 { return Ok(Default::default()); }
+        let demand = self.initial_page_birth_demand()?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history ledger birth requires original depth")); }
+        if grant.maximum_items == 0 || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(Default::default()); }
+        self.open_page().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history ledger original page allocation refused"))?;
+        let progress = semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
+        semio_framework_value::retained_clone::admit_retained_clone_progress(grant, progress, "original history ledger first page")?;
+        Ok(progress)
+    }
+
+    pub fn new() -> Self {
+        let mut ledger = Self::empty();
+        ledger.open_page().expect("history ledger first page");
+        ledger
+    }
+
+    fn open_page(&mut self) -> Result<(), ()> {
+        if self.page_count == u32::MAX {
+            return Err(());
+        }
+        let page = Box::new(ArtifactHistorySlotPage { slots: artifact_history_slot_page() });
+        let page_index = self.page_count as usize;
+        if self.pages.is_none() {
+            *self.pages = Some(Box::new(ArtifactHistoryPageChunk::blank()));
+        }
+        {
+            let chunk = artifact_history_descend(self.pages.as_mut().expect("history ledger chunk"), page_index / ARTIFACT_HISTORY_DIRECTORY_PAGES);
+            let offset = page_index % ARTIFACT_HISTORY_DIRECTORY_PAGES;
+            chunk.pages[offset] = Some(page);
+            chunk.count = chunk.count.saturating_add(1);
+        }
+        self.page_count += 1;
+        Ok(())
+    }
+
+    fn slot_page(&self, page: usize) -> &ArtifactHistorySlotPage<T> {
+        let head = self.pages.as_ref().expect("history ledger owns its first page");
+        artifact_history_chunk(head, page / ARTIFACT_HISTORY_DIRECTORY_PAGES).pages[page % ARTIFACT_HISTORY_DIRECTORY_PAGES].as_ref().expect("history ledger page")
+    }
+
+    fn slot_page_mut(&mut self, page: usize) -> &mut ArtifactHistorySlotPage<T> {
+        let head = self.pages.as_mut().expect("history ledger owns its first page");
+        artifact_history_descend(head, page / ARTIFACT_HISTORY_DIRECTORY_PAGES).pages[page % ARTIFACT_HISTORY_DIRECTORY_PAGES].as_mut().expect("history ledger page")
+    }
+
+    fn slot(&self, index: u32) -> &ArtifactHistorySlot<T> {
+        let index = index as usize;
+        unsafe { self.slot_page(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].assume_init_ref() }
+    }
+
+    fn slot_mut(&mut self, index: u32) -> &mut ArtifactHistorySlot<T> {
+        let index = index as usize;
+        unsafe { self.slot_page_mut(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].assume_init_mut() }
+    }
+
+    fn authority(&self) -> usize {
+        self.pages.as_ref().map(|chunk| chunk.as_ref() as *const ArtifactHistoryPageChunk<T> as usize).unwrap_or(0)
+    }
+
+    fn allocated_slots(&self) -> usize {
+        self.page_count as usize * ARTIFACT_HISTORY_PAGE_SLOTS
+    }
+
+    /// 🎟️ Reports backing required by the next unoccupied history reservation.
+    pub fn next_reservation_allocation_bytes(&self) -> usize {
+        if self.reservation.is_some() || self.free_head.is_some() || (self.initialized as usize) < self.allocated_slots() { return 0; }
+        size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .saturating_add(size_of::<ArtifactHistorySlotPage<T>>())
+            .saturating_add(if self.page_count as usize % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { size_of::<ArtifactHistoryPageChunk<T>>() } else { 0 })
+    }
+
+    pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
+        if self.group.is_some() {
+            return Err(ArtifactHistoryReservationFault::GroupUnavailable);
+        }
+        self.reserve_slot()
+    }
+
+    fn reserve_slot(&mut self) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
+        if self.reservation.is_some() {
+            return Err(ArtifactHistoryReservationFault::Busy);
+        }
+        let (index, generation) = if let Some(index) = self.free_head {
+            let generation = self.slot(index).generation.checked_add(1).ok_or(ArtifactHistoryReservationFault::GenerationExhausted)?;
+            (index, generation)
+        } else {
+            if self.initialized as usize == self.allocated_slots() && self.open_page().is_err() {
+                return Err(ArtifactHistoryReservationFault::Capacity);
+            }
+            (self.initialized, 1)
+        };
+        let reservation = ArtifactHistoryReservation { authority: self.authority(), index, generation };
+        self.reservation = Some(ArtifactHistoryReservation { authority: reservation.authority, index, generation });
+        Ok(reservation)
+    }
+
+    pub fn cancel_reservation(&mut self, reservation: ArtifactHistoryReservation) -> Result<(), ArtifactHistoryReservation> {
+        if self.reservation.as_ref() != Some(&reservation) {
+            return Err(reservation);
+        }
+        self.reservation = None;
+        Ok(())
+    }
+
+    pub fn insert_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
+        if self.group.is_some() {
+            return Err((reservation, value));
+        }
+        let key = self.insert_owned_slot(reservation, value, self.tail)?;
+        if self.head.is_none() {
+            self.head = Some(key.index);
+        }
+        self.tail = Some(key.index);
+        self.len += 1;
+        Ok(key)
+    }
+
+    fn insert_owned_slot(&mut self, reservation: ArtifactHistoryReservation, value: T, previous: Option<u32>) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
+        if reservation.authority != self.authority() || self.reservation.as_ref() != Some(&reservation) {
+            return Err((reservation, value));
+        }
+        let index = reservation.index;
+        let generation = reservation.generation;
+        self.reservation = None;
+        self.forget_seek();
+        if Some(index) == self.free_head {
+            let free_next = self.slot(index).free_next;
+            self.free_head = free_next;
+            let slot = self.slot_mut(index);
+            slot.generation = generation;
+            slot.visibility = None;
+            slot.previous = previous;
+            slot.next = None;
+            slot.free_next = None;
+            slot.value = Some(value);
+        } else if index == self.initialized && (index as usize) < self.allocated_slots() {
+            let offset = index as usize;
+            self.slot_page_mut(offset / ARTIFACT_HISTORY_PAGE_SLOTS).slots[offset % ARTIFACT_HISTORY_PAGE_SLOTS].write(ArtifactHistorySlot { generation, visibility: None, previous, next: None, free_next: None, value: Some(value) });
+            self.initialized += 1;
+        } else {
+            return Err((reservation, value));
+        }
+        if let Some(tail) = previous {
+            self.slot_mut(tail).next = Some(index);
+        }
+        Ok(ArtifactHistoryKey { index, generation })
+    }
+
+    /// 🪢️ Binds an already reserved slot to its exact still-private visibility owner.
+    pub fn bind_group_reservation(&mut self, reservation: &ArtifactHistoryReservation, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<(), ()> {
+        if self.reservation.as_ref() != Some(reservation) || !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) { return Err(()); }
+        if self.group.is_none() { self.group = Some(ArtifactHistoryGroupSuffix { visibility: std::sync::Arc::clone(visibility), head: None, tail: None, len: 0 }); }
+        Ok(())
+    }
+
+    pub fn reserve_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
+        if !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
+            return Err(ArtifactHistoryReservationFault::GroupUnavailable);
+        }
+        let reservation = self.reserve_slot()?;
+        if self.group.is_none() {
+            self.group = Some(ArtifactHistoryGroupSuffix { visibility: std::sync::Arc::clone(visibility), head: None, tail: None, len: 0 });
+        }
+        Ok(reservation)
+    }
+
+    pub fn stage_group_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
+        let Some(group) = self.group.as_ref().filter(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility) && visibility.pending()) else {
+            return Err((reservation, value));
+        };
+        let previous = group.tail.or(self.tail);
+        let key = self.insert_owned_slot(reservation, value, previous)?;
+        self.slot_mut(key.index).visibility = Some(std::sync::Arc::clone(visibility));
+        let group = self.group.as_mut().expect("validated group suffix remains owned");
+        if group.head.is_none() {
+            group.head = Some(key.index);
+        }
+        group.tail = Some(key.index);
+        group.len += 1;
+        Ok(key)
+    }
+
+    pub fn adopt_group(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<(), ()> {
+        if self.reservation.is_some() || !visibility.committed() || !self.group.as_ref().is_some_and(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
+            return Err(());
+        }
+        let group = self.group.take().expect("validated group suffix remains owned");
+        self.forget_seek();
+        self.head = self.head.or(group.head);
+        self.tail = group.tail.or(self.tail);
+        self.len += group.len;
+        Ok(())
+    }
+
+    pub fn abort_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<Option<T>, ()> {
+        if self.reservation.is_some() || visibility.pending() || visibility.committed() {
+            return Err(());
+        }
+        let group = self.group.as_ref().filter(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility)).ok_or(())?;
+        let Some(index) = group.tail else {
+            self.group = None;
+            return Ok(None);
+        };
+        self.forget_seek();
+        let previous = self.slot(index).previous;
+        if let Some(previous) = previous {
+            self.slot_mut(previous).next = None;
+        }
+        let free_head = self.free_head;
+        let value = {
+            let slot = self.slot_mut(index);
+            slot.previous = None;
+            slot.next = None;
+            slot.free_next = free_head;
+            slot.value.take().expect("aborted group slot retains its exact entry owner")
+        };
+        self.free_head = Some(index);
+        let group = self.group.as_mut().expect("validated aborted group remains owned");
+        group.len -= 1;
+        group.tail = if group.len == 0 { None } else { previous };
+        if group.len == 0 {
+            group.head = None;
+        }
+        Ok(Some(value))
+    }
+
+    fn visible_bounds(&self) -> (Option<u32>, Option<u32>, usize) {
+        match self.group.as_ref().filter(|group| group.visibility.committed()) {
+            Some(group) => (self.head.or(group.head), group.tail.or(self.tail), self.len + group.len),
+            None => (self.head, self.tail, self.len),
+        }
+    }
+
+    pub fn group_visibility(&self) -> Option<&ArtifactGroupVisibility> {
+        self.group.as_ref().map(|group| group.visibility.as_ref())
+    }
+
+    pub fn read_group(&self, decision: Option<&ArtifactGroupReadDecision<'_>>) -> Result<ArtifactHistoryIter<'_, T>, ()> {
+        let (front, back, remaining) = match self.group.as_ref() {
+            Some(group) if decision.ok_or(())?.committed_for(&group.visibility)? => (self.head.or(group.head), group.tail.or(self.tail), self.len + group.len),
+            _ => (self.head, self.tail, self.len),
+        };
+        Ok(ArtifactHistoryIter { ledger: self, front, back, remaining })
+    }
+
+    pub fn try_push(&mut self, value: T) -> Result<ArtifactHistoryKey, T> {
+        let reservation = match self.reserve_one() {
+            Ok(reservation) => reservation,
+            Err(_) => return Err(value),
+        };
+        self.insert_reserved(reservation, value).map_err(|(_, value)| value)
+    }
+
+    pub fn try_from_preflighted(values: Vec<T>) -> Result<Self, Vec<T>> {
+        let mut ledger = Self::new();
+        let mut pending = values.into_iter();
+        while let Some(value) = pending.next() {
+            if let Err(value) = ledger.try_push(value) {
+                let mut rejected = Vec::new();
+                while let Some(established) = ledger.pop() {
+                    rejected.push(established);
+                }
+                rejected.reverse();
+                rejected.push(value);
+                rejected.extend(pending);
+                return Err(rejected);
+            }
+        }
+        Ok(ledger)
+    }
+
+    pub fn remove_key(&mut self, key: ArtifactHistoryKey) -> Result<T, ArtifactHistoryKey> {
+        if self.reservation.is_some() || self.group.is_some() {
+            return Err(key);
+        }
+        if key.index >= self.initialized {
+            return Err(key);
+        }
+        let slot = self.slot(key.index);
+        if slot.generation != key.generation || slot.value.is_none() {
+            return Err(key);
+        }
+        self.forget_seek();
+        let previous = slot.previous;
+        let next = slot.next;
+        if let Some(previous) = previous {
+            self.slot_mut(previous).next = next;
+        } else {
+            self.head = next;
+        }
+        if let Some(next) = next {
+            self.slot_mut(next).previous = previous;
+        } else {
+            self.tail = previous;
+        }
+        let free_head = self.free_head;
+        let value = {
+            let slot = self.slot_mut(key.index);
+            slot.previous = None;
+            slot.next = None;
+            slot.free_next = free_head;
+            slot.value.take().expect("validated history slot retains its exact owner")
+        };
+        self.free_head = Some(key.index);
+        self.len -= 1;
+        Ok(value)
+    }
+
+    /// ✂️ Removes and answers every entry `remove` selects, in ledger order — how a ledger follows a fold whose facts shrank
+    /// (a retracted transition). Refused, removing nothing, while a reservation or a group decision is open.
+    pub fn extract_if(&mut self, mut remove: impl FnMut(&T) -> bool) -> Result<Vec<T>, ArtifactHistoryReservationFault> {
+        if self.group.is_some() {
+            return Err(ArtifactHistoryReservationFault::GroupUnavailable);
+        }
+        if self.reservation.is_some() {
+            return Err(ArtifactHistoryReservationFault::Busy);
+        }
+        let mut keys = Vec::new();
+        let mut cursor = self.head;
+        while let Some(index) = cursor {
+            let slot = self.slot(index);
+            if slot.value.as_ref().is_some_and(&mut remove) {
+                keys.push(ArtifactHistoryKey { index, generation: slot.generation });
+            }
+            cursor = slot.next;
+        }
+        Ok(keys.into_iter().filter_map(|key| self.remove_key(key).ok()).collect())
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        let index = self.tail?;
+        let generation = self.slot(index).generation;
+        self.remove_key(ArtifactHistoryKey { index, generation }).ok()
+    }
+
+    pub fn first(&self) -> Option<&T> {
+        self.visible_bounds().0.and_then(|index| self.slot(index).value.as_ref())
+    }
+
+    pub fn last(&self) -> Option<&T> {
+        self.visible_bounds().1.and_then(|index| self.slot(index).value.as_ref())
+    }
+
+    pub fn last_mut(&mut self) -> Option<&mut T> {
+        if self.group.is_some() {
+            return None;
+        }
+        let index = self.tail?;
+        self.slot_mut(index).value.as_mut()
+    }
+
+    /// 🎯️ The entry at `position` of the visible order — O(1) amortized when reads walk forward (see `seek`).
+    pub fn get(&self, position: usize) -> Option<&T> {
+        let index = self.seek_slot(position)?;
+        self.slot(index).value.as_ref()
+    }
+
+    /// 🗝️ Reads an exact live slot generation while honoring its staged group decision.
+    pub fn get_key(&self, key: ArtifactHistoryKey) -> Option<&T> {
+        if key.index >= self.initialized { return None; }
+        let slot = self.slot(key.index);
+        if slot.generation != key.generation || slot.visibility.as_ref().is_some_and(|visibility| !visibility.committed()) { return None; }
+        slot.value.as_ref()
+    }
+
+    /// 🧭️ Captures the exact generation of the visible entry at `position`.
+    pub fn key_at(&self, position: usize) -> Option<ArtifactHistoryKey> {
+        let index = self.seek_slot(position)?;
+        Some(ArtifactHistoryKey { index, generation: self.slot(index).generation })
+    }
+
+    pub fn get_mut(&mut self, position: usize) -> Option<&mut T> {
+        assert!(self.group.is_none(), "mutable history access requires its staged group to be adopted or aborted");
+        let index = self.seek_slot(position)?;
+        self.slot_mut(index).value.as_mut()
+    }
+
+    /// 🔎️ The first visible entry `found` accepts, searched from the last entry a read reached onward and then from the
+    /// front — O(1) amortized for lookups that follow the order (an id per applied edit, a replay's next edit).
+    pub fn find_near(&self, found: impl FnMut(&T) -> bool) -> Option<&T> {
+        self.find_near_position(found).map(|(_, value)| value)
+    }
+
+    /// 🔎️ [`Self::find_near`] answering the entry's position in the visible order too.
+    pub fn find_near_position(&self, found: impl FnMut(&T) -> bool) -> Option<(usize, &T)> {
+        self.find_near_entry(found).map(|(position, _, value)| (position, value))
+    }
+
+    /// 🗝️ [`Self::find_near`] with the matched generation key.
+    pub fn find_near_key(&self, found: impl FnMut(&T) -> bool) -> Option<(ArtifactHistoryKey, &T)> {
+        self.find_near_entry(found).map(|(_, key, value)| (key, value))
+    }
+
+    fn find_near_entry(&self, mut found: impl FnMut(&T) -> bool) -> Option<(usize, ArtifactHistoryKey, &T)> {
+        let (front, _, remaining) = self.visible_bounds();
+        let (start_position, start) = match self.remembered_seek() {
+            Some((position, index)) if position < remaining => (position, Some(index)),
+            _ => (0, front),
+        };
+        let mut cursor = (start_position, start);
+        for _ in 0..remaining {
+            let (position, Some(index)) = cursor else { break };
+            let slot = self.slot(index);
+            if slot.value.as_ref().is_some_and(&mut found) {
+                self.remember_seek(position, index);
+                return slot.value.as_ref().map(|value| (position, ArtifactHistoryKey { index, generation: slot.generation }, value));
+            }
+            cursor = match slot.next {
+                Some(next) if position + 1 < remaining => (position + 1, Some(next)),
+                _ => (0, front),
+            };
+        }
+        None
+    }
+
+    /// 🧭️ The slot at `position` of the visible order, walking forward from the remembered seek when it lies at or
+    /// before `position`, else from the front; remembers where it landed.
+    fn seek_slot(&self, position: usize) -> Option<u32> {
+        let (front, _, remaining) = self.visible_bounds();
+        if position >= remaining {
+            return None;
+        }
+        let (mut at, mut index) = match self.remembered_seek() {
+            Some((known, index)) if known <= position => (known, index),
+            _ => (0, front?),
+        };
+        while at < position {
+            index = self.slot(index).next?;
+            at += 1;
+        }
+        self.remember_seek(position, index);
+        Some(index)
+    }
+
+    /// 🧭️ The remembered `(position, slot)`, only while it still names a live entry and no staged group shifts the order.
+    fn remembered_seek(&self) -> Option<(usize, u32)> {
+        let packed = self.seek.load(std::sync::atomic::Ordering::Relaxed);
+        if packed == ARTIFACT_HISTORY_NO_SEEK || self.group.is_some() {
+            return None;
+        }
+        let (position, index) = ((packed >> 32) as usize, packed as u32);
+        (index < self.initialized && self.slot(index).value.is_some()).then_some((position, index))
+    }
+
+    fn remember_seek(&self, position: usize, index: u32) {
+        if let Ok(position) = u32::try_from(position) {
+            self.seek.store((u64::from(position) << 32) | u64::from(index), std::sync::atomic::Ordering::Relaxed);
+        }
+    }
+
+    fn forget_seek(&self) {
+        self.seek.store(ARTIFACT_HISTORY_NO_SEEK, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    pub fn len(&self) -> usize {
+        self.visible_bounds().2
+    }
+
+    /// 🪑️ How many more entries the ledger admits one reservation at a time — the preflight of an atomic batch of inserts.
+    pub fn vacancies(&self) -> usize {
+        if self.group.is_some() || self.reservation.is_some() {
+            return 0;
+        }
+        let mut vacancies = 0;
+        let mut free = self.free_head;
+        while let Some(index) = free {
+            let slot = self.slot(index);
+            if slot.generation == u32::MAX {
+                return vacancies;
+            }
+            vacancies += 1;
+            free = slot.free_next;
+        }
+        let unused = self.allocated_slots().saturating_sub(self.initialized as usize);
+        let next_page = if unused == 0 && self.page_count < u32::MAX { ARTIFACT_HISTORY_PAGE_SLOTS } else { 0 };
+        vacancies + unused + next_page
+    }
+
+    pub fn has_capacity(&self) -> bool {
+        self.group.is_none() && self.reservation.is_none() && (self.free_head.is_some_and(|index| self.slot(index).generation != u32::MAX) || (self.initialized as usize) < self.allocated_slots() || self.page_count < u32::MAX)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn iter(&self) -> ArtifactHistoryIter<'_, T> {
+        let (front, back, remaining) = self.visible_bounds();
+        ArtifactHistoryIter { ledger: self, front, back, remaining }
+    }
+
+    pub fn iter_mut(&mut self) -> ArtifactHistoryIterMut<'_, T> {
+        assert!(self.group.is_none(), "mutable history iteration requires its staged group to be adopted or aborted");
+        ArtifactHistoryIterMut { ledger: self, front: self.head, back: self.tail, remaining: self.len, marker: std::marker::PhantomData }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.head.is_none() && self.tail.is_none() && self.reservation.is_none() && self.group.is_none()
+    }
+
+    /// 🪹️ Observes the original native backing after logical entry ownership has left.
+    pub fn backing_is_empty(&self) -> bool { self.pages.is_none() && self.page_count == 0 }
+
+    /// 🧮️ Observes initialized original headers still retaining their slot visibility leases.
+    pub fn retained_terminal_slot_count(&self) -> usize { self.initialized as usize }
+
+    /// 👁️ Borrows the exact next slot visibility without copying or transferring its Arc.
+    pub fn next_terminal_slot_visibility(&self) -> Result<Option<&std::sync::Arc<ArtifactGroupVisibility>>, ValueError> {
+        if !self.terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history ledger still retains logical entry owners")); }
+        if self.initialized == 0 { return Ok(None); }
+        let slot = self.slot(self.initialized - 1);
+        if slot.value.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "terminal history header still contains its original value")); }
+        Ok(slot.visibility.as_ref())
+    }
+
+    /// 🎟️ Transfers at most one original empty slot's visibility after item and depth admission.
+    pub fn retire_terminal_slot(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Option<std::sync::Arc<ArtifactGroupVisibility>>, semio_framework_value::retained_clone::RetainedCloneProgress), ValueError> {
+        self.next_terminal_slot_visibility()?;
+        if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "history slot retirement requires one admitted item")); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history slot retirement requires original owner depth")); }
+        if self.initialized == 0 { return Ok((None, Default::default())); }
+        let index = self.initialized - 1;
+        let visibility = self.slot_mut(index).visibility.take();
+        self.initialized = index;
+        self.free_head = None;
+        self.forget_seek();
+        Ok((visibility, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+    }
+
+    /// 📏️ Declares the actual last slot slice, page shell, and separately owned empty directory.
+    pub fn next_empty_page_release_byte_demand(&self) -> Result<usize, ValueError> {
+        if !self.terminal_is_empty() || self.initialized != 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history page retains original entry or visibility headers")); }
+        if self.backing_is_empty() { return Ok(0); }
+        let index = self.page_count.checked_sub(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history directory has no corresponding page"))? as usize;
+        let mut chunk = self.pages.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history page lost its original directory"))?;
+        for _ in 0..index / ARTIFACT_HISTORY_DIRECTORY_PAGES { chunk = chunk.next.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history page directory chain is incomplete"))?; }
+        let offset = index % ARTIFACT_HISTORY_DIRECTORY_PAGES;
+        if chunk.next.is_some() || usize::from(chunk.count) != offset + 1 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history page directory differs from its actual last allocation")); }
+        let page = chunk.pages[offset].as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history page slot backing is absent"))?;
+        let slots = std::alloc::Layout::array::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>(page.slots.len()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history slot backing layout overflow"))?.size();
+        slots.checked_add(size_of::<ArtifactHistorySlotPage<T>>()).and_then(|bytes| bytes.checked_add(if offset == 0 { size_of::<ArtifactHistoryPageChunk<T>>() } else { 0 })).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history page whole release extent overflow"))
+    }
+
+    /// ♻️ Releases one real native page only after its visibility owners and full release grant.
+    pub fn release_empty_page(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        let empty = RetainedCloneProgress::default();
+        let demand = self.next_empty_page_release_byte_demand()?;
+        if self.backing_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 || grant.maximum_release_bytes < demand { return Ok(RetainedCloneStep::Progress(empty)); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history page release requires original owner depth")); }
+        let index = self.page_count as usize - 1;
+        let directory = index / ARTIFACT_HISTORY_DIRECTORY_PAGES;
+        let offset = index % ARTIFACT_HISTORY_DIRECTORY_PAGES;
+        let mut chunk = self.pages.as_mut().unwrap();
+        for _ in 0..directory { chunk = chunk.next.as_mut().unwrap(); }
+        drop(chunk.pages[offset].take());
+        chunk.count -= 1;
+        if offset == 0 {
+            if directory == 0 { drop(self.pages.take()); }
+            else {
+                let mut previous = self.pages.as_mut().unwrap();
+                for _ in 0..directory - 1 { previous = previous.next.as_mut().unwrap(); }
+                drop(previous.next.take());
+            }
+        }
+        self.page_count -= 1;
+        let progress = RetainedCloneProgress { copied_items: 1, released_bytes: demand, ..empty };
+        Ok(if self.backing_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+    }
+
+}
+
+impl<T> Drop for ArtifactHistoryLedger<T> {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "artifact history ledger reached Drop before every exact entry owner was retired");
+        unsafe { std::mem::ManuallyDrop::drop(&mut self.pages) };
+    }
+}
+
+/// 🧬️ Rebuilds a fresh, independent ledger from every currently-visible entry (mirrors `Serialize`'s
+/// own `read_group`-scoped view) — a pending, uncommitted group's staged entries clone away exactly
+/// as they already serialize away, since a clone is just another reader. `try_from_preflighted` can
+/// only fail when the page address space is exhausted, which an already-admitted source ledger never does.
+impl<T: Clone> Clone for ArtifactHistoryLedger<T> {
+    fn clone(&self) -> Self {
+        Self::try_from_preflighted(self.iter().cloned().collect()).unwrap_or_else(|_| unreachable!("a source ledger's own entries never exhaust its page address space"))
+    }
+}
+
+/// 🧬️ `ToValue`/`FromValue` for `ArtifactHistoryLedger<T>` — serde's own `Serialize`/`Deserialize`
+/// were dropped from this type (see the `Change` struct's docstring above); this is now the only
+/// codec. Same admission path (`try_from_preflighted`) every other ledger construction uses.
+impl<T: ToValue> ToValue for ArtifactHistoryLedger<T> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+    }
+}
+
+impl<T: FromValue> FromValue for ArtifactHistoryLedger<T> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let values = Vec::<T>::from_value(value)?;
+        Self::try_from_preflighted(values).map_err(|rejected| ValueError::new(protocol::value::ValueRefusalKind::OwnershipLimit,format!("a history ledger within its page address space ({} entries rejected)", rejected.len())))
+    }
+}
+
+pub struct ArtifactHistoryIter<'a, T> {
+    ledger: &'a ArtifactHistoryLedger<T>,
+    front: Option<u32>,
+    back: Option<u32>,
+    remaining: usize,
+}
+
+impl<T> Clone for ArtifactHistoryIter<'_, T> {
+    fn clone(&self) -> Self {
+        Self { ledger: self.ledger, front: self.front, back: self.back, remaining: self.remaining }
+    }
+}
+
+/// 🧬️ `ToValue` for `ArtifactHistoryIter` — serde's own `Serialize` was dropped from this type
+/// (see the `Change` struct's docstring above). This is the exact shape `ArtifactVcsRead` (below)
+/// needs for each of its four group-visibility-consistent fields.
+impl<T: ToValue> ToValue for ArtifactHistoryIter<'_, T> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.clone().map(ToValue::to_value).collect())
+    }
+}
+
+impl<'a, T> Iterator for ArtifactHistoryIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+        let index = self.front?;
+        let slot = self.ledger.slot(index);
+        self.front = slot.next;
+        self.remaining -= 1;
+        slot.value.as_ref()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.remaining, Some(self.remaining))
+    }
+}
+
+impl<T> DoubleEndedIterator for ArtifactHistoryIter<'_, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+        let index = self.back?;
+        let slot = self.ledger.slot(index);
+        self.back = slot.previous;
+        self.remaining -= 1;
+        slot.value.as_ref()
+    }
+}
+
+impl<T> ExactSizeIterator for ArtifactHistoryIter<'_, T> {}
+
+pub struct ArtifactHistoryIterMut<'a, T> {
+    ledger: *mut ArtifactHistoryLedger<T>,
+    front: Option<u32>,
+    back: Option<u32>,
+    remaining: usize,
+    marker: std::marker::PhantomData<&'a mut T>,
+}
+
+impl<'a, T> Iterator for ArtifactHistoryIterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+        let index = self.front?;
+        let slot = unsafe { (*self.ledger).slot_mut(index) };
+        self.front = slot.next;
+        self.remaining -= 1;
+        slot.value.as_mut().map(|value| unsafe { &mut *(value as *mut T) })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.remaining, Some(self.remaining))
+    }
+}
+
+impl<T> DoubleEndedIterator for ArtifactHistoryIterMut<'_, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+        let index = self.back?;
+        let slot = unsafe { (*self.ledger).slot_mut(index) };
+        self.back = slot.previous;
+        self.remaining -= 1;
+        slot.value.as_mut().map(|value| unsafe { &mut *(value as *mut T) })
+    }
+}
+
+impl<T> ExactSizeIterator for ArtifactHistoryIterMut<'_, T> {}
+
+impl<'a, T> IntoIterator for &'a ArtifactHistoryLedger<T> {
+    type Item = &'a T;
+    type IntoIter = ArtifactHistoryIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a, T> IntoIterator for &'a mut ArtifactHistoryLedger<T> {
+    type Item = &'a mut T;
+    type IntoIter = ArtifactHistoryIterMut<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
+impl<T> std::ops::Index<usize> for ArtifactHistoryLedger<T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.get(index).expect("artifact history index outside the live deterministic order")
+    }
+}
+
+impl<T> std::ops::IndexMut<usize> for ArtifactHistoryLedger<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.get_mut(index).expect("artifact history index outside the live deterministic order")
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for ArtifactHistoryLedger<T> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_list().entries(self.iter()).finish()
+    }
+}
+
+impl<T: PartialEq> PartialEq for ArtifactHistoryLedger<T> {
+    fn eq(&self, other: &Self) -> bool {
+        let left = self.iter();
+        let right = other.iter();
+        left.len() == right.len() && left.zip(right).all(|(left, right)| left == right)
+    }
+}
+
+impl<T: Eq> Eq for ArtifactHistoryLedger<T> {}
+
+// 🎞️ `Serialize`/`Deserialize` dropped — see the docstring above `Change`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ArtifactVcs<P, Mutation> {
+    pub genesis: P,
+    pub edits: ArtifactHistoryLedger<Edit<Mutation>>,
+    pub changes: ArtifactHistoryLedger<Change>,
+    pub checkpoints: ArtifactHistoryLedger<Checkpoint>,
+    pub alternatives: ArtifactHistoryLedger<Alternative>,
+}
+
+impl<P: FromValue, Mutation: FromValue> FromValue for ArtifactVcs<ArtifactGenesis<P>, Mutation> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Object(fields) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "VCS requires an object")); };
+        let mut admitted = std::collections::BTreeMap::new();
+        for (key, value) in fields { if admitted.insert(key, value).is_some() { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "VCS repeats a field")); } }
+        let mut fields = admitted;
+        let mut take = |key: &str| fields.remove(key).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("VCS missing {key}")));
+        let genesis = ArtifactGenesis::from_value(take("genesis")?)?;
+        let edits = ArtifactHistoryLedger::from_value(take("edits")?)?;
+        let changes = ArtifactHistoryLedger::from_value(take("changes")?)?;
+        let checkpoints = ArtifactHistoryLedger::from_value(take("checkpoints")?)?;
+        let alternatives = ArtifactHistoryLedger::from_value(take("alternatives")?)?;
+        if !fields.is_empty() { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "VCS has unknown fields")); }
+        Ok(Self { genesis, edits, changes, checkpoints, alternatives })
+    }
+}
+
+pub struct ArtifactVcsRead<'a, P, Mutation> {
+    genesis: &'a P,
+    edits: ArtifactHistoryIter<'a, Edit<Mutation>>,
+    changes: ArtifactHistoryIter<'a, Change>,
+    checkpoints: ArtifactHistoryIter<'a, Checkpoint>,
+    alternatives: ArtifactHistoryIter<'a, Alternative>,
+}
+
+/// 🧬️ Projects logical admitted genesis facts and the history decision captured by this read.
+impl<P: ArtifactGenesisWitness, Mutation: ToValue> ToValue for ArtifactVcsRead<'_, P, Mutation> where P::Snapshot:ToValue {
+    fn to_value(&self) -> DslValue {
+        DslValue::Object(vec![
+            ("genesis".to_string(), self.genesis.genesis_facts().to_value()),
+            ("edits".to_string(), self.edits.to_value()),
+            ("changes".to_string(), self.changes.to_value()),
+            ("checkpoints".to_string(), self.checkpoints.to_value()),
+            ("alternatives".to_string(), self.alternatives.to_value()),
+        ])
+    }
+}
+
+impl<P, Mutation> ArtifactVcs<P, Mutation> {
+    pub fn group_visibility(&self) -> Result<Option<&ArtifactGroupVisibility>, ()> {
+        let mut visibility: Option<&ArtifactGroupVisibility> = None;
+        for candidate in [self.edits.group_visibility(), self.changes.group_visibility(), self.checkpoints.group_visibility(), self.alternatives.group_visibility()].into_iter().flatten() {
+            if visibility.is_some_and(|owner| !std::ptr::eq(owner, candidate)) {
+                return Err(());
+            }
+            visibility = Some(candidate);
+        }
+        Ok(visibility)
+    }
+
+    pub fn read_group(&self, decision: Option<&ArtifactGroupReadDecision<'_>>) -> Result<ArtifactVcsRead<'_, P, Mutation>, ()> {
+        Ok(ArtifactVcsRead {
+            genesis: &self.genesis,
+            edits: self.edits.read_group(decision)?,
+            changes: self.changes.read_group(decision)?,
+            checkpoints: self.checkpoints.read_group(decision)?,
+            alternatives: self.alternatives.read_group(decision)?,
+        })
+    }
+}
+
+/// 🧬️ `ToValue` for `ArtifactVcs` — serde's own `Serialize` was dropped from this type (see the
+/// `Change` struct's docstring above). No `Result`, unlike the old `serde::Serializer` path, so
+/// the two invariant violations that path reported via `Error::custom` (a torn group-visibility
+/// authority across the four ledgers, or losing the captured decision between the two calls) become
+/// panics here instead — both are "cannot happen" internal-consistency bugs, never a caller input
+/// error, matching this same file's existing `.expect(...)` style for slot-authority invariants.
+impl<P: ArtifactGenesisWitness, Mutation: ToValue> ToValue for ArtifactVcs<P, Mutation> where P::Snapshot:ToValue {
+    fn to_value(&self) -> DslValue {
+        let decision = self.group_visibility().expect("a single ArtifactVcs never spans two different group visibility authorities").map(ArtifactGroupVisibility::capture);
+        self.read_group(decision.as_ref()).expect("the just-captured decision remains valid for the immediately following read").to_value()
+    }
+}
+//#endregion 🔖️Schemas
+//#region 🔖️Errors
+// 🎞️ `Eq` dropped: `Rejected` below carries
+// `Vec<protocol::MutationMessage>`, and `MutationMessage` itself only derives `PartialEq`
+// (not `Eq`) — see `📡️spr/🎮️command`'s `🔖️Message` region.
+#[derive(Debug, PartialEq, semio_framework_value::RetireOwned)]
+pub enum VcsError {
+    UnknownEdit(String),
+    UnknownChange(String),
+    UnknownAlternative(String),
+    NoCheckpoint,
+    EmptyApply,
+    MutationApply(MutationApplyError),
+    InverseRefused(ValueError),
+    NativeEncoding(ValueError),
+    NothingToUndo,
+    ForeignEdit(String),
+    NothingToRedo,
+    Serialize(String),
+    Deserialize(String),
+    Backbone(String),
+    /// 🧬️ A migration/replay/merge was attempted across two envelopes/mutations whose
+    /// `dialect` coordinates don't match (see `crate::os_store::store_schema::ArtifactEnvelope::dialect`, `26/08/10` D4
+    /// evolution slice). Not yet raised by any call site in this pass — additive only.
+    DialectMismatch(String),
+    /// 🧬️ An operation needs a dialect migration to run first (see `crate::os_store::codec_registry::migrate_document`)
+    /// before it can proceed. Not yet raised by any call site in this pass — additive only.
+    MigrationRequired(String),
+    /// 🧬️ A registered dialect migration ran but failed. Not yet raised by any call site in
+    /// this pass — additive only.
+    MigrationFailed(String),
+    /// 🔁️ A composition-pin graph traversal (parent → child → …) found a cycle back to an
+    /// ancestor — an owned-child forest must stay acyclic. Raised by `crate::os_store::composition_coordinator::CompositionGraph::
+    /// would_cycle_owns`/`would_cycle_links` via `crate::os_store::composition_coordinator::CompositionCoordinator::dispatch_group`'s
+    /// phase-1 validation (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` `🔖️CompositionCoordinator`, wave B2).
+    CompositionCycle(String),
+    /// 🚫️ An operation would violate composition's single-ownership invariant (e.g.
+    /// adopting a child that already has a different owner, or dispatching to a child a group's
+    /// stated parent does not actually own). Raised by `crate::os_store::composition_coordinator::CompositionGraph::insert_owns` and
+    /// `crate::os_store::composition_coordinator::CompositionCoordinator::dispatch_group`'s phase-1 ownership check.
+    OwnershipViolation(String),
+    /// 🛂️ A structural failure rejected an operation during
+    /// `crate::os_store::composition_coordinator::CompositionCoordinator::dispatch_group`'s phase-1 pass (or the object-safe
+    /// `store::SpaceMember::preview_wire`/`dispatch_wire` bridge that pass uses) — the group is
+    /// aborted with zero side effects anywhere. Reserved for structural failures only (ticket
+    /// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6): an ordinary
+    /// mutation-level rejection now travels as a `MutationMessage` on the op's own
+    /// `MutationOutcome`, never through this variant. Additive; not raised anywhere else in this
+    /// crate (every other command path reports its own more specific `VcsError` variant).
+    ValidationFailed(String),
+    /// 🧯️ A `CompositionCoordinator::dispatch_group` call failed AFTER some members were
+    /// already applied, and the reverse-order `Undo` compensation pass (see that method's doc
+    /// comment) itself failed on at least one member — i.e. the group could not be fully rolled
+    /// back. The message embeds a human-readable rollback report (which members compensated
+    /// cleanly, which did not, and why) so a caller can surface/log the exact partial state rather
+    /// than silently losing it. This is the one path in this crate where a command's Result can
+    /// legitimately leave a multi-member gesture inconsistent — every other `VcsError` variant is
+    /// raised BEFORE any mutation lands.
+    CompensationFailed(String),
+    /// 🛑️ A command was rejected WHOLESALE by the authority's own `protocol::MergePolicy`
+    /// — nothing in the command was applied (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
+    /// CLASS-CONFLICTS` §C6). Carries the policy that rejected it and every message the rejected
+    /// replay produced, so a caller can explain the rejection without re-running anything.
+    /// `ValidationFailed` survives ONLY for structural failures now — an ordinary mutation-level
+    /// rejection travels through this variant instead.
+    Rejected {
+        policy: protocol::MergePolicy,
+        messages: Vec<protocol::MutationMessage>,
+    },
+    /// ❓️ `store::ArtifactStore::resolve_conflict` was called with an id that names no
+    /// currently-`Open` conflict on this store.
+    UnknownConflict(String),
+    /// ⌛️ A result computed against store generation `expected_generation` (a finished history replay) was offered
+    /// after the store moved on to `generation`; the caller computes it again against the live state.
+    Stale { expected_generation: u64, generation: u64 },
+    /// 🗂️ A history transition of `kind` was authored on, or offered to, a store whose history `shape` does not hold it —
+    /// a config store's history holds undo and redo only. Refused before anything was recorded.
+    HistoryShape { shape: protocol::HistoryShape, kind: protocol::HistoryTransitionKind },
+    /// 🎞️ The tool transaction `transaction_id` is open on this store: until its commit or abort only its own appends, a
+    /// remote ingest and a merge-policy change run — nothing else may interleave with its open edit.
+    TransactionOpen { transaction_id: String },
+    /// 🕳️ A commit, abort or append named a tool transaction that is not the one open on this store.
+    UnknownTransaction(String),
+    /// 🧱️ The document's edit history holds `capacity` edits and is full: the edit was refused before anything was recorded.
+    HistoryFull { capacity: usize },
+    /// 🐢️ A local history step (undo, redo, checkout, alternative switch, checkpoint or supersession) still replays across
+    /// turns on this store: no other history step may be authored before it is adopted or discarded.
+    HistoryReplaying,
+    /// 🐘️ A gesture's edit needs `rows` staged rows (forwards plus inverses) where at most `capacity` are admitted — the one-item
+    /// ceiling, or the rows its leaves declare (`x-semio-inverse-rows`, design §20.5). Refused before anything was recorded.
+    TooLarge { rows: usize, capacity: usize },
+    /// 🧷️ The operation `mutation_id` belongs to the cross-artifact unit `unit`: it planned steps in other documents, or it is
+    /// such a step. A unit is superseded in all of its documents at once, which no replica can do yet, so the supersession
+    /// was refused before anything was recorded.
+    UnitSpansDocuments { mutation_id: String, unit: String },
+}
+
+impl std::fmt::Display for VcsError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownEdit(id) => write!(formatter, "unknown edit id: {id}"),
+            Self::UnknownChange(id) => write!(formatter, "unknown change id: {id}"),
+            Self::UnknownAlternative(id) => write!(formatter, "unknown alternative id: {id}"),
+            Self::NoCheckpoint => formatter.write_str("no checkpoint for alternative"),
+            Self::EmptyApply => formatter.write_str("empty apply command"),
+            Self::MutationApply(error) => write!(formatter, "mutation diff rejected: {error}"),
+            Self::InverseRefused(error) => write!(formatter, "mutation inverse refused: {error}"),
+            Self::NativeEncoding(error) => write!(formatter, "native encoding refused: {error}"),
+            Self::NothingToUndo => formatter.write_str("nothing to undo"),
+            Self::ForeignEdit(id) => write!(formatter, "cannot undo edit authored by another actor: {id}"),
+            Self::NothingToRedo => formatter.write_str("nothing to redo"),
+            Self::Serialize(message) => write!(formatter, "serialize error: {message}"),
+            Self::Deserialize(message) => write!(formatter, "deserialize error: {message}"),
+            Self::Backbone(message) => write!(formatter, "backbone error: {message}"),
+            Self::DialectMismatch(message) => write!(formatter, "dialect mismatch: {message}"),
+            Self::MigrationRequired(message) => write!(formatter, "migration required: {message}"),
+            Self::MigrationFailed(message) => write!(formatter, "migration failed: {message}"),
+            Self::CompositionCycle(message) => write!(formatter, "composition cycle: {message}"),
+            Self::OwnershipViolation(message) => write!(formatter, "ownership violation: {message}"),
+            Self::ValidationFailed(message) => write!(formatter, "validation failed: {message}"),
+            Self::CompensationFailed(message) => write!(formatter, "group dispatch failed and rollback also failed: {message}"),
+            Self::Rejected { policy, .. } => write!(formatter, "rejected by merge policy {policy:?}"),
+            Self::UnknownConflict(id) => write!(formatter, "unknown conflict id: {id}"),
+            Self::Stale { expected_generation, generation } => write!(formatter, "stale result: computed at generation {expected_generation}, store is at {generation}"),
+            Self::HistoryShape { shape, kind } => write!(formatter, "a {} history holds no {} transition", shape.name(), kind.name()),
+            Self::TransactionOpen { transaction_id } => write!(formatter, "tool transaction {transaction_id} is open on this store"),
+            Self::UnknownTransaction(transaction_id) => write!(formatter, "tool transaction {transaction_id} is not open on this store"),
+            Self::HistoryFull { capacity } => write!(formatter, "the edit history holds at most {capacity} edits and is full"),
+            Self::HistoryReplaying => formatter.write_str("a history step still replays on this store"),
+            Self::TooLarge { rows, capacity } => write!(formatter, "the edit needs {rows} staged rows where at most {capacity} are admitted"),
+            Self::UnitSpansDocuments { mutation_id, unit } => write!(formatter, "operation {mutation_id} belongs to the cross-artifact unit {unit}, which one document alone cannot supersede"),
+        }
+    }
+}
+
+impl std::error::Error for VcsError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::MutationApply(error) => Some(error),
+            Self::InverseRefused(error) => Some(error),
+            Self::NativeEncoding(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<ValueError> for VcsError {fn from(error:ValueError)->Self{Self::NativeEncoding(error)}}
+
+impl From<MutationApplyError> for VcsError {
+    fn from(error: MutationApplyError) -> Self {
+        Self::MutationApply(error)
+    }
+}
+
+/// 🚨️ Every `VcsError` is a module fault; the refusals a runtime surfaces as their own notices carry their own codes:
+/// `toolTransaction.open`, `toolTransaction.unknown`, `history.full` (its capacity the notice's `{n}` param),
+/// `history.replaying`, `mutation.too-large` and `history.unit-spans-documents`.
+impl semio_framework_diagnostic::FaultFrom for VcsError {
+    fn fault_origin(&self) -> semio_framework_diagnostic::FaultOrigin {
+        semio_framework_diagnostic::FaultOrigin::Module
+    }
+
+    fn fault_code(&self) -> semio_framework_diagnostic::FaultCode {
+        semio_framework_diagnostic::FaultCode::new(match self {
+            Self::TransactionOpen { .. } => "toolTransaction.open",
+            Self::UnknownTransaction(_) => "toolTransaction.unknown",
+            Self::HistoryFull { .. } => "history.full",
+            Self::HistoryReplaying => "history.replaying",
+            Self::TooLarge { .. } => "mutation.too-large",
+            Self::UnitSpansDocuments { .. } => "history.unit-spans-documents",
+            _ => "module.vcs",
+        })
+    }
+
+    fn fault_severity(&self) -> semio_framework_diagnostic::Severity {
+        semio_framework_diagnostic::Severity::Error
+    }
+
+    fn fault_message(&self) -> String {
+        self.to_string()
+    }
+
+    fn fault_params(&self) -> semio_framework_diagnostic::FaultParams {
+        match self {
+            Self::HistoryFull { capacity } => semio_framework_diagnostic::FaultParams(vec![("n".to_string(), capacity.to_string())]),
+            _ => semio_framework_diagnostic::FaultParams::default(),
+        }
+    }
+}
+
+//#endregion 🔖️Errors
+//#region 🔖️CollectionDiff
+/// 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`).
+///
+/// 🎞️ Canonical collection patch entry for sparse collection diffs (re-exported by `crate::os_spr`).
+#[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct ItemPatch<TId, TPatch> {
+    pub id: TId,
+    pub patch: TPatch,
+}
+
+/// 🧩️ Sparse collection diff (mirrors semio_compose_rs `XCollectionDiff`).
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct CollectionDiff<TId, TPatch, TAdded> {
+    pub removed: Vec<TId>,
+    pub modified: Vec<ItemPatch<TId, TPatch>>,
+    pub added: Vec<TAdded>,
+}
+
+impl<TId, TPatch, TAdded> Default for CollectionDiff<TId, TPatch, TAdded> {
+    fn default() -> Self {
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+    }
+}
+//#endregion 🔖️CollectionDiff
+
+//#region 🔖️Identified
+/// 🏷️ Identifies an item within a `Vec` by a stable id, for generic collection operations.
+pub trait Identified<TId> {
+    // 🚫️async: E1 pure accessor — every real caller is a std `Iterator`/`Vec` closure
+    // (`retain`/`position`/`find`), `FnMut(&T) -> bool` signature fixed outside this repo and
+    // cannot be async — see R9, R10 residue shape #1. Two of the three known implementors
+    // (🌊️flow/🌿️vcs, ♾️infinite/…/dag) already converged on sync independently.
+    fn id(&self) -> &TId;
+}
+
+/// 🩹️ Applies a patch in place.
+pub trait Patchable<TPatch>: Sized {
+    fn apply_patch(&mut self, patch: &TPatch);
+}
+//#endregion 🔖️Identified
+//#region 🔖️Mutation
+// 🎞️ `Mutation`/`MutationDiff`/`MutationMessage` live in `protocol_command`; this region just
+// replays a snapshot through an operation's forward diff — the pure per-step transform every
+// store-level replay uses.
+
+/// ▶️ Computes `operation.diff(snapshot)`, applies the resulting diff, and returns the new
+/// snapshot alongside every [`protocol::MutationMessage`] the outcome carried. Diff-apply
+/// rejection is returned as its structured [`MutationApplyError`] before a snapshot is produced. A `Fatal`
+/// message's diff is `D::default()` by construction (§C2 LAW 1), so applying it is always a no-op —
+/// callers that must not silently apply a rejected op check `worst_level(&messages)` against their
+/// `MergePolicy` themselves (this fn stays policy-agnostic, matching its old unconditional-apply
+/// shape).
+pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> Result<(P, Vec<protocol::MutationMessage>), MutationApplyError>
+where
+    Mutation: self::Mutation<P>,
+{
+    let (diff, messages) = operation.diff(snapshot).into_parts();
+    let applied = protocol::apply_diff(&diff, snapshot);
+    MutationDiff::retire_cold(diff);
+    Ok((applied?, messages))
+}
+
+//#endregion 🔖️Mutation
+
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️fault-params/🦀️.rs"]
+mod fault_params_tests;
+//#endregion 🧪️Tests
+
+#[path="🚪️io/🦀️.rs"]
+pub mod io;

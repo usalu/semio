@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import sharp from "sharp";
 import { editSelection, maskLayers, pixelLayers, layerPoint, selectionSpans, selectionBounds, type SelectionScanOptions } from "../🟦️.ts";
-import fixtures from "../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json";
+import { surfacePaintEditingFixture as fixtures, paintStrokeRevisionFixture as revisions, paintMaskStrokeFixture as maskStrokes } from "../../../../../../../../../🔨️modules/🗺️surface/🧪️tests/🧫️fixtures/🟦️.ts";
 
 for(const fixture of fixtures.cases) test(fixture.name,()=>{
   const [layer]=pixelLayers(JSON.stringify(fixture.document),JSON.stringify(fixture.assets));
@@ -138,7 +138,6 @@ test("selection editing rejects invalid extents before allocating",async()=>{
 });
 
 import patch,{type Operation} from "fast-json-patch";
-import revisions from "../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🖌️stroke-revision/🔣️.json";
 import {pixelGestureRevision} from "../🟦️.ts";
 for(const row of revisions.cases)test("stroke revision "+row.name,()=>{
   const before=pixelLayers(JSON.stringify(revisions.document))[0];
@@ -147,7 +146,6 @@ for(const row of revisions.cases)test("stroke revision "+row.name,()=>{
   expect(pixelGestureRevision(before)!==pixelGestureRevision(after)||row.utility!=="paintBrush").toBe(row.cancel);
 });
 
-import maskStrokes from "../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🎭️mask-stroke/🔣️.json";
 import {Matrix3,Vector2} from "three";
 for(const row of maskStrokes.cases)test("shared mask stroke "+row.name,async()=>{
   const [layer]=maskLayers(JSON.stringify(row.document),JSON.stringify(row.assets));

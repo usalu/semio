@@ -3,10 +3,10 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | World3dHost}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { publishedPageUrl } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { publishedPageUrl } from "@semio-tech/framework/assets/published-page";
 import React, { useEffect, useLayoutEffect, useMemo } from "react";
-import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
-import { MESH_DELIVERY_CATALOG } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/📇️catalog/🟦️.ts";
+import { meshAssetTransportUrl } from "@semio-tech/framework/assets/mesh";
+import { MESH_DELIVERY_CATALOG } from "@semio-tech/framework/assets/mesh";
 // #region 🔌️Adapters
 import {
   BufferAttribute,

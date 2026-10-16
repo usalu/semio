@@ -1,9 +1,105 @@
 {
-  "$schema":"http://json-schema.org/draft-07/schema#",
-  "$id":"https://semio.tech/framework/process/native-image-cleanup-state/v1",
-  "definitions":{
-    "FundingRequest":{"type":"object","additionalProperties":false,"required":["version","acceptedAtMilliseconds","wholeDeadlineMilliseconds","reserveMilliseconds"],"properties":{"version":{"const":1},"acceptedAtMilliseconds":{"type":"number","minimum":0,"maximum":9007199254740991},"wholeDeadlineMilliseconds":{"type":"number","minimum":0,"maximum":9007199254740991},"reserveMilliseconds":{"const":10000}}},
-    "Funding":{"type":"object","additionalProperties":false,"required":["version","acceptedAtMilliseconds","wholeDeadlineMilliseconds","bodyDeadlineMilliseconds","reserveMilliseconds"],"properties":{"version":{"const":1},"acceptedAtMilliseconds":{"type":"number","minimum":0,"maximum":9007199254740991},"wholeDeadlineMilliseconds":{"type":"number","minimum":0,"maximum":9007199254740991},"bodyDeadlineMilliseconds":{"type":"number","minimum":0,"maximum":9007199254740991},"reserveMilliseconds":{"const":10000}}}
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/native-image-cleanup-state/v1",
+  "definitions": {
+    "FundingRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "acceptedAtMilliseconds",
+        "wholeDeadlineMilliseconds",
+        "reserveMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "acceptedAtMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "wholeDeadlineMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "reserveMilliseconds": {
+          "const": 10000
+        }
+      }
+    },
+    "Funding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "acceptedAtMilliseconds",
+        "wholeDeadlineMilliseconds",
+        "bodyDeadlineMilliseconds",
+        "reserveMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "acceptedAtMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "wholeDeadlineMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "bodyDeadlineMilliseconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "reserveMilliseconds": {
+          "const": 10000
+        }
+      }
+    },
+    "Preparation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "failed",
+        "pendingCommands",
+        "pendingOperations",
+        "acknowledged",
+        "bodyOpen"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "failed": {
+          "type": "boolean"
+        },
+        "pendingCommands": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pendingOperations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "acknowledged": {
+          "type": "boolean"
+        },
+        "bodyOpen": {
+          "type": "boolean"
+        }
+      }
+    }
   },
-  "$ref":"#/definitions/FundingRequest"
+  "$ref": "#/definitions/FundingRequest"
 }

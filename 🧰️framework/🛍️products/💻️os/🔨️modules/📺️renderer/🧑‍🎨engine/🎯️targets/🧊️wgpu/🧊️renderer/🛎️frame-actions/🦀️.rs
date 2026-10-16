@@ -15,7 +15,7 @@ pub struct RuntimeDispatchCursor {
     pub inflight: Option<ui_render::DispatchEvent>,
 }
 
-pub struct RuntimeDispatchSource{original:semio_framework_job::OriginalCallerSourceLoan,epoch:u64}
+pub struct RuntimeDispatchSource{original:semio_framework_job::OriginalCallerSourceLoan,pub epoch:u64}
 impl RuntimeDispatchSource{
     pub fn admit(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{let epoch=cx.original_source_epoch().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch source requires its actual admitted input epoch"))?;let parent=cx.original_source_parent()?;Ok(parent.admit_loan(cx)?.map(|original|Self{original,epoch}))}
     fn original_clock_source(&self)->Result<(u64,fn()->Option<u64>,u64),semio_framework_value::ValueError>{self.original.original_clock_source()}
@@ -55,9 +55,9 @@ impl RuntimeDispatchCursor {
         None
     }
 
-    fn validate_original(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{let original=self.original.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch cursor original source has closed"))?;original.validate_context(cx)}
+    pub fn validate_original(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{let original=self.original.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch cursor original source has closed"))?;original.validate_context(cx)}
 
-    fn events_terminal_is_empty(&self)->bool{self.inflight.is_none()&&self.events.pointer_move.is_none()&&self.events.metrics.is_none()&&self.events.discrete.iter().all(Option::is_none)}
+    pub fn events_terminal_is_empty(&self)->bool{self.inflight.is_none()&&self.events.pointer_move.is_none()&&self.events.metrics.is_none()&&self.events.discrete.iter().all(Option::is_none)}
 
     pub fn close_inflight_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let Some(event)=self.inflight.as_ref()else{return Ok(true)};self.validate_original(cx)?;let remaining=cx.retained_grant();let released_bytes=dispatch_event_retained_capacity(event);let depth=match event{ui_render::DispatchEvent::Accessibility{..}=>4,_=>2};if cx.should_yield()||remaining.maximum_items==0||remaining.maximum_release_bytes<released_bytes||remaining.maximum_depth<depth{return Ok(false)}
@@ -126,7 +126,7 @@ impl Drop for FrameActionReceiptOwner {
 }
 
 impl FrameActionEnvelope {
-    fn cancel(self) {
+    pub fn cancel(self) {
         if let Some(receipt) = self.receipt {
             settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
         }
@@ -540,7 +540,7 @@ impl FrameDeferredCursor {
     }
 
     #[cfg(any(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
-    fn return_shell_maintenance(&mut self) {
+    pub fn return_shell_maintenance(&mut self) {
         self.phase = 0;
         self.shell_maintenance = true;
         self.closing = false;

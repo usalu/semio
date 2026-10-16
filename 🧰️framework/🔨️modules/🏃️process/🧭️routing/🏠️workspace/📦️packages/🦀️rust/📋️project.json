@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/process-routing-workspace-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

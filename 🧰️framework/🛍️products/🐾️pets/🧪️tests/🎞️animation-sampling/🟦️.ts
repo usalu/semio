@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🎞️animation/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { BLINK_TICKS, blendPose, clipTicks, easeBezier, lidAt, sampleClip, sampleTrack } from "../../🔨️modules/🎞️animation/🟦️.ts";
 import type { Pose } from "../../🔨️modules/🦴️rig/🟦️.ts";
 import type { Clip, Ease, Species, Track } from "../../🧬️schema/🟦️.ts";

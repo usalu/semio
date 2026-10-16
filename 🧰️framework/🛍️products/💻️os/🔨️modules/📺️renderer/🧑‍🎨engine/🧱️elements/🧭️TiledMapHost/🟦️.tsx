@@ -7,7 +7,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { publishedPageUrl } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { publishedPageUrl } from "@semio-tech/framework/assets/published-page";
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import {
   useLabel,
@@ -29,7 +29,7 @@ import {
 } from "@semio-tech/ui-react";
 import { GestureRecognizer, applyPinchToCamera, type ComponentSceneHostProps, type MergeMode } from "@semio-tech/framework";
 import { type MapWasmSession, createMapSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
-import { EASED_SURFACE_TRAILING_WINDOW_MS, createDemandFrameScheduler } from "@semio-tech/canvas-react-renderer";
+import { EASED_SURFACE_TRAILING_WINDOW_MS, createDemandFrameScheduler } from "@semio-tech/framework/canvas/react-renderer";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`🟦️Interpreter` already landed in a prior batch.
 import { useMapContextMenuSpecs, useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
@@ -1236,7 +1236,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
         const feature = queryHitFeature(point);
         const hits = feature ? [{ domain: feature.kind, id: feature.id }] : [];
         const selection = parseMapLayerIds(scene.selectionJson);
-        const selectionGroups = overlayIndex.layers.flatMap((layer) => (layer.granularity && (selection[layer.id]?.length ?? 0) > 0 ? [{ domain: layer.granularity, ids: [...selection[layer.id]] }] : []));
+        const selectionGroups=overlayIndex.layers.flatMap(layer=>{const ids=selection[layer.id];return layer.granularity&&ids&&ids.length>0?[{domain:layer.granularity,ids:[...ids]}]:[];});
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {

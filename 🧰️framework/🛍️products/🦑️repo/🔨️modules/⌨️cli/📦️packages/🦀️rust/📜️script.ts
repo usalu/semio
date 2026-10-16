@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {runDeclaredRustBuildV1} from "../../../📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts";
 import {runRepositoryPublishedCargoExecutableV1} from "../../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -34,7 +35,7 @@ class TestScript extends BundleScript {
 class RepoScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     await runDeclaredRustBuildV1(this.repoRoot,"@semio-tech/repo-cli-rs",this.root,this.invocation,[],"build-cli");
-    process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(this.root,"Cargo.toml"),"semio-repo"+(process.platform==="win32"?".exe":""),segments,this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),this.invocation);
+    process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(this.root,"Cargo.toml"),"semio-repo"+(process.platform==="win32"?".exe":""),segments,this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:published-execution",0));
   }
 }
 
@@ -45,7 +46,7 @@ class RepoScript extends BundleScript {
 class McpScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     await runDeclaredRustBuildV1(this.repoRoot,"@semio-tech/repo-cli-rs",this.root,this.invocation,[],"build-cli");
-    process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(this.root,"Cargo.toml"),"semio-repo"+(process.platform==="win32"?".exe":""),["mcp",...segments],this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),this.invocation);
+    process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(this.root,"Cargo.toml"),"semio-repo"+(process.platform==="win32"?".exe":""),["mcp",...segments],this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:published-execution",0));
   }
 }
 

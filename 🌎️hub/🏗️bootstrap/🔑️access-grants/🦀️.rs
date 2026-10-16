@@ -18,7 +18,7 @@ use semio_hub_trusted_catalog_descriptor::{TrustedCatalogAsset, VerifiedExecutio
 use semio_hub_auth::rate_limit::{RateLimitSubjectV1, StreamLimitClassV1};
 use directory::os_directory::DocumentScope;
 use semio_hub_directory_contract::model::SocketSessionBindingStatus;
-use semio_hub_directory::HubDirectory;
+use semio_hub_directory::{AuthSessionDirectory, DocumentDirectory, EventLog, PrincipalAuthority, ShareTokenDirectory};
 use semio_hub_directory_contract::{HubCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability};
 use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use serde::Serialize;

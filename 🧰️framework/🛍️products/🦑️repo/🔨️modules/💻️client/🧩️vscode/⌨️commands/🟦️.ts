@@ -7,7 +7,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { getRepoBinaryPath, getWorkspaceRoot } from "../🎼️utilities/🟦️.ts";
-import { openFileAtLine, resolveTicketPath } from "../🎵️path-helpers/🟦️.ts";
+import { openFileAtLine, resolveTicketPath } from "../🎵️path-navigation/🟦️.ts";
 import { getTreeNodeCache, navigateToUri, slugify, type TreeNodeData } from "../🏬️uri-resolution/🟦️.ts";
 import { filterProvider, type FilterTreeDataProvider, loadAvailableFilterValues, monorepoProvider, type MonorepoTreeItem } from "../🌳️tree-providers/🟦️.ts";
 // #endregion 🔌️Adapters

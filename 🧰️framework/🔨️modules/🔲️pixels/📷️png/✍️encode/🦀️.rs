@@ -7,7 +7,7 @@ pub trait PngRasterSource:semio_framework_value::retirement::RetireOwned {fn ras
 impl PngRasterSource for RasterImage {fn raster(&self)->&RasterImage{self}}
 impl PngRasterSource for crate::retirement::RasterLease {fn raster(&self)->&RasterImage{self}}
 #[derive(semio_framework_value::RetireOwned)]
-struct PngEncodeOwners<S:PngRasterSource> {image:S,bytes:Vec<u8>,encoder:crate::component::deflate::ZlibEncodeCursor}
+struct PngEncodeOwners<S:PngRasterSource> {pub image:S,pub bytes:Vec<u8>,encoder:crate::component::deflate::ZlibEncodeCursor}
 
 impl<S:PngRasterSource> semio_framework_value::retirement::RetireOwned for PngEncodeJob<S> {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(PngEncodeOwners {image:self.image,bytes:self.bytes,encoder:self.encoder})}
@@ -24,12 +24,12 @@ pub struct EncodedPngImage {
 }
 
 pub struct PngEncodeJob<S:PngRasterSource=RasterImage> {
-    image: S,
-    bytes: Vec<u8>,
+    #[doc(hidden)] pub image: S,
+    #[doc(hidden)] pub bytes: Vec<u8>,
     encoder: crate::component::deflate::ZlibEncodeCursor,
     hasher: std::collections::hash_map::DefaultHasher,
     cursor: usize,
-    total: usize,
+    #[doc(hidden)] pub total: usize,
     cancelled: bool,
     maximum_bytes: usize,
 }
@@ -100,6 +100,3 @@ impl<S:PngRasterSource> PngEncodeJob<S> {
     }
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

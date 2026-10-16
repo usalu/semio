@@ -96,6 +96,29 @@
         "cwd": "{projectRoot}"
       }
     },
+    "test-module-package-surface": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-module-package-surface",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-document-scope": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📄️document/🪪️scope/**/*"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-document-scope",
+        "cwd": "{projectRoot}"
+      }
+    },
     "test-source-text": {
       "executor": "repo:script",
       "cache": false,

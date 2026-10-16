@@ -16,7 +16,6 @@
         "maximumArgumentLength",
         "parallelism",
         "subcommands",
-        "capacityLeaseDirectory",
         "isolatedDirectory",
         "isolatedNoncePattern",
         "jobserverDirectoryPrefix",
@@ -116,9 +115,6 @@
               }
             }
           }
-        },
-        "capacityLeaseDirectory": {
-          "const": ".cache/framework/leases"
         },
         "isolatedDirectory": {
           "const": "isolated"

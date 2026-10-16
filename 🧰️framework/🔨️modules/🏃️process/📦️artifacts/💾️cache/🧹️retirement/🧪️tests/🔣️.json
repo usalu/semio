@@ -1,0 +1,703 @@
+{
+  "sequences": [
+    {
+      "name": "full",
+      "stages": [
+        "requested",
+        "drained",
+        "child-empty",
+        "child-retired",
+        "parent-retired",
+        "complete"
+      ],
+      "valid": true
+    },
+    {
+      "name": "out-of-order",
+      "stages": [
+        "requested",
+        "child-retired"
+      ],
+      "valid": false
+    },
+    {
+      "name": "duplicate",
+      "stages": [
+        "requested",
+        "requested"
+      ],
+      "valid": false
+    },
+    {
+      "name": "missing-birth",
+      "stages": [
+        "drained"
+      ],
+      "valid": false
+    },
+    {
+      "name": "after-complete",
+      "stages": [
+        "requested",
+        "drained",
+        "child-empty",
+        "child-retired",
+        "parent-retired",
+        "complete",
+        "complete"
+      ],
+      "valid": false
+    }
+  ],
+  "tails": [
+    {
+      "name": "empty",
+      "prefix": "empty",
+      "valid": true
+    },
+    {
+      "name": "prefix",
+      "prefix": "prefix",
+      "valid": true
+    },
+    {
+      "name": "complete",
+      "prefix": "complete",
+      "valid": true
+    },
+    {
+      "name": "foreign",
+      "prefix": "foreign",
+      "valid": false
+    },
+    {
+      "name": "newline",
+      "prefix": "newline",
+      "valid": false
+    }
+  ],
+  "cleanup": [
+    {
+      "name": "normal",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "error",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "detached-error",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "duplicate",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "foreign",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "replay",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "deadline",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "undefined",
+      "failed": true,
+      "undefined": true
+    },
+    {
+      "name": "detached-undefined",
+      "failed": true,
+      "undefined": true
+    },
+    {
+      "name": "borrower",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "metadata-error",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "metadata-undefined",
+      "failed": true,
+      "undefined": true
+    },
+    {
+      "name": "descendant",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "retained-error",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "retained-undefined",
+      "failed": true,
+      "undefined": true
+    },
+    {
+      "name": "settlement",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "self-wait",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "borrower-error",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "borrower-undefined",
+      "failed": true,
+      "undefined": true
+    },
+    {
+      "name": "borrower-recapture",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "preflight-normal",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "preflight-unknown",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "preflight-mode",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "preflight-error",
+      "failed": true,
+      "undefined": false
+    },
+    {
+      "name": "preflight-undefined",
+      "failed": true,
+      "undefined": true
+    },
+    {
+      "name": "refined-body",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "foreign-body",
+      "failed": false,
+      "undefined": false
+    },
+    {
+      "name": "refined-proof",
+      "failed": false,
+      "undefined": false
+    }
+  ],
+  "mounts": [
+    {
+      "name": "full",
+      "value": {
+        "dev": "1",
+        "ino": "18446744073709551615",
+        "mode": 16832
+      },
+      "valid": true
+    },
+    {
+      "name": "rounded-inode",
+      "value": {
+        "dev": "1",
+        "ino": 18446744073709551615,
+        "mode": 16832
+      },
+      "valid": false
+    },
+    {
+      "name": "empty",
+      "value": {
+        "dev": "1",
+        "mode": 16832
+      },
+      "valid": false
+    },
+    {
+      "name": "leading-zero",
+      "value": {
+        "dev": "1",
+        "ino": "01",
+        "mode": 16832
+      },
+      "valid": false
+    },
+    {
+      "name": "foreign",
+      "value": {
+        "dev": "1",
+        "ino": "2",
+        "mode": 16832,
+        "path": "/unowned"
+      },
+      "valid": false
+    }
+  ],
+  "births": [
+    {
+      "name": "ordered",
+      "stages": [
+        "accepted",
+        "parent-reader",
+        "journal-loan",
+        "parent-reserved",
+        "child-owned",
+        "child-retired",
+        "parent-retired",
+        "complete"
+      ],
+      "valid": true
+    },
+    {
+      "name": "unfunded-child",
+      "stages": [
+        "accepted",
+        "child-owned"
+      ],
+      "valid": false
+    },
+    {
+      "name": "late-loan",
+      "stages": [
+        "accepted",
+        "parent-reader",
+        "parent-reserved",
+        "journal-loan"
+      ],
+      "valid": false
+    },
+    {
+      "name": "early-parent-release",
+      "stages": [
+        "accepted",
+        "parent-reader",
+        "journal-loan",
+        "parent-reserved",
+        "parent-retired"
+      ],
+      "valid": false
+    },
+    {
+      "name": "duplicate",
+      "stages": [
+        "accepted",
+        "parent-reader",
+        "parent-reader"
+      ],
+      "valid": false
+    },
+    {
+      "name": "foreign",
+      "stages": [
+        "accepted",
+        "unknown"
+      ],
+      "valid": false
+    },
+    {
+      "name": "retained-success",
+      "stages": [
+        "accepted",
+        "parent-reader",
+        "journal-loan",
+        "parent-reserved",
+        "child-owned",
+        "child-retained",
+        "complete"
+      ],
+      "valid": true
+    },
+    {
+      "name": "retained-parent-release",
+      "stages": [
+        "accepted",
+        "parent-reader",
+        "journal-loan",
+        "parent-reserved",
+        "child-owned",
+        "child-retained",
+        "parent-retired"
+      ],
+      "valid": false
+    }
+  ],
+  "descriptors": [
+    {
+      "name": "success",
+      "body": "value",
+      "close": "ok",
+      "primary": "value",
+      "unresolved": false
+    },
+    {
+      "name": "body-error",
+      "body": "error",
+      "close": "ok",
+      "primary": "body-error",
+      "unresolved": false
+    },
+    {
+      "name": "body-undefined",
+      "body": "undefined",
+      "close": "ok",
+      "primary": "body-undefined",
+      "unresolved": false
+    },
+    {
+      "name": "close-error",
+      "body": "value",
+      "close": "error",
+      "primary": "close-error",
+      "unresolved": true
+    },
+    {
+      "name": "close-undefined",
+      "body": "value",
+      "close": "undefined",
+      "primary": "close-undefined",
+      "unresolved": true
+    },
+    {
+      "name": "dual-error",
+      "body": "error",
+      "close": "error",
+      "primary": "body-error",
+      "unresolved": true
+    },
+    {
+      "name": "dual-undefined",
+      "body": "undefined",
+      "close": "error",
+      "primary": "body-undefined",
+      "unresolved": true
+    },
+    {
+      "name": "dual-close-undefined",
+      "body": "error",
+      "close": "undefined",
+      "primary": "body-error",
+      "unresolved": true
+    }
+  ],
+  "descriptorCallers": [
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/💾️state/🧾️records/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/💾️durability/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧾️metadata/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📁️copy/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧹️retirement/🧾️journal/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧹️retirement/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📥️inspection/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📥️inspection/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🕸️wasm/👓️reading/🟦️.ts",
+    "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/📤️producer/🟦️.ts",
+    "🌎️hub/🏗️bootstrap/🧾️provenance/📦️cargo/🧫️fixture/📥️reading/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🧾️claim/🟦️.ts"
+  ],
+  "creatorClaims": [
+    {
+      "name": "fresh",
+      "failed": false,
+      "primary": "value"
+    },
+    {
+      "name": "reopen",
+      "failed": false,
+      "primary": "value"
+    },
+    {
+      "name": "escaped",
+      "failed": false,
+      "primary": "value"
+    },
+    {
+      "name": "unknown-directory",
+      "failed": true,
+      "primary": "refusal"
+    },
+    {
+      "name": "partial",
+      "failed": true,
+      "primary": "refusal"
+    },
+    {
+      "name": "foreign-request",
+      "failed": true,
+      "primary": "refusal"
+    },
+    {
+      "name": "mode-change",
+      "failed": true,
+      "primary": "refusal"
+    },
+    {
+      "name": "root-replaced",
+      "failed": true,
+      "primary": "refusal"
+    },
+    {
+      "name": "body-error",
+      "failed": true,
+      "primary": "marker"
+    },
+    {
+      "name": "body-undefined",
+      "failed": true,
+      "primary": "undefined"
+    },
+    {
+      "name": "unknown-entry",
+      "failed": true,
+      "primary": "refusal"
+    },
+    {
+      "name": "root-entry",
+      "failed": true,
+      "primary": "refusal"
+    },
+    {
+      "name": "forged-request-getter",
+      "failed": false,
+      "primary": "value"
+    },
+    {
+      "name": "metadata-order",
+      "failed": false,
+      "primary": "value"
+    }
+  ],
+  "fundedAllocations": [
+    {
+      "name": "exact",
+      "kind": "compiler-state",
+      "sameAllocation": true,
+      "maximumPhysicalBytes": 8192,
+      "chargeBytes": 8193,
+      "valid": true
+    },
+    {
+      "name": "foreign-id",
+      "kind": "compiler-state",
+      "sameAllocation": false,
+      "maximumPhysicalBytes": 8192,
+      "chargeBytes": 8193,
+      "valid": false
+    },
+    {
+      "name": "non-child-kind",
+      "kind": "artifact-publication",
+      "sameAllocation": true,
+      "maximumPhysicalBytes": 8192,
+      "chargeBytes": 8193,
+      "valid": false
+    },
+    {
+      "name": "no-metadata-charge",
+      "kind": "compiler-state",
+      "sameAllocation": true,
+      "maximumPhysicalBytes": 8192,
+      "chargeBytes": 8192,
+      "valid": false
+    }
+  ],
+  "creatorMetadata": [
+    {
+      "name": "ordered",
+      "events": [
+        "directory-parent-sync",
+        "directory-claim",
+        "root-parent-sync",
+        "root-claim"
+      ],
+      "valid": true
+    },
+    {
+      "name": "late-root-sync",
+      "events": [
+        "directory-parent-sync",
+        "directory-claim",
+        "root-claim",
+        "root-parent-sync"
+      ],
+      "valid": false
+    },
+    {
+      "name": "missing-root-sync",
+      "events": [
+        "directory-parent-sync",
+        "directory-claim",
+        "root-claim"
+      ],
+      "valid": false
+    }
+  ],
+  "preparations": [
+    {
+      "name": "retained-success",
+      "evidence": {
+        "version": 1,
+        "failed": false,
+        "pendingCommands": 0,
+        "pendingOperations": 0,
+        "acknowledged": true,
+        "bodyOpen": false
+      },
+      "action": "handoff"
+    },
+    {
+      "name": "body-error",
+      "evidence": {
+        "version": 1,
+        "failed": true,
+        "pendingCommands": 0,
+        "pendingOperations": 0,
+        "acknowledged": true,
+        "bodyOpen": false
+      },
+      "action": "settle-failure"
+    },
+    {
+      "name": "body-undefined",
+      "evidence": {
+        "version": 1,
+        "failed": true,
+        "pendingCommands": 0,
+        "pendingOperations": 0,
+        "acknowledged": true,
+        "bodyOpen": false
+      },
+      "action": "settle-failure"
+    },
+    {
+      "name": "pending-failure",
+      "evidence": {
+        "version": 1,
+        "failed": true,
+        "pendingCommands": 1,
+        "pendingOperations": 0,
+        "acknowledged": true,
+        "bodyOpen": false
+      },
+      "action": "drain"
+    },
+    {
+      "name": "pending-operation",
+      "evidence": {
+        "version": 1,
+        "failed": false,
+        "pendingCommands": 0,
+        "pendingOperations": 32,
+        "acknowledged": true,
+        "bodyOpen": false
+      },
+      "action": "drain"
+    },
+    {
+      "name": "open-body",
+      "evidence": {
+        "version": 1,
+        "failed": false,
+        "pendingCommands": 0,
+        "pendingOperations": 0,
+        "acknowledged": true,
+        "bodyOpen": true
+      },
+      "action": "retain"
+    },
+    {
+      "name": "unacknowledged",
+      "evidence": {
+        "version": 1,
+        "failed": false,
+        "pendingCommands": 0,
+        "pendingOperations": 0,
+        "acknowledged": false,
+        "bodyOpen": false
+      },
+      "action": "retain"
+    }
+  ],
+  "preparationObservations": [
+    {
+      "name": "success",
+      "prepare": "success",
+      "oversized": false,
+      "primary": "value",
+      "failures": []
+    },
+    {
+      "name": "observation-only",
+      "prepare": "success",
+      "oversized": true,
+      "primary": "observation",
+      "failures": [
+        "observation"
+      ]
+    },
+    {
+      "name": "prepare-error",
+      "prepare": "body",
+      "oversized": false,
+      "primary": "body",
+      "failures": [
+        "body"
+      ]
+    },
+    {
+      "name": "error-before-invalid-backing",
+      "prepare": "body",
+      "oversized": true,
+      "primary": "body",
+      "failures": [
+        "body",
+        "observation"
+      ]
+    },
+    {
+      "name": "undefined-before-invalid-backing",
+      "prepare": "undefined",
+      "oversized": true,
+      "primary": "undefined",
+      "failures": [
+        "undefined",
+        "observation"
+      ]
+    }
+  ]
+}

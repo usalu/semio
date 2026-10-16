@@ -6,6 +6,7 @@ import { spawnSync } from "node:child_process";
 import { WORKSPACE_ROOT } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
 import { toolJobRustBlock, toolJobProductionSource } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
 import { toolJobPublicationFreshnessBeforeEveryTurn, toolJobRetainedDispatchSetup, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobEphemeralOneItemPublicationBounded, toolJobStoreBatchPublicationBounded, toolJobMountedDispatchOneTurnExact } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts";
+import { retainedCloneWireSchemaUrl } from "../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 🧪️ Cross-checks full-domain scope fixtures with system deep equality and semantic Ajv scope validation and guards the active retained admission/publication seam. */
 export function toolJobLatestWinsSelfTests(): number {
@@ -180,7 +181,7 @@ export function toolJobLatestWinsSelfTests(): number {
   for (const hostile of rawHostiles) if (hostile === rawSource || rawClose(hostile)) throw new Error("retained raw close accepts lost physical custody or capacity-sized copy deadlock");
   console.log("[DEBUG] Original raw close Buffer cases=" + rawFixture.cases.length + "; independent backing/copy and native source refusal laws passed");
   const childCloseFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️tests/🧫️fixtures/🧩️child-prepublication-close.json"), "utf8"));
-  const validateChildGrant = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json"), "utf8")));
+  const validateChildGrant = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(retainedCloneWireSchemaUrl, "utf8")));
   if (!validateChildGrant(childCloseFixture.closeGrant)) throw new Error("original child close caller violates its genuine neutral production grant");
   for (const axis of Object.keys(childCloseFixture.closeGrant)) {
     const denied = { ...childCloseFixture.closeGrant };

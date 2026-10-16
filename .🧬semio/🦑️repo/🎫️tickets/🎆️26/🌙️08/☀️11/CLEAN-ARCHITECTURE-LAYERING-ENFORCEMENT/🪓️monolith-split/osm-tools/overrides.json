@@ -1,0 +1,78 @@
+{
+ "transport:origin_and_handlers": {
+  "cfg_test": [
+   "HEADER_MISMATCH",
+   "HttpAdmission",
+   "HttpState"
+  ]
+ },
+ "transport:<exports>": {
+  "cfg_test": [
+   "BridgeSession",
+   "EventLog",
+   "FixedByteCredits",
+   "FixedOwnerRing",
+   "HTTP_CONNECTION_CAPACITY",
+   "HTTP_HEADER_BYTES",
+   "HTTP_IO_PAGE_BYTES",
+   "HTTP_REQUEST_BYTES",
+   "HTTP_REQUEST_LINE_BYTES",
+   "HTTP_RESPONSE_BYTES",
+   "HTTP_SLOWLORIS_MS",
+   "HttpAdmission",
+   "HttpAfterWrite",
+   "HttpConnection",
+   "HttpConnectionPhase",
+   "HttpState",
+   "HttpTerminalPolicy",
+   "HttpTransportMode",
+   "HttpTransportState",
+   "HttpTurn",
+   "OwnedHeader",
+   "OwnedHttpResponse",
+   "ParsedHttpHead",
+   "WEBSOCKET_FRAME_BYTES",
+   "constant_time_eq",
+   "decode_client_websocket_frame",
+   "dispatch_owned_bridge_handshake",
+   "dispatch_owned_http",
+   "encode_server_websocket_frame",
+   "find_crlf_bounded",
+   "generation_is_current",
+   "is_loopback_or_null",
+   "origin_allowed",
+   "websocket_accept",
+   "websocket_key_nonce"
+  ]
+ },
+ "remote:remote_binding": {
+  "drop": [
+   "wall_now_ms"
+  ]
+ },
+ "remote:<exports>": {
+  "cfg_test": [
+   "base64_encode_exact",
+   "binding_error_to_gateway",
+   "bounded_diagnostic",
+   "canonical_checkpoint_resource_text",
+   "checked_base64_length",
+   "complete_authorized_directory_dial",
+   "directory_dial_refusal",
+   "map_catalog_client_error",
+   "map_client_error",
+   "settled_pair_attempt",
+   "validate_document_count"
+  ]
+ },
+ "bridge:shell_decode_cursor": {
+  "drop": [
+   "ApprovalDecision"
+  ]
+ },
+ "bridge:<exports>": {
+  "drop": [
+   "ValidatedShellFrame"
+  ]
+ }
+}

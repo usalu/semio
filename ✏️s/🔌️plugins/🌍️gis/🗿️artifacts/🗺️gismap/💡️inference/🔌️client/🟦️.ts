@@ -1,4 +1,4 @@
-import { DOCUMENT_SERVICE_TOPIC_V1, admitDocumentServiceDeclarationV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts";
+import { DOCUMENT_SERVICE_TOPIC_V1, admitDocumentServiceDeclarationV1 } from "@semio-tech/framework/inference/service";
 import submitInput from "./🧬️schema/submit-input.json" with { type: "json" };
 import submitOutput from "./🧬️schema/submit-output.json" with { type: "json" };
 import eventsInput from "./🧬️schema/events-input.json" with { type: "json" };

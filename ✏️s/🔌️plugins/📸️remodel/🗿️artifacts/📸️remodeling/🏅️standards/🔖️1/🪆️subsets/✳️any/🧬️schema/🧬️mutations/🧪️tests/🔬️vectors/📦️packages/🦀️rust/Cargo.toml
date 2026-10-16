@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-mut-vectors"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The law library every committed remodeling mutation vector is checked with."
+
+[package.metadata.semio]
+role = "test"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-remodel-remodeling-model = { workspace = true }
+semio-s-artifact-remodel-remodeling-model-diff = { workspace = true }
+semio-s-artifact-remodel-remodeling-mutations = { workspace = true }

@@ -3,7 +3,7 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import type { PluginManifest, ProgramContributionEntry, NamedLayout, WindowLayout } from "../../🛂️manifest/🟦️.ts";
+import type { PluginManifest, ProgramContributionEntry, NamedLayout, WindowLayout } from "@semio-tech/framework/manifest";
 
 // #region 🎠️Kernel
 export function buildContributionsJson(loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>): string {

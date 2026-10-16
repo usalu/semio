@@ -3,9 +3,9 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { type ArtifactDialect } from "../../🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
 import { dialectCoordinate } from "../../🚪️io/🧬️schema/🟦️.ts";
-import { type AppRole, type AppRef } from "../../🛂️manifest/🧬️schema/🟦️.ts";
+import { type AppRole, type AppRef } from "@semio-tech/framework/manifest/schema";
 import { appRefEquals, dialectEquals } from "../🔀️dialect-equality/🟦️.ts";
 import { AppRouter, SURFACE_FAULT_CODES, surfaceFault } from "../🧭️app-router/🟦️.ts";
 import { SemioFaultError } from "../🚨️fault/🟦️.ts";

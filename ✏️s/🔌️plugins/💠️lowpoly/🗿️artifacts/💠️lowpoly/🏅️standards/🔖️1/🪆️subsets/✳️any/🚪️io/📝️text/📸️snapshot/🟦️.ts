@@ -49,5 +49,5 @@ export const lowpolyLowpolySnapshotTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseLowpolySnapshotText(value: unknown, at = "$"): LowpolySnapshotText {
-  return lowpolyLowpolySnapshotTextGuardObject(value, `${at}`);
+  return lowpolyLowpolySnapshotTextGuardString(value, `${at}`);
 }

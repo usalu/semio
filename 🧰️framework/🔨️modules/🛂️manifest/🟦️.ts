@@ -1,4 +1,4 @@
-import { type ArtifactDialect } from "../🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
 import { dialectCoordinate, parseDialectCoordinate } from "../🚪️io/🧬️schema/🟦️.ts";
 import type { AppRole, AppRef } from "./🧬️schema/🟦️.ts";
 import type { IntroductionDefinition, TutorialDefinition } from "../🎓️onboarding/🟦️.ts";
@@ -21,7 +21,7 @@ export type { ShellLocale, ShellTerminology, LocalizedLabel };
 // `🖱️ui/🎬️scene/🟦️.ts`'s own `ActionDescriptor` import from this file erases cleanly.
 import type { ContextMenuItemSpec } from "../🖱️ui/🎬️scene/🟦️.ts";
 import inputLabelGlossaryDocument from "./🔣️input-labels.json" with { type: "json" };
-import numericTransportSchemaDocument from "../🌱️value/🧬️schema/🔣️.json" with { type: "json" };
+import { valueSchema as numericTransportSchemaDocument } from "@semio-tech/value-ts/schema";
 import type { Effect } from "../🎠️kernel/⚡️effect/🟦️.ts";
 import { UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplayText } from "../🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 

@@ -1,5 +1,6 @@
 /** 🔺️ CsvDiff schema facet — mirrors 🦀️.rs field-for-field. No full-replace slot:
  * every field is a sparse patch, `records` is an index-keyed removed/modified/added triple. */
+import { parseCsvRecord } from "../📸️snapshot/🟦️.ts";
 
 export interface CsvFieldDiff {
   value?: string;
@@ -109,5 +110,20 @@ export function parseCsvRecordsDiff(value: unknown, at = "$"): CsvRecordsDiff {
     removed: row["removed"] === undefined ? undefined : stdioCsvRfc4180AnyDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioCsvRfc4180AnyDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
     modified: row["modified"] === undefined ? undefined : stdioCsvRfc4180AnyDiffGuardArray(row["modified"], `${at}.modified`).map((item, index) => parseCsvRecordModified(item, `${at}.modified[${index}]`)),
     added: row["added"] === undefined ? undefined : stdioCsvRfc4180AnyDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseCsvRecordAdded(item, `${at}.added[${index}]`)),
+  };
+}
+
+export function parseCsvRecordAdded(value: unknown, at = "$"): CsvRecordAdded {
+  const row = stdioCsvRfc4180AnyDiffGuardObject(value, at);
+  return {
+    index: stdioCsvRfc4180AnyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    record: parseCsvRecord(row["record"], `${at}.record`),
+  };
+}
+
+export function parseCsvRecordDiff(value: unknown, at = "$"): CsvRecordDiff {
+  const row = stdioCsvRfc4180AnyDiffGuardObject(value, at);
+  return {
+    fields: row["fields"] === undefined ? undefined : stdioCsvRfc4180AnyDiffGuardArray(row["fields"], `${at}.fields`).map((item, index) => (item === null ? null : parseCsvFieldDiff(item, `${at}.fields[${index}]`))),
   };
 }

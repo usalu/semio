@@ -48,13 +48,3 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocum
     }
 }
 //#endregion 🔖️Mutation
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/📤️unlists-the-studio-and-keeps-its-sibling/🦀️.rs"]
-mod tests_unlists_the_studio_and_keeps_its_sibling;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

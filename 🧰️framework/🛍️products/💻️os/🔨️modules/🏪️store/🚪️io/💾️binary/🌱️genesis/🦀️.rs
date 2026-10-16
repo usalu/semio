@@ -15,7 +15,7 @@ pub struct ArtifactGenesisPackCapture {
 
 impl ArtifactGenesisPackCapture {
     pub fn admit<P>(self,snapshot:P)->semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>{let digest=*self.hasher.finalize().as_bytes();semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis::from_verified_pack(snapshot,self.bytes,digest)}
-    pub(super) fn new(token: OwnedSchemaToken, cx: &semio_framework_job::StepContext<'_>) -> Result<Self, OwnedSchemaDecodeDiagnostic> {
+    pub fn new(token: OwnedSchemaToken, cx: &semio_framework_job::StepContext<'_>) -> Result<Self, OwnedSchemaDecodeDiagnostic> {
         let extent = token.end.saturating_sub(token.start).saturating_sub(2) as usize;
         if token.kind != OwnedSchemaTokenKind::String || extent == 0 || extent & 1 != 0 { return Err(ArtifactEnvelopeFreshVcsAuthority::<(), ()>::diagnostic("artifact-envelope.genesis-pack-hex")); }
         let mut bytes = Vec::new();

@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/✅️validation/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { ensembleIssues, menagerieIssues, speciesIssues, type Issue } from "../../🔨️modules/✅️validation/🟦️.ts";
 
 const VECTORS = "shared://🧬️schema-conformance/🔣️.json";

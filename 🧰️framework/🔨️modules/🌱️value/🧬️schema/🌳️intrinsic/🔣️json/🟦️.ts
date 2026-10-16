@@ -1,6 +1,6 @@
 /** 🔣️ Lossless tagged JSON admits all intrinsic words, octets and ordered members. */
 import{parseIntrinsicValue,type IntrinsicValue}from"../🟦️.ts";
-import{parseSchemaRecord}from"../../../../🧬️schema/🧾️record/🟦️.ts";
+import{parseSchemaRecord}from"@semio-tech/schema-ts/record";
 type Pending={source:unknown;put:(value:IntrinsicValue)=>void}|{close:object};
 function decimal(source:unknown,signed:boolean):bigint{if(typeof source!=="string"||!(signed?/^(0|-?[1-9][0-9]*)$/:/^(0|[1-9][0-9]*)$/).test(source)||source.length>20)throw Error("invalid intrinsic decimal");const value=BigInt(source);if(signed?(value< -9223372036854775808n||value>9223372036854775807n):(value>18446744073709551615n))throw Error("intrinsic decimal exceeds its domain");return value;}
 function octets(source:unknown):Uint8Array{if(!Array.isArray(source)||source.some(value=>typeof value!=="number"||!Number.isInteger(value)||value<0||value>255))throw Error("invalid intrinsic octets");return Uint8Array.from(source);}

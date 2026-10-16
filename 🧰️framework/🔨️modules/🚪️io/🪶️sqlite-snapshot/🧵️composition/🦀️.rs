@@ -41,7 +41,3 @@ pub const fn sqlite_schema_text(bytes: &'static [u8]) -> &'static str {
         Err(_) => panic!("composed SQLite schema is not UTF-8"),
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

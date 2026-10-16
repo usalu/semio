@@ -3,12 +3,12 @@ import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
-import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import * as wire from "../../🟦️.ts";
-import { parseDirectorySessionAuthorityJsonV1 } from "../../🪪️session-authority-v1/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import * as wire from "@semio-tech/framework/directory/io/text";
+import { parseDirectorySessionAuthorityJsonV1 } from "@semio-tech/framework/directory/io/text/session-authority-v1";
 import * as creation from "../../🌱️space-artifact-creation-v1/🟦️.ts";
 import * as checkin from "../../📌️document-check-in-v1/🟦️.ts";
-import { documentCheckInStatusFromValueV1 } from "../../../../🧬️schema/📌️document-check-in-v1/🟦️.ts";
+import { documentCheckInStatusFromValueV1 } from "@semio-tech/framework/document/check-in";
 
 const directory = resolve(import.meta.dir, "../../../..");
 const os = resolve(directory, "../..");

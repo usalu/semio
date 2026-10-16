@@ -292,6 +292,28 @@ semio-framework-os-renderer-wgpu-ui-engine-focus = { path = "../../👆️ui-eng
 semio-framework-os-renderer-wgpu-ui-engine-tests = { path = "../../🧿️ui-engine-tests/📦️packages/🦀️rust" }
 semio-framework-ui-runtime = { workspace = true }
 ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
+semio-framework-ui-testing-paint-policy = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧪️testing/🎨️paint-policy/📦️packages/🦀️rust" }
+semio-framework-ui-action = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-arena = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🏟️arena/📦️packages/🦀️rust" }
+semio-framework-ui-contract-presentation = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-layout = { path = "../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
+semio-framework-ui-prepared = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust" }
+semio-framework-ui-prepared-staging = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust" }
+semio-framework-ui-retained-tree = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust" }
+semio-framework-ui-scene-camera = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
+semio-framework-ui-scene-mesh = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
+semio-framework-ui-scene-node-graph = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🕸️node-graph/📦️packages/🦀️rust" }
+semio-framework-ui-scene-pass = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
+semio-framework-ui-scene-picking = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎯️picking/📦️packages/🦀️rust" }
+semio-framework-ui-scene-plane = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust" }
+semio-framework-ui-scene-surface = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🌉️surface/📦️packages/🦀️rust" }
+semio-framework-ui-scene-views = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust" }
+semio-framework-ui-scene-world3d = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🌍️world3d/📦️packages/🦀️rust" }
+semio-framework-ui-surface-identity = { path = "../../../../../../../../../🔨️modules/🖱️ui/🪟️surface/🪪️identity/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 accesskit_consumer = "0.39.1"

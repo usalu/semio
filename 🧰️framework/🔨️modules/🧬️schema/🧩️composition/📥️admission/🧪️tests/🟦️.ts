@@ -1,5 +1,5 @@
 import callers from "./📋️callers.json" with {type:"json"};
-import {readRustSourceClosureV1} from "../../../../🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import {readRustSourceClosureV1} from "@semio-tech/process/artifacts/native-build/source";
 import {readFile} from "node:fs/promises";
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";

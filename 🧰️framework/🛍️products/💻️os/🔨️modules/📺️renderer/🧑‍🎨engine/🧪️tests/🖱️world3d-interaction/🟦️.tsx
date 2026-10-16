@@ -19,7 +19,7 @@ import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json" with { type: "json" };
-import mergeModes from "../../../../../../../🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🎯️merge-modes.json" with { type: "json" };
+import { interactionMergeModesFixture as mergeModes } from "../../../../../../../🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🟦️.ts";
 import type { MergeMode } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import identity from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🪪️world-surface-identity.json" with { type: "json" };
 import instanceTitles from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🌐️instance-title/🔣️.json" with { type: "json" };

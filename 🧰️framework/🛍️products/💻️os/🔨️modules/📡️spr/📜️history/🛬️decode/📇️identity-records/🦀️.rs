@@ -11,7 +11,7 @@ pub enum RetainedHistoryIdentityRecord{Document{doc_id:String,schema:String},Vie
 pub struct RetainedHistoryIdentityRecordPartial{pub fields:[Option<String>;6]}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum RetainedHistoryIdentityRecordStep{Blocked,Progress,Ready,Fault,Closed}
-pub struct RetainedHistoryIdentityRecordDecode{source:OriginalWireSourceIdentity,control:(u64,Option<u64>),limits:HistoryReadLimits,kind:RetainedHistoryIdentityRecordKind,end:usize,position:usize,phase:u8,slot:u8,mask:u8,closing:bool,closed:bool,partial:ManuallyDrop<Option<RetainedHistoryIdentityRecordPartial>>,id:ManuallyDrop<Option<RetainedHistoryIdDecode>>,fault:ManuallyDrop<Option<ValueError>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>}
+#[doc(hidden)] pub struct RetainedHistoryIdentityRecordDecode{source:OriginalWireSourceIdentity,control:(u64,Option<u64>),limits:HistoryReadLimits,kind:RetainedHistoryIdentityRecordKind,end:usize,position:usize,#[doc(hidden)] pub phase:u8,slot:u8,mask:u8,closing:bool,closed:bool,partial:ManuallyDrop<Option<RetainedHistoryIdentityRecordPartial>>,id:ManuallyDrop<Option<RetainedHistoryIdDecode>>,fault:ManuallyDrop<Option<ValueError>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>}
 fn fault(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn metadata()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 fn permits(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items>0&&g.maximum_depth>=d.depth&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes}
@@ -41,7 +41,3 @@ impl RetainedHistoryIdentityRecordDecode{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.partial.is_none()&&self.id.is_none()&&self.fault.is_none()&&self.receipt.is_none()}
 }
 impl Drop for RetainedHistoryIdentityRecordDecode{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original identity record abandoned paid receiving custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.partial);ManuallyDrop::drop(&mut self.id);ManuallyDrop::drop(&mut self.fault)}}}}
-
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

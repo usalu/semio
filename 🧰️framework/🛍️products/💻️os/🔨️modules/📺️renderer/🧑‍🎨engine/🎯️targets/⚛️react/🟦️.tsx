@@ -331,7 +331,7 @@ import {
   Vector3,
   GLTFLoader,
 } from "@semio-tech/ui-react";
-import { isIconName } from "@semio-tech/assets";
+import { isIconName } from "@semio-tech/framework/assets";
 import {
   organizeContextMenu,
   type ActionDescriptor,
@@ -482,24 +482,34 @@ import {
   windowMeasureChromeStatus,
 } from "@semio-tech/framework";
 import { createRoot } from "react-dom/client";
-import { type WasmCanvasSession, WasmCanvas, type CanvasInputModifiers } from "@semio-tech/canvas-react-renderer";
+import { type WasmCanvasSession, WasmCanvas, type CanvasInputModifiers } from "@semio-tech/framework/canvas/react-renderer";
 import {
-  FRAMEWORK_SYNC_CONTROLLER_ID,
-  buildFileBackboneUri,
-  buildFolderBackboneUri,
-  buildFrameworkSyncUtilities,
-  buildRemoteBackboneUri,
-  AppChannelClient,
   encodePackValue,
-  decodePackValue,
+  decodePackValue
+} from "@semio-tech/framework/packs";
+import {
+  AppChannelClient,
+  decodeFaultFromWire,
+  faultDisplayMessage
+} from "@semio-tech/framework/app-channel";
+import {
   encodeActionWire,
   decodeActionWire,
   packValueToBase64,
   packValueFromBase64,
   decodeScenePackField,
   encodeMutationEnvelopesPack,
-  decodeMutationEnvelopesPack,
-  type AppFrameValue,
+  decodeMutationEnvelopesPack
+} from "@semio-tech/framework/packs";
+import {
+  type AppFrameValue
+} from "@semio-tech/framework/wire-contracts";
+import {
+  FRAMEWORK_SYNC_CONTROLLER_ID,
+  buildFileBackboneUri,
+  buildFolderBackboneUri,
+  buildFrameworkSyncUtilities,
+  buildRemoteBackboneUri,
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
   type ArtifactActorMsg,
@@ -509,10 +519,8 @@ import {
   encodeBackboneMessage,
   decodeBackboneWorkerResponse,
   encodeBackboneWorkerRequest,
-  type PersistenceBinding,
-  decodeFaultFromWire,
-  faultDisplayMessage,
-} from "@semio-tech/framework-os";
+  type PersistenceBinding
+} from "@semio-tech/framework/backbone";
 import {
   DEFAULT_LOD_GRID_FACTOR,
   DEFAULT_MANUAL_LOD,
@@ -857,7 +865,7 @@ export type { PluginRegistryEntry };
 //#endregion 🔖️plugin-runtime
 
 //#region 🔖️wasm-session-loader
-import { createDemandFrameScheduler } from "@semio-tech/canvas-react-renderer";
+import { createDemandFrameScheduler } from "@semio-tech/framework/canvas/react-renderer";
 import {
   createGraphSession,
   type FlowWasmSession,

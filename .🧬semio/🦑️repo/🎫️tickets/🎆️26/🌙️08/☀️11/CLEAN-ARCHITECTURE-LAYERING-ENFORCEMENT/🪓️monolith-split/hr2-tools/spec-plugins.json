@@ -1,0 +1,6 @@
+{"families":[
+ {"id":"block-shared","old":"🧱️shared","new":"🧱️document-fields","anchors":["🧱️block/🧬️schema","🧱️block/🧪️tests/🧫️fixtures"],"dirFilter":"^✏️s/🔌️plugins/🧱️block/(🧬️schema|🧪️tests/🧫️fixtures)/🧱️shared$","artifactPrefixDepth":3},
+ {"id":"procedural-core","old":"🫀️core","new":"🫀️foundation","anchors":["🌀️procedural"],"dirFilter":"^✏️s/🔌️plugins/🌀️procedural/🫀️core$","artifactPrefixDepth":3},
+ {"id":"cad-core","old":"🫀️core","new":"🫀️kernel","anchors":["📐️cad/⚙️engine"],"dirFilter":"^✏️s/🔌️plugins/📐️cad/⚙️engine/🫀️core$","artifactPrefixDepth":4},
+ {"id":"gltf-geometry-core","old":"🔨️geometry-core","new":"🔨️geometry-kernel","anchors":["💡️inferences"],"dirFilter":"^✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/.*/💡️inferences/🔨️geometry-core$","artifactPrefixDepth":5}
+]}

@@ -1,4 +1,7 @@
 import { fixtureOriginalWorkStock } from "../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadActorCompositionBootstrapFixture, loadActorCompositionFixture, loadInstanceOutputAdmissionFixture, loadActivationInstanceOutputFixture, loadActivationReturnRetirementFixture, loadActivationReturnAdmissionFixture, loadActivationReturnAdmissionContract, loadInstanceOutputAdmissionContract, loadInstanceOutputFaultFixture, loadActorActivationReturnFixture, loadActorActivationFixture, loadActorShardClientFixture, loadClientSegmentedDownloadSchema, loadClientSegmentedDownloadFixture } from "../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadRetainedResidentSlotFixture, loadRetainedResidentSlotSchema, loadRetainedResidentPayloadFixture, loadRetainedResidentPayloadSchema, loadRetainedResidentBuilderFixture, loadRetainedResidentBuilderSchema, loadRetainedResidentEvidenceFixture, loadRetainedResidentReaderFixture, loadRetainedResidentPageFixture, loadResidentPageBindingFixture, loadResidentEvidenceCopiedFixture, loadResidentEvidenceCopiedSchema, loadResidentPageBindingSchema } from "../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadContentInputAuthorityFixture, loadContentInputBuilderDocument, loadContentInputBuilderFixture, loadContentInputReleaseDocument, loadContentInputReleaseFixture, loadContentInputPayloadDocument, loadContentInputPayloadFixture } from "../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClientTestDependenciesV1, testSource: TestSource): Promise<void> {
@@ -8,12 +11,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type InboundMessage = import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").InboundMessage;
   type Lane = import("../../../../../../🔨️modules/🎭️actor/🤖️generated/🎭️actor/🟦️.ts").Lane;
   type OutboundMessage = import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").OutboundMessage;
-  type OwnedResidentAdmission = import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts").OwnedResidentAdmission;
-  type OwnedResidentRecord = import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts").OwnedResidentRecord;
+  type OwnedResidentAdmission = import("@semio-tech/value-ts/resident").OwnedResidentAdmission;
+  type OwnedResidentRecord = import("@semio-tech/value-ts/resident").OwnedResidentRecord;
   type OwnedUiResidentInstance = import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentInstance;
   type OwnedUiResidentPayload = import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentPayload;
   type PendingEntry = import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").PendingEntry;
-  type ResidentStep = import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts").ResidentStep;
+  type ResidentStep = import("@semio-tech/value-ts/resident").ResidentStep;
   type ShardBudget = import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardBudget;
   type ShardClientOptions = import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClientOptions;
   type ShardEnvelope = import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardEnvelope;
@@ -34,8 +37,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type OwnedActorTurnOutput = import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts").OwnedActorTurnOutput;
   type OwnedActorTurnOutputs = import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts").OwnedActorTurnOutputs;
   type OwnedKernelReturnContent = import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts").OwnedKernelReturnContent;
-  type OwnedResidentLedger = import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts").OwnedResidentLedger;
-  type OwnedResidentRetirement = import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts").OwnedResidentRetirement;
+  type OwnedResidentLedger = import("@semio-tech/value-ts/resident").OwnedResidentLedger;
+  type OwnedResidentRetirement = import("@semio-tech/value-ts/resident").OwnedResidentRetirement;
   type OwnedUiInstance = import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiInstance;
   type OwnedUiInstanceRetirement = import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiInstanceRetirement;
   type OwnedUiPatchAcknowledgement = import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiPatchAcknowledgement;
@@ -45,9 +48,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { describe, expect, it, vi } = vitest;
 
   it("ShardWorkerBootstrap declares only original metadata preparation and close methods", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorCompositionBootstrapFixture();
     
-    const { default: residentSchema } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv");
+    const { residentSchema } = await import("@semio-tech/value-ts/resident/schema"); const { default: Ajv } = await import("ajv");
     
     const { client, workers } = harness(1, { residentLedger: new OwnedResidentLedger(fixture.capacity) }); const posts = workers[0]!.sent.length;
     expect(typeof Reflect.get(client, fixture.methods.prepare)).toBe("function"); expect(typeof Reflect.get(client, fixture.methods.close)).toBe("function");
@@ -55,8 +58,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   for (const prefix of [7, 8]) for (const closing of ["ledger", "record", "cell", "fault"]) it(`ShardWorkerBootstrap shared closing prefix ${prefix} ${closing} cannot admit a UI descendant`, async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json");
-    const { OwnedResidentRecord } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
+    const fixture = await loadActorCompositionBootstrapFixture();
+    const { OwnedResidentRecord } = await import("@semio-tech/value-ts/resident");
     const ledger = new OwnedResidentLedger(fixture.capacity); const { client, workers } = harness(1, { residentLedger: ledger });
     const held: { cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null } = { cell: null, record: null };
     const reserve = OwnedResidentLedger.prototype.reserveRecord;
@@ -71,7 +74,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(cell.result?.record).toBe(record); expect(record.retirement).toBeNull(); expect(ledger.usage).toEqual(before); expect(workers).toHaveLength(1); expect(workers[0]!.sent.length).toBe(posts); client.disposeAll();
   });
 
-  async function workerPreparationFixture() { return (await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json")).default; }
+  async function workerPreparationFixture() { return (await loadActorCompositionBootstrapFixture()); }
   function prepareWorkerFixture(client: ShardClient, rows: readonly (readonly (string | number)[])[]): void {
     for (const row of rows) { const bytes = Number(row[1]); expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: bytes }), String(row[0])).toMatchObject({ kind: "pending", items: 1, bytes }); }
   }
@@ -131,7 +134,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardWorkerBootstrap shares the original prefix and preserves UI-close-then-worker ownership", async () => {
-    const fixture = await workerPreparationFixture(); const { default: uiFixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await workerPreparationFixture(); const uiFixture = await loadActorCompositionFixture();
     for (const prefix of [0, ...fixture.shared.phases.map((_, index) => index + 1)]) {
       const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger });
       for (let index = 0; index < fixture.shared.phases.length; index++) {
@@ -170,7 +173,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardWorkerBootstrap executes all declared original-cell gate endings", async () => {
-    const fixture = await workerPreparationFixture(); const { OwnedResidentAdmission } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts"); const completed: string[] = [];
+    const fixture = await workerPreparationFixture(); const { OwnedResidentAdmission } = await import("@semio-tech/value-ts/resident"); const completed: string[] = [];
     for (const row of fixture.gateCases) {
       const capacityLimited = row.id.startsWith("capacity-blocked") || row.id === "prepare-after-fault-null-not-empty-proof";
       const ledger = new OwnedResidentLedger(capacityLimited ? { ...fixture.capacity, bytes: fixture.capacity.control.bytes + fixture.shared.retained.bytes } : fixture.capacity);
@@ -239,7 +242,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardWorkerBootstrap retains every first value after real prepare claim reserve and install", async () => {
-    const fixture = await workerPreparationFixture(); const { OwnedResidentRecord } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts"); let observed = 0;
+    const fixture = await workerPreparationFixture(); const { OwnedResidentRecord } = await import("@semio-tech/value-ts/resident"); let observed = 0;
     for (const stage of fixture.faults.stages) for (const name of fixture.faults.values) {
       let reads = 0; const object = Object.defineProperty({}, "message", { get() { reads++; throw new Error("Must not inspect original fault"); } });
       const fault = name === "null" ? null : name === "undefined" ? undefined : name === "false" ? false : name === "zero" ? 0 : object;
@@ -264,7 +267,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardWorkerBootstrap does not infer pending release from a close-wrapper throw and null", async () => {
-    const fixture = await workerPreparationFixture(); const { OwnedResidentAdmission } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
+    const fixture = await workerPreparationFixture(); const { OwnedResidentAdmission } = await import("@semio-tech/value-ts/resident");
     const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); prepareWorkerFixture(client, fixture.shared.phases); prepareWorkerFixture(client, fixture.worker.phases.slice(0, 2));
     const cell = ledger.preparedAdmission(client); if (!cell) throw new Error("Exact original pending worker cell missing"); expect(client.closeWorkerBootstrapStep({ maxItems: 1, maxBytes: 64 }).kind).toBe("pending");
     const original = OwnedResidentAdmission.prototype.closeStep; const fault = Object.freeze({ original: "close-after-release" });
@@ -287,7 +290,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardWorkerBootstrap leaves a distinct later thrown value with its caller and preserves the first", async () => {
-    const fixture = await workerPreparationFixture(); const { OwnedResidentAdmission } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
+    const fixture = await workerPreparationFixture(); const { OwnedResidentAdmission } = await import("@semio-tech/value-ts/resident");
     const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); prepareWorkerFixture(client, fixture.shared.phases);
     const original = OwnedResidentLedger.prototype.prepareAdmission; const first = Object.freeze({ original: "first" }); const other = Object.freeze({ original: "distinct" });
     const preparation = vi.spyOn(OwnedResidentLedger.prototype, "prepareAdmission").mockImplementation(function (this: OwnedResidentLedger, ...args) { Reflect.apply(original, this, args); throw first; });
@@ -299,9 +302,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition requires the original ledger before creating workers", async () => {
-    const { OwnedResidentLedger } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); 
-    const { default: residentSchema } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv");
+    const { OwnedResidentLedger } = await import("@semio-tech/value-ts/resident");
+    const fixture = await loadActorCompositionFixture(); 
+    const { residentSchema } = await import("@semio-tech/value-ts/resident/schema"); const { default: Ajv } = await import("ajv");
     
     const ledger = new OwnedResidentLedger(fixture.capacity); let workers = 0;
     const createWorker = () => { workers++; return new FakeShardWorker(0); };
@@ -318,8 +321,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition matches only the privately captured original activation owner", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); 
-    const { default: residentSchema } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv");
+    const fixture = await loadActorCompositionFixture(); 
+    const { residentSchema } = await import("@semio-tech/value-ts/resident/schema"); const { default: Ajv } = await import("ajv");
     const { readFile } = await import("node:fs/promises"); const ts = await import("typescript"); const row = fixture.activationBinding;
     
     const ledger = new OwnedResidentLedger(fixture.capacity); const local = harness(1, { residentLedger: ledger }); const foreign = harness(1, { residentLedger: ledger });
@@ -345,7 +348,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition retains original ownership while revoking replaced routes and workers", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const { produce } = await import("immer"); const row = fixture.activationBinding;
+    const fixture = await loadActorCompositionFixture(); const { produce } = await import("immer"); const row = fixture.activationBinding;
     for (const vector of row.transitions) {
       const ledger = new OwnedResidentLedger(fixture.capacity); const { client, workers } = harness(2, { residentLedger: ledger, exclusiveShardCount: 1 }); const { client: foreign } = harness(1, { residentLedger: ledger });
       const activate = async (worker: FakeShardWorker) => { const pending = client.activate(row.actorId, "https://fixture.invalid/actor.js", [], BUDGET); const request = worker.sent.at(-1) as { requestId: string }; worker.deliver({ kind: "result", requestId: request.requestId, ok: true, value: undefined }); await pending; return client.captureActorActivation(row.actorId); };
@@ -368,7 +371,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   }
 
   it("ShardResidentComposition preadmits the exact shared pool record without reusing a child grant", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const { produce } = await import("immer");
+    const fixture = await loadActorCompositionFixture(); const { produce } = await import("immer");
     const { readFile } = await import("node:fs/promises"); const ts = await import("typescript");
     const ledger = new OwnedResidentLedger(fixture.capacity); const foreign = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const row = fixture.poolPreparation;
     expect(client.prepareUiResidentPool(foreign, { maxItems: 1, maxBytes: 4096 }).kind).toBe("rejected"); expect(foreign.usage.data).toEqual({ bytes: 0, slots: 0, owners: 0 });
@@ -386,7 +389,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition releases only its actual pool's private terminal witness", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorCompositionFixture();
     const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: foreign } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 }; const row = fixture.poolLifecycle;
     prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes); const admitted = OwnedUiResidentPool.begin(client, ledger, grant); expect(admitted.step.kind).toBe("ready"); const pool = admitted.pool; if (!pool) throw new Error("Actual pool admission missing");
     expect(Object.keys(pool)).toEqual(row.publicCapabilityKeys); expect(client.ownsUiResidentPool(pool)).toBe(true); expect(OwnedUiResidentPool.begin(client, ledger, grant).step.kind).toBe(row.postConstructionRepeat);
@@ -402,7 +405,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition retains a rejected record and its original fault in the same cell", async () => {
-    const { OwnedResidentRecord } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts"); const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const { produce } = await import("immer");
+    const { OwnedResidentRecord } = await import("@semio-tech/value-ts/resident"); const fixture = await loadActorCompositionFixture(); const { produce } = await import("immer");
     const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: peer } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 }; const row = fixture.rejectedPreparation;
     prepareResidentFixture(peer, ledger, fixture.poolPreparation.prepareBytes); const before = ledger.usage.data; prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes.slice(0, fixture.poolPreparation.controllerPrepareBytes.length + 4));
     const original: { record: OwnedResidentRecord | null } = { record: null }; const freeze = Object.freeze;
@@ -421,7 +424,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition parent closes its installed pool with separate child and proof turns", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 }; const row = fixture.parentClose;
+    const fixture = await loadActorCompositionFixture(); const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 }; const row = fixture.parentClose;
     prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes); const pool = OwnedUiResidentPool.begin(client, ledger, grant).pool; if (!pool) throw new Error("Original pool missing");
     const close = vi.spyOn(OwnedUiResidentPool.prototype, "closeStep"); const retirement = vi.spyOn(OwnedUiResidentPool.prototype, "retirement", "get");
     try {
@@ -434,7 +437,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition preserves every thrown value after an actual parent close transition", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const { OwnedResidentRecord } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts"); const row = fixture.parentFault; const grant = { maxItems: 1, maxBytes: 4096 };
+    const fixture = await loadActorCompositionFixture(); const { OwnedResidentRecord } = await import("@semio-tech/value-ts/resident"); const row = fixture.parentFault; const grant = { maxItems: 1, maxBytes: 4096 };
     let getterReads = 0; const values = new Map<string, unknown>([["null", null], ["undefined", undefined], ["false", false], ["zero", 0], ["object", { payload: new Uint8Array(8193), get message() { getterReads++; return "unread"; } }]]);
     for (const name of row.values) {
       const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: peer } = harness(1, { residentLedger: ledger }); prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes); const before = ledger.usage.data;
@@ -449,7 +452,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition contains a fault after the actual private detachment observation", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const { OwnedResidentRecord } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts"); const row = fixture.observationFault;
+    const fixture = await loadActorCompositionFixture(); const { OwnedResidentRecord } = await import("@semio-tech/value-ts/resident"); const row = fixture.observationFault;
     const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 };
     prepareResidentFixture(client, ledger, fixture.poolPreparation.prepareBytes); const pool = OwnedUiResidentPool.begin(client, ledger, grant).pool; if (!pool) throw new Error("Exact original pool missing"); pool.beginClose(); expect(pool.closeStep(grant).kind).toBe("complete"); const witness = pool.retirement;
     expect(client.releaseUiResidentPool(pool, witness, grant).kind).toBe("pending"); expect(client.releaseUiResidentPool(pool, witness, grant).kind).toBe("pending");
@@ -465,7 +468,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition recovers original bootstrap claim and record results after wrapper throws", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const row = fixture.admissionWrappers;
+    const fixture = await loadActorCompositionFixture(); const row = fixture.admissionWrappers;
     let getterReads = 0; const values = new Map<string, unknown>([["null", null], ["undefined", undefined], ["false", false], ["zero", 0], ["object", { payload: new Uint8Array(8193), get message() { getterReads++; return "unread"; } }]]);
     for (const scope of row.scopes) for (const stage of row.stages) for (const name of row.values) {
       const ledger = new OwnedResidentLedger(fixture.capacity); const { client } = harness(1, { residentLedger: ledger }); const { client: peer } = harness(1, { residentLedger: ledger }); const grant = { maxItems: 1, maxBytes: 4096 }; const fault = values.get(name);
@@ -485,7 +488,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition waits for exact result aliases and cell retirement before final release", async () => {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const row = fixture.aliasRetirement; const ledger = new OwnedResidentLedger(fixture.capacity); const {client} = harness(1,{residentLedger:ledger});
+    const fixture = await loadActorCompositionFixture(); const row = fixture.aliasRetirement; const ledger = new OwnedResidentLedger(fixture.capacity); const {client} = harness(1,{residentLedger:ledger});
     const held: { cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null } = {cell:null,record:null}; const original = OwnedResidentLedger.prototype.reserveRecord;
     const trap = vi.spyOn(OwnedResidentLedger.prototype,"reserveRecord").mockImplementation(function(this:OwnedResidentLedger,...args) { const result=Reflect.apply(original,this,args); held.cell=args[2]; held.record=result.record; return result; });
     try { prepareResidentFixture(client,ledger,fixture.poolPreparation.prepareBytes); } finally { trap.mockRestore(); }
@@ -500,7 +503,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition cancels every preparation frontier and a closed-ledger refusal", async () => {
-    const {default:fixture}=await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const row=fixture.cancelledPreparation; const grant={maxItems:1,maxBytes:4096};
+    const fixture = await loadActorCompositionFixture(); const row=fixture.cancelledPreparation; const grant={maxItems:1,maxBytes:4096};
     for(const frontier of row.preparationFrontiers) {
       const ledger=new OwnedResidentLedger(fixture.capacity); const {client}=harness(1,{residentLedger:ledger}); prepareResidentFixture(client,ledger,fixture.poolPreparation.prepareBytes.slice(0,frontier));
       let complete=false; for(let index=0;index<fixture.poolPreparation.prepareBytes.length+fixture.unusedClose.releaseBytes.length;index++) { const current=client.closeUiResidentPoolStep(grant); expect(current.items).toBeLessThanOrEqual(1); expect(current.kind).not.toBe("rejected"); if(current.kind==="complete"){complete=true;break;} }
@@ -513,7 +516,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   it("ShardResidentComposition retains actual controller funding after child intrinsic retirement", async () => {
-    const {default:fixture}=await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json"); const {produce}=await import("immer"); const ledger=new OwnedResidentLedger(fixture.capacity); const {client}=harness(1,{residentLedger:ledger});
+    const fixture = await loadActorCompositionFixture(); const {produce}=await import("immer"); const ledger=new OwnedResidentLedger(fixture.capacity); const {client}=harness(1,{residentLedger:ledger});
     const original=OwnedResidentLedger.prototype.reserveRecord; const held:{record:OwnedResidentRecord|null}={record:null};
     const trap=vi.spyOn(OwnedResidentLedger.prototype,"reserveRecord").mockImplementation(function(this:OwnedResidentLedger,...args){ const result=Reflect.apply(original,this,args); if(args[1]===poolControllerEnvelope)held.record=result.record; return result; });
     try { prepareResidentFixture(client,ledger,fixture.poolPreparation.controllerPrepareBytes); } finally { trap.mockRestore(); }
@@ -569,7 +572,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   }
 
   async function fixtureResidentPool(client: ShardClient, ledger: OwnedResidentLedger): Promise<OwnedUiResidentPool> {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🏘️composition/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadActorCompositionFixture();
     const { produce } = await import("immer"); const before = ledger.usage.data;
     expect(ShardClient.matchesResidentLedger(client, ledger)).toBe(true);
     for (const bytes of fixture.poolPreparation.prepareBytes) {
@@ -586,8 +589,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   async function fixtureResidentScope(pool: OwnedUiResidentPool, ledger: OwnedResidentLedger, lease: ShardInstanceLifecycleLease): Promise<OwnedUiResidentInstance> {
     const { OwnedUiResidentInstance } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️tests/🧫️fixtures/🔣️.json");
-    const { default: schema } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+    const fixture = await loadRetainedResidentSlotFixture();
+    const schema = await loadRetainedResidentSlotSchema(); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
     
     const owner = fixtureHosts.get(lease); const lifetime = lease.lifetime; if (!owner || !lifetime) throw new Error("Original fixture host has not been captured");
     const before = ledger.usage.data; let scope: OwnedUiResidentInstance | null = null;
@@ -607,7 +610,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   async function fixtureResidentPayload(scope: OwnedUiResidentInstance, ledger: OwnedResidentLedger, field: NonNullable<OwnedKernelReturnContent["field"]>): Promise<OwnedUiResidentPayload> {
     const { OwnedUiResidentPayload } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
     const { OwnedKernelReturnInputField } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️tests/🧫️fixtures/🔣️.json"); const { default: schema } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧬️schema/🔣️.json");
+    const fixture = await loadRetainedResidentPayloadFixture(); const schema = await loadRetainedResidentPayloadSchema();
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); 
     const before = ledger.usage.data; let payload: OwnedUiResidentPayload | null = null;
     for (let index = 0; index < fixture.admissionBytes.length; index++) {
@@ -626,7 +629,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   async function fixtureResidentBuilder(ledger: OwnedResidentLedger, field: NonNullable<OwnedKernelReturnContent["field"]>, resident: OwnedUiResidentPayload) {
     const { OwnedUiOperationPayloadBuilder } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts");
     const { OwnedKernelReturnInputField } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
-    const { default: fixture } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️tests/🧫️fixtures/🔣️.json"); const { default: schema } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧬️schema/🔣️.json");
+    const fixture = await loadRetainedResidentBuilderFixture(); const schema = await loadRetainedResidentBuilderSchema();
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); 
     const before = ledger.usage.data;
     for (let index = 0; index < fixture.grants.length; index++) {
@@ -688,13 +691,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   //#region 🚪️CapturedLifecycle
   async function fixtureOutputReservation(queue: OwnedActorTurnOutputs): Promise<OwnedActorTurnOutput> {
-    const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json");
+    const fixture = await loadInstanceOutputAdmissionFixture();
     for (let turn = 0; turn < fixture.phases.length + 1; turn++) { const current = queue.reserve({ maxItems: 1, maxBytes: 4096 }); if (current.step.kind === "ready" && current.output) return current.output; expect(current.step.kind).toBe("pending"); }
     throw new Error("Output admission exceeded declared transitions");
   }
   describe("ShardClient reserved response settlement", () => {
     it("captures the exact response before actual pending removal, heartbeat recomputation and caller settlement", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadActivationInstanceOutputFixture();
       const { client, workers, residentLedger } = harness(1); const worker = workers[0]!;
       const slot: ShardSlot = Reflect.get(client, "shards")[0];
       const send = Reflect.get(client, "send").bind(client) as (slot: ShardSlot, message: OutboundMessage, request: string, posted: undefined, output: OwnedActorTurnOutput) => Promise<unknown>;
@@ -715,7 +718,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("retains the original failed response when actual worker error grafting throws", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadActivationInstanceOutputFixture();
       const { client, workers, residentLedger } = harness(1); const worker = workers[0]!;
       const slot: ShardSlot = Reflect.get(client, "shards")[0];
       const send = Reflect.get(client, "send").bind(client) as (slot: ShardSlot, message: OutboundMessage, request: string, posted: undefined, output: OwnedActorTurnOutput) => Promise<unknown>;
@@ -732,9 +735,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("ShardClient captured return authority", () => {
     it("CapturedUnusedReturnRetirement releases each original admission prefix without posting or retaining stale authority", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadActivationReturnRetirementFixture();
       
-      const { default: admission } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json");
+      const admission = await loadActivationReturnAdmissionFixture();
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
       
       for (const prefix of fixture.prefixes) {
@@ -769,7 +772,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("CapturedUnusedReturnRetirement does not discard an executed original return or its private page", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadActivationReturnRetirementFixture();
       const { client, residentLedger, worker, instance, source, response } = await deliveredInput();
       const before = residentLedger.usage, page = source.page, posts = worker.sent.length;
       for (let index = 0; index < 3; index++) expect(instance.retireUnusedReturn(fixture.grant).kind).toBe("blocked");
@@ -781,8 +784,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("CapturedUnusedReturnRetirement retains executing, content and construction-fault owners", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🚪️retirement/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: admission } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadActivationReturnRetirementFixture();
+      const admission = await loadActivationReturnAdmissionFixture();
       for (const phase of ["in-flight", "content-owned", "faulted"]) {
         const { client, residentLedger, worker, instance, row } = await captured();
         const owner = Reflect.get(client, "instanceLifecycles").get(instance.openRequest.requestSequence);
@@ -815,8 +818,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("CapturedReturnAdmission validates its exact parent phases and independent fixed ledger inventory", async () => {
-      const { default: contract } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🤝️contract.json"); 
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"); 
+      const contract = await loadActivationReturnAdmissionContract(); 
+      const fixture = await loadActivationReturnAdmissionFixture(); 
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");  
       const words = [contract.parentFields, contract.stateFields, contract.rosterFields, contract.facadeFields]; const bytes = words.reduce((sum, fields) => sum + BigInt(contract.model.recordBytes) + BigInt(fields.length) * BigInt(contract.model.fieldBytes), 0n);
       expect({ bytes: Number(bytes), slots: words.length, owners: words.length }).toEqual(contract.domain);
@@ -831,7 +834,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("CapturedReturnAdmission binds the parent, state, roster and facade inventory to actual source", async () => {
-      const { default: contract } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🤝️contract.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
+      const contract = await loadActivationReturnAdmissionContract(); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
       const ast = ts.createSourceFile("shard-client.ts", await readFile(new URL("./🟦️.ts", testSource.url), "utf8"), ts.ScriptTarget.Latest, true);
       const fields = (name: string) => { const node = ast.statements.find(item => ts.isTypeAliasDeclaration(item) && item.name.text === name); if (!node || !ts.isTypeAliasDeclaration(node) || !ts.isTypeLiteralNode(node.type)) throw new Error("Missing return owner declaration"); return node.type.members.map(item => item.name?.getText(ast)); };
       const instance = fields("ShardInstanceOwner"); expect(instance.slice(-contract.parentFields.length)).toEqual(contract.parentFields); expect(fields("CapturedReturn")).toEqual(contract.stateFields);
@@ -844,13 +847,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("CapturedReturnAdmission refuses the first zero grant before original parent construction", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"); const { client, residentLedger, worker, instance } = await captured(); const before = residentLedger.usage; const sent = worker.sent.length;
+      const fixture = await loadActivationReturnAdmissionFixture(); const { client, residentLedger, worker, instance } = await captured(); const before = residentLedger.usage; const sent = worker.sent.length;
       const admission = Reflect.apply(instance.reserveReturn, instance, [fixture.capacity, { maxItems: 0, maxBytes: 0 }]);
       expect(admission).toMatchObject({ step: { kind: fixture.shortGrant.kind, items: fixture.shortGrant.items, bytes: fixture.shortGrant.bytes }, source: null });
       expect(instance.pendingReturn).toBeNull(); expect(residentLedger.usage).toEqual(before); expect(worker.sent.length).toBe(sent); client.disposeAll();
     });
     it("CapturedReturnAdmission installs the actual parent before all twelve granted construction phases", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"); const { produce } = await import("immer");
+      const fixture = await loadActivationReturnAdmissionFixture(); const { produce } = await import("immer");
       const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = Reflect.get(client, "instanceLifecycles").get(instance.openRequest.requestSequence); const initial = residentLedger.usage.data; const posts = worker.sent.length;
       for (const capacity of fixture.invalidCapacities) expect(instance.reserveReturn(capacity, { maxItems: 1, maxBytes: 4096 })).toMatchObject({ step: { kind: "rejected", bytes: 0 }, source: null });
       expect(owner.returnCell).toBeNull(); expect(owner.returnCapacity).toBe(0); let source: OwnedShardReturn | null = null;
@@ -872,7 +875,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("CapturedReturnAdmission recovers genuine lost returns and finalizer faults under the original charged owner", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"); const { OwnedResidentRecord } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
+      const fixture = await loadActivationReturnAdmissionFixture(); const { OwnedResidentRecord } = await import("@semio-tech/value-ts/resident");
       for (const boundary of fixture.faultBoundaries) for (const kind of fixture.faultValues) {
         const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = Reflect.get(client, "instanceLifecycles").get(instance.openRequest.requestSequence); const posts = worker.sent.length; let reads = 0;
         const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(8193), get message() { reads++; throw new Error("Foreign fault getter"); } };
@@ -895,7 +898,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("CapturedReturnAdmission stops forward child construction at every closing ledger prefix", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadActivationReturnAdmissionFixture();
       for (const prefix of fixture.closing.prefixes) {
         const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = Reflect.get(client, "instanceLifecycles").get(instance.openRequest.requestSequence);
         for (const phase of fixture.phases.slice(0, prefix)) expect(instance.reserveReturn(fixture.capacity, { maxItems: 1, maxBytes: phase.grant }).step.kind).toBe(phase.kind);
@@ -909,7 +912,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("ActorResponseAdmission refuses an ungranted output allocation in the actual captured roster", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadInstanceOutputAdmissionFixture();
       const { client, residentLedger, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, fixture.capacity); const state = capturedReturnState(source); const before = residentLedger.usage; const posts = worker.sent.length;
       if (!state.outputs) throw new Error("Missing original output roster");
       Reflect.apply(state.outputs.reserve, state.outputs, [{ maxItems: 0, maxBytes: 4096 }]);
@@ -917,7 +920,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("ActorResponseAdmission charges each original output before construction and retains cancelled metadata", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"); const { produce } = await import("immer"); const { OwnedResidentRecord } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
+      const fixture = await loadInstanceOutputAdmissionFixture(); const { produce } = await import("immer"); const { OwnedResidentRecord } = await import("@semio-tech/value-ts/resident");
       const { client, residentLedger, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, fixture.capacity); const state = capturedReturnState(source); const before = residentLedger.usage.data; const posts = worker.sent.length; let record: OwnedResidentRecord | null = null;
       const install = OwnedResidentRecord.prototype.install; const spy = vi.spyOn(OwnedResidentRecord.prototype, "install").mockImplementation(function (this: OwnedResidentRecord, shell, grant) { const result = install.call(this, shell, grant); if (shell === state.outputs) record = this; return result; });
       try {
@@ -937,7 +940,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("ActorResponseAdmission preserves original roots at every closing prefix", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadInstanceOutputAdmissionFixture();
       for (const prefix of fixture.closingPrefixes) for (const close of ["ledger", "roster"] as const) {
         const { client, residentLedger, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, fixture.capacity); const state = capturedReturnState(source);
         for (const row of fixture.phases.slice(0, prefix)) expect(source.reserveResponse({ maxItems: 1, maxBytes: row.grant }).kind).toBe(row.kind);
@@ -949,7 +952,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("ActorResponseAdmission recovers exact wrapper and finalizer faults without replacement or post", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"); const { default: contract } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🤝️contract.json"); const { OwnedResidentRecord } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
+      const fixture = await loadInstanceOutputAdmissionFixture(); const contract = await loadInstanceOutputAdmissionContract(); const { OwnedResidentRecord } = await import("@semio-tech/value-ts/resident");
       for (const boundary of contract.faultBoundaries) for (const kind of fixture.faultValues) {
         const { client, residentLedger, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, fixture.capacity); const state = capturedReturnState(source); const posts = worker.sent.length; let reads = 0; let observed = false;
         const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(fixture.unknownBytes), get message() { reads++; throw new Error("Foreign admission fault getter"); } }; const restore: Array<() => void> = [];
@@ -967,7 +970,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("CapturedReturnConstruction fences the original parent after a retained child finalizer fault", async () => {
       const { OwnedActorTurnOutput } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧪️tests/🧫️fixtures/🔣️.json");  const { default: Ajv } = await import("ajv"); 
+      const fixture = await loadInstanceOutputFaultFixture();  const { default: Ajv } = await import("ajv"); 
       for (const boundary of fixture.boundaries) for (const kind of fixture.values) {
         const { client, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, 2); const state = capturedReturnState(source); const posts = worker.sent.length; let reads = 0;
         const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(fixture.unknownBytes), get message() { reads++; throw new Error("Foreign child fault getter"); } };
@@ -981,7 +984,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("CapturedReturnConstruction retains the original parent and raw fault before facade finalization", async () => {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadActorActivationReturnFixture();
       
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
       
@@ -994,7 +997,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           if (value instanceof OwnedShardReturn) { observed.source = value; observed.before = instance.pendingReturn === value; if (boundary === "after-finalize") freeze(value); throw fault; }
           return freeze(value);
         });
-        const { default: admission } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json"); let rejected = false;
+        const admission = await loadActivationReturnAdmissionFixture(); let rejected = false;
         try { for (const phase of admission.phases) { const result = instance.reserveReturn(row.responseSlots, { maxItems: 1, maxBytes: phase.grant }); if (result.step.kind === "rejected") { rejected = true; break; } } } finally { finalizer.mockRestore(); }
         expect(rejected).toBe(true);
         expect(observed.before).toBe(fixture.construction.parentBeforeFinalize);
@@ -1016,7 +1019,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     async function fixtureCapturedReturn(instance: ShardInstanceLifecycleLease, capacity: number): Promise<OwnedShardReturn> {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadActivationReturnAdmissionFixture();
       let source: OwnedShardReturn | null = null;
       for (const phase of fixture.phases) {
         const current = instance.reserveReturn(capacity, { maxItems: 1, maxBytes: phase.grant });
@@ -1026,13 +1029,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     async function fixtureResponse(source: OwnedShardReturn): Promise<void> {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadInstanceOutputAdmissionFixture();
       for (let turn = 0; turn < fixture.phases.length + 1; turn++) { const current = source.reserveResponse({ maxItems: 1, maxBytes: 4096 }); if (current.kind === "ready") return; expect(current.kind).toBe("pending"); }
       throw new Error("Captured response admission exceeded declared transitions");
     }
 
     async function captured() {
-      const { default: row } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
+      const row = await loadActorActivationReturnFixture();
       const { client, residentLedger, workers } = harness(2, { exclusiveShardCount: 1 });
       const pending = client.activate(row.actorId, "https://fixture.invalid/component.js", [], BUDGET);
       const worker = workers[0]!;
@@ -1043,7 +1046,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     async function inputStream(lifetime: ActorInstanceLifetime, payloadBytes?: number) {
-      const { default: vector } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️tests/🧫️fixtures/🔣️.json");
+      const vector = await loadContentInputAuthorityFixture();
       const name = "@webassemblyjs/leb128/lib/leb.js"; const lib = await import(name); const encode = (lib.default ?? lib).encodeUIntBuffer;
       const uint = (n: bigint | number) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(n)); return Buffer.from(encode(bytes)); };
       const frame = (tag: number, body: Buffer) => Buffer.concat([Buffer.of(tag), uint(body.length), body]);
@@ -1126,7 +1129,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
     it("OwnedKernelReturnInput bounds a large field to the exact currently captured page range", async () => {
       const { OwnedKernelReturnContent } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
-      const { default: vector } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️tests/🧫️fixtures/🔣️.json");
+      const vector = await loadContentInputAuthorityFixture();
       const { client, instance, source, bytes, payload, response } = await deliveredInput(undefined, vector.crossPage.payloadBytes, vector.crossPage.firstPageBytes);
       const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
       for (let turn = 0; turn < 256 && input.field === null; turn++) input.advance({ maxItems: 1, maxBytes: 4096 });
@@ -1144,8 +1147,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("OwnedKernelReturnBuilderBinding validates two-way close traces with an independent state oracle", async () => {
-      const { default: contract } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/📜️contract/🔣️.json"); 
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/🧪️tests/🧫️fixtures/🔣️.json");
+      const contract = await loadContentInputBuilderDocument(); 
+      const fixture = await loadContentInputBuilderFixture();
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const validator = new Ajv({ strict: true });
        
       const price = (fields: number) => BigInt(contract.metadata.recordBytes) + BigInt(contract.metadata.fieldBytes) * BigInt(fields);
@@ -1173,7 +1176,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("OwnedKernelReturnBuilderBinding reuses the actual field word and original two-field UI witness", async () => {
-      const { default: contract } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/📜️contract/🔣️.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
+      const contract = await loadContentInputBuilderDocument(); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
       const text = await readFile(new URL("../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", testSource.url), "utf8"); const input = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
       const uiText = await readFile(new URL("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts", testSource.url), "utf8"); const ui = ts.createSourceFile("resident.ts", uiText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
       const field = input.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === "OwnedKernelReturnInputField"); const witness = ui.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === "BuilderWitness");
@@ -1204,8 +1207,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("OwnedKernelReturnInputEvidence validates exact detach phases with an independent state oracle", async () => {
-      const { default: contract } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🧾️release/📜️contract/🔣️.json"); 
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🧾️release/🧪️tests/🧫️fixtures/🔣️.json");
+      const contract = await loadContentInputReleaseDocument(); 
+      const fixture = await loadContentInputReleaseFixture();
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const validator = new Ajv({ strict: true });
        
       const metadata = contract.metadata; const price = (fields: number) => BigInt(metadata.recordBytes) + BigInt(metadata.fieldBytes) * BigInt(fields);
@@ -1238,7 +1241,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("OwnedKernelReturnInputEvidence binds its declared metadata to the actual source fields", async () => {
-      const { default: contract } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🧾️release/📜️contract/🔣️.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
+      const contract = await loadContentInputReleaseDocument(); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
       const text = await readFile(new URL("../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", testSource.url), "utf8"); const source = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
       for (const [name, fields] of [["OwnedKernelReturnInputField", contract.fieldFields], ["OwnedKernelReturnInputFragment", contract.fragmentFields], ["OwnedKernelReturnInputRelease", contract.releaseFields]] as const) {
         const declaration = source.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === name);
@@ -1264,8 +1267,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("OwnedKernelReturnInput validates the two-way resident payload declaration with an independent state oracle", async () => {
-      const { default: contract } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/📜️contract/🔣️.json"); 
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️tests/🧫️fixtures/🔣️.json");
+      const contract = await loadContentInputPayloadDocument(); 
+      const fixture = await loadContentInputPayloadFixture();
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); const validator = new Ajv({ strict: true });
        
       const metadata = contract.fixedSubset; expect(metadata.fieldBytesTotal).toBe(metadata.recordBytes + metadata.fieldBytes * contract.sourceFields.length); expect(metadata.observationBytesTotal).toBe(metadata.recordBytes + metadata.fieldBytes * contract.observationFields.length); expect(metadata.total.bytes).toBe(metadata.fieldBytesTotal + metadata.observationBytesTotal);
@@ -1298,7 +1301,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("OwnedKernelReturnInput refuses fabricated resident payload associations on its actual private field", async () => {
       const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
-      const { default: contract } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/📜️contract/🔣️.json"); const { default: fixture } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️tests/🧫️fixtures/🔣️.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
+      const contract = await loadContentInputPayloadDocument(); const fixture = await loadContentInputPayloadFixture(); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
       const { client, instance, source, response } = await deliveredInput(); const owner = fixtureHosts.get(instance)!;
       const input = new OwnedKernelReturnContent(source, owner, instance.activation, instance.lifetime!); for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!;
       expect(OwnedKernelReturnInputField.matchesResidentPayload(field, {})).toBe(false); expect(field.residentPayloadDetachment).toBeNull();
@@ -1318,7 +1321,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("OwnedKernelReturnInput retains exact field construction roots and arbitrary finalizer failures", async () => {
       const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnInputFragment, OwnedKernelReturnPayloadDetachment } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️tests/🧫️fixtures/🔣️.json"); const row = fixture.construction; const freeze = Object.freeze;
+      const fixture = await loadContentInputPayloadFixture(); const row = fixture.construction; const freeze = Object.freeze;
       for (const stage of row.stages) for (const position of row.positions) for (const kind of row.faults) {
         const { client, instance, source, response } = await deliveredInput(); const owner = fixtureHosts.get(instance)!; let reads = 0;
         const faults: Record<string, unknown> = { null: null, undefined, false: false, zero: 0, object: { payload: new Uint8Array(row.faultPayloadBytes), get message() { reads++; throw new Error("Arbitrary fault getter read"); } } }; const fault = faults[kind];
@@ -1340,7 +1343,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("OwnedKernelReturnInput admits its exact instance through the released nine-phase shared scope", async () => {
-      const { default: slot } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️tests/🧫️fixtures/🔣️.json");
+      const slot = await loadRetainedResidentSlotFixture();
       const { client, residentLedger, instance, source, response } = await deliveredInput();
       const pool = await fixtureResidentPool(client, residentLedger); const before = residentLedger.usage.data;
       const scope = await fixtureResidentScope(pool, residentLedger, instance); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response);
@@ -1351,7 +1354,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("OwnedKernelReturnInput settles the genuine payload in exact charged phases after operation revocation", async () => {
       const { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
       const { OwnedUiResidentPayloadSourceRelease } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️tests/🧫️fixtures/🔣️.json"); const { produce } = await import("immer");
+      const fixture = await loadContentInputPayloadFixture(); const { produce } = await import("immer");
       for (const activationState of fixture.runtimeClose.activationStates) {
         const { client, residentLedger, instance, source, response, worker } = await deliveredInput(); const owner = fixtureHosts.get(instance)!;
         const input = new OwnedKernelReturnContent(source, owner, instance.activation, instance.lifetime!); for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!;
@@ -1388,7 +1391,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("OwnedKernelReturnInput abandons a genuine unbound payload only after clean source refusal", async () => {
       const { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
       const { OwnedUiResidentPayloadSourceRelease } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/📦️payload/🧪️tests/🧫️fixtures/🔣️.json"); const { default: ui } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadContentInputPayloadFixture(); const ui = await loadRetainedResidentPayloadFixture();
       for (const driver of fixture.abandonment.drivers) {
       const { client, residentLedger, instance, source, response } = await deliveredInput(); const owner = fixtureHosts.get(instance)!;
       const input = new OwnedKernelReturnContent(source, owner, instance.activation, instance.lifetime!); for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!;
@@ -1470,10 +1473,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("OwnedKernelReturnInput advances no framing on unread or genuinely cancelled fragments", async () => {
       const { OwnedKernelReturnContent } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
       const { OwnedUiOperationInputCancelled } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts");
-      const { default: evidenceFixture } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: builderFixture } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: payloadFixture } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: scopeFixture } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️tests/🧫️fixtures/🔣️.json");
+      const evidenceFixture = await loadRetainedResidentEvidenceFixture();
+      const builderFixture = await loadRetainedResidentBuilderFixture();
+      const payloadFixture = await loadRetainedResidentPayloadFixture();
+      const scopeFixture = await loadRetainedResidentSlotFixture();
       
       const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
       const { client, residentLedger, instance, source, response, vector, payload } = await deliveredInput();
@@ -1521,16 +1524,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("OwnedKernelReturnInput consumes only privately copied bytes and retains the containing raw page", async () => {
       const { OwnedKernelReturnInputFragment } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
       const { OwnedUiOperationInputCopied } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts");
-      const { default: vector } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: readers } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: pages } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: binding } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: evidence } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: copied } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: builders } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: payloads } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: scopes } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: copiedSchema } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧬️schema/🔣️.json");
+      const vector = await loadContentInputAuthorityFixture();
+      const readers = await loadRetainedResidentReaderFixture();
+      const pages = await loadRetainedResidentPageFixture();
+      const binding = await loadResidentPageBindingFixture();
+      const evidence = await loadRetainedResidentEvidenceFixture();
+      const copied = await loadResidentEvidenceCopiedFixture();
+      const builders = await loadRetainedResidentBuilderFixture();
+      const payloads = await loadRetainedResidentPayloadFixture();
+      const scopes = await loadRetainedResidentSlotFixture();
+      const copiedSchema = await loadResidentEvidenceCopiedSchema();
       const { default: Ajv } = await import("ajv"); const { Buffer } = await import("node:buffer"); const { produce } = await import("immer");
       
       for (const length of vector.continuation.copiedPayloadBytes) {
@@ -1592,16 +1595,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("OwnedKernelReturnInput stops at the exact copied page boundary without fabricating a next range", async () => {
-      const { default: vector } = await import("../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🪪️authority/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: readers } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: pages } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: binding } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: evidence } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: copied } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: builders } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: payloads } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: scopes } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: bindingSchema } = await import("../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧬️schema/🔣️.json");
+      const vector = await loadContentInputAuthorityFixture();
+      const readers = await loadRetainedResidentReaderFixture();
+      const pages = await loadRetainedResidentPageFixture();
+      const binding = await loadResidentPageBindingFixture();
+      const evidence = await loadRetainedResidentEvidenceFixture();
+      const copied = await loadResidentEvidenceCopiedFixture();
+      const builders = await loadRetainedResidentBuilderFixture();
+      const payloads = await loadRetainedResidentPayloadFixture();
+      const scopes = await loadRetainedResidentSlotFixture();
+      const bindingSchema = await loadResidentPageBindingSchema();
       const { default: Ajv } = await import("ajv"); const { Buffer } = await import("node:buffer");
       
       const { client, residentLedger, instance, source, response, payload, worker } = await deliveredInput(undefined, vector.crossPage.payloadBytes, vector.crossPage.firstPageBytes);
@@ -2170,7 +2173,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("disposes the captured worker after a moved or released route and preserves refusal for retry", async () => {
-      const { default: rows } = await import("../../../../../../🔨️modules/🎭️actor/🪪️activation/🧪️tests/🧫️fixtures/🔣️.json");
+      const rows = await loadActorActivationFixture();
       
       const { default: Ajv } = await import("ajv");
       const oracle = new Ajv({ strict: true });
@@ -2673,7 +2676,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     };
 
     async function livenessFixture(): Promise<LivenessFixture> {
-      const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧫️fixtures/🔣️.json");
+      const fixture = await loadActorShardClientFixture();
       const { actorShardLivenessSchema: schema } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🫀️liveness/🟦️.ts");
       const { default: Ajv } = await import("ajv");
       const validate = new Ajv({ strict: true }).compile(schema);
@@ -2723,8 +2726,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS).toBe(fixture.policy.progressIntervalMs);
       // 📤️ The segmented-download chunk contract, same rule: one schema-owned record, four enforcing hops
       // (guest producer, generated worker, host transport, host drain) and no literal of anyone's own.
-      const { default: schema } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧬️schema/🔣️.json");
-      const { default: contractFixture } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧪️tests/🧫️fixtures/🔣️.json");
+      const schema = await loadClientSegmentedDownloadSchema();
+      const contractFixture = await loadClientSegmentedDownloadFixture();
       const { default: Ajv } = await import("ajv");
       expect(new Ajv({ strict: true }).validate(schema, { ...SEGMENTED_DOWNLOAD_CONTRACT, maximumOperationId: SEGMENTED_DOWNLOAD_CONTRACT.maximumOperationId.toString() })).toBe(true);
       expect({ ...SEGMENTED_DOWNLOAD_CONTRACT, maximumOperationId: SEGMENTED_DOWNLOAD_CONTRACT.maximumOperationId.toString() }).toEqual(contractFixture.contract);

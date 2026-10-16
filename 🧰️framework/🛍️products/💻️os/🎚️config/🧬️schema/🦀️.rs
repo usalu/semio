@@ -523,13 +523,3 @@ pub fn apply_local_folders_config_mutation_reporting(snapshot: &mut super::mutat
     outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
 }
 //#endregion 🌉️MutationCodecBridge
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
-#[cfg(test)]
-#[path = "🎨️ui-preferences/🧪️tests/🌱️owned-customization/🦀️.rs"]
-mod owned_customization_tests;

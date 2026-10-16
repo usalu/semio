@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 
 import type { UiValue } from "@semio-tech/framework";
+import * as ModuleUnderTest from "../../🟦️.ts";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -52,3 +55,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../🟦️.ts")).href;
+const moduleUnderTestDirectory = resolve(import.meta.dirname, "../..");
+const vitestApi = await import("vitest");
+await registerTests1(vitestApi, { renderDocument: ModuleUnderTest.renderDocument, editableDocumentDraft: ModuleUnderTest.editableDocumentDraft }, { directory: moduleUnderTestDirectory, url: moduleUnderTestUrl });

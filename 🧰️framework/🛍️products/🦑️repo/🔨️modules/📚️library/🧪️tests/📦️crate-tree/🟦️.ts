@@ -4,14 +4,14 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { applyCarveWrites, carveWrites, planArtifactCrates } from "../../🏗️authoring/📦️crate-tree/🟦️.ts";
-import { parseRustSourceTree, prunedUse, rustOuterDocStart } from "../../🏗️authoring/📦️crate-tree/🌳️module-tree/🟦️.ts";
+import { demoteDanglingOuterDocs, parseRustSourceTree, prunedUse, rustOuterDocStart } from "../../🏗️authoring/📦️crate-tree/🌳️module-tree/🟦️.ts";
 import { MeasureUnion, totalsFit } from "../../🏗️authoring/📦️crate-tree/📏️measure-union/🟦️.ts";
 import { allItems, crateIdent as crateIdentOf, implHeader, qualifyModuleHeads, rootAliasModules, superChains } from "../../🏗️authoring/📦️crate-tree/🗺️plan/🟦️.ts";
-import { addWorkspaceMembers, insertBuildOwnerRows, patchCargoLock, patchRouterPackages, rebaseManifestDirPaths, rebaseRustIncludes } from "../../🏗️authoring/📦️crate-tree/📝️render/🟦️.ts";
-import { rewriteForCombined, verifyAppliedLayout } from "../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
+import { addWorkspaceMembers, hidingExcludePattern, insertBuildOwnerRows, patchCargoLock, patchRouterPackages, rebaseManifestDirPaths, rebaseRustIncludes, workspaceAdmissionProblems } from "../../🏗️authoring/📦️crate-tree/📝️render/🟦️.ts";
+import { rewriteCrateAliases, rewriteForCombined, siblingPathCrates, verifyAppliedLayout } from "../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
 import { externalizeFacetLeaves } from "../../🏗️authoring/📦️crate-tree/🧾️facet-leaves/🟦️.ts";
 import { absolutizeSuperPaths, fixturesToRuntime, resolveFixturePlaceholders, transformTestClosure } from "../../🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts";
-import { checkOrphanRules, compareModuleTrees, dropUnlinkedCascades, resolveCrateModules } from "../../🏗️authoring/📦️crate-tree/🔬️verify/🟦️.ts";
+import { checkOrphanRules, compareModuleTrees, dropUnlinkedCascades, plainModulePath, resolveCrateModules, sharedMountFiles, unlinkedGlobModules } from "../../🏗️authoring/📦️crate-tree/🔬️verify/🟦️.ts";
 
 const files: Record<string, string> = {
   "Cargo.toml": '[workspace]\nresolver = "2"\nmembers = [ "📦️packages/🦀️rust" ]\n\n[workspace.package]\nversion = "0.1.0"\nedition = "2021"\nrust-version = "1.95"\n',
@@ -160,6 +160,79 @@ describe("artifact crate carve", () => {
     const lock = patchCargoLock('version = 4\n\n[[package]]\nname = "demo"\nversion = "0.1.0"\ndependencies = [\n "serde",\n]\n', "demo", [{ name: "demo-x", dependsOn: [] }]);
     expect(lock).toContain('name = "demo-x"');
     expect(lock).toMatch(/name = "demo"[\s\S]*"demo-x"/u);
+  });
+  test("admits carved members that sit under a blanket standards exclusion so Cargo and the launcher agree", () => {
+    const workspace = [
+      "[workspace]",
+      'members = [ "📦️packages/🦀️rust" ]',
+      "exclude = [",
+      '    "**/🏅️standards/**",',
+      '    "**/🏭️bridge/**",',
+      '    "🏅️standards/🔖️1/🏭️generator/📦️packages/🦀️rust",',
+      "]",
+      "",
+      "[workspace.metadata.semio.repository]",
+      "schema-version = 1",
+      "exclude-patterns = [",
+      '  "**/🏅️standards/**",',
+      '  "**/🏭️bridge/**"',
+      "]",
+      'member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]',
+      "",
+    ].join("\n");
+    const member = "🏅️standards/🔖️1/🧬️schema/📦️packages/🦀️rust";
+    expect(hidingExcludePattern(member, ["**/🏅️standards/**"])).toBe("**/🏅️standards/**");
+    expect(hidingExcludePattern(member, ["**/🏭️bridge/**"])).toBeUndefined();
+    expect(workspaceAdmissionProblems(workspace)).toEqual([]);
+    expect(workspaceAdmissionProblems(workspace.replace('members = [ "📦️packages/🦀️rust" ]', `members = [ "📦️packages/🦀️rust", "${member}" ]`))).toEqual([`member ${member} is hidden from repository discovery by exclude pattern **/🏅️standards/**`]);
+    const admitted = addWorkspaceMembers(workspace, [member]);
+    expect(workspaceAdmissionProblems(admitted)).toEqual([]);
+    const parsed = Bun.TOML.parse(admitted) as { workspace: { members: string[]; exclude: string[]; metadata: { semio: { repository: { "exclude-patterns": string[]; "member-manifests": string[] } } } } };
+    expect(parsed.workspace.members).toEqual([member, "📦️packages/🦀️rust"]);
+    expect(parsed.workspace.exclude).toEqual(["**/🏭️bridge/**", "🏅️standards/🔖️1/🏭️generator/📦️packages/🦀️rust"]);
+    expect(parsed.workspace.metadata.semio.repository["exclude-patterns"]).toEqual(["**/🏭️bridge/**"]);
+    expect(parsed.workspace.metadata.semio.repository["member-manifests"]).toEqual(["**/📦️packages/🦀️rust/Cargo.toml"]);
+    expect(addWorkspaceMembers(admitted, [member])).toBe(admitted);
+  });
+  test("reports a source file that two crates mount and none once the second crate depends on the owner", () => {
+    const root = mkdtempSync(join(tmpdir(), "shared-mounts-"));
+    try {
+      const write = (path: string, text: string): void => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
+      const manifest = (name: string, lib: string, extra = ""): string => `[package]\nname = "${name}"\nversion = "0.1.0"\n\n[lib]\npath = "${lib}"\n${extra}`;
+      write("shared/🦀️.rs", "pub fn shared() {}\n");
+      write("owner/Cargo.toml", manifest("owner", "../shared/🦀️.rs"));
+      write("left/🦀️.rs", '#[path = "../shared/🦀️.rs"]\nmod shared;\n');
+      write("left/Cargo.toml", manifest("left", "🦀️.rs"));
+      write("right/🦀️.rs", '#[path = "../shared/🦀️.rs"]\nmod shared;\n#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\n');
+      write("right/🧪️tests/🦀️.rs", "fn helper() {}\n");
+      write("right/Cargo.toml", manifest("right", "🦀️.rs"));
+      const manifests = ["owner/Cargo.toml", "left/Cargo.toml", "right/Cargo.toml"];
+      expect(sharedMountFiles(root, manifests)).toEqual([{ file: "shared/🦀️.rs", manifests: ["left/Cargo.toml", "owner/Cargo.toml", "right/Cargo.toml"] }]);
+      expect(sharedMountFiles(root, manifests, (path) => path.startsWith("owner/"))).toHaveLength(1);
+      expect(sharedMountFiles(root, ["left/Cargo.toml", "right/Cargo.toml"], (path) => path.startsWith("nothing/"))).toEqual([]);
+      write("left/🦀️.rs", "pub use owner as shared;\n");
+      write("right/🦀️.rs", '#[cfg(test)]\n#[path = "🧪️tests/🦀️.rs"]\nmod tests;\npub use owner as shared;\n');
+      expect(sharedMountFiles(root, manifests)).toEqual([]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+  test("finds the plugin-local path crates an artifact crate depends on and rewrites crate aliases for the combined layout", () => {
+    const root = mkdtempSync(join(tmpdir(), "sibling-crates-"));
+    try {
+      const write = (path: string, text: string): void => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
+      write("p/a/Cargo.toml", '[workspace]\nmembers = ["artifact"]\n[workspace.dependencies.demo-shared]\npath = "../shared"\n');
+      write("p/shared/Cargo.toml", '[package]\nname = "demo-shared"\nversion = "0.1.0"\n');
+      write("p/a/artifact/Cargo.toml", '[package]\nname = "demo-x"\nversion = "0.1.0"\n[lib]\npath = "🦀️.rs"\n[dependencies]\nsibling_alias = { path = "../../ext", package = "demo-ext" }\noutside = { path = "../../../q/other" }\ndemo-shared = { workspace = true }\n[dev-dependencies]\ndemo-inside = { path = "../inside" }\n');
+      write("p/a/inside/Cargo.toml", '[package]\nname = "demo-inside"\nversion = "0.1.0"\n');
+      write("p/ext/Cargo.toml", '[package]\nname = "demo-ext"\nversion = "0.1.0"\n[lib]\npath = "🦀️.rs"\n[dependencies]\ndeep = { path = "../deep" }\n');
+      write("p/deep/Cargo.toml", '[package]\nname = "deep"\nversion = "0.1.0"\n');
+      write("q/other/Cargo.toml", '[package]\nname = "other"\nversion = "0.1.0"\n');
+      const found = siblingPathCrates(root, "p", "p/a", ["p/a/artifact/Cargo.toml"]);
+      expect(found.map((entry) => entry.name).sort()).toEqual(["deep", "demo-ext", "demo-shared", "other"]);
+      expect(found.find((entry) => entry.name === "other")!.dir).toBe("q/other");
+      expect(found.find((entry) => entry.name === "demo-ext")!.idents.slice().sort()).toEqual(["demo_ext", "sibling_alias"]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+    const modules = new Map([["demo_ext", "__c_demo_ext"]]);
+    expect(rewriteCrateAliases("pub use demo_ext as control;\nuse crate as native;\nuse demo_ext::x;", "__c_self", modules)).toBe("pub use crate::__c_demo_ext as control;\nuse crate::__c_self as native;\nuse demo_ext::x;");
   });
   test("registers carved crates as build-owner rows at their byte-order position and never twice", () => {
     const raw = JSON.stringify({ version: 1, owners: [{ name: "@a/x", root: "x", manifest: "x/p.json", packages: [] }, { name: "demo-a", root: "a/📦️", manifest: "a/📦️/Cargo.toml", packages: [] }, { name: "demo-z", root: "z/📦️", manifest: "z/📦️/Cargo.toml", packages: [] }], catalogProviders: [] }, null, 2) + "\n";
@@ -538,6 +611,67 @@ describe("artifact crate carve", () => {
     }
   });
 
+  test("lays out the hand-built crates of the pre-carve tree the same way, so only a name the working tree adds is reported", async () => {
+    const repo = mkdtempSync(join(tmpdir(), "semio-applied-base-"));
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-applied-base-sbx-"));
+    const artifact = "a/b/c";
+    try {
+      const write = (path: string, text: string): void => { mkdirSync(dirname(join(repo, artifact, path)), { recursive: true }); writeFileSync(join(repo, artifact, path), text); };
+      const manifest = (name: string): string => `[package]\nname = "${name}"\nversion = "0.1.0"\n\n[lib]\npath = "../../🦀️.rs"\n`;
+      write("Cargo.toml", '[workspace]\nmembers = ["📦️packages/🦀️rust", "🧩️extra/📦️packages/🦀️rust"]\n');
+      write("📦️packages/🦀️rust/Cargo.toml", manifest("demo-x"));
+      write("🦀️.rs", "//! 🧪️ facade\npub const A: u8 = 1;\n");
+      write("🧩️extra/📦️packages/🦀️rust/Cargo.toml", manifest("demo-x-extra"));
+      write("🧩️extra/🦀️.rs", "//! 🧩️ hand-built crate\nuse crate::MacroMade;\npub fn a() -> u8 { demo_x::A }\n");
+      const git = (...args: string[]): void => { execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], { cwd: repo, stdio: "pipe" }); };
+      git("init", "-q");
+      git("add", "-A");
+      git("commit", "-q", "-m", "baseline");
+      const clean = await verifyAppliedLayout(repo, artifact, join(sandbox, "clean"));
+      expect(clean.crates).toBe(1);
+      expect(Object.values(clean.layout).map((row) => row.onlyCombined)).toEqual([0, 0]);
+      expect(Object.values(clean.layout).every((row) => row.base === row.combined && row.base > 0)).toBe(true);
+      write("🧩️extra/🦀️.rs", "//! 🧩️ hand-built crate\nuse crate::MacroMade;\nuse crate::Added;\npub fn a() -> u8 { demo_x::A }\n");
+      const regressed = await verifyAppliedLayout(repo, artifact, join(sandbox, "regressed"), "HEAD", false, 5);
+      expect(regressed.layout.native!.onlyCombined).toBe(1);
+      expect(regressed.layout.native!.sampleOnlyCombined[0]).toContain("Added");
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  test("heals a pre-carve file that rustc cannot parse with its working-tree text, so a repaired tree is still compared name for name", async () => {
+    const repo = mkdtempSync(join(tmpdir(), "semio-applied-heal-"));
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-applied-heal-sbx-"));
+    const artifact = "a/b/c";
+    try {
+      const write = (path: string, text: string): void => { mkdirSync(dirname(join(repo, artifact, path)), { recursive: true }); writeFileSync(join(repo, artifact, path), text); };
+      write("Cargo.toml", '[workspace]\nmembers = ["📦️packages/🦀️rust"]\n');
+      write("📦️packages/🦀️rust/Cargo.toml", '[package]\nname = "demo-x"\nversion = "0.1.0"\n\n[lib]\npath = "../../🦀️.rs"\n');
+      write("🦀️.rs", "//! 🧪️ facade\n#[path = \"🧰️kit/🦀️.rs\"]\npub mod kit;\n#[path = \"🪟️views/🦀️.rs\"]\npub mod views;\nuse crate::Imported;\n");
+      write("🧰️kit/🦀️.rs", "//! 🧰️ kit\nuse std::fmt::Debug;\n#![allow(dead_code)]\npub const A: u8 = 1;\n");
+      write("🪟️views/🦀️.rs", "//! 🪟️ views\npub mod tools {\n    #[path = \"../🛠️tools/🦀️.rs\"]\n    pub mod simulation;\n}\n");
+      write("🪟️views/🛠️tools/🦀️.rs", "//! 🛠️ tools\npub const B: u8 = 2;\n");
+      const git = (...args: string[]): void => { execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], { cwd: repo, stdio: "pipe" }); };
+      git("init", "-q");
+      git("add", "-A");
+      git("commit", "-q", "-m", "baseline");
+      const broken = await verifyAppliedLayout(repo, artifact, join(sandbox, "broken"));
+      expect(broken.healedBase).toEqual([]);
+      expect(Object.values(broken.layout).map((row) => row.onlyCombined)).toEqual([0, 0]);
+      write("🧰️kit/🦀️.rs", "//! 🧰️ kit\n#![allow(dead_code)]\nuse std::fmt::Debug;\npub const A: u8 = 1;\n");
+      write("🪟️views/🦀️.rs", "//! 🪟️ views\n#[path = \"🛠️tools\"]\npub mod tools {\n    #[path = \"🦀️.rs\"]\n    pub mod simulation;\n}\n");
+      const repaired = await verifyAppliedLayout(repo, artifact, join(sandbox, "repaired"));
+      expect(repaired.healedBase.map((path) => path.split("/").slice(-2).join("/")).sort()).toEqual(["🧰️kit/🦀️.rs", "🪟️views/🦀️.rs"]);
+      expect(Object.values(repaired.layout).map((row) => row.onlyCombined)).toEqual([0, 0]);
+      expect(Object.values(repaired.layout).every((row) => row.base === row.combined)).toBe(true);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
   test("keeps the largest size per path in a measure union and never counts the virtual root", () => {
     const union = new MeasureUnion(new Set(["mirror/🦀️.rs"]), { files: 1, bytes: 0, lines: 0 });
     const left = new Map([["a.rs", { bytes: 10, lines: 2 }], ["b.rs", { bytes: 5, lines: 1 }], ["mirror/🦀️.rs", { bytes: 99, lines: 9 }]]);
@@ -669,6 +803,30 @@ describe("artifact crate carve", () => {
       entry("E0425", "cannot find type `Op` in this scope", "", "fn f() -> Op"),
     ]);
     expect(kept.map((item) => item.message)).toEqual(["cannot find module or crate `semio_foo` in this scope", "unresolved import `crate::Real`", "cannot find type `Op` in this scope"]);
+  });
+
+  test("drops the unresolved imports that go through a module which glob-re-exports an unlinked external crate", () => {
+    const entry = (code: string, message: string, label: string, sourceLine: string, file = "a.rs") => ({ code, message, label, file, line: 1, sourceLine });
+    const entries = [
+      entry("E0432", "unresolved import `semio_ext`", "use of unresolved module or unlinked crate `semio_ext`", "pub use semio_ext::{self as graph, *};", "engine/🦀️.rs"),
+      entry("E0432", "unresolved import `crate::__c_demo::editor::engine::BoardHost`", "no `BoardHost` in `editor::engine`", "use crate::editor::engine::BoardHost;"),
+      entry("E0432", "unresolved imports `crate::__c_demo::editor::engine::BoardNaming`, `crate::__c_demo::editor::engine::BoardFillStage`", "", "use crate::editor::engine::{BoardNaming, BoardFillStage};"),
+      entry("E0432", "unresolved imports `crate::__c_demo::editor::engine::BoardNaming`, `crate::__c_demo::editor::other::Real`", "", "use crate::editor::engine::BoardNaming;"),
+      entry("E0432", "unresolved import `crate::__c_demo::editor::other::Real`", "", "use crate::editor::other::Real;"),
+    ];
+    expect(dropUnlinkedCascades(entries).length).toBe(4);
+    const kept = dropUnlinkedCascades(entries, new Set(["editor::engine"]));
+    expect(kept.map((item) => item.message)).toEqual(["unresolved imports `crate::__c_demo::editor::engine::BoardNaming`, `crate::__c_demo::editor::other::Real`", "unresolved import `crate::__c_demo::editor::other::Real`"]);
+    expect(plainModulePath(["crate", "__c_demo", "editor", "engine"])).toBe("editor::engine");
+    const root = mkdtempSync(join(tmpdir(), "glob-modules-"));
+    try {
+      mkdirSync(join(root, "editor/engine"), { recursive: true });
+      writeFileSync(join(root, "root.rs"), '#[path = "editor/🦀️.rs"]\npub mod editor;\n');
+      writeFileSync(join(root, "editor/🦀️.rs"), '#[path = "engine/🦀️.rs"]\npub mod engine;\n');
+      writeFileSync(join(root, "editor/engine/🦀️.rs"), "pub use semio_ext::{self as graph, *};\n");
+      const found = unlinkedGlobModules(root, join(root, "root.rs"), [entry("E0432", "unresolved import `semio_ext`", "use of unresolved module or unlinked crate `semio_ext`", "pub use semio_ext::{self as graph, *};", "editor/engine/🦀️.rs")]);
+      expect([...found]).toEqual(["editor::engine"]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
 
   test("copies a root alias of an external crate into every crate that reaches through it with a longer path", async () => {

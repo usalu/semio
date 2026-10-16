@@ -31,4 +31,5 @@ serde_json = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
 semio-s-artifact-procedural-3d-io-text = { workspace = true }
 semio-s-artifact-procedural-3d-mesh-primitive = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-mesh-harness = { workspace = true }
 

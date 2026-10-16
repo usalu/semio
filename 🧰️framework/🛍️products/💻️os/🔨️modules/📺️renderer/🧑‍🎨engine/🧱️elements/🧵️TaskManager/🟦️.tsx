@@ -46,10 +46,10 @@
 import { useEffect, useState, useSyncExternalStore, type ReactElement } from "react";
 import { Button, Table, registerUiTranslationBundles, useLabel, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor } from "@semio-tech/framework";
-import { type ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
-import { type RuntimeMetricsSnapshot } from "../../../../../../../🔨️modules/🎠️kernel/⏱️runtime-metrics/🟦️.ts";
+import { type ActivationRegistry } from "@semio-tech/framework";
+import { type RuntimeMetricsSnapshot } from "@semio-tech/framework";
 import { type SpawnedJobRowV1 } from "../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
-import { type VideoRenderJobRow } from "../../../../../../../🔨️modules/🎠️kernel/🧵️video-render-job/🟦️.ts";
+import { type VideoRenderJobRow } from "@semio-tech/framework";
 import { videoRenderExportTaskIdV1, videoRenderExportTextV1 } from "../🎥️VideoRenderHost/🟦️.ts";
 import { type AgentConversationEntry } from "../🔗️AgentBridge/🟦️.tsx";
 // #endregion 🔌️Adapters

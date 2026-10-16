@@ -7,12 +7,13 @@
 //! off React's DOM in `📓️w3b-chip-text-and-footer-dock.md` §3), React's own
 //! `🛠️ShellHelpers/🟦️.tsx`/`🏛️ShellHost/🟦️.tsx` sources, and the puzzle plugin's authored descriptor.
 
+use semio_framework_os_renderer_wgpu_fixtures::shell::{split_pane_shell, test_app};
 use super::*;
 use ui_wgpu::wgpu::InputState;
 
 /// 🌳️ `…/🧑‍🎨engine` — the same derivation `🌓️appearance-tour-and-footer-pills/🦀️.rs` uses.
 fn engine_root() -> std::path::PathBuf {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root")
+    semio_framework_os_renderer_wgpu_test_support::engine_root()
 }
 
 fn repo_root() -> std::path::PathBuf {
@@ -22,7 +23,7 @@ fn repo_root() -> std::path::PathBuf {
 #[test]
 fn explicit_window_titles_follow_the_live_session_owner() {
     let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🌐️instance-title/🔣️.json")).unwrap();
-    let mut shell = super::window_pane_chrome_tests::split_pane_shell();
+    let mut shell = split_pane_shell();
     for owner in fixture["owners"].as_array().unwrap() {
         let session = shell.docs.session.as_mut().unwrap();
         session.plugin_id = owner["pluginId"].as_str().unwrap().into();
@@ -53,7 +54,7 @@ fn hub_projection_fixture() -> Value {
 
 /// 🌍️ A pane that hosts a world surface, so the Projection chip mounts at all.
 fn world_pane_shell() -> ShellState {
-    let mut shell = super::window_pane_chrome_tests::split_pane_shell();
+    let mut shell = split_pane_shell();
     let _ = shell.surfaces.world3d_states.try_insert("pane-top".into(), World3dState::new("pane-top".into(), "pane.controller".into()));
     shell.surfaces.world3d_window_ids.insert("pane-top".into(), "pane-top".into());
     shell
@@ -116,7 +117,7 @@ fn every_painted_pane_chip_registers_a_hit_target() {
 /// moves the chip's own icon, which is where React shows the live spec too.
 #[test]
 fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let theme = Theme::light();
     let window = Rect::new(0.0, 0.0, 800.0, 600.0);
     let mut shell = world_pane_shell();
@@ -128,7 +129,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
         semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor {
             controller_id: "framework".into(),
             action: "setWorldProjectionTemplate".into(),
-            args: crate::action_args_json!({ "windowId": "pane-top", "templateId": template_id }),
+            args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "windowId": "pane-top", "templateId": template_id }),
         }))
         .expect("a retained Projection Tree action never errors");
     };
@@ -169,25 +170,25 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
     assert!(painted.last().is_some_and(|row| row.ends_with("/framework.worldOrbit.projection.paneTop.curvilinear")), "🔀️ the last row is React's Curvilinear Tree item: {painted:?}");
     let surface = window_projection_surface_id("pane-top");
     assert_eq!(
-        crate::interpreter::candidate_tree_item_selected_for_test(&surface, &format!("{surface}/framework.worldOrbit.projection.paneTop.threePoint")),
+        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::candidate_tree_item_selected_for_test(&surface, &format!("{surface}/framework.worldOrbit.projection.paneTop.threePoint")),
         Some(true),
         "🔀️ the accepted retained Tree row carries the default selection into paint and AX"
     );
 
     assert_eq!(shell.windows.world_projection_template_id("pane-top", &shell.surfaces), WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, "🔀️ a pane with no selection reads React's own `worldProjectionDefaults(\"threePoint\")` fallback");
     assert_eq!(shell.windows.window_pane_chip_icon_id(WindowPaneChip::Projection, "pane-top", &shell.surfaces), "projection-three-point");
-    assert_eq!(shell.surfaces.world3d_states.get("pane-top").map(|world| infinite_world::world::world3d_camera_projection(&world.camera)), Some(ui_wgpu::wgpu::CameraProjection3d::Perspective), "🔀️ the pane opens on its delivered family");
+    assert_eq!(shell.surfaces.world3d_states.get("pane-top").map(|world| infinite_world::world::world3d_camera_projection(&world.camera)), Some(semio_framework_ui_scene_camera::CameraProjection3d::Perspective), "🔀️ the pane opens on its delivered family");
     select(&mut shell, "orthographic");
     assert_eq!(shell.windows.world_projection_template_id("pane-top", &shell.surfaces), "orthographic");
     let painted = rows(&mut shell);
     assert_eq!(painted.len(), WORLD_PROJECTION_TEMPLATES.len());
     assert_eq!(
-        crate::interpreter::candidate_tree_item_selected_for_test(&surface, &format!("{surface}/framework.worldOrbit.projection.paneTop.orthographic")),
+        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::candidate_tree_item_selected_for_test(&surface, &format!("{surface}/framework.worldOrbit.projection.paneTop.orthographic")),
         Some(true),
         "🔀️ replacement reconcile moves accepted selection onto the newly chosen row"
     );
     assert_eq!(
-        crate::interpreter::candidate_tree_item_selected_for_test(&surface, &format!("{surface}/framework.worldOrbit.projection.paneTop.threePoint")),
+        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::candidate_tree_item_selected_for_test(&surface, &format!("{surface}/framework.worldOrbit.projection.paneTop.threePoint")),
         Some(false),
         "🔀️ replacement reconcile clears the predecessor instead of retaining two selected rows"
     );
@@ -199,14 +200,14 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
         assert_eq!(titles["pane-top"], title_fixture["explicitBaseTitle"].as_str().unwrap());
         assert_eq!(titles["pane-perspective"], "Perspective");
     }
-    assert_eq!(shell.surfaces.world3d_states.get("pane-top").map(|world| infinite_world::world::world3d_camera_projection(&world.camera)), Some(ui_wgpu::wgpu::CameraProjection3d::Orthographic), "🔀️ pressing a Parallel row makes the pane's camera parallel");
+    assert_eq!(shell.surfaces.world3d_states.get("pane-top").map(|world| infinite_world::world::world3d_camera_projection(&world.camera)), Some(semio_framework_ui_scene_camera::CameraProjection3d::Orthographic), "🔀️ pressing a Parallel row makes the pane's camera parallel");
     assert!(!shell.surfaces.world3d_states.get("pane-top").is_some_and(|world| infinite_world::world::world3d_pending_camera_settle(&world.camera, &world.authority)), "🔀️ a local projection choice does not invent a navigation gesture or dispatch a camera echo");
     assert_eq!(shell.windows.window_pane_chip_icon_id(WindowPaneChip::Projection, "pane-top", &shell.surfaces), "projection-orthographic", "🔀️ the chip wears the selected template's icon, as React's `worldProjectionSpecIconId(spec)` pane icon does");
     assert_eq!(shell.windows.world_projection_template_id("pane-perspective", &shell.surfaces), WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, "🔀️ the selection is per pane");
 
     shell.dock.layout_override = shell.docs.session.as_ref().unwrap().app.default_layout.clone();
-    if let ui_wgpu::wgpu::WindowLayoutRoot::Axis(axis) = &mut shell.dock.layout_override.as_mut().unwrap().root {
-        if let ui_wgpu::wgpu::WindowLayoutChild::Stack(stack) = &mut axis.children[0] {
+    if let semio_framework_ui_layout::layout::WindowLayoutRoot::Axis(axis) = &mut shell.dock.layout_override.as_mut().unwrap().root {
+        if let semio_framework_ui_layout::layout::WindowLayoutChild::Stack(stack) = &mut axis.children[0] {
             stack.children[0].template_id = Some(format!("world-projection:{}", title_fixture["instances"][0]["initialProjection"]));
         }
     }
@@ -214,7 +215,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
     SessionCtx::of(&mut shell).sync_dock();
     assert_eq!(shell.windows.world_projection_template_id("pane-top", &shell.surfaces), "orthographic");
     for seed in title_fixture["retainedOrientations"].as_array().unwrap() {
-        let orientation = if seed["type"] == "cardinal" { ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Front) } else { ui_wgpu::wgpu::WorldProjectionOrientation::Free };
+        let orientation = if seed["type"] == "cardinal" { semio_framework_ui_scene_camera::WorldProjectionOrientation::Cardinal(semio_framework_ui_scene_camera::WorldCardinalView::Front) } else { semio_framework_ui_scene_camera::WorldProjectionOrientation::Free };
         let world = shell.surfaces.world3d_states.get_mut("pane-top").unwrap();
         let typed_orientation = if seed["type"] == "cardinal" {
             semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Front }
@@ -228,7 +229,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
             assert_eq!(shell.windows.world_projection_template_id("pane-top", &shell.surfaces), branch["effective"].as_str().unwrap());
             assert_eq!(shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows).0["pane-top"], branch["title"].as_str().unwrap());
             assert_eq!(shell.windows.window_pane_chip_icon_id(WindowPaneChip::Projection, "pane-top", &shell.surfaces), branch["icon"].as_str().unwrap());
-            let family = if branch["family"] == "orthographic" { ui_wgpu::wgpu::CameraProjection3d::Orthographic } else { ui_wgpu::wgpu::CameraProjection3d::Perspective };
+            let family = if branch["family"] == "orthographic" { semio_framework_ui_scene_camera::CameraProjection3d::Orthographic } else { semio_framework_ui_scene_camera::CameraProjection3d::Perspective };
             assert_eq!(shell.surfaces.world3d_states.get("pane-top").map(|world| infinite_world::world::world3d_camera_projection(&world.camera)), Some(family));
             assert_eq!(shell.surfaces.world3d_states.get("pane-top").map(|world| infinite_world::world::world3d_projection_orientation(&world.camera)), Some(orientation));
             assert_eq!(shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows).0["pane-perspective"], "Perspective");
@@ -287,7 +288,7 @@ fn a_pane_chip_press_over_an_engine_surface_belongs_to_the_shell() {
 /// it never abandons the body, which is what left the live pane blank.
 #[test]
 fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let theme = Theme::light();
     let body = |shell: &mut ShellState, window: Rect| {
         let mut input = InputState::<ActionDescriptor>::default();
@@ -336,12 +337,12 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
     assert!(declared_heights.windows(2).all(|pair| pair[1] > pair[0]), "the bottom-right anchor retains the taxonomy's declared down direction: {declared_heights:?}");
     let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
     for row in &rows {
-        let glyphs: Vec<_> = instances.iter().enumerate().filter(|(_, item)| item.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH && item.rect[1] >= row.rect.y && item.rect[1] < row.rect.y + row.rect.h).collect();
+        let glyphs: Vec<_> = instances.iter().enumerate().filter(|(_, item)| item.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH && item.rect[1] >= row.rect.y && item.rect[1] < row.rect.y + row.rect.h).collect();
         assert!(!glyphs.is_empty(), "each projection hit row also paints its label: {:?}", row.control_id);
         for (index, glyph) in glyphs {
             let center = [glyph.rect[0] + glyph.rect[2] * 0.5, glyph.rect[1] + glyph.rect[3] * 0.5];
             assert!(!instances[index + 1..].iter().any(|item| {
-                (item.params[2] == ui_wgpu::wgpu::draw_types::KIND_SOLID || item.params[2] == ui_wgpu::wgpu::draw_types::KIND_ROUNDED)
+                (item.params[2] == semio_framework_ui_draw_contract::KIND_SOLID || item.params[2] == semio_framework_ui_draw_contract::KIND_ROUNDED)
                     && item.color[3] >= 0.99 && item.rect[2] > glyph.rect[2] && item.rect[3] > glyph.rect[3]
                     && center[0] > item.rect[0] && center[0] < item.rect[0] + item.rect[2] && center[1] > item.rect[1] && center[1] < item.rect[1] + item.rect[3]
             }), "later identity-row chrome must not cover a projection label: {:?}", row.control_id);
@@ -408,7 +409,7 @@ fn a_focused_world_window_does_not_retire_its_hidden_sibling() {
 /// `workspace · examples · scene` (`📓️audit-visual-parity-puzzle3d.md` §2).
 #[test]
 fn the_navbar_title_is_the_apps_breadcrumb_not_its_dialect_id() {
-    let mut app = super::command_registry_tests::test_app(Vec::new(), Vec::new());
+    let mut app = test_app(Vec::new(), Vec::new());
     app.id = "fixture.scene@1/*#editor".into();
     app.breadcrumb = vec!["workspace".into(), "examples".into(), "scene".into()];
     app.terminology_breadcrumbs = std::collections::HashMap::from([("reuse".to_string(), vec!["Entwerfen mit Bestand".to_string(), "Aggregator".to_string()])]);
@@ -579,7 +580,7 @@ fn the_footer_statuses_and_tabs_follow_reacts_collision_free_sequence() {
     let order = fixture["contract"]["footerTrailingOrder"].as_array().expect("footer order").iter().map(|value| value.as_str().expect("footer order entry")).collect::<Vec<_>>();
     assert_eq!(order, vec!["presence", "hubConnection", "bottomRight"]);
 
-    shell.chrome.screen_w = crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+    shell.chrome.screen_w = semio_framework_os_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
     let mobile_width = shell.chrome.screen_w;
     let mobile = PanelsViewCtx::of(&mut shell).footer_chrome_layout(&mut atlas, &theme, mobile_width, btn_y, theme.control_height);
     assert!(mobile.presence.is_none(), "mobile omits presence");
@@ -632,7 +633,7 @@ fn app_manifest_carries_the_introduction_the_tour_arms_on() {
         serde_json::from_value(authored).expect("🎓️ it deserialises through the very `IntroductionDefinition` `AppDefinition::introduction` carries, so a schema drift that dropped the field fails here");
     assert!(!introduction.steps.is_empty(), "🎓️ the tour has steps to walk");
 
-    let mut app = super::command_registry_tests::test_app(Vec::new(), Vec::new());
+    let mut app = test_app(Vec::new(), Vec::new());
     app.id = editor["id"].as_str().expect("the authored id").to_string();
     app.breadcrumb = editor["breadcrumb"].as_array().expect("the authored breadcrumb").iter().map(|part| part.as_str().expect("breadcrumb part").to_string()).collect();
     app.introduction = Some(introduction);
@@ -712,7 +713,7 @@ fn task_manager_footer_identity_order_icon_and_localized_label_match_react() {
     for label in expected["labels"].as_array().expect("task manager labels") {
         let mut shell = ShellState::new(Vec::new(), "task-manager-footer-law".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         shell.prefs.locale_id = label["locale"].as_str().expect("locale").to_string();
-        shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+        shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(Vec::new(), Vec::new()), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
         let dock = SessionCtx::of(&mut shell).default_dock();
         let rows = dock.tabs(PanelAnchor::BottomRight);
         let index = rows.iter().position(|row| row.id == expected["id"].as_str().expect("task manager id")).expect("task manager footer row");

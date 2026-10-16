@@ -5,7 +5,7 @@
 
 import React, { createContext } from "react";
 import { AppRouter, type Severity } from "@semio-tech/framework";
-import { type BrowserActorUiMountedV1 } from "@semio-tech/framework-os";
+import { type BrowserActorUiMountedV1 } from "@semio-tech/framework/backbone";
 import { dockSeedActiveWindowIdV1, modeLayoutStacksV1, type WindowScopeLayoutNodeV1 } from "../⌨️window-scope/🟦️.ts";
 import { type IconName, type UiTranslationKey, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";

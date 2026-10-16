@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-procedural-core-generation-sqlite-native"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation native codec: the seven shared DSL twins and the literal eight-field native document mirrors generic over the generation 2d and 3d snapshots"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+pack = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-framework-diagnostic = { path = "../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-os-flow-contract = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-os-playbook-contract = { workspace = true }
+semio-framework-value = { workspace = true }

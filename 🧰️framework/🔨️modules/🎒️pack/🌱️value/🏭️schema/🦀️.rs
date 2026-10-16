@@ -3,9 +3,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::{PackSchemaField,PackSchemaGraph,PackSchemaShape};
 use semio_framework_dsl_record::{NativeSchemaControl,RecordSpec,RecordSpecProducer,Shape};
 use std::{cmp::Ordering,mem::size_of};
-#[path="🗂️index/🦀️.rs"]
-mod index;
-use index::Index;
+use semio_framework_pack_schema_index::Index;
 
 fn push<T,C:NativeSchemaControl>(values:&mut Vec<T>,value:T,control:&mut C)->Result<(),ValueError>{
     if values.len()==values.capacity(){let capacity=if values.capacity()==0{1}else{values.capacity().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"schema frontier capacity overflow"))?};let bytes=capacity.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"schema frontier backing overflow"))?;control.charge(bytes)?;control.checkpoint()?;values.try_reserve_exact(capacity-values.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"schema frontier allocation"))?;}

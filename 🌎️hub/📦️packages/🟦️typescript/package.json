@@ -12,13 +12,16 @@
     "test": "bun --cwd \"../../..\" repo run os-hub-ts:test"
   },
   "dependencies": {
-    "@semio-tech/framework-os": "workspace:*"
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/framework-os": "workspace:*",
+    "@semio-tech/schema-validator-ts": "workspace:*"
   },
   "devDependencies": {
     "ajv": "^8.20.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.17",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/schema-ts": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

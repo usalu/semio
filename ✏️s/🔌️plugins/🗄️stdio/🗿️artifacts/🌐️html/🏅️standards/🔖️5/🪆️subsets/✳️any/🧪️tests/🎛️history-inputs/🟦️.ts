@@ -16,9 +16,9 @@ function snapshot(text:string){
 const beforeHtml="<!DOCTYPE html><html><head></head><body><p class=\"lead\">One</p></body></html>";
 const rows=[
  {id:"text",leaf:"✍️set-text",mutation:{mutation:"setText",path:[1,0,0],text:"Hallo 😀"},afterHtml:"<!DOCTYPE html><html><head></head><body><p class=\"lead\">Hallo 😀</p></body></html>"},
- {id:"doctype",leaf:"📜set-doctype",mutation:{mutation:"setDoctype",doctype:null},afterHtml:"<html><head></head><body><p class=\"lead\">One</p></body></html>"},
- {id:"target",leaf:"🔖set-attribute",beforeHtml:"<!DOCTYPE html><html><head></head><body><p class=\"lead\">One</p><p class=\"tail\">Two</p></body></html>",mutation:{mutation:"setAttribute",path:[1,0],name:"class",value:"note"},afterHtml:"<!DOCTYPE html><html><head></head><body><p class=\"note\">One</p><p class=\"tail\">Two</p></body></html>"},
- {id:"attribute",leaf:"🔖set-attribute",mutation:{mutation:"setAttribute",path:[1,0],name:"class",value:"note"},afterHtml:"<!DOCTYPE html><html><head></head><body><p class=\"note\">One</p></body></html>"}
+ {id:"📜️doctype",leaf:"📜set-doctype",mutation:{mutation:"setDoctype",doctype:null},afterHtml:"<html><head></head><body><p class=\"lead\">One</p></body></html>"},
+ {id:"🎯️target",leaf:"🔖set-attribute",beforeHtml:"<!DOCTYPE html><html><head></head><body><p class=\"lead\">One</p><p class=\"tail\">Two</p></body></html>",mutation:{mutation:"setAttribute",path:[1,0],name:"class",value:"note"},afterHtml:"<!DOCTYPE html><html><head></head><body><p class=\"note\">One</p><p class=\"tail\">Two</p></body></html>"},
+ {id:"🔖️attribute",leaf:"🔖set-attribute",mutation:{mutation:"setAttribute",path:[1,0],name:"class",value:"note"},afterHtml:"<!DOCTYPE html><html><head></head><body><p class=\"note\">One</p></body></html>"}
 ];
 test("HTML committed text doctype and attribute intents match independent HTML5 documents",()=>{
  const ajv=new Ajv({strict:false});const validateSnapshot=ajv.compile(read("🧬️schema/📸️snapshot/🔣️.json"));
@@ -28,7 +28,7 @@ test("HTML committed text doctype and attribute intents match independent HTML5 
   const after=snapshot(row.afterHtml);expect(validateSnapshot(after)).toBe(true);
   const leaf=read(`🧬️schema/🧬️mutations/${row.leaf}/🧬️schema/🔣️.json`);expect((ajv.getSchema(leaf.$id)??ajv.compile(leaf))(row.mutation)).toBe(true);
   expect(after).not.toEqual(before);
-  const path=resolve(root,`🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`);expect(existsSync(path)).toBe(true);
+  const path=resolve(root,`🧪️tests/🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`);expect(existsSync(path)).toBe(true);
   expect(JSON.parse(readFileSync(path,"utf8"))).toEqual({mutation:row.mutation,before,after});
   console.log("[DEBUG] HTML committed native intent matches independent parse5",row.id);
  }

@@ -382,9 +382,9 @@ export {
  * 📏️ It is also the host half of `PUZZLE3D_IMPORT_CHUNK_BYTES`
  * (`✏️s/🔌️plugins/🧩️puzzle/…/🎮️commands/📥️import-snapshot/🦀️.rs`), held equal to it by the engine
  * contract's own law. */
-export { IMPORT_CHUNK_BYTES, importChunkArguments, importPayloadChunks } from "../../../../../../../🔨️modules/🎠️kernel/🗄️file-open-import/🟦️.ts";
+export { IMPORT_CHUNK_BYTES, importChunkArguments, importPayloadChunks } from "@semio-tech/framework";
 //#endregion 📥️ChunkedImport
-export type { ImportChunk } from "../../../../../../../🔨️modules/🎠️kernel/🗄️file-open-import/🟦️.ts";
+export type { ImportChunk } from "@semio-tech/framework";
 // 📌️ The panel carriage moved to its own cycle-free module (`📌️panel/🟦️.ts`) so a law can drive
 // it — importing this file from a test hits the `ShellHelpers → Shell → ShellHost` cycle. Re-exported
 // here so every existing call site keeps one import.

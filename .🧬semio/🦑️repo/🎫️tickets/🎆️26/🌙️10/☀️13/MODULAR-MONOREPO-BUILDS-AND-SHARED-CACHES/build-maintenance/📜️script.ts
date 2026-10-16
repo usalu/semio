@@ -8,7 +8,7 @@ import {checkResourceLeaseControl} from "../../../../../../../../🧰️framewor
 import {withCargoCacheMaintenanceV1,scanCargoBuildUnits,planCachePrune,planCachePressurePruneV1,deleteUnit} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🟦️.ts";
 import {CACHE_POLICY} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import {cargoDirectories} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
-import{assertCompilerDescriptorCustodyV1}from"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📉️pressure/📂️descriptors/🟦️.ts";
+import{assertNativeCacheDescriptorCustodyV1}from"../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts";
 const command=process.argv[2];if(!["preview","prune"].includes(command!))throw Error("Expected preview or prune");
 const workspace=resolve(import.meta.dir,"../../../../../../../.."),buildDirectory=cargoDirectories(workspace).build;
 const lockProgram=`import os,sys,stat
@@ -50,7 +50,7 @@ async function withPhysicalProfileLocks(paths:readonly string[],control:ReturnTy
 await receiveScriptProcessInvocation(process.env,async invocation=>{
  const control=scriptCompilerAdmissionControlV1(invocation,"cache:inactive-build-units",600000);
  const available=async()=>{checkResourceLeaseControl(control);const fs=await statfs(buildDirectory,{bigint:true});checkResourceLeaseControl(control);const bytes=Number(fs.bavail*fs.bsize);if(!Number.isSafeInteger(bytes)||bytes<0)throw Error("Finite actual filesystem headroom required");return bytes;};
- await withCargoCacheMaintenanceV1({buildDirectory,leaseDirectory:join(workspace,".cache/framework/leases"),control},async()=>{
+ await withCargoCacheMaintenanceV1({buildDirectory,leaseDirectory:join(workspace,".cache/framework/leases"),control,wait:false},async()=>{
   const processes=await captureOwnedCommandV1("ps",["-axo","pid,comm"],workspace,{control});
   if(processes.split("\n").some(line=>/(?:^|\s|\/)(?:rustc|cargo|cargo-nextest|clang|clang\+\+|ld)$/u.test(line.trim())))throw Error("External compiler process must finish before maintenance");
   const originalAvailableBytes=await available(),units=await scanCargoBuildUnits(buildDirectory,control),policy=CACHE_POLICY.storage.cargo,pressurePolicy=CACHE_POLICY.storage.pressure;
@@ -65,7 +65,7 @@ await receiveScriptProcessInvocation(process.env,async invocation=>{
   await withPhysicalProfileLocks(locks,control,async guard=>{
   const opened=await captureOwnedProcess("lsof",["-nP","-Fpn"],{invocation,cwd:workspace,env:process.env,budgetMs:600000,maxOutputBytes:16777216,stdoutPath:join(artifacts,`opened-${process.pid}.txt`),stderrPath:join(artifacts,`errors-${process.pid}.txt`)});
   console.log(`[DEBUG] Physical compiler descriptor probe ${JSON.stringify({status:opened.status,signal:opened.signal,reason:opened.reason,stdoutBytes:Buffer.byteLength(opened.stdout),stderrBytes:Buffer.byteLength(opened.stderr),guardPid:guard.pid})}`);
-  assertCompilerDescriptorCustodyV1(opened,buildDirectory,{pid:guard.pid,paths:locks});
+  assertNativeCacheDescriptorCustodyV1(opened,buildDirectory,{pid:guard.pid,paths:locks},"newline-pn");
   let bytes=0,count=0;
   for(let pass=0;;pass++){
   if(pressure.pressured&&(bytes>=pressurePolicy.maximumDeletionBytes||await available()>=pressurePolicy.targetAvailableBytes))break;

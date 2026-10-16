@@ -7,7 +7,7 @@ use pack::snapshot::ArtifactDsl as _;
 
 #[test]
 fn collection_native_schema_factories_admit_both_directions_before_copies(){
-    let oracle:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏭️native-schema/🔣️.json")).unwrap();
+    let oracle:serde_json::Value=serde_json::from_str(crate::test_inputs::text("🧪️tests/🧫️fixtures/🏭️native-schema/🔣️.json")).unwrap();
     let mut accept=|_|true;
     let mut decoding=semio_framework_value::NativeDecodeControl::new(oracle["maximumBytes"].as_u64().unwrap() as usize,&mut accept);
     let variants=<ArtifactBody as semio_framework_dsl_record::DslVariants>::variants_controlled(&mut decoding).unwrap();
@@ -73,7 +73,7 @@ fn package_declaration_matches_serde_json_oracle() {
 
 #[test]
 fn collection_document_example_matches_codec_and_pack_contract() {
-    let parsed = CollectionSnapshot::parse_dsl(include_str!("../../📚️examples/🎬️demo.collection")).expect("parse collection example");
+    let parsed = CollectionSnapshot::parse_dsl(crate::test_inputs::text("📚️examples/🎬️demo.collection")).expect("parse collection example");
     assert_eq!(CollectionSnapshot::envelope_id(), S_COLLECTION_SCHEMA);
     assert_eq!(parsed.schema, "s.collection");
     store::os_store::test_support::assert_dsl_round_trip(&parsed);
@@ -113,7 +113,7 @@ fn hierarchy_reconciliation_and_path_resolution_stay_deterministic() {
 
 #[test]
 fn collection_borrowed_body_variants_match_the_native_schema_corpus(){
- let oracle:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🏭️native-schema/🔣️.json")).unwrap();
+ let oracle:serde_json::Value=serde_json::from_str(crate::test_inputs::text("🧪️tests/🧫️fixtures/🏭️native-schema/🔣️.json")).unwrap();
  let actual:Vec<_>=<ArtifactBody as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS.iter().map(|(_,make)|{let spec=make();serde_json::json!({"keyword":spec.keyword,"fields":spec.fields.iter().map(|field|serde_json::json!({"id":field.id,"key":field.key,"shape":match field.shape{semio_framework_dsl_record::BorrowedShape::Text=>"text",semio_framework_dsl_record::BorrowedShape::UInt=>"uint",_=>panic!("collection field shape")} })).collect::<Vec<_>>()})}).collect();
  assert_eq!(serde_json::json!(actual),oracle["variants"]);
 }

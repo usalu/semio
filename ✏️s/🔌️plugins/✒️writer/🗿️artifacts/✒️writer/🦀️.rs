@@ -620,7 +620,7 @@ pub mod editor {
                             pub mod line_height;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/☑️options/🔢️line-numbers/🦀️.rs"]
                             pub mod line_numbers;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/☑️options/⇥️tab/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/☑️options/🗂️tab/🦀️.rs"]
                             pub mod tab_size;
                         }
                     }

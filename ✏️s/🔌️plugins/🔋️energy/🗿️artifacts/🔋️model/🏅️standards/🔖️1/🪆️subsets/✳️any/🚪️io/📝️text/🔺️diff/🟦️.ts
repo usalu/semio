@@ -49,5 +49,5 @@ export const energyModelDiffTextGuardConstant = <T extends string | number | boo
 //#endregion 🚪️Parsers
 
 export function parseEnergyModelDiffText(value: unknown, at = "$"): EnergyModelDiffText {
-  return energyModelDiffTextGuardObject(value, `${at}`);
+  return energyModelDiffTextGuardString(value, `${at}`);
 }

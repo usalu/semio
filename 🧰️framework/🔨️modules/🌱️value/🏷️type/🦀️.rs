@@ -103,9 +103,6 @@ impl FromValue for ValueType {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 #[path = "🛬️controlled/🦀️.rs"]
 mod controlled;
@@ -114,4 +111,10 @@ impl RetireOwned for ValueType {
     fn retirement(self)->Box<dyn crate::retirement::RetirementCursor> {match self {Self::List(value)=>value.retirement(),Self::Schema(value)=>value.retirement(),_=>crate::retirement::leaf(())}}
     fn retirement_birth_bytes(&self)->Option<usize> {match self {Self::List(value)=>value.retirement_birth_bytes(),Self::Schema(value)=>value.retirement_birth_bytes(),_=>Some(crate::retirement::leaf_birth_bytes::<()>())}}
     fn controlled_retirement_supported()->bool {true}
+}
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub use super::controlled::testkit::*;
 }

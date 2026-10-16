@@ -49,5 +49,5 @@ export const architectProgramMutationsTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseProgramMutationsText(value: unknown, at = "$"): ProgramMutationsText {
-  return architectProgramMutationsTextGuardObject(value, `${at}`);
+  return architectProgramMutationsTextGuardString(value, `${at}`);
 }

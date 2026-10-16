@@ -202,5 +202,6 @@ pub struct ShellDocumentRetirementAdmission {
 //#region ShellTypes
 //#region 📄️ShellDocumentRetirement
 pub const SHELL_DOCUMENT_RETIREMENT_INDEX_BYTES: usize = std::mem::size_of::<[u64; SHELL_DOCUMENT_RETIREMENT_WORDS]>() + std::mem::size_of::<u64>();
+const _: [(); 72] = [(); SHELL_DOCUMENT_RETIREMENT_INDEX_BYTES];
 //#endregion 📄️ShellDocumentRetirement
 //#endregion ShellTypes

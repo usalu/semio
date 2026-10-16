@@ -10,9 +10,9 @@ static NEXT_POOL_ID: AtomicU64 = AtomicU64::new(1);
 /// 🎟️ Only the issuing pool and live generation accept this hook ticket.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct WorkerMaintenanceTicket {
-    pool: u64,
-    slot: u8,
-    generation: u64,
+    #[doc(hidden)] pub pool: u64,
+    #[doc(hidden)] pub slot: u8,
+    #[doc(hidden)] pub generation: u64,
 }
 
 /// 👣️ A finite callback yields, sleeps until another request, retains a fault, or retires its
@@ -48,7 +48,7 @@ pub type WorkerMaintenanceCallback = fn([u64; 2]) -> WorkerMaintenanceStep;
 
 #[derive(Clone, Copy)]
 struct Hook {
-    generation: u64,
+    pub generation: u64,
     lane: Lane,
     callback: WorkerMaintenanceCallback,
     context: [u64; 2],
@@ -58,9 +58,9 @@ struct Hook {
 }
 
 struct State {
-    next_generation: u64,
+    pub next_generation: u64,
     closed: bool,
-    entries: [Option<Hook>; WORKER_MAINTENANCE_CAPACITY],
+    pub entries: [Option<Hook>; WORKER_MAINTENANCE_CAPACITY],
     cursor: [usize; LANE_COUNT],
     hook_first: [bool; LANE_COUNT],
 }
@@ -70,12 +70,12 @@ struct State {
 /// contends for the registry.
 pub(super) struct WorkerMaintenanceRegistry {
     identity: u64,
-    state: Mutex<State>,
+    pub state: Mutex<State>,
     pending: [AtomicU32; LANE_COUNT],
 }
 
 pub(super) struct Invocation {
-    ticket: WorkerMaintenanceTicket,
+    pub ticket: WorkerMaintenanceTicket,
     callback: WorkerMaintenanceCallback,
     context: [u64; 2],
 }
@@ -87,7 +87,7 @@ pub(super) enum PoolWork {
 }
 
 impl PoolWork {
-    pub(super) fn run(self, registry: &WorkerMaintenanceRegistry) {
+    #[doc(hidden)] pub fn run(self, registry: &WorkerMaintenanceRegistry) {
         match self {
             Self::Job(job) => job(),
             Self::Maintenance(invocation) => {
@@ -100,7 +100,7 @@ impl PoolWork {
 }
 
 impl WorkerMaintenanceRegistry {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         let identity = NEXT_POOL_ID.try_update(Ordering::Relaxed, Ordering::Relaxed, |value| value.checked_add(1)).expect("WorkerPool maintenance identity exhausted");
         Self { identity, state: Mutex::new(State { next_generation: 1, closed: false, entries: [None; WORKER_MAINTENANCE_CAPACITY], cursor: [0; LANE_COUNT], hook_first: [false; LANE_COUNT] }), pending: std::array::from_fn(|_| AtomicU32::new(0)) }
     }
@@ -117,7 +117,7 @@ impl WorkerMaintenanceRegistry {
         }
     }
 
-    pub(super) fn install(&self, lane: Lane, callback: WorkerMaintenanceCallback, context: [u64; 2]) -> Result<WorkerMaintenanceTicket, WorkerMaintenanceError> {
+    pub fn install(&self, lane: Lane, callback: WorkerMaintenanceCallback, context: [u64; 2]) -> Result<WorkerMaintenanceTicket, WorkerMaintenanceError> {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         if state.closed {
             return Err(WorkerMaintenanceError::Shutdown);
@@ -136,7 +136,7 @@ impl WorkerMaintenanceRegistry {
         state.entries.get_mut(usize::from(ticket.slot)).and_then(Option::as_mut).filter(|entry| entry.generation == ticket.generation).ok_or(WorkerMaintenanceError::Stale)
     }
 
-    pub(super) fn request(&self, ticket: WorkerMaintenanceTicket) -> Result<WorkerMaintenanceRequest, WorkerMaintenanceError> {
+    #[doc(hidden)] pub fn request(&self, ticket: WorkerMaintenanceTicket) -> Result<WorkerMaintenanceRequest, WorkerMaintenanceError> {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         if state.closed {
             return Err(WorkerMaintenanceError::Shutdown);
@@ -151,7 +151,7 @@ impl WorkerMaintenanceRegistry {
         Ok(result)
     }
 
-    pub(super) fn remove(&self, ticket: WorkerMaintenanceTicket) -> Result<bool, WorkerMaintenanceError> {
+    #[doc(hidden)] pub fn remove(&self, ticket: WorkerMaintenanceTicket) -> Result<bool, WorkerMaintenanceError> {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         let entry = self.exact(&mut state, ticket)?;
         entry.closing = true;
@@ -164,7 +164,7 @@ impl WorkerMaintenanceRegistry {
         Ok(!running)
     }
 
-    pub(super) fn has_pending(&self, lane: Option<Lane>) -> bool {
+    pub fn has_pending(&self, lane: Option<Lane>) -> bool {
         match lane {
             Some(lane) => self.pending[lane.index()].load(Ordering::Acquire) != 0,
             None => self.pending.iter().any(|pending| pending.load(Ordering::Acquire) != 0),
@@ -180,7 +180,7 @@ impl WorkerMaintenanceRegistry {
         self.publish(&state);
     }
 
-    pub(super) fn select(&self, lane: Lane, queue: &mut VecDeque<Job>) -> Option<PoolWork> {
+    #[doc(hidden)] pub fn select(&self, lane: Lane, queue: &mut VecDeque<Job>) -> Option<PoolWork> {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         if state.closed {
             return queue.pop_front().map(PoolWork::Job);
@@ -222,7 +222,7 @@ impl WorkerMaintenanceRegistry {
         Some(PoolWork::Maintenance(invocation))
     }
 
-    fn finish(&self, invocation: &Invocation, step: WorkerMaintenanceStep) {
+    pub fn finish(&self, invocation: &Invocation, step: WorkerMaintenanceStep) {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         let closed = state.closed;
         let slot = usize::from(invocation.ticket.slot);
@@ -247,6 +247,9 @@ impl WorkerMaintenanceRegistry {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod internals {
+    pub type PoolWork = super::PoolWork;
+    pub type WorkerMaintenanceRegistry = super::WorkerMaintenanceRegistry;
+}

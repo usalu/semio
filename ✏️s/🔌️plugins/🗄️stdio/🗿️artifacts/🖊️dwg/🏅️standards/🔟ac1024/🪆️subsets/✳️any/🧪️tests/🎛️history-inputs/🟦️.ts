@@ -10,7 +10,7 @@ test("DWG version-info edits are genuine committed inputs for each native versio
   const validate = new Ajv({ strict: false }).compile(leaf);
   for (const [directory, version, codepage] of [["4️⃣ac1018", "AC1018", 30], ["🔟ac1024", "AC1024", 28]] as const) {
     const owner = resolve(standards, directory, "🪆️subsets/✳️any");
-    const { before, after, mutation } = read(resolve(owner, "🧫️fixtures/🧬️history-edits/version-info/🦠️mutation/🔣️.json"));
+    const { before, after, mutation } = read(resolve(owner, "🧪️tests/🧫️fixtures/🧬️history-edits/🔢️version-info/🦠️mutation/🔣️.json"));
     expect(before.version).toBe(version);
     expect(mutation).toEqual({ mutation: "setVersionInfo", version: "AC1024", maintenanceVersion: before.maintenanceVersion, codepage });
     expect(validate(mutation)).toBe(true);

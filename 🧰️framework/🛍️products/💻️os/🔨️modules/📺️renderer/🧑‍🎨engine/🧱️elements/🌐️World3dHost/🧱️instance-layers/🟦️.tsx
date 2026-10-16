@@ -13,7 +13,7 @@ import {
   Suspense,
   type ComponentProps
 } from "react";
-import { hopTrace } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { hopTrace } from "@semio-tech/framework/trace";
 // #region 🔌️Adapters
 import {
   reactHostPort,

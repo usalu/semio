@@ -1,2 +1,2 @@
-export { setAppearance } from "../🟦️.ts";
-export type { SetAppearance } from "../🟦️.ts";
+export { setAppearance } from "@semio-tech/framework/config/mutations";
+export type { SetAppearance } from "@semio-tech/framework/config/mutations";

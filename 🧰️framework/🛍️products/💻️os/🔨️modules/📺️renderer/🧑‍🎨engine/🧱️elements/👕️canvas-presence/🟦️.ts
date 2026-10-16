@@ -2,7 +2,7 @@
  * Ephemeral shared only — hosts publish throttled views; Shell heartbeat collects them into
  * `ArtifactPresencePeer.views`; hosts subscribe to the full roster to paint peer overlays.
  */
-import { presenceTypingExcerpt, PRESENCE_PEER_WIRE_LIMITS_V1, type ArtifactPresencePeer, type ArtifactPresenceTyping, type ArtifactPresenceWindowView } from "@semio-tech/framework-replication";
+import { presenceTypingExcerpt, PRESENCE_PEER_WIRE_LIMITS_V1, type ArtifactPresencePeer, type ArtifactPresenceTyping, type ArtifactPresenceWindowView } from "@semio-tech/framework/replication";
 
 export type LocalPresenceWindowPublicationV1 = {
   readonly runtimeKey: string;

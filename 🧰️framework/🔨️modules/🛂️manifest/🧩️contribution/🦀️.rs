@@ -198,7 +198,7 @@ impl TryFrom<String> for Version {
 
 /// 📌️ A dependency pin: the exact version (`=X.Y.Z`) of the plugin a manifest depends on. One tree is one catalog, and a
 /// trusted catalog admits only exact pins inside its own closure (`trustedBootstrapDescriptorClaims`,
-/// `🌎️hub/📦️packages/🦀️rust/📜️script.ts`), so a manifest carries no range grammar: a declaration pins the version its
+/// `🌎️hub/🏗️bootstrap/🧾️provenance/🧮️bootstrap-claims/🟦️.ts`), so a manifest carries no range grammar: a declaration pins the version its
 /// own tree builds, through [`tree_pin!`](crate::tree_pin).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct VersionPin(pub Version);

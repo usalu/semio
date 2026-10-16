@@ -8,23 +8,23 @@
 
 use super::{LocalCatalogDiff, LocalCatalog, LocalCatalogConfigMutation};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📤️retire-local-document/📤️unlists-the-studio-and-keeps-its-sibling/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
 }
 fn before() -> LocalCatalog {
-    serde_json::from_str(BEFORE).expect("before catalog decodes")
+    serde_json::from_str(BEFORE.as_str()).expect("before catalog decodes")
 }
 fn expected_after() -> LocalCatalog {
-    serde_json::from_str(AFTER).expect("after catalog decodes")
+    serde_json::from_str(AFTER.as_str()).expect("after catalog decodes")
 }
 fn mutation() -> LocalCatalogConfigMutation {
-    serde_json::from_str(MUTATION).expect("retire mutation decodes")
+    serde_json::from_str(MUTATION.as_str()).expect("retire mutation decodes")
 }
 
 /// ▶️ Exactly the retired id leaves the catalog; the sibling stays.
@@ -55,25 +55,25 @@ fn undoing_the_retirement_restores_before() {
 /// 🔣️ The committed catalogs and the `retireLocalDocument` payload are canonical.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: LocalCatalog = serde_json::from_str(text).expect("catalog decodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("catalog reparses");
         assert_eq!(serde_json::to_value(decoded).expect("catalog encodes"), original, "retire-local-document: committed {label} catalog JSON is not canonical");
     }
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("retire payload reparses");
+    let original: serde_json::Value = serde_json::from_str(MUTATION.as_str()).expect("retire payload reparses");
     assert_eq!(serde_json::to_value(mutation()).expect("retire payload encodes"), original, "retire-local-document: committed retireLocalDocument JSON is not canonical");
 }
 
 /// 🎯️ Retiring a listed id raises no diagnostic, as the committed outcome declares; the diff carries before to after.
 #[test]
 fn declared_outcome_and_diff_hold() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"));
     let produced = <LocalCatalogConfigMutation as protocol::Mutation<LocalCatalog>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None);
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(json_value(produced.diff()), committed);
-    let decoded: LocalCatalogDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: LocalCatalogDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after());
 }
 

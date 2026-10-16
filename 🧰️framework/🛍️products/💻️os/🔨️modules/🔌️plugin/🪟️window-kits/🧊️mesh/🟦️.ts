@@ -21,10 +21,4 @@ export function renderMesh(view: MeshView): UiComponentSceneNode {
   return node;
 }
 
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️rendermesh/🟦️.ts");
-  await registerTests1(import.meta.vitest, { renderMesh }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️Tests
 // #endregion 🧊️MeshWindowKit

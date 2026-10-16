@@ -15,8 +15,8 @@ import {
   hubFirstRunIntroductionV1,
   hubFirstRunStepIndexV1,
   type HubFirstRunStageV1,
-  type HubFirstRunStateV1,
-} from "../../../../📇️directory/🎓️first-run/🟦️.ts";
+  type HubFirstRunStateV1
+} from "@semio-tech/framework/directory/first-run";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Types

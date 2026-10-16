@@ -9,7 +9,8 @@
 //! - the palette lists and EXECUTES every in-palette command of every owner, and ranks its rows with the
 //!   very algorithm React's `UISearch` uses (`🔨️modules/🖱️ui/🔨️modules/🔎️fuzzy-ranking/🟦️.ts`).
 
-use super::command_registry_tests::test_app;
+use semio_framework_os_renderer_wgpu_fixtures::shell::{host_test_shell, test_app, tree_pointer_record};
+use test_app;
 use super::*;
 use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, CommandOwnerAddress};
 
@@ -216,7 +217,7 @@ fn dismissing_and_reopening_a_palette_preserves_its_query() {
 fn two_window_shell() -> ShellState {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let app = test_app(Vec::new(), Vec::new());
-    shell.dock.dock.root = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
+    shell.dock.dock.root = semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
     shell.dock.dock.active_window_id = Some("main".into());
     shell.windows.active_window_id = Some("main".into());
     shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
@@ -449,7 +450,7 @@ fn picking_an_arg_carrying_command_opens_its_form() {
 }
 
 fn publish_palette_chrome(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>) {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     while input.retire_hit_step() {}
     shell.chrome.screen_w = 1280.0;
     shell.chrome.screen_h = 720.0;
@@ -495,7 +496,7 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
     assert_eq!(input_node.value_text.as_deref(), Some(""));
     assert!(input_node.focused, "shortcut focus and accessibility focus are the same input");
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
+        ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Value("Set Theme".into()), &mut input)).expect("palette accessibility value"));
     assert_eq!(shell.commands.search_query, "Set Theme");
 
@@ -519,22 +520,22 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
 /// activates its existing selection funnel and retires the modal focus owner.
 #[test]
 fn find_publishes_filters_and_activates_with_a_physical_row_click() {
-    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut shell = host_test_shell();
     shell.plugins.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_action(accept_find_fixture_action);
-    shell.dock.dock.root = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
+    shell.dock.dock.root = semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
     shell.dock.dock.active_window_id = Some("main".into());
     shell.windows.active_window_id = Some("main".into());
     SessionCtx::of(&mut shell).sync_dock_tabs();
     let window_id = shell.dock.dock.window_instances().first().map(|(id, _)| id.clone()).expect("the app contributes one mounted window");
-    let mut graph: ui_wgpu::wgpu::NodeGraphScene = serde_json::from_value(serde_json::json!({
+    let mut graph: semio_framework_ui_scene_node_graph::NodeGraphScene = serde_json::from_value(serde_json::json!({
         "nodes": [],
         "edges": [],
         "viewport": { "x": 0.0, "y": 0.0, "zoom": 1.0 }
     }))
     .expect("NodeGraph find fixture decodes");
-    graph.find_items.push(ui_wgpu::wgpu::NodeGraphFindItem { id: "media.node".into(), label: "Media Node".into(), category: "Nodes".into() });
-    let surface = ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, &graph).expect("bounded NodeGraph find scene encodes");
-    let records = vec![super::shell_input_tests::tree_pointer_record(1, "find-node-graph", ui_contract::Component::Surface(surface), &[], None)];
+    graph.find_items.push(semio_framework_ui_scene_node_graph::NodeGraphFindItem { id: "media.node".into(), label: "Media Node".into(), category: "Nodes".into() });
+    let surface = semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::NodeGraph, &graph).expect("bounded NodeGraph find scene encodes");
+    let records = vec![tree_pointer_record(1, "find-node-graph", ui_contract::Component::Surface(surface), &[], None)];
     let document = shell.windows.publish_surface_records(&window_id, records).expect("NodeGraph production ingress");
     shell.docs.window_ui.insert(window_id, document);
     let mut input = InputState::<ActionDescriptor>::default();
@@ -544,7 +545,7 @@ fn find_publishes_filters_and_activates_with_a_physical_row_click() {
     let input_node = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "ui.find.input").expect("Find textbox projects to accessibility");
     assert_eq!(input_node.role, "combobox");
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
+        ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Value("Media".into()), &mut input)).expect("Find accessibility value"));
     publish_palette_chrome(&mut shell, &mut input);
     let row = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some("ui.find.item.0")).expect("filtered Find row publishes a physical hit").rect;
@@ -625,7 +626,7 @@ fn palette_accessibility_is_a_dialog_tree_with_close_list_groups_status_and_stab
     assert!(empty_nodes.iter().any(|node| node.role == "status" && node.live == "polite"), "no-results is an announced status");
     let close = empty_nodes.iter().find(|node| node.key == "ui.search.close").expect("accessible close after filtering");
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: close.node_id, node_key: close.key.clone() };
+        ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: close.node_id, node_key: close.key.clone() };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("accessible Close activation"));
     assert_eq!(shell.input.overlay_state, OverlayState::None);
     assert_eq!(shell.commands.search_query, "zzzz", "Close preserves the query");
@@ -635,7 +636,7 @@ fn palette_accessibility_is_a_dialog_tree_with_close_list_groups_status_and_stab
 /// the host-app verbs — because that order is what the ranker breaks ties on and what a cold palette shows.
 #[test]
 fn the_palette_rows_follow_the_react_declaration_order() {
-    let shell = super::panel_anchor_model_tests::host_test_shell();
+    let shell = host_test_shell();
     assert!(shell.plugins.space_mode);
     let items = SessionCtx::of(&mut shell).build_search_items();
     items.iter().fold(0usize, |rank, item| {

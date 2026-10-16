@@ -49,5 +49,5 @@ export const stdioZip20BaseDiffTextGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parseZipDiffText(value: unknown, at = "$"): ZipDiffText {
-  return stdioZip20BaseDiffTextGuardObject(value, `${at}`);
+  return stdioZip20BaseDiffTextGuardString(value, `${at}`);
 }

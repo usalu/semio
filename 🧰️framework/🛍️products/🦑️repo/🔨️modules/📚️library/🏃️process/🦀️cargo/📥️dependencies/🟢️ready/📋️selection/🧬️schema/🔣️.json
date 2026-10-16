@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest",
+    "cwd",
+    "offline"
+  ],
+  "properties": {
+    "manifest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "cwd": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "offline": {
+      "type": "boolean"
+    }
+  }
+}

@@ -19,5 +19,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "framework/product/os/modules/shell"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*"
+  }
 }

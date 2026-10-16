@@ -2,6 +2,8 @@
 import type { UiNodeRecord } from "@semio-tech/framework";
 import type { RetainedSurface } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { type PluginRuntimeVitest, type PluginRuntimeDependencies, type PluginRuntimeSource } from "../🛠️plugin-runtime-helpers/🟦️.tsx";
+import { loadUiRefreshSectionFixture, loadPagedTextCarrierFixture } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadValueResidentSchema } from "../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 🧩️ One packed text leaf of a paged text carrier: slice 0 in `value`, slices 1..32 as
  * `dataAttributes` keyed `01`..`32` — the exact node shape `section_text_chunks`
@@ -78,7 +80,7 @@ export async function registerViewModelSurfacesTests(vitest: PluginRuntimeVitest
 
   describe("reserved refresh sections", () => {
     it("mounts one retained surface per requested section, keyed by the neutral fixture's reserved body key, carrying the unnarrowed view", async () => {
-      const { default: reserved } = await import("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔬️ui-refresh-section/🔣️.json");
+      const reserved = await loadUiRefreshSectionFixture();
       const viewState = {
         locale: "de",
         terminology: "reuse",
@@ -99,10 +101,10 @@ export async function registerViewModelSurfacesTests(vitest: PluginRuntimeVitest
     });
 
     it("projects a section's chunked text carrier back into the shell's own measures map", async () => {
-      const { default: reserved } = await import("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔬️ui-refresh-section/🔣️.json");
+      const reserved = await loadUiRefreshSectionFixture();
       const measures = { "puzzle3d-main-top": [{ kind: "slider", id: "puzzle3d-fill-count", value: 12, min: 1, max: 64, step: 1, onChange: { controller: "fill", action: "setCount" } }] };
       const payload = JSON.stringify(measures);
-      const chunks = [payload.slice(0, 17), payload.slice(17)];
+      const chunks:readonly[string,string]=[payload.slice(0,17),payload.slice(17)];
       const measuresSection = reserved.sections.find((section: { key: string }) => section.key === "measures")!;
       const leaf = (id: number, value: string): UiNodeRecord => ({
         id, key: `c${id - 1}`, component: { type: "text", value, emphasize: null, dataAttributes: null },
@@ -133,19 +135,20 @@ export async function registerViewModelSurfacesTests(vitest: PluginRuntimeVitest
     });
 
     it("reassembles a PACKED carrier leaf — value plus every sorted dataAttributes slice — against the neutral paged-text-carrier fixture", async () => {
-      const { default: carrier } = await import("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔬️paged-text-carrier/🔣️.json");
+      const carrier = await loadPagedTextCarrierFixture();
+      const firstSlice=carrier.slices.at(0);if(firstSlice===undefined)throw Error("Actual paged text carrier first slice required");
       expect(carrier.slices.join("")).toBe(carrier.payload);
       expect(carrier.payload.length).toBe(carrier.payloadBytes);
       expect(carrier.payloadBytes).toBeGreaterThan(carrier.textMaxBytes);
-      expect(carrier.slices[0].length).toBe(carrier.textMaxBytes);
-      expect(() => JSON.parse(carrier.slices[0])).toThrow();
+      expect(firstSlice.length).toBe(carrier.textMaxBytes);
+      expect(() => JSON.parse(firstSlice)).toThrow();
       expect(carrier.slices.length).toBeGreaterThan(1);
       expect(carrier.slices.length).toBeLessThanOrEqual(carrier.packSlices);
       const dataAttributes = Object.fromEntries(carrier.slices.slice(1).map((slice: string, offset: number) => [String(offset + 1).padStart(2, "0"), slice]));
       const { surface, desynced } = applyUiPatchToRetained(null, {
         surface: carrier.rootKey, revision: 1, baseRevision: 0,
         ops: [
-          { type: "upsert", ...packedCarrierLeaf(1, carrier.slices[0], dataAttributes) },
+          { type: "upsert", ...packedCarrierLeaf(1, firstSlice, dataAttributes) },
           { type: "upsert", ...packedCarrierRoot(carrier.rootKey, [1]) },
           { type: "setRoot", id: 0 },
         ],
@@ -157,11 +160,12 @@ export async function registerViewModelSurfacesTests(vitest: PluginRuntimeVitest
     });
 
     it("raises a typed fault naming the reserved section and its producer when a carrier's payload is not valid JSON", async () => {
-      const { default: carrier } = await import("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔬️paged-text-carrier/🔣️.json");
+      const carrier = await loadPagedTextCarrierFixture();
+      const firstSlice=carrier.slices.at(0);if(firstSlice===undefined)throw Error("Actual paged text carrier first slice required");
       const { surface } = applyUiPatchToRetained(null, {
         surface: carrier.rootKey, revision: 1, baseRevision: 0,
         ops: [
-          { type: "upsert", ...packedCarrierLeaf(1, carrier.slices[0], null) },
+          { type: "upsert", ...packedCarrierLeaf(1, firstSlice, null) },
           { type: "upsert", ...packedCarrierRoot(carrier.rootKey, [1]) },
           { type: "setRoot", id: 0 },
         ],
@@ -181,15 +185,15 @@ export async function registerViewModelSurfacesTests(vitest: PluginRuntimeVitest
   });
 
   it("RendererResidentComposition never replaces a closing composition ledger", async () => {
-      const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🧪️tests/🧫️fixtures/🔣️.json"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(source.url)), "../../💾️resident/🟦️.ts")).href;
+      const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🧪️tests/🧫️fixtures/🔣️.json"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖼️canvas/💾️renderer-resident/🟦️.ts")).href;
       const childSource = `const { rendererResidentLedger } = await import(process.argv[1]); const first = rendererResidentLedger(); first.beginClose(); const result = first.closeStep({maxItems:1,maxBytes:256}); const second = rendererResidentLedger(); const admission = second.prepareAdmission({},'data',{maxItems:1,maxBytes:296}); process.stdout.write(JSON.stringify({same:first===second,terminal:first.terminalIsEmpty(),result:result.kind,admission:admission.kind}));`;
       const actual = JSON.parse(execFileSync("node", ["--experimental-transform-types", "--input-type=module", "--eval", childSource, moduleUrl], { encoding: "utf8", timeout: 10000 }));
       expect(actual).toEqual({ same: !fixture.replacesClosingLedger, terminal: true, result: "complete", admission: "rejected" });
     });
 
     it("RendererResidentComposition shares one exact ledger and preserves both consumers' charges", async () => {
-      const { rendererResidentLedger } = await import("../../💾️resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json"); const { default: resident } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+      const { rendererResidentLedger } = await import("../../../../../../../🔨️modules/🖼️canvas/💾️renderer-resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🧪️tests/🧫️fixtures/🔣️.json");
+      const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json"); const resident = await loadValueResidentSchema(); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
       expect(new Ajv({ strict: true }).addSchema(resident).addSchema(rendererModule).getSchema(`${rendererModule.$id}#/$defs/RendererResidentPolicyV1`)!(fixture.capacity)).toBe(true);
       const react = rendererResidentLedger(); const wgpu = rendererResidentLedger(); expect(react === wgpu).toBe(fixture.sameLedger); expect(react.capacity).toEqual(fixture.capacity);
       expect({ bytes: react.capacity.bytes - react.capacity.control.bytes, slots: react.capacity.slots - react.capacity.control.slots, owners: react.capacity.owners - react.capacity.control.owners }).toEqual(fixture.data);

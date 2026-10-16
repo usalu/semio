@@ -3,7 +3,7 @@ import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import{readFileSync,existsSync}from"node:fs";
 import{readFile}from"node:fs/promises";
-import{readRustSourceClosureV1,selectRustSourceV1}from"../../../../🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import{readRustSourceClosureV1,selectRustSourceV1}from"@semio-tech/process/artifacts/native-build/source";
 import{resolve,dirname,relative}from"node:path";
 import Parser from"web-tree-sitter";
 import TOML from"@iarna/toml";
@@ -57,7 +57,7 @@ test("UI contract referenced external and derive runtime crates require actual d
    const missing=(db.query("select name from needed except select name from declared order by name").all()as{name:string}[]).map(row=>row.name);expect(missing,row.id).toEqual(row.missing);
   }
  }finally{db.close();}
- const expansion=readFileSync(resolve(root,"../../🌱️value/✨️derive/⚙️expansion/🦀️.rs"),"utf8");expect(expansion).toContain('container.crate_path.as_deref().unwrap_or("::semio_framework_value")');expect(expansion).toContain("#value_crate::ToValue");expect(expansion).toContain("#value_crate::FromValue");
+ const expansionEntry=resolve(root,"../../🌱️value/✨️derive/⚙️expansion/🦀️.rs"),expansionRoot=resolve(root,"../../.."),expansion=(await readRustSourceClosureV1([expansionEntry],expansionRoot,[],async path=>await readFile(path).catch((error:NodeJS.ErrnoException)=>error.code==="ENOENT"?null:Promise.reject(error)))).map(input=>readFileSync(resolve(expansionRoot,input.path),"utf8")).join("\n");expect(expansion).toContain('container.crate_path.as_deref().unwrap_or("::semio_framework_value")');expect(expansion).toContain("#value_crate::ToValue");expect(expansion).toContain("#value_crate::FromValue");
  const framework=resolve(root,"../../.."),violations=new Map<string,{owner:string;crate:string;path:string}>(),observed=new Map<string,Set<string>>();
  for(const owner of[{name:"document",root:"."},...fixture.owners]){
   const directory=resolve(root,owner.root),manifestPath=resolve(directory,"📦️packages/🦀️rust/Cargo.toml"),manifest=Bun.TOML.parse(readFileSync(manifestPath,"utf8"))as any;

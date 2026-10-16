@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("strict worker-parking fixture")
+    serde_json::from_str(crate::text("🔔️worker-parking/🧪️tests/🧫️fixtures/🔣️.json")).expect("strict worker-parking fixture")
 }
 
 fn wake_name(wake: ParkWake) -> &'static str {

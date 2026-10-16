@@ -49,5 +49,5 @@ export const stdioJpgJfif101DocumentInferenceTextGuardConstant = <T extends stri
 //#endregion 🚪️Parsers
 
 export function parseJpgInferenceText(value: unknown, at = "$"): JpgInferenceText {
-  return stdioJpgJfif101DocumentInferenceTextGuardObject(value, `${at}`);
+  return stdioJpgJfif101DocumentInferenceTextGuardString(value, `${at}`);
 }

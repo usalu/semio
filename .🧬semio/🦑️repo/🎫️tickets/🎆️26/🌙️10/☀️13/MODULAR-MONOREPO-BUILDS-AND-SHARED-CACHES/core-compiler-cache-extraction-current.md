@@ -137,3 +137,107 @@ Before moving bodies, add Source AST/closed relation corpus REDs for actual wrap
 Implement the two owner seams and the minimal Core exact-image operation as one coherent handoff checkpoint, then move the generic bodies. No public registrar, structural image alias, free effect constructor, reservation-checker widening or raw Native field in Rust facts is introduced. Existing generic consumer APIs remain required; there is no compatibility overload.
 
 Additional exact Source roster for this handoff: canonical Native `storage/platform/🟦.ts`; repository `budget/opening/🟦.ts`; repository `compiler/🟦.ts`; adjacent owner Source/normal-file-control tests; existing state test route. The Native borrower/cleanup/lease primitive and public reservation checker semantics are not edited. Parent/child receiver close order remains inside the genuine carried phase, before that phase settles.
+
+## Implemented Frozen Source Checkpoint
+
+This section supersedes the proposed implementation details above where they differ. The extraction is now implemented. Core owns the sole generic policy/model/receiver/inventory/descriptor/layout/volume implementation; the old generic files were removed without compatibility exports. Rust retains its plan/context/content/environment/cwd checks, CompilerWorkspaceCustody and opaque Rust loan. Production remains 4 GiB child charge, eight slots, 1 GiB pressure recovery target and 8 GiB initial parent availability. Release write containment remains a separate frontier.
+
+The actual wrapper handoff is owner-scoped. Budget opening maps only its factory-created frozen wrapper to the real canonical image and its lease dependency. Compiler construction maps both the base store and the final toolchain-bearing store to that same genuine retained owner. The two closed operations capture policy/key/content before deferred work and pass the real image to Core internally; neither public callback exposes it. Copied, invented, foreign and closed owner references refuse. The Native platform map is populated solely by its actual backend opener, captures opening options before the backend await, and returns the same actual frozen image and port rather than accepting an alias.
+
+Core separately authenticates the real parent allocation at its exact allocation control. A new read-only policy-fact API captures immutable policy only in the actual allocator factory; it does not widen the existing reservation checker or grant authority. Core compares every captured parent policy field, requires the policy floor to equal the actual allocation maximum workspace, enters the authentic Native operation and awaits allocation.recheck before effects. Policy DATA is independently copied from own plain data descriptors, bounded and frozen before any await; accessor/Proxy/unsupported shape inputs refuse.
+
+The moved cache workspace uses a bounded Core Workspace binding and actual Native allocator. It does not import the repository mode-specific compiler reservation owner. The ordinary repository compiler reservation remains its separate domain lifecycle; there is no second copy of the extracted cache volume/model/inventory logic. Durable binding/intent ambiguity and unbound owner-name allocation candidates retain/refuse. Existing clean-only pressure, dirty retention, exact retiring tombstones, descriptor exclusion and fresh recensus predicates remain intact.
+
+The private receiver now enrolls the exact returned promise before invoking work, rejects same-frame close and synchronously refuses overlapping replacement. Closure stops births, drains accepted descendants and attempts every owned receiver close. Partition admission and close preserve ordered primary Error or thrown undefined while still attempting image and lease dependency close. A callback failure is never replaced by finally-close failure. The borrowed parent is retained by its real Native operation, not put in the owned-child receiver-close set.
+
+## Executed Evidence and Strict Boundary
+
+All commands used the existing preauthored build-mode state test/types route. Core and Rust received laws ran in separate owned Bun children. No Native/image/compiler/Rust/Cargo/download/SDK/retirement effect ran.
+
+| Evidence | Actual result |
+| --- | --- |
+| `core-cache-handoff-red.log` | Genuine missing owner handoff Source RED, 22 pass / 1 fail / 289 assertions. |
+| `core-cache-ledger-reentrance-red.log` | Genuine pre-enrollment own-frame close RED, 0 pass / 1 fail / 1 assertion. |
+| `core-cache-parent-freeze-red.log` | Genuine actual platform freeze Source RED, 22 pass / 1 fail / 313 assertions in the Rust integration child. |
+| `core-cache-source-prototype1.log` | Intermediate moved-name AST expectations failed, 20 pass / 3 fail / 297 assertions; corrected to actual Core owners and retained Rust domain names. |
+| `core-cache-final-test-prototype.log` | Core 7/55 plus Rust integration 23/316, all pass: total 30 tests / 371 assertions. |
+| `core-cache-final-test-release.log` | Same 30 tests / 371 assertions, all pass. |
+| `core-cache-types-prototype1.log` | Actual moved descriptor import missing; corrected at its real consumer. |
+| `core-cache-types-prototype2.log` | Expanded actual Source roots strict exit 0 at that preceding epoch. |
+| `core-cache-final-types-prototype.log`, `core-cache-final-types-release.log` | Both exit 1 exclusively at moving peer component-pass line 122 (`options`/`plan` unknown and consequent parameter inference), no owned extraction diagnostic. CPU acknowledged and corrected the misplaced preflight afterward. No unexecuted successor is called green. |
+
+The tests include schema/Ajv and independent SQLite policy/ordered-prefix/transition outputs, actual ordinary-file Python SHA256/SQLite census, bounded policy mutation/accessor refusal, genuine received control negatives, receiver success/Error/undefined and admission-order drainage. Source AST laws check actual private factory associations, same image identity, real allocation policy/recheck/floor ordering and absence of Core-to-repository reverse imports. They do not qualify Native physical admission or platform freezing at runtime. Every original strict root and flag is retained. Root will collect integration strict after the peer lanes settle; no unchanged rerun was launched.
+
+## Native Freeze Source Census
+
+`core-cache-native-freeze-census.json` is a bounded read-only census of 427 TypeScript files under Native storage and repository caching (maximum 4096 files, 2 MiB per file). Four public-write pattern matches occur only in SDK derivative-index tests that instrument ordinary filesystem FileHandle.close; none is a Native image or port write. Both actual physical constructors were inspected: macOS persistent construction in cleanup/command and the shared fixed Linux/Windows receiver. They return ordinary data/method object literals, without field accessor syntax. Lifecycle mutation occurs in private receiver/closure state (`stage`, held guard, maintenance/closing state), rather than reassigning public image/port members. The three platform forwarders and canonical platform owner likewise have no such accessor definitions. Their six hashes are recorded in the census. This establishes Source compatibility of freezing the same actual object; no physical or cross-platform runtime qualification is inferred.
+
+## Next Separately Funded Consumer and Whole-Cache Retirement Plan
+
+The authored small policy is genuine different consumer DATA: 64 MiB charge, 16 MiB parent metadata allowance, 48 MiB backing, 47 MiB inner filesystem, two slots, 4 MiB recovery target and 16 MiB initial parent floor. It exercises the same engine/model, not a production override. It has not created a volume. An actual parent allocation must privately capture a 16 MiB maximum workspace to satisfy the floor equality, and its real journal must fund the distinct child cache charge. The canonical Diagnostics whole-image allocation cannot simply be relabeled that smaller allocation or double-charged.
+
+The actual macOS child creator additionally requires backing plus 64 MiB available before creation. A proposed 128 MiB parent with a 16 MiB actual consumer allocation and distinct 64 MiB child charge could satisfy the logical envelope; creation still needs at least 112 MiB actual parent free for the 48 MiB child and may honestly refuse after formatting overhead. Parent plus child known backing is 176 MiB. Therefore it does not fit the earlier 128 MiB total private-image fixture authorization. A separately reviewed finite 192 MiB outer Diagnostics scratch quote is a possible next consumer, not existing approval or a global cap increase. Alternatively an actual API factoring that uses an already funded fixed child could avoid the nested envelope; that requires its own custody design. No fixture will run by silently weakening either capacity predicate.
+
+Before either physical fixture, implement and review a closed whole-cache retirement operation under the same privately authenticated parent owner. It must resolve the exact durable Binding/Intent, allocation ID and immutable backing/receipt identity without creating a missing cache. It must stop births, drain real producer and receiver descendants, obtain nonblocking actual child EX, complete rooted FD exclusion and fresh unchanged census, and preserve unknown/unbound/corrupt/ambiguous candidates. Dirty producer state is not inferred abandoned from PID/name. Whole-cache owning teardown is distinct from clean-slot pressure and needs actual whole-volume ownership/exclusion.
+
+A durable whole-cache retirement transition is still missing. The proposed closed state order is bound -> retiring-content -> retiring-image -> retired, with the existing real child charge retained through all interrupted/uncertain stages. Exact inner workspace retirement and known owned content removal precede canonical Native backing retirement. Only confirmed physical backing retirement may acknowledge the parent charge retirement. The EX/gap/reopen and inner journal ordering must be qualified rather than represented by a boolean receipt. No public raw path/callback/argv retirement surface is proposed. Failures including undefined retain primary order, exact charged unresolved state and the same genuinely prefunded deadline; no new Original or cleanup control is minted.
+
+This teardown Source transaction, independent custody review and an explicit finite actual Diagnostics funding quote are prerequisites to the small physical lifecycle/pressure cohort. Production 4 GiB/8 GiB remains unqualified and currently unfunded at the last observational outer availability of about 4.325 GiB. There is no physical operation authorized by this handback. All own handles are terminal.
+
+## Frozen File Roster and SHA256
+
+New Core files: 11. Updated files: 15. Removed generic implementation files: 5. Maximum absolute roster path is 150 UTF-16 code units (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧬️schema/🔣️.json`), within 256. No editor catalog or new human command was needed; existing state commands remain registered in both catalogs.
+
+| Source path | SHA256 |
+| --- | --- |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/⚙️policy/🟦️.ts` | `a9d019290af89fae77ab9197ccfa47792e53320606ae719867cd7dc8a12aed0f` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/💾️volume/🟦️.ts` | `858aad39aff33ff87559b7fc3c8bf75e34cf6a08fccf72b2a615817247be904d` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts` | `3fb031bd6043e5d61e07ff03ecadf13f9bb41519694d8397d51f43c3d4757660` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/📨️receiver/🟦️.ts` | `381445e40e0cdfc8593aa6861fc1e74fda87a40759920dfb77cb0d4bea2b3bf0` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/🟦️.ts` | `b207d1ce4637de204007e79145dfa70800811fc8f1d7ee35291fe268e3a4f71c` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📍️layout/🟦️.ts` | `8ab38c5b6278d12e73f32e218d80e5a1d44e310875361b697fe779325aaf292b` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📏️inventory/🟦️.ts` | `0b3508cf2da2777d6a3cd547c1d42de5007735669edb80497caac1ced97cc3f5` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🟦️.ts` | `d62d4812b9ef5a1590fcf883252afcb17e10f35d026eeaf459632370e1f88e83` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🔣️.json` | `f1ccf2f4eafd808827f4cb5728962498312ad0d7a8dbb5959a3182dc8e9d8641` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts` | `f4af5cda030497229d63ed52a7b7fa207276b829a1cadbcefdb8493e59c1363e` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧬️schema/🔣️.json` | `35a61ad6e719034792ccaa34f408701df85025b06d527e73042ccdde799525b2` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts` | `2826304c1b8ba5c92b3323d4cae955bb893f5b1609b723123b33cfd2dab9da45` |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts` | `6b02ba012f0e6ff9367ae52c8a945faae77bcaf724ecbcc4d28be64e04cbbd68` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts` | `3f371803307c563169f7e9227140e19dea5df86764d6fd5540e0bd33ee2ba2d1` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts` | `9286dd571434492905bd29e313c896f00ca57080c7e28f8786c9eb4558e6dec2` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🟦️.ts` | `bd762245b3fe0ceef54bc30bd220bfbf52ce67a7733de0294f7e91c578c11840` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/⚙️policy/🟦️.ts` | `94332ca35a21aca497306bd5b5f44d5d92e946cb172f3378a0d5c51eaf73697c` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/📍️layout/🟦️.ts` | `fa5a86b0ee8853977c0f95096818cb94d4929ab28a1c192c9a6a24218493f3ac` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🔣️policy.json` | `e4225e951f0017352d472a190cc3a10c165d743b2c14fc226587a01e595f027c` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧬️schema/🔣️.json` | `075f6c9fd47d6671abc64a3e3ba36247c56725826220d8983dd371e63cd2ba8d` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts` | `673c37fec32f18aa9a93e12bea95d68e07c26c48a52adc2f97a7786ab9bca17b` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🔣️.json` | `a86cd0c9b36e85b5d669a951326227e1d96f433323adcfb6fb0bbb36c9eba599` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/⚙️execution/🟦️.ts` | `86a056c785135f92bcb45a0b8dddb8c37d109af079958bc27cfd904c1a129e98` |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📉️pressure/🧪️tests/🟦️.ts` | `7f4df8ed88074ca373c74677ddbd868eca5363284a18d34643614da3bd3cf436` |
+| `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/build-maintenance/📜️script.ts` | `954a90ebd6d3d78648e3da6d0468e520a8ab6c67cb7644b4a3c919d13ed40d65` |
+| `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/build-mode/📜️script.ts` | `538ca1c93fd18dfdee586d778b3167990dff147fd09729950ed45f2901ddb50e` |
+
+Removed, without alias/reexport:
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/📋️model/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/📋️model/📨️receiver/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/📏️inventory/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/💾️volume/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📉️pressure/📂️descriptors/🟦️.ts`
+
+## Retained Generated Evidence SHA256
+
+| Generated file | SHA256 |
+| --- | --- |
+| `core-cache-final-test-prototype.log` | `306bcdc379f584b363c6e031802dcf8ca7e02bcc909ec17e6caee94cbe7d3774` |
+| `core-cache-final-test-release.log` | `ecfdf02c74f5e8bc897f9b9a805f78514d6b51055fede46f12a69fffab0ca4e3` |
+| `core-cache-final-types-prototype.log` | `8a2b2c97bc7a6d146197c10d635bbfe8682fbe1061315439686b65b395182118` |
+| `core-cache-final-types-release.log` | `8a2b2c97bc7a6d146197c10d635bbfe8682fbe1061315439686b65b395182118` |
+| `core-cache-handoff-red.log` | `6e31802f0a4fc8c21c89e529de097a325fe1237c7df70ae240604ecdc7abb9a7` |
+| `core-cache-ledger-reentrance-red.log` | `d79fb49dc68ba35226b393c8127d2ce595383175767384d9ebd7fc4df63285c1` |
+| `core-cache-parent-freeze-red.log` | `b6332fbe0c3123d33ab6cedf6e34faaed8fc491fb181d679b518fe7ff4ecd5dc` |
+| `core-cache-source-prototype1.log` | `c55461d7df8c95340910abd49805494c0489337a19caba08cd556a5f399a267f` |
+| `core-cache-source-prototype2.log` | `781f1c4eefda76ea21d570be89081a51bb31b14b93c0b378f68343a99591de44` |
+| `core-cache-types-prototype1.log` | `78afefae873098a04c86b71b0b0995b9f8c3703e73e55bc799f26dd3270489b0` |
+| `core-cache-types-prototype2.log` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| `core-cache-native-freeze-census.json` | `c3b5b5565e0c13345d892d4344edbd888f2fcd5111638fd17c49878966cba2a9` |

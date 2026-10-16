@@ -27,7 +27,7 @@
       "rationale": "🧾️ The TypeScript compiler's own parser decides where each TypeScript definition starts and ends, independently of this module's Rust and Go definition parsers, which never link it. It is not test-only at the repository level: it is the compiler toolchain every TypeScript package declares, and repository tooling calls its API outside this owner. That reach is recorded below as debt, and none of it touches the parser under test.",
       "productionDebt": {
         "reachableFrom": [
-          "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+          "🌎️hub/🧪️tests/👤️browser-actor-checks/🟦️.ts",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs",
           "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
           "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts"

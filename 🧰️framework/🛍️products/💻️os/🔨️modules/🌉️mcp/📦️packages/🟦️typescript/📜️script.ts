@@ -3,7 +3,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules
 import { runBudgetedTestCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌉️ `@semio-tech/framework-os-mcp` TS task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`.
- * Nx restores the Rust build before these process consumers run. An explicit binary override
+ * The repository build tool restores Rust outputs before these process consumers run. An explicit binary override
  * remains a strict prebuilt-artifact seam; both paths require an executable before Vitest starts. */
 import { join } from "node:path";
 import { runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";

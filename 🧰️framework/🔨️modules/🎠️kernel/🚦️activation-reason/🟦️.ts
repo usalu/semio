@@ -3,7 +3,7 @@
  * 🧱️ Child module of `🎠️kernel`; importers import this module directly, and the kernel package entry {@link ../📦️packages/🟦️typescript/🟦️.ts} lists its public names.
  */
 
-import { parseSurfaceAppId } from "../../🛂️manifest/🧬️schema/🟦️.ts";
+import { parseSurfaceAppId } from "@semio-tech/framework/manifest/schema";
 import { type ShardEventEnvelope } from "../../🎭️actor/📮️shard-client/🟦️.ts";
 import { ON_ARTIFACT_KIND_ACTIVATION_PREFIX } from "../📚️plugin-catalog/🟦️.ts";
 

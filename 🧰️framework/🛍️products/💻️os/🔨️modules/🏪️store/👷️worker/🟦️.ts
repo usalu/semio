@@ -1,12 +1,13 @@
 import {admitCheckpointSelectionV1} from "../../📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts";
-import { parseDirectorySessionAuthorityJsonV1 } from "../../📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts";
-import { parseDirectoryEventPageV1 } from "../../📇️directory/🚪️io/📝️text/🟦️.ts";
+import { parseDirectorySessionAuthorityJsonV1 } from "@semio-tech/framework/directory/io/text/session-authority-v1";
+import { parseDirectoryEventPageV1 } from "@semio-tech/framework/directory/io/text";
 import { parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1 } from "../../📇️directory/🚪️io/📝️text/🌱️space-artifact-creation-v1/🟦️.ts";
 import { documentCheckInCanonicalJson, parseDocumentCheckInStatusV1 } from "../../📇️directory/🚪️io/📝️text/📌️document-check-in-v1/🟦️.ts";
-import { directoryAdministrationCommandAllowedV1, directoryCommandRequestJson, directoryCommandSha256, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "../../📇️directory/🚪️io/📝️text/🟦️.ts";
+import { directoryAdministrationCommandAllowedV1, directoryCommandRequestJson, directoryCommandSha256, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 import { CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1, decodeCanonicalCheckpointPairV1 } from "../../📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts";
-import { DOCUMENT_SERVICE_TOPIC_V1, InstalledServiceRegistryV1, type InstalledServiceDriverV1, type AdmittedDocumentServiceDeclarationV1 } from "../../💡️inference/🔌️service/🟦️.ts";
-import {admitDocumentServiceWireDeclarationV1, documentServiceRequestV1, admitDocumentServiceResponseV1} from "../../💡️inference/🔌️service/🚪️io/🟦️.ts";
+import { DOCUMENT_SERVICE_TOPIC_V1, InstalledServiceRegistryV1, type InstalledServiceDriverV1, type AdmittedDocumentServiceDeclarationV1 } from "@semio-tech/framework/inference/service";
+import {admitDocumentServiceWireDeclarationV1, documentServiceRequestV1, admitDocumentServiceResponseV1} from "@semio-tech/framework/inference/service/io";
+import type { DocumentServiceDriverContextV1, DocumentServiceWorkerHostV1 } from "@semio-tech/framework/inference/service/worker-host";
 // #region Header
 /**
  * 🧵️ `🏪️store/👷️worker/🟦️.ts` — browser backbone loader. Authenticated hub
@@ -16,10 +17,10 @@ import {admitDocumentServiceWireDeclarationV1, documentServiceRequestV1, admitDo
  */
 // #endregion Header
 
-import { DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, type DirectorySessionAuthorityV1 } from "../../📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
-import { DIRECTORY_PREFERENCE_PAGE_PATH_V1, type DirectoryEvent } from "../../📇️directory/🧬️schema/🟦️.ts";
-import { directoryStreamWakeV1 } from "../../📇️directory/🟦️.ts";
-import { StreamMuxPortEndpointV1, type StreamMuxEndpointV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
+import { DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, type DirectorySessionAuthorityV1 } from "@semio-tech/framework/directory/schema/session-authority-v1";
+import { DIRECTORY_PREFERENCE_PAGE_PATH_V1, type DirectoryEvent } from "@semio-tech/framework/directory/schema";
+import { directoryStreamWakeV1 } from "@semio-tech/framework/directory";
+import { StreamMuxPortEndpointV1, type StreamMuxEndpointV1 } from "@semio-tech/framework/io/stream-mux";
 
 import type {
   ArtifactBootstrapControl,
@@ -67,23 +68,24 @@ import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_
 import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
 import { DOCUMENT_ACTOR_RECOVERY_FRESH_V1, DOCUMENT_ACTOR_RECOVERY_V1, documentActorRecoveryStepV1, type DocumentActorLossCauseV1, type DocumentActorRecoveryMemoryV1 } from "./🚑️actor-recovery/🟦️.ts";
 import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
-import { BROWSER_ACTOR_CHILD_LIMITS, COMMAND_INGRESS_KINDS, boundChildText, measureChildValue, type CommandIngressKindV1 } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import { BROWSER_ACTOR_CHILD_LIMITS, COMMAND_INGRESS_KINDS, boundChildText, measureChildValue, type CommandIngressKindV1 } from "@semio-tech/framework/browser-bundle/child/schema";
 import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairCursor, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
 import { createShardCommandIngressPages, type ShardCommandIngressPage } from "../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { driveSpawnedJob, spawnedJobCompletedEvent, typedOperationPageAnswerV1, typedOperationResult, wireSpawnJob } from "../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt, type ActorUiPatchReceipt } from "../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
-import { BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM, browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
-import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, browserActorAdmissionRefusalReasonV1, browserActorGuestRefusalReasonV1, parseBrowserActorActionRequestV1, parseBrowserActorHistoryPatchBytesV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionCommitReceiptV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
-import { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, decodeBrowserActorUnsolicitedPublicationV1, encodeBrowserActorHostEffectV1, requireBrowserActorCommandBackboneProjectionV1, type BrowserActorCommandBackboneEnvelopeV1, type BrowserActorCommandPublicationV1, type BrowserActorEphemeralSnapshotV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
-import { ActorDocumentBindingV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1 } from "../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
-import { parseBrowserActorViewStateRequest } from "../../🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
-import { panelTabKindId, panelViewContext, sectionViewContext, windowViewContext, type PanelTabKind, type ResolvedPluginViewState } from "../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM, browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "@semio-tech/framework/browser-bundle/patch-handoff";
+import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, browserActorAdmissionRefusalReasonV1, browserActorGuestRefusalReasonV1, parseBrowserActorActionRequestV1, parseBrowserActorHistoryPatchBytesV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionCommitReceiptV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "@semio-tech/framework/browser-bundle/action-handoff";
+import { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, decodeBrowserActorUnsolicitedPublicationV1, encodeBrowserActorHostEffectV1, requireBrowserActorCommandBackboneProjectionV1, type BrowserActorCommandBackboneEnvelopeV1, type BrowserActorCommandPublicationV1, type BrowserActorEphemeralSnapshotV1 } from "@semio-tech/framework/browser-bundle/action-handoff/publication";
+import { ActorDocumentBindingV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1 } from "@semio-tech/framework/backbone/binding";
+import { parseBrowserActorViewStateRequest } from "@semio-tech/framework/browser-bundle/view-context";
+import { panelTabKindId, panelViewContext, sectionViewContext, windowViewContext, type PanelTabKind, type ResolvedPluginViewState } from "@semio-tech/framework/manifest";
 import { BROWSER_ACTOR_VISIBLE_SURFACES_V1, browserActorVisibleSurfacesV1, type BrowserActorVisibleTurnV1 } from "./🪟️visible-surfaces/🟦️.ts";
-import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectorySpaceAdministrationPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, DocumentOpenIntentV1, DocumentOpenPlanV1 } from "../../📇️directory/🧬️schema/🟦️.ts";
-import { DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1, isTerminalDocumentCheckInPhaseV1, type DocumentCheckInRefusalV1, type DocumentCheckInStatusV1 } from "../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
-import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "../../📇️directory/🧬️schema/🟦️.ts";
-import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, admitCanonicalCheckpointPairV1, directoryCommandErrorIsTransient, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1, sameExecutionTargetV1, sameLeaseFieldsV1, surfaceOpensArtifactKindV1, type SurfaceArtifactKindV1, type SurfaceKindAppV1 } from "../../📇️directory/🧬️schema/🟦️.ts";
+import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectorySpaceAdministrationPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, DocumentOpenIntentV1, DocumentOpenPlanV1 } from "@semio-tech/framework/directory/schema";
+import { DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1, isTerminalDocumentCheckInPhaseV1, type DocumentCheckInRefusalV1, type DocumentCheckInStatusV1 } from "@semio-tech/framework/document/check-in";
+import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
+import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1, sameExecutionTargetV1, sameLeaseFieldsV1 } from "../../📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
+import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, admitCanonicalCheckpointPairV1, directoryCommandErrorIsTransient, documentExecutionTargetStatusRoleV1, surfaceOpensArtifactKindV1, type SurfaceArtifactKindV1, type SurfaceKindAppV1 } from "@semio-tech/framework/directory/schema";
 /** 🔏️ First-party BLAKE3 runtime module — Web Crypto supplies SHA-256 but has no BLAKE3, so a
  * verified execution-target component is hashed with the repository's own implementation. */
 import { blake3Hex } from "@semio-tech/framework";
@@ -95,13 +97,12 @@ import type { OpeningPreferences } from "@semio-tech/framework";
  * with a composed timeout. Reused rather than reimplemented (see this file's `🔖️Folder`/`🔖️Hub`
  * regions for how each is wired in). */
 import { fetchWithTimeout, latestWins, retryWithJitteredBackoff, type FetchTimeoutResponse } from "@semio-tech/framework";
-/** 🪪️ Identity config facet (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
- * §C3) — self-contained TS twin (see that module's header doc for why); never redefined here. */
-import type { Identity } from "../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️";
-import { LOCAL_CATALOG_CONFIG_SCHEMA } from "../../../🎚️config/🧬️schema/🧬️mutations/📥️admit-local-document/🟦️.ts";
+/** 🪪️ Identity and local-catalog config lanes (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
+ * §C3) — the neutral backbone module owns the actor configs and the identity fold; never redefined here. */
+import { IDENTITY_CONFIG_SCHEMA, foldIdentityEvent, identityActorConfig, localCatalogActorConfig } from "@semio-tech/framework/backbone/config-lane";
 import { spaceArtifactCreationPollDelayV1, spaceArtifactCreationUnreachableV1 } from "./🌱️creation-polling/🟦️.ts";
 import { executionTargetRetrySleepV1, requestExecutionTargetAssetV1 } from "./🔁️execution-target-retry/🟦️.ts";
-import { closeHubSocketV1 } from "../../📇️directory/🔌️client/🚪️socket-close/🟦️.ts";
+import { closeHubSocketV1 } from "@semio-tech/framework/directory/client/socket-close";
 
 export type RustWorkerHost = {
   handleRequestBytes(bytes: Uint8Array): void;
@@ -1405,7 +1406,7 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
   const decoded = decodePackValue(bytes);
   const canonical = encodePackValue(decoded);
   if (canonical.length !== bytes.length || canonical.some((byte, index) => byte !== bytes[index])) throw new Error("document execution target: descriptor is not canonical");
-  const record = (value: PackValue): Record<string, PackValue> => {
+  const record = (value: PackValue|undefined): Record<string, PackValue> => {
     if (value === null || typeof value !== "object" || Array.isArray(value) || isPackInteger(value)) throw new Error("document execution target: descriptor invalid");
     return value as Record<string, PackValue>;
   };
@@ -1434,12 +1435,12 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
   };
   const openingApp = app === undefined ? null : surfaceApp(app);
   if (
-    packUIntSafeOrNull(descriptor.descriptorVersion) !== 1 ||
+    packUIntSafeOrNull(descriptor.descriptorVersion??null) !== 1 ||
     descriptor.packageId !== fields.package.packageId ||
     descriptor.execution !== "isolated" ||
     Object.keys(executionProtocol).length !== 1 ||
-    packUIntSafeOrNull(executionProtocol.appChannelVersion) !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 ||
-    packUIntSafeOrNull(executionProtocol.appChannelVersion) !== fields.package.executionProtocol.appChannelVersion ||
+    packUIntSafeOrNull(executionProtocol.appChannelVersion??null) !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 ||
+    packUIntSafeOrNull(executionProtocol.appChannelVersion??null) !== fields.package.executionProtocol.appChannelVersion ||
     manifest.pluginId !== fields.package.pluginId ||
     manifest.version !== fields.package.version ||
     descriptor.hashes !== undefined ||
@@ -1605,7 +1606,7 @@ type DocumentBrowserActorGrant = Readonly<{ actorId: string; reserveBeforeMs: nu
 let documentBrowserActorGeneration = 0n;
 const DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT = 256;
 
-function browserActorRecord(value: BrowserActorChildValue, code: string): Record<string, BrowserActorChildValue> {
+function browserActorRecord(value: BrowserActorChildValue|undefined, code: string): Record<string, BrowserActorChildValue> {
   if (!value || typeof value !== "object" || Array.isArray(value) || value instanceof Uint8Array || value instanceof ArrayBuffer) throw new Error(code);
   return value;
 }
@@ -1774,12 +1775,13 @@ function browserActorBytes(value: BrowserActorChildValue | undefined, code: stri
   return Uint8Array.from(value);
 }
 
-function validateBrowserActorUiValues(values: readonly PackValue[]): void {
+function validateBrowserActorUiValues(values: readonly (PackValue|undefined)[]): void {
   const encoder = new TextEncoder(),
     pending = values.map(value => ({ value, depth: 0 }));
   let items = 0;
   while (pending.length > 0) {
-    const entry = pending.pop()!;
+    const entry = pending.pop();if(!entry)break;
+    if(entry.value===undefined)throw Error("document browser actor: invalid intent value");
     items++;
     if (items > 256 || entry.depth > 256) throw new Error("document browser actor: intent value capacity");
     if (entry.value === null || typeof entry.value === "boolean") continue;
@@ -1794,14 +1796,14 @@ function validateBrowserActorUiValues(values: readonly PackValue[]): void {
     if (isPackInteger(entry.value)) continue;
     if (Array.isArray(entry.value)) {
       if (entry.value.length > 256) throw new Error("document browser actor: intent value capacity");
-      for (let index = entry.value.length - 1; index >= 0; index--) pending.push({ value: entry.value[index]!, depth: entry.depth + 1 });
+      for (let index = entry.value.length - 1; index >= 0; index--) pending.push({ value: entry.value[index], depth: entry.depth + 1 });
       continue;
     }
     if (entry.value === null || typeof entry.value !== "object" || entry.value instanceof Uint8Array) throw new Error("document browser actor: invalid intent value");
     const fields = Object.entries(entry.value);
     if (fields.length > 256) throw new Error("document browser actor: intent value capacity");
     for (let index = fields.length - 1; index >= 0; index--) {
-      const [key, value] = fields[index]!;
+      const field=fields[index];if(!field)throw Error("document browser actor: intent field required");const [key,value]=field;
       if (encoder.encode(key).byteLength > 512) throw new Error("document browser actor: intent text capacity");
       pending.push({ value, depth: entry.depth + 1 });
     }
@@ -3601,67 +3603,18 @@ export function foldOpeningPreferencesEvent(base: OpeningPreferences, event: Art
   return next;
 }
 
-/** 🪪️ Canonical `documentId`/`schema` for the OS-wide `os.config.identity` facet (contract freeze
- * §C3) — mirrors {@link OPENING_PREFERENCES_SCHEMA}'s singleton-by-schema-id pattern. */
-export const IDENTITY_CONFIG_SCHEMA = "os.config.identity";
-
-/** 🪪️ Builds the {@link ArtifactActorConfig} that opens the identity facet. Unlike
- * {@link openingPreferencesActorConfig}'s `bindings: []`, identity binds to the FOLDER lane under
- * `${dataDir}/os` (contract §C3) so a reload keeps the session token — a browser tab with no
- * `S_DATA_DIR` (`dataDir` omitted) falls back to opening's local-only-in-memory pattern instead. */
-export function identityActorConfig(actor: string, actorIdentityGrant: ArtifactActorConfig["actorIdentityGrant"], dataDir?: string): ArtifactActorConfig {
-  const bindings: PersistenceBinding[] = dataDir ? [{ kind: "folder", dataClass: "persistedLocalOnly", path: `${dataDir}/os` }] : [];
-  return { documentId: IDENTITY_CONFIG_SCHEMA, schema: IDENTITY_CONFIG_SCHEMA, bindings, actor, actorIdentityGrant };
-}
-
-/** 🗂️ Builds the {@link ArtifactActorConfig} that opens the OS-wide local document catalog facet
- * (`os.config.local-catalog`, persisted local-only): the same folder lane under `${dataDir}/os` as the identity facet, so
- * the list of documents this device keeps survives a reload; a shell with no `S_DATA_DIR` keeps it in memory only.
- * @see ../../📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/🟦️.ts */
-export function localCatalogActorConfig(actor: string, actorIdentityGrant: ArtifactActorConfig["actorIdentityGrant"], dataDir?: string): ArtifactActorConfig {
-  const bindings: PersistenceBinding[] = dataDir ? [{ kind: "folder", dataClass: "persistedLocalOnly", path: `${dataDir}/os` }] : [];
-  return { documentId: LOCAL_CATALOG_CONFIG_SCHEMA, schema: LOCAL_CATALOG_CONFIG_SCHEMA, bindings, actor, actorIdentityGrant };
-}
-
-/** 🧮️ Reduces one {@link ArtifactEvent} onto a materialized `Identity | null` — event-sourced,
- * mirrors {@link foldOpeningPreferencesEvent}: `applyIdentityConfigMutation`'s diff is whole-record
- * too (`🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts`), so a `remoteMutations` envelope's
- * already-diffed `diff.payload` IS the next `Identity` (or `null` for a signed-out session) —
- * folding is "last envelope wins". `decodePayload` returning `undefined` means "not this facet's
- * payload", distinct from a legit `null` (signed out), so both must be distinguishable. */
-export function foldIdentityEvent(base: Identity | null, event: ArtifactEvent, decodePayload: (payload: unknown) => Identity | null | undefined): Identity | null {
-  if (event.kind !== "remoteMutations") return base;
-  let next = base;
-  for (const envelope of event.envelopes) {
-    const decoded = decodePayload(envelope.diff.payload);
-    if (decoded !== undefined) next = decoded;
-  }
-  return next;
-}
 //#endregion 🔖️ConfigLane
 
 /** 🪪 Narrow authority port available to installed owner service contributions. */
 export type DocumentServiceWorkerContextV1 = Readonly<{ state: ArtifactState; reservation?: DocumentBrowserActorReservation; pair?: VerifiedColdDocumentPair }>;
-export type DocumentServiceWorkerHostV1 = Readonly<{
-  artifactScope: typeof artifactScope;
-  artifactState: typeof artifactState;
-  bytesHex: typeof bytesHex;
-  captureBrowserSessionOperationFence: typeof captureBrowserSessionOperationFence;
-  sameBrowserSessionOperationFence: typeof sameBrowserSessionOperationFence;
-  post: typeof post;
-  documentRuntimeKeyV1: typeof documentRuntimeKeyV1;
-  SOCKET_GRANT_REQUEST_TIMEOUT_MS: number;
-  directorySessionEpoch: number;
-  bindDocumentService(owner: string, serviceId: string, scope: DocumentScope): Readonly<{ call(action: string, payload: unknown, options: Parameters<typeof hubSessionFetch>[2]): Promise<FetchTimeoutResponse> }>;
-}>;
 const documentServices = new InstalledServiceRegistryV1<DocumentServiceWorkerContextV1>();
 
 /** 🔌 Deployment composition installs executable owners; verified document declarations grant routes. */
-function activateDocumentServiceWorkerV1(owner: string, serviceId: string, factory: (host: DocumentServiceWorkerHostV1) => InstalledServiceDriverV1<DocumentServiceWorkerContextV1>): () => void {
+function activateDocumentServiceWorkerV1(owner: string, serviceId: string, factory: (host: DocumentServiceWorkerHostV1) => InstalledServiceDriverV1<DocumentServiceDriverContextV1>): () => void {
   const retirement = new AbortController();
   const host: DocumentServiceWorkerHostV1 = {
     artifactScope, artifactState, bytesHex, captureBrowserSessionOperationFence, sameBrowserSessionOperationFence,
-    post(message) { if (retirement.signal.aborted) return; post(message.kind === "inference-port-opened" || message.kind === "inference-port-closed" ? { ...message, owner, serviceId } : message); },
+    post(message) { if (retirement.signal.aborted) return; const outbound = message as BackboneWorkerResponse; post(outbound.kind === "inference-port-opened" || outbound.kind === "inference-port-closed" ? { ...outbound, owner, serviceId } : outbound); },
     documentRuntimeKeyV1, SOCKET_GRANT_REQUEST_TIMEOUT_MS,
     get directorySessionEpoch() { return directorySessionEpoch; },
     bindDocumentService(requestOwner, requestServiceId, scope) {
@@ -3695,8 +3648,8 @@ function activateDocumentServiceWorkerV1(owner: string, serviceId: string, facto
 }
 
 /** 🧩 Composition holds factories; registry presence creates and retires the actual operation owners. */
-const documentServiceFactoriesV1 = new Map<string, { owner: string; serviceId: string; factory: (host: DocumentServiceWorkerHostV1) => InstalledServiceDriverV1<DocumentServiceWorkerContextV1>; retire: (() => void) | null }>();
-export function installDocumentServiceWorkerV1(owner: string, serviceId: string, factory: (host: DocumentServiceWorkerHostV1) => InstalledServiceDriverV1<DocumentServiceWorkerContextV1>): () => void {
+const documentServiceFactoriesV1 = new Map<string, { owner: string; serviceId: string; factory: (host: DocumentServiceWorkerHostV1) => InstalledServiceDriverV1<DocumentServiceDriverContextV1>; retire: (() => void) | null }>();
+export function installDocumentServiceWorkerV1(owner: string, serviceId: string, factory: (host: DocumentServiceWorkerHostV1) => InstalledServiceDriverV1<DocumentServiceDriverContextV1>): () => void {
   const key = JSON.stringify([owner, serviceId]);
   if (documentServiceFactoriesV1.size >= 64 || documentServiceFactoriesV1.has(key)) throw new Error("installed-service.capacity");
   const contribution = { owner, serviceId, factory, retire: activateDocumentServiceWorkerV1(owner, serviceId, factory) as (() => void) | null };
@@ -3790,7 +3743,7 @@ function toWireEnvelope(envelope: MutationEnvelope, timestamp: WireMutationEnvel
  * always edit-shaped JSON), mirroring the Rust side's identical recovery. */
 function fromWireEnvelope(envelope: WireMutationEnvelope | ExactWireMutationEnvelope): MutationEnvelope {
   const payload = decodePackPayload(envelope.diff.payload);
-  const sequenceNumber = payload !== null && typeof payload === "object" && !Array.isArray(payload) && !isPackInteger(payload) && "sequenceNumber" in payload ? packUIntSafeOrNull((payload as Record<string, PackValue>).sequenceNumber) : 0;
+  const sequenceNumber = payload !== null && typeof payload === "object" && !Array.isArray(payload) && !isPackInteger(payload) && "sequenceNumber" in payload ? packUIntSafeOrNull((payload as Record<string, PackValue>).sequenceNumber??null) : 0;
   if (sequenceNumber === null) throw new Error("wire envelope: sequenceNumber is not an exact unsigned integer");
   return {
     id: envelope.mutation_id,
@@ -7127,8 +7080,6 @@ if (import.meta.vitest) {
   await registerColdPairLoadingTests(import.meta.vitest, { settleColdPairLoading, retryColdPairBackpressure, coldPairWaitDelay, COLD_PAIR_WAIT_POLICY });
   const { registerBackboneParityTests } = await import("../🔄️sync/🧪️tests/🔬️backbone-parity/🟦️.ts");
   await registerBackboneParityTests(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, documentCatchingUpV1, newArtifactState, requestDocumentActorRecoveryV1, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, installHubSessionCapability, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, queueOutbox, readExecutionTargetBody, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink });
-  const { registerWorkerLawTests } = await import("../../../🧪️tests/📚️worker-law-suites/🟦️.ts");
-  await registerWorkerLawTests(import.meta.vitest, dependencies, documentWorkerTestSourceV1);
 
 }
 //#endregion 🧪️Tests

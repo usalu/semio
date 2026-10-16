@@ -50,25 +50,25 @@ pub const VALUE_RECOVERY_SCHEMA: &str = "semio.store.one-item-outcome.stdio-valu
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DurableOwnedGroupAnchorV1 {
-    pub(crate) schema: String,
-    pub(crate) parent: semio_framework_artifact_reference::ArtifactRef,
-    pub(crate) shape: String,
+    pub schema: String,
+    pub parent: semio_framework_artifact_reference::ArtifactRef,
+    pub shape: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DurableOwnedGroupMemberV1 {
-    pub(crate) role: String,
-    pub(crate) reference: semio_framework_artifact_reference::ArtifactRef,
-    pub(crate) owner: Option<OwnerRef>,
-    pub(crate) expected_generation: u64,
-    pub(crate) expected_revision: [u8; 32],
-    pub(crate) recovery_schema: String,
-    pub(crate) recovery_pack: Vec<u8>,
-    pub(crate) recovery_pack_sha256: String,
-    pub(crate) unbound_outcome_sha256: String,
-    pub(crate) post_generation: u64,
-    pub(crate) post_revision: [u8; 32],
+    pub role: String,
+    pub reference: semio_framework_artifact_reference::ArtifactRef,
+    pub owner: Option<OwnerRef>,
+    pub expected_generation: u64,
+    pub expected_revision: [u8; 32],
+    pub recovery_schema: String,
+    pub recovery_pack: Vec<u8>,
+    pub recovery_pack_sha256: String,
+    pub unbound_outcome_sha256: String,
+    pub post_generation: u64,
+    pub post_revision: [u8; 32],
 }
 
 pub struct DurableStorePreparedOutcomesV1 {
@@ -146,51 +146,51 @@ impl std::error::Error for DurableOwnedGroupDecisionError {}
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "store.unbound-one-item-outcome")]
 pub struct DurableUnboundOneItemOutcomeV1 {
-    schema: String,
-    recovery_schema: String,
-    operation: u64,
-    base_generation: u64,
-    base_revision: [u8; 32],
-    base_applied_edit_count: u64,
-    next_sequence_number: i32,
+    pub schema: String,
+    pub recovery_schema: String,
+    pub operation: u64,
+    pub base_generation: u64,
+    pub base_revision: [u8; 32],
+    pub base_applied_edit_count: u64,
+    pub next_sequence_number: i32,
     #[dsl(base64)]
-    next_clock_canonical_json: Vec<u8>,
-    actor: semio_framework_value::SharedUtf8,
+    pub next_clock_canonical_json: Vec<u8>,
+    pub actor: semio_framework_value::SharedUtf8,
     #[dsl(base64)]
-    edit_without_group_canonical_json: Vec<u8>,
+    pub edit_without_group_canonical_json: Vec<u8>,
     #[dsl(base64)]
-    post_snapshot_pack: Vec<u8>,
+    pub post_snapshot_pack: Vec<u8>,
 }
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_dsl::DslArtifact)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "store.bound-one-item-outcome")]
 pub struct DurableBoundOneItemOutcomeV1 {
-    schema: String,
-    recovery_schema: String,
-    operation: u64,
-    base_generation: u64,
-    base_revision: [u8; 32],
-    base_applied_edit_count: u64,
-    next_sequence_number: i32,
+    pub schema: String,
+    pub recovery_schema: String,
+    pub operation: u64,
+    pub base_generation: u64,
+    pub base_revision: [u8; 32],
+    pub base_applied_edit_count: u64,
+    pub next_sequence_number: i32,
     #[dsl(base64)]
-    next_clock_canonical_json: Vec<u8>,
-    actor: semio_framework_value::SharedUtf8,
-    group_id: String,
+    pub next_clock_canonical_json: Vec<u8>,
+    pub actor: semio_framework_value::SharedUtf8,
+    pub group_id: String,
     #[dsl(base64)]
-    edit_canonical_json: Vec<u8>,
+    pub edit_canonical_json: Vec<u8>,
     #[dsl(base64)]
-    post_snapshot_pack: Vec<u8>,
-    edit_digest: [u8; 32],
-    post_generation: u64,
-    post_revision: [u8; 32],
+    pub post_snapshot_pack: Vec<u8>,
+    pub edit_digest: [u8; 32],
+    pub post_generation: u64,
+    pub post_revision: [u8; 32],
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DurableStorePreparedOutcomeV1 {
-    recovery_schema: String,
-    pack: Vec<u8>,
-    sha256: String,
+    pub recovery_schema: String,
+    pub pack: Vec<u8>,
+    pub sha256: String,
 }
 
 pub struct DurableStoreVerifiedOutcomeV1<P, Mutation> {
@@ -611,7 +611,7 @@ impl DurableUnboundOneItemOutcomeV1 {
         if manifest.uncompressed_body_len > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64 {
             return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
         }
-        if manifest.doc_frame_count != 1 || manifest.chunk_count != 0 || file.chunk_count() != 0 || manifest.field_count != 11 || manifest.schema_hash != semio_framework_os_pack::schema_hash(&Self::__dsl_spec()) {
+        if manifest.doc_frame_count != 1 || manifest.chunk_count != 0 || file.chunk_count() != 0 || manifest.field_count != 11 || manifest.schema_hash != pack::record::schema_hash(&Self::__dsl_spec()) {
             return Err(DurableOwnedGroupDecisionError::NonCanonical);
         }
         let outcome = <Self as ArtifactPack>::decode_pack_with(bytes, &options).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
@@ -826,7 +826,7 @@ impl DurableBoundOneItemOutcomeV1 {
         if manifest.uncompressed_body_len > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64 {
             return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
         }
-        if manifest.doc_frame_count != 1 || manifest.chunk_count != 0 || file.chunk_count() != 0 || manifest.field_count != 15 || manifest.schema_hash != semio_framework_os_pack::schema_hash(&Self::__dsl_spec()) {
+        if manifest.doc_frame_count != 1 || manifest.chunk_count != 0 || file.chunk_count() != 0 || manifest.field_count != 15 || manifest.schema_hash != pack::record::schema_hash(&Self::__dsl_spec()) {
             return Err(DurableOwnedGroupDecisionError::NonCanonical);
         }
         let outcome = <Self as ArtifactPack>::decode_pack_with(bytes, &options).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
@@ -974,18 +974,18 @@ impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DurableBoundOne
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DurableOwnedGroupMapHandlesV1 {
-    pub(crate) drawing: semio_framework_artifact_reference::ArtifactRef,
-    pub(crate) value: semio_framework_artifact_reference::ArtifactRef,
+    pub drawing: semio_framework_artifact_reference::ArtifactRef,
+    pub value: semio_framework_artifact_reference::ArtifactRef,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DurableOwnedGroupMapFrontiersV1 {
-    pub(crate) parent_generation: u64,
-    pub(crate) parent_revision: [u8; 32],
-    pub(crate) drawing_generation: u64,
-    pub(crate) drawing_revision: [u8; 32],
-    pub(crate) value_generation: u64,
-    pub(crate) value_revision: [u8; 32],
+    pub parent_generation: u64,
+    pub parent_revision: [u8; 32],
+    pub drawing_generation: u64,
+    pub drawing_revision: [u8; 32],
+    pub value_generation: u64,
+    pub value_revision: [u8; 32],
 }
 
 pub fn valid_hash(value: &str) -> bool {

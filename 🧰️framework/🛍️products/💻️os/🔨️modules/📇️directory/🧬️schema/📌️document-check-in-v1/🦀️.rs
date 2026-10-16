@@ -130,7 +130,3 @@ impl DocumentCheckInStatusV1 {
 
     
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

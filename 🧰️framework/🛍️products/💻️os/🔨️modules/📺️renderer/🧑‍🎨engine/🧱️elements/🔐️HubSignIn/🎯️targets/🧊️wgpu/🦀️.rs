@@ -1,5 +1,5 @@
 //! 🔐️ wgpu twin of the `🔐️HubSignIn` pane and of the pure contract underneath it
-//! (`🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts`, 653 lines).
+//! (`🧰️framework/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts`, 653 lines).
 //!
 //! 🧩️ Split of ownership: everything in this file is PURE — routes and bounds, the closed denial
 //! classes, the `session.v1.<32hex>.<64hex>` capability parser, the origin normalizer, the

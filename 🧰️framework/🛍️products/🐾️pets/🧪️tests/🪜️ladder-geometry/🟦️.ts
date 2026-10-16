@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🧗️climbing/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { LADDER_DESCENT, LADDER_DISMOUNT_TICKS, LADDER_EXIT, LADDER_FLAT, LADDER_FOLLOW, LADDER_FOOTING, LADDER_GIRTH, LADDER_HORNS, LADDER_IDLE, LADDER_LEAN, LADDER_LIFE, LADDER_MOUNT_TICKS, LADDER_RAISE_TICKS, LADDER_RAMP, LADDER_RISE, LADDER_SHIFT, LADDER_SHORT, LADDER_STEEP, LADDER_TALL, LADDER_TUCK, RUNG_SPACING, TOPPLE_DAMPING, TOPPLE_PUSH, TOPPLE_STEP, TOPPLE_STIFFNESS, ladderAt, ladderExit, ladderFor, ladderHolds, ladderLanding, ladderLean, ladderLength, ladderPhase, ladderRungs, ladderStep, ladderTo, spillOf } from "../../🔨️modules/🧗️climbing/🟦️.ts";
 import type { Perch, Pitch, Rect, Size } from "../../🧬️schema/🟦️.ts";
 

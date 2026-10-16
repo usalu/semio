@@ -2,9 +2,9 @@
 import { dispatchInvokeExtensionEffect, runInvokeExtensionEffect } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json";
-import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
+import { extensionInvocationWireFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
 import { describe, expect, it, vi } from "vitest";
-import publicInvocationSchema from "../../../../../../../🔨️modules/🛂️manifest/🎛️public-invocation/🧬️schema/🔣️.json";
+import { manifestPublicInvocationSchema as publicInvocationSchema } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_DEPTH, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationCharCost, publicInvocationStringPages } from "@semio-tech/framework";
 import { rendererExport } from "../🧰️engine-contract-helpers/🟦️.ts";
 

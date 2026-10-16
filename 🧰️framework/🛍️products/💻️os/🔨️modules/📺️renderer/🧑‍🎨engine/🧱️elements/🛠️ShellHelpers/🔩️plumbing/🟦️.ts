@@ -30,7 +30,7 @@ import {
   SAVE_ARTIFACT_FILE_ACTION_ID
 } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
-import { packValueFromBase64, packValueToBase64 } from "@semio-tech/framework-os";
+import { packValueFromBase64, packValueToBase64 } from "@semio-tech/framework/packs";
 import {
   decodePresenceHistoryEdit,
   decodePresenceInteraction,
@@ -38,10 +38,10 @@ import {
   type ArtifactPresenceHistoryEdit,
   type ArtifactPresenceInteraction,
   type ArtifactPresenceToolRun
-} from "@semio-tech/framework-replication";
+} from "@semio-tech/framework/replication";
 import { type Anchor, resolveTranslationLabel, uiI18n, type UiTranslationKey } from "@semio-tech/ui-react";
 import { useCallback, useEffect, useState } from "react";
-import type { SelectionMode } from "../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import type { SelectionMode } from "@semio-tech/framework";
 import { mediaExportBytes } from "../../../../../../../../🔨️modules/🎠️kernel/🎬️media-export/🟦️.ts";
 import { wireMediaExportEncoding } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { causalOrderKeyV1, type InputProvenanceV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";

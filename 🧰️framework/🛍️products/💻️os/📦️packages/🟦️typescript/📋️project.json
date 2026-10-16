@@ -4,11 +4,11 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🎁️packs/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🪢️wire-contracts/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧵️backbone/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧾️app-channel/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📞️directory-client/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎁️packs/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪢️wire-contracts/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛰️backbone/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📞️directory-client/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/**/*",

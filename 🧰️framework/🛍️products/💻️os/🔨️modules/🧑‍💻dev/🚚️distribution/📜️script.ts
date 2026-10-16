@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {writeOwnedCommandOutputV1} from "../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {writeOwnedCommandOutputV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import {frameworkOsViteArtifactInputsV1} from "../🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";

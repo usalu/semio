@@ -132,15 +132,16 @@ def _scan(node, file, text, lo, hi, loader, seen_files, host_part=None, include_
                     node.includes.append((inc, st.attrs))
                     itext = read(inc)
                     _scan(node, inc, itext, 0, len(itext), loader, seen_files, host_part=part, include_attrs=attrs_text)
-            elif re.match(r"(thread_local|component_persistent_local|lazy_static)!", body.lstrip()):
-                for sm in re.finditer(r"\bstatic\s+(?:ref\s+)?([A-Za-z_][A-Za-z0-9_]*)", body):
-                    node.items.append(Item("static", sm.group(1), "", st.attrs, part, st))
+            elif re.match(r"(?:::)?(?:[A-Za-z_][A-Za-z0-9_]*::)*(thread_local|component_persistent_local|lazy_static)!", body.lstrip()):
+                for sm in re.finditer(r"(?:(pub(?:\s*\([^)]*\))?)\s+)?\bstatic\s+(?:ref\s+)?([A-Za-z_][A-Za-z0-9_]*)", body):
+                    node.items.append(Item("static", sm.group(2), sm.group(1) or "", st.attrs, part, st))
         # impl / other: ignored for the namespace
 
 
 def load_crate(root_file, key=None):
     """root Node of the module tree below root_file (textual includes merged)"""
     seen = set()
+    first = {}
     root = Node("", None, root_file)
     root.crate = key
     root.attrs = ""
@@ -148,8 +149,15 @@ def load_crate(root_file, key=None):
 
     def loader(node, file):
         if file in seen:
+            f0 = first.get(file)
+            if f0 is not None and f0 is not node and not node.parts:
+                node.items, node.uses, node.mods, node.macros = f0.items, f0.uses, f0.mods, f0.macros
+                node.externs = f0.externs
+                node.crate = key
+                node.dupe_of = f0
             return
         seen.add(file)
+        first[file] = node
         text = read(file)
         node.crate = key
         _scan(node, file, text, 0, len(text), loader, seen)

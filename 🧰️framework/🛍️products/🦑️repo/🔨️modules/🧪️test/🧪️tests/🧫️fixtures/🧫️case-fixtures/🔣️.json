@@ -53,6 +53,48 @@
       ]
     },
     {
+      "id": "adapter-module-child-is-accepted",
+      "features": [
+        "owner/🧪️tests/🧪️case"
+      ],
+      "children": [
+        {
+          "case": "owner/🧪️tests/🧪️case",
+          "name": "🧱️base",
+          "files": [
+            "🐍️.py",
+            "🦀️.rs"
+          ]
+        }
+      ],
+      "expected": [
+        "owner/🧪️tests/🧪️case"
+      ],
+      "unknown": []
+    },
+    {
+      "id": "adapter-module-child-with-other-files-is-rejected",
+      "features": [
+        "owner/🧪️tests/🧪️case"
+      ],
+      "children": [
+        {
+          "case": "owner/🧪️tests/🧪️case",
+          "name": "🧱️base",
+          "files": [
+            "🐍️.py",
+            "notes.txt"
+          ]
+        }
+      ],
+      "expected": [
+        "owner/🧪️tests/🧪️case"
+      ],
+      "unknown": [
+        "owner/🧪️tests/🧪️case/🧱️base"
+      ]
+    },
+    {
       "id": "module-named-fixtures-keeps-real-tests",
       "features": [
         "owner/🔨️modules/🧫️fixtures/🧪️tests/🧪️case"

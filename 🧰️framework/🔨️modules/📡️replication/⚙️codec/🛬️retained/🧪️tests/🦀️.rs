@@ -6,7 +6,7 @@ mod timestamp;
 #[path="../🔣️json-string/🧪️tests/🦀️.rs"]
 mod json_string;
 struct Heap{requested_bytes:usize,released_bytes:usize}
-fn observe<T>(operation:impl FnOnce()->T)->(T,Heap){let(result,requested_bytes,released_bytes)=crate::test_allocation::observe_backing(operation);(result,Heap{requested_bytes,released_bytes})}
+fn observe<T>(operation:impl FnOnce()->T)->(T,Heap){let(result,requested_bytes,released_bytes)=semio_framework_trace_memory_testing::observe_backing(operation);(result,Heap{requested_bytes,released_bytes})}
 fn close_received(mut received:Option<Vec<u8>>,grant:RetainedCloneGrant)->usize{
  let original=received.as_ref().unwrap().as_ptr();for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=observe(||RetainedWireFieldDecode::admit_received(&mut received,denied).unwrap());assert!(result.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(received.as_ref().unwrap().as_ptr(),original);}
  let(result,heap)=observe(||RetainedWireFieldDecode::admit_received(&mut received,grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(received.is_none());let recipient=result.unwrap();assert_eq!(recipient.source_identity().0,original as usize);close_recipient(recipient,grant)

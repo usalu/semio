@@ -41,7 +41,8 @@ pub const DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES: usize = 256 * 1024;
 /// prove it (`🧩️puzzle`) can no longer be described at all. Splitting here — inside the guest's own
 /// `describe`, not in the emitter — is what keeps `descriptor_is_fresh` a byte comparison against
 /// exactly what `describe_plugin()` returns.
-fn externalize_oversized_example_bodies(manifest: &mut PluginManifest, assets: &mut Vec<AssetDeclaration>) {
+#[doc(hidden)]
+pub fn externalize_oversized_example_bodies(manifest: &mut PluginManifest, assets: &mut Vec<AssetDeclaration>) {
     let media_types: Vec<(_, MediaType)> = manifest.apps.iter().map(|app| (app.dialect.clone(), app.io.artifact_media_type)).collect();
     for example in &mut manifest.examples {
         if example.artifact_json.len() <= DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES {
@@ -92,11 +93,11 @@ async fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
 
 /// 💡️ This plugin's frozen first-party inference roster (`owner == plugin_id`), including
 /// metadata-only ActionBus cold routes that deliberately have no synchronous service facade.
-async fn plugin_inference_services<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
-    let bytes = crate::plugin_runtime::plugin_wire_list_artifact_inference_services(runtime).await.unwrap_or_default();
+async fn plugin_inference_services<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
+    let bytes = crate::extension_runtime_lift::plugin_wire_list_artifact_inference_services(runtime).await.unwrap_or_default();
     std::str::from_utf8(&bytes)
         .ok()
-        .and_then(|text| semio_framework_pack_json::from_json_str::<Vec<crate::artifact_inference::WireArtifactInferenceMetadata>>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok())
+        .and_then(|text| semio_framework_pack_json::from_json_str::<Vec<semio_framework_plugin_plugin_program::WireArtifactInferenceMetadata>>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok())
         .unwrap_or_default()
         .into_iter()
         .filter(|metadata| metadata.owner == plugin_id)
@@ -160,7 +161,7 @@ async fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Ve
 /// 🗂️ Assembles `ContributionSet` from what `manifest` and the process-global runtime registries
 /// actually declare — see each field helper's own doc. `menus`/`themes` stay empty (E1's own survey,
 /// unchanged); `mutation_services` stays empty (see `plugin_io_contributions`'s doc).
-async fn plugin_contributions<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, manifest: &PluginManifest) -> ContributionSet {
+async fn plugin_contributions<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, manifest: &PluginManifest) -> ContributionSet {
     let (io_entries, composer_entries) = plugin_io_contributions(&manifest.plugin_id).await;
     ContributionSet {
         commands: manifest.commands.clone(),
@@ -177,14 +178,15 @@ async fn plugin_contributions<PA: crate::plugin_app::PluginApp>(runtime: &crate:
     }
 }
 
-fn encode_package_descriptor(descriptor: &PackageDescriptor) -> Vec<u8> {
+#[doc(hidden)]
+pub fn encode_package_descriptor(descriptor: &PackageDescriptor) -> Vec<u8> {
     let value = semio_framework_value::ToValue::to_value(descriptor);
     store::pack_rt::encode_wire_value(semio_framework::CanonicalDescriptorValue::new(value).value())
 }
 
-async fn plugin_descriptor<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> PackageDescriptor {
-    let mut manifest = crate::plugin_runtime::plugin_manifest(runtime).await;
-    let extras = crate::plugin_runtime::plugin_descriptor_extras(runtime).await;
+async fn plugin_descriptor<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>) -> PackageDescriptor {
+    let mut manifest = semio_framework_plugin_runtime_instances::inst_descriptor::plugin_manifest(runtime).await;
+    let extras = semio_framework_plugin_runtime_instances::inst_descriptor::plugin_descriptor_extras(runtime).await;
     let contributions = plugin_contributions(runtime, &manifest).await;
     let mut assets = extras.assets;
     externalize_oversized_example_bodies(&mut manifest, &mut assets);
@@ -205,14 +207,14 @@ async fn plugin_descriptor<PA: crate::plugin_app::PluginApp>(runtime: &crate::pl
 }
 
 /// 🔌️ Encodes the plugin's installed runtime descriptor.
-pub async fn describe_plugin<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
+pub async fn describe_plugin<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>) -> Vec<u8> {
     encode_package_descriptor(&plugin_descriptor(runtime).await)
 }
 
 /// 🧩️ Combines an extension's metadata with its installed typed application runtime.
-pub async fn describe_extension_with_apps<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
+pub async fn describe_extension_with_apps<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>) -> Vec<u8> {
     let mut descriptor = plugin_descriptor(runtime).await;
-    let extension = crate::plugin_runtime::extension_manifest().await;
+    let extension = crate::extension_runtime_lift::extension_manifest().await;
     assert_eq!(descriptor.manifest.plugin_id, extension.extension_id, "extension and app bundle identities must match");
     assert_eq!(descriptor.manifest.version, extension.version, "extension and app bundle versions must match");
     descriptor.role = PackageRole::Extension;
@@ -266,7 +268,7 @@ pub async fn describe_extension_with_apps<PA: crate::plugin_app::PluginApp>(runt
 /// never by the extension attaching to one; an extension's own activation is entirely driven by the
 /// host's `ExtensionPointDeclaration.activation`, not a declaration of its own.
 pub async fn describe_extension() -> Vec<u8> {
-    let extension = crate::plugin_runtime::extension_manifest().await;
+    let extension = crate::extension_runtime_lift::extension_manifest().await;
     let package_id = extension.package_id.clone();
     let manifest = PluginManifest {
         plugin_id: extension.extension_id,
@@ -312,10 +314,4 @@ pub async fn describe_extension() -> Vec<u8> {
     encode_package_descriptor(&descriptor)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️example-assets/🦀️.rs"]
-mod example_asset_tests;

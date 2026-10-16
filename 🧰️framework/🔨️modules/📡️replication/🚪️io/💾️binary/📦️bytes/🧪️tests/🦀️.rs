@@ -6,27 +6,27 @@ fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing
     let source = &fixture["source"];
     let expected: Vec<u8> = source["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(source["paddingByte"].as_u64().unwrap() as u8, source["paddingCount"].as_u64().unwrap() as usize)).collect();
     let maximum = fixture["maximumBytes"].as_u64().unwrap() as usize;
-    let (constructed, requested, released) = crate::test_allocation::observe_backing(|| OwnedOperationBytes::try_new(fixture["maximumPayloadBytes"].as_u64().unwrap() as usize, fixture["maximumAllocationBytes"].as_u64().unwrap() as usize));
+    let (constructed, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| OwnedOperationBytes::try_new(fixture["maximumPayloadBytes"].as_u64().unwrap() as usize, fixture["maximumAllocationBytes"].as_u64().unwrap() as usize));
     let mut owner = constructed.expect("real bounded byte owner constructor");
     assert_eq!((requested, released), (0, 0));
-    let (zero, requested, released) = crate::test_allocation::observe_backing(|| owner.reserve_one(0));
+    let (zero, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.reserve_one(0));
     assert!(!zero.unwrap().progressed);
     assert_eq!((requested, released), (0, 0));
     for &byte in &expected {
         while !owner.has_reserved_slot() {
             let required = owner.next_allocation_bytes().unwrap();
             assert!(required <= maximum);
-            let (narrow, requested, released) = crate::test_allocation::observe_backing(|| owner.reserve_one(required - 1));
+            let (narrow, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.reserve_one(required - 1));
             assert!(!narrow.unwrap().progressed);
             assert_eq!((requested, released), (0, 0));
-            let (progress, requested, released) = crate::test_allocation::observe_backing(|| owner.reserve_one(maximum));
+            let (progress, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.reserve_one(maximum));
             let progress = progress.unwrap();
             assert!(progress.progressed);
             assert_eq!(progress.allocated_bytes, requested);
             assert_eq!(released, 0);
             assert!(requested <= maximum);
         }
-        let (appended, requested, released) = crate::test_allocation::observe_backing(|| owner.push_reserved(byte));
+        let (appended, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.push_reserved(byte));
         appended.expect("one source-owned reserved byte");
         assert_eq!((requested, released), (0, 0));
     }
@@ -35,12 +35,12 @@ fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing
     assert_eq!(serde_json::to_value(&owner).unwrap(), serde_json::to_value(&expected).unwrap());
     let retained = owner.allocated_bytes();
     let rejected = fixture["expected"]["overflowByteReturned"].as_u64().unwrap() as u8;
-    let (refusal, requested, released) = crate::test_allocation::observe_backing(|| owner.push_reserved(rejected));
+    let (refusal, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.push_reserved(rejected));
     assert_eq!(refusal.unwrap_err().byte, rejected);
     assert_eq!((requested, released), (0, 0));
     assert!(owner.iter().eq(expected.iter().copied()));
     for (items, bytes) in [(0, maximum), (1, 0)] {
-        let (step, requested, released) = crate::test_allocation::observe_backing(|| owner.close_one(items, bytes));
+        let (step, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_one(items, bytes));
         assert_eq!(step.unwrap(), OperationByteCloseStep::Pending { released_items: 0, released_bytes: 0 });
         assert_eq!((requested, released), (0, 0));
         assert_eq!(owner.allocated_bytes(), retained);
@@ -48,7 +48,7 @@ fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing
     }
     let mut total = 0;
     for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap() {
-        let (step, requested, released) = crate::test_allocation::observe_backing(|| owner.close_one(1, maximum));
+        let (step, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_one(1, maximum));
         assert_eq!(requested, 0);
         assert!(released <= maximum);
         match step.unwrap() {
@@ -77,7 +77,7 @@ fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without
     let mut allow = |_| true;
     let mut control = semio_framework_value::NativeEncodeControl::new(65536, &mut allow);
     owner.write_bytes(&expected, &mut control).unwrap();
-    let ((), allocated, returned) = crate::test_allocation::observe_backing(|| {
+    let ((), allocated, returned) = semio_framework_trace_memory_testing::observe_backing(|| {
         let span = ByteSpan::from_source(&owner);
         assert_eq!(span.len(), expected.len());
         assert!(span.iter().eq(expected.iter().copied()));
@@ -122,7 +122,7 @@ fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_firs
     for span in [ByteSpan::from_slice(&expected),ByteSpan::from_source(&source)]{
         let mut allow=|_|true;
         let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
-        let(result,requested,released)=crate::test_allocation::observe_backing(||{
+        let(result,requested,released)=semio_framework_trace_memory_testing::observe_backing(||{
             let mut comparison=OperationByteComparison::new(span);
             comparison.write_bytes(&expected[..4095],&mut control)?;
             comparison.write_bytes(&expected[4095..],&mut control)?;
@@ -134,7 +134,7 @@ fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_firs
         let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
         let mut comparison=OperationByteComparison::new(span);
         comparison.write_bytes(&expected[..4095],&mut control).unwrap();
-        let(error,requested,released)=crate::test_allocation::observe_backing(||comparison.write_bytes(&[255],&mut control));
+        let(error,requested,released)=semio_framework_trace_memory_testing::observe_backing(||comparison.write_bytes(&[255],&mut control));
         let semio_framework_pack_error::PackRefusal::RetainedMalformed{kind,offset,..}=error.unwrap_err()else{panic!("exact typed mismatch lost")};
         assert_eq!(kind,semio_framework_value::ValueRefusalKind::InvalidValue);
         assert_eq!(offset,4095);
@@ -220,12 +220,12 @@ fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_em
         let mut receipt=control.pause().unwrap();
         for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){
             let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::resume(receipt,&mut allow).unwrap();
-            let (zero,requested,released)=crate::test_allocation::observe_backing(||prepared.fund_one(1,0,&mut control));
+            let (zero,requested,released)=semio_framework_trace_memory_testing::observe_backing(||prepared.fund_one(1,0,&mut control));
             assert_eq!(zero.unwrap(),OperationByteFundingStep::Pending{prepared_items:0,allocated_bytes:0});assert_eq!((requested,released),(0,0));
             let required=prepared.next_funding_byte_demand().unwrap();
-            let (narrow,requested,released)=crate::test_allocation::observe_backing(||prepared.fund_one(1,required.saturating_sub(1),&mut control));
+            let (narrow,requested,released)=semio_framework_trace_memory_testing::observe_backing(||prepared.fund_one(1,required.saturating_sub(1),&mut control));
             assert_eq!(narrow.unwrap(),OperationByteFundingStep::Pending{prepared_items:0,allocated_bytes:0});assert_eq!((requested,released),(0,0));
-            let (step,requested,released)=crate::test_allocation::observe_backing(||prepared.fund_one(1,maximum,&mut control));
+            let (step,requested,released)=semio_framework_trace_memory_testing::observe_backing(||prepared.fund_one(1,maximum,&mut control));
             assert_eq!(released,0);assert!(requested<=maximum);
             match step.unwrap(){OperationByteFundingStep::Pending{prepared_items,allocated_bytes}=>{assert!(prepared_items<=1);assert_eq!(allocated_bytes,requested);},OperationByteFundingStep::Ready=>{assert_eq!(requested,0);}}
             assert_eq!(prepared.accepted_prefix().unwrap().len(),0);
@@ -244,7 +244,7 @@ fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_em
             for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if prepared.close_one(1,maximum).unwrap()==OperationByteCloseStep::Complete{break;}}
             assert!(prepared.terminal_is_empty());assert_eq!(prepared.allocated_bytes(),0);
         }else{
-            let (emitted,requested,released)=crate::test_allocation::observe_backing(||prepared.write_bytes(&expected,&mut control));
+            let (emitted,requested,released)=semio_framework_trace_memory_testing::observe_backing(||prepared.write_bytes(&expected,&mut control));
             emitted.unwrap();assert_eq!((requested,released),(0,0));assert_eq!(prepared.allocated_bytes(),retained);
             assert!(prepared.accepted_prefix().unwrap().iter().eq(expected.iter().copied()));
             let mut source=prepared.take_ready().unwrap();assert!(prepared.terminal_is_empty());
@@ -278,7 +278,7 @@ fn owned_operation_byte_pages_measure_complete_operation_without_retaining_paylo
     for maximum in [expected.len(),expected.len()-1]{
         let mut measured=OperationByteMeasurement::new(maximum as u64);
         let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
-        let (result,requested,released)=crate::test_allocation::observe_backing(||{
+        let (result,requested,released)=semio_framework_trace_memory_testing::observe_backing(||{
             measured.write_bytes(&expected[..2],&mut control)?;
             measured.write_bytes(&expected[2..],&mut control)
         });
@@ -334,29 +334,29 @@ fn child_paged_operation_carrier_borrows_exact8194_and_returns_actual_pages_with
     while !collection.has_reserved_slot(){let step=collection.reserve_one(max).unwrap();assert!(step.progressed&&step.allocated_bytes<=max);}
     assert!(collection.push_reserved(operation).is_ok());
     let collection_bytes=collection.allocated_bytes();
-    let ((),allocated,released)=crate::test_allocation::observe_backing(||{
+    let ((),allocated,released)=semio_framework_trace_memory_testing::observe_backing(||{
         let sources:&dyn OperationSourceCollection=&collection;assert_eq!(sources.len(),1);assert!(!sources.is_empty());assert!(sources.source_at(1).is_none());
         let span=sources.source_at(0).unwrap();assert_eq!(span.len(),8194);assert_eq!(span.get(0),Some(&49));assert_eq!(span.get(1),Some(&55));
         for index in 2..8194{assert_eq!(span.get(index),Some(&32));assert!(std::ptr::eq(span.get(index).unwrap(),collection.get(0).unwrap().byte_ref(index).unwrap()));}
     });assert_eq!((allocated,released),(0,0));
     let mut parent=ParentAllocationReturn::<1>::try_new(max,f["maximumAllocationBytes"].as_u64().unwrap()as usize).unwrap();
     let owner=collection.get_mut(0).unwrap();
-    for (items,bytes)in[(0,max),(1,0)]{let(step,a,r)=crate::test_allocation::observe_backing(||owner.return_one(&mut parent,items,bytes));assert_eq!(step.unwrap(),OperationByteReturnStep::Pending{returned_items:0,returned_bytes:0});assert_eq!((a,r),(0,0));assert_eq!(owner.len(),8194);assert_eq!(owner.allocated_bytes(),retained);}
+    for (items,bytes)in[(0,max),(1,0)]{let(step,a,r)=semio_framework_trace_memory_testing::observe_backing(||owner.return_one(&mut parent,items,bytes));assert_eq!(step.unwrap(),OperationByteReturnStep::Pending{returned_items:0,returned_bytes:0});assert_eq!((a,r),(0,0));assert_eq!(owner.len(),8194);assert_eq!(owner.allocated_bytes(),retained);}
     let mut physical=0;let mut handed=0;
     for _ in 0..f["maximumTurns"].as_u64().unwrap(){
         if !parent.terminal_is_empty(){
             let demand=parent.next_close_byte_demand();
-            let(step,a,r)=crate::test_allocation::observe_backing(||parent.close_step(1,demand-1));assert_eq!(step,AllocationReturnStep::Pending{released_items:0,released_bytes:0});assert_eq!((a,r),(0,0));
-            let(step,a,r)=crate::test_allocation::observe_backing(||parent.close_step(1,max));assert_eq!(a,0);assert_eq!(step,AllocationReturnStep::Pending{released_items:1,released_bytes:demand});assert_eq!(r,demand);assert!(r<=max);physical+=r;
+            let(step,a,r)=semio_framework_trace_memory_testing::observe_backing(||parent.close_step(1,demand-1));assert_eq!(step,AllocationReturnStep::Pending{released_items:0,released_bytes:0});assert_eq!((a,r),(0,0));
+            let(step,a,r)=semio_framework_trace_memory_testing::observe_backing(||parent.close_step(1,max));assert_eq!(a,0);assert_eq!(step,AllocationReturnStep::Pending{released_items:1,released_bytes:demand});assert_eq!(r,demand);assert!(r<=max);physical+=r;
         }else{
-            let(step,a,r)=crate::test_allocation::observe_backing(||owner.return_one(&mut parent,1,max));assert_eq!((a,r),(0,0));
-            match step.unwrap(){OperationByteReturnStep::Pending{returned_items,returned_bytes}=>{assert!(returned_items<=1);assert_eq!(parent.retained_bytes(),returned_bytes);handed+=returned_bytes;if returned_bytes!=0&&owner.allocated_bytes()!=0{let kept=owner.allocated_bytes();let(step,a,r)=crate::test_allocation::observe_backing(||owner.return_one(&mut parent,1,max));assert_eq!(step.unwrap(),OperationByteReturnStep::Pending{returned_items:0,returned_bytes:0});assert_eq!((a,r),(0,0));assert_eq!(owner.allocated_bytes(),kept);assert_eq!(parent.retained_bytes(),returned_bytes);}},OperationByteReturnStep::Complete=>break}
+            let(step,a,r)=semio_framework_trace_memory_testing::observe_backing(||owner.return_one(&mut parent,1,max));assert_eq!((a,r),(0,0));
+            match step.unwrap(){OperationByteReturnStep::Pending{returned_items,returned_bytes}=>{assert!(returned_items<=1);assert_eq!(parent.retained_bytes(),returned_bytes);handed+=returned_bytes;if returned_bytes!=0&&owner.allocated_bytes()!=0{let kept=owner.allocated_bytes();let(step,a,r)=semio_framework_trace_memory_testing::observe_backing(||owner.return_one(&mut parent,1,max));assert_eq!(step.unwrap(),OperationByteReturnStep::Pending{returned_items:0,returned_bytes:0});assert_eq!((a,r),(0,0));assert_eq!(owner.allocated_bytes(),kept);assert_eq!(parent.retained_bytes(),returned_bytes);}},OperationByteReturnStep::Complete=>break}
         }
     }
     assert!(owner.terminal_is_empty()&&parent.terminal_is_empty());assert_eq!(handed,retained);assert_eq!(physical,retained);assert_eq!(owner.allocated_bytes(),0);
-    let((),a,r)=crate::test_allocation::observe_backing(||{assert!(collection.pop().unwrap().terminal_is_empty());});assert_eq!((a,r),(0,0));
+    let((),a,r)=semio_framework_trace_memory_testing::observe_backing(||{assert!(collection.pop().unwrap().terminal_is_empty());});assert_eq!((a,r),(0,0));
     let mut outer=0;
-    while !collection.terminal_is_empty(){let(step,a,r)=crate::test_allocation::observe_backing(||collection.return_empty_page(&mut parent,1));let step=step.unwrap();assert!(step.progressed);assert_eq!((a,r),(0,0));assert_eq!(step.returned_allocation_bytes,parent.retained_bytes());let(drain,a,r)=crate::test_allocation::observe_backing(||parent.close_step(1,max));assert_eq!(a,0);assert!(r<=max);assert_eq!(drain,AllocationReturnStep::Pending{released_items:1,released_bytes:r});outer+=r;}
+    while !collection.terminal_is_empty(){let(step,a,r)=semio_framework_trace_memory_testing::observe_backing(||collection.return_empty_page(&mut parent,1));let step=step.unwrap();assert!(step.progressed);assert_eq!((a,r),(0,0));assert_eq!(step.returned_allocation_bytes,parent.retained_bytes());let(drain,a,r)=semio_framework_trace_memory_testing::observe_backing(||parent.close_step(1,max));assert_eq!(a,0);assert!(r<=max);assert_eq!(drain,AllocationReturnStep::Pending{released_items:1,released_bytes:r});outer+=r;}
     assert!(parent.terminal_is_empty());assert_eq!(outer,collection_bytes);
     eprintln!("[DEBUG] actual paged Child operation capability borrows exact original8194 refs without allocation; physical allocator proves every source and outer collection handoff releases0 child bytes, parent full4096 deallocation only");
 }

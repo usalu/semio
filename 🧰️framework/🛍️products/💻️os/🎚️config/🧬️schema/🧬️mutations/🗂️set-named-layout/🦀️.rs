@@ -44,13 +44,3 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetN
         vec!["named-layouts".to_string(), self.app_id.clone(), self.layout_id.clone()]
     }
 }
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✏️sets-named-layout/🦀️.rs"]
-mod tests_sets_named_layout;
-
-#[cfg(test)]
-#[path = "🧪️tests/🟰️keeps-named-layout/🦀️.rs"]
-mod tests_keeps_named_layout;
-//#endregion 🧪️Tests

@@ -1,0 +1,22 @@
+{
+  "format": 1,
+  "ownerPackage": "semio-framework-pack-record",
+  "ownerRoots": [
+    "🌱️value"
+  ],
+  "osPackFiles": [
+    "🦀️.rs",
+    "🌉️bridge/🦀️.rs"
+  ],
+  "adapters": [
+    "encode_document",
+    "decode_document",
+    "encode_record_body",
+    "decode_record_body"
+  ],
+  "tagOwner": "🌱️value/🧬️schema/🦀️.rs",
+  "tagCount": 24,
+  "retiredCrates": [
+    "🧬️schema/📡️record-token"
+  ]
+}

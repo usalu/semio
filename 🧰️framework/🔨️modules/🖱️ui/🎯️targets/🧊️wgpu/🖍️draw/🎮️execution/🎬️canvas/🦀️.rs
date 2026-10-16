@@ -1,8 +1,8 @@
 //! 🎬️ Exact admitted EngineCanvas GPU resources retained through stage refusal and close.
 use semio_framework_ui_wgpu_device as gpu_device;
 use super::{GpuContext,GpuSessionRoots};
-use crate::draw::{RasterTextureAdmission,RasterTextureCancelFault,RasterTextureStageFault,RasterTextureWitness};
-use crate::prepared::RasterContentIdentity;
+use semio_framework_ui_wgpu_draw_execution::{RasterTextureAdmission,RasterTextureCancelFault,RasterTextureStageFault,RasterTextureWitness};
+use semio_framework_ui_prepared::RasterContentIdentity;
 use semio_framework_canvas_scene::{Scene,Color};
 use gpu_device::platform::CanvasRasterizer as CanvasRasterSession;
 use std::sync::Arc;

@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🪄️mischief/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type Circumstances, allowed, allowedFrom, chosenFixture, fits, fixtureFor, liftAt, liftEnds, stationFor, thrownOff } from "../../🔨️modules/🪄️mischief/🟦️.ts";
 
 const VECTORS = "shared://🪄️mischief-choice/🔣️.json";

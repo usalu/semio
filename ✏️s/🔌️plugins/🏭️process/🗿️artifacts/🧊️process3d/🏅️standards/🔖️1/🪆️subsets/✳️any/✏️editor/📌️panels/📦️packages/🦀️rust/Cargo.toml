@@ -15,22 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[test]]
-name = "process3d_panels_inspection"
-path = "../../🔍️inspection/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "process3d_panels_artifact"
-path = "../../🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "process3d_panels_catalogue"
-path = "../../🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs"
-
-[[test]]
-name = "process3d_panels_workshop"
-path = "../../🛠️workshop/🧪️tests/🔬️unit/🦀️.rs"
-
 [dependencies]
 machine = { workspace = true }
 semio-framework-plugin = { workspace = true }

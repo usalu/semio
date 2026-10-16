@@ -34,12 +34,3 @@ semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒�
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
-
-[dev-dependencies]
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
-semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-dsl-record-derive = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-trace = { path = "../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
-semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }

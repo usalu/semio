@@ -9,7 +9,8 @@
       "packageName",
       "root",
       "entry",
-      "files"
+      "files",
+      "entrypoint"
     ],
     "properties": {
       "packageName": {
@@ -37,6 +38,12 @@
           "maxLength": 128,
           "pattern": "^[a-zA-Z0-9_][a-zA-Z0-9._-]*$"
         }
+      },
+      "entrypoint": {
+        "enum": [
+          "source",
+          "generated"
+        ]
       }
     }
   },

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -17,6 +17,7 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, MCP_GATEWAY_PACKAGES, readMcpGatewaySource, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
 import { capabilityDescriptionCensus } from "../../🗂️catalog/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 import { buildRepositoryCargoArtifacts, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { packageNativeRelease, signExecutableForDistribution } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -92,7 +93,7 @@ class BuildScript extends BundleScript {
 
 /** 📦️ Stages the **release**-profile `semio-os-mcp` binary, the one a distribution ships.
  *
- * Mirrors `os-hub`'s own `BuildScript` (`🌎️hub/📦️packages/🦀️rust/📜️script.ts`, `["--release",
+ * Mirrors `os-hub`'s own `BuildScript` (`🌎️hub/🎛️commands/🏗️build-and-dev/🟦️.ts`, `["--release",
  * "--bin", …]`): the only differences are this crate's explicit `--package` selector and a separate
  * `dist/build-release` deliverable root, so the dev-loop `dist/build` artifact every black-box gate
  * and `.mcp.json` exec stays exactly where it was. `stageRepositoryArtifacts` publishes through a fresh
@@ -245,7 +246,7 @@ class HubLiveCatalogCheckScript extends BundleScript {
   run(): void {
     runCmd("bun", ["./📜️script.ts", "hub-live-catalog-oracle"], { cwd: this.root, budgetMs: 60_000 });
     const workspace = readMcpGatewaySource(this.repoRoot);
-    const remote = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🦀️.rs"), "utf8");
+    const remote = readModuleTreeSource(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🦀️.rs"), { crates: false });
     const inference = readFileSync(join(this.root, "..", "..", "💡️inference", "🦀️.rs"), "utf8");
     const root = readFileSync(join(this.root, "..", "..", "🦀️.rs"), "utf8");
     for (const marker of ["verified_hub_catalog_selections", "discovery_descriptors", "ready_catalog_snapshot"]) if (!workspace.includes(marker)) throw new Error("workspace live-catalog source missing " + marker);
@@ -312,7 +313,7 @@ class CanonicalCheckpointResourceCheckScript extends BundleScript {
   run(): void {
     runCmd("bun", ["./📜️script.ts", "canonical-checkpoint-resource-oracle"], { cwd: this.root, budgetMs: 60_000 });
     const workspace = readMcpGatewaySource(this.repoRoot);
-    const remote = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🦀️.rs"), "utf8");
+    const remote = readModuleTreeSource(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🦀️.rs"), { crates: false });
     const pair = readMcpGatewaySource(this.repoRoot);
     const context = readFileSync(join(this.root, "..", "..", "🧠️context", "🦀️.rs"), "utf8");
     for (const marker of ["checkpoint_resource_uri", "parse_checkpoint_resource_uri", "read_canonical_checkpoint", "CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES"])

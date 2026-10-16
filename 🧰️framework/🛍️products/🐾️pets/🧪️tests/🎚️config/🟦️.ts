@@ -29,7 +29,7 @@ export default {
     name: "@semio-tech/pets",
     mode: "test",
     environment: "node",
-    include: ["../../🔨️modules/*/🧪️tests/🔬️unit/🟦️.ts", "../../🧬️schema/🧪️tests/🔬️unit/🟦️.ts"],
+    include: ["../../🔨️modules/*/🧪️tests/🔬️unit/🟦️.ts", "../../🧬️schema/🧪️tests/🔬️unit/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/📦️boxes-and-places/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/📜️claims-and-order/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/🪑️seating-and-heads/🟦️.ts", "../../🔨️modules/🚧️clearance/🧪️tests/🏛️world-laws/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🚪️arrival-and-gaze/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🚶️walking-and-encounters/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🎬️frames-and-summoning/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/📏️distance-and-turning/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/👁️attention-and-gait/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🧠️determinism-and-mind/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🦾️body-and-gear/🟦️.ts", "../../🔨️modules/🎪️stage/🧪️tests/🪄️mischief-and-arithmetic/🟦️.ts"],
     coverage: { include: ["🟦️.ts", "../../🧬️schema/🟦️.ts", "../../🔨️modules/**/🟦️.ts"] },
     passWithNoTests: false,
   },

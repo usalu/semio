@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🔺️ Runs the native mesh IO and semantic value laws through the canonical test owner. */
@@ -8,6 +9,7 @@ import {runScriptMain} from "../../../🏃️process/📦️packages/🟦️type
 import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import {resolveTestLevel} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 class Native extends BundleScript {
- async run(segments:string[]):Promise<void>{const{rest}=resolveTestLevel(segments);await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-mesh-engine"],cwd:this.root,extraArgs:rest},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);}
+ async run(segments:string[]):Promise<void>{
+    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);const{rest}=resolveTestLevel(segments);await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-mesh-engine"],cwd:this.root,extraArgs:rest},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);}
 }
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test-native",Native), { invocation: original }));

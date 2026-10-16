@@ -4,6 +4,7 @@ import { join } from "node:path";
 import Ajv from "ajv/dist/2020";
 import {spawnSync} from "node:child_process";
 import {parseArtifactPreparedOperationOutput,parseArtifactPreparedOperations} from "../📦️output/🧬️schema/🟦️.ts";
+import { valueRefusalCodecSchemaUrl } from "../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 const base = join(import.meta.dir, "..");
 const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 test("borrowed operation wire neutral UTF8/ordered JSON and bounded chunk oracle", () => {
@@ -81,7 +82,7 @@ test("original text refusal preserves initialized UTF8 prefix and canonical phys
   const scalar=Buffer.from(row.scalar);const prefix=Buffer.concat([Buffer.from(row.header),scalar.subarray(0,row.initializedScalarBytes)]);
   expect([...prefix]).toEqual(row.expectedPrefix);expect(prefix.length).toBe(row.expectedCopiedBytes);expect([...new TextEncoder().encode(row.scalar)]).toEqual([...scalar]);
   const root=join(base,"../../../../../..");
-  const reasonSchema=JSON.parse(readFileSync(join(root,"🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🧬️schema/🔣️.json"),"utf8"));
+  const reasonSchema=JSON.parse(readFileSync(valueRefusalCodecSchemaUrl,"utf8"));
   const schema=JSON.parse(readFileSync(join(base,"⚠️failure/🧬️schema/🔣️.json"),"utf8"));const ajv=new Ajv({strict:true});ajv.addSchema(reasonSchema);const admit=ajv.compile(schema);
   const value={writtenBytes:prefix.length,reason:{kind:"invariantViolated",message:"original scalar refusal",retainedProgress:{copiedItems:1,copiedBytes:prefix.length,retainedCapacityBytes:0,releasedBytes:0}}};
   expect(admit(value)).toBe(true);expect(admit({...value,writtenBytes:-1})).toBe(false);

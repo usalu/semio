@@ -6,6 +6,7 @@ import { testInputRootFixture } from "../../🪪️root/🧪️tests/🔬️inpu
 import { testInputWriterFixture } from "../../✍️writer/🧪️tests/🔬️input-writer/🟦️.ts";
 import { testInputCommitObserverFixture } from "../../🔗️commit/🧪️tests/🔬️input-commit-observer/🟦️.ts";
 import { testWatchdogTailFixture } from "../../../../../../⏱️trace/⏱️clock/🏁️tail/🧪️tests/🔬️watchdog-tail/🟦️.ts";
+import { valueSchemaUrl } from "../../../../../../🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 🎟️ The input-admission ledger: which pointer and key turns are admitted, refused or coalesced. */
 type InputAdmissionFixture = {
@@ -54,7 +55,7 @@ type InputAdmissionFixture = {
 export function testInputAdmissionFixture(): void {
   const fixture: InputAdmissionFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   
-  const value = JSON.parse(readFileSync(new URL("../../../../../../🌱️value/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const value = JSON.parse(readFileSync(valueSchemaUrl, "utf8"));
   
   
   assert.equal(new Set(fixture.cases.map((row: { name: string }) => row.name)).size, fixture.cases.length);
@@ -86,7 +87,7 @@ export function testInputAdmissionFixture(): void {
   }
   for (const invalid of ["-1", "01", "18446744073709551616", "99999999999999999999"]) {
     const hostile = structuredClone(fixture);
-    hostile.cases[0].inputGeneration = invalid;
+    const first=hostile.cases[0];if(!first)throw Error("Actual input corpus case required");first.inputGeneration = invalid;
     
   }
   

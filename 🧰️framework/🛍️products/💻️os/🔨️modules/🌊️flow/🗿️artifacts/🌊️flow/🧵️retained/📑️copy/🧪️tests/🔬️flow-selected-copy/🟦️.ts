@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { WORKSPACE_ROOT } from "../../../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl } from "../../../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { jobSnapshotSchemaUrl } from "@semio-tech/framework/job/testing/fixtures";
 
 /** 🧪️ Executes flow selected copy policy assertions. */
 export function flowSelectedCopySelfTests(): number {
@@ -11,7 +13,7 @@ export function flowSelectedCopySelfTests(): number {
   const fixture = JSON.parse(readFileSync(join(base, "📑️copy/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   let probes=0;
   const schema=JSON.parse(readFileSync(join(base,"🧬️schema/🔣️.json"),"utf8"));
-  const grant=JSON.parse(readFileSync(join(WORKSPACE_ROOT,"🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json"),"utf8"));
+  const grant=JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8"));
   const ajv=new Ajv({strict:true,allErrors:true}).addSchema(grant).addSchema(schema);
   const validate=ajv.compile({$ref:schema.$id+"#/$defs/OwnedFields"});
   const allocationAdmission=ajv.compile({$ref:schema.$id+"#/$defs/CopyAdmission"});assert.equal(allocationAdmission(fixture.allocationAdmission),true);assert.equal(allocationAdmission({...fixture.allocationAdmission,originalContextRequired:false}),false);assert.equal(allocationAdmission({...fixture.allocationAdmission,singleBytes:16777216}),false);probes+=3;
@@ -31,7 +33,7 @@ export function flowSelectedCopySelfTests(): number {
     const pointer = test.pointer === "" ? document : test.pointer.slice(1).split("/").reduce((value: any, key: string) => value[key], document);
     if (stable(pointer) !== stable(copied)) throw new Error("Flow selected copy fixture pointer disagrees");
   }
-  const intakeSchema=JSON.parse(readFileSync(join(WORKSPACE_ROOT,"🧰️framework/🔨️modules/🧵️job/📥️snapshot/🧬️schema/🔣️.json"),"utf8"));
+  const intakeSchema=JSON.parse(readFileSync(jobSnapshotSchemaUrl,"utf8"));
   const intakeCorpus=JSON.parse(readFileSync(join(base,"📑️copy/🧪️tests/🧫️fixtures/📥️intake.json"),"utf8"));
   const admitIntake=ajv.compile(intakeSchema);assert.equal(admitIntake(intakeCorpus),true);
   const altered=structuredClone(intakeCorpus);altered.cases[0].expected.sameSourceAllocation=false;assert.equal(admitIntake(altered),false);probes+=2;

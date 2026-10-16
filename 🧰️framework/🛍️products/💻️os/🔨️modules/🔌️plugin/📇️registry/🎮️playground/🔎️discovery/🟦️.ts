@@ -4,8 +4,9 @@ import { parseTileProxyAssetSpecV1 } from "../../../../../../../🔨️modules/�
 import {admitPlaygroundNativeHostV1,parsePlaygroundNativeHostV1,nativeHostFilesystemViewV1,nativeHostTextSourceViewV1,type PlaygroundNativeHostV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import type { RegistryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { getWorkspaceRoot, registryCatalogInputView, registryExampleCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import type { RegistryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { registryCatalogInputView, registryExampleCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { generatePluginRegistry, parseTomlStringArray, readDescriptorJson, tomlBlocksAfterHeader, TAXONOMY, type GeneratePluginRegistryOptions, type RegistryChannelDiagnosticV1 } from "../../🔎️discovery/🟦️.ts";
 
 

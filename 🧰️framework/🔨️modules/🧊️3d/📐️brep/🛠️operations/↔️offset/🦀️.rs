@@ -862,8 +862,7 @@ pub use jobs::{ClosedShellJob, DraftJob, OffsetFaceJob, OffsetSolidJob, OpenShel
 // #region 🔖️Tests
 
 #[cfg(test)]
-#[path = "../../../🧪️tests/🧰️support/🦀️.rs"]
-pub(crate) mod test_support;
+pub(crate) use semio_framework_3d_testing_support as test_support;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

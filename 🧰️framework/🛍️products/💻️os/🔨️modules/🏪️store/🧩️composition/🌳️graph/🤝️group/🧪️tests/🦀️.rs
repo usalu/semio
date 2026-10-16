@@ -1,5 +1,5 @@
 use super::*;
-use crate::os_vcs::ArtifactGroupVisibilityOwner;
+use semio_framework_os_vcs::ArtifactGroupVisibilityOwner;
 #[semio_framework_async_macros::async_test]
 async fn composition_group_siblings_commit_without_post_flip_allocation_or_stale_tokens() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
@@ -11,7 +11,7 @@ async fn composition_group_siblings_commit_without_post_flip_allocation_or_stale
     for row in rows { prepare_edge(&graph,&mut preparation,row[0].as_str().unwrap(),row[1].as_str().unwrap(),row[2].as_str().unwrap()).unwrap(); }
     for _ in 0..10000 { if seal_root(&graph,&mut preparation).unwrap()==GroupOwnsStep::RootPrepared{break} }
     assert!(graph.owns_group_ready(&preparation));assert!(owner.commit());
-    let (result,allocated,released)=crate::test_allocation::observe_backing(||graph.commit_owns_group(&mut preparation));
+    let (result,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||graph.commit_owns_group(&mut preparation));
     assert_eq!(result,Ok(()));assert_eq!((allocated,released),(0,0));assert_eq!(graph.owns_generation,1);
     close_group(&mut graph,&mut preparation);
     close_graph(&mut graph);
@@ -21,16 +21,16 @@ fn seal_root(graph: &CompositionGraph, preparation: &mut GroupOwnsPreparation) -
     let demand=preparation.next_preparation_demands(graph);let grant=preparation_grant(demand);
     for refused in [ArtifactStoreOneItemGrant{maximum_items:0,..grant},ArtifactStoreOneItemGrant{maximum_depth:0,..grant},ArtifactStoreOneItemGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(1),..grant},ArtifactStoreOneItemGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant}] {
         if refused.maximum_items==grant.maximum_items&&refused.maximum_depth==grant.maximum_depth&&refused.maximum_copy_bytes==grant.maximum_copy_bytes&&refused.maximum_capacity_bytes==grant.maximum_capacity_bytes{continue;}
-        let(answer,allocated,released)=crate::test_allocation::observe_backing(||graph.seal_owns_group(preparation,refused));assert_eq!(answer,Ok(GroupOwnsStep::Blocked));assert_eq!((allocated,released),(0,0));assert_eq!(preparation.next_preparation_demands(graph),demand);
+        let(answer,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||graph.seal_owns_group(preparation,refused));assert_eq!(answer,Ok(GroupOwnsStep::Blocked));assert_eq!((allocated,released),(0,0));assert_eq!(preparation.next_preparation_demands(graph),demand);
     }
-    let(answer,allocated,released)=crate::test_allocation::observe_backing(||graph.seal_owns_group(preparation,grant));assert_eq!(allocated,demand.capacity_bytes);assert_eq!(released,0);assert!(demand.copy_bytes<=4096);answer
+    let(answer,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||graph.seal_owns_group(preparation,grant));assert_eq!(allocated,demand.capacity_bytes);assert_eq!(released,0);assert!(demand.copy_bytes<=4096);answer
 }
 fn preparation_grant(demand: semio_framework_value::RetirementDemand) -> ArtifactStoreOneItemGrant { ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth } }
 fn group_grant(preparation: &GroupOwnsPreparation) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: preparation.next_close_copy_byte_demand(), maximum_capacity_bytes: 0, maximum_release_bytes: preparation.next_close_release_byte_demand(), maximum_depth: preparation.next_close_depth_demand() } }
 fn close_graph(graph: &mut CompositionGraph) {
     for _ in 0..10000 {
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: graph.next_close_copy_byte_demand().unwrap(), maximum_capacity_bytes: graph.next_close_capacity_byte_demand(0).unwrap(), maximum_release_bytes: graph.next_close_release_byte_demand().unwrap(), maximum_depth: graph.next_close_depth_demand().unwrap() };
-        let (result, allocated, released) = crate::test_allocation::observe_backing(|| graph.close_step(grant));
+        let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.close_step(grant));
         let step = result.unwrap(); assert_eq!(allocated, 0); assert_eq!(released, step.progress().released_bytes); assert!(step.progress().fits(grant));
         if matches!(step, RetainedCloneStep::Complete(_)) { assert!(graph.terminal_is_empty()); return; }
     }
@@ -41,10 +41,10 @@ fn close_group(graph: &mut CompositionGraph, preparation: &mut GroupOwnsPreparat
         let grant = group_grant(preparation);
         for refused in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes.saturating_sub(1), ..grant }, RetainedCloneGrant { maximum_release_bytes: grant.maximum_release_bytes.saturating_sub(1), ..grant }] {
             if refused == grant { continue; }
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| graph.close_owns_group(preparation, refused));
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.close_owns_group(preparation, refused));
             assert_eq!((allocated, released), (0, 0)); assert_eq!(step, RetainedCloneStep::Progress(Default::default())); assert_eq!(group_grant(preparation), grant);
         }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| graph.close_owns_group(preparation, grant));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.close_owns_group(preparation, grant));
         assert_eq!(allocated, 0); assert_eq!(released, step.progress().released_bytes); assert!(step.progress().fits(grant));
         if matches!(step, RetainedCloneStep::Complete(_)) { assert_eq!(released, 0); assert!(preparation.terminal_is_empty()); return; }
     }
@@ -57,10 +57,10 @@ fn prepare_edge(graph: &CompositionGraph, preparation: &mut GroupOwnsPreparation
         let grant=preparation_grant(demand);
         for refused in [ArtifactStoreOneItemGrant {maximum_items:0,..grant},ArtifactStoreOneItemGrant {maximum_depth:0,..grant},ArtifactStoreOneItemGrant {maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(1),..grant},ArtifactStoreOneItemGrant {maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant}] {
             if refused.maximum_items==grant.maximum_items&&refused.maximum_depth==grant.maximum_depth&&refused.maximum_copy_bytes==grant.maximum_copy_bytes&&refused.maximum_capacity_bytes==grant.maximum_capacity_bytes{continue;}
-            let (answer,allocated,released)=crate::test_allocation::observe_backing(||graph.prepare_owns_group_edge(preparation,parent,slot,child,refused));
+            let (answer,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||graph.prepare_owns_group_edge(preparation,parent,slot,child,refused));
             assert_eq!(answer,Ok(GroupOwnsStep::Blocked));assert_eq!((allocated,released),(0,0));assert_eq!(preparation.next_edge_demands(graph,parent,slot,child)?,demand);
         }
-        let (answer,allocated,released)=crate::test_allocation::observe_backing(||graph.prepare_owns_group_edge(preparation,parent,slot,child,grant));
+        let (answer,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||graph.prepare_owns_group_edge(preparation,parent,slot,child,grant));
         assert_eq!(allocated,demand.capacity_bytes);assert_eq!(released,0);assert!(demand.copy_bytes<=4096);
         match answer? { GroupOwnsStep::EdgePrepared=>return Ok(turns),GroupOwnsStep::Progress=>(),other=>panic!("funded edge turn: {other:?}") }
     }
@@ -75,17 +75,17 @@ async fn composition_group_sorted_root_is_atomic_and_every_owner_retirement_is_p
     let before_generation = graph.owns_generation;
     let mut owner = ArtifactGroupVisibilityOwner::new();
     let visibility = owner.view();
-    let (result, allocated, released) = crate::test_allocation::observe_backing(|| graph.begin_owns_group(&visibility, 2));
+    let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.begin_owns_group(&visibility, 2));
     assert_eq!((allocated, released), (0, 0));
     let mut preparation = result.unwrap();
     let rows = fixture["siblings"]["additions"].as_array().unwrap();
     for row in rows.iter().rev() {
         let parent = row[0].as_str().unwrap(); let slot = row[1].as_str().unwrap(); let child = row[2].as_str().unwrap();
         let demand = preparation.next_edge_demands(&graph, parent, slot, child).unwrap();
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| graph.prepare_owns_group_edge(&mut preparation, parent, slot, child, ArtifactStoreOneItemGrant { maximum_items: 0, ..preparation_grant(demand) }));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.prepare_owns_group_edge(&mut preparation, parent, slot, child, ArtifactStoreOneItemGrant { maximum_items: 0, ..preparation_grant(demand) }));
         assert_eq!(step.unwrap(), GroupOwnsStep::Blocked); assert_eq!((allocated, released), (0, 0));
         let demand = preparation.next_edge_demands(&graph, parent, slot, child).unwrap();
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| graph.prepare_owns_group_edge(&mut preparation, parent, slot, child, ArtifactStoreOneItemGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..preparation_grant(demand) }));
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.prepare_owns_group_edge(&mut preparation, parent, slot, child, ArtifactStoreOneItemGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..preparation_grant(demand) }));
         assert_eq!(step.unwrap(), GroupOwnsStep::Blocked); assert_eq!((allocated, released), (0, 0));
         prepare_edge(&graph, &mut preparation, parent, slot, child).unwrap();
         assert_eq!(graph.owns.len(), 1); assert_eq!(graph.owns_generation, before_generation);
@@ -101,7 +101,7 @@ async fn composition_group_sorted_root_is_atomic_and_every_owner_retirement_is_p
     assert_eq!(foreign.commit_owns_group(&mut preparation), Err(GroupOwnsError::Foreign));
     graph.owns_generation += 1; assert!(!graph.owns_group_ready(&preparation)); graph.owns_generation -= 1;
     assert!(owner.commit());
-    let (result, allocated, released) = crate::test_allocation::observe_backing(|| graph.commit_owns_group(&mut preparation));
+    let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.commit_owns_group(&mut preparation));
     assert_eq!(result, Ok(())); assert_eq!((allocated, released), (0, 0));
     assert_eq!(graph.owns_generation, before_generation + 1);
     for row in rows { assert_eq!(graph.owner_of(row[2].as_str().unwrap()).await, row[0].as_str()); assert_eq!(graph.slot_of(row[2].as_str().unwrap()).await, row[1].as_str()); }
@@ -149,9 +149,9 @@ async fn composition_group_live_root_retirement_moves_one_row_without_metadata_b
     graph.insert_owns("parent", "slot", "child").await.unwrap();
     let bytes = graph.next_close_copy_byte_demand().unwrap();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 };
-    let (blocked, allocated, released) = crate::test_allocation::observe_backing(|| graph.close_step(RetainedCloneGrant { maximum_copy_bytes: bytes - 1, ..grant }));
+    let (blocked, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.close_step(RetainedCloneGrant { maximum_copy_bytes: bytes - 1, ..grant }));
     assert_eq!(blocked.unwrap(), RetainedCloneStep::Progress(Default::default())); assert_eq!((allocated, released), (0, 0));
-    let (step, allocated, released) = crate::test_allocation::observe_backing(|| graph.close_step(grant));
+    let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.close_step(grant));
     assert_eq!(step.unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }));
     assert_eq!((allocated, released), (0, 0)); close_graph(&mut graph);
     println!("[DEBUG] actual live graph row transfer copied={bytes} allocated0 released0, exact separate backing close");
@@ -163,11 +163,11 @@ async fn composition_group_link_retirement_retains_underfunded_original_backing(
     graph.links.insert("source".into(), ["target".into()].into_iter().collect());
     let capacity = graph.links.capacity();
     let grant = RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: 4096, maximum_depth: 1 };
-    let (result, allocated, released) = crate::test_allocation::observe_backing(|| graph.close_step(grant));
+    let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| graph.close_step(grant));
     assert_eq!(result.unwrap(), RetainedCloneStep::Progress(Default::default())); assert_eq!((allocated, released), (0, 0));
     assert_eq!(graph.links.capacity(), capacity); assert!(graph.links.get("source").unwrap().iter().any(|target| target == "target"));
     close_graph(&mut graph);
-    let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(graph)); assert_eq!((allocated, released), (0, 0));
+    let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(graph)); assert_eq!((allocated, released), (0, 0));
     println!("[DEBUG] original linked graph underfunded allocation0 free0; exact string/row/backing release closes terminalDrop0");
 }
 
@@ -188,7 +188,7 @@ async fn composition_group_empty_additions_preserve_original_root_with_exact_bac
     let mut owner=ArtifactGroupVisibilityOwner::new();let visibility=owner.view();let mut preparation=graph.begin_owns_group(&visibility,0).unwrap();
     for _ in 0..10000{if seal_root(&graph,&mut preparation).unwrap()==GroupOwnsStep::RootPrepared{break;}}
     assert!(graph.owns_group_ready(&preparation));assert_eq!(graph.owner_of(row[2].as_str().unwrap()).await,row[0].as_str());assert!(owner.commit());
-    let(answer,allocated,released)=crate::test_allocation::observe_backing(||graph.commit_owns_group(&mut preparation));assert_eq!(answer,Ok(()));assert_eq!((allocated,released),(0,0));
+    let(answer,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||graph.commit_owns_group(&mut preparation));assert_eq!(answer,Ok(()));assert_eq!((allocated,released),(0,0));
     assert_eq!(graph.owner_of(row[2].as_str().unwrap()).await,row[0].as_str());assert_eq!(graph.slot_of(row[2].as_str().unwrap()).await,row[1].as_str());close_group(&mut graph,&mut preparation);close_graph(&mut graph);
     println!("[DEBUG] zero additions keep original owner/slot through exact work/backing grants and allocation0 committed flip");
 }

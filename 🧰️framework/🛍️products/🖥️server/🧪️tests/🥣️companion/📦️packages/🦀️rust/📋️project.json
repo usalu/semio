@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-server-tests-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

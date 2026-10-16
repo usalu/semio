@@ -1,4 +1,4 @@
-import {SelectionCombineJob} from "../../../../../../../../../../🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
+import { SelectionCombineJob } from "@semio-tech/framework/pixels/editing";
 /** 🧪️ Moving focus to the tools must preserve an asynchronously computed pixel selection. */
 import {act,cleanup,fireEvent,render,waitFor} from "@semio-tech/ui-react/test";
 import {afterEach,expect,test,vi} from "vitest";
@@ -287,7 +287,7 @@ for(const kind of ["pixel","group"])for(const sample of fixture.affineMaskTarget
 });
 
 import patch,{type Operation} from "fast-json-patch";
-import revisions from "../../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🖌️stroke-revision/🔣️.json";
+import { paintStrokeRevisionFixture as revisions } from "../../../../../../../../../../🔨️modules/🗺️surface/🧪️tests/🧫️fixtures/🟦️.ts";
 for(const row of revisions.cases)test("active stroke handles target revision "+row.name,async()=>{
   vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);

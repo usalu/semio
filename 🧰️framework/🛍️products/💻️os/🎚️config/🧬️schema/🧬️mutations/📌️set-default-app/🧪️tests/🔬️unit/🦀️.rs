@@ -3,7 +3,7 @@ use super::super::super::DefaultApp;
 
 #[test]
 fn semantic_reference_targets_preserve_independent_identity_components(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧭️semantic-reference-targets/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧭️semantic-reference-targets/🔣️.json")).expect("fixture").as_str()).unwrap();
  for case in fixture["cases"].as_array().unwrap(){
   let value=&case["dialect"];let text=|key:&str|value[key].as_str().unwrap().to_owned();let dialect=ArtifactDialect{artifact_kind:text("artifactKind"),standard:text("standard"),subset:text("subset")};
   let role=match case["role"].as_str().unwrap(){"viewer"=>AppRole::Viewer,"editor"=>AppRole::Editor,_=>unreachable!()};

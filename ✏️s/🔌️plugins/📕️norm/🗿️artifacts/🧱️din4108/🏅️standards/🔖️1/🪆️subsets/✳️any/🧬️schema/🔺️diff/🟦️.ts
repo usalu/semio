@@ -1,7 +1,7 @@
 /** 🔺️ `Din4108Diff` wire twin: the sparse delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireNullable, normWireNumber, normWireObject, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireNullable, normWireNumber, normWireObject, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 import { type Din4108ClimateZoneDe, type Din4108EnvelopeElement, type Din4108LayerDocument, type Din4108LayerSegment, type Din4108ThermalBridge, type Din4108ThermalZone, type Din4108ZoneWindow, parseDin4108ClimateZoneDe, parseDin4108EnvelopeElement, parseDin4108LayerDocument, parseDin4108LayerSegment, parseDin4108ThermalBridge, parseDin4108ThermalZone, parseDin4108ZoneWindow } from "../📸️snapshot/🟦️.ts";
 
 export interface Din4108WindowPatch { orientation: (string) | null; inclinationDeg: (number) | null; areaM2: (number) | null; gValue: (number) | null; shadingFc: (number) | null; }

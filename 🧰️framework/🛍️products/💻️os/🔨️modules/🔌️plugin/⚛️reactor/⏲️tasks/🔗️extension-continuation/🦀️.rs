@@ -1,6 +1,8 @@
 //! 🔗️ Host handles and the extension invocation continuation over the actor request registry.
 
-use super::*;
+use crate::REGISTRY;
+use semio_framework::kernel::Effect;
+use semio_framework_plugin_actor_host::requests;
 
 /// 🌐️ Every `host::Host` handle vended to plugin/extension code shares this actor's one
 /// `RequestRegistry`, scoped to `instance` (`RequestRegistry::for_instance` — design-abi.md §4's
@@ -8,9 +10,9 @@ use super::*;
 /// pending host round-trips and no other's) — see `host::Host::new`.
 ///
 /// 🌐️ Captures the actor's existing request registry without polling a future.
-pub fn host_for_instance(instance: u32) -> crate::host::Host {
+pub fn host_for_instance(instance: u32) -> semio_framework_plugin_actor_host::Host {
     let registry = REGISTRY.with(|registry| registry.for_instance(instance));
-    crate::host::Host::new(registry)
+    semio_framework_plugin_actor_host::Host::new(registry)
 }
 //#region 🔖️ExtensionContinuation
 /// 🔁️ Mints one `Effect::InvokeExtension` for `instance` through this actor's `RequestRegistry` and
@@ -18,7 +20,8 @@ pub fn host_for_instance(instance: u32) -> crate::host::Host {
 /// created on the guest side outside `host::Host::invoke_extension`'s awaiting variant. Returns the
 /// minted id (diagnostic; the effect itself rides the registry's own outbound queue, drained into
 /// `turn-result.effects` by `poll` later in the SAME turn).
-pub(crate) fn queue_extension_invocation(instance: u32, invocation: &crate::app_emission::ExtensionInvocation) -> Result<semio_framework::kernel::RequestId, semio_framework::Fault> {
+#[doc(hidden)]
+pub fn queue_extension_invocation(instance: u32, invocation: &semio_framework_plugin_decl_emission::ExtensionInvocation) -> Result<semio_framework::kernel::RequestId, semio_framework::Fault> {
     let registry = REGISTRY.with(|registry| registry.for_instance(instance));
     let extension_id = invocation.extension_id.clone();
     let capability = invocation.capability.clone();
@@ -30,7 +33,8 @@ pub(crate) fn queue_extension_invocation(instance: u32, invocation: &crate::app_
 /// `turn-result.effects` once per turn. A fixture that drives a `PluginApp` without a live
 /// `PluginRuntime` has no `poll`, so this is its only way to observe a minted
 /// `Effect::InvokeExtension` (`🔌️plugin/🦀️.rs`'s `artifact_app_laws::settle_extension_invocations`).
-pub(crate) fn drain_queued_effects(instance: u32) -> Vec<Effect> {
+#[doc(hidden)]
+pub fn drain_queued_effects(instance: u32) -> Vec<Effect> {
     REGISTRY.with(|registry| registry.for_instance(instance).drain())
 }
 
@@ -77,7 +81,8 @@ pub fn extension_response_args(request_json: &str, outcome: Result<Vec<u8>, semi
 /// testable without a live `PluginRuntime`: takes the id's continuation (if any) and builds the
 /// exact `(instance, action, args, original_fault)` the follow-up dispatch uses. An unclaimed id is an
 /// ordinary parked-future request and must go to `RequestRegistry::resolve` instead.
-pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, semio_framework_value::DslValue, Option<semio_framework::Fault>), Result<Vec<u8>, semio_framework::Fault>> {
+#[doc(hidden)]
+pub fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, semio_framework_value::DslValue, Option<semio_framework::Fault>), Result<Vec<u8>, semio_framework::Fault>> {
     let Some(continuation) = REGISTRY.with(|registry| registry.take_continuation(req)) else { return Err(terminal) };
     let (instance, response_action, request_json, outcome) = continuation.into_response(terminal);
     let (args, original_fault) = extension_response_args(&request_json, outcome);
@@ -88,7 +93,8 @@ pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, t
 /// `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` page arrives through, whose terminal page rides the
 /// `Event::Completed` that answers the request. `false` means `req` owns no continuation and the
 /// caller must fall through to the parked-future chunk path.
-pub(super) fn append_extension_response_page(req: semio_framework::kernel::RequestId, bytes: &[u8]) -> bool {
+#[doc(hidden)]
+pub fn append_extension_response_page(req: semio_framework::kernel::RequestId, bytes: &[u8]) -> bool {
     REGISTRY.with(|registry| registry.append_continuation_chunk(req, bytes)) == requests::ContinuationChunkStep::Accumulated
 }
 //#endregion 🔖️ExtensionContinuation
@@ -98,6 +104,6 @@ pub(super) fn append_extension_response_page(req: semio_framework::kernel::Reque
 /// `RequestRegistry::for_instance`'s own doc names. `⚛️reactor/💼️jobs/🦀️.rs::spawn_job`
 /// calls this (as `crate::reactor::host()`, zero args): a job is actor-global, not tied to one open
 /// instance the way an `AsyncTask` is, so it has no `instance: u32` to scope by in the first place.
-pub fn host() -> crate::host::Host {
-    REGISTRY.with(|registry| crate::host::Host::new(registry.clone()))
+pub fn host() -> semio_framework_plugin_actor_host::Host {
+    REGISTRY.with(|registry| semio_framework_plugin_actor_host::Host::new(registry.clone()))
 }

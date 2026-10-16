@@ -1,5 +1,4 @@
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};
@@ -13,7 +12,7 @@ fn sqlite_snapshot_equation_deep_retirement_exact_profile_and_bounded_cancellati
 
 #[test]
 fn sqlite_snapshot_equation_authored_logical_grammar_demo_and_actual_declaration_agree(){
- let(_,value)=fixture();let codec=crate::standards::v1::subsets::any::io::io().native.codec;assert!(codec.snapshot_sqlite.is_some());assert_eq!(codec.pack_schema_hash,store::schema_hash(&<EquationSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap()));
+ let(_,value)=fixture();let codec=crate::standards::v1::subsets::any::io::io().native.codec;assert!(codec.snapshot_sqlite.is_some());assert_eq!(codec.pack_schema_hash,pack::record::schema_hash(&<EquationSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap()));
  let grammar=semio_framework_dsl::grammar::parse_grammar(include_str!("../../../📝️text/📸️snapshot/📖️.grammar.semio")).unwrap();let recognizer=semio_framework_dsl::grammar::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");let text=pack::snapshot::ArtifactDsl::print_dsl(&value);assert!(recognizer.recognize(&text).unwrap(),"{text}");let demo=include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");let decoded=<EquationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(demo).unwrap();assert!(recognizer.recognize(demo).unwrap());assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&decoded),demo);
  for invalid in[text.replace("mathematical.equation.dsl","stdio.json.dsl"),text.replace("mathematical.equation.dsl v1","mathematical.equation.dsl v2"),format!("{text}\nunowned-field=1")]{assert!(<EquationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&invalid).is_err());}
 }

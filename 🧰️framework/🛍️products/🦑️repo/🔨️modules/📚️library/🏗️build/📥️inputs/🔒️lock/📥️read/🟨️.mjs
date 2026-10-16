@@ -1,29 +1,12 @@
-import { createHash } from "node:crypto";
-import { createRequire } from "node:module";
-import { readFileSync, existsSync } from "node:fs";
-import { dirname, resolve, join } from "node:path";
-import { cargoLockClosure } from "../🟨️.mjs";
-
-/** 🔒️ Hashes the selected package's locked resolution without admitting unrelated registry entries. */
-export function selectedCargoLockDigest(manifest, records = new Map()) {
-  const parser = createRequire(import.meta.url)("@iarna/toml"), read = path => { if (!records.has(path)) records.set(path, parser.parse(readFileSync(path, "utf8"))); return records.get(path); };
-  const packagePath = resolve(manifest), selected = read(packagePath);
-  if (!selected.package?.name) throw Error("Selected Cargo package manifest required");
-  let root = selected.package.workspace ? resolve(dirname(packagePath), selected.package.workspace) : dirname(packagePath);
-  if (!selected.package.workspace) {
-    while (!read(join(root, "Cargo.toml")).workspace) {
-      const parent = dirname(root);
-      if (parent === root) throw Error("Selected Cargo workspace owner required");
-      root = parent;
-      while (!existsSync(join(root, "Cargo.toml"))) {
-        const ancestor = dirname(root);
-        if (ancestor === root) throw Error("Selected Cargo workspace owner required");
-        root = ancestor;
-      }
-    }
-  }
-  if (!existsSync(join(root, "Cargo.lock"))) return createHash("sha256").update("missing\0Cargo.lock").digest("hex");
-  const workspace = read(join(root, "Cargo.toml")), version = selected.package.version?.workspace ? workspace.workspace?.package?.version : selected.package.version;
-  return createHash("sha256").update(JSON.stringify(cargoLockClosure(read(join(root, "Cargo.lock")), [{ name: selected.package.name, version }]))).digest("hex");
-}
-
+import{createHash}from"node:crypto";
+import{dirname,resolve,relative,join,sep,isAbsolute}from"node:path";
+import{cargoLockClosure}from"../🟨️.mjs";
+import{withExactSourceReadBatchV1,readExactSourceTomlV1,requireExactSourceReadBatchV1}from"../../🧮️digest/📥️read/🟨️.mjs";
+import{requireIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import schema from"../../🧮️digest/📥️read/🧬️schema/🔣️.json"with{type:"json"};
+const maximumAncestors=schema.definitions.Policy.const.maximumAncestors;
+function within(root,path){const value=relative(root,path);if(!value||value===".."||value.startsWith(".."+sep)||isAbsolute(value))throw Error("Selected Cargo metadata outside Source owner");return value.split(sep).join("/");}
+/** 🔒️ Projects only the selected locked resolution from the same privately authenticated Source batch. */
+export async function selectedCargoLockDigestInBatchV1(batch,workspaceRoot,manifest){requireExactSourceReadBatchV1(batch,workspaceRoot);const packagePath=resolve(workspaceRoot,manifest),read=async path=>{const value=await readExactSourceTomlV1(batch,within(workspaceRoot,path));return value?.value??null;},selected=await read(packagePath);if(!selected?.package||typeof selected.package.name!=="string"||!selected.package.name)throw Error("Selected Cargo package manifest required");let root=selected.package.workspace?resolve(dirname(packagePath),selected.package.workspace):dirname(packagePath),workspace;if(selected.package.workspace!==undefined&&typeof selected.package.workspace!=="string")throw Error("Selected Cargo workspace path required");for(let depth=0;depth<maximumAncestors;depth++){const path=join(root,"Cargo.toml");within(workspaceRoot,path);const candidate=await read(path);if(candidate?.workspace){workspace=candidate;break;}if(selected.package.workspace)throw Error("Selected explicit Cargo workspace required");if(root===workspaceRoot)throw Error("Selected Cargo workspace owner required");const parent=dirname(root);if(parent===root)throw Error("Selected Cargo workspace owner required");root=parent;}if(!workspace)throw Error("Selected Cargo workspace ancestry exceeded");const lock=await read(join(root,"Cargo.lock"));if(lock===null)return createHash("sha256").update("missing\0Cargo.lock").digest("hex");const version=selected.package.version?.workspace?workspace.workspace?.package?.version:selected.package.version;return createHash("sha256").update(JSON.stringify(cargoLockClosure(lock,[{name:selected.package.name,version}]))).digest("hex");}
+/** 🔒️ Starts a fresh actual Source batch; no parsed-record cache crosses invocations. */
+export function selectedCargoLockDigest(workspaceRoot,manifest,control){requireIssuedResourceControlV1(control);if(typeof manifest!=="string")throw Error("Selected Cargo manifest path required");return withExactSourceReadBatchV1(workspaceRoot,control,batch=>selectedCargoLockDigestInBatchV1(batch,workspaceRoot,manifest));}

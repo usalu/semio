@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "expectation",
+    "cases",
+    "publisher"
+  ],
+  "properties": {
+    "expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "directory",
+        "receipt",
+        "directoryDevice",
+        "directoryInode",
+        "receiptDevice",
+        "receiptInode",
+        "receiptBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "receipt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "directoryDevice": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "directoryInode": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "receiptDevice": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "receiptInode": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "receiptBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "enum": [
+          "value",
+          "changed-directory",
+          "changed-receipt",
+          "wrong-volume",
+          "changed-mount",
+          "wrong-filesystem",
+          "flush-fault",
+          "not-closed",
+          "extra",
+          "malformed",
+          "oversize",
+          "reordered"
+        ]
+      }
+    },
+    "publisher": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "enum": [
+          "nested",
+          "host",
+          "stopped",
+          "changed-parent",
+          "flush-fault"
+        ]
+      }
+    }
+  }
+}

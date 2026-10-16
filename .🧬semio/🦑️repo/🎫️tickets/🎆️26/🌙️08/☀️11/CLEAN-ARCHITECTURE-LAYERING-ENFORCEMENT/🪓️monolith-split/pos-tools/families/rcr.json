@@ -1,0 +1,23 @@
+{
+"name": "rcr",
+"crates": [
+"semio-framework-repo-tree",
+"semio-framework-repo-test-runner",
+"semio-framework-repo-hooks",
+"semio-framework-repo-mcp",
+"semio-framework-repo-providers",
+"semio-framework-repo-languages"
+],
+"base": {
+"rev": "HEAD",
+"crates": [
+"semio-framework-repo-tree",
+"semio-framework-repo-test-runner",
+"semio-framework-repo-hooks",
+"semio-framework-repo-mcp",
+"semio-framework-repo-providers",
+"semio-framework-repo-languages"
+]
+},
+"note": "REPO-CRATE-ROOT-SPLITS"
+}

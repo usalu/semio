@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Forwarding": {
+      "type": "object",
+      "required": [
+        "storage",
+        "storageControl",
+        "effect",
+        "expectedStorage",
+        "expectedControl",
+        "accepted",
+        "expectedEffect"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "storage": {
+          "type": "string"
+        },
+        "storageControl": {
+          "type": "string"
+        },
+        "effect": {
+          "type": "string"
+        },
+        "expectedStorage": {
+          "type": "string"
+        },
+        "expectedControl": {
+          "type": "string"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "expectedEffect": {
+          "type": "string"
+        }
+      }
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumSourceBytes": 4194304,
+        "maximumCalls": 16
+      }
+    }
+  }
+}

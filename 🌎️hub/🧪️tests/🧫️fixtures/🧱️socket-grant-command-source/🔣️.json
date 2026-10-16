@@ -92,9 +92,7 @@
         "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts",
         "🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/📋️native-law-plan/🟦️.ts"
       ],
-      "rootImports": [
-        "SocketGrantCheckScript"
-      ],
+      "rootImports": [],
       "contextChain": [
         "hub-directory",
         "hub-directory-authorization",
@@ -228,6 +226,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication}}/🟦️.ts",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/Cargo.toml",
         "{workspaceRoot}/🌎️hub/📇️directory/🦀️.rs",

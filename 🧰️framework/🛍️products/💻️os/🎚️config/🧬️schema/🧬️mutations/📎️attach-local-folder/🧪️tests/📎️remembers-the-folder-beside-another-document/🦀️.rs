@@ -9,23 +9,23 @@
 
 use super::{LocalFoldersDiff, LocalFolderBindings, LocalFoldersConfigMutation};
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/📸️snapshot/⬅️before/🔣️.json")).expect("fixture"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/📸️snapshot/➡️after/🔣️.json")).expect("fixture"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🦠️mutation/🔣️.json")).expect("fixture"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🔺️diff/🔣️.json")).expect("fixture"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧫️fixtures/🧬️mutations/📎️attach-local-folder/📎️remembers-the-folder-beside-another-document/🎯️outcome/🔣️.json")).expect("fixture"));
 
 fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
 }
 fn before() -> LocalFolderBindings {
-    serde_json::from_str(BEFORE).expect("before bindings decode")
+    serde_json::from_str(BEFORE.as_str()).expect("before bindings decode")
 }
 fn expected_after() -> LocalFolderBindings {
-    serde_json::from_str(AFTER).expect("after bindings decode")
+    serde_json::from_str(AFTER.as_str()).expect("after bindings decode")
 }
 fn mutation() -> LocalFoldersConfigMutation {
-    serde_json::from_str(MUTATION).expect("attach mutation decodes")
+    serde_json::from_str(MUTATION.as_str()).expect("attach mutation decodes")
 }
 
 /// ▶️ The attached drawing follows the puzzle in document-id order.
@@ -57,14 +57,14 @@ fn undoing_the_attachment_restores_before() {
 /// 🔣️ Both committed binding records and the `attachLocalFolder` payload are canonical, the payload internally tagged on `"mutation"`.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: LocalFolderBindings = serde_json::from_str(text).expect("bindings decode");
         let reencoded = serde_json::to_value(decoded).expect("bindings encode");
         let original: serde_json::Value = serde_json::from_str(text).expect("bindings reparse");
         assert_eq!(reencoded, original, "attach-local-folder: committed {label} bindings JSON is not canonical");
     }
     let reencoded = serde_json::to_value(mutation()).expect("attach payload encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("attach payload reparses");
+    let original: serde_json::Value = serde_json::from_str(MUTATION.as_str()).expect("attach payload reparses");
     assert_eq!(reencoded, original, "attach-local-folder: committed attachLocalFolder JSON is not canonical");
     assert_eq!(original.get("mutation").and_then(serde_json::Value::as_str), Some("attachLocalFolder"));
 }
@@ -72,7 +72,7 @@ fn committed_json_is_canonical() {
 /// 🎯️ A document without a folder is attached without a diagnostic, as the committed outcome declares.
 #[test]
 fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"));
     let produced = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::diff(&mutation(), &before());
     assert_eq!(produced.worst_level(), None, "attach-local-folder: attaching a new document must not raise a diagnostic");
@@ -82,9 +82,9 @@ fn declared_outcome_holds() {
 #[test]
 fn produces_and_applies_the_committed_diff() {
     let outcome = <LocalFoldersConfigMutation as protocol::Mutation<LocalFolderBindings>>::diff(&mutation(), &before());
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(json_value(outcome.diff()), committed, "attach-local-folder: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let decoded: LocalFoldersDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: LocalFoldersDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after());
 }
 

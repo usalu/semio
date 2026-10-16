@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rgba",
+    "sampler"
+  ],
+  "properties": {
+    "rgba": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "sampler": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "wrapS": {
+          "enum": [
+            33071,
+            33648,
+            10497
+          ]
+        },
+        "wrapT": {
+          "enum": [
+            33071,
+            33648,
+            10497
+          ]
+        },
+        "magFilter": {
+          "enum": [
+            9728,
+            9729
+          ]
+        },
+        "minFilter": {
+          "enum": [
+            9728,
+            9729,
+            9984,
+            9985,
+            9986,
+            9987
+          ]
+        }
+      }
+    }
+  }
+}

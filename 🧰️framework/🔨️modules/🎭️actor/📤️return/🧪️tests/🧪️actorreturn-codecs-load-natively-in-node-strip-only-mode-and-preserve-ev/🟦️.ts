@@ -85,7 +85,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: fixture } = await import("../🧫️fixtures/🔣️.json");
     const { default: schema } = await import("../../🧬️schema/🔣️.json");
     const { default: lifetimeSchema } = await import("../../../🚪️lifetime/🧬️schema/🔣️.json");
-    const { default: valueSchema } = await import("../../../../🌱️value/🧬️schema/🔣️.json");
+    const { valueSchema } = await import("@semio-tech/value-ts/schema");
     const { default: pageSchema } = await import("../../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema);
@@ -200,7 +200,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: fixture } = await import("../🧫️fixtures/🔣️.json");
     const { default: schema } = await import("../../🧬️schema/🔣️.json");
     const { default: lifetimeSchema } = await import("../../../🚪️lifetime/🧬️schema/🔣️.json");
-    const { default: valueSchema } = await import("../../../../🌱️value/🧬️schema/🔣️.json");
+    const { valueSchema } = await import("@semio-tech/value-ts/schema");
     const { default: pageSchema } = await import("../../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/Result")!;
@@ -263,7 +263,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: schema } = await import("../../🌿️framing/🧬️schema/🔣️.json");
     const { default: returned } = await import("../../🧬️schema/🔣️.json");
     const { default: lifetime } = await import("../../../🚪️lifetime/🧬️schema/🔣️.json");
-    const { default: value } = await import("../../../../🌱️value/🧬️schema/🔣️.json");
+    const { valueSchema: value } = await import("@semio-tech/value-ts/schema");
     const { default: page } = await import("../../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Popover, PopoverContent, PopoverTrigger } from "../../../🗨️Popover/🟦️.tsx";
 import { createShellScope, ShellScopeProvider } from "../../../🐚️ShellScope/🟦️.tsx";
 import fixture from "../🧫️fixtures/♿️modal/🔣️.json";
-import dialogChoices from "../../../../../🛂️manifest/🧪️tests/🧫️fixtures/🧫️dialog-choices/🔣️.json";
+import { manifestDialogChoicesFixture as dialogChoices } from "../../../../../🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 
 
 /** 🌐️ Admits a fixture locale string into the shell's declared locale union at the test boundary. */

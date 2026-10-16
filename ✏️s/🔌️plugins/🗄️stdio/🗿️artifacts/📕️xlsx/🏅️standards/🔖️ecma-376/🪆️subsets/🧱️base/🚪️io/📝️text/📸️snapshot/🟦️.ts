@@ -49,5 +49,5 @@ export const stdioXlsxEcma376BaseSnapshotTextGuardConstant = <T extends string |
 //#endregion 🚪️Parsers
 
 export function parseXlsxSnapshotText(value: unknown, at = "$"): XlsxSnapshotText {
-  return stdioXlsxEcma376BaseSnapshotTextGuardObject(value, `${at}`);
+  return stdioXlsxEcma376BaseSnapshotTextGuardString(value, `${at}`);
 }

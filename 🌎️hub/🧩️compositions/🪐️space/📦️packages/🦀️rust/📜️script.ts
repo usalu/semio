@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -106,7 +107,7 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-projection-persistence-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
+      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
           laws: ["editor::home::transient::component::tests::the_projection_wire_round_trips_documents_and_rejects_corruption"],
@@ -207,7 +208,7 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-event-page-owner-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
+      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
           laws: [
@@ -338,7 +339,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   const missingMounts = [
     ...[...homeCrate.matchAll(/#\[path = "([^"]+)"\]/g)].map((match) => [homeCrateRoot, match[1]] as const),
     ...[...spaceIndexCrate.matchAll(/#\[path = "([^"]+)"\]/g)].map((match) => [spaceIndexCrateRoot, match[1]] as const),
-  ].filter(([root, mount]) => !existsSync(join(root, mount)));
+  ].filter(([root,mount])=>{assert(mount!==undefined,"Actual Rust path mount required");return !existsSync(join(root,mount));});
   assert.deepEqual(missingMounts, [], `Space artifact crates mount missing physical paths: ${missingMounts.map(([, mount]) => mount).join(", ")}`);
   assert(homeOperations.includes("use protocol::os_spr::protocol_laws::{") && spaceOperations.includes("use protocol::os_spr::protocol_laws::{"), "Home or Space mutation laws import the Pack test context instead of the current SPR test context");
   const operationSources = `${homeOperations}\n${spaceOperations}`;
@@ -390,7 +391,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     [editor.replace("row.role == Some(crate::DirectorySpaceRole::Author)", 'row.origin == "hub"'), editorTests],
     [editor, editorTests.replace('assert_eq!(buttons.len(), 5', 'assert_eq!(buttons.len(), 4')],
     [editor, editorTests.replace("role: Some(crate::DirectorySpaceRole::Spectator)", "role: Some(crate::DirectorySpaceRole::Author)")],
-  ]) assert.equal(exact(editorSource, editorTestSource, viewerTests), false);
+  ] as const) assert.equal(exact(editorSource, editorTestSource, viewerTests), false);
   for (const law of ["registrar_tests::svg_path_extraction_preserves_transformed_geometry"]) {
     assert(ownerScript.includes(law), `Home native gate omitted ${law}`);
     const name = law.slice(law.lastIndexOf("::") + 2);
@@ -403,7 +404,7 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-identity-rows-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [
+      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [
           {
             package: "semio-framework-plugin-host-imports",
             target: { kind: "lib" },
@@ -442,7 +443,7 @@ function spacePluginIdentityOracle(repoRoot: string): number {
   const identityAjv = new Ajv({ strict: true, allErrors: true });
   identityAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   identityAjv.addSchema(module);
-  assert(identityAjv.compile({ $ref: `${module.$id}#/$defs/SpacePluginIdentity` })(fixture), "plugin-identity fixture violates its owner scope export");
+  assert(identityAjv.compile<typeof import("../../🧪️tests/🧫️fixtures/🧫️plugin-identity/🔣️.json")>({ $ref: `${module.$id}#/$defs/SpacePluginIdentity` })(fixture), "plugin-identity fixture violates its owner scope export");
 
   const cargo = readFileSync(join(plugin, "🧩️component/📦️packages/🦀️rust/Cargo.toml"), "utf8");
   const cargoComponentPackage = cargo.split("[package.metadata.component]")[1]?.split("[")[0]?.match(/package\s*=\s*"([^"]+)"/)?.[1];
@@ -543,7 +544,7 @@ class SnapshotOwnerCensusScript extends BundleScript {
       console.log("[DEBUG] independent Hub Space census owner "+owner.kind+" package="+owner.package+" authored_SQL_tables="+owner.tables.length);
     }
     if(segments[0]==="native"){
-      const receipts=await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.root, env:{...process.env,RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}], progress(event){console.log("[DEBUG] Hub Space census Native "+event.stage+" "+(event.law??""));} });
+      const receipts=await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.root, env:{...process.env,RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}], progress(event){console.log("[DEBUG] Hub Space census Native "+event.stage+" "+(event.law??""));} });
       console.log("[DEBUG] Hub Space census Native receipts "+JSON.stringify(receipts));
     }
   }
@@ -553,7 +554,7 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("interactive-job-catalog-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{
+      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{
           package: "semio-hub-space",
           target: { kind: "lib" },
           laws: [

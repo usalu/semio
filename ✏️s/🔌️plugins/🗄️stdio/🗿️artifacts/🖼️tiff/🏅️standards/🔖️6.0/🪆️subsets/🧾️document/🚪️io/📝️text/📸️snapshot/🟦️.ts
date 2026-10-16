@@ -49,5 +49,5 @@ export const stdioTiff60DocumentSnapshotTextGuardConstant = <T extends string | 
 //#endregion 🚪️Parsers
 
 export function parseTiffSnapshotText(value: unknown, at = "$"): TiffSnapshotText {
-  return stdioTiff60DocumentSnapshotTextGuardObject(value, `${at}`);
+  return stdioTiff60DocumentSnapshotTextGuardString(value, `${at}`);
 }

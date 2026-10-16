@@ -8,7 +8,7 @@
 //! contract wire JSON, derived independently of this implementation).
 
 use super::*;
-use crate::shell::section_fixtures::{fixture, measures_section_document};
+use semio_framework_os_renderer_wgpu_shell_windows::section_fixtures::{fixture, measures_section_document};
 
 fn tree_parity_fixture() -> Value {
     serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🌳️window-measures-tree-parity/🔣️.json")).expect("window measure tree parity fixture")
@@ -85,7 +85,7 @@ fn outline(records: &[ui_contract::UiNodeRecord], id: ui_contract::UiNodeId) -> 
 fn section_measures() -> HashMap<String, Vec<WindowMeasure>> {
     let fixture = fixture();
     let mut document = measures_section_document(&fixture["section"], 21);
-    let measures = crate::program_bridge::window_measures_from_section(&document).expect("measures section decodes");
+    let measures = semio_framework_os_renderer_wgpu_program_bridge::window_measures_from_section(&document).expect("measures section decodes");
     while !document.close_step() {}
     measures
 }
@@ -124,7 +124,7 @@ struct PaintedOverlay {
 }
 
 fn paint_overlay(shell: &mut ShellState, window_id: &str, rect: Rect) -> PaintedOverlay {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -132,7 +132,7 @@ fn paint_overlay(shell: &mut ShellState, window_id: &str, rect: Rect) -> Painted
     let theme = Theme::default();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut cursor = ShellChromeChildCursor::default();
-    crate::interpreter::begin_accessibility_visible_documents();
+    semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let complete = caller.turn(|cx|ChromeViewCtx::of(&mut shell).paint_window_measures_step(&mut cursor, &mut draw, &mut None, &mut atlas, &icons, &mut input, &theme, window_id, rect, &mut world_resources, cx));
         assert!(!cursor.document.terminal_is_fault(), "the overlay paint faulted in phase {}", cursor.document.phase_name());
@@ -155,7 +155,7 @@ fn key_event(event: &Value) -> ui_wgpu::wgpu::UiEvent {
 }
 
 fn dispatched(input: &mut InputState<ActionDescriptor>, name: &str) -> Value {
-    let mut actions = crate::collect_fixture_actions(input);
+    let mut actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(input);
     let action = actions.iter_mut().rev().find(|action| action.action == name).unwrap_or_else(|| panic!("the gesture dispatched `{name}`"));
     let surface = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str).expect("retained actions carry their surface").to_string();
     scope_action_to_window(action, window_measures_owner(&surface).expect("a measures action names its overlay surface"));
@@ -164,7 +164,7 @@ fn dispatched(input: &mut InputState<ActionDescriptor>, name: &str) -> Value {
 
 #[test]
 fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture = fixture();
     let measures = section_measures();
     let mut shell = ShellState::new(vec![], "test".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -186,7 +186,7 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
         assert!(!targets.iter().any(|target| target.ends_with("brush-snap")), "{name}: a utility-scoped group stays out of the Measures overlay");
         if let Some(events) = gesture["events"].as_array() {
             for event in events {
-                let commands = crate::interpreter::dispatch_ui_event(&surface, key_event(event), &mut painted.input);
+                let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, key_event(event), &mut painted.input);
                 shell.chrome.chrome_build.note_content_focus_commands(&commands);
             }
             assert!(shell.chrome.chrome_build.content_has_focus(&surface), "{name}: keyboard focus lands in the overlay surface");
@@ -199,14 +199,14 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
         }
         let expected = &gesture["expectedAction"];
         assert_eq!(dispatched(&mut painted.input, expected["action"].as_str().expect("expected action")), *expected, "{name}");
-        assert!(crate::interpreter::request_ui_document_close(&surface));
+        assert!(semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(&surface));
         for _ in 0..262_144 {
-            if !crate::interpreter::ui_document_close_pending_for(&surface) {
+            if !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(&surface) {
                 break;
             }
-            assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"));
+            assert!(caller.turn(|cx|semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"));
         }
-        assert!(!crate::interpreter::ui_document_close_pending_for(&surface));
+        assert!(!semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(&surface));
         let mut document = shell.docs.window_measures_documents.remove(window_id).expect("the accepted overlay retains its lease");
         while !document.close_step() {}
     }

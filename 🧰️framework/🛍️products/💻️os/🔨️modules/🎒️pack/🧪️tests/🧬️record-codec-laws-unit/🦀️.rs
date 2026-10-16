@@ -77,8 +77,8 @@ async fn record_value_gen_produces_values_the_pack_codec_accepts() {
     let spec = mixed_spec();
     for seed in 0..20u64 {
         let record = RecordValueGen::new(seed).generate(&spec, 4);
-        let bytes = crate::encode_document(&spec, &record, &crate::EncodeOptions::default()).unwrap_or_else(|e| panic!("seed {seed}: encode_document failed: {e}"));
-        crate::decode_document(&bytes, &spec, &crate::DecodeOptions::default()).unwrap_or_else(|e| panic!("seed {seed}: decode_document failed: {e}"));
+        let bytes = pack::record::encode_document(&spec, &record, &pack::record::EncodeOptions::default()).unwrap_or_else(|e| panic!("seed {seed}: encode_document failed: {e}"));
+        pack::record::decode_document(&bytes, &spec, &pack::record::DecodeOptions::default()).unwrap_or_else(|e| panic!("seed {seed}: decode_document failed: {e}"));
     }
 }
 
@@ -141,8 +141,8 @@ async fn law_dsl_pack_bidirectional_holds_for_a_hand_built_sample() {
     let spec = camera_spec();
     let parse_dsl = async |text: &str| semio_framework_dsl_record::parse(text, &spec, &semio_framework_dsl_record::ParseOptions::default()).unwrap_or_else(|e| panic!("parse failed: {e}"));
     let print_dsl = async |value: &RecordValue| semio_framework_dsl_record::print(value, &spec, semio_framework_dsl_record::JoinMode::Document);
-    let encode_pack = async |value: &RecordValue| crate::encode_document(&spec, value, &crate::EncodeOptions::default()).expect("encode_pack");
-    let decode_pack = async |bytes: &[u8]| crate::decode_document(bytes, &spec, &crate::DecodeOptions::default()).expect("decode_pack").0;
+    let encode_pack = async |value: &RecordValue| pack::record::encode_document(&spec, value, &pack::record::EncodeOptions::default()).expect("encode_pack");
+    let decode_pack = async |bytes: &[u8]| pack::record::decode_document(bytes, &spec, &pack::record::DecodeOptions::default()).expect("decode_pack").0;
     assert_dsl_pack_bidirectional(parse_dsl, print_dsl, encode_pack, decode_pack, &camera_sample()).await;
 }
 //#endregion 🔖️Laws
@@ -152,14 +152,14 @@ async fn law_dsl_pack_bidirectional_holds_for_a_hand_built_sample() {
 // decoder slot — bridges via `io::resolve_ready` (the same sanctioned pattern already used
 // by SPR's `fuzz_truncation_never_panics_history_reader_open` law), see R9/E5.
 fn decode_closure(spec: RecordSpec) -> impl Fn(&[u8]) -> Result<(), String> {
-    move |bytes: &[u8]| crate::decode_document(bytes, &spec, &crate::DecodeOptions::default()).map(|_| ()).map_err(|e| e.to_string())
+    move |bytes: &[u8]| pack::record::decode_document(bytes, &spec, &pack::record::DecodeOptions::default()).map(|_| ()).map_err(|e| e.to_string())
 }
 
 #[semio_framework_async_macros::async_test]
 async fn fuzz_truncation_never_panics_on_a_real_encoded_document() {
     let spec = mixed_spec();
     let record = RecordValueGen::new(9).generate(&spec, 4);
-    let bytes = crate::encode_document(&spec, &record, &crate::EncodeOptions::default()).expect("encode_document");
+    let bytes = pack::record::encode_document(&spec, &record, &pack::record::EncodeOptions::default()).expect("encode_document");
     let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, decode_closure(spec));
     assert!(report.cases_panicked.is_empty(), "fuzz_truncation observed panics: {:?}", report.cases_panicked);
     assert!(report.cases_run > 0, "fuzz_truncation must have run at least one case");
@@ -169,7 +169,7 @@ async fn fuzz_truncation_never_panics_on_a_real_encoded_document() {
 async fn fuzz_bit_flips_never_panics_on_a_real_encoded_document() {
     let spec = mixed_spec();
     let record = RecordValueGen::new(11).generate(&spec, 4);
-    let bytes = crate::encode_document(&spec, &record, &crate::EncodeOptions::default()).expect("encode_document");
+    let bytes = pack::record::encode_document(&spec, &record, &pack::record::EncodeOptions::default()).expect("encode_document");
     let report = fuzz_bit_flips(&bytes, CorruptionLevel::Quick, decode_closure(spec));
     assert!(report.cases_panicked.is_empty(), "fuzz_bit_flips observed panics: {:?}", report.cases_panicked);
     assert!(report.cases_run > 0, "fuzz_bit_flips must have run at least one case");
@@ -211,8 +211,8 @@ async fn golden_hash_hex_is_deterministic_and_sensitive_to_content() {
 async fn golden_hash_hex_matches_a_real_encoded_document_across_two_encodes() {
     let spec = mixed_spec();
     let record = RecordValueGen::new(5).generate(&spec, 4);
-    let a = crate::encode_document(&spec, &record, &crate::EncodeOptions::default()).unwrap();
-    let b = crate::encode_document(&spec, &record, &crate::EncodeOptions::default()).unwrap();
+    let a = pack::record::encode_document(&spec, &record, &pack::record::EncodeOptions::default()).unwrap();
+    let b = pack::record::encode_document(&spec, &record, &pack::record::EncodeOptions::default()).unwrap();
     assert_eq!(golden_hash_hex(&a).await, golden_hash_hex(&b).await, "golden hash of a canonical encoding must be stable across repeated encodes");
 }
 //#endregion 🔖️Golden
@@ -225,7 +225,7 @@ mod long {
     async fn fuzz_truncation_and_bit_flips_never_panic_at_long_density() {
         let spec = mixed_spec();
         let record = RecordValueGen::new(21).generate(&spec, 5);
-        let bytes = crate::encode_document(&spec, &record, &crate::EncodeOptions::default()).expect("encode_document");
+        let bytes = pack::record::encode_document(&spec, &record, &pack::record::EncodeOptions::default()).expect("encode_document");
         let truncation_report = fuzz_truncation(&bytes, CorruptionLevel::Long, decode_closure(spec.clone()));
         let bit_flip_report = fuzz_bit_flips(&bytes, CorruptionLevel::Long, decode_closure(spec));
         assert!(truncation_report.cases_panicked.is_empty(), "long-level truncation fuzz observed panics: {:?}", truncation_report.cases_panicked);
@@ -244,7 +244,7 @@ mod exhaustive {
     async fn fuzz_truncation_never_panics_at_every_single_byte_offset() {
         let spec = mixed_spec();
         let record = RecordValueGen::new(33).generate(&spec, 5);
-        let bytes = crate::encode_document(&spec, &record, &crate::EncodeOptions::default()).expect("encode_document");
+        let bytes = pack::record::encode_document(&spec, &record, &pack::record::EncodeOptions::default()).expect("encode_document");
         let report = fuzz_truncation(&bytes, CorruptionLevel::Exhaustive, decode_closure(spec));
         assert!(report.cases_panicked.is_empty(), "exhaustive truncation fuzz observed panics: {:?}", report.cases_panicked);
         assert_eq!(report.cases_run, bytes.len() as u64, "exhaustive truncation must try every offset");
@@ -254,7 +254,7 @@ mod exhaustive {
     async fn fuzz_bit_flips_never_panics_at_every_single_bit() {
         let spec = mixed_spec();
         let record = RecordValueGen::new(34).generate(&spec, 3);
-        let bytes = crate::encode_document(&spec, &record, &crate::EncodeOptions::default()).expect("encode_document");
+        let bytes = pack::record::encode_document(&spec, &record, &pack::record::EncodeOptions::default()).expect("encode_document");
         let report = fuzz_bit_flips(&bytes, CorruptionLevel::Exhaustive, decode_closure(spec));
         assert!(report.cases_panicked.is_empty(), "exhaustive bit-flip fuzz observed panics: {:?}", report.cases_panicked);
         assert_eq!(report.cases_run, bytes.len() as u64 * 8, "exhaustive bit-flip must try every bit");

@@ -3,7 +3,7 @@ import { useCallback, useLayoutEffect, useRef, useSyncExternalStore } from "reac
 import type { OwnedUiReadSource, OwnedUiReadSubscription, OwnedUiSceneReadSource, OwnedUiSceneRecordView, OwnedUiSceneTextView } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts";
 import type { RetainedUiNodeRecord } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
 import type { OwnedUiSceneDiagnostic } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts";
-import type { NumericIndexGrant } from "../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { NumericIndexGrant } from "@semio-tech/framework/value/ordered/numeric";
 import type { OwnedUiInstanceSurface } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import type { OwnedUiSurfaceView } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts";
 

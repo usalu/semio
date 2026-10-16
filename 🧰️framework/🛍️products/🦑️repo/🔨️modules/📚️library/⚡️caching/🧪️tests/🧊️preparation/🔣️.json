@@ -1,0 +1,37 @@
+{
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+  "manifest": "[package]\nname = \"sample\"\nversion = \"0.1.0\"\n[workspace]\n[package.metadata.component]\npackage = \"semio:sample\"\n[package.metadata.semio]\ncomponent-kind = \"plugin\"\n[[package.metadata.semio.playground]]\nvariant = \"fixture\"\nports = { wgpu = 4321 }\n",
+  "catalog": {
+    "version": 1,
+    "publication": {
+      "version": 1,
+      "ownerRoot": "catalog/publication",
+      "outputRoot": "catalog/publication/out",
+      "contributions": [
+        {
+          "ownerRoot": "component",
+          "packageRoots": [
+            "component"
+          ]
+        }
+      ]
+    },
+    "projectRoot": "catalog",
+    "project": "fixture-catalog",
+    "generateTarget": "generate",
+    "inputs": [
+      "component/Cargo.toml"
+    ]
+  },
+  "profiles": [
+    "prototype",
+    "release"
+  ],
+  "variant": "fixture",
+  "pluginId": "sample",
+  "port": 4321,
+  "callers": [
+    "🧊️live-activation",
+    "🧊️native-runtime"
+  ]
+}

@@ -75,12 +75,12 @@ pub trait RetainedCloneEdit<P: RetainedClone, M>: semio_framework_value::Factory
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct RetainedClonePreparationFactory<P, M, E> {
     #[factory_child]
-    edit: Arc<E>,
+    pub edit: Arc<E>,
     #[factory_child]
-    mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,
+    pub mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,
     #[factory_child]
-    snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>,
-    maximum_depth: usize,
+    pub snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>,
+    pub maximum_depth: usize,
     marker: PhantomData<fn() -> (P, M)>,
 }
 

@@ -1,23 +1,23 @@
 use super::*;
 use std::collections::BTreeMap;
 
-#[path = "../../../🧪️tests/🧰️oracle-support/🦀️.rs"]
-mod support;
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_geometry_oracle_support as support;
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/📚️math-list/🔣️.json");
 
 #[test]
 fn the_compute_table_and_the_fixture_cover_exactly_the_catalogue_kinds() {
-    support::assert_category("math.list", COMPUTES, FIXTURE);
+    support::assert_category(catalogue(), "math.list", COMPUTES, FIXTURE);
 }
 
 #[test]
 fn every_fixture_case_holds_at_fuel_one_and_at_unbounded_fuel() {
-    assert!(support::run_fixture(FIXTURE, COMPUTES) >= 17);
+    assert!(support::run_fixture(catalogue(), FIXTURE, COMPUTES) >= 17);
 }
 
 fn run(id: &str, values: BTreeMap<String, GeometryValue>) -> WidgetEvaluation {
-    let kind = support::kind_of(id);
+    let kind = support::kind_of(catalogue(), id);
     let start = COMPUTES.iter().find(|entry| entry.id == id).expect("registered").start;
     support::drive(start(kind, WidgetInputs::new_cold("w", kind, values)), 1)
 }

@@ -63,6 +63,7 @@ semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust"
 semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }
+semio-framework-pack-intrinsic-media-laws = { path = "../../🌱️value/🧪️tests/🎞️intrinsic-media/📦️packages/🦀️rust" }
 
 [[test]]
 name = "pack_record_laws"

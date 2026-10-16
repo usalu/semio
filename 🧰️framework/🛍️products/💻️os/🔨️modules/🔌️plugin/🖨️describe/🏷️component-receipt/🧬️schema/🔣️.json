@@ -21,39 +21,94 @@
     },
     "ComponentProfile": {
       "description": "`release` is the one shipped profile; `prototype` is the local-only single-plugin loop whose bytes are never shipped.",
-      "enum": ["release", "prototype"]
+      "enum": [
+        "release",
+        "prototype"
+      ]
     },
     "ComponentProfilePolicyV1": {
       "description": "The fixed directory, byte cap and shipping admission of every component profile, keyed by profile.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["directory", "maximumBytes", "shipped"],
+      "required": [
+        "directory",
+        "maximumBytes",
+        "shipped"
+      ],
       "properties": {
-        "directory": { "enum": ["dist/components/release", "dist/components/prototype"] },
-        "maximumBytes": { "type": "integer", "minimum": 1 },
-        "shipped": { "type": "boolean" }
+        "directory": {
+          "enum": [
+            "dist/components/release",
+            "dist/components/prototype"
+          ]
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "shipped": {
+          "type": "boolean"
+        }
       }
     },
     "ComponentProfilePolicies": {
       "description": "The profile policy table. `release` keeps the 256 MiB shipped bound; `prototype` carries its own 512 MiB local-only cap.",
       "const": {
-        "release": { "directory": "dist/components/release", "maximumBytes": 268435456, "shipped": true },
-        "prototype": { "directory": "dist/components/prototype", "maximumBytes": 536870912, "shipped": false }
+        "release": {
+          "directory": "dist/components/release",
+          "maximumBytes": 268435456,
+          "shipped": true
+        },
+        "prototype": {
+          "directory": "dist/components/prototype",
+          "maximumBytes": 536870912,
+          "shipped": false
+        }
       }
     },
     "ComponentReceiptV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "pluginId", "packageId", "profile", "target", "wasmSha256", "wasmBytes", "semanticDescriptorSha256", "toolchain", "sourceTreeDigest", "provenanceSha256"],
+      "required": [
+        "schema",
+        "pluginId",
+        "packageId",
+        "profile",
+        "target",
+        "wasmSha256",
+        "wasmBytes",
+        "semanticDescriptorSha256",
+        "toolchain",
+        "sourceTreeDigest",
+        "provenanceSha256"
+      ],
       "properties": {
-        "schema": { "const": "semio.plugin.component-receipt/v1" },
-        "pluginId": { "$ref": "#/$defs/ComponentPluginId" },
-        "packageId": { "$ref": "#/$defs/ComponentPackageId" },
-        "profile": { "$ref": "#/$defs/ComponentProfile" },
-        "target": { "const": "wasm32-wasip2" },
-        "wasmSha256": { "$ref": "#/$defs/ComponentSha256" },
-        "wasmBytes": { "type": "integer", "minimum": 8, "maximum": 536870912 },
-        "semanticDescriptorSha256": { "$ref": "#/$defs/ComponentSha256" },
+        "schema": {
+          "const": "semio.plugin.component-receipt/v1"
+        },
+        "pluginId": {
+          "$ref": "#/$defs/ComponentPluginId"
+        },
+        "packageId": {
+          "$ref": "#/$defs/ComponentPackageId"
+        },
+        "profile": {
+          "$ref": "#/$defs/ComponentProfile"
+        },
+        "target": {
+          "const": "wasm32-wasip2"
+        },
+        "wasmSha256": {
+          "$ref": "#/$defs/ComponentSha256"
+        },
+        "wasmBytes": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 536870912
+        },
+        "semanticDescriptorSha256": {
+          "$ref": "#/$defs/ComponentSha256"
+        },
         "toolchain": {
           "description": "`rustc -vV`'s release and commit-hash, the compiler that produced the bytes.",
           "type": "string",
@@ -68,8 +123,52 @@
           "$ref": "#/$defs/ComponentSha256"
         }
       },
-      "if": { "type": "object", "properties": { "profile": { "const": "release" } } },
-      "then": { "type": "object", "properties": { "wasmBytes": { "type": "integer", "maximum": 268435456 } } }
+      "if": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "const": "release"
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "wasmBytes": {
+            "type": "integer",
+            "maximum": 268435456
+          }
+        }
+      }
+    },
+    "ComponentReceiptBindingV1": {
+      "description": "Exact selected component mode, identity and content tuple. Shipping callers explicitly select release.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "pluginId",
+        "packageId",
+        "wasmSha256",
+        "semanticDescriptorSha256"
+      ],
+      "properties": {
+        "profile": {
+          "$ref": "#/$defs/ComponentProfile"
+        },
+        "pluginId": {
+          "$ref": "#/$defs/ComponentPluginId"
+        },
+        "packageId": {
+          "$ref": "#/$defs/ComponentPackageId"
+        },
+        "wasmSha256": {
+          "$ref": "#/$defs/ComponentSha256"
+        },
+        "semanticDescriptorSha256": {
+          "$ref": "#/$defs/ComponentSha256"
+        }
+      }
     }
   }
 }

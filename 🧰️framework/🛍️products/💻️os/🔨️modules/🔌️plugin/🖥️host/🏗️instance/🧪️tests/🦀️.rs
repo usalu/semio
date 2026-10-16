@@ -8,8 +8,7 @@ use semio_framework_plugin_interpreter::OwnedSemioExport;
 use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
 use semio_framework_value::RetainedCloneGrant;
-#[path="../../../🧠️interpreter/🏃️runtime/🧪️tests/🧫️fixtures/🌱️channel/🦀️.rs"]
-mod channel_fixture;
+use semio_framework_plugin_interpreter_runtime::channel_fixture;
 fn clock()->Option<u64>{Some(1000)}
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:10000,maximum_copy_bytes:2_000_000,maximum_capacity_bytes:2_000_000,maximum_release_bytes:2_000_000,maximum_depth:64}}
 fn observed<T>(run:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,(heap.requested_bytes,heap.released_bytes))}

@@ -1,7 +1,7 @@
 use super::*;
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiRevision};
-use ui_wgpu::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
-use ui_wgpu::wgpu::tree::{UiDocumentTree, UiTree};
+use semio_framework_ui_retained_tree::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
+use semio_framework_ui_retained_tree::tree::{UiDocumentTree, UiTree};
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🎬️presented-media-slots/🔣️.json")).unwrap()
@@ -48,8 +48,8 @@ pub(super) fn tree(props: serde_json::Value, vector: &serde_json::Value) -> UiTr
         node.layout.y = parent["y"].as_f64().unwrap() as f32;
         node.layout.width = parent["width"].as_f64().unwrap() as f32;
         node.layout.height = parent["height"].as_f64().unwrap() as f32;
-        node.flags.set(ui_wgpu::wgpu::tree::NodeFlags::SCROLLABLE, true);
-        node.flags.set(ui_wgpu::wgpu::tree::NodeFlags::CLIPS_CHILDREN, true);
+        node.flags.set(semio_framework_ui_retained_tree::tree::NodeFlags::SCROLLABLE, true);
+        node.flags.set(semio_framework_ui_retained_tree::tree::NodeFlags::CLIPS_CHILDREN, true);
         node.state.scroll_offset = (vector["scrollOffset"]["x"].as_f64().unwrap() as f32, vector["scrollOffset"]["y"].as_f64().unwrap() as f32);
         media
     } else { root };

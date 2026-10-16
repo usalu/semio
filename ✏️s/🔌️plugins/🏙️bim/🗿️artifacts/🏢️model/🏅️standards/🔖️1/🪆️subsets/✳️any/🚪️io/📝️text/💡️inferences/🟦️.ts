@@ -49,5 +49,5 @@ export const bimModelInferenceTextGuardConstant = <T extends string | number | b
 //#endregion 🚪️Parsers
 
 export function parseModelInferenceText(value: unknown, at = "$"): ModelInferenceText {
-  return bimModelInferenceTextGuardObject(value, `${at}`);
+  return bimModelInferenceTextGuardString(value, `${at}`);
 }

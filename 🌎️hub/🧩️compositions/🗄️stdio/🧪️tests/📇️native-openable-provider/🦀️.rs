@@ -273,7 +273,7 @@ fn las_native_receipt_binds_canonical_graph_and_independent_blake3() {
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️publication/🧫️fixtures/🧬️trusted-stdio-catalog/🔣️.json"))).unwrap();
     let spec = <semio_s_artifact_stdio_las::LasSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap();
-    let graph = semio_framework_os_kernel::os_pack::PackSchemaGraph::of(&spec);
+    let graph = pack::record::PackSchemaGraph::of(&spec);
     let json: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&graph.to_json())).unwrap();
     let records = json.as_array().unwrap();
     let mut independent = Vec::new();

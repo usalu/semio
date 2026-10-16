@@ -9,6 +9,14 @@
       "path": "🔨️modules/🛂️manifest/🧪️tests/🔬️package-descriptor-value-codec/🦀️.rs",
       "occurrences": 1,
       "arbitrary": true
+    },
+    {
+      "path": "🔨️modules/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+      "occurrences": 1
     }
   ]
 }

@@ -26,33 +26,36 @@ function diffLines(before: readonly string[], after: readonly string[]): DiffLin
   const beforeLen = before.length;
   const afterLen = after.length;
   const lcs: number[][] = Array.from({ length: beforeLen + 1 }, () => new Array<number>(afterLen + 1).fill(0));
-  for (let i = beforeLen - 1; i >= 0; i--) {
-    for (let j = afterLen - 1; j >= 0; j--) {
-      lcs[i][j] = before[i] === after[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
-    }
+  for(let i=beforeLen-1;i>=0;i--){
+    const current=lcs[i],below=lcs[i+1];if(!current||!below)throw Error("Complete diff matrix rows required");
+    for(let j=afterLen-1;j>=0;j--){const diagonal=below[j+1],bottom=below[j],right=current[j+1];if(diagonal===undefined||bottom===undefined||right===undefined)throw Error("Complete diff matrix cells required");current[j]=before[i]===after[j]?diagonal+1:Math.max(bottom,right);}
   }
   const lines: DiffLine[] = [];
   let i = 0;
   let j = 0;
-  while (i < beforeLen && j < afterLen) {
-    if (before[i] === after[j]) {
-      lines.push({ kind: "equal", beforeNo: i + 1, afterNo: j + 1, text: before[i] });
+  while(i<beforeLen&&j<afterLen){
+    const beforeLine=before[i],afterLine=after[j],bottom=lcs[i+1]?.[j],right=lcs[i]?.[j+1];
+    if(beforeLine===undefined||afterLine===undefined||bottom===undefined||right===undefined)throw Error("Complete diff sequence and matrix required");
+    if(beforeLine===afterLine){
+      lines.push({kind:"equal",beforeNo:i+1,afterNo:j+1,text:beforeLine});
       i += 1;
       j += 1;
-    } else if (lcs[i + 1][j] >= lcs[i][j + 1]) {
-      lines.push({ kind: "remove", beforeNo: i + 1, text: before[i] });
+    }else if(bottom>=right){
+      lines.push({kind:"remove",beforeNo:i+1,text:beforeLine});
       i += 1;
     } else {
-      lines.push({ kind: "add", afterNo: j + 1, text: after[j] });
+      lines.push({kind:"add",afterNo:j+1,text:afterLine});
       j += 1;
     }
   }
-  while (i < beforeLen) {
-    lines.push({ kind: "remove", beforeNo: i + 1, text: before[i] });
+  while(i<beforeLen){
+    const text=before[i];if(text===undefined)throw Error("Complete removed diff line required");
+    lines.push({kind:"remove",beforeNo:i+1,text});
     i += 1;
   }
-  while (j < afterLen) {
-    lines.push({ kind: "add", afterNo: j + 1, text: after[j] });
+  while(j<afterLen){
+    const text=after[j];if(text===undefined)throw Error("Complete added diff line required");
+    lines.push({kind:"add",afterNo:j+1,text});
     j += 1;
   }
   return lines;
@@ -63,22 +66,16 @@ function buildSplitRows(diff: readonly DiffLine[]): SplitRow[] {
   const rows: SplitRow[] = [];
   let i = 0;
   while (i < diff.length) {
-    const line = diff[i];
+    const line=diff[i];if(!line)throw Error("Complete split diff line required");
     if (line.kind === "equal") {
       rows.push({ left: line, right: line });
       i += 1;
       continue;
     }
     const removes: DiffLine[] = [];
-    while (i < diff.length && diff[i].kind === "remove") {
-      removes.push(diff[i]);
-      i += 1;
-    }
+    while(i<diff.length){const removed=diff[i];if(!removed)throw Error("Complete removed split diff line required");if(removed.kind!=="remove")break;removes.push(removed);i++;}
     const adds: DiffLine[] = [];
-    while (i < diff.length && diff[i].kind === "add") {
-      adds.push(diff[i]);
-      i += 1;
-    }
+    while(i<diff.length){const added=diff[i];if(!added)throw Error("Complete added split diff line required");if(added.kind!=="add")break;adds.push(added);i++;}
     const pairCount = Math.max(removes.length, adds.length);
     for (let pair = 0; pair < pairCount; pair += 1) {
       rows.push({ left: removes[pair], right: adds[pair] });

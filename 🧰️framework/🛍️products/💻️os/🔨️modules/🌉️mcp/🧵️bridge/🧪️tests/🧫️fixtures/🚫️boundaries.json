@@ -1,0 +1,14 @@
+[
+  {
+    "direction": "shell_to_gateway",
+    "hex": "000100ff000000000000000000"
+  },
+  {
+    "direction": "shell_to_gateway",
+    "hex": "0600000000ff00"
+  },
+  {
+    "direction": "gateway_to_shell",
+    "hex": "0400000000ff"
+  }
+]

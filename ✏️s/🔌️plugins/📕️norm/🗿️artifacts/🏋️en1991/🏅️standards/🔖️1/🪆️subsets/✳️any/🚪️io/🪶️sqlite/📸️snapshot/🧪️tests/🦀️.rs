@@ -1,6 +1,5 @@
 //! 🏋️ Complete EN1991 snapshot capability and independent domain evidence.
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 
 #[test]
 fn sqlite_snapshot_en1991_actual_bare_factory_exposes_owned_relational_capability() {

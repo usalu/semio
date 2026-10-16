@@ -1,0 +1,22 @@
+{
+  "productsFilesystemBytes": 25768755200,
+  "persistentChargeBytes": 1075838976,
+  "productsArtifactBytes": 24692916224,
+  "cases": [
+    {
+      "id": "tools",
+      "receiptBytes": 8588886016,
+      "expectedContinuation": true
+    },
+    {
+      "id": "products",
+      "receiptBytes": 24692916224,
+      "expectedContinuation": true
+    },
+    {
+      "id": "products",
+      "receiptBytes": 25768755200,
+      "expectedContinuation": true
+    }
+  ]
+}

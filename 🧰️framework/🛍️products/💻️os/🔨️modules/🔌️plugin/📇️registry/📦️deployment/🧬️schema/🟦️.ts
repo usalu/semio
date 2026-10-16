@@ -1,8 +1,8 @@
 /** 🧩️ Shared trusted plugin module wire contract for publishers and clients. */
-import { blake3Hex } from "../../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import schemaModule from "./🔣️.json";
 import { MODULE_BRIDGE_FILE, MODULE_VENDOR_DIRECTORY } from "../🟦️.ts";
 import { COMPONENT_RECEIPT_FILE } from "../../../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
+import { TrustedPluginModuleRefusalV1, utf8OrderV1, type TrustedPluginModulePathV1, type TrustedPluginModuleFileV1, type TrustedPluginModuleBundleV1, type TrustedPluginModuleIndexEntryV1, type TrustedPluginModuleIndexV1, type TrustedPluginModuleSourceV1 } from "../../../../../../../🔨️modules/🔌️plugin-module/🟦️.ts";
 
 const defs = schemaModule.$defs;
 const bundleProperties = defs.TrustedPluginModuleBundleV1.properties;
@@ -32,55 +32,11 @@ const FILE_KEYS: readonly string[] = defs.TrustedPluginModuleFileV1.required;
 const INDEX_KEYS: readonly string[] = defs.TrustedPluginModuleIndexV1.required;
 const INDEX_ENTRY_KEYS: readonly string[] = defs.TrustedPluginModuleIndexEntryV1.required;
 
-/** 📛️ A validated module-relative file path. */
-export type TrustedPluginModulePathV1 = string;
-export type TrustedPluginModuleFileV1 = Readonly<{ path: TrustedPluginModulePathV1; byteLength: number; sha256: string; blake3: string }>;
-export type TrustedPluginModuleBundleV1 = Readonly<{
-  schema: string;
-  pluginId: string;
-  packageId: string;
-  version: string;
-  sourceComponentSha256: string;
-  sourceDescriptorByteSha256: string;
-  moduleDirectory: string;
-  entry: TrustedPluginModulePathV1;
-  files: readonly TrustedPluginModuleFileV1[];
-}>;
-export type TrustedPluginModuleIndexEntryV1 = Readonly<{
-  pluginId: string;
-  packageId: string;
-  version: string;
-  componentSha256: string;
-  descriptorByteSha256: string;
-  receiptSha256: string;
-  dependencies: readonly string[];
-  dialectArtifactKinds: readonly string[];
-  extendsPluginId: string | null;
-  bundleSha256: string;
-  bundleByteLength: number;
-  entry: TrustedPluginModulePathV1;
-}>;
-export type TrustedPluginModuleIndexV1 = Readonly<{ schema: string; generationId: string; modules: readonly TrustedPluginModuleIndexEntryV1[] }>;
-/** 🪪️ The package a plugin module must have been derived from. */
-export type TrustedPluginModuleSourceV1 = Readonly<{ pluginId: string; packageId: string; version: string; componentSha256: string; descriptorByteSha256: string; receiptSha256: string }>;
-
-/** 🚫️ Every refusal of this contract, one type so a caller can tell a refused module from a failed transport. */
-export class TrustedPluginModuleRefusalV1 extends Error {
-  override readonly name = "TrustedPluginModuleRefusalV1";
-}
-
 const refuse = (reason: string): never => {
   throw new TrustedPluginModuleRefusalV1(`trusted plugin module ${reason}`);
 };
 
 const utf8 = new TextEncoder();
-
-/** 🔢️ Byte order of the UTF-8 encodings — the order the hub sorts paths and plugin ids by. */
-export function utf8OrderV1(left: string, right: string): number {
-  const a = utf8.encode(left), b = utf8.encode(right);
-  for (let index = 0; index < Math.min(a.length, b.length); index++) if (a[index] !== b[index]) return a[index]! - b[index]!;
-  return a.length - b.length;
-}
 
 function exactRecord(value: unknown, keys: readonly string[]): Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return refuse("record is not an object");
@@ -222,22 +178,3 @@ export function validateTrustedPluginModuleIndexV1(value: unknown): TrustedPlugi
   return Object.freeze({ schema: record.schema, generationId: record.generationId, modules: Object.freeze(modules) });
 }
 
-/** 🪪️ The package an index entry says its module derives from. */
-export function trustedPluginModuleSourceOfEntryV1(entry: TrustedPluginModuleIndexEntryV1): TrustedPluginModuleSourceV1 {
-  return { pluginId: entry.pluginId, packageId: entry.packageId, version: entry.version, componentSha256: entry.componentSha256, descriptorByteSha256: entry.descriptorByteSha256, receiptSha256: entry.receiptSha256 };
-}
-
-async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes as Uint8Array<ArrayBuffer>));
-  return Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-/** 🔐️ Accepts a file's bytes only when their length and both digests are the manifest's own. */
-export async function verifyTrustedPluginModuleFileV1(file: TrustedPluginModuleFileV1, bytes: Uint8Array): Promise<boolean> {
-  return bytes.byteLength === file.byteLength && (await sha256Hex(bytes)) === file.sha256 && blake3Hex(bytes) === file.blake3;
-}
-
-/** 🔐️ SHA-256 of one manifest's bytes, the content address its index entry names. */
-export function trustedPluginModuleBundleSha256V1(bytes: Uint8Array): Promise<string> {
-  return sha256Hex(bytes);
-}

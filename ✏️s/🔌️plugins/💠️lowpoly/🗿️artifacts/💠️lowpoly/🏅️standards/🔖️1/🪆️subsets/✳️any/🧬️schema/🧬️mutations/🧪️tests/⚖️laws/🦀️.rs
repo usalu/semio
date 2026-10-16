@@ -1,5 +1,6 @@
 //! ⚖️ The laws every committed quintet of a single-row-inverse lowpoly leaf holds (`apply-paint-stroke`, the three selection motions and `set-vertex-positions`), written once and called by each scenario's `🧪️tests/<case>/🦀️.rs`.
 
+use semio_framework_os_kernel as protocol;
 use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
 use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;

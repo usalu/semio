@@ -10,8 +10,8 @@ use super::*;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};
 use serde_json::Value;
 use semio_framework_ui_locale::LocalizedLabel;
-use ui_wgpu::wgpu::NamedLayout;
-use ui_wgpu::wgpu::WindowOptions;
+use semio_framework_ui_layout::layout::NamedLayout;
+use semio_framework_ui_layout::layout::WindowOptions;
 
 //#region 🧫️FixtureModel
 #[derive(serde::Deserialize)]
@@ -105,7 +105,7 @@ fn fixture_window_kind(kind: &FixtureWindowKind) -> WindowKindDefinition {
         id: kind.id.clone(),
         label: LocalizedLabel::data(&kind.label),
         body_key: format!("{}.body", kind.id),
-        surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+        surface_kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         icon_id: "app-window".into(),
         options: WindowOptions::default(),
         actions: vec![],

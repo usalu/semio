@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {verifyCapturedCargoArtifactsV1} from "../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -15,7 +15,7 @@ import { buildRepositoryCargoArtifacts } from "../../../🦑️repo/🔨️modul
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-quiz-schema", "semio-framework-quiz"], this.repoRoot, this.invocation, rest);
+    await runRepositoryCargoTests(["semio-framework-quiz-schema", "semio-framework-quiz", "semio-framework-quiz-tests", "semio-framework-quiz-primitives-tests"], this.repoRoot, this.invocation, rest);
   }
 }
 

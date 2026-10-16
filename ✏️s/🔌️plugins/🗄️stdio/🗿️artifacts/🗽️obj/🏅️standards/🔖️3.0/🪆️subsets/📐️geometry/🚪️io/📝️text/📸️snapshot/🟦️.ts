@@ -49,5 +49,5 @@ export const stdioObj30GeometrySnapshotTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseObjSnapshotText(value: unknown, at = "$"): ObjSnapshotText {
-  return stdioObj30GeometrySnapshotTextGuardObject(value, `${at}`);
+  return stdioObj30GeometrySnapshotTextGuardString(value, `${at}`);
 }

@@ -49,5 +49,5 @@ export const rasterRasterInferenceTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseRasterInferenceText(value: unknown, at = "$"): RasterInferenceText {
-  return rasterRasterInferenceTextGuardObject(value, `${at}`);
+  return rasterRasterInferenceTextGuardString(value, `${at}`);
 }

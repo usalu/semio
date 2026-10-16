@@ -35,7 +35,7 @@ members = [
     "🔐️auth/🔌️client/📦️packages/🦀️rust",
     "🗄️stores/📦️packages/🦀️rust",
     "🗿️artifact-authority/🌱️creation/📦️packages/🦀️rust",
-    "🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/📦️packages/🦀️rust",
+    "🗿️artifact-authority/🌱️creation/🧑‍🏭service-v1/📦️packages/🦀️rust",
     "🗿️artifact-authority/📇️native-openable-provider/📦️packages/🦀️rust",
     "🗿️artifact-authority/📌️check-in/📦️packages/🦀️rust",
     "🗿️artifact-authority/📦️packages/🦀️rust",
@@ -594,7 +594,7 @@ semio-hub-stores = { path = "../🌎️hub/🗄️stores/📦️packages/🦀️
 semio-hub-auth = { path = "../🌎️hub/🔐️auth/📦️packages/🦀️rust" }
 semio-hub-native-openable = { path = "../🌎️hub/🗿️artifact-authority/📇️native-openable-provider/📦️packages/🦀️rust" }
 semio-hub-artifact-checkin = { path = "../🌎️hub/🗿️artifact-authority/📌️check-in/📦️packages/🦀️rust" }
-semio-hub-artifact-creation-service = { path = "../🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/📦️packages/🦀️rust" }
+semio-hub-artifact-creation-service = { path = "../🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭service-v1/📦️packages/🦀️rust" }
 semio-hub-trusted-catalog-laws = { path = "../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🏛️laws/📦️packages/🦀️rust" }
 semio-hub-trusted-catalog = { path = "../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/📦️packages/🦀️rust" }
 semio-hub-trusted-catalog-descriptor = { path = "../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧾️descriptor/📦️packages/🦀️rust" }

@@ -49,13 +49,3 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLoc
     }
 }
 //#endregion 🔖️Mutation
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/✂️forgets-the-folder-and-keeps-its-sibling/🦀️.rs"]
-mod tests_forgets_the_folder_and_keeps_its_sibling;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

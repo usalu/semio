@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🏅️badges/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type Badge, type Quiz, type RunResult, earnedBadges } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://🏅️badge-rules/🔣️.json";

@@ -15,6 +15,9 @@ BODY_PATH = re.compile(r"(?<![A-Za-z0-9_$])(?<!::)((?:crate|super|self)(?:::supe
 IDENT = re.compile(r"(?<![A-Za-z0-9_$'])([A-Za-z_][A-Za-z0-9_]*)")
 
 
+STATIC_OWNER = {}
+
+
 class Tr:
     """translator for text that will live in crate K"""
 
@@ -31,10 +34,35 @@ class Tr:
         return ["crate"] + p + ([name] if name else [])
 
     # emission ----------------------------------------------------------------------------------------------
+    def shared_fixture(self, res):
+        part = res.item.part if res.kind == "item" else (res.node.parts[0] if res.kind == "node" and res.node.parts else None)
+        return part is not None and rel(part.file).startswith(("🧪️testing/🎟️caller/",))
+
+    def item_anchor(self, item):
+        if item.kind == "static" and item.name in STATIC_OWNER:
+            return STATIC_OWNER[item.name], []
+        if rel(item.part.file).startswith(("🧪️testing/🎟️caller/",)):
+            return "FACADE", []
+        return self.LY.anchor(item.part)
+
     def site_path(self, K2, mp, name=None):
         base = "crate" if K2 == self.K else PFX + K2.replace("-", "_")
         segs = [base] + list(mp) + ([name] if name else [])
         return segs
+
+    def shorten_node(self, K2, mp, node):
+        """prefer the crate-root name when the (already flipped) crate re-exports the module at its root (a private wrapper module such as `persistent_local` must not appear in a path)"""
+        if K2 not in self.flipped or len(mp) < 2:
+            return mp
+        tree = self.W.real.get(K2) if K2 in self.W.real else (self.W.real_tree(K2) if K2 in Wd.O.CR else None)
+        if tree is None:
+            return mp
+        b = self.W.public_lookup(tree, mp[-1])
+        if b:
+            r = self.W._follow(b, set())
+            if r is not None and r.kind == "node" and r.node is node:
+                return [mp[-1]]
+        return mp
 
     def shorten(self, K2, mp, item):
         """prefer the crate-root name when the (already flipped) crate re-exports the item at its root"""
@@ -58,18 +86,21 @@ class Tr:
         if res.kind == "crate":
             return [PFX + res.key.replace("-", "_")] + list(res.segs)
         if res.kind in ("item", "node") and self.allowed is not None:
-            site = self.LY.anchor(res.item.part) if res.kind == "item" else self.LY.node_site(res.node)
+            site = self.item_anchor(res.item) if res.kind == "item" else self.LY.node_site(res.node)
             if site[0] not in ("FACADE", "TESTS", None, "EXT", "CYCLE") and site[0] != self.K and site[0] not in self.allowed and self.K != "FACADE":
                 self.notes.append(("unflipped-target", (res.item.name if res.kind == "item" else "/".join(res.node.path())), site[0]))
                 return None
         if res.kind == "item":
-            K2, mp = self.LY.anchor(res.item.part)
+            K2, mp = self.item_anchor(res.item)
             if self.K == "FACADE" and (K2 in ("FACADE", "TESTS") or (K2 not in self.flipped and res.node.root().crate in (None, "FACADE"))):
                 return self.facade_path(res.node, res.item.name) + list(res.segs)
             if K2 in ("FACADE", "TESTS", None, "EXT", "CYCLE"):
                 self.notes.append(("facade-target", res.item.name, K2))
                 return None
-            mp = self.shorten(K2, mp, res.item)
+            if res.item.kind == "macro" and "macro_export" in (res.item.attrs or ""):
+                mp = []
+            else:
+                mp = self.shorten(K2, mp, res.item)
             return self.site_path(K2, mp, res.item.name) + list(res.segs)
         if res.kind == "node":
             K2, mp = self.LY.node_site(res.node)
@@ -78,7 +109,7 @@ class Tr:
             if K2 in ("FACADE", "TESTS", None, "EXT", "CYCLE"):
                 self.notes.append(("facade-target-node", "/".join(res.node.path()), K2))
                 return None
-            return self.site_path(K2, mp) + list(res.segs)
+            return self.site_path(K2, self.shorten_node(K2, mp, res.node)) + list(res.segs)
         return None
 
     def translate_path(self, node, segs):
@@ -108,7 +139,7 @@ class Tr:
                 continue
             head = m.group(1)
             segs = [s for s in head.split("::")] + m.group(2).split("::")[1:]
-            res = self.W.resolve_path(node, segs)
+            res = self.W.resolve_path(node, segs, prefer="macro" if re.match(r"\s*!(?!=)", clean[m.end():m.end() + 4]) else None)
             if res is None or res.kind in ("unresolved", "cycle"):
                 self.notes.append(("unresolved-body-path", "::".join(segs), clean.count("\n", 0, m.start()) + 1))
                 continue
@@ -147,6 +178,9 @@ class Tr:
             tgt = self.W.resolve_path(node, path)
             if tgt is None or tgt.kind in ("unresolved", "cycle"):
                 self.notes.append(("unresolved-use", "::".join(path), 0))
+                out.append((path, alias, False))
+                continue
+            if path[0] not in ("crate", "self", "super") and self.shared_fixture(tgt):
                 out.append((path, alias, False))
                 continue
             new = self.emit(tgt)

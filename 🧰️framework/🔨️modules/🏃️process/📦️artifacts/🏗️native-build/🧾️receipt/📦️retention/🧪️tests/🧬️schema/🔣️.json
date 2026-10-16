@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "StructuralCasesV1": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "when"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "directory",
+              "absent"
+            ]
+          },
+          "when": {
+            "enum": [
+              "before-close",
+              "after-close"
+            ]
+          }
+        }
+      }
+    },
+    "GraphCasesV1": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "undefined",
+          "cleanupError"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "direct-error",
+              "direct-undefined"
+            ]
+          },
+          "undefined": {
+            "type": "boolean"
+          },
+          "cleanupError": {
+            "const": true
+          }
+        }
+      }
+    },
+    "GraphOutcomeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "undefined",
+        "order"
+      ],
+      "properties": {
+        "undefined": {
+          "type": "boolean"
+        },
+        "order": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": [
+            {
+              "const": "failed"
+            },
+            {
+              "const": "input-settled"
+            },
+            {
+              "const": "cleanup"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

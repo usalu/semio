@@ -142,7 +142,7 @@ mod deflate {
     }
 
     struct BitReader<'a> {
-        data: &'a [u8],
+        pub data: &'a [u8],
         pos: usize,
         cur: u8,
         nbits: u8,
@@ -682,10 +682,10 @@ fn read_chunks_from(data: &[u8], mut pos: usize) -> Result<Vec<PngChunk<'_>>, St
 //#region PngIhdr
 #[derive(semio_framework_value::RetireOwned)]
 struct Ihdr {
-    width: u32,
-    height: u32,
-    bit_depth: u8,
-    color_type: u8,
+    pub width: u32,
+    pub height: u32,
+    pub bit_depth: u8,
+    pub color_type: u8,
     interlace: u8,
 }
 
@@ -1013,8 +1013,8 @@ pub fn decode_png(data: &[u8]) -> Result<RasterImage, RasterError> {
 /// canonicalized to RGBA8. Interlaced images decode all Adam7 passes eagerly on construction (rare
 /// in practice for camera/photogrammetry input) and then simply drain a pre-built row queue.
 pub struct PngScanlineDecoder {
-    width: u32,
-    height: u32,
+    #[doc(hidden)] pub width: u32,
+    #[doc(hidden)] pub height: u32,
     rows: PngScanlineSource,
 }
 
@@ -1035,7 +1035,7 @@ enum PngScanlineSource {
 }
 
 struct PngScanlineStream {
-    data: Vec<u8>,
+    pub data: Vec<u8>,
     ihdr: Ihdr,
     palette: Vec<[u8; 3]>,
     palette_alpha: Vec<u8>,
@@ -1402,8 +1402,16 @@ pub fn resize_bilinear(image: &RasterImage, dst_width: u32, dst_height: u32) -> 
 }
 //#endregion Resize
 
-//#region Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion Tests
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    pub mod deflate {
+        use super::super::deflate as inner;
+        pub fn zlib_compress(data: &[u8]) -> Vec<u8> {
+            inner::zlib_compress(data)
+        }
+        pub fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
+            inner::zlib_decompress(data)
+        }
+    }
+}

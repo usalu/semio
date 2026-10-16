@@ -1,5 +1,5 @@
 /** 🎨️ Declarative color scale output compared with independent D3 scales and interpolation. */
-import { defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { buildVizScale } from "../../🧬️schema/💡️inferences/📐scale/🟦️.ts";
 import { renderVizPresetTikz } from "../../🚪️io/📝️text/💡️inferences/📚️catalogue/🟦️.ts";
 import {vizParseColor} from "../../🧬️schema/💡️inferences/🎨theme/🟦️.ts";

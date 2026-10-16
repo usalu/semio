@@ -49,5 +49,5 @@ export const stdioBinaryRawAnyInferenceTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseBinaryInferenceText(value: unknown, at = "$"): BinaryInferenceText {
-  return stdioBinaryRawAnyInferenceTextGuardObject(value, `${at}`);
+  return stdioBinaryRawAnyInferenceTextGuardString(value, `${at}`);
 }

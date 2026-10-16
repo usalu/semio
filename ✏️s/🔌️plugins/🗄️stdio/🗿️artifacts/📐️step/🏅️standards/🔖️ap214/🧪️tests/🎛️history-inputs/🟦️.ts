@@ -31,7 +31,7 @@ for(const [index,subset] of subsets.entries())test(`STEP ${subset} native editor
 
 
 for(const [index,subset] of subsets.entries())test(`STEP ${subset} construction retains its independently declared class-native intent`,()=>{
- const owner=join(root,subset),name=`StepCc${index+1}Mutation`,fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🎛️history-inputs/restore-entities/🦠️mutation/🔣️.json"),"utf8"));expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);
+ const owner=join(root,subset),name=`StepCc${index+1}Mutation`,fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🎛️history-inputs/♻️restore-entities/🦠️mutation/🔣️.json"),"utf8"));expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);
  const native=readFileSync(join(owner,"🚪️io/🦀️.rs"),"utf8"),construction=native.slice(native.indexOf("pub mod derived_construction"));expect(construction).toContain(`type Mutation = ${name};`);expect(construction).toContain(`apply_step_cc${index+1}_mutation`);expect(construction).not.toContain("type Mutation = StepMutation;");
  console.log(`[DEBUG] STEP ${subset} construction retains ${name} and the independently authored native RestoreEntities intent`);
 });

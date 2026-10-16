@@ -1,0 +1,83 @@
+[
+  {
+    "name": "shrink",
+    "sequence": 2,
+    "change": null,
+    "bytes": 60,
+    "accepted": true
+  },
+  {
+    "name": "stale-sequence",
+    "sequence": 1,
+    "change": null,
+    "bytes": 60,
+    "accepted": false
+  },
+  {
+    "name": "foreign-owner",
+    "sequence": 2,
+    "change": {
+      "owner": "other"
+    },
+    "bytes": 60,
+    "accepted": false
+  },
+  {
+    "name": "wrong-id",
+    "sequence": 2,
+    "change": {
+      "id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "bytes": 60,
+    "accepted": false
+  },
+  {
+    "name": "wrong-kind",
+    "sequence": 2,
+    "change": {
+      "kind": "persistent-state"
+    },
+    "bytes": 60,
+    "accepted": false
+  },
+  {
+    "name": "wrong-amount",
+    "sequence": 2,
+    "change": {
+      "bytes": 99
+    },
+    "bytes": 60,
+    "accepted": false
+  },
+  {
+    "name": "wrong-phase",
+    "sequence": 2,
+    "change": {
+      "phase": "reserved"
+    },
+    "bytes": 60,
+    "accepted": false
+  },
+  {
+    "name": "expansion",
+    "sequence": 2,
+    "change": null,
+    "bytes": 101,
+    "accepted": false
+  },
+  {
+    "name": "unchanged",
+    "sequence": 2,
+    "change": null,
+    "bytes": 100,
+    "accepted": false
+  },
+  {
+    "name": "compiler-envelope",
+    "sequence": 2,
+    "change": null,
+    "bytes": 60,
+    "accepted": false,
+    "baseKind": "compiler-workspace"
+  }
+]

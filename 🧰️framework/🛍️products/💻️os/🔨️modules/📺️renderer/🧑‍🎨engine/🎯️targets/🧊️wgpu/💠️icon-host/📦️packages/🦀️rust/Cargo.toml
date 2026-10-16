@@ -52,4 +52,10 @@ ui_gpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯�
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-prepared = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust" }
+semio-framework-ui-scene-camera = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
+semio-framework-ui-scene-mesh = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
+semio-framework-ui-scene-pass = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }

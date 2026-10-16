@@ -4,7 +4,7 @@ name = "semio-hub"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "OS hub — the multi-tenant document/directory server: an axum WS shell over db::Database (documents/blobs) and HubDirectory (identity/tenancy), sqlite/postgres/neo4j backends selectable by feature"
+description = "OS hub — the multi-tenant document/directory server: an axum WS shell over db::Database (documents/blobs) and the hub directory capabilities (identity/tenancy), sqlite/postgres/neo4j backends selectable by feature"
 
 [package.metadata.semio]
 channel-version-consumers = "🔖️channel-version/📇️consumers.json"

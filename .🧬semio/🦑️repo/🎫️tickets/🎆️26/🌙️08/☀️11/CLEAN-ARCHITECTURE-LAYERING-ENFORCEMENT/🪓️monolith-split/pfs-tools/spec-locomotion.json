@@ -1,0 +1,83 @@
+{
+ "file": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🚶️locomotion/🟦️.ts",
+ "label": "locomotion",
+ "childRoot": "🧰️framework/🛍️products/🐾️pets/🔨️modules/🚶️locomotion",
+ "deleteParent": true,
+ "children": [
+  {
+   "folder": "📐️constants",
+   "doc": "/** 📐️ Locomotion, constants: the waiting times, spans, speeds and shares of the motions, and the bounce and puff durations the rest of the stage reads.\n *\n * @see ../⚓️footing/🟦️.ts — the footing that uses them first\n * @see ../🦀️.rs — the Rust twin\n * @see ../../🎪️stage/🟦️.ts — the façade of the stage and the normative order of a tick\n */",
+   "stmts": [
+    "43-72"
+   ]
+  },
+  {
+   "folder": "⚓️footing",
+   "doc": "/** ⚓️ Locomotion, footing: what carries a pet and how it loses its ground — the plan of a course, the puff in which a pet vanishes and arrives anew, dropping a pet whose footing went away and installing a planned course. The module as a whole (this folder; the children sit in the sibling folders `📐️constants`, `🛬️courses`, `🛫️departure`, `🏃️motion`, `✋️hand`, `🪜️outings`, `🧳️trips`, `🪄️mischief` and `🚪️leaving`):\n * Every motion is checked before it is committed. A walker, a scooter and a rider on a head move only as far as\n * `guardedStride` lets them; a pet in the hand is pushed out of whatever it is dragged into (`pushedOut`). Whatever\n * flies plans its whole course first — tick by tick, landing included — and takes it only when `claimClear` says that\n * nobody is in its way, now or later; its claim then keeps everybody else out of the corridor and off its landing spot.\n * A pet whose ground went away plans its way down: as it flies, towards the free column over where it lands, with the\n * air control of `STEERINGS`, bounced back or simply let go when it was thrown; it lands on a perch or on another\n * pet's head, whose top is a one-way platform it then slides off. A pet that owns a parachute and would land hard\n * opens it on the way down — decided on the landing its course really makes — and, thrown at the ground too close to\n * it for the canopy to open, brakes: it never lands hard. While no plan is clear it waits where it is for `DELAY`\n * ticks; when even that place is not free it vanishes in a puff and arrives anew. A trip with gear is planned whole the\n * same way — every foothold from the walk to the gear to where it ends (`Trip`) — and taken only when its claim is\n * clear; whatever interrupts it gives it up where the actor is ({@link halt}).\n *\n * A new footing or a new way to travel belongs here: what starts it, its tick of motion and where it ends. A planned\n * motion through the air is a `Course` installed with {@link install}; any other planned motion claims its corridor\n * with `claimOf` and `claimClear` of `🚧️clearance` into the claims of the draft; motion without a plan is guarded.\n * A part of the stage, not of the package: `@semio-tech/pets` exports nothing of it.\n *\n * @see ../../🚧️clearance/🟦️.ts — claims, guarded strides, heads, the last resort\n * @see ../../🪢️swing/🟦️.ts — the hand and the parachute\n * @see ../../🏞️terrain/🟦️.ts — falls, hops, landings\n * @see ../../🎪️stage/🟦️.ts — the façade of the stage and the normative order of a tick\n * @see ../🦀️.rs — the Rust twin\n */",
+   "stmts": [
+    "77-229",
+    "642",
+    "828-832",
+    "1589-1607"
+   ]
+  },
+  {
+   "folder": "🛬️courses",
+   "doc": "/** 🛬️ Locomotion, courses: how a pet whose ground went away plans its way down — tick by tick, landing included, with the air control of the steerings, the parachute and the one-way platform of another pet's head.\n *\n * @see ../⚓️footing/🟦️.ts — the plan and the installed course\n * @see ../🦀️.rs — the Rust twin\n * @see ../../🎪️stage/🟦️.ts — the façade of the stage and the normative order of a tick\n */",
+   "stmts": [
+    "234-415"
+   ]
+  },
+  {
+   "folder": "🛫️departure",
+   "doc": "/** 🛫️ Locomotion, departure: setting out for a goal on the pet's perch, strolling, attending and the hop or glide that launches a pet from one perch to the next.\n *\n * @see ../🛬️courses/🟦️.ts — the plan of a launch\n * @see ../🦀️.rs — the Rust twin\n * @see ../../🎪️stage/🟦️.ts — the façade of the stage and the normative order of a tick\n */",
+   "stmts": [
+    "420-523"
+   ]
+  },
+  {
+   "folder": "🏃️motion",
+   "doc": "/** 🏃️ Locomotion, motion: the guarded stride of a walker, the scoot of a scooter, the slip of a rider on a head and the flight and plunge of a pet in the air.\n *\n * @see ../🛬️courses/🟦️.ts — the ways down\n * @see ../🦀️.rs — the Rust twin\n * @see ../../🎪️stage/🟦️.ts — the façade of the stage and the normative order of a tick\n */",
+   "stmts": [
+    "528-641",
+    "650-693"
+   ]
+  },
+  {
+   "folder": "✋️hand",
+   "doc": "/** ✋️ Locomotion, hand: a pet lifted into the learner's hand, held, let go, given back and tossed.\n *\n * @see ../🧳️trips/🟦️.ts — the halt of a trip a lift interrupts\n * @see ../🦀️.rs — the Rust twin\n * @see ../../🎪️stage/🟦️.ts — the façade of the stage and the normative order of a tick\n */",
+   "stmts": [
+    "698-812"
+   ]
+  },
+  {
+   "folder": "🪜️outings",
+   "doc": "/** 🪜️ Locomotion, outings: every outing a pet with gear can take from a stand — the climb onto a wall, the ladder and the rope, the slide and the rests on the way — and the legs of a trip assembled from them.\n *\n * @see ../⚓️footing/🟦️.ts — the release of gear\n * @see ../🦀️.rs — the Rust twin\n * @see ../../🎪️stage/🟦️.ts — the façade of the stage and the normative order of a tick\n */",
+   "stmts": [
+    "817-826",
+    "835-1328"
+   ]
+  },
+  {
+   "folder": "🧳️trips",
+   "doc": "/** 🧳️ Locomotion, trips: setting out on a trip with gear, embarking, travelling leg by leg, alighting, resting, clinging and halting where the actor is.\n *\n * @see ../🪜️outings/🟦️.ts — the outings a trip is made of\n * @see ../🦀️.rs — the Rust twin\n * @see ../../🎪️stage/🟦️.ts — the façade of the stage and the normative order of a tick\n */",
+   "stmts": [
+    "1331-1586"
+   ]
+  },
+  {
+   "folder": "🪄️mischief",
+   "doc": "/** 🪄️ Locomotion, mischief: posting a pet to a spot, popping it back, pushing and unpushing it and what is left unlifted.\n *\n * @see ../🧳️trips/🟦️.ts — the trips a post starts\n * @see ../🦀️.rs — the Rust twin\n * @see ../../🎪️stage/🟦️.ts — the façade of the stage and the normative order of a tick\n */",
+   "stmts": [
+    "1612-1704"
+   ]
+  },
+  {
+   "folder": "🚪️leaving",
+   "doc": "/** 🚪️ Locomotion, leaving: a pet that leaves the stage after halting wherever it is.\n *\n * @see ../🧳️trips/🟦️.ts — the halt that comes first\n * @see ../🦀️.rs — the Rust twin\n * @see ../../🎪️stage/🟦️.ts — the façade of the stage and the normative order of a tick\n */",
+   "stmts": [
+    "1709-1731"
+   ]
+  }
+ ]
+}

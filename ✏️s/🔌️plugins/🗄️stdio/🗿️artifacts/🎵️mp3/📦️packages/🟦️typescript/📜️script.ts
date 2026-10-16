@@ -12,7 +12,7 @@ if(process.argv[2]==="metadata-oracle"){
  });
 }else if(process.argv[2]==="metadata-native"){
  await receiveScriptProcessInvocation(process.env,async original=>{
- await runRepositoryCommand(original,"cargo",["test","--manifest-path",resolve(import.meta.dir,"../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🏷️metadata/🧪️tests/📦️packages/🦀️rust/Cargo.toml"),"--lib","--","--nocapture"],getWorkspaceRoot(),"mp3-metadata-native",{version:1,maximumElapsedMilliseconds:300000,output:{maximumBytes:134217728,maximumLines:65536}});
+ await runRepositoryCommand(original,"cargo",["test","--manifest-path",resolve(import.meta.dir,"../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🏷️metadata/📦️packages/🦀️rust/Cargo.toml"),"--lib","--","--nocapture"],getWorkspaceRoot(),"mp3-metadata-native",{version:1,maximumElapsedMilliseconds:300000,output:{maximumBytes:134217728,maximumLines:65536}});
 
  });
 }else if(process.argv[2]==="metadata-source"){

@@ -1,0 +1,267 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumPendingRequests": 16,
+        "maximumRequests": 128,
+        "maximumNotifications": 128,
+        "maximumNotificationBytes": 4194304,
+        "maximumOutputBytes": 16777216,
+        "maximumOutputLines": 1024,
+        "maximumDiagnosticBytes": 65536,
+        "maximumDiagnosticLines": 128,
+        "maximumServerRequests": 64,
+        "maximumPendingOperations": 24,
+        "maximumArguments": 256,
+        "maximumArgumentBytes": 65536,
+        "maximumEnvironmentEntries": 1024,
+        "maximumEnvironmentBytes": 262144,
+        "maximumPathUnits": 256,
+        "maximumInputChunkBytes": 4194304,
+        "maximumCredentialBytes": 16384,
+        "protocolVersion": "2025-06-18",
+        "maximumRecordedFailures": 1,
+        "maximumBodyFailures": 1,
+        "maximumTerminalFailures": 3
+      }
+    },
+    "Correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issued",
+        "received",
+        "accepted"
+      ],
+      "properties": {
+        "issued": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 128
+          }
+        },
+        "received": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 128
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Delegation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hubOrigin",
+        "spaceId",
+        "token",
+        "scopes"
+      ],
+      "properties": {
+        "hubOrigin": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^https?://[^/?#@]+/?$"
+        },
+        "spaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "token": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16384
+        },
+        "scopes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "autoApprove": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Initialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocolVersion",
+        "capabilities"
+      ],
+      "properties": {
+        "protocolVersion": {
+          "const": "2025-06-18"
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "roots": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "listChanged"
+              ],
+              "properties": {
+                "listChanged": {
+                  "const": false
+                }
+              }
+            }
+          }
+        },
+        "clientInfo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      }
+    },
+    "SettlementCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "revoke",
+        "events",
+        "errors"
+      ],
+      "properties": {
+        "owner": {
+          "enum": [
+            "success",
+            "refused",
+            "body",
+            "terminal",
+            "undefined"
+          ]
+        },
+        "revoke": {
+          "enum": [
+            "success",
+            "failure",
+            "undefined"
+          ]
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "enum": [
+              "owner",
+              "body",
+              "terminal",
+              "revoke"
+            ]
+          }
+        },
+        "errors": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "enum": [
+              "refused",
+              "body",
+              "terminal",
+              "revocation",
+              "undefined"
+            ]
+          }
+        }
+      }
+    },
+    "FailureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recorded",
+        "body",
+        "terminal",
+        "expected"
+      ],
+      "properties": {
+        "recorded": {
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "enum": [
+              "first",
+              "later",
+              "pump",
+              "undefined"
+            ]
+          }
+        },
+        "body": {
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "enum": [
+              "first",
+              "later",
+              "pump",
+              "undefined"
+            ]
+          }
+        },
+        "terminal": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "first",
+              "later",
+              "pump",
+              "undefined"
+            ]
+          }
+        },
+        "expected": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "enum": [
+              "first",
+              "later",
+              "pump",
+              "undefined"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

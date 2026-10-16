@@ -1,5 +1,5 @@
 import {dirname,isAbsolute} from "node:path";
-import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 /** 🌱️ Projects Cargo's effective resolved package values into the compiler's explicit environment.
  * @see https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates */

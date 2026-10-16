@@ -1,4 +1,4 @@
-/** 🧭️ `os` and `semio` commands: headless OS studio run and the `.semio` file processor.
+/** 💻️ `os` and `semio` commands: headless OS studio run and the `.semio` file processor.
  * @see 📜️script.ts
  */
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";

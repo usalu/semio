@@ -1,0 +1,395 @@
+{
+  "version": 1,
+  "status": "proposal-input-not-runtime-proof",
+  "cases": [
+    {
+      "name": "fixed data bytes 33554432",
+      "kind": "footer",
+      "input": {
+        "dataBytes": 33554432,
+        "maximumPhysicalBytes": 33554944,
+        "timestamp": 0,
+        "uuid": "00112233445546778899aabbccddeeff"
+      },
+      "expected": {
+        "outcome": "accept",
+        "dispatches": 0,
+        "fileBytes": 33554944
+      }
+    },
+    {
+      "name": "fixed data bytes 67108864",
+      "kind": "footer",
+      "input": {
+        "dataBytes": 67108864,
+        "maximumPhysicalBytes": 67109376,
+        "timestamp": 0,
+        "uuid": "00112233445546778899aabbccddeeff"
+      },
+      "expected": {
+        "outcome": "accept",
+        "dispatches": 0,
+        "fileBytes": 67109376
+      }
+    },
+    {
+      "name": "fixed data bytes 1099511627776",
+      "kind": "footer",
+      "input": {
+        "dataBytes": 1099511627776,
+        "maximumPhysicalBytes": 1099511628288,
+        "timestamp": 0,
+        "uuid": "00112233445546778899aabbccddeeff"
+      },
+      "expected": {
+        "outcome": "accept",
+        "dispatches": 0,
+        "fileBytes": 1099511628288
+      }
+    },
+    {
+      "name": "unaligned data region",
+      "kind": "footer",
+      "input": {
+        "dataBytes": 33554433,
+        "maximumPhysicalBytes": 33554945
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "footer exceeds physical envelope",
+      "kind": "footer",
+      "input": {
+        "dataBytes": 33554432,
+        "maximumPhysicalBytes": 33554432
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "below declared minimum",
+      "kind": "footer",
+      "input": {
+        "dataBytes": 33553920,
+        "maximumPhysicalBytes": 33554432
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "timestamp overflow",
+      "kind": "footer",
+      "input": {
+        "dataBytes": 33554432,
+        "maximumPhysicalBytes": 33554944,
+        "timestamp": 4294967296
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "initial host own receipt",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "parent": "initial-host",
+        "phase": "actual-live",
+        "receipt": "owned-file",
+        "ancestry": "same",
+        "mapping": "same",
+        "returnValue": 0
+      },
+      "expected": {
+        "outcome": "accept",
+        "dispatches": 1
+      }
+    },
+    {
+      "name": "retained actual parent",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "parent": "retained-native",
+        "phase": "actual-live",
+        "receipt": "owned-file",
+        "ancestry": "same",
+        "mapping": "same",
+        "returnValue": 0
+      },
+      "expected": {
+        "outcome": "accept",
+        "dispatches": 1
+      }
+    },
+    {
+      "name": "copied preparation",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "copied"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "ready token before birth",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "ready-image"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "foreign parent",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "parent": "foreign-native"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "stopped actual phase",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "phase": "stopped"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "replaced receipt",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "receipt": "changed-inode"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "directory FilePath query",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "query": "directory-filepath"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "unowned host path",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "caller-path",
+        "parent": "initial-host"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "changed mapping after Flush",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "phase": "actual-live",
+        "receipt": "owned-file",
+        "ancestry": "same",
+        "mapping": "changed-after",
+        "returnValue": 0
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 1
+      }
+    },
+    {
+      "name": "numeric nonzero Flush",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "phase": "actual-live",
+        "receipt": "owned-file",
+        "ancestry": "same",
+        "mapping": "same",
+        "returnValue": 4
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 1
+      }
+    },
+    {
+      "name": "string zero Flush",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "phase": "actual-live",
+        "receipt": "owned-file",
+        "ancestry": "same",
+        "mapping": "same",
+        "returnValue": "0"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 1
+      }
+    },
+    {
+      "name": "cancel during child",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "phase": "cancel-during",
+        "receipt": "owned-file",
+        "ancestry": "same",
+        "mapping": "same",
+        "returnValue": 0
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 1
+      }
+    },
+    {
+      "name": "replaced parent after child",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "phase": "actual-live",
+        "receipt": "owned-file",
+        "ancestry": "changed-after",
+        "mapping": "same",
+        "returnValue": 0
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 1
+      }
+    },
+    {
+      "name": "first undefined prevents second dispatch",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "firstFailure": "undefined",
+        "laterAttempt": "frozen-error"
+      },
+      "expected": {
+        "outcome": "retain-primary",
+        "dispatches": 1
+      }
+    },
+    {
+      "name": "body frozen wins child undefined",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "bodyFailure": "frozen-error",
+        "childFailure": "undefined"
+      },
+      "expected": {
+        "outcome": "retain-primary",
+        "dispatches": 1
+      }
+    },
+    {
+      "name": "non-C actual system root",
+      "kind": "system-path",
+      "input": {
+        "source": "system-api",
+        "systemDirectory": "D:\\OS\\System32",
+        "windowsDirectory": "D:\\OS"
+      },
+      "expected": {
+        "outcome": "accept",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "unicode actual root",
+      "kind": "system-path",
+      "input": {
+        "source": "system-api",
+        "systemDirectory": "D:\\操作系统\\System32",
+        "windowsDirectory": "D:\\操作系统"
+      },
+      "expected": {
+        "outcome": "accept",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "environment only",
+      "kind": "system-path",
+      "input": {
+        "source": "environment",
+        "systemDirectory": "D:\\untrusted"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "truncated system API result",
+      "kind": "system-path",
+      "input": {
+        "source": "system-api",
+        "result": "buffer-capacity"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "report ANSI module candidate",
+      "kind": "system-path",
+      "input": {
+        "source": "process-report-sharedObjects"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    },
+    {
+      "name": "earlier accepted barrier still pending",
+      "kind": "preparation-barrier",
+      "input": {
+        "owner": "actual-preparation",
+        "pending": "earlier-dispatch"
+      },
+      "expected": {
+        "outcome": "refuse",
+        "dispatches": 0
+      }
+    }
+  ]
+}

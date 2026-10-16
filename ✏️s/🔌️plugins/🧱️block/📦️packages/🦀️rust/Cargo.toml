@@ -20,7 +20,7 @@ test-serde = ["dep:serde"]
 
 [[test]]
 name = "shared-schema"
-path = "../../🧬️schema/🧱️shared/🧪️tests/🦀️.rs"
+path = "../../🧬️schema/🧱️document-fields/🧪️tests/🦀️.rs"
 required-features = ["test-serde"]
 
 [dependencies]

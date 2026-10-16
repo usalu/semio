@@ -6,7 +6,8 @@ import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/framewo
 // #endregion 🧲️Header
 
 
-import { AnchorAttachment, AnchorRecord, AnchorRef, EdgeRecord, EdgeRef, FaceRecord, FaceRef, Model, ShellRecord, ShellRef, SolidPrimitive, SolidRecord, SolidRef, TypologyRef, VertexRecord, VertexRef, WireRecord, WireRef } from "../📐️geometry/🟦️.ts";
+import { AnchorAttachment, AnchorRecord, AnchorRef, EdgeRecord, EdgeRef, FaceRecord, FaceRef, ShellRecord, ShellRef, SolidPrimitive, SolidRecord, SolidRef, TypologyRef, VertexRecord, VertexRef, WireRecord, WireRef } from "../📐️geometry/🟦️.ts";
+import { Model } from "../📐️geometry/🧊️model/🟦️.ts";
 
 
 

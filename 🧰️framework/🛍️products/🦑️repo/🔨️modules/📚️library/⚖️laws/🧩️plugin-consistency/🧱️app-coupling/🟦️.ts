@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: cargo artifacts, app coupling, JSON fixtures and ops grammar rules.
+/** 🧱️ Wave 4 plugin consistency policy: cargo artifacts, app coupling, JSON fixtures and ops grammar rules.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";

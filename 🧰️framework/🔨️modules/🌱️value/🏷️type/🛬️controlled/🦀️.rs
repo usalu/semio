@@ -86,3 +86,15 @@ pub(super) fn encode(value: &ValueType, c: &mut NativeEncodeControl<'_>) -> Resu
         Ok(output.take())
     })
 }
+
+#[cfg(feature = "testkit")]
+#[doc(hidden)]
+pub mod testkit {
+    use super::*;
+    pub fn decode(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<ValueType, ValueError> {
+        super::decode(value, c)
+    }
+    pub fn encode(value: &ValueType, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        super::encode(value, c)
+    }
+}

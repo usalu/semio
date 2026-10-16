@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumWireBytes": 4194304,
+        "maximumDepth": 32,
+        "maximumNodes": 65536,
+        "maximumObjectEntries": 16384
+      }
+    },
+    "Value": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string",
+          "maxLength": 4194304
+        },
+        {
+          "type": "array",
+          "maxItems": 65536,
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        {
+          "type": "object",
+          "maxProperties": 16384,
+          "additionalProperties": {
+            "$ref": "#/definitions/Value"
+          },
+          "propertyNames": {
+            "type": "string",
+            "maxLength": 4194304
+          }
+        }
+      ]
+    },
+    "Id": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      ]
+    },
+    "Record": {
+      "type": "object",
+      "maxProperties": 16384,
+      "additionalProperties": {
+        "$ref": "#/definitions/Value"
+      },
+      "propertyNames": {
+        "type": "string",
+        "maxLength": 4194304
+      }
+    },
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 65536
+        },
+        "data": {
+          "$ref": "#/definitions/Value"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "method"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!rpc\\.)[^\\u0000-\\u001f]+$"
+        },
+        "params": {
+          "$ref": "#/definitions/Record"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "method"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!rpc\\.)[^\\u0000-\\u001f]+$"
+        },
+        "params": {
+          "$ref": "#/definitions/Record"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "result"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "result": {
+          "$ref": "#/definitions/Record"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jsonrpc",
+        "id",
+        "error"
+      ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "error": {
+          "$ref": "#/definitions/Error"
+        }
+      }
+    }
+  ]
+}

@@ -67,3 +67,4 @@ csv = "1"
 # the repository workspace"), so a direct path dep from a workspace member makes cargo fail with
 # "multiple workspace roots found in the same workspace" — which breaks EVERY cargo command
 # repo-wide, for every session. Reach the oracle through a generated test host instead.
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }

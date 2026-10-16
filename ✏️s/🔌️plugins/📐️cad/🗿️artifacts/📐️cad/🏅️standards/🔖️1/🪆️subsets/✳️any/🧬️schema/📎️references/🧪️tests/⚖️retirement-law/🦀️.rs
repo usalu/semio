@@ -3,8 +3,7 @@
 #[global_allocator]
 static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/🦀️.rs"]
-mod typed_input_law;
+use semio_framework_test_typed_input_law as typed_input_law;
 
 use semio_s_artifact_cad_cad_model::{snapshot::CadReference, CadReferenceIndex};
 use typed_input_law::typed_input_retirement_law;

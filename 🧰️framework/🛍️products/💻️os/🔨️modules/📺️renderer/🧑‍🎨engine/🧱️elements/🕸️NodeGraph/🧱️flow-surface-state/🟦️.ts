@@ -3,7 +3,7 @@
  * 🧱️ Child hook module of {@link ../🟦️.tsx | FlowGraphCanvasHost}: `useFlowSurfaceState` runs the original statements in order and returns the bindings later hooks and the render read; the component merges them into the shared core object.
  */
 
-import type { DagWireTypeRefusal } from "../../../../../♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🟦️.ts";
+import type { DagWireTypeRefusal } from "@semio-tech/framework/infinite/board/schema/dag-input";
 import React, {
   useContext,
   useEffect,
@@ -11,7 +11,7 @@ import React, {
   useRef,
   useState
 } from "react";
-import { createDemandFrameScheduler } from "@semio-tech/canvas-react-renderer";
+import { createDemandFrameScheduler } from "@semio-tech/framework/canvas/react-renderer";
 import { registerIntroductionSurfaceResolver, useLabel, type CanvasPickTarget } from "@semio-tech/ui-react";
 import {
   windowElementId,

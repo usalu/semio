@@ -323,7 +323,7 @@ fn member_factory_selection_uses_only_complete_closed_declarations() {
         let row = serde_json::json!({ "id": "all-arm", "dialect": [row[0], row[1], row[2]], "selected": row, "error": null });
         run_case::<SemioFixture>(&complete, &row, 1);
     }
-    type Generated = super::super::super::tests::RetainedTestMembers;
+    type Generated = super::store_unit_tests::RetainedTestMembers;
     let generated = Generated::OPEN_DECLARATIONS.iter().map(|row| serde_json::json!([row.kind, row.standard, row.subset, row.schema])).collect::<Vec<_>>();
     assert_eq!(generated, *fixture["generatedDeclarations"].as_array().unwrap());
     for row in fixture["generatedDeclarations"].as_array().unwrap() {

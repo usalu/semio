@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-artifact-procedural-3d-geometry-mesh-harness"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Fixture harness of the mesh unit tests: meshes and selections from language-agnostic cases, every compute at fuel one and unbounded, bit-identical repeated runs; the catalogue is passed in by the caller"
+
+[package.metadata.semio]
+role = "test"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-3d = { workspace = true }
+semio-framework-io-base64 = { path = "../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-oracle-support = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+serde_json = { workspace = true }

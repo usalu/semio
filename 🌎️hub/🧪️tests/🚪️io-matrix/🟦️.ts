@@ -1,5 +1,5 @@
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import {readNativeCallerAuthorityV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 /** 🚪️ Export and import through the served `s` React shell, per kind, as a user drives them (acceptance 1.7), plus the
  * live half of command reachability (1.8): every verb that was `BatchOnlyPendingRewrite` must dispatch from its rail row.
@@ -34,7 +34,7 @@ import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, 
 import { createKind, openSweepSpace, stagedKinds, type HubDocumentSweepOptions, type HubSweepRow } from "../🗂️document-sweep/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 import { decodeDocumentArchiveBytes } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID } from "../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts";
+import { EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID } from "@semio-tech/framework/manifest";
 
 //#region 🔖️Pins
 /** 🧾️ A file format a third-party parser must accept; `any` sniffs the format from the downloaded file's name. */

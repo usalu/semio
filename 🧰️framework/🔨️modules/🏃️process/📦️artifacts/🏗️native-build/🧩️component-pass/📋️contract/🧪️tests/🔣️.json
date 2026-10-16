@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "name": "valid plan",
+      "kind": "plan",
+      "change": "none",
+      "accepted": true
+    },
+    {
+      "name": "duplicate pass ids",
+      "kind": "plan",
+      "change": "duplicate-pass",
+      "accepted": false
+    },
+    {
+      "name": "duplicate package names",
+      "kind": "plan",
+      "change": "duplicate-package",
+      "accepted": false
+    },
+    {
+      "name": "duplicate job ids",
+      "kind": "plan",
+      "change": "duplicate-job",
+      "accepted": false
+    },
+    {
+      "name": "invalid plan profile",
+      "kind": "plan",
+      "change": "profile",
+      "accepted": false
+    },
+    {
+      "name": "unknown plan field",
+      "kind": "plan",
+      "change": "unknown",
+      "accepted": false
+    },
+    {
+      "name": "valid pipeline",
+      "kind": "pipeline",
+      "change": "none",
+      "accepted": true
+    },
+    {
+      "name": "duplicate pipeline jobs",
+      "kind": "pipeline",
+      "change": "duplicate-job",
+      "accepted": false
+    },
+    {
+      "name": "invalid pipeline profile",
+      "kind": "pipeline",
+      "change": "profile",
+      "accepted": false
+    },
+    {
+      "name": "unknown pipeline field",
+      "kind": "pipeline",
+      "change": "unknown",
+      "accepted": false
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-/** 🧭️ `micro-commit` and `commit` commands.
+/** 📝️ `micro-commit` and `commit` commands.
  * @see 📜️script.ts
  */
 import { runCommit, runMicroCommit } from "../../📦️packages/🟦️typescript/🟦️.ts";

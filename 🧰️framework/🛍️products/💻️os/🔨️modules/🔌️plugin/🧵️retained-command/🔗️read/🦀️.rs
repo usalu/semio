@@ -1,9 +1,12 @@
 //! 🔗️ One paid transfer lends the actual Store read retained by the original command owner.
 use std::cell::RefCell;
-use super::{AppOperationContext,StepContext,RetainedCloneProgress,ValueError,ValueRefusalKind};
+use semio_framework_plugin_decl_views::AppOperationContext;
+use semio_framework_job::StepContext;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use store::os_store::snapshot_read::SnapshotRead;
 /// 🎒️ Borrows original command read custody without duplicating the captured snapshot or issuer lease.
-pub struct ArtifactCommandSnapshotRead<'a,T:?Sized>{pub(super) original:&'a RefCell<Option<SnapshotRead<T>>>,pub(super) operation:&'a AppOperationContext}
+pub struct ArtifactCommandSnapshotRead<'a,T:?Sized>{pub original:&'a RefCell<Option<SnapshotRead<T>>>,pub operation:&'a AppOperationContext}
 impl<T:?Sized> ArtifactCommandSnapshotRead<'_,T>{
  /// 🎟️ Moves the exact issuer read only after its initiating turn funds a metadata event and revalidates current custody.
  pub fn take_current(&self,generation:u64,revision:[u8;32],cx:&mut StepContext<'_>)->Result<Option<SnapshotRead<T>>,semio_framework_job::OriginalTurnFailure>{

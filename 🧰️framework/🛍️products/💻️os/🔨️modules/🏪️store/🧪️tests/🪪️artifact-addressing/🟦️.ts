@@ -1,23 +1,23 @@
 /** 🧪️ Independent JSON Schema checks for shared artifact addressing and child wire identity. */
-import artifactReferenceSchema from "../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema } from "@semio-tech/schema-ts/artifact-reference";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🪪️artifact-addressing/🔣️.json" with { type: "json" };
-import ioSchema from "../../../../../../🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
+import { ioSchema } from "@semio-tech/framework/io/testing/fixtures";
 import linkSchema from "../../🔗️link/🧬️schema/🔣️.json" with { type: "json" };
 import blobSchema from "../../📦️blob/🧬️schema/🔣️.json" with { type: "json" };
 import { parseArtifactLink } from "../../🔗️link/🧬️schema/🟦️.ts";
 import childSchema from "../../🪆️child/🧬️schema/🔣️.json" with { type: "json" };
-import manifestSchema from "../../../../../../🔨️modules/🛂️manifest/🧬️schema/🔣️.json" with { type: "json" };
+import { manifestSchema } from "@semio-tech/framework/manifest/testing/fixtures";
 import { dialectCoordinate, parseDialectCoordinate, artifactRefUri, parseArtifactRefUri } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import { contentId, parseArtifactChild } from "../../🪆️child/🧬️schema/🟦️.ts";
-import { sha256Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
+import { sha256Hex } from "@semio-tech/framework/hash";
 
 import openingSchema from "../../../../🎚️config/🧬️schema/🔣️.json" with { type: "json" };
 import setDefaultSchema from "../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧬️schema/🔣️.json" with { type: "json" };
 import clearDefaultSchema from "../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧬️schema/🔣️.json" with { type: "json" };
-import { surfaceAppId, parseSurfaceAppId } from "../../../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
+import { surfaceAppId, parseSurfaceAppId } from "@semio-tech/framework/manifest/schema";
 
 export function testSharedArtifactAddressingOracle(): void {
   const ajv = new Ajv({ strict: false, allErrors: true }).addSchema(artifactReferenceSchema);

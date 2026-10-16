@@ -13,7 +13,9 @@
     "ajv": "^8.20.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.17",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/value-ts": "workspace:*",
+    "@semio-tech/framework": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {
@@ -21,5 +23,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "framework/product/os/modules/mcp"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "dependencies": {
+    "@semio-tech/schema-validator-ts": "workspace:*"
+  }
 }

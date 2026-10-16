@@ -1,4 +1,10 @@
 #!/usr/bin/env bun
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {type ResourceLeaseControl} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {captureOwnedCommandResultV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import {runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import {configuredExactCargoLawPolicyV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
@@ -9,7 +15,7 @@ import { cmdBudgetMs } from "../../../../🧰️framework/🔨️modules/🏃️
 import { readProcessOwnerContextV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts";
 import { getWorkspaceRoot, packageTestBudgetMs, runRepositoryTestCommand } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { finishLocalHub, startLocalHub, waitForReadiness } from "../../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { withBuiltLocalHubHostV1,withLocalHubHostTaskV1,startLocalHub,waitForReadiness } from "../../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { runHubCollaborationCli } from "./🤝️collaboration/🟦️.ts";
 import { nativeRuntimeDirectory } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🟦️.ts";
 
@@ -23,41 +29,13 @@ type LiveHubPrincipal = { readonly prefix: string; readonly email: string; reado
  * (every principal's `<prefix>_EMAIL`/`_PASSWORD` must then be set too), or a fresh hub booted from the
  * staged `os-hub:build-dev` binary with each principal provisioned through `os-hub credential set`,
  * torn down and its data root deleted afterwards (the `os-hub:live-sign-in-check` recipe). */
-async function withLiveHub(principals: readonly LiveHubPrincipal[], body: (env: Record<string, string>) => Promise<void>): Promise<string> {
-  const hubRustRoot = join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust");
-  const password = "correct horse battery staple";
-  const env: Record<string, string> = {};
-  let hub: Awaited<ReturnType<typeof startLocalHub>> | undefined, dataDir: string | undefined;
-  if (process.env.SEMIO_HUB_LIVE_ORIGIN) {
-    env.SEMIO_HUB_LIVE_ORIGIN = process.env.SEMIO_HUB_LIVE_ORIGIN;
-    for (const { prefix } of principals) {
-      for (const key of [`${prefix}_EMAIL`, `${prefix}_PASSWORD`]) {
-        if (!process.env[key]) throw new Error(`SEMIO_HUB_LIVE_ORIGIN needs ${key}`);
-        env[key] = process.env[key]!;
-      }
-    }
-  } else {
-    const binaryPath = join(hubRustRoot, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-    if (!existsSync(binaryPath)) throw new Error(`stage the hub first (\`bun repo run os-hub:build-dev\`): ${binaryPath} does not exist`);
-    dataDir = mkdtempSync(join(process.platform === "darwin" ? "/private/tmp" : tmpdir(), "wgpu-hub-live-"));
-    for (const { prefix, email, displayName } of principals) {
-      const provisioned = spawnSync(binaryPath, ["credential", "set", "--email", email, "--display-name", displayName], { env: { ...process.env, OS_HUB_DATA: dataDir }, input: password, encoding: "utf8" });
-      if (provisioned.status !== 0) throw new Error(`credential set failed: ${provisioned.stderr}`);
-      env[`${prefix}_EMAIL`] = email;
-      env[`${prefix}_PASSWORD`] = password;
-    }
-    process.env.OS_HUB_CREDENTIAL_SIGN_IN = "1";
-    hub = await startLocalHub(repoRoot, hubRustRoot, [{ profileId: "developer", subject: "local-developer-01", displayName: "Local Developer", allowedClientClasses: ["native", "mcp"] }], { dataDir, binaryPath, capture: true });
-    await waitForReadiness(hub, true);
-    env.SEMIO_HUB_LIVE_ORIGIN = `http://127.0.0.1:${hub.port}`;
-  }
-  try {
-    await body(env);
-  } finally {
-    if (hub) await finishLocalHub(hub);
-    if (dataDir) rmSync(dataDir, { recursive: true, force: true });
-  }
-  return env.SEMIO_HUB_LIVE_ORIGIN;
+async function withLiveHub(invocation:ScriptInvocation,phase:ResourceLeaseControl,principals:readonly LiveHubPrincipal[],body:(env:Record<string,string>,control:ResourceLeaseControl)=>Promise<void>):Promise<string>{
+ requireIssuedResourceControlInvocationV1(phase,invocation);const password="correct horse battery staple",env:Record<string,string>={};
+ if(process.env.SEMIO_HUB_LIVE_ORIGIN){env.SEMIO_HUB_LIVE_ORIGIN=process.env.SEMIO_HUB_LIVE_ORIGIN;for(const{prefix}of principals)for(const key of[`${prefix}_EMAIL`,`${prefix}_PASSWORD`]){const value=process.env[key];if(!value)throw Error(`SEMIO_HUB_LIVE_ORIGIN needs ${key}`);env[key]=value;}await body(env,phase);return env.SEMIO_HUB_LIVE_ORIGIN;}
+ return withBuiltLocalHubHostV1(invocation,phase,(host,context)=>withLocalHubHostTaskV1(host,context.control,async actual=>{
+  for(const{prefix,email,displayName}of principals){const result=await captureOwnedCommandResultV1(actual.binaryPath,["credential","set","--email",email,"--display-name",displayName],actual.workspace,{control:actual.control,env:{...actual.environment,OS_HUB_DATA:actual.dataRoot},input:{version:1,text:password},output:{maximumBytes:65536,maximumLines:512}});if(result.status!==0||result.signal!==null)throw Error("Credential operator child failed: "+result.stderr);env[`${prefix}_EMAIL`]=email;env[`${prefix}_PASSWORD`]=password;}
+  const hub=await startLocalHub(host,[{profileId:"developer",subject:"local-developer-01",displayName:"Local Developer",allowedClientClasses:["native","mcp"]}],{capture:true,credentialSignIn:true});await waitForReadiness(hub,true);env.SEMIO_HUB_LIVE_ORIGIN=`http://127.0.0.1:${hub.port}`;await body(env,actual.control);return env.SEMIO_HUB_LIVE_ORIGIN;
+ }));
 }
 
 /** 📦️ Stages a completed plugin release component as the native runtime (the `native-entrypoint` publish verb, no
@@ -71,13 +49,8 @@ function stageNativeRuntime(variant: string, profile: "prototype" | "release"): 
 }
 
 /** 🧪️ Runs one ignored live law of this crate, exactly, under the crate's exhaustive budget. */
-async function runLiveLaw(law: string, env: Record<string, string>): Promise<void> {
-  await runRepositoryTestCommand("cargo", ["test", "-p", crateName, "--lib", "--", law, "--exact", "--ignored", "--show-output"], {
-    cwd: repoRoot,
-    env: { ...process.env, ...env },
-    budgetMs: packageTestBudgetMs([crateName], "exhaustive"),
-    throwOnFailure: true,
-  });
+async function runLiveLaw(invocation:ScriptInvocation,control:ResourceLeaseControl,law:string,env:Record<string,string>):Promise<void>{
+ await runRepositoryExactCargoLaws({invocation,control,preparation:configuredRepositoryCargoPreparationPolicyV1(),policy:configuredExactCargoLawPolicyV1(),cwd:repoRoot,env:{...process.env,...env},groups:[{package:crateName,target:{kind:"lib"},laws:[law]}]});
 }
 
 /** 🤝️ Drives the wgpu shell's whole hub lane against a live hub through its own native
@@ -87,7 +60,7 @@ class HubLiveJourneyCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("journey-check accepts no arguments");
     const law = "shell::hub_projection_workspace_tests::a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace";
-    const origin = await withLiveHub([{ prefix: "SEMIO_HUB_LIVE", email: "ada@example.org", displayName: "Ada Lovelace" }], env => runLiveLaw(law, env));
+    const origin = await withLiveHub(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"renderer:live-hub",0),[{ prefix: "SEMIO_HUB_LIVE", email: "ada@example.org", displayName: "Ada Lovelace" }], (env,control) => runLiveLaw(this.invocation,control,law,env));
     console.log(`journey-check: origin=${origin} law=1 clean`);
   }
 }
@@ -100,7 +73,7 @@ class HubLiveCreationCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("creation-check accepts no arguments");
     const law = "shell::hub_projection_workspace_tests::a_live_hub_artifact_is_created_through_the_wgpu_creation_door";
-    const origin = await withLiveHub([{ prefix: "SEMIO_HUB_LIVE", email: "ada@example.org", displayName: "Ada Lovelace" }], env => runLiveLaw(law, env));
+    const origin = await withLiveHub(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"renderer:live-hub",0),[{ prefix: "SEMIO_HUB_LIVE", email: "ada@example.org", displayName: "Ada Lovelace" }], (env,control) => runLiveLaw(this.invocation,control,law,env));
     console.log(`creation-check: origin=${origin} law=1 clean`);
   }
 }
@@ -117,12 +90,12 @@ class HubLiveCollaborationCheckScript extends BundleScript {
     if (segments.length) throw new Error("collaboration-check accepts no arguments");
     const variant = "block2d", modules = stageNativeRuntime(variant, "release");
     const law = "shell::hub_projection_workspace_tests::two_live_wgpu_shells_collaborate_on_one_hub_document";
-    const origin = await withLiveHub(
+    const origin = await withLiveHub(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"renderer:live-hub",0),
       [
         { prefix: "SEMIO_HUB_LIVE", email: "ada@example.org", displayName: "Ada Lovelace" },
         { prefix: "SEMIO_HUB_LIVE_PEER", email: "bo@example.org", displayName: "Bo Peep" },
       ],
-      env => runLiveLaw(law, { ...env, SEMIO_PLUGIN: variant, SEMIO_PLUGIN_MODULES: modules }),
+      (env,control) => runLiveLaw(this.invocation,control,law,{ ...env, SEMIO_PLUGIN: variant, SEMIO_PLUGIN_MODULES: modules }),
     );
     console.log(`collaboration-check: origin=${origin} law=1 clean`);
   }
@@ -155,7 +128,7 @@ class NativeGuestJourneyCheckScript extends BundleScript {
       "a_native_guest_redoes_its_undone_edit_without_a_hub",
       "a_native_guest_copies_and_pastes_its_selection_without_a_hub",
     ];
-    for (const law of laws) await runLiveLaw(`shell::hub_projection_workspace_tests::${law}`, { SEMIO_PLUGIN: variant, SEMIO_PLUGIN_MODULES: modules });
+    for (const law of laws) await runLiveLaw(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"renderer:live-law",0),`shell::hub_projection_workspace_tests::${law}`, { SEMIO_PLUGIN: variant, SEMIO_PLUGIN_MODULES: modules });
     console.log(`native-guest-journey-check: variant=${variant} profile=${profile} laws=${laws.length} clean`);
   }
 }

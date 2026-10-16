@@ -1,5 +1,5 @@
 /** 🔑️ The Shell's private session-broker port: acknowledged reads, the closed proof, and serial refresh of session authority through the actual worker broker. */
-import { semioSchemaAjvV1 } from "../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { stubFetch } from "../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import type { BackboneWorkerTestDependencies } from "../../../🏪️store/👷️worker/🟦️.ts";
 import { workerLawFakesV1, WORKER_LAW_CAPABILITY, WORKER_LAW_CAPABILITY_TWO } from "../../../../🧪️tests/🧰️worker-law-fakes/🟦️.ts";
@@ -15,7 +15,7 @@ export async function registerSessionBrokerPortTests(vitest: Vitest, dependencie
     resetWorkerLaw();
     const { readFileSync } = await import("node:fs");
     const { default: equal } = await import("fast-deep-equal");
-    const { HubSessionPortClientV1 } = await import("../../🪪️session-refresh/🪪️session-port/🟦️.ts");
+    const { HubSessionPortClientV1 } = await import("@semio-tech/framework/directory/session-refresh/session-port");
     const directory = "./🔨️modules/📇️directory/";
     const corpus = JSON.parse(readFileSync(new URL(directory + "🧪️tests/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL(directory + "🧬️schema/🪪️session-authority-v1/🧬️.schema.json", source.url), "utf8"));
@@ -58,7 +58,7 @@ export async function registerSessionBrokerPortTests(vitest: Vitest, dependencie
     const { default: equal } = await import("fast-deep-equal");
     const directory = "./🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🪪️session-port/";
     const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
-    const { HubSessionPortClientV1, HUB_SESSION_PORT_CLIENT_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_INITIALIZATION_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_MAX_PENDING } = await import("../../🪪️session-refresh/🪪️session-port/🟦️.ts");
+    const { HubSessionPortClientV1, HUB_SESSION_PORT_CLIENT_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_INITIALIZATION_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_MAX_PENDING } = await import("@semio-tech/framework/directory/session-refresh/session-port");
     vitest.expect(equal([HUB_SESSION_PORT_CLIENT_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_MAX_PENDING], [fixture.timeoutMs, fixture.maximumPending])).toBe(true);
     vitest.expect(HUB_SESSION_PORT_CLIENT_INITIALIZATION_TIMEOUT_MS).toBe(fixture.initializationTimeoutMs);
     vitest.expect(fixture.initializationTimeoutMs + fixture.timeoutMs * 2).toBeLessThan(fixture.bootstrapTimeoutMs);
@@ -119,7 +119,7 @@ export async function registerSessionBrokerPortTests(vitest: Vitest, dependencie
     const { default: equal } = await import("fast-deep-equal");
     const directory = "./🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🪪️session-port/";
     const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
-    const { HubSessionPortClientV1 } = await import("../../🪪️session-refresh/🪪️session-port/🟦️.ts");
+    const { HubSessionPortClientV1 } = await import("@semio-tech/framework/directory/session-refresh/session-port");
     const originalFetch = globalThis.fetch;
     try {
       for (const row of fixture.close.cases) {
@@ -171,7 +171,7 @@ export async function registerSessionBrokerPortTests(vitest: Vitest, dependencie
     const { readFileSync } = await import("node:fs");
     const { default: equal } = await import("fast-deep-equal");
     const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🪪️session-refresh/🔣️.json", source.url), "utf8"));
-    const { directorySessionAuthorityIsCurrentV1, directorySessionAuthorityTextV1, directorySessionRefreshRetryDelayMsV1, startDirectorySessionRefreshV1, DIRECTORY_SESSION_REFRESH_INTERVAL_MS, DIRECTORY_SESSION_AUTHORITY_TEXT_V1 } = await import("../../🪪️session-refresh/🟦️.ts");
+    const { directorySessionAuthorityIsCurrentV1, directorySessionAuthorityTextV1, directorySessionRefreshRetryDelayMsV1, startDirectorySessionRefreshV1, DIRECTORY_SESSION_REFRESH_INTERVAL_MS, DIRECTORY_SESSION_AUTHORITY_TEXT_V1 } = await import("@semio-tech/framework/directory/session-refresh");
     const corpus = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
     const first = corpus.rows[0].value;
     const second = corpus.rows[1].value;

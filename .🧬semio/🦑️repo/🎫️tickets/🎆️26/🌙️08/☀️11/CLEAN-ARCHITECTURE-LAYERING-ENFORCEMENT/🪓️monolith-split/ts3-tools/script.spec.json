@@ -1,0 +1,155 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+ "label": "os-rust-script",
+ "childRoot": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands",
+ "children": [
+  {
+   "folder": "🧱️script-bases",
+   "doc": "/** 🧱️ Script bases of the os kernel package: the schema check shape, the exact cargo stage environments and the check, test and native test script classes the commands extend.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "names": [
+    "SchemaCheck",
+    "exactCargoStageEnvironments",
+    "CheckScript",
+    "TestScript",
+    "NativeTestScript"
+   ]
+  },
+  {
+   "folder": "🗄️database-checks",
+   "doc": "/** 🗄️ Database commands: paged history stack, history completion, catalog read ownership, capability completion and shutdown checks.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "names": [
+    "PagedHistoryStackScript",
+    "DatabaseHistoryCompletionCheckScript",
+    "DatabaseCatalogReadOwnershipCheckScript",
+    "DatabaseCapabilityCompletionCheckScript",
+    "DatabaseShutdownCheckScript"
+   ]
+  },
+  {
+   "folder": "✍️wal-checks",
+   "doc": "/** ✍️ Write-ahead log commands: writer authority and fence, postgres round trips, committed transactions and compaction, recovery, capacity and segment state.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "names": [
+    "WalWriterAuthorityCheckScript",
+    "WAL_WRITER_FENCE_LANES",
+    "WalWriterFenceLiveScript",
+    "PostgresRoundTripsLiveScript",
+    "WalCommittedTransactionsCheckScript",
+    "WalCommittedCompactionCheckScript",
+    "WalRecoveryCheckScript",
+    "WalCapacityCheckScript",
+    "walSegmentStateOracle",
+    "WalSegmentStateCheckScript"
+   ]
+  },
+  {
+   "folder": "📄️document-checks",
+   "doc": "/** 📄️ Document commands: mount single flight, durable group decision and journal, document opening attempts, reopen storms and the document http check.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "names": [
+    "DocumentMountSingleFlightCheckScript",
+    "DurableOwnedGroupDecisionCheckScript",
+    "DurableGroupJournalCheckScript",
+    "DocumentOpeningAttemptNativeCheckScript",
+    "REOPEN_STORM_LAWS",
+    "ReopenStormCheckScript",
+    "DocumentHttpCheckScript"
+   ]
+  },
+  {
+   "folder": "🧬️retained-clone-check",
+   "doc": "/** 🧬️ Retained clone command: the fixture shapes of retained clone choices, grants, ordered map paging and paged copies, and the retained clone check.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "names": [
+    "RetainedCloneChoiceV1",
+    "RetainedCloneGrantV1",
+    "RetainedCloneNestedFixtureV1",
+    "RetainedOrderedMapExpectationV1",
+    "RetainedOrderedMapOperationV1",
+    "RetainedOrderedMapPagingFixtureV1",
+    "RetainedClonePreparationCaseV1",
+    "RetainedClonePreparationFixtureV1",
+    "RetainedPagedListCopyFixtureV1",
+    "RetainedPagedOwnerFixtureV1",
+    "RetainedCloneCheckScript"
+   ]
+  },
+  {
+   "folder": "📇️directory-checks",
+   "doc": "/** 📇️ Directory commands: descriptor digest, checkpoint pair, runtime source, session authority, event page contract, client and bootstrap, and the lease fixture.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "names": [
+    "DirectoryDescriptorDigestSourceScript",
+    "DirectoryDescriptorDigestNativeScript",
+    "DirectoryCheckpointPairSourceScript",
+    "DirectoryCheckpointPairNativeScript",
+    "DirectoryRuntimeSourceScript",
+    "directorySessionAuthorityOracle",
+    "DirectorySessionAuthorityCheckScript",
+    "directoryEventPageContractOracle",
+    "directoryEventPageClientOracle",
+    "DirectoryEventPageContractCheckScript",
+    "DirectoryEventPageClientCheckScript",
+    "directoryEventPageBootstrapOracle",
+    "DirectoryEventPageBootstrapCheckScript",
+    "DirectoryLeaseFixtureScript"
+   ]
+  },
+  {
+   "folder": "📸️snapshot-checks",
+   "doc": "/** 📸️ Snapshot commands: route admission, codec receiving, native and sqlite admission, typed snapshot files and space history.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "names": [
+    "SnapshotRouteAdmissionScript",
+    "SnapshotCodecReceivingScript",
+    "SnapshotNativeAdmissionTestScript",
+    "SnapshotSqliteAdmissionScript",
+    "TypedSnapshotFileSourceScript",
+    "TypedSnapshotFileNativeScript",
+    "SpaceHistorySqliteNativeTestScript",
+    "SpaceHistorySqliteSourceTestScript",
+    "SpaceHistoryValidationScript"
+   ]
+  },
+  {
+   "folder": "👥️member-dialect-checks",
+   "doc": "/** 👥️ Member commands: codec send, group visibility, backbone detach, member dialect, input census and group publication checks.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "names": [
+    "CodecSendSourceScript",
+    "GroupVisibilitySourceScript",
+    "BackboneDetachSourceScript",
+    "MemberDialectSourceScript",
+    "MemberInputCensusSourceScript",
+    "MemberGroupPublicationSourceScript",
+    "MemberDialectCheckScript"
+   ]
+  },
+  {
+   "folder": "🧪️source-and-native-tests",
+   "doc": "/** 🧪️ Source and native test commands: wire, payload, transport, list record, pack schema, retirement, key index, assembly lifetime, jco adapter, artifact kind, returned reads, edit metadata, actor identity, preparation control, config paging, cleanup context, crate boundaries and the DSL architecture proof.\n *\n * @see ../../📜️script.ts — the package script that registers the commands of this module\n */",
+   "names": [
+    "ScalarWireSourceScript",
+    "CanonicalArchitectureScript",
+    "CommandTransportSourceTestScript",
+    "CommandTransportNativeTestScript",
+    "ListRecordNativeTestScript",
+    "ComposedPackSchemaTestScript",
+    "IeeePayloadNativeTestScript",
+    "IeeePayloadSourceTestScript",
+    "IntrinsicRetirementNativeTestScript",
+    "BorrowedKeyIndexNativeTestScript",
+    "AssemblyLifetimeNativeTestScript",
+    "GenerateJcoPackageAdapterScript",
+    "PreviewGeneratedScript",
+    "CheckJcoPackageAdapterScript",
+    "CommandIngressConsumerScript",
+    "DslArchitectureProofScript",
+    "ArtifactKindNativeScript",
+    "ReturnedReadCustodyScript",
+    "ReturnedReadFactoryMountScript",
+    "NativeEditMetadataSourceScript",
+    "SyncActorIdentitySourceScript",
+    "CanonicalPreparationControlSourceScript",
+    "ConfigPagedSourceScript",
+    "OriginalCleanupContextNativeScript",
+    "CrateBoundariesSourceScript"
+   ]
+  }
+ ],
+ "sha1": "c2c3ec919e0c9db035946fff275ad51d04634819"
+}

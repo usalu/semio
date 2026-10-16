@@ -1,9 +1,9 @@
 import{awaitPrintWorkerV1,type PrintWorkerPortV1}from"../../../📦️artifacts/🧵️worker/🟦️.ts";
 import{withArtifactDestinationTaskV1,type ArtifactDestinationV1}from"./../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
 import{Worker}from"node:worker_threads";
-import{validateJsonSchemaSubset}from"./../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,type ScriptInvocation}from"./../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"./../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 /** 🪟️ Describes one finite crop in PDF points. */
 export interface PrintPanelEntryV1{readonly id:string;readonly page:number;readonly xPt:number;readonly yPt:number;readonly wPt:number;readonly hPt:number}

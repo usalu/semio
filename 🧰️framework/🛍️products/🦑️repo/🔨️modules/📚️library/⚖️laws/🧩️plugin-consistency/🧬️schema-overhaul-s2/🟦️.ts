@@ -1,4 +1,4 @@
-/** 🧭️ Wave 4 plugin consistency policy: sniff reality and the schema overhaul S2 rules.
+/** 🧬️ Wave 4 plugin consistency policy: sniff reality and the schema overhaul S2 rules.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { canonicalPrimaryFilenameForKind, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";

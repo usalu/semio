@@ -49,5 +49,5 @@ export const imperativeImperativeSnapshotTextGuardConstant = <T extends string |
 //#endregion 🚪️Parsers
 
 export function parseProcedureSnapshotText(value: unknown, at = "$"): ProcedureSnapshotText {
-  return imperativeImperativeSnapshotTextGuardObject(value, `${at}`);
+  return imperativeImperativeSnapshotTextGuardString(value, `${at}`);
 }

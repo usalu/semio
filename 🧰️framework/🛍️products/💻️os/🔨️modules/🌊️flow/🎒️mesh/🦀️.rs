@@ -113,7 +113,7 @@ pub fn encode_mesh_pack(mesh: &semio_framework::MeshData) -> Result<Vec<u8>, Str
         while !cursor.step(&mesh.attributes,&mesh.materials,&mesh.textures,Some(&mesh.component_references),None,None,&mut text)? {}text.push('}');
         record.fields.insert(MESH_PACK_FIELD_METADATA,semio_framework_dsl_record::FieldValue::Bytes64(text.into_bytes()));
     }
-    crate::os_pack::encode_record_body(&mesh_pack_spec(), &record, &crate::os_pack::EncodeOptions::default()).map_err(|error| error.to_string())
+    crate::os_pack::record::encode_record_body(&mesh_pack_spec(), &record, &crate::os_pack::record::EncodeOptions::default()).map_err(|error| error.to_string())
 }
 
 /// ⏳️ Retained numeric preview record encoder using the mesh record field identities.
@@ -199,7 +199,7 @@ impl MeshPackEncodingJob {
 /// 🎒️ Decodes an [`encode_mesh_pack`] body back into `MeshData` — the exact inverse, byte-for-byte.
 pub fn decode_mesh_pack(bytes: &[u8]) -> Result<semio_framework::MeshData, String> {
     
-    let record = crate::os_pack::decode_record_body_exact(bytes, &mesh_pack_spec(), &crate::os_pack::DecodeOptions::default()).map_err(|error| error.to_string())?;
+    let record = crate::os_pack::record::decode_record_body_exact(bytes, &mesh_pack_spec(), &crate::os_pack::record::DecodeOptions::default()).map_err(|error| error.to_string())?;
     let blob = |id: u16| match record.get(id) {
         Some(semio_framework_dsl_record::FieldValue::Bytes64(bytes)) => bytes.as_slice(),
         _ => &[][..],

@@ -28,7 +28,7 @@ isProject: false
 ## Confirmed causes
 
 - [`VcsArtifactApp::record_command`](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs) records commands in the plugin, but `finish_recorded` deliberately excludes `ActionKind::View` from live history refreshes. Consecutive view and shell commands are also folded, and the panel renders only the newest 300 rows.
-- The channel drops `InvocationResult.ui_scope`; [`resolveUiDirtyScope`](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts) therefore upgrades every action to a full refresh.
+- The channel drops `InvocationResult.ui_scope`; [`resolveUiDirtyScope`](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts) therefore upgrades every action to a full refresh.
 - `handleAction`, `refreshUi`, and generator `flowEvalTick` calls share one serialized WASM worker. History currently requires a second queued render call, so generator evaluation can delay it and a failing window render can fail the whole refresh.
 - The active [first-class interaction plan](/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM/📋️master.md) currently says `ActionKind::Interaction` should skip history; this conflicts with the new requirement and must be corrected.
 

@@ -2,8 +2,8 @@ import { mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS, isTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import type { ProcessOwnerContextV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts";
-import type { VitestPolicyV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
+import type { ProcessOwnerContextV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/📋️contract/🟦️.ts";
+import type { VitestPolicyV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/📋️contract/🟦️.ts";
 import { repoCacheDirectory } from "../../../⚡️caching/🟦️.ts";
 import { getRepoMetaDir } from "../../../🗂️workspaces/🧬️metadata/🟦️.ts";
 

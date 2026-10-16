@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-artifact-procedural-3d-geometry-phased-job-support"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Fixture-driven support of the phased B-Rep categories: decodes cases into widget inputs, drives started jobs at several fuel grants and checks shapes against analytic expectations; the catalogue is passed in by the caller"
+
+[package.metadata.semio]
+role = "test"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-3d-brep-analysis = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-3d-brep-representation = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-oracle-support = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+serde_json = { workspace = true }

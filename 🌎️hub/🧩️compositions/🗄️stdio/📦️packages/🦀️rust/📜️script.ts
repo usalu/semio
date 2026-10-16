@@ -1,12 +1,17 @@
 #!/usr/bin/env bun
+import{runStdioOwnedCommandV1}from"./📥️execution/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,type ScriptInvocation}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{buildRepositoryCargoArtifacts}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import{repositoryCargoNetworkV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import{withCapturedCargoArtifactsTaskV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {completeCargoPreparationObservationV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { terminateOwnedChildTree } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🗄️ `@semio-tech/stdio-plugin` router: `bun ./📜️script.ts test`. */
-import { spawn } from "node:child_process";
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 import { createHash } from "node:crypto";
@@ -19,9 +24,6 @@ import { devToolingEnv, resolveWorkspaceBin, runCmd, runRepositoryExactCargoLaws
 import { runRepositoryCargoTests, runRepositoryTestCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {prepareCargoWorkspaceInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
-import {repositoryCargoPreparationStorageV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import { acquireCargoBuildLeaseV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
@@ -65,31 +67,9 @@ function assertControlled(control: CatalogControl): void {
   if (control.remainingMs() <= 0) throw new Error("stdio catalog-root exceeded its configured deadline");
 }
 
-async function runControlled(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: CatalogControl): Promise<void> {
-  assertControlled(control);
-  if (command === "cargo") prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(cwd),cwd,args,cwd,process.env);
-  const child = spawn(command, args, { cwd, env, stdio: "inherit", windowsHide: true });
-  const drained = new Promise<void>((resolve) => child.once("close", () => resolve()));
-  let settled = false;
-  let failure: Error | undefined;
-  child.once("error", (error) => {
-    failure = error;
-    settled = true;
-  });
-  child.once("close", (code, signal) => {
-    if (code !== 0) failure = new Error(`${command} ${args.join(" ")} exited with ${signal ?? code}`);
-    settled = true;
-  });
-  while (!settled) {
-    await new Promise((wake) => setTimeout(wake, Math.min(100, Math.max(1, control.remainingMs()))));
-    if (control.cancelled() || control.remainingMs() <= 0) {
-      terminateOwnedChildTree(child);
-      await drained;
-      throw new Error(control.cancelled() ? "stdio catalog-root cancelled" : "stdio catalog-root exceeded its configured deadline");
-    }
-  }
-  if (failure) throw failure;
-}
+interface CatalogExecution{readonly invocation:ScriptInvocation;readonly phase:ResourceLeaseControl}
+function catalogControlV1(execution:CatalogExecution):CatalogControl{requireIssuedResourceControlInvocationV1(execution.phase,execution.invocation);return{cancelled:()=>execution.phase.signal.aborted,remainingMs:()=>checkResourceLeaseControl(execution.phase)??Number.MAX_SAFE_INTEGER};}
+async function runControlled(execution:CatalogExecution,command:string,args:readonly string[],cwd:string,env:NodeJS.ProcessEnv,control:CatalogControl):Promise<void>{assertControlled(control);await runStdioOwnedCommandV1(execution.invocation,execution.phase,command,args,cwd,env);assertControlled(control);}
 
 function assertRegularBounded(path: string, label: string, maxBytes = ARTIFACT_MAX_BYTES): number {
   const info = lstatSync(path);
@@ -105,7 +85,8 @@ function assertContainedBounded(root: string, path: string, label: string, maxBy
 }
 
 /** 🗜️ Produces a cancellable release component before applying the distribution admission limit. */
-async function prepareReleaseComponent(input: string, output: string, repoRoot: string, env: NodeJS.ProcessEnv, control: CatalogControl): Promise<void> {
+async function prepareReleaseComponent(input: string, output: string, repoRoot: string, env: NodeJS.ProcessEnv, control: CatalogControl, execution:CatalogExecution): Promise<void> {
+  requireIssuedResourceControlInvocationV1(execution.phase,execution.invocation);
   assertControlled(control);
   const inputBytes = assertRegularBounded(input, "compiler component", SHIPPED_COMPONENT_MAX_BYTES);
   if (resolve(input) === resolve(output)) throw new Error("release output cannot replace its compiler input");
@@ -116,7 +97,7 @@ async function prepareReleaseComponent(input: string, output: string, repoRoot: 
   const stage = mkdtempSync(join(dirname(output), ".stdio-release-"));
   const stagedOutput = join(stage, "component.wasm");
   try {
-    await runControlled("node", [jco, "opt", input, "-o", stagedOutput, "--", "-Oz", "--low-memory-unused", "--enable-bulk-memory", "--enable-nontrapping-float-to-int", "--enable-sign-ext", "--strip-debug"], repoRoot, env, control);
+    await runControlled(execution,"node", [jco, "opt", input, "-o", stagedOutput, "--", "-Oz", "--low-memory-unused", "--enable-bulk-memory", "--enable-nontrapping-float-to-int", "--enable-sign-ext", "--strip-debug"], repoRoot, env, control);
     assertControlled(control);
     const outputBytes = assertRegularBounded(stagedOutput, "release component");
     renameSync(stagedOutput, output);
@@ -255,7 +236,7 @@ function readWasmU32(bytes: Uint8Array, offset: number): { readonly value: numbe
   let shift = 0;
   for (let index = 0; index < 5; index += 1) {
     if (offset >= bytes.byteLength) throw new Error("truncated wasm u32");
-    const byte = bytes[offset++];
+    const byte = bytes[offset++];if(byte===undefined)throw Error("Truncated component integer");
     value += (byte & 0x7f) * 2 ** shift;
     if ((byte & 0x80) === 0) {
       if (value > 0xffff_ffff) throw new Error("wasm u32 overflow");
@@ -314,7 +295,8 @@ async function verifyIndependentOracles(rawPath: string, descriptorPackPath: str
   return { rawSha256, descriptorSha256, receipt };
 }
 
-async function runCatalogRootContractTests(root: string, repoRoot: string): Promise<void> {
+async function runCatalogRootContractTests(root: string, repoRoot: string, execution:CatalogExecution): Promise<void> {
+  requireIssuedResourceControlInvocationV1(execution.phase,execution.invocation);
   const fixtureRoot = join(root, "../..", "🧪️tests/🧫️fixtures", "🌳️catalog-root");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
     packageId: string;
@@ -337,7 +319,7 @@ async function runCatalogRootContractTests(root: string, repoRoot: string): Prom
   const testBase = process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : tmpdir();
   mkdirSync(testBase, { recursive: true });
   const scratch = mkdtempSync(join(testBase, "stdio-catalog-root-contract-"));
-  const active: CatalogControl = { cancelled: () => false, remainingMs: () => CATALOG_DEADLINE_MS };
+  const active=catalogControlV1(execution);
   try {
     mkdirSync(join(scratch, ".cargo"));
     const config = '[build]\ntarget-dir = "shared-target"\nbuild-dir = "shared-build"\n';
@@ -356,21 +338,21 @@ async function runCatalogRootContractTests(root: string, repoRoot: string): Prom
       const output = join(scratch, `${vector.name}.release.wasm`);
       const original = await jco.parse(vector.wat);
       writeFileSync(input, original);
-      await prepareReleaseComponent(input, output, repoRoot, devToolingEnv({}), active);
+      await prepareReleaseComponent(input, output, repoRoot, devToolingEnv({}), active,execution);
       const optimized = readFileSync(output);
       if (!readFileSync(input).equals(Buffer.from(original))) throw new Error(`${vector.name}: optimization mutated its compiler input`);
       if (await jco.componentWit(original) !== await jco.componentWit(optimized)) throw new Error(`${vector.name}: optimization changed the component interface`);
       const modules = (await jco.metadataShow(optimized)).filter((entry) => entry.metaType.tag === "module");
       if (modules.length !== 1) throw new Error(`${vector.name}: expected one optimized core module`);
-      const core = optimized.subarray(modules[0].range[0], modules[0].range[1]);
+      const module=modules[0];assert(module,"Actual optimized component module required");const core = optimized.subarray(module.range[0],module.range[1]);
       if (assertComponentizableCore(core).definedFunctions !== vector.definedFunctions) throw new Error(`${vector.name}: unused functions survived release optimization`);
       const instance = new WebAssembly.Instance(new WebAssembly.Module(core));
       if ((instance.exports[vector.export] as () => number)() !== vector.result) throw new Error(`${vector.name}: native WebAssembly execution disagrees with the neutral result`);
-      await prepareReleaseComponent(input, output, repoRoot, devToolingEnv({}), active);
+      await prepareReleaseComponent(input, output, repoRoot, devToolingEnv({}), active,execution);
       if (!readFileSync(output).equals(optimized)) throw new Error(`${vector.name}: repeated release optimization changed the output`);
       const cancelledOutput = join(scratch, `${vector.name}.cancelled.wasm`);
       let cancelled = false;
-      try { await prepareReleaseComponent(input, cancelledOutput, repoRoot, devToolingEnv({}), { cancelled: () => true, remainingMs: () => CATALOG_DEADLINE_MS }); } catch { cancelled = true; }
+      try { await prepareReleaseComponent(input, cancelledOutput, repoRoot, devToolingEnv({}), { cancelled: () => true, remainingMs: () => CATALOG_DEADLINE_MS },execution); } catch { cancelled = true; }
       if (!cancelled || existsSync(cancelledOutput)) throw new Error(`${vector.name}: cancellation left a release artifact`);
     }
     for (const vector of fixture.wasmStructures) {
@@ -384,7 +366,7 @@ async function runCatalogRootContractTests(root: string, repoRoot: string): Prom
         const input = join(scratch, `${vector.name}.wasm`);
         const output = join(scratch, `${vector.name}.optimized.wasm`);
         writeFileSync(input, bytes);
-        runCmd(wasmOpt, [input, "-o", output], { cwd: root, budgetMs: 10_000 });
+        await runControlled(execution,wasmOpt,[input,"-o",output],root,devToolingEnv(),active);
         if (!WebAssembly.validate(readFileSync(output))) throw new Error(`${vector.name} Binaryen oracle produced invalid wasm`);
       }
     }
@@ -533,7 +515,7 @@ class FlowRetainedDecodeScript extends BundleScript {
     assert(source.includes("semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures"));
     assert(source.includes("semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"), "retained Flow lifecycle native law is absent");
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: PACKAGE_NAME, target: { kind: "test", name: "flow_retained_decode" }, laws: ["semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures", "semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"] }] });
+    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: PACKAGE_NAME, target: { kind: "test", name: "flow_retained_decode" }, laws: ["semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures", "semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"] }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }
@@ -981,29 +963,22 @@ class CompositionScript extends BundleScript {
     const retained = present.map(owner => owner.identity).sort();
     assert.deepEqual(retained, identities.filter(identity => identity !== "📼️avi").sort(), "Removed-parent snapshot retains every actual sibling owner exactly once");
     const owners = retained.length;
-    const started = Date.now();
-    let interrupted = false, compiled = false, testsCompiled = false;
-    const runtimeLaws: string[] = [];
-    const interrupt = (): void => { interrupted = true; };
-    process.on("SIGINT", interrupt);
-    process.on("SIGTERM", interrupt);
-    const control: CatalogControl = { cancelled: () => interrupted, remainingMs: () => Math.max(0, (buildBudgetMs() || CATALOG_DEADLINE_MS) - (Date.now() - started)) };
+    const phase=scriptCompilerAdmissionControlV1(this.invocation,"stdio:parent-removal",buildBudgetMs()||CATALOG_DEADLINE_MS),execution={invocation:this.invocation,phase},control=catalogControlV1(execution);
+    let compiled=false,testsCompiled=false;const runtimeLaws:string[]=[];
     const env = devToolingEnv({ SEMIO_WORKSPACE_ROOT: snapshot, CARGO_TARGET_DIR: join(snapshot, "target"), CARGO_BUILD_BUILD_DIR: join(snapshot, "target", "intermediate") });
     try {
-      await runControlled("cargo", [tests ? "test" : "check", "--offline", "--message-format=json-render-diagnostics", "--manifest-path", manifest, "-p", PACKAGE_NAME, ...(tests ? ["--tests", "--no-run"] : ["--lib"])], snapshot, env, control);
+      await runControlled(execution,"cargo", [tests ? "test" : "check", "--offline", "--message-format=json-render-diagnostics", "--manifest-path", manifest, "-p", PACKAGE_NAME, ...(tests ? ["--tests", "--no-run"] : ["--lib"])], snapshot, env, control);
       compiled = true;
       if (tests) {
         testsCompiled = true;
         for (const [target, law] of [["native_openable_provider", "artifact_owned_native_codec_receipts_form_one_complete_static_bijection"], ["editor_catalog", "neutral_catalog_requires_each_edit_operation_once"]]) {
-          await runControlled("cargo", ["test", "--offline", "--manifest-path", manifest, "-p", PACKAGE_NAME, "--test", target!, law!, "--", "--exact", "--nocapture"], snapshot, env, control);
+          await runControlled(execution,"cargo", ["test", "--offline", "--manifest-path", manifest, "-p", PACKAGE_NAME, "--test", target!, law!, "--", "--exact", "--nocapture"], snapshot, env, control);
           runtimeLaws.push(law!);
         }
       }
       console.log(`stdio parent removal: AVI absent; ${owners} artifact owners retained; default parent compiled`);
     } finally {
       writeFileSync(join(snapshot, tests ? "stdio-parent-removal-test-proof.json" : "stdio-parent-removal-proof.json"), JSON.stringify({ schema: "semio.stdio.parent-removal-proof/v1", absent: artifact, parent: PACKAGE_NAME, defaultFeatures: true, retainedOwnerIdentities: retained, compiled, testsCompiled, runtimeLaws }, null, 2) + "\n");
-      process.off("SIGINT", interrupt);
-      process.off("SIGTERM", interrupt);
     }
   }
 }
@@ -1013,7 +988,7 @@ class TestScript extends BundleScript {
     const { rest } = resolveTestLevel(segments, "long");
     await testEditorCatalogContract(this.root);
     if (rest[0] === "editor-catalog-contract") return;
-    await runCatalogRootContractTests(this.root, this.repoRoot);
+    await runCatalogRootContractTests(this.root,this.repoRoot,{invocation:this.invocation,phase:scriptCompilerAdmissionControlV1(this.invocation,"stdio:catalog-contract",buildBudgetMs()||CATALOG_DEADLINE_MS)});
     if (rest[0] === "catalog-root-contract") return;
     await runRepositoryCargoTests([PACKAGE_NAME], this.repoRoot, this.invocation, rest);
   }
@@ -1030,7 +1005,7 @@ class EditorComponentCheckScript extends BundleScript {
     if (segments.length > 1 || !isAbsolute(outputRoot)) throw new Error("editor-component-check accepts one absolute output directory");
     mkdirSync(outputRoot, { recursive: true });
     const admission=scriptCompilerAdmissionControlV1(this.invocation,"stdio:editor-components",buildBudgetMs()||CATALOG_DEADLINE_MS);
-    const control:CatalogControl={cancelled:()=>admission.signal.aborted,remainingMs:()=>checkResourceLeaseControl(admission)??0};
+    const execution={invocation:this.invocation,phase:admission},control=catalogControlV1(execution);
     const jco = resolveWorkspaceBin("@bytecodealliance/jco", this.repoRoot);
     if (!jco) throw new Error("missing workspace component tooling");
     const packages = stdioPackageManifests(resolve(this.root, "../.."));
@@ -1039,22 +1014,15 @@ class EditorComponentCheckScript extends BundleScript {
       const lib = manifest.package.name.replaceAll("-", "_"),stage=mkdtempSync(join(outputRoot,".stdio-editor-")),capture=join(stage,"raw.wasm");
       const env=devToolingEnv({CARGO_TARGET_DIR:join(stage,"target"),CARGO_BUILD_BUILD_DIR:cargoBuildDirectory(this.repoRoot)});
       const args = ["build", "--manifest-path", path, "-p", manifest.package.name, "--profile", COMPONENT_PROFILE, "--lib", "--target", "wasm32-wasip2"];
-      let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
       try {
-        try {
-          lease = await acquireCargoBuildLeaseV1({directory:join(this.repoRoot,".cache","framework","leases"),buildDirectory:cargoBuildDirectory(this.repoRoot,env),targetDirectory:cargoTargetDirectory(this.repoRoot,env),args,signal:admission.signal,control:admission});
-          await runRepositoryCommand(this.invocation,"cargo",args,this.repoRoot,"stdio:editor-component-link",{version:1,maximumElapsedMilliseconds:compilerAdmissionBudgetV1(admission),output:{maximumBytes:67108864,maximumLines:65536}},{env});
-          assertControlled(control);
-          await admission.publish({resource:"stdio:editor-component-capture",mode:"shared",elapsedMs:0});
-          await admission.yieldContinuation();
-          copyCatalogArtifact(join(cargoTargetDirectory(this.repoRoot,env),"wasm32-wasip2",COMPONENT_PROFILE,`${lib}.wasm`),capture,"original compiler component",control);
-          assertControlled(control);
-        } finally {lease?.release();lease=undefined;}
+        await buildRepositoryCargoArtifacts(path,args.slice(1).filter((arg,index,array)=>arg!=="--manifest-path"&&array[index-1]!=="--manifest-path"),this.repoRoot,{producer:"artifact",invocation:this.invocation,control:admission,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),deliverables:[".wasm"],consume:token=>withCapturedCargoArtifactsTaskV1(token,async view=>{
+          const wasm=view.files.get(`${lib}.wasm`);if(!wasm)throw Error("Actual selected Stdio compiler wasm required");await view.recheck();copyCatalogArtifact(wasm,capture,"original compiler component",catalogControlV1({invocation:this.invocation,phase:view.control}));await view.recheck();
+        })});
         const out = join(outputRoot, id);
         mkdirSync(out, { recursive: true });
         const release = join(out, `${lib}.wasm`);
-        await prepareReleaseComponent(capture, release, this.repoRoot, env, control);
-        await runControlled("node", [jco, "transpile", release, "-o", out, "--name", lib, "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], this.repoRoot, env, control);
+        await prepareReleaseComponent(capture, release, this.repoRoot, env, control,execution);
+        await runControlled(execution,"node", [jco, "transpile", release, "-o", out, "--name", lib, "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], this.repoRoot, env, control);
         const core = readFileSync(join(out, `${lib}.core.wasm`));
         const structure = assertComponentizableCore(core);
         console.log(`🧩️ ${index + 1}/${packages.length} ${id} component validated: ${JSON.stringify({ ...structure, coreBytes: core.byteLength })}`);
@@ -1114,15 +1082,11 @@ class CatalogRootScript extends BundleScript {
     const cancelFile = option("--cancel-file");
     if (!suppliedRoot) throw new Error("usage: catalog-root --build-root <absolute empty fresh root> [--cancel-file <path>]");
     const buildRoot = requireEmptyFreshRoot(this.repoRoot, suppliedRoot);
-    const started = Date.now();
-    let interrupted = false;
-    const interrupt = (): void => { interrupted = true; };
-    process.on("SIGINT", interrupt);
-    process.on("SIGTERM", interrupt);
-    const control: CatalogControl = {
-      cancelled: () => interrupted || (cancelFile !== undefined && existsSync(resolve(cancelFile))),
-      remainingMs: () => Math.max(0, CATALOG_DEADLINE_MS - (Date.now() - started)),
-    };
+    const admission=scriptCompilerAdmissionControlV1(this.invocation,"stdio:catalog-root",CATALOG_DEADLINE_MS),cancel=new AbortController();
+    const poll=()=>{if(cancelFile!==undefined&&existsSync(resolve(cancelFile)))cancel.abort(Error("stdio catalog-root cancelled"));};poll();
+    const timer=cancelFile===undefined?undefined:setInterval(poll,100);
+    try{return await withRequestedIssuedResourceControlV1(admission,0,async phase=>{
+    const execution={invocation:this.invocation,phase},control=catalogControlV1(execution);
     const workRoot = join(buildRoot, `.stdio-work-${process.pid}`);
     const stageRoot = join(buildRoot, `.stdio-stage-${process.pid}`);
     const rowRoot = join(buildRoot, PLUGIN_ID);
@@ -1142,7 +1106,7 @@ class CatalogRootScript extends BundleScript {
       const jco = resolveWorkspaceBin("@bytecodealliance/jco", this.repoRoot);
       if (!jco) throw new Error("missing @bytecodealliance/jco workspace binary; run bun install");
       const witPath = join(workRoot, "stdio.wit");
-      await runControlled("node", [jco, "wit", deliverable.wasm, "--output", witPath], this.repoRoot, devToolingEnv(), control);
+      await runControlled(execution,"node", [jco, "wit", deliverable.wasm, "--output", witPath], this.repoRoot, devToolingEnv(), control);
       const wit = readFileSync(witPath, "utf8");
       if (!/world\s+actor\s*\{/.test(wit) || !["reactor", "jobs", "checkpoint", "describe"].every((name) => new RegExp(`export\\s+${name}\\s*;`).test(wit))) {
         throw new Error("wasm-tools WIT oracle rejected the required actor exports");
@@ -1158,14 +1122,14 @@ class CatalogRootScript extends BundleScript {
       assertControlled(control);
       renameSync(stageRoot, rowRoot);
       rowPublished = true;
-      await runControlled("bun", ["repo", "run", "@semio-tech/plugin-registry:generate"], this.repoRoot, devToolingEnv(), control);
+      await runControlled(execution,"bun", ["repo", "run", "@semio-tech/plugin-registry:generate"], this.repoRoot, devToolingEnv(), control);
       const audit = auditPluginCatalogSources(this.repoRoot, { cancelled: control.cancelled });
       const stdioIssues = audit.issues.filter((issue) => issue.pluginId === PLUGIN_ID);
       if (stdioIssues.length > 0) throw new Error(`stdio source audit failed: ${stdioIssues.map((issue) => issue.diagnostic).join("; ")}`);
       const source = audit.sources.find(({ entry }) => entry.pluginId === PLUGIN_ID);
       if (!source) throw new Error("stdio strict descriptor source was not discovered");
       if (source.entry.packageName !== COMPONENT_PACKAGE || source.entry.wasmOut !== WASM_OUT) throw new Error("stdio source identity is not bijective with Cargo component identity");
-      await runControlled("bun", ["repo", "run", "@semio-tech/plugin-registry:check-generated"], this.repoRoot, devToolingEnv(), control);
+      await runControlled(execution,"bun", ["repo", "run", "@semio-tech/plugin-registry:check-generated"], this.repoRoot, devToolingEnv(), control);
       if (source.descriptor.packageId !== packageId) throw new Error("stdio descriptor packageId does not match the Cargo component contract");
       publishCatalogCommitMarker(rowRoot, createFreshCatalogCommitMarker(source, buildRoot, { cancelled: control.cancelled }), CATALOG_COMMIT_MARKER_FILENAME);
       const strictReceipt = createFreshCatalogBuildVerifier(this.repoRoot, buildRoot).verify(source.entry, { cancelled: control.cancelled });
@@ -1178,10 +1142,8 @@ class CatalogRootScript extends BundleScript {
       if (rowPublished) rmSync(rowRoot, { recursive: true, force: true });
       for (const path of [stageRoot, workRoot]) rmSync(path, { recursive: true, force: true });
       throw error;
-    } finally {
-      process.off("SIGINT", interrupt);
-      process.off("SIGTERM", interrupt);
     }
+    },cancel.signal);}finally{if(timer!==undefined)clearInterval(timer);}
   }
 }
 
@@ -1205,17 +1167,17 @@ class NativeCodecProjectionScript extends BundleScript {
         const ownerScript=resolve(this.repoRoot,dirname(authored.definition_path),"📦️packages/🦀️rust/📜️script.ts");
         await runRepositoryCommand(this.invocation,process.execPath,["repo", "exec", `--projects=@semio-tech/stdio-${artifact}-rs`, "--exclude-dependencies", "--", process.execPath, ownerScript, "test", "long", "--lib", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"],this.repoRoot,"native-codec-publication",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env: { ...process.env, NEXTEST_SUCCESS_OUTPUT: "immediate" },onLine: line => { const prefix = "[DEBUG] native-codec-publication="; const index = line.indexOf(prefix); if (index >= 0) receipts.push(JSON.parse(line.slice(index + prefix.length))); }});
         if (control.signal.aborted || receipts.length !== 1) throw new Error("native-codec-projection requires one successful current native receipt");
-        const receipt = receipts[0];
+        const receipt = receipts[0];if(!receipt)throw Error("Actual native codec receipt required");
         if (receipt.factoryId !== authored.factory_id) throw new Error("native-codec-projection native factory disagrees with its owner");
         const definitionPath = resolve(this.repoRoot, authored.definition_path);
         const protocolPath = resolve(this.repoRoot, authored.protocol_path);
-        const paths = [factoryPath, definitionPath, catalogPath];
-        const originals = paths.map(path => readFileSync(path, "utf8"));
+        const paths = [factoryPath, definitionPath, catalogPath] as const;
+        const originals = [readFileSync(factoryPath,"utf8"),readFileSync(definitionPath,"utf8"),readFileSync(catalogPath,"utf8")] as const;
         const protocol = readFileSync(protocolPath, "utf8");
         const projected = projectNativeCodecReceiptPublicationV1({ receipt, protocol, factories: JSON.parse(originals[0]), definition: JSON.parse(originals[1]), catalog: JSON.parse(originals[2]) });
         const documents = [projected.factories, projected.definition, projected.catalog];
         if (control.signal.aborted || readFileSync(protocolPath, "utf8") !== protocol || paths.some((path, index) => readFileSync(path, "utf8") !== originals[index])) throw new Error("native-codec-projection source changed before publication");
-        for (let index = 0; index < paths.length; index++) writeFileSync(paths[index], `${JSON.stringify(documents[index], null, 2)}\n`);
+        for (const [index,path] of paths.entries()) writeFileSync(path, `${JSON.stringify(documents[index], null, 2)}\n`);
         console.log(`[DEBUG] native-codec-projection published ${receipt.factoryId} pack=${receipt.packSchemaHash} protocol=${receipt.protocolSourceSha256}`);
       } finally {
         process.off("SIGINT", interrupt);

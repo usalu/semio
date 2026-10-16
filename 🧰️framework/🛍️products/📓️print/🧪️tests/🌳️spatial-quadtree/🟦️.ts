@@ -6,7 +6,7 @@ import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
  * the nearest point a query finds — plus the node count, which compares the trees' shape.
  */
 import { quadtree } from "d3-quadtree";
-import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { type ProbeProjection, type ProbeRecord, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
 //#region 🔖️Vectors

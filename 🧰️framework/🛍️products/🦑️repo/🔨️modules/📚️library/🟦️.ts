@@ -25,7 +25,7 @@ import { HUB_DATA_DIR_NAME,SPACE_DATA_DIR_NAME,MAP_CACHE_DIR_NAME,SEMIO_ROOT_DIR
 export { HUB_DATA_DIR_NAME,SPACE_DATA_DIR_NAME,MAP_CACHE_DIR_NAME,SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir };
 import { runOwnedCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildWasmWebV1, type WasmPackWebBuildOptions, type WasmBuildPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import type { ProcessOwnerContextV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts";
+import type { ProcessOwnerContextV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/📋️contract/🟦️.ts";
 import { runVitestV1, vitestArgumentsV1, type VitestPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { type CargoTestPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
@@ -897,7 +897,7 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
 //#region 🔖️bundle-script
 //#region 🔖️Script
 import { Script, BundleScript, ScriptRouter, findWorkspaceRoot, type ScriptCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readScriptPolicy, checkScriptInvocation, advanceScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, type ScriptInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readScriptPolicy, checkScriptInvocation, advanceScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, requireIssuedResourceControlInvocationV1, createRequestedIssuedResourceControlV1, type ScriptInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { SCRIPT_PROCESS_INVOCATION_ENV, createScriptProcessEnvelope, receiveScriptProcessInvocation, withScriptProcessEnvelope } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 export { ownedScriptRoutes, resolveOwnedScriptRoute, dispatchOwnedScriptRoute, type OwnedScriptRoute } from "./🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
@@ -1177,11 +1177,16 @@ function killBudgetTree(pid: number): void {
  * `import("playwright")` makes bun follow it into a browser build, failing on the uninstalled
  * optional `chromium-bidi`. Runtime behaviour is identical. */
 
-/** 🦀️ Composes repository Cargo preparation with neutral bounded test execution. */
-export async function runRepositoryTestCommand(command: string, args: string[], options: { cwd?: string; env?: Readonly<Record<string, string | undefined>>; budgetMs?: number; signal?: AbortSignal; onTimeoutHint?: string; throwOnFailure?: boolean } = {}): Promise<void> {
-  const cwd = options.cwd ?? process.cwd();
-  if(command==="cargo"){await receiveScriptProcessInvocation(options.env??process.env,async invocation=>{const {runRepositoryCargoCommandV1}=await import("./🏃️process/🦀️cargo/🎟️admission/🟦️.ts");await runRepositoryCargoCommandV1(invocation,getWorkspaceRoot(),args,cwd,options.env??process.env,options.budgetMs??testLevelBudgetMs());});return;}
-  await runBudgetedTestCommand(command, args, { ...options, cwd, budgetMs: options.budgetMs ?? testLevelBudgetMs() });
+/** 🧪️ Supplies generic test command options without creating compiler authority. */
+export type RepositoryTestCommandOptionsV1=Readonly<{cwd?:string;env?:Readonly<Record<string,string|undefined>>;budgetMs?:number;signal?:AbortSignal;onTimeoutHint?:string;throwOnFailure?:boolean}>;
+/** 🦀️ Carries actual Cargo owner custody while preserving other bounded test commands. */
+export async function runRepositoryTestCommand<Command extends string>(command:Command,args:string[],...provided:Command extends "cargo"?[options:RepositoryTestCommandOptionsV1&Readonly<{invocation:ScriptInvocation;control:CompilerAdmissionControl}>]:[options?:RepositoryTestCommandOptionsV1]):Promise<void>{
+ const input=provided[0],options=Object.freeze({...input,...(input?.env?{env:Object.freeze({...input.env})}:{})})as RepositoryTestCommandOptionsV1&Partial<{invocation:ScriptInvocation;control:CompilerAdmissionControl}>,cwd=options.cwd??process.cwd(),arguments_=[...args],maximum=options.budgetMs??testLevelBudgetMs();
+ if(command==="cargo"){
+  const {invocation,control}=options;if(!invocation||!control)throw Error("Actual Cargo test owner invocation and phase required");requireIssuedResourceControlInvocationV1(control,invocation);const actual=createRequestedIssuedResourceControlV1(control,maximum,options.signal),environment=options.env??Object.freeze({...process.env});
+  const {runRepositoryCargoCommandV1}=await import("./🏃️process/🦀️cargo/🎟️admission/🟦️.ts");requireIssuedResourceControlInvocationV1(actual,invocation);await runRepositoryCargoCommandV1(invocation,actual,getWorkspaceRoot(),arguments_,cwd,environment,maximum);return;
+ }
+ await runBudgetedTestCommand(command,arguments_,{...options,cwd,budgetMs:maximum});
 }
 
 /** 📦️Runs a build-budgeted command while capturing metadata and replaying diagnostics only on failure. */

@@ -49,5 +49,5 @@ export const stdioDeflateRfc1950AnyDiffTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parseDeflateDiffText(value: unknown, at = "$"): DeflateDiffText {
-  return stdioDeflateRfc1950AnyDiffTextGuardObject(value, `${at}`);
+  return stdioDeflateRfc1950AnyDiffTextGuardString(value, `${at}`);
 }

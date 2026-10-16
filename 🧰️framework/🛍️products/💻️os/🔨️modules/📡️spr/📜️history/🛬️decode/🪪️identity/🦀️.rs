@@ -67,6 +67,3 @@ impl RetainedHistoryIdDecode{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.field.is_none()&&self.receipt.is_none()}
 }
 impl Drop for RetainedHistoryIdDecode{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original History identity abandoned native field custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.field)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

@@ -9,7 +9,7 @@ import { encodeDocumentBackboneEnvelopeBatchExact } from "@semio-tech/framework-
 import { decodeBackboneWorkerResponse, decodeDocumentArchiveBytes, encodeBackboneMessage, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodePackValue, type ArtifactActorConfig, type BackboneWorkerRequest, type BackboneWorkerResponse, type DocumentArchivePack } from "../../🟦️.ts";
 import { restoreDocumentArchiveV1 } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { commitLocalFoldersConfigMutationV1, localFolderReconnectOfferV1, readLocalFolderBindingsV1, readLocalFolderEventsV1 } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📎️local-folders/🟦️.tsx";
-import { attachLocalFolder, detachLocalFolder, LOCAL_FOLDERS_CONFIG_SCHEMA } from "../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { attachLocalFolder, detachLocalFolder, LOCAL_FOLDERS_CONFIG_SCHEMA } from "@semio-tech/framework/config/mutations";
 import { createMemoryStoragePort, OsShellConfig } from "@semio-tech/framework";
 
 type Point = readonly [number, number];

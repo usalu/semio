@@ -21,7 +21,7 @@ import {
   type NodeGraphNodeRecord,
   type NodeGraphScene
 } from "@semio-tech/framework";
-import { encodePackValue } from "@semio-tech/framework-os";
+import { encodePackValue } from "@semio-tech/framework/packs";
 import { type FlowTask } from "../../🪪️WasmSessionLoader/🟦️.tsx";
 import { flowJsonText } from "../🧰️graph-core/🟦️.ts";
 

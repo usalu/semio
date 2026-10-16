@@ -1018,7 +1018,7 @@ impl Drop for SnapshotReadReturnPump {
 }
 
 #[doc(hidden)]
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub struct ChildAdmissionTestState {
     pub children_empty: bool,
     pub generation: u64,

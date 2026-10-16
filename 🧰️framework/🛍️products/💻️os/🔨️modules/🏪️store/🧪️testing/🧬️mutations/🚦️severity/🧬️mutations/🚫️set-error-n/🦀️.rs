@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 //#endregion 📦️Imports
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, semio_framework_value_derive::RetireOwned, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, semio_framework_value_derive::RetireOwned, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -17,10 +17,10 @@ pub struct SetErrorN {
 //#endregion 🧬️Payload
 
 //#region ⚙️Behavior
-impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetErrorN {
-    const SEMANTICS: crate::os_spr::SemanticDescriptor = crate::os_spr::SemanticDescriptor { verb: "set", entity: "error-n", kind: "set-error-n", record: "SetErrorN" };
-    fn diff(&self, _base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
-        crate::os_spr::MutationOutcome::error("mutation.target-missing", "target n is missing", ["n"])
+impl semio_framework_os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetErrorN {
+    const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "error-n", kind: "set-error-n", record: "SetErrorN" };
+    fn diff(&self, _base: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
+        semio_framework_os_spr::MutationOutcome::error("mutation.target-missing", "target n is missing", ["n"])
     }
     fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<SeverityMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -28,17 +28,11 @@ impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetErrorN {
     
     })())
 }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native("Set Error N", "Fehler N setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Error N", "Fehler N setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["n".into()]
     }
 }
 //#endregion ⚙️Behavior
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🧪️fixture-severity-set-error-n/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

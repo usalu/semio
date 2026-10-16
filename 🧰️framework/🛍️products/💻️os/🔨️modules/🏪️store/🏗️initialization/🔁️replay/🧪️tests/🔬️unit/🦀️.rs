@@ -7,8 +7,8 @@ use semio_framework_os_store_initialization_replay::initialization_authority::Ar
 use semio_framework_os_store_initialization_replay::{ArtifactStoreReplayInitializer, Phase, permits};
 use semio_framework_job::{Generation, JobOutcomeBorrow, OperationId, StepContext};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use super::fixture_mutations::demo::{AddN, DemoMutation, SetN};
-use super::tests::DemoSnapshot;
+use semio_framework_os_store_testing_fixtures::demo::AddN; use semio_framework_os_store_testing_fixtures::demo::DemoMutation; use semio_framework_os_store_testing_fixtures::demo::SetN;
+use semio_framework_os_store_testing_fixtures::DemoSnapshot;
 use semio_framework_os_store_document::create_document_envelope;
 use semio_framework_os_store_engine_owners::fund_document_store_owners;
 use semio_framework_os_store_space::lifted_store::install_unscheduled_catalog;
@@ -35,7 +35,7 @@ fn add(delta: i32) -> DemoMutation {
 
 async fn open(envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation>) -> Store {
     let mut store = Store::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.expect("the fixture history is valid");
-    install_unscheduled_catalog(&mut store, fund_document_store_owners(crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners_birth_demand().expect("the fixture catalog quotes its birth"), |grant|crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(grant))).expect("the fixture owners install");
+    install_unscheduled_catalog(&mut store, fund_document_store_owners(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners_birth_demand().expect("the fixture catalog quotes its birth"), |grant|semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(grant))).expect("the fixture owners install");
     store
 }
 

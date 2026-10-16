@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/cleanup/retirement/component.json",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumOwnersPerImage": 32,
+        "maximumPendingReads": 32,
+        "operations": [
+          "retained-read",
+          "exact-retirement"
+        ],
+        "ordinaryControl": false,
+        "arbitraryCommand": false,
+        "disposableReserveMilliseconds": 10000,
+        "maximumDisposableAllocations": 1
+      }
+    }
+  },
+  "$ref": "#/definitions/Protocol"
+}

@@ -93,7 +93,7 @@ pub struct IoKey {
 impl IoKey {
     /// 🗝️ Build a key from an (owner, counterpart) pair already resolved to the right
     /// perspective by the caller -- see the two call sites in `register_composer_entries`.
-    fn from_owner_counterpart(owner: Dialect, counterpart: Dialect, direction: IoDirection) -> Self {
+    pub fn from_owner_counterpart(owner: Dialect, counterpart: Dialect, direction: IoDirection) -> Self {
         IoKey {
             artifact_kind: owner.artifact_kind.to_string(),
             standard: owner.standard.0.to_string(),

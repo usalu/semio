@@ -73,8 +73,7 @@ impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthority<A>{
  pub fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()}
 }
 #[cfg(test)]
-#[path="../../../../🧪️testing/💾️allocator/🦀️.rs"]
-mod allocation_testing;
+use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
 #[cfg(test)]

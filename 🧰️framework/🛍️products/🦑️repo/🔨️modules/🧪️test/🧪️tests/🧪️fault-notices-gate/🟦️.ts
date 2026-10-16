@@ -10,7 +10,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import Parser from "web-tree-sitter";
-import { type FaultCodeSite, type FaultNoticeScope, faultNoticeReport, rustFaultCodeSites, rustFaultHelpers, rustStringConsts } from "../../🧬️schema/📋️orchestration/🟦️.ts";
+import { type FaultCodeSite, type FaultNoticeScope, faultNoticeReport, rustFaultCodeSites, rustFaultHelpers, rustStringConsts } from "../../🧬️schema/📋️orchestration/📢️fault-notices/🟦️.ts";
 
 type Site = Pick<FaultCodeSite, "code" | "via">;
 type Located = Pick<FaultCodeSite, "code" | "via" | "within" | "defaulted">;

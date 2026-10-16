@@ -2,7 +2,7 @@ use semio_framework_dsl_record::DslField;
 use semio_framework_dsl_record::FieldValue;
 use semio_framework_value::NativeEncodeControl;
 use {semio_framework_artifact_reference::ArtifactRef};
-use crate::os_store::artifact_child::ArtifactChild;
+use semio_framework_os_store_child::ArtifactChild;
 use protocol::value::ToValue;
 
 #[test]

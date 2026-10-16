@@ -18,7 +18,7 @@
  */
 
 import {requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import { createHash } from "node:crypto";
 import { ProtectedActorResponseCaptureV1, executeProtectedActorChildV1, type ProtectedActorSelectionV1, protectedActorChildUrlV1, observeNormalDevHubPublicationOwnerV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🟦️.ts";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";

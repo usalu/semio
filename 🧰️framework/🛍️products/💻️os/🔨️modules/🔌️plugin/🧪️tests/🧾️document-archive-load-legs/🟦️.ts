@@ -5,7 +5,7 @@ import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import schema from "./🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import { familyText } from "../../🧷️companions/🧯️test-support/🧵️instance-family/🟦️.ts";
 test("archive status observation preserves retained owner and owns no work authority",()=>{
  const valid=new Ajv({strict:true}).compile(schema);expect(valid(fixture)).toBe(true);expect(validateJsonSchemaSubset(schema,fixture)).toEqual([]);

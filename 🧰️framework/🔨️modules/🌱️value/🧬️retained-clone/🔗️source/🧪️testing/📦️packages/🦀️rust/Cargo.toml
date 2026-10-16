@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-clone-source-testing"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Root native allocator custody creates and drains actual canonical clone-source fixtures."
+
+[package.metadata.semio]
+role = "test"
+id = "value-clone-source-testing"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-value-clone-source = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

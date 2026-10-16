@@ -539,10 +539,3 @@ export function bridgeBackboneWorkerInbound(backbone: EffectBackbone, worker: Ba
   };
 }
 //#endregion 🌉️WorkerTransport
-
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("../../../🧪️tests/🧪️effectbackbone-capability-gating/🟦️.ts");
-  await registerTests1(import.meta.vitest, { AllowAllCapabilities, EffectBackbone, MESSAGE_ENDPOINT_VARIANT_FIELDS, RecordingBackboneOverflowReporter, backboneMessageEndpoint, bridgeBackboneWorkerInbound, createBackboneWorkerTransport, decodeBackboneGuestMessage, encodeBackboneGuestMessage }, { directory: import.meta.dir, url: import.meta.url });
-}
-//#endregion 🧪️Tests
